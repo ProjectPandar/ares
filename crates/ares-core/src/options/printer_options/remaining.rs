@@ -7,8 +7,7 @@ use std::fmt;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub use enums::{
-    AuthorizationType, BedExcludeVolumeMode, BeltRotationAxis, FanDirection, ImexVizTheme,
-    NozzleVolumeType, NozzleVolumeTypes, PrintHostType, RemapAxis,
+    AuthorizationType, BedExcludeVolumeMode, NozzleVolumeType, NozzleVolumeTypes, PrintHostType,
 };
 pub use structured::{
     DefaultBedType, ExtruderVariantLists, NullableFloats, PrinterModel, PrinterNotes,
@@ -27,27 +26,6 @@ use super::super::{
 
 declare_option_group! {
     pub struct PrinterRemainingOptions, PrinterRemainingOptionsBuilder {
-        gcode_skip_config_block => "gcode_skip_config_block": OrcaBool = OrcaBool(false),
-        build_plate_tilt_x => "build_plate_tilt_x": OrcaFloat = OrcaFloat(0.0),
-        build_plate_tilt_y => "build_plate_tilt_y": OrcaFloat = OrcaFloat(0.0),
-        belt_printer => "belt_printer": OrcaBool = OrcaBool(false),
-        belt_printer_infinite_y => "belt_printer_infinite_y": OrcaBool = OrcaBool(true),
-        belt_slice_rotation_angle => "belt_slice_rotation_angle": OrcaFloat = OrcaFloat(45.0),
-        belt_slice_rotation => "belt_slice_rotation": BeltRotationAxis = BeltRotationAxis::X,
-        belt_support_floor_offset => "belt_support_floor_offset": OrcaFloat = OrcaFloat(0.0),
-        gcode_remap_x => "gcode_remap_x": RemapAxis = RemapAxis::PosX,
-        gcode_remap_y => "gcode_remap_y": RemapAxis = RemapAxis::PosY,
-        gcode_remap_z => "gcode_remap_z": RemapAxis = RemapAxis::PosZ,
-        belt_frame_tilt_decouple => "belt_frame_tilt_decouple": OrcaBool = OrcaBool(false),
-        belt_frame_tilt_angle => "belt_frame_tilt_angle": OrcaFloat = OrcaFloat(45.0),
-        printer_plugin_config_overrides => "printer_plugin_config_overrides": OrcaString = string(""),
-        extruder_clearance_dist_to_rod => "extruder_clearance_dist_to_rod": OrcaFloat = OrcaFloat(40.0),
-        fan_direction => "fan_direction": FanDirection = FanDirection::Undefined,
-        cooling_filter_enabled => "cooling_filter_enabled": OrcaBool = OrcaBool(false),
-        wait_for_temp_on_wipe_tower => "wait_for_temp_on_wipe_tower": OrcaBool = OrcaBool(false),
-        enable_belt_purge_tower => "enable_belt_purge_tower": OrcaBool = OrcaBool(false),
-        imex_firmware_managed_zones => "imex_firmware_managed_zones": OrcaBool = OrcaBool(false),
-        imex_viz_theme => "imex_viz_theme": ImexVizTheme = ImexVizTheme::Standard,
         printable_area => "printable_area": Point2dList = points(&[(0.0, 0.0), (200.0, 0.0), (200.0, 200.0), (0.0, 200.0)]),
         extruder_printable_area => "extruder_printable_area": Point2dGroups = Point2dGroups(Vec::new()),
         support_parallel_printheads => "support_parallel_printheads": OrcaBool = OrcaBool(false),
@@ -148,28 +126,7 @@ impl PrinterRemainingOptions {
         "adaptive_bed_mesh_margin",
     ];
 
-    pub const RUNTIME_REGISTRATION_ORDER: [&'static str; 36] = [
-        "gcode_skip_config_block",
-        "build_plate_tilt_x",
-        "build_plate_tilt_y",
-        "belt_printer",
-        "belt_printer_infinite_y",
-        "belt_slice_rotation_angle",
-        "belt_slice_rotation",
-        "belt_support_floor_offset",
-        "gcode_remap_x",
-        "gcode_remap_y",
-        "gcode_remap_z",
-        "belt_frame_tilt_decouple",
-        "belt_frame_tilt_angle",
-        "printer_plugin_config_overrides",
-        "extruder_clearance_dist_to_rod",
-        "fan_direction",
-        "cooling_filter_enabled",
-        "wait_for_temp_on_wipe_tower",
-        "enable_belt_purge_tower",
-        "imex_firmware_managed_zones",
-        "imex_viz_theme",
+    pub const RUNTIME_REGISTRATION_ORDER: [&'static str; 15] = [
         "printer_technology",
         "bbl_use_printhost",
         "printer_agent",

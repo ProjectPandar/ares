@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19";
+const revision = "345efec64c7b95a05ce5cf96df0dde66a158835c";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/role-times/`;
@@ -28,11 +28,11 @@ const excerpts = [
   excerpt(viewer, 1144, 1148, "for (size_t j = 0; j < TIME_MODES_COUNT; ++j) {", "}"),
   excerpt(viewer, 1154, 1155, "if (v.type == EMoveType::Extrude) {", "m_extrusion_roles.add(v.role, v.times);"),
   // GCodeViewer::render_legend total, time/percent lambdas and Feature Type Time/% cells.
-  excerpt(legend, 4064, 4064, "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();",
+  excerpt(legend, 4105, 4105, "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();",
     "const float total_estimated_time = time_mode.time > 0.0f ? time_mode.time : m_viewer.get_estimated_time();"),
-  excerpt(legend, 4333, 4341, "auto role_time_and_percent = [this, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {", "};"),
-  excerpt(legend, 4565, 4577, "char buffer[64];", "percents.push_back(buffer);"),
-  excerpt(legend, 4586, 4595, "//BBS: get travel time and percent", "percents.push_back(travel_percent);"),
+  excerpt(legend, 4374, 4382, "auto role_time_and_percent = [this, total_estimated_time](libvgcode::EGCodeExtrusionRole role) {", "};"),
+  excerpt(legend, 4606, 4618, "char buffer[64];", "percents.push_back(buffer);"),
+  excerpt(legend, 4627, 4636, "//BBS: get travel time and percent", "percents.push_back(travel_percent);"),
 ];
 const [loopHead, times, extrude, total, lambdas, roleCells, travelCells] = excerpts.map((e) => e.text);
 const replacements = [["[this, total_estimated_time]", "[&m_viewer, total_estimated_time]"]];
@@ -52,7 +52,7 @@ ${extrude}        }
     }
 }
 
-// GCodeViewer::render_legend (GCodeViewer.cpp:4064, 4333-4341, 4565-4577, 4586-4595):
+// GCodeViewer::render_legend (GCodeViewer.cpp:4105, 4374-4382, 4606-4618, 4627-4636):
 // the Feature Type Time and % cells; Usage cells are a later slice.
 template <class Viewer>
 inline void feature_type_cells(const Viewer& m_viewer, const Slic3r::PrintEstimatedStatistics::Mode& time_mode,

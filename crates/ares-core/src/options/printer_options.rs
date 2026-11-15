@@ -15,10 +15,9 @@ pub(crate) use machine_envelope::MachineEnvelopeOptionsBuilder;
 pub use machine_envelope::{InputShaperType, MachineEnvelopeOptions};
 pub(crate) use remaining::PrinterRemainingOptionsBuilder;
 pub use remaining::{
-    AuthorizationType, BedExcludeVolumeMode, BeltRotationAxis, DefaultBedType,
-    ExtruderVariantLists, FanDirection, ImexVizTheme, NozzleVolumeType, NozzleVolumeTypes,
-    NullableFloats, PrintHostType, PrinterModel, PrinterNotes, PrinterRemainingOptions, RemapAxis,
-    ThumbnailDefinitions,
+    AuthorizationType, BedExcludeVolumeMode, DefaultBedType, ExtruderVariantLists,
+    NozzleVolumeType, NozzleVolumeTypes, NullableFloats, PrintHostType, PrinterModel, PrinterNotes,
+    PrinterRemainingOptions, ThumbnailDefinitions,
 };
 
 #[derive(Clone, Debug, PartialEq)]

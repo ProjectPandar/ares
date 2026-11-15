@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/multi-plate/", import.meta.url));
@@ -44,14 +44,11 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   copyFileSync(`${repositoryRoot}${FIXTURE}`, project);
   const legs = ["official", "seeded"] as const;
   const results: Record<string, Record<string, string>> = {};
-  const oracles: Record<string, Record<string, ReturnType<typeof oracleRun>>> = {};
   const compare = (label: string, gcode: string, oracle: string, plate: number) => {
     results[label] = {};
-    oracles[label] = {};
     for (const leg of legs) {
       const native = orcaPlate(oracle, plate, leg);
       results[label][leg] = native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL";
-      oracles[label][leg] = oracleRun(oracle, plate, leg, native);
     }
   };
 
@@ -119,7 +116,7 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     fixture: FIXTURE,
-    oracle: { command: "--slice <plate> (official and seed-replay seed 0); after the delete, of the GUI-exported project", runs: oracles },
+    oracle: "OrcaSlicer 2.4.2 --slice <plate> (official and seed-replay seed 0); after the delete, of the GUI-exported project",
     evidence: "ordered_bytes_generator_only",
     results,
   }, null, 2)}\n`);

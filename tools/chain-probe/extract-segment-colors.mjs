@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("../../", import.meta.url));
-const revision = "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19";
+const revision = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
 if (execFileSync("git", ["-C", `${repo}OrcaSlicer`, "rev-parse", "HEAD"], { encoding: "utf8" }).trim() !== revision)
   throw new Error("upstream revision differs from approved oracle source");
 const output = `${repo}tools/chain-probe/segment-colors/`;
@@ -24,29 +24,29 @@ const impl = "src/libvgcode/src/ViewerImpl.cpp";
 const header = "src/libvgcode/src/ViewerImpl.hpp";
 const free = [
   // fast_round_up and round_to_bin, used by update_color_ranges.
-  excerpt(impl, 35, 36, "template<class T, class O = T>", "using IntegerOnly = std::enable_if_t<std::is_integral<T>::value, O>;"),
-  excerpt(impl, 49, 55, "template<typename I>", "}"),
-  excerpt(impl, 59, 75, "static float round_to_bin(const float value)", "}"),
+  excerpt(impl, 23, 24, "template<class T, class O = T>", "using IntegerOnly = std::enable_if_t<std::is_integral<T>::value, O>;"),
+  excerpt(impl, 37, 43, "template<typename I>", "}"),
+  excerpt(impl, 47, 63, "static float round_to_bin(const float value)", "}"),
   // Default role and option palettes.
-  excerpt(impl, 315, 337, "static const std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> DEFAULT_EXTRUSION_ROLES_COLORS = { {", "} };"),
-  excerpt(impl, 339, 349, "static const std::array<Color, size_t(EOptionType::COUNT)> DEFAULT_OPTIONS_COLORS{ {", "} };"),
+  excerpt(impl, 283, 305, "static const std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> DEFAULT_EXTRUSION_ROLES_COLORS = { {", "} };"),
+  excerpt(impl, 307, 317, "static const std::array<Color, size_t(EOptionType::COUNT)> DEFAULT_OPTIONS_COLORS{ {", "} };"),
 ];
 const members = [
-  excerpt(header, 245, 245, "Settings m_settings;", "Settings m_settings;"),
-  excerpt(header, 249, 249, "Layers m_layers;", "Layers m_layers;"),
-  excerpt(header, 300, 300, "std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> m_extrusion_roles_colors;", "std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> m_extrusion_roles_colors;"),
-  excerpt(header, 304, 304, "std::array<Color, size_t(EOptionType::COUNT)> m_options_colors;", "std::array<Color, size_t(EOptionType::COUNT)> m_options_colors;"),
-  excerpt(header, 331, 331, "std::vector<PathVertex> m_vertices;", "std::vector<PathVertex> m_vertices;"),
+  excerpt(header, 202, 202, "Settings m_settings;", "Settings m_settings;"),
+  excerpt(header, 206, 206, "Layers m_layers;", "Layers m_layers;"),
+  excerpt(header, 242, 242, "std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> m_extrusion_roles_colors;", "std::array<Color, size_t(EGCodeExtrusionRole::COUNT)> m_extrusion_roles_colors;"),
+  excerpt(header, 246, 246, "std::array<Color, size_t(EOptionType::COUNT)> m_options_colors;", "std::array<Color, size_t(EOptionType::COUNT)> m_options_colors;"),
+  excerpt(header, 273, 273, "std::vector<PathVertex> m_vertices;", "std::vector<PathVertex> m_vertices;"),
   // Color ranges and palettes.
-  excerpt(header, 346, 365, "std::optional<Settings> m_settings_used_for_ranges;", "PaletteWithAlpha m_color_print_colors;"),
+  excerpt(header, 285, 304, "std::optional<Settings> m_settings_used_for_ranges;", "Palette m_color_print_colors;"),
 ];
 const methods = [
-  excerpt(impl, 1856, 1859, "const Color& ViewerImpl::get_extrusion_role_color(EGCodeExtrusionRole role) const", "}"),
-  excerpt(impl, 1867, 1870, "void ViewerImpl::reset_default_extrusion_roles_colors()", "}"),
-  excerpt(impl, 1872, 1875, "const Color& ViewerImpl::get_option_color(EOptionType type) const", "}"),
-  excerpt(impl, 1883, 1886, "void ViewerImpl::reset_default_options_colors()", "}"),
-  excerpt(impl, 2122, 2183, "void ViewerImpl::update_color_ranges()", "}"),
-  excerpt(impl, 1734, 1823, "Color ViewerImpl::get_vertex_color(const PathVertex& v) const", "}"),
+  excerpt(impl, 1567, 1570, "const Color& ViewerImpl::get_extrusion_role_color(EGCodeExtrusionRole role) const", "}"),
+  excerpt(impl, 1578, 1581, "void ViewerImpl::reset_default_extrusion_roles_colors()", "}"),
+  excerpt(impl, 1583, 1586, "const Color& ViewerImpl::get_option_color(EOptionType type) const", "}"),
+  excerpt(impl, 1594, 1597, "void ViewerImpl::reset_default_options_colors()", "}"),
+  excerpt(impl, 1817, 1878, "void ViewerImpl::update_color_ranges()", "}"),
+  excerpt(impl, 1467, 1553, "Color ViewerImpl::get_vertex_color(const PathVertex& v) const", "}"),
 ];
 const excerpts = [...free, ...members, ...methods];
 /** Applies exact textual replacements; each `from` must occur in `text`. */
@@ -57,9 +57,9 @@ function adapt(text, replacements) {
   }
   return text;
 }
-const adapted = `// ViewerImpl.cpp:35-36,49-55,59-75 rounding helpers and :315-349 default palettes;
-// ViewerImpl.hpp members read by the color code; ViewerImpl.cpp:1856-1886 palette
-// accessors, :2122-2183 update_color_ranges and :1734-1823 get_vertex_color as
+const adapted = `// ViewerImpl.cpp:23-24,37-43,47-63 rounding helpers and :283-317 default palettes;
+// ViewerImpl.hpp members read by the color code; ViewerImpl.cpp:1567-1597 palette
+// accessors, :1817-1878 update_color_ranges and :1467-1553 get_vertex_color as
 // members of a GL-free holder of the same members (ViewerImpl::load needs GL).
 namespace libvgcode {
 ${free.map((e) => e.text).join("")}

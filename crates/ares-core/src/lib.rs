@@ -157,11 +157,6 @@ pub use options::{
     WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use options::{
-    BeltRotationAxis, FanDirection, FilamentPresetSourceOptions, ImexVizTheme,
-    ProcessAdaptiveInfillGradient, ProcessAdaptiveInfillMode, ProcessCenterOfSurfacePattern,
-    ProcessSurfaceFillOrder, ProcessToolChangeOrdering, RemapAxis,
-};
-pub use options::{
     decode_config_value, decode_config_value_by_key, encode_config_value,
     encode_config_value_by_key,
 };

@@ -36,7 +36,7 @@ impl Generator<'_> {
                 writer.disable_linear_advance();
             }
             if self.mk4_mmu3 {
-                writer.set_temperature(old_temperature - 20, false, true);
+                writer.set_temperature(old_temperature - 20, false);
             }
         } else {
             writer.position = start;
@@ -141,7 +141,7 @@ impl Generator<'_> {
             if self.mk4_mmu3 && cooling {
                 change_later = true;
             } else {
-                writer.set_temperature(new_temperature, false, true);
+                writer.set_temperature(new_temperature, false);
             }
             self.old_temperature = new_temperature;
         }
@@ -182,9 +182,7 @@ impl Generator<'_> {
             ];
         }
         writer.suppress_preview = false;
-        writer
-            .gcode
-            .push_str(Writer::flush_planner_queue_command(self.flavor));
+        Writer::flush_planner_queue(&mut writer.gcode, self.flavor);
     }
 
     fn ramming_first_line(&self, y_step: f32) -> Option<f32> {
@@ -234,7 +232,7 @@ impl Generator<'_> {
             if i == filament.cooling_moves - 1
                 && let Some(temperature) = change_temperature
             {
-                writer.set_temperature(temperature, false, true);
+                writer.set_temperature(temperature, false);
             }
             let speed = filament.cooling_initial + increment * 2.0 * i as f32;
             writer.load_move_x(turning, tube, speed, 50.0);

@@ -1,6 +1,8 @@
-use super::{DefaultBedType, SliceOptions, temperature_vector};
+use super::{SliceOptions, temperature_vector};
 
 use crate::SliceError;
+
+const DEFAULT_BED_TYPE: &str = "Cool Plate";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct FirstLayerBedTemperature(u32);
@@ -95,19 +97,11 @@ impl SliceOptions {
     }
 
     fn curr_bed_type(&self) -> Result<&str, SliceError> {
-        match self.values().get("curr_bed_type").map(serde_json::Value::as_str) {
-            Some(Some("" | "Default Plate")) | None => {
-                let hint = match self.values().get("default_bed_type") {
-                    Some(value) => value.as_str().ok_or_else(|| {
-                        SliceError::InvalidInput("default_bed_type must be a string".to_owned())
-                    })?,
-                    None => "",
-                };
-                // Bare byte options have no catalog from which to obtain a model identifier.
-                Ok(DefaultBedType::resolve_hint(hint, "").as_str())
-            }
-            Some(Some(current)) => Ok(current),
-            Some(None) => Err(invalid_curr_bed_type("must be a string")),
+        match self.values().get("curr_bed_type") {
+            Some(value) => value
+                .as_str()
+                .ok_or_else(|| invalid_curr_bed_type("must be a string")),
+            None => Ok(DEFAULT_BED_TYPE),
         }
     }
 }

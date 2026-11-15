@@ -33,8 +33,6 @@ test("the status bar follows the core's slicing statuses while a plate slices", 
   expect(expected.some(([, text]) => text.startsWith("Generating G-code: layer "))).toBe(true);
 
   await page.goto("/");
-  // The status bar reads "Loading slicing engine…" until the engine is ready (StatusBar.tsx), as slice.spec.ts waits.
-  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("link", { name: "Prepare", exact: true }).click();
   await page.getByTestId("import-input").setInputFiles(project);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");

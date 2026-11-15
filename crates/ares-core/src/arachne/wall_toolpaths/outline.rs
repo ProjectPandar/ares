@@ -1,10 +1,9 @@
-use crate::geometry::{ClipperError, JoinType, Point, Polygon, offset_paths, union_polygons_paths};
+use crate::geometry::{
+    ClipperError, JoinType, Point, Polygon, offset_paths, union_even_odd_polygons_paths,
+    union_polygons_paths,
+};
 
 use super::RawWallToolPathConfig;
-
-mod degenerate;
-mod line_grid;
-mod self_intersections;
 
 pub(super) fn prepare(
     outline: &[Polygon],
@@ -34,8 +33,10 @@ pub(super) fn prepare(
     let restored = offset_paths(&expanded, -(epsilon_offset as f32), JoinType::Miter, 3.0)?;
     let maximum_resolution = config.wall_maximum_resolution;
     let maximum_deviation = config.wall_maximum_deviation;
-    // WallToolPaths.cpp:496–502: near-self-intersection displacement brackets
-    // the degenerate/collinear cleanup; neither correction performs a union.
+    // `WallToolPaths.cpp:496`: simplify + `:497-502`: fixSelfIntersections /
+    // removeDegenerateVerts / removeColinearEdges(0.005), repeated after the
+    // collinear pass; the even-odd union resolves the self-intersections the
+    // way `fixSelfIntersections` (`:497`,`:501`) does.
     let mut simplified = restored
         .into_iter()
         .filter_map(normalize_polygon)
@@ -48,12 +49,12 @@ pub(super) fn prepare(
                 config.coordinate_scale.scaled_delta(0.0001) as i64,
             )
         })
+        .filter_map(clean_degenerate_and_collinear)
         .collect::<Vec<_>>();
-    self_intersections::fix(&mut simplified, epsilon_offset, config.coordinate_scale);
-    degenerate::remove(&mut simplified);
-    simplified = simplified.into_iter().filter_map(clean_collinear).collect();
-    self_intersections::fix(&mut simplified, epsilon_offset, config.coordinate_scale);
-    degenerate::remove(&mut simplified);
+    simplified = union_even_odd_polygons_paths(&simplified)?
+        .into_iter()
+        .filter_map(clean_degenerate_and_collinear)
+        .collect();
     // `WallToolPaths.cpp:503`: removeSmallAreas(prepared_outline, small_area_length *
     // small_area_length, false), with small_area_length = bead_width_0 / 2
     // (`WallToolPaths.cpp:80`).
@@ -113,7 +114,7 @@ fn normalize_polygon(polygon: Polygon) -> Option<Polygon> {
     (points.len() >= 3).then(|| Polygon::new(points))
 }
 
-fn clean_collinear(polygon: Polygon) -> Option<Polygon> {
+fn clean_degenerate_and_collinear(polygon: Polygon) -> Option<Polygon> {
     let mut points = polygon.into_points();
     loop {
         if points.len() < 3 {

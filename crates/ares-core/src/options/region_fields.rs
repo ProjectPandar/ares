@@ -165,3 +165,11 @@ macro_rules! region_option_fields {
 }
 
 pub(crate) use region_option_fields;
+
+macro_rules! declare_region_option_order {
+    ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
+        pub(crate) const REGION_OPTION_DECLARATION_ORDER: [&str; 159] = [$($key),*];
+    };
+}
+
+region_option_fields!(declare_region_option_order);

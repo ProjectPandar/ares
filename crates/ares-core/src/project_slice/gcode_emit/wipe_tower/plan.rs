@@ -58,7 +58,7 @@ impl Plan {
             ramming: settings.printer.gcode.enable_filament_ramming.0,
             semm: settings.printer.gcode.single_extruder_multi_material.0,
             use_gap_wall: use_gap_wall(print),
-            no_sparse: super::sparse_layers_skipped(settings),
+            no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
         }
     }
 

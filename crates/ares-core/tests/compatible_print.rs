@@ -7,8 +7,7 @@
 //! ignored without a current print; an incompatible current print not mapped to the compatible
 //! print of the same alias, or mapped by layer height instead; the layer height of the current
 //! print not preferred over the default profile when no alias matches; a user print matched by
-//! its parent's alias instead of its own whole name; a catalog without normal prints failing
-//! to resolve its source-defined built-in default.
+//! its parent's alias instead of its own whole name; a catalog without prints returning a name.
 
 use std::fs;
 use std::path::Path;
@@ -166,13 +165,9 @@ fn without_an_alias_match_the_current_layer_height_outranks_the_default_profile(
 }
 
 #[test]
-fn a_catalog_without_prints_returns_source_defined_default_setting() {
+fn a_catalog_without_prints_chooses_none() {
     let catalog = catalog("Custom", &["machine_model_list", "machine_list"]);
-    // Preset.hpp:573-579 / first_compatible_idx: source-defined default identity.
-    assert_eq!(
-        catalog.compatible_print(KLIPPER, None).unwrap().as_deref(),
-        Some("Default Setting")
-    );
+    assert_eq!(catalog.compatible_print(KLIPPER, None).unwrap(), None);
 }
 
 /// `PresetCollection::set_custom_preset_alias` (`Preset.cpp:4414-4437`): a user print keeps its

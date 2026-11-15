@@ -72,16 +72,6 @@ pub(super) fn native(
     datadir: Option<&Path>,
     label: &str,
 ) -> Vec<u8> {
-    native_with_args(runner, project, datadir, label, &[])
-}
-
-pub(super) fn native_with_args(
-    runner: &OrcaRunner,
-    project: &Path,
-    datadir: Option<&Path>,
-    label: &str,
-    extra_args: &[&str],
-) -> Vec<u8> {
     let output = runner.work.join(label);
     std::fs::create_dir(&output).unwrap();
     let mut args = vec![
@@ -96,7 +86,6 @@ pub(super) fn native_with_args(
             datadir.to_string_lossy().into_owned(),
         ]);
     }
-    args.extend(extra_args.iter().map(|arg| (*arg).to_owned()));
     args.push(project.to_string_lossy().into_owned());
     command::run_exact(
         runner.bin(),

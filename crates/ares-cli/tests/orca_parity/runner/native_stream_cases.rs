@@ -1,7 +1,5 @@
 #[path = "acceleration_raw_f64.rs"]
 mod acceleration_raw_f64;
-#[path = "../arachne_near_self_intersections.rs"]
-mod arachne_near_self_intersections;
 #[path = "avoid_crossing_external_frame.rs"]
 mod avoid_crossing_external_frame;
 #[path = "bbl_type1_adhesiveness_categories.rs"]

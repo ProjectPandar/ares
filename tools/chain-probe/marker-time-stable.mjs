@@ -1,6 +1,7 @@
-// Capture the single Native source-kernel producer for the tagged fixture.
-// At 40ecc66f7 marker relocation is upstream in OptionsZCorrector::on_moves_inserted
-// (GCodeProcessor.hpp:1126-1135, called at GCodeProcessor.cpp:8183).
+// Capture the single beta Native source-kernel producer for the tagged fixture.
+// At 345efec64 the raw-vs-stable marker relocation premise no longer exists
+// (the stable-options diagnostic correction is a no-op on beta), so the tagged
+// fixture asserts Ares against one qualified producer: the merged beta oracle.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { runNative } from "./marker-time-runner.mjs";
@@ -33,7 +34,7 @@ export async function generateMarkerTimeStable(input, directory) {
     binaries: [{ path: binary, sha256: sha(binary) }],
     counts: [data.vertices.length],
     files: Object.fromEntries(["stable.json", "stable.csv"].map(name => [name, sha(`${dir}/${name}`)])),
-    policy: "stable vertex IDs are authoritative for Ares; 40ecc66f7 includes the marker relocation correction upstream",
+    policy: "stable vertex IDs are authoritative for Ares; at 345efec64 the raw producer is byte-identical, so the raw/stable pair was retired",
   };
   const stableTsv = data.vertices.map(vertex => [vertex.id, vertex.gcodeId, ...vertex.durationBits, ...vertex.elapsedBits].join("\t")).join("\n") + "\n";
   writeFileSync(`${dir}/stable.tsv`, stableTsv);

@@ -1,6 +1,6 @@
-// ViewerImpl.cpp:35-36,49-55,59-75 rounding helpers and :315-349 default palettes;
-// ViewerImpl.hpp members read by the color code; ViewerImpl.cpp:1856-1886 palette
-// accessors, :2122-2183 update_color_ranges and :1734-1823 get_vertex_color as
+// ViewerImpl.cpp:23-24,37-43,47-63 rounding helpers and :283-317 default palettes;
+// ViewerImpl.hpp members read by the color code; ViewerImpl.cpp:1567-1597 palette
+// accessors, :1817-1878 update_color_ranges and :1467-1553 get_vertex_color as
 // members of a GL-free holder of the same members (ViewerImpl::load needs GL).
 namespace libvgcode {
 template<class T, class O = T>
@@ -89,8 +89,8 @@ struct ColorsViewer
     std::array<ColorRange, COLOR_RANGE_TYPES_COUNT> m_layer_time_range{
         ColorRange(EColorRangeType::Linear), ColorRange(EColorRangeType::Logarithmic)
     };
-    PaletteWithAlpha m_tool_colors;
-    PaletteWithAlpha m_color_print_colors;
+    Palette m_tool_colors;
+    Palette m_color_print_colors;
 
 const Color& get_extrusion_role_color(EGCodeExtrusionRole role) const
 {
@@ -244,16 +244,13 @@ Color get_vertex_color(const PathVertex& v) const
     case EViewType::Tool:
     {
         assert(static_cast<size_t>(v.extruder_id) < m_tool_colors.size());
-        const ColorWithAlpha& color = m_tool_colors[v.extruder_id];
-        return { color[0], color[1], color[2] };
+        return m_tool_colors[v.extruder_id];
     }
     case EViewType::Summary: // ORCA
     case EViewType::ColorPrint:
     {
-        if (m_layers.layer_contains_colorprint_options(static_cast<size_t>(v.layer_id)))
-            return DUMMY_COLOR;
-        const ColorWithAlpha& color = m_color_print_colors[static_cast<size_t>(v.color_id) % m_color_print_colors.size()];
-        return { color[0], color[1], color[2] };
+        return m_layers.layer_contains_colorprint_options(static_cast<size_t>(v.layer_id)) ? DUMMY_COLOR :
+            m_color_print_colors[static_cast<size_t>(v.color_id) % m_color_print_colors.size()];
     }
     default: { break; }
     }

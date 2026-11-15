@@ -9,13 +9,12 @@ use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, features,
 };
 
-/// `travel_to(erMixed)` accepts an explicit Z without `_extrude`'s Z restatement.
+/// `append_tcr2` calls `travel_to(erMixed)` without `_extrude`'s Z restatement.
 pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     first_scaled: (i64, i64),
     geometry: LayerGeometry<'_>,
-    target_z: Option<f64>,
 ) -> Result<(), crate::SliceError> {
     let first_x = geometry.scale.unscale(first_scaled.0) + state.offset.0;
     let first_y = geometry.scale.unscale(first_scaled.1) + state.offset.1;
@@ -35,7 +34,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn tower_travel(
         first_position: !state.positioned,
         layer_change_travel: state.layer_change_travel_pending && state.positioned,
         slope_start_z: None,
-        target_z: target_z.unwrap_or(state.layer_z),
+        target_z: state.layer_z,
         travel_distance: (first_x - state.x).hypot(first_y - state.y),
     };
     approach::emit_needs_travel(output, state, request)?;

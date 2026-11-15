@@ -109,12 +109,6 @@ pub(super) fn object(
                 options.flush_into_objects.0 || options.flush_into_infill.0,
                 region_options.sparse_infill_filament_id.0,
             ),
-            // `ToolOrdering.cpp:160–163,3394–3405`: standalone GapFill uses wall gating.
-            (
-                usage.outer_wall_fill,
-                options.flush_into_objects.0,
-                region_options.outer_wall_filament_id.0,
-            ),
         ];
         // Upstream pushes the whole category block when ANY present fill
         // is non-overriddable (`something_nonoverriddable`, :718-733);
@@ -130,12 +124,8 @@ pub(super) fn object(
                     .map(|(_, _, id)| id as usize),
             );
         }
-        target.has_object |= usage.perimeters
-            || usage.outer_wall_fill
-            || usage.internal_solid
-            || usage.top
-            || usage.bottom
-            || usage.infill;
+        target.has_object |=
+            usage.perimeters || usage.internal_solid || usage.top || usage.bottom || usage.infill;
     }
 }
 

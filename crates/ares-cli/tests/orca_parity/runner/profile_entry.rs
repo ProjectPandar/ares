@@ -1,8 +1,5 @@
 //! Public profile entries against matched Native configuration-loading lifecycles.
 
-#[path = "profile_entry/applied_thumbnails.rs"]
-mod applied_thumbnails;
-
 #[path = "profile_entry/flattened.rs"]
 mod flattened;
 pub(super) use flattened::slice_flattened;

@@ -14,7 +14,7 @@ fn m1020_bills_filament_change_without_tool_change_bills_filament_change_without
         ("m1020-filament-change", UPSTREAM),
         "towerless-change",
         include_bytes!("../../../../../tests/parity/m1020-filament-change/towerless-change.3mf"),
-        "8a2a9b965621cff0a3a274bda6db68cf97a02f460c8ea9fe375a14c1dba099a7",
+        "80b5e4edce475ccd9555c9dff16feef04f62ba47ef61dbaa82fb10066851d29d",
         (false, |_, _| {}),
     );
 }

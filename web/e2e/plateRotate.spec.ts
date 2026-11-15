@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { aboutX, aboutZ, guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { aboutX, aboutZ, guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-rotate/", import.meta.url));
@@ -85,8 +85,7 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     fixture: FIXTURE,
     edits: ["rotate gizmo Z ring eighth sweep (fresh load after)", "Rotate (relative) Z 45", "Rotate (absolute) X 90"],
-    oracle: { command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)", official: oracleRun(oracle, 1, "official", legs.official),
-      seeded: oracleRun(oracle, 1, "seeded", legs.seeded) },
+    oracle: "OrcaSlicer 2.4.2 --slice 1 of the GUI-exported project (official and seed-replay seed 0)",
     evidence: "ordered_bytes_generator_only",
     results,
   }, null, 2)}\n`);

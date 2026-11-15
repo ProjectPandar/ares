@@ -1,5 +1,5 @@
 {
-  "upstreamRevision": "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+  "upstreamRevision": "345efec64c7b95a05ce5cf96df0dde66a158835c",
   "conversion": {
     "path": "src/slic3r/GUI/LibVGCode/LibVGCodeWrapper.cpp",
     "fileSha256": "150571e58634996482e72168df5e33f72acc654893d6c9772cdfa330374cce86"
@@ -52,44 +52,44 @@
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        4064,
-        4064
+        4105,
+        4105
       ],
       "excerptSha256": "d60bb2511a72abd83ce38419547c714c705d58461d4208a4fe46f213e3a6fca7"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        4333,
-        4341
+        4374,
+        4382
       ],
       "excerptSha256": "134a7488ccf157dffeb7b74281d864edb8a822325a68c8b080dd2333817e6b96"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        4565,
-        4577
+        4606,
+        4618
       ],
       "excerptSha256": "cb5f7f43be52e200207d76e50c36b9e6c061db64e57508e4adaa588f66c4a60a"
     },
     {
       "path": "src/slic3r/GUI/GCodeViewer.cpp",
-      "fileSha256": "fe0ebd3443b0dbe2996cf27f624918e26dddc6e06f070d072fe4037151009966",
+      "fileSha256": "14b7325041c1681c6706bdd524bf51c5555289ed9246df470a762592defce70b",
       "lines": [
-        4586,
-        4595
+        4627,
+        4636
       ],
       "excerptSha256": "3de4505260ea5d7846305596ab63c60eb4643b3c6bf456c3b04014c280c66eb4"
     }
   ],
   "files": {
     "kernel.upstream.hpp": "9e101ab1eeae6f1d6add9124dbbb51f1f65179ec5a45002064fedd4d9ba0ce7f",
-    "kernel.hpp": "9e0e6019dea28c0f728f859dedc47f5cbe355e8066742be4fcec8ca1aacb4a4e",
-    "kernel.diff": "32a6a61856d6650d46acdac0bbc64b3f4c02ef2399e6fae89b1c028aedcb34ae"
+    "kernel.hpp": "8012c302b75b6647d2b39743601af67a5e0205b28d64b189a771ef9880fc2fd8",
+    "kernel.diff": "ea7e7ead091c92593b8e368561457a4c7f29ccecc78df76f74d2708369cf3471"
   }
 }

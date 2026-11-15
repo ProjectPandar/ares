@@ -85,7 +85,6 @@ fn moonraker_extracts_native_duration_and_filament_from_public_exports() {
     let result = Command::new(&python)
         .arg("-I")
         .arg(&helper)
-        .arg(env!("CARGO_PKG_VERSION"))
         .arg(&parser)
         .arg(&pillow)
         .arg(&reference.root)

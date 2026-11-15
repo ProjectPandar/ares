@@ -15,47 +15,29 @@ import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/", import.meta.url));
 const fixture = `${repositoryRoot}tests/parity/orca_cli_ender3.3mf`;
-const endTravel = "G1 X50 Y{print_bed_max[1]*0.5} F3000";
 
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 
-/**
- * The fixture with one XY travel at 50 mm/s before the end G-code's present-print travel at
- * `travel_speed`. 2.5.0 `convert` starts a path when acceleration or jerk changes
- * (LibVGCodeWrapper.cpp:227-235), so only consecutive XY travels at different feedrates keep
- * differing Speed + Travel ends (`segmentColors.ts`); the plain fixture has none.
- */
-function travelSpeedsProject(): string {
-  const directory = `${artifacts}slice-input/`;
-  mkdirSync(directory, { recursive: true });
-  const entries = unzipSync(readFileSync(fixture));
-  const name = "Metadata/project_settings.config";
-  const config = JSON.parse(strFromU8(entries[name]));
-  const present = "G1 X5 Y{print_bed_max[1]*0.8} F{travel_speed*60} ; present print\n";
-  expect(config.machine_end_gcode).toContain(present);
-  entries[name] = strToU8(JSON.stringify({ ...config, machine_end_gcode: config.machine_end_gcode.replace(present, `${endTravel}\n${present}`) }));
-  const project = `${directory}orca_cli_ender3.3mf`;
-  writeFileSync(project, zipSync(entries));
-  return project;
-}
-
 /** Native reference: same project through ares-cli (built by `npm run test:e2e`). */
-function nativeGcode(project: string, plate: string): Buffer {
+function nativeGcode(plate: string): Buffer {
   const output = `${artifacts}native.gcode`;
-  execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", plate, "-o", output, project]);
+  execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", plate, "-o", output, fixture]);
   return readFileSync(output);
 }
 
 /**
- * Official OrcaSlicer slicing the project with the edit as typed CLI options, as the M854 oracle
- * crates/ares-cli/tests/orca_parity/runner/user_overrides.rs does. OrcaSlicer.cpp:4138-4223 records
- * the changed keys in different_settings_to_system like a GUI edit (PresetBundle.cpp:5586-5595);
- * an edit inside the project config keeps the project's column (OrcaSlicer.cpp:1896, :3202-3207).
+ * Official OrcaSlicer slicing a copy of the project whose `Metadata/project_settings.config`
+ * (bbs_3mf.cpp:210, loaded at :2647) carries the edit: the PresetBundle::full_config ->
+ * Print::apply path a GUI edit takes (Config.cpp:573 set_deserialize_nothrow, PrintApply.cpp:1113),
+ * as the M854 oracle crates/ares-cli/tests/orca_parity/runner/user_overrides.rs does.
  */
-function orcaEditedGcode(project: string, edit: Record<string, string>): string {
+function orcaEditedGcode(edit: Record<string, string>): string {
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-project-edit-`)}/`;
-  const options = Object.entries(edit).flatMap(([key, value]) => [`--${key.replaceAll("_", "-")}`, value]);
-  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, [...options, "--slice", "0", "--outputdir", work, project], {
+  const entries = unzipSync(readFileSync(fixture));
+  const config = "Metadata/project_settings.config";
+  entries[config] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[config])), ...edit }));
+  writeFileSync(`${work}edited.3mf`, zipSync(entries));
+  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, `${work}edited.3mf`], {
     cwd: work, stdio: ["ignore", "pipe", "pipe"],
   });
   const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
@@ -101,7 +83,7 @@ async function sliceTimings(page: Page, runs = 20) {
 
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
   // GCodeProcessor oracle (tools/chain-probe/procgcode.nix) of the toolpath preview.
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0 AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
   const oracle = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -116,8 +98,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   const engineReadyMs = Date.now() - loadStarted;
 
-  const project = travelSpeedsProject();
-  await page.getByTestId("import-input").setInputFiles(project);
+  await page.getByTestId("import-input").setInputFiles(fixture);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await expect(page.getByTestId("object-list").getByRole("treeitem")).not.toHaveCount(0);
   await expect(page.getByTestId("sidebar")).toContainText("Layer height");
@@ -144,7 +125,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   expect(text.match(/^;LAYER_CHANGE$/gm)?.length).toBe(50);
   expect(text).not.toMatch(/^G[0-3] .*\b(?:NaN|inf)\b/m);
 
-  const native = nativeGcode(project, "1");
+  const native = nativeGcode("1");
   expect(sha256(gcode), "browser G-code must match native ares-cli bytes").toBe(sha256(native));
 
   await page.getByRole("link", { name: "Preview" }).click();
@@ -191,9 +172,9 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
     await checkToolPosition(page, moves, 0, `${artifacts}project-edit/`);
   }
   if (orca) {
-    const nativeEdited = orcaEditedGcode(project, { layer_height: "0.12" });
+    const nativeEdited = orcaEditedGcode({ layer_height: "0.12" });
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
+      oracle: "official OrcaSlicer 2.5.0-beta on the project with the edit in Metadata/project_settings.config",
       evidence: "ordered_bytes_generator_only",
       edit: { layer_height: "0.12" },
       bytes: edited.length,
@@ -207,7 +188,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   writeFileSync(
     `${artifacts}result.json`,
     `${JSON.stringify({
-      fixture: "tests/parity/orca_cli_ender3.3mf", machineEndGcodeTravel: endTravel, bytes: gcode.length, sha256: sha256(gcode),
+      fixture: "tests/parity/orca_cli_ender3.3mf", bytes: gcode.length, sha256: sha256(gcode),
       engineReadyMs, firstSliceS, sliceMs, sliceMedianMs: [...sliceMs].sort((a, b) => a - b)[sliceMs.length >> 1],
     }, null, 2)}\n`,
   );

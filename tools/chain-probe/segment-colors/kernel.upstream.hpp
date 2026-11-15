@@ -81,8 +81,8 @@ static const std::array<Color, size_t(EOptionType::COUNT)> DEFAULT_OPTIONS_COLOR
     std::array<ColorRange, COLOR_RANGE_TYPES_COUNT> m_layer_time_range{
         ColorRange(EColorRangeType::Linear), ColorRange(EColorRangeType::Logarithmic)
     };
-    PaletteWithAlpha m_tool_colors;
-    PaletteWithAlpha m_color_print_colors;
+    Palette m_tool_colors;
+    Palette m_color_print_colors;
 const Color& ViewerImpl::get_extrusion_role_color(EGCodeExtrusionRole role) const
 {
     return m_extrusion_roles_colors[size_t(role)];
@@ -235,16 +235,13 @@ Color ViewerImpl::get_vertex_color(const PathVertex& v) const
     case EViewType::Tool:
     {
         assert(static_cast<size_t>(v.extruder_id) < m_tool_colors.size());
-        const ColorWithAlpha& color = m_tool_colors[v.extruder_id];
-        return { color[0], color[1], color[2] };
+        return m_tool_colors[v.extruder_id];
     }
     case EViewType::Summary: // ORCA
     case EViewType::ColorPrint:
     {
-        if (m_layers.layer_contains_colorprint_options(static_cast<size_t>(v.layer_id)))
-            return DUMMY_COLOR;
-        const ColorWithAlpha& color = m_color_print_colors[static_cast<size_t>(v.color_id) % m_color_print_colors.size()];
-        return { color[0], color[1], color[2] };
+        return m_layers.layer_contains_colorprint_options(static_cast<size_t>(v.layer_id)) ? DUMMY_COLOR :
+            m_color_print_colors[static_cast<size_t>(v.color_id) % m_color_print_colors.size()];
     }
     default: { break; }
     }

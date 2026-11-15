@@ -95,14 +95,10 @@ impl Generator<'_> {
             let change_interface_temperature =
                 interface && interface_temp > 0 && interface_temp != temperature;
             if change_interface_temperature {
-                writer.set_temperature(interface_temp, true, true);
+                writer.set_temperature(interface_temp, true);
             }
             if change_interface_temperature && cooldown {
-                writer.set_temperature(
-                    temperature,
-                    false,
-                    self.flavor != crate::GCodeFlavor::Klipper,
-                );
+                writer.set_temperature(temperature, false);
             }
             if interface && filament.interface_distance > 0.0 && filament.interface_length > 0.0 {
                 writer.extrude_explicit(
@@ -121,11 +117,7 @@ impl Generator<'_> {
             }
             self.wipe(&mut writer, bounds, volume, (interface, false, fill_box));
             if change_interface_temperature && !cooldown {
-                writer.set_temperature(
-                    temperature,
-                    false,
-                    self.flavor != crate::GCodeFlavor::Klipper,
-                );
+                writer.set_temperature(temperature, false);
             }
             writer.gcode.push_str("; WIPE_TOWER_END\n");
             self.tool_changes += 1;
@@ -153,16 +145,14 @@ impl Generator<'_> {
 
     pub(super) fn change(&mut self, writer: &mut Writer, tool: usize) {
         self.used_filament[self.current_tool] += writer.take_used_filament();
-        writer
-            .gcode
-            .push_str("[restore_layer_z_before_toolchange]\n[change_filament_gcode]\n");
+        writer.gcode.push_str("[change_filament_gcode]\n");
         if self.mk4_mmu3 {
             writer.switch_filament_monitoring(true);
         }
         let position = writer.rotated(writer.position);
         writer.feedrate(self.travel_speed * 60.0);
         writer.gcode.push_str(&format!(
-            "G1 X{} Y{}_GCODE_WIPE_TOWER_NEVER_SKIP_TAG\n[deretraction_from_wipe_tower_generator]\n",
+            "G1 X{} Y{}_GCODE_WIPE_TOWER_NEVER_SKIP_TAG\n[deretraction_from_wipe_tower_generator]",
             super::super::format_processor_float(f64::from(position[0])),
             super::super::format_processor_float(f64::from(position[1]))
         ));

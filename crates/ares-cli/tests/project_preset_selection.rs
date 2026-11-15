@@ -4,8 +4,6 @@ mod application;
 mod differences;
 #[path = "project_preset_selection/existing.rs"]
 mod existing;
-#[path = "project_preset_selection/filament_composition.rs"]
-mod filament_composition;
 #[path = "project_preset_selection/input.rs"]
 mod input;
 #[path = "project_preset_selection/local.rs"]
@@ -16,8 +14,6 @@ mod lookup;
 mod metadata;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
-#[path = "project_preset_selection/points_groups.rs"]
-mod points_groups;
 #[path = "project_preset_selection/support.rs"]
 mod support;
 #[path = "project_preset_selection/system.rs"]

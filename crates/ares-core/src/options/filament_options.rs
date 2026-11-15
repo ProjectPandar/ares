@@ -1,5 +1,4 @@
 mod gcode_source;
-mod preset_source;
 mod print_source;
 mod region_source;
 mod retract_overrides;
@@ -11,8 +10,6 @@ use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub use gcode_source::FilamentGCodeSourceOptions;
 use gcode_source::FilamentGCodeSourceOptionsBuilder;
-pub use preset_source::FilamentPresetSourceOptions;
-use preset_source::FilamentPresetSourceOptionsBuilder;
 use print_source::FilamentPrintSourceOptionsBuilder;
 pub use print_source::{FilamentPrintSourceOptions, RawOverhangFanThreshold};
 pub use region_source::FilamentRegionSourceOptions;
@@ -40,7 +37,6 @@ pub struct FilamentOptions {
     pub print: FilamentPrintSourceOptions,
     pub region: FilamentRegionSourceOptions,
     pub retract_overrides: FilamentRetractOverrideOptions,
-    pub preset: FilamentPresetSourceOptions,
     pub pellet_flow_coefficient: OrcaFloats,
 }
 
@@ -53,8 +49,6 @@ impl FilamentOptions {
             .restore_absent_defaults(defaults.region, &present);
         self.retract_overrides
             .restore_absent_defaults(defaults.retract_overrides, &present);
-        self.preset
-            .restore_absent_defaults(defaults.preset, &present);
         if !present("pellet_flow_coefficient") {
             self.pellet_flow_coefficient = defaults.pellet_flow_coefficient;
         }
@@ -67,7 +61,6 @@ impl FilamentOptions {
             region,
             retract_overrides,
             pellet_flow_coefficient,
-            preset: _,
         } = child;
         self.gcode.append(gcode);
         self.print.append(print);
@@ -125,7 +118,6 @@ pub(crate) struct FilamentOptionsBuilder {
     print: FilamentPrintSourceOptionsBuilder,
     region: FilamentRegionSourceOptionsBuilder,
     retract_overrides: FilamentRetractOverrideOptionsBuilder,
-    preset: FilamentPresetSourceOptionsBuilder,
     pellet_flow_coefficient: Option<OrcaFloats>,
 }
 
@@ -135,7 +127,6 @@ impl FilamentOptionsBuilder {
         self.print.overlay(child.print);
         self.region.overlay(child.region);
         self.retract_overrides.overlay(child.retract_overrides);
-        self.preset.overlay(child.preset);
         if let Some(value) = child.pellet_flow_coefficient {
             self.pellet_flow_coefficient = Some(value);
         }
@@ -179,9 +170,7 @@ impl FilamentOptionsBuilder {
             region,
             retract_overrides,
             pellet_flow_coefficient,
-            preset,
         } = self;
-        preset.apply_present(&mut target.preset);
         if let Some(value) = pellet_flow_coefficient {
             target.pellet_flow_coefficient = value;
         }
@@ -197,7 +186,6 @@ impl FilamentOptionsBuilder {
             || FilamentPrintSourceOptionsBuilder::is_known_field(key)
             || FilamentRegionSourceOptionsBuilder::is_known_field(key)
             || FilamentRetractOverrideOptionsBuilder::is_known_field(key)
-            || FilamentPresetSourceOptionsBuilder::is_known_field(key)
             || key == "pellet_flow_coefficient"
     }
 
@@ -213,7 +201,6 @@ impl FilamentOptionsBuilder {
             || self.print.deserialize_known_field(key, map)?
             || self.region.deserialize_known_field(key, map)?
             || self.retract_overrides.deserialize_known_field(key, map)?
-            || self.preset.deserialize_known_field(key, map)?
         {
             Ok(true)
         } else {
@@ -238,8 +225,6 @@ impl FilamentOptionsBuilder {
         } else if FilamentRetractOverrideOptionsBuilder::is_known_field(key) {
             self.retract_overrides
                 .deserialize_known_value(key, deserializer)
-        } else if FilamentPresetSourceOptionsBuilder::is_known_field(key) {
-            self.preset.deserialize_known_value(key, deserializer)
         } else if key == "pellet_flow_coefficient" {
             if self.pellet_flow_coefficient.is_some() {
                 return Err(serde::de::Error::custom(
@@ -285,7 +270,6 @@ impl FilamentOptionsBuilder {
             print: self.print.resolve(),
             region: self.region.resolve(),
             retract_overrides: self.retract_overrides.resolve(),
-            preset: self.preset.resolve(),
             pellet_flow_coefficient: self
                 .pellet_flow_coefficient
                 .unwrap_or_else(|| OrcaFloats(vec![OrcaFloat(0.4157)])),

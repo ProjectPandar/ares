@@ -5,8 +5,7 @@ import json
 import pathlib
 import sys
 
-ares_version = sys.argv[1]
-parser, pillow, output = map(pathlib.Path, sys.argv[2:5])
+parser, pillow, output = map(pathlib.Path, sys.argv[1:4])
 sys.path.insert(0, str(pillow))
 import PIL
 
@@ -16,7 +15,7 @@ spec.loader.exec_module(metadata)
 labels = ("native", "api", "cli", "wasm")
 exports = {
     label: metadata.extract_metadata(path, [])
-    for label, path in zip(labels, sys.argv[5:], strict=True)
+    for label, path in zip(labels, sys.argv[4:], strict=True)
 }
 keys = ("estimated_time", "filament_total", "filament_weight_total", "filament_weights")
 values = {
@@ -35,8 +34,7 @@ print(json.dumps(values, indent=2))
 for label, record in exports.items():
     expected_name = "OrcaSlicer" if label == "native" else "Ares"
     assert record.get("slicer") == expected_name, (label, "slicer", record.get("slicer"))
-    expected_version = "2.5.0" if label == "native" else ares_version
-    assert record.get("slicer_version") == expected_version, (label, "slicer_version")
+    assert record.get("slicer_version") == "2.5.0", (label, "slicer_version")
     assert all(key in record and record[key] is not None for key in keys), (
         label, "missing duration or filament metadata", values[label]
     )

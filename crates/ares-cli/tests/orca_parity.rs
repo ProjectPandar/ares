@@ -5,12 +5,11 @@
 //! Environment-gated: runs only when `ARES_ORCA_BIN` (or the repository
 //! wrapper `scripts/orca-parity.sh`) names a working OrcaSlicer CLI.
 
-#[path = "orca_parity/gcode_regression_cases.rs"]
-mod gcode_regression_cases;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
-#[path = "orca_parity/standalone_thin_gap_fill.rs"]
-mod standalone_thin_gap_fill;
+
+#[path = "orca_parity/gcode_regression_cases.rs"]
+mod gcode_regression_cases;
 
 #[path = "orca_parity/object_emission_cases.rs"]
 mod object_emission_cases;

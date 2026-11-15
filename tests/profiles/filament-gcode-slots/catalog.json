@@ -23,7 +23,6 @@
         "machine.json": {
           "from": "system",
           "instantiation": "true",
-          "layer_change_gcode": "G92 E0",
           "name": "Acme A1 0.4 nozzle",
           "nozzle_diameter": [
             "0.4"

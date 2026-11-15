@@ -1,5 +1,5 @@
 use super::super::{OrcaRunner, application, cache_identity, profile_entry, repo_root};
-use super::project_catalog_supply::{native_with_args, produce};
+use super::project_catalog_supply::{native, produce};
 use serde_json::json;
 
 #[test]
@@ -24,17 +24,13 @@ fn project_filament_refresh_vendor_miss_keeps_imported_slot_like_native() {
     let project = runner.work.join("input.3mf");
     std::fs::write(&project, &input).unwrap();
     let supply = produce(&runner);
-    // 2.5.0 PrintConfig.cpp:13160-13165 defaults to error-only logging; utils.cpp:160-192
-    // no longer forces info for release builds. Request warnings for OrcaSlicer.cpp:2806;
-    // PresetBundle.cpp:480's vendor-miss error alone does not cover that CLI warning.
     let references = (0..2)
         .map(|index| {
-            native_with_args(
+            native(
                 &runner,
                 &project,
                 Some(&supply.join("native")),
                 &format!("native-{index}"),
-                &["--debug", "2"],
             )
         })
         .collect::<Vec<_>>();

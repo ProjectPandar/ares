@@ -117,39 +117,6 @@ async fn imported_sparse_profile_pads_empty_filament_gcode_vectors() {
     assert_eq!(settings["filament_start_gcode"], json!([""]));
 }
 
-#[tokio::test]
-async fn vendor_profile_omitted_filament_gcodes_keep_registered_space_defaults() {
-    let (catalog, selection) = catalog_parts();
-    let catalog_json = catalog.to_string();
-    let selection_json = selection.to_string();
-    let overrides = ConfigOverrides::default();
-    let settings =
-        ares_core::profile_settings(stl(), request(&catalog_json, &selection_json, &overrides))
-            .await
-            .unwrap();
-    let settings = serde_json::to_value(settings).unwrap();
-    assert_eq!(settings["filament_end_gcode"], json!([" "]));
-    assert_eq!(settings["filament_start_gcode"], json!([" "]));
-}
-
-#[tokio::test]
-async fn vendor_profile_empty_filament_gcode_vectors_become_one_empty_slot() {
-    let (mut catalog, selection) = catalog_parts();
-    let filament = &mut catalog["vendors"][0]["files"]["filament.json"];
-    filament["filament_end_gcode"] = json!([]);
-    filament["filament_start_gcode"] = json!([]);
-    let catalog_json = catalog.to_string();
-    let selection_json = selection.to_string();
-    let overrides = ConfigOverrides::default();
-    let settings =
-        ares_core::profile_settings(stl(), request(&catalog_json, &selection_json, &overrides))
-            .await
-            .unwrap();
-    let settings = serde_json::to_value(settings).unwrap();
-    assert_eq!(settings["filament_end_gcode"], json!([""]));
-    assert_eq!(settings["filament_start_gcode"], json!([""]));
-}
-
 fn write_artifact(name: &str, bytes: &[u8]) {
     let root = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
     std::fs::create_dir_all(root).unwrap();
@@ -195,68 +162,4 @@ async fn overrides_win_over_preset_values() {
         "override must win over the preset value: {overridden}"
     );
     assert_ne!(plain, overridden, "the slice itself must change");
-}
-
-#[tokio::test]
-async fn typed_sparse_cli_empty_filament_gcodes_complete_slicing() {
-    let catalog: Value = serde_json::from_str(include_str!(
-        "../../../tests/profiles/filament-gcode-slots/catalog.json"
-    ))
-    .unwrap();
-    let machine = catalog["vendors"][0]["files"]["machine.json"].to_string();
-    let process = include_str!("../../../tests/profiles/filament-gcode-slots/cli-process.json");
-    let filament = include_str!("../../../tests/profiles/filament-gcode-slots/cli-filament.json");
-    write_artifact(
-        "runtime-inputs.json",
-        &serde_json::to_vec_pretty(&json!({
-            "machine": serde_json::from_str::<Value>(&machine).unwrap(),
-            "process": serde_json::from_str::<Value>(process).unwrap(),
-            "filament": serde_json::from_str::<Value>(filament).unwrap(),
-            "mesh": include_str!("../../../tests/profiles/filament-gcode-slots/sparse-runtime.stl")
-        }))
-        .unwrap(),
-    );
-    let mut sliced_plate = ares_core::SlicedPlate::default();
-    let gcode = ares_core::slice_with_load_settings(
-        include_bytes!("../../../tests/profiles/filament-gcode-slots/sparse-runtime.stl").to_vec(),
-        ares_core::LoadSettingsSliceRequest {
-            filename: "cube.stl",
-            catalog_json: None,
-            uptodate: false,
-            settings: &[
-                ares_core::LoadSettingsFile {
-                    label: "machine.json",
-                    json: &machine,
-                },
-                ares_core::LoadSettingsFile {
-                    label: "process.json",
-                    json: process,
-                },
-            ],
-            filaments: &[ares_core::LoadSettingsFile {
-                label: "filament.json",
-                json: filament,
-            }],
-            plate: None,
-            overrides: &ConfigOverrides::default(),
-            placement: ares_core::Placement::Center,
-            sliced_plate: &mut sliced_plate,
-        },
-        ares_core::GenerationMetadata::deterministic(2026, 11, 13, 0, 0, 0),
-        ares_core::SlicerContext::new(0),
-    )
-    .await
-    .unwrap();
-    write_artifact("runtime-empty.gcode", &gcode);
-    let gcode = String::from_utf8(gcode).unwrap();
-    for expected in [
-        "; filament_start_gcode = \"\"",
-        "; filament_end_gcode = \"\"",
-        "; single_extruder_multi_material = 1",
-    ] {
-        assert!(
-            gcode.lines().any(|line| line == expected),
-            "missing configuration line: {expected}"
-        );
-    }
 }

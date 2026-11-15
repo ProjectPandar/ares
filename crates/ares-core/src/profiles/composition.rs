@@ -188,7 +188,7 @@ pub(super) fn compose_resolved_profiles(
             unreachable!("filament merge changed profile kind")
         };
         filament_metadata.push(metadata);
-        filament_options.push(*options);
+        filament_options.push(options);
     }
 
     let (filament, variant_cardinalities) = if filament_options.is_empty() {
@@ -211,8 +211,8 @@ pub(super) fn compose_resolved_profiles(
 
     ComposedProfile {
         settings: ProjectSettings {
-            printer: *printer,
-            process: *process,
+            printer,
+            process,
             filament,
             project,
             metadata: PresetMetadata::default(),

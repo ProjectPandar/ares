@@ -14,7 +14,7 @@ use super::invalid;
 use super::{Catalog, ComposedSelection};
 use crate::{
     SliceError,
-    options::{FilamentOptions, ProjectRuntimeOptionsBuilder},
+    options::ProjectRuntimeOptionsBuilder,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
@@ -72,16 +72,13 @@ impl Catalog {
             .iter()
             .map(|name| {
                 let mut filament_raw = ProjectSettingsRaw::default();
-                let mut merged =
+                let merged =
                     self.merge(ProfileKind::Filament, name, &mut filament_raw, &mut runtime)?;
-                let MergedProfile::Filament { options, .. } = &mut merged else {
-                    unreachable!("filament merge changed profile kind")
-                };
                 // `load_default_gcodes_to_config(config, TYPE_FILAMENT)`
-                // (`OrcaSlicer.cpp:3590,710-728`): an empty filament
+                // (`OrcaSlicer.cpp:3150,587-606`): an empty filament
                 // start/end G-code vector is resized to one empty slot.
                 insert_default_options(&mut filament_raw, &FILAMENT_GCODE_KEYS);
-                resize_empty_filament_gcodes(&mut filament_raw, options);
+                resize_empty_filament_gcodes(&mut filament_raw);
                 if self.direct_imports {
                     // CLI::run creates this option per loaded file slot before variant matching.
                     // OrcaSlicer.cpp:3625-3635.
@@ -219,7 +216,7 @@ impl Catalog {
             let MergedProfile::Machine { options, .. } = &mut merged else {
                 unreachable!("machine selection has a machine payload")
             };
-            **options = printer.resolve();
+            *options = printer.resolve();
             runtime.overlay(project);
         }
         if !self.is_user_scope(position) {
@@ -235,19 +232,10 @@ impl Catalog {
     }
 }
 
-/// OrcaSlicer.cpp:710-728, `load_default_gcodes_to_config(TYPE_FILAMENT)`:
-/// resize empty start/end G-code vectors in both raw and merged filament options.
-fn resize_empty_filament_gcodes(raw: &mut ProjectSettingsRaw, filament: &mut FilamentOptions) {
-    for (key, gcodes) in [
-        (
-            "filament_start_gcode",
-            &mut filament.gcode.filament_start_gcode.0,
-        ),
-        (
-            "filament_end_gcode",
-            &mut filament.gcode.filament_end_gcode.0,
-        ),
-    ] {
+/// OrcaSlicer.cpp:588-605, `load_default_gcodes_to_config(TYPE_FILAMENT)`:
+/// resize empty start/end G-code vectors to one empty string.
+fn resize_empty_filament_gcodes(raw: &mut ProjectSettingsRaw) {
+    for key in FILAMENT_GCODE_KEYS {
         let empty = match raw.get(key).unwrap() {
             RawConfigValue::Text(token) => matches!(
                 crate::options::json_deserialize::decode(crate::OptionValueKind::Strings, token)
@@ -260,8 +248,7 @@ fn resize_empty_filament_gcodes(raw: &mut ProjectSettingsRaw, filament: &mut Fil
         if !empty {
             continue;
         }
-        gcodes.resize(1, String::new());
-        raw.insert_strings(key, gcodes);
+        raw.insert_strings(key, &[String::new()]);
     }
 }
 

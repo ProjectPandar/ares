@@ -6,14 +6,6 @@ use wasm_bindgen::prelude::*;
 
 pub use catalog::PresetCatalog;
 
-#[wasm_bindgen(js_name = resolveDefaultBedType)]
-pub fn resolve_default_bed_type(hint: String, model_id: &str) -> String {
-    ares_core::DefaultBedType(hint)
-        .resolve(model_id)
-        .as_str()
-        .to_owned()
-}
-
 #[wasm_bindgen(js_name = parsePresetBundle)]
 pub fn parse_preset_bundle(input: Vec<u8>, filename: String) -> Result<String, JsValue> {
     parse_preset_bundle_json(&input, &filename).map_err(|error| JsValue::from_str(&error))

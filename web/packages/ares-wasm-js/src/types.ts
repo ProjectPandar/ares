@@ -131,15 +131,6 @@ export interface ProfileSelection {
   filaments: string[];
 }
 
-/**
- * The project's own presets in place of selected ones: each key the project lacks comes from its
- * system preset in the catalog, or the option default when the catalog does not hold it
- * (OrcaSlicer.cpp:3167-3200).
- */
-export interface ProjectPresetSelection {
-  from_project: true;
-}
-
 /** A status of a running slice (`PrintBase::SlicingStatus`): its progress and the current stage. */
 export interface SlicingStatus {
   percent: number;

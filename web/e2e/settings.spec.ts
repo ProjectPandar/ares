@@ -96,16 +96,7 @@ async function checkTab(page: Page, scope: Locator, scroller: Locator, name: key
     for (const [index, layout] of pages.entries()) {
       await scope.getByRole("tab", { name: layout.title, exact: true }).click();
       await expect(scope.getByRole("tab", { name: layout.title, exact: true })).toHaveAttribute("aria-selected", "true");
-      // Tab.cpp:6280-6297 binds Extruder controls to extruder_idx; Field.cpp:163-185 prints key[idx].
-      const extruder = name === "printer" && layout.title === "Extruder";
-      const slot = name === "filament" || extruder ? 0 : undefined;
-      const indexed = extruder ? {
-        ...layout,
-        groups: layout.groups.map((group) => ({
-          ...group, rows: group.rows.map((row) => row.kind === "option" ? { ...row, index: slot } : row),
-        })),
-      } : layout;
-      const expected = expectedPage(defs, indexed, mode, config, TYPED[name], slot);
+      const expected = expectedPage(defs, layout, mode, config, TYPED[name], name === "filament" ? 0 : undefined);
       await expect(scope.locator(".optgroup-title")).toHaveText(expected.groups);
       const fields = await renderedFields(scope);
       // Values are checked where the oracle knows them (all but untyped whole-vector texts).

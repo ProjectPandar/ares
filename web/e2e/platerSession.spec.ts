@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
 import { build, preview } from "vite";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { aboutZ, guiExport, matrix, oracleRun, orcaPlate, type OraclePlate } from "./platerOracle";
+import { aboutZ, guiExport, matrix, orcaPlate, type OraclePlate } from "./platerOracle";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -48,8 +48,8 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
 
     const loaded = await call<Layout>(page, "load", [...readFileSync(`${repositoryRoot}${FIXTURE}`)], "two-plates.3mf");
     expect(platesOf(loaded)).toEqual([
-      { id: 1, origin: [0, 0], instances: [[2, 0, 14]], locked: false },
-      { id: 2, origin: [STRIDE, 0], instances: [[3, 0, 15]], locked: false },
+      { id: 1, origin: [0, 0], instances: [[2, 0, 14]] },
+      { id: 2, origin: [STRIDE, 0], instances: [[3, 0, 15]] },
     ]);
 
     // Selection::translate + do_move: object 2 onto plate 2 (notify_instance_update reassigns it).
@@ -71,8 +71,8 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
     // delete_plate: later plates and their instances move up one place.
     layout = await call<Layout>(page, "deletePlate", 0);
     expect(platesOf(layout)).toEqual([
-      { id: 1, origin: [0, 0], instances: [[2, 0, 14], [3, 0, 15]], locked: false },
-      { id: 2, origin: [STRIDE, 0], instances: [], locked: false },
+      { id: 1, origin: [0, 0], instances: [[2, 0, 14], [3, 0, 15]] },
+      { id: 2, origin: [STRIDE, 0], instances: [] },
     ]);
     const moved = matrix([], [50, 60, 5]);
     const rotated = matrix([aboutZ(45)], [110, 95.5, 5]);
@@ -91,8 +91,7 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
       fixture: FIXTURE,
       edits: ["translate object 2 onto plate 2", "position object 3 Y 95.5", "rotate object 3 Z 45", "add plate", "delete plate 1"],
-      oracle: { command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)", official: oracleRun(project, 1, "official", legs.official),
-        seeded: oracleRun(project, 1, "seeded", legs.seeded) },
+      oracle: "OrcaSlicer 2.4.2 --slice 1 of the GUI-exported project (official and seed-replay seed 0)",
       evidence: "ordered_bytes_generator_only",
       plates: platesOf(layout),
       bytes: gcode.length,

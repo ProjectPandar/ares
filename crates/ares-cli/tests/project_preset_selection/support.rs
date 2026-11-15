@@ -295,21 +295,17 @@ fn scalar(value: &Value) -> String {
     }
 }
 
-pub fn wire(key: &str, value: &Value) -> String {
+fn wire(key: &str, value: &Value) -> String {
     match value {
-        // ConfigBase::load_from_json (Config.cpp:1032-1052): strings are quoted and
-        // ';'-joined, points groups '#'-joined, other vectors ','-joined.
         Value::Array(values) => {
-            match ares_core::option_definition(key).map(|definition| definition.kind) {
-                Some(OptionValueKind::Strings) => values
+            if ares_core::option_definition(key).unwrap().kind == OptionValueKind::Strings {
+                values
                     .iter()
                     .map(|value| serde_json::to_string(value).unwrap())
                     .collect::<Vec<_>>()
-                    .join(";"),
-                Some(OptionValueKind::PointsGroups) => {
-                    values.iter().map(scalar).collect::<Vec<_>>().join("#")
-                }
-                _ => values.iter().map(scalar).collect::<Vec<_>>().join(","),
+                    .join(";")
+            } else {
+                values.iter().map(scalar).collect::<Vec<_>>().join(",")
             }
         }
         value => scalar(value),

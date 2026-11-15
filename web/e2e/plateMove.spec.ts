@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
-import { guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { guiExport, matrix, orcaPlate, probedTowers } from "./platerOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-move/", import.meta.url));
@@ -91,8 +91,7 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
     fixture: FIXTURE,
     edits: ["drag along X", "move gizmo X arrow", "Position X 145.5", "Position Y 95.5", "Position Z 12 drops to 5"],
-    oracle: { command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)", official: oracleRun(oracle, 1, "official", legs.official),
-      seeded: oracleRun(oracle, 1, "seeded", legs.seeded) },
+    oracle: "OrcaSlicer 2.4.2 --slice 1 of the GUI-exported project (official and seed-replay seed 0)",
     evidence: "ordered_bytes_generator_only",
     results,
   }, null, 2)}\n`);

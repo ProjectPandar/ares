@@ -112,9 +112,7 @@ pub(super) fn typed(key: &str, raw: &RawConfigValue) -> Result<Typed, SliceError
                 value => scalar(value),
             })
             .collect::<Result<Vec<_>, _>>()?
-            // ConfigOptionPointsGroups::serialize (Config.hpp:1725-1735) joins groups with
-            // '#', which deserialize splits on (:1748-1773).
-            .join("#"),
+            .join(";"),
         RawConfigValue::List(values) => values
             .iter()
             .map(scalar)

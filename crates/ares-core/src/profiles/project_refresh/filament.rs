@@ -17,27 +17,22 @@ pub(super) fn apply(
         return Ok(());
     }
     let count = filaments.len();
-    let last_id = i32::try_from(count).unwrap();
     let mut ids = preset::strings(project, "filament_self_index")
         .iter()
         .map(|value| {
             value
-                .parse::<i32>()
+                .parse::<usize>()
                 .map_err(|error| SliceError::InvalidInput(error.to_string()))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    // OrcaSlicer.cpp:3534–3547 regenerates stale indices before saving old ranges.
-    if ids.len() < count
-        || ids.iter().any(|id| *id < 1)
-        || ids.iter().copied().max().unwrap_or(0) != last_id
-    {
-        ids = (1..=last_id).collect();
+    for index in ids.len()..count {
+        ids.push(index + 1);
     }
     let mut groups = Vec::new();
     for id in &ids {
         if groups
             .last()
-            .is_some_and(|(previous, _): &(i32, usize)| previous == id)
+            .is_some_and(|(previous, _): &(usize, usize)| previous == id)
         {
             groups.last_mut().unwrap().1 += 1;
         } else {

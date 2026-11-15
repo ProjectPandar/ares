@@ -150,6 +150,13 @@ function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boo
 }
 
 /**
+ * Preset dependency keys (`Preset::print_options` / `filament_options` compatibility lists) that
+ * the `loadScene` project settings do not carry, so Ares hides their Dependencies rows. Every
+ * other option exists in a full `DynamicPrintConfig`, keys missing from the 3MF at their default.
+ */
+const NOT_IN_SCENE = new Set(["compatible_printers", "compatible_printers_condition", "compatible_prints", "compatible_prints_condition"]);
+
+/**
  * Groups and fields a page shows in `mode`; values are checked where the scene stores them,
  * typed ones against the native decode.
  */
@@ -158,10 +165,11 @@ export function expectedPage(
 ) {
   const groups: string[] = [];
   const fields: ExpectedField[] = [];
+  const shown = ({ key }: LayoutOption) => !NOT_IN_SCENE.has(key);
   for (const group of page.groups) {
-    const rows = group.rows.filter((row) => lineVisible(defs, row, mode));
+    const rows = group.rows.filter((row) => lineVisible(defs, row, mode) && rowOptions(row).some(shown));
     if (rows.length) groups.push(group.title);
-    for (const option of rows.flatMap(rowOptions)) fields.push(expectedField(defs.get(option.key)!, option, config[option.key], typed[option.key], slot));
+    for (const option of rows.flatMap(rowOptions).filter(shown)) fields.push(expectedField(defs.get(option.key)!, option, config[option.key], typed[option.key], slot));
   }
   return { groups, fields };
 }
