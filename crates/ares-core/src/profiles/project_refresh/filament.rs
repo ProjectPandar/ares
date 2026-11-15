@@ -115,6 +115,55 @@ pub(super) fn apply(
     Ok(())
 }
 
+pub(crate) fn loaded_filament_ordinary_values(
+    filaments: &[ProjectSettingsRaw],
+) -> Result<ProjectSettingsRaw, SliceError> {
+    use std::collections::{BTreeMap, btree_map::Entry};
+
+    let mut slots: BTreeMap<String, Vec<RawConfigValue>> = BTreeMap::new();
+    for (slot, config) in filaments.iter().enumerate() {
+        for (key, source) in config.entries() {
+            if SKIPPED_BY_SET_AT.contains(&key.as_str())
+                || dev_key(key)
+                || crate::filament_options_with_variant().contains(&key.as_str())
+                || !crate::option_definition(key)
+                    .is_some_and(|definition| is_vector(definition.kind))
+            {
+                continue;
+            }
+            let first = source.element(0).ok_or_else(|| {
+                SliceError::InvalidInput(
+                    "ConfigOptionVector::set_at(): Assigning from an empty vector".to_owned(),
+                )
+            })?;
+            let values = match slots.entry(key.clone()) {
+                Entry::Occupied(entry) => entry.into_mut(),
+                Entry::Vacant(entry) => entry.insert(vector(&keys::default_value(key)?.unwrap())),
+            };
+            // OrcaSlicer.cpp:3770–3771; Config.hpp:450–473.
+            if values.len() <= slot {
+                values.resize(slot + 1, values[0].clone());
+            }
+            values[slot] = first.clone();
+        }
+    }
+    let mut raw = ProjectSettingsRaw::default();
+    raw.extend(
+        slots
+            .into_iter()
+            .map(|(key, values)| (key, RawConfigValue::List(values))),
+    );
+    Ok(raw)
+}
+
+const SKIPPED_BY_SET_AT: &[&str] = &[
+    "compatible_prints",
+    "compatible_printers",
+    "model_id",
+    "dev_model_name",
+    "filament_settings_id",
+];
+
 fn normalize_variants(
     result: &mut ProjectSettingsRaw,
     filaments: &[Option<ProjectSettingsRaw>],
