@@ -86,7 +86,7 @@ fn check(name: &str) {
     let reference = profile_entry::native_user_presets::slice_stl(
         &runner,
         &native_presets,
-        &runner.work.join("filament.json"),
+        &runner.work.join(input_filename),
         "native",
         &overrides_json,
     );
