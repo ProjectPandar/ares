@@ -116,9 +116,9 @@ pub struct PrintEstimatedStatistics {
     pub flush_per_filament: Vec<f64>,
     /// `PrintStatistics::total_used_filament` (mm).
     pub total_used_filament: f64,
-    /// `modes[Normal].time`: `GCodeProcessor::get_time` narrows the
-    /// machine time to float (`GCodeProcessor.cpp:2722-2725, 6019-6020`).
-    pub normal_time: f32,
+    /// `modes[Normal].time`: double machine time returned without narrowing
+    /// (`GCodeProcessor.hpp:96,843`, `GCodeProcessor.cpp:4032-4034`).
+    pub normal_time: f64,
     /// `modes[Normal].prepare_time`: f32 sum of the `flags.prepare_stage`
     /// block times (`GCodeProcessor.cpp:475-476`), copied by
     /// `update_estimated_times_stats` (`:6016-6022`).
