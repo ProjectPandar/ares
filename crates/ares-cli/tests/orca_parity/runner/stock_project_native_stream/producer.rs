@@ -20,6 +20,9 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
     .all(|(key, value)| std::env::var_os(key).as_deref() == Some(value))
         && std::env::var("ORCA_REPLAY_SEED").as_deref() == Ok("0");
     if !selected {
+        let replay_cpu = std::env::var_os("ORCA_REPLAY_CPU").expect(
+            "ORCA_REPLAY_CPU must be supplied by the outer runner to preserve lane affinity",
+        );
         let artifacts = tempfile::Builder::new()
             .prefix("ksr-initialized-dispatch-")
             .tempdir_in(root)
@@ -33,7 +36,7 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
             .env("ARES_ORCA_RESOURCES_DIR", &resources)
             .env("ORCA_REPLAY_BIN", &bin)
             .env("ORCA_REPLAY_SEED", "0")
-            .env("ORCA_REPLAY_CPU", "0")
+            .env("ORCA_REPLAY_CPU", replay_cpu)
             .output()
             .unwrap();
         fs::write(artifacts.join("child.stdout"), &output.stdout).unwrap();
