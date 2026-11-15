@@ -100,7 +100,7 @@ impl ProfileSelection {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ComposedProfile {
-    settings: ProjectSettings,
+    pub(super) settings: ProjectSettings,
     metadata: ProfileGroupMetadata,
     process: String,
     machine: String,
