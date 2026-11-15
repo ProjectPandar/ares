@@ -6,6 +6,7 @@ import { AboutDialog } from "./AboutDialog";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
 import { MultipartDialog } from "./MultipartDialog";
+import { EngineCrashDialog } from "./EngineCrashDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
 import { TabBar, TitleBar } from "./TopBar";
@@ -87,6 +88,7 @@ export function Shell() {
           onClose={() => useApp.setState((state) => (state.stlImport?.id === stlImport.id ? { stlImport: null } : {}))} />
       )}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <EngineCrashDialog />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
       {wizard && (
         <Suspense>
