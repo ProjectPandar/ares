@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the extracted OrcaSlicer 2.5.0-beta AppImage binary for the parity harness
+# Runs the explicitly selected OrcaSlicer AppImage binary for the parity harness
 # by assembling a host LD_LIBRARY_PATH from nixpkgs runtime libraries.
 #
 # Set ORCA_APPDIR to the explicitly selected extraction directory.
@@ -14,7 +14,7 @@ if [ -z "${ORCA_APPDIR:-}" ] && [ -n "${ARES_PARITY_ENV:-}" ]; then
     set +a
 fi
 if [ -z "${ORCA_APPDIR:-}" ]; then
-    echo "ORCA_APPDIR must name an explicitly selected v2.5.0-beta extraction (or set ARES_PARITY_ENV)" >&2
+    echo "ORCA_APPDIR must name an explicitly selected reference extraction (or set ARES_PARITY_ENV)" >&2
     exit 127
 fi
 APPDIR="$ORCA_APPDIR"
