@@ -162,14 +162,16 @@ impl Catalog {
         } else {
             self.resolved_layers(position)?
         };
-        // PresetBundle.cpp:7627-7641 starts resolved vendor presets from collection defaults.
+        // Preset.cpp:1925–1944 / PresetBundle.cpp:7827–7839 carry collection defaults
+        // through resolved user and vendor presets.
         let completed_vendor = matches!(self.records[position].scope, super::Scope::Vendor(_))
             && self.document(position).instantiation.as_deref() == Some("true");
-        let mut defaults = if completed_vendor {
-            super::super::project_refresh::default_preset_fields(kind)?
-        } else {
-            Default::default()
-        };
+        let mut defaults =
+            if completed_vendor || (!self.direct_imports && self.is_user_scope(position)) {
+                super::super::project_refresh::default_preset_fields(kind)?
+            } else {
+                Default::default()
+            };
         raw.extend(
             defaults
                 .iter()
