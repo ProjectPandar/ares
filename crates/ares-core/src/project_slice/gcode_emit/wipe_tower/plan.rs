@@ -133,14 +133,14 @@ impl Plan {
             self.perimeter_width * filament.ramming_width,
             height,
         );
-        let ramming_depth = if self.ramming {
+        let do_ramming = (self.semm && self.ramming) || filament.multitool_ramming;
+        let ramming_depth = if do_ramming {
             ((length / width) as i32 + 1) as f32
                 * (self.perimeter_width * filament.ramming_width * filament.ramming_step)
                 * self.ramming_spacing
         } else {
             0.0
         };
-        let do_ramming = (self.semm && self.ramming) || filament.multitool_ramming;
         let boundary_wipe_start = do_ramming && !self.semm && self.use_gap_wall;
         let first_wipe_line = if do_ramming && !boundary_wipe_start {
             -(width * (length / width - (length / width) as i32 as f32) - width)
