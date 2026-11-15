@@ -24,7 +24,7 @@ fn is_part_structural_metadata(key: &str) -> bool {
     )
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
 pub(crate) struct ModelSettings {
     #[serde(rename = "object", default)]
