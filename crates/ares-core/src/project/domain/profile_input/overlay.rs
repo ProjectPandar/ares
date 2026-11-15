@@ -2,6 +2,7 @@
 //! (`OrcaSlicer.cpp:2750-2812,3155-3161,3259-3271,3301`).
 
 mod cli_bookkeeping;
+mod device;
 mod identity_slots;
 mod variant;
 
@@ -139,6 +140,9 @@ pub(super) fn merged_profile_raw(
     // so that case is bounded to synthetic inputs.
     let mut inserts: Vec<(String, RawConfigValue)> = Vec::new();
     for key in &filament_keys {
+        if device::is_key(key) {
+            continue;
+        }
         let values =
             if crate::options::registry::filament_options_with_variant().contains(&key.as_str()) {
                 variant_values(embedded_raw, filament_raws, key, selected)
@@ -345,6 +349,7 @@ pub(super) fn merged_profile_raw(
         merged.insert(key, value);
     }
 
+    device::apply(&mut merged, filament_raws, selected == embedded_count)?;
     Ok(merged)
 }
 
