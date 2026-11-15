@@ -11,6 +11,7 @@ use crate::SliceError;
 
 impl Catalog {
     pub(in crate::profiles) fn from_json(input: &str) -> Result<Self, SliceError> {
+        let input = input.strip_prefix('\u{feff}').unwrap_or(input);
         let input: CatalogInput = serde_json::from_str(input).map_err(invalid_json)?;
         let mut catalog = Self::empty();
         for vendor in input.vendors {
