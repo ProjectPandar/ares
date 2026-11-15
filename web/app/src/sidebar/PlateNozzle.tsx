@@ -5,8 +5,8 @@ import { useApp } from "../state/store";
 import { firstString } from "./options";
 
 /**
- * The plate type and machine variant selectors of the plater printer panel
- * (Plater.cpp:1120-1140, 3015-3048). Bambu dual printers use their left/right controls.
+ * The plate type combo (`combo_printer_bed`) and, for a single-extruder printer, the nozzle
+ * diameter combo (`combo_nozzle_dia`) of the plater printer panel (Plater.cpp:641-652).
  */
 export function PlateNozzle({ settings }: { settings: ProjectSettings | null }) {
   const panel = useApp((state) => state.printerPanel);
@@ -17,7 +17,6 @@ export function PlateNozzle({ settings }: { settings: ProjectSettings | null }) 
   const options = bedTypeOptions(def, panel);
   const bedType = selection ? selection.bedType : (edited as string | undefined) ?? firstString(settings?.project, "curr_bed_type");
   const nozzle = nozzleOptions(panel, 0);
-  const multiExtruderVariant = !panel.bbl && panel.nozzleDiameters.length > 1;
   return (
     <>
       {showsBedTypes(panel) && (
@@ -29,10 +28,10 @@ export function PlateNozzle({ settings }: { settings: ProjectSettings | null }) 
           </select>
         </label>
       )}
-      {(panel.nozzleDiameters.length < 2 || multiExtruderVariant) && (
+      {panel.nozzleDiameters.length < 2 && (
         <label className="kv-row">
-          <span>{multiExtruderVariant ? "Variant" : "Nozzle"}</span>
-          <select className="option-select printer-select" aria-label={multiExtruderVariant ? "Variant" : "Nozzle diameter"} value={nozzle.selected}
+          <span>Nozzle</span>
+          <select className="option-select printer-select" aria-label="Nozzle diameter" value={nozzle.selected}
             onChange={(event) => void selectDiameter(panel, event.target.value)}>
             {nozzle.options.map((diameter) => <option key={diameter} value={diameter}>{`${diameter} mm`}</option>)}
           </select>

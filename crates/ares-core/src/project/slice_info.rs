@@ -1,12 +1,12 @@
 use serde::Deserialize;
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
 pub(crate) struct SliceInfo {
     pub header: SliceInfoHeader,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct SliceInfoHeader {
     #[serde(rename = "header_item", default)]
     pub items: Vec<SliceInfoHeaderItem>,

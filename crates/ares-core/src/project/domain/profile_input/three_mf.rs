@@ -1,6 +1,6 @@
 use super::{
-    OverlayContext, Project, SelectedProfile, SliceError, machine_switch, mapped_prime_tower,
-    merged_profile_raw, shift_wipe_tower, shrink_to_new_bed_offset,
+    OverlayContext, Project, ProjectSettingsBuilder, SelectedProfile, SliceError, machine_switch,
+    mapped_prime_tower, merged_profile_raw, shift_wipe_tower, shrink_to_new_bed_offset,
 };
 
 impl Project {
@@ -115,9 +115,9 @@ impl Project {
         // "printable_height")`/`opt<ConfigOptionPoints>(
         // "printable_area")` over the fully parsed config
         // (`OrcaSlicer.cpp:3711,3708`), `PrintConfigDef` defaults included.
-        let mut resolved = crate::options::json_deserialize::deserialize_config_values(
-            merged.clone().into_object(),
-        )
+        let mut resolved = crate::options::json_deserialize::deserialize_preset_config::<
+            ProjectSettingsBuilder,
+        >(merged.clone().into_object())
         .map_err(|error| {
             SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
         })?
@@ -139,9 +139,9 @@ impl Project {
             project.translate_all_instances(offset);
             shift_wipe_tower(&mut merged, offset);
             // The shifted wipe tower reaches the typed view too.
-            resolved = crate::options::json_deserialize::deserialize_config_values(
-                merged.clone().into_object(),
-            )
+            resolved = crate::options::json_deserialize::deserialize_preset_config::<
+                ProjectSettingsBuilder,
+            >(merged.clone().into_object())
             .map_err(|error| {
                 SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
             })?

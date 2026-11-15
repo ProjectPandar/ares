@@ -105,10 +105,6 @@ impl Project {
         &self.plates
     }
 
-    pub(crate) fn initialize_plate(&mut self, instances: Vec<[u32; 3]>) {
-        self.plates = vec![PlateMetadata::new(1, instances)];
-    }
-
     /// The selected plate's grid origin (`PartPlateList::compute_origin`,
     /// `PartPlate.cpp:3914-3921`). Zero for unselected projects.
     pub(crate) fn plate_origin(&self) -> (f64, f64) {
