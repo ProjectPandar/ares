@@ -1,6 +1,6 @@
-//! Config.cpp:945-1001 joins JSON arrays before ConfigOptionFloat reads a
-//! numeric prefix (Config.hpp:784). Exercise the inherited user-preset path
-//! with the existing LH whole-file control and matching raw vendor/user inputs.
+//! Preset.cpp:313–368 completes inherited process vectors against the process
+//! variant layout. Compare authored arrays through the public slice API and Native;
+//! a Native-only singleton control checks the reference normalization.
 use std::fs;
 
 use ares_core::{ConfigOverrides, Placement, ProfileSliceRequest};
@@ -118,6 +118,25 @@ async fn inherited_user_process_scalar_array_whole_file() {
             }
         };
         fs::write(path(&format!("ares-{label}.gcode")), &actual).unwrap();
+        let text = String::from_utf8_lossy(&actual);
+        let columns = text
+            .lines()
+            .filter(|line| {
+                [
+                    "; bridge_speed = ",
+                    "; print_extruder_id = ",
+                    "; print_extruder_variant = ",
+                ]
+                .iter()
+                .any(|prefix| line.starts_with(prefix))
+            })
+            .collect::<Vec<_>>();
+        write_json(
+            &runner
+                .work
+                .join(format!("ares-process-columns-{label}.json")),
+            &json!({"columns": columns}),
+        );
         if let Err(difference) =
             crate::golden::compare_ordered_bytes_generator_only(reference, &actual)
         {
