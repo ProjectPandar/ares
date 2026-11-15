@@ -35,6 +35,7 @@ pub async fn slice_plater_plate(
             plate: slice.plate,
             profile: None,
             refresh: None,
+            system_catalog: None,
             overrides: slice.overrides,
             validate_print: slice.validate_print,
             validate_config: false,

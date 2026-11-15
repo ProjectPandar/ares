@@ -43,6 +43,16 @@ pub async fn slice_cli_project_plate_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_cli_project_plate_validated_with_catalog(input, request, metadata, None, context).await
+}
+
+pub async fn slice_cli_project_plate_validated_with_catalog(
+    input: impl AsRef<[u8]>,
+    request: CliProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    system_catalog: Option<&crate::PresetCatalogHandle>,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
     let CliProjectSliceRequest {
         plate,
         overrides,
@@ -65,6 +75,7 @@ pub async fn slice_cli_project_plate_validated(
             orient,
             upward: Some(upward),
             sliced_plate: Some(sliced_plate),
+            system_catalog,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -87,6 +98,7 @@ pub async fn slice_project_plate_validated(
             plate,
             profile: None,
             refresh: None,
+            system_catalog: None,
             overrides,
             validate_print: true,
             validate_config: true,
@@ -116,6 +128,7 @@ pub async fn slice_project_plate_processed_validated(
             plate,
             profile: None,
             refresh: None,
+            system_catalog: None,
             overrides,
             validate_print: true,
             validate_config: true,
