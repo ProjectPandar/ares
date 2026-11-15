@@ -2,6 +2,8 @@
 
 use std::borrow::Cow;
 
+use crate::geometry::CoordinateScale;
+
 use super::*;
 
 pub(super) fn post_loop_destination(
@@ -21,7 +23,7 @@ pub(super) fn post_loop_destination(
     {
         return None;
     }
-    let last_points = clipped_last(last, end_clip / geometry.scale.factor());
+    let last_points = clipped_last(last, end_clip / geometry.scale.factor(), geometry.scale);
     if last_points.len() < 2 {
         return None;
     }
@@ -65,7 +67,7 @@ pub(super) fn append_inward_move(
     state.last_position_defined = true;
 }
 
-fn clipped_last(path: &ExtrusionPath, distance: f64) -> Cow<'_, [Point3]> {
+fn clipped_last(path: &ExtrusionPath, distance: f64, scale: CoordinateScale) -> Cow<'_, [Point3]> {
     let points = &path.polyline.points;
     if path.z_contoured {
         return super::super::path::contour::clipped(points, distance);
@@ -80,6 +82,22 @@ fn clipped_last(path: &ExtrusionPath, distance: f64) -> Cow<'_, [Point3]> {
         let last = points.last_mut().unwrap();
         last.x = x;
         last.y = y;
+    }
+    if !path.polyline.fitting.is_empty() {
+        let mut local_points = points
+            .iter()
+            .map(|point| (scale.unscale(point.x), scale.unscale(point.y)))
+            .collect::<Vec<_>>();
+        let mut fitting = path.polyline.fitting.clone();
+        let pre_projected = local_points.last().copied();
+        super::super::arc::clip_fitting_end(&mut local_points, &mut fitting, scale);
+        if let Some(&(x, y)) = local_points.last()
+            && Some((x, y)) != pre_projected
+        {
+            let last = points.last_mut().unwrap();
+            last.x = (x / scale.factor()).round() as i64;
+            last.y = (y / scale.factor()).round() as i64;
+        }
     }
     Cow::Owned(points)
 }
