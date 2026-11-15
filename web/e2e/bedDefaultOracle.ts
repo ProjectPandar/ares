@@ -22,7 +22,7 @@ export function firstBedCommands(gcode: string) {
 /** Independent native CLI inputs from unchanged pinned resource files. */
 export async function nativeBedReference(binary: string, selection: BedSelection, model: string, directory: string) {
   mkdirSync(directory, { recursive: true });
-  const vendors = await Promise.all([loadVendor("Snapmaker"), loadVendor("OrcaFilamentLibrary")]);
+  const vendors = await Promise.all([loadVendor("Qidi"), loadVendor("OrcaFilamentLibrary")]);
   const repository = fileURLToPath(new URL("../../", import.meta.url));
   const source = process.env.ORCA_SLICER_DIR ?? `${repository}OrcaSlicer`;
   const inputs = new Map<string, string>();

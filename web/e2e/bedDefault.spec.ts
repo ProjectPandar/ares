@@ -10,7 +10,9 @@ const repository = fileURLToPath(new URL("../../", import.meta.url));
 const model = `${repository}tests/parity/adaptive-octree-spacing/baseline.3mf`;
 const artifacts = `${repository}target/web-e2e/bed-default/`;
 
-test("U1 initializes Textured PEI and exports Native first-layer bed temperatures without a bed selection", async ({ page }) => {
+// U1's four filament slots deterministically crash Native CLI; use a single-nozzle profile.
+// Qidi/machine/Qidi X-Plus 5 0.4 nozzle.json sets Textured PEI Plate, not the Cool Plate fallback.
+test("Qidi X-Plus 5 initializes Textured PEI and exports Native first-layer bed temperatures without a bed selection", async ({ page }) => {
   const binary = oraclePath("ARES_ORCA_BIN", "the release bed-temperature oracle", "the pinned OrcaSlicer 2.5.0 launcher");
   if (!binary) test.skip();
   test.setTimeout(300_000);
@@ -23,13 +25,15 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await combo("Printer preset").click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done" }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "Qidi", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "Qidi X-Plus 5", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await combo("Printer preset").click();
-  await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
-  await expect(combo("Printer preset")).toHaveAttribute("title", "Snapmaker U1 (0.4 nozzle)");
+  await page.getByRole("option", { name: "Qidi X-Plus 5", exact: true }).click();
+  await page.getByRole("combobox", { name: "Nozzle diameter", exact: true }).selectOption("0.4");
+  await expect(combo("Printer preset")).toHaveAttribute("title", "Qidi X-Plus 5 0.4 nozzle");
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
   await expect(plate).toBeVisible();
@@ -38,17 +42,17 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   await page.screenshot({ path: `${artifacts}implicit-selection.png` });
   expect(bed).toBe("Textured PEI Plate");
   await combo("Process preset").click();
-  await page.getByRole("option", { name: "0.20 Standard @Snapmaker U1 (0.4 nozzle)", exact: true }).click();
+  await page.getByRole("option", { name: "0.20mm Standard @X-Plus 5", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await combo("Filament 1 preset").click();
   await page.getByRole("option", { name: "Add/Remove filaments", exact: true }).click();
   const filaments = page.getByRole("dialog", { name: "Filament selection" });
-  await filaments.getByRole("group", { name: "Filaments", exact: true }).getByRole("checkbox", { name: "Generic PLA", exact: true }).check();
+  await filaments.getByRole("group", { name: "Filaments", exact: true }).getByRole("checkbox", { name: "QIDI PLA Rapido", exact: true }).check();
   await filaments.getByRole("button", { name: "Done", exact: true }).click();
   const slots = page.getByRole("button", { name: /^Filament \d+ preset$/ });
   for (let index = 0; index < await slots.count(); index++) {
     await slots.nth(index).click();
-    await page.getByRole("option", { name: "Generic PLA @U1 0.4 nozzle", exact: true }).click();
+    await page.getByRole("option", { name: "QIDI PLA Rapido @Qidi X-Plus 5 0.4 nozzle", exact: true }).click();
   }
   const selection = {
     printer: (await combo("Printer preset").getAttribute("title"))!,
@@ -63,7 +67,7 @@ test("U1 initializes Textured PEI and exports Native first-layer bed temperature
   await download.saveAs(`${artifacts}browser.gcode`);
   const browser = readFileSync(`${artifacts}browser.gcode`, "utf8");
   writeFileSync(`${artifacts}result.json`, JSON.stringify({ selection, bed, explicit_bed_selection: false, native_first_bed_commands: firstBedCommands(native), browser_first_bed_commands: firstBedCommands(browser), native_bed_commands: bedCommands(native), browser_bed_commands: bedCommands(browser), complete_output_parity_claimed: false }, null, 2));
-  expect(firstBedCommands(native)).toEqual(["M140 S55", "M190 S55"]);
+  expect(firstBedCommands(native)).toEqual(["M140 S60", "M190 S60"]);
   expect(firstBedCommands(browser)).toEqual(firstBedCommands(native));
   expect(browser).toContain("; curr_bed_type = Textured PEI Plate");
 });
@@ -114,9 +118,10 @@ test("a hidden plate combo still initializes a concrete printer bed", async ({ p
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "LH", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "LH", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "LH Stinger", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm", exact: true }).click();
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "LH Stinger", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -145,9 +150,10 @@ test("supported remembered beds win and unsupported remembered beds use the firs
   const printer = page.getByRole("button", { name: "Printer preset", exact: true });
   await printer.click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)", exact: true }).click();
-  const wizard = page.getByRole("dialog", { name: "System presets" });
-  await wizard.getByRole("checkbox", { name: "Snapmaker", exact: true }).check();
-  await wizard.getByRole("button", { name: "Done", exact: true }).click();
+  const wizard = page.getByRole("dialog");
+  await wizard.getByRole("button", { name: "Snapmaker", exact: true }).click();
+  await wizard.getByRole("checkbox", { name: "Snapmaker U1", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm", exact: true }).click();
   await printer.click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
