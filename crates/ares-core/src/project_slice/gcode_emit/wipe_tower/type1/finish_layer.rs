@@ -57,8 +57,12 @@ impl Generator<'_> {
             if self.plan.layers[self.index].depth != self.plan.layers[0].depth {
                 loops = 0;
             } else {
-                loops = loops.min((3.0 / spacing) as i32)
-                    - (self.index - self.plan.first_layer.unwrap()) as i32;
+                // Upstream narrows the size_t subtraction, including its -1 sentinel, to int.
+                let distance = self
+                    .index
+                    .wrapping_sub(self.plan.first_layer.unwrap_or(usize::MAX))
+                    as i32;
+                loops = loops.min((3.0 / spacing) as i32) - distance;
             }
         }
         if loops > 0 {

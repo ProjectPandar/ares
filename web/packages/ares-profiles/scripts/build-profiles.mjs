@@ -14,7 +14,7 @@ const profiles = `${orca}/resources/profiles`;
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 const LISTS = ["machine_model_list", "process_list", "filament_list", "machine_list"];
 
-const readJson = (path) => JSON.parse(readFileSync(path, "utf8").replace(/^\uFEFF/, ""));
+const readJson = (path) => JSON.parse(readFileSync(path, "utf8").replace(/^\uFEFF/u, ""));
 const moduleName = (id) => id.replace(/[^\w.-]/g, "_");
 
 const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: orca, encoding: "utf8" }).trim();

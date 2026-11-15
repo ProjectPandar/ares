@@ -11,6 +11,7 @@ use crate::SliceError;
 
 impl Catalog {
     pub(in crate::profiles) fn from_json(input: &str) -> Result<Self, SliceError> {
+        let input = input.strip_prefix('\u{feff}').unwrap_or(input);
         let input: CatalogInput = serde_json::from_str(input).map_err(invalid_json)?;
         let mut catalog = Self::empty();
         for vendor in input.vendors {
@@ -26,7 +27,7 @@ impl Catalog {
 
     pub(in crate::profiles) fn empty() -> Self {
         Self {
-            records: Vec::new(),
+            records: super::defaults::records(),
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
             vendor_names: Vec::new(),
@@ -183,11 +184,16 @@ impl Catalog {
                 return Some(position);
             }
         }
-        self.library_scope().and_then(|scope| {
-            self.index
-                .get(&(Scope::Vendor(scope), record.kind, parent.to_owned()))
-                .copied()
-        })
+        self.library_scope()
+            .and_then(|scope| {
+                self.index
+                    .get(&(Scope::Vendor(scope), record.kind, parent.to_owned()))
+                    .copied()
+            })
+            .or_else(|| {
+                let position = self.default_position(record.kind);
+                (self.document(position).name == parent).then_some(position)
+            })
     }
 
     fn library_scope(&self) -> Option<usize> {

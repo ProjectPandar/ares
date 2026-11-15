@@ -74,14 +74,15 @@ fn gcode_writer_and_do_export_real_records_reject_33_mutations() {
         ("M73", "M73 P4 R8\n", "M73 P6 R8\n", "M73 P2 R8\n"),
         (
             "config",
-            "; enable_arc_fitting = 0\n",
+            // OrcaSlicer 40ecc66f7 PrintConfig.cpp:256-261,4426-4444.
+            "; enable_arc_fitting = disabled\n",
             "; enable_extra_bridge_layer = disabled\n",
-            "; enable_arc_fitting = 1\n",
+            "; enable_arc_fitting = enabled\n",
         ),
         (
             "statistics",
             "; filament used [mm] = 262.34\n",
-            "; estimated printing time (normal mode) = 8m 55s\n",
+            "; estimated printing time (normal mode) = 8m 54s\n",
             "; filament used [mm] = 262.35\n",
         ),
     ] {

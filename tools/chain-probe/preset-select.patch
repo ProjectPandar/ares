@@ -17,6 +17,16 @@
      // Mark the main thread for the debugger and for runtime checks.
      set_current_thread_name("orcaslicer_main");
      // Save the thread ID of the main thread.
+@@ -8194,6 +8197,9 @@
+     }
+ #endif
+ 
++    if (const char *test_resources = std::getenv("ARES_ORCA_RESOURCES_DIR"))
++        path_resources = test_resources;
++
+     set_resources_dir(path_resources.string());
+     set_var_dir((path_resources / "images").string());
+     set_local_dir((path_resources / "i18n").string());
 --- a/src/libslic3r/Preset.cpp
 +++ b/src/libslic3r/Preset.cpp
 @@ -30,6 +30,7 @@
@@ -40,7 +50,7 @@
      //BBS: add config related logs
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,111 @@
+@@ -0,0 +1,109 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
@@ -125,8 +135,6 @@
 +            const std::string filename = project.at("filename").get<std::string>();
 +            if (!boost::algorithm::iends_with(filename, ".3mf"))
 +                throw std::runtime_error("preset-select probe requires a 3MF filename");
-+            if (combined.option<ConfigOptionStrings>("filament_colour")->size() != 1)
-+                throw std::runtime_error("preset-select probe requires one filament");
 +            const Json imported = config(combined);
 +            materialized = Json::array();
 +            presets.load_config_model(filename, std::move(combined),

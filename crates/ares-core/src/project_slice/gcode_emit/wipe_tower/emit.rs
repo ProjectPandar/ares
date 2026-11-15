@@ -98,6 +98,7 @@ pub(super) fn append(
         );
     }
     let mut change = Vec::new();
+    let mut restore_layer_z = Vec::new();
     let mut deretraction = Vec::new();
     let mut override_temperature = None;
     if result.priming || (new_tool.is_some() && needs_change) {
@@ -126,6 +127,25 @@ pub(super) fn append(
                 temperature
             };
             override_temperature = (temperature > 0).then_some(temperature);
+        }
+        let new_physical = (at(&settings.project.gcode.filament_map.0, tool).0 - 1) as usize;
+        let tool_may_travel = !context
+            .traversal
+            .resolved
+            .views
+            .runtime_gcode
+            .change_filament_gcode
+            .0
+            .is_empty()
+            || (state.extruder_selected && state.extruders.active_physical() != new_physical);
+        if will_go_down && tool_may_travel && settings.process.print.enable_prime_tower.0 {
+            motion::tower::writer_z(
+                &mut restore_layer_z,
+                state,
+                current_z,
+                "Restore layer Z before toolchange",
+                false,
+            );
         }
         tool_transition::tower(
             &mut change,
@@ -157,8 +177,8 @@ pub(super) fn append(
             &change,
             &code,
             tool,
-            at(temperatures, tool).0,
-            temperature,
+            (at(temperatures, tool).0, temperature),
+            settings.printer.gcode.gcode_flavor,
         );
     }
     let mut config = placeholders::base_config(
@@ -170,6 +190,10 @@ pub(super) fn append(
     )?;
     motion::refresh_writer_state(&mut config, state);
     config.insert("change_filament_gcode", Value::String(change));
+    config.insert(
+        "restore_layer_z_before_toolchange",
+        Value::String(String::from_utf8(restore_layer_z).expect("writer G-code is UTF-8")),
+    );
     config.insert(
         "deretraction_from_wipe_tower_generator",
         Value::String(String::from_utf8(deretraction).expect("writer G-code is UTF-8")),

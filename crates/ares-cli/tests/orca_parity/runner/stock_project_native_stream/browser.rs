@@ -6,7 +6,7 @@ use crate::runner::{ExportedCase, cache_identity, repo_root};
 use std::fs;
 
 #[test]
-fn browser_output_matches_initialized_orca_242_ordered_bytes() {
+fn browser_output_matches_initialized_orca_ordered_bytes() {
     let Some(capture) = std::env::var_os("ARES_BROWSER_GCODE") else {
         crate::native_environment::skipped(
             "browser capture absent; run via web/e2e/ksrProject.spec.ts",
@@ -14,7 +14,7 @@ fn browser_output_matches_initialized_orca_242_ordered_bytes() {
         return;
     };
     let Some(runner) = producer::runner(
-        "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_242_ordered_bytes",
+        "runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_ordered_bytes",
     ) else {
         return;
     };

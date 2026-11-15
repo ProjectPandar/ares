@@ -134,11 +134,3 @@ macro_rules! object_option_fields {
 }
 
 pub(crate) use object_option_fields;
-
-macro_rules! declare_object_option_order {
-    ($($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?) => {
-        pub(crate) const OBJECT_OPTION_DECLARATION_ORDER: [&str; 127] = [$($key),*];
-    };
-}
-
-object_option_fields!(declare_object_option_order);

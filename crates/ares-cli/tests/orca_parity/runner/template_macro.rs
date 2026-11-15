@@ -17,7 +17,7 @@ fn macro_block_statements_render_prusa_xl_stock_script() {
         ),
         "prusa-xl-change-filament",
         include_bytes!("../../../../../tests/parity/template-macro/prusa-xl-change-filament.3mf"),
-        "2c1b4c18ebd99c029991bd33130b6f17e286671fd1b285bcdc7c7f2285af55ce",
+        "92d305757fd84bd6aa0cfc7f8b8e61a1071ed226656d0d54f3fd65cbc09f34cc",
         (true, |reference, _| {
             let lines: Vec<&str> = reference.native.lines().collect();
             let start = lines

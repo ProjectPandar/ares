@@ -44,7 +44,7 @@ pub struct ProfileFragment {
 
 impl ProfileFragment {
     pub fn from_json_bytes(input: impl AsRef<[u8]>) -> Result<Self, SliceError> {
-        let input = input.as_ref();
+        let input = super::without_utf8_bom(input.as_ref());
         let parsed = metadata::parse(input)?;
         let payload = payload::parse(input, parsed.preset.kind)?;
         Ok(Self {
@@ -55,23 +55,25 @@ impl ProfileFragment {
     }
 
     pub(crate) fn from_original_machine_bytes(input: &[u8]) -> Result<Self, SliceError> {
-        let parsed = metadata::parse(input)?;
+        let json = super::without_utf8_bom(input);
+        let parsed = metadata::parse(json)?;
         // OrcaSlicer.cpp:2118–2123 separates flattened direct loads from
         // inherited resources; keep the latter's existing strict handling.
         if parsed.config.inherits.is_some() {
             return Self::from_json_bytes(input);
         }
-        Self::from_flattened_config_bytes(input)
+        Self::from_flattened_config_bytes(json)
     }
 
     pub(crate) fn from_up_to_date_file_bytes(input: &[u8]) -> Result<Self, SliceError> {
-        let parsed = metadata::parse(input)?;
+        let json = super::without_utf8_bom(input);
+        let parsed = metadata::parse(json)?;
         // OrcaSlicer.cpp:2539–2558 uses the same direct-file loader before
         // selecting the machine's upward vector.
         if parsed.preset.kind != ProfileKind::Machine || parsed.config.inherits.is_some() {
             return Self::from_json_bytes(input);
         }
-        Self::from_flattened_config_bytes(input)
+        Self::from_flattened_config_bytes(json)
     }
 
     fn from_flattened_config_bytes(input: &[u8]) -> Result<Self, SliceError> {

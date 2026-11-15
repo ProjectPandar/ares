@@ -170,7 +170,8 @@ recreate them after every restart or context reset.
 For each RR, check:
 - **History.**
   - The three-dot diff `git diff main...tip` and every commit message.
-  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base.
+  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base (a pending integration tip). A
+    branch still based on the unsquashed commits of a landed batch is rebased first (step 6 of the batch rules).
 - **Author and trailer.** The author is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`, and each commit has exactly one trailer,
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - **Hygiene.** Grep the messages and the diff, docs included. Each commit must be clean on its own. Flag any of:
@@ -193,6 +194,9 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
 1. A batch contains the chains accepted before it starts. Later ones go to the next batch.
 2. W5:
    - stacks the chains linearly on main (the range-diff must be identical);
+   - stacks a release commit last: `chore: release 0.1.<N>` for batch N. It sets `version` in `[workspace.package]`
+     of the root `Cargo.toml` and in `web/app/package.json` (plus the `app` entry of `web/package-lock.json`), and
+     updates `Cargo.lock` with `cargo update -w --offline`;
    - runs fmt, clippy --all-targets and the wasm32 check;
    - pushes an integration ref.
 
@@ -213,10 +217,24 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
      decision.
 4. COORD verifies the exact tip over the whole range: fast-forward, trailers, hygiene and clippy. A hygiene fix to
    an accepted commit is a rewrite that needs the user's approval; the rewritten tip may differ from the tested tip
-   only in the cleaned files, and the range-diff must show only the rewritten commits. Then COORD ff-merges main and pushes main to
-   origin (never force).
+   only in the cleaned files, and the range-diff must show only the rewritten commits.
+5. COORD lands the batch with one squash commit per chain, in stack order, plus the release commit:
+   - No tag keeps the unsquashed commits; record the tested tip and each chain's `<end>` in the ledger.
+   - A chain is one accepted RR line; a follow-up stacked right after its chain (such as a test fix) belongs to that
+     chain's commit.
+   - For each chain, take the stacked commit that ends it (`<end>`) and create
+     `git commit-tree <end>^{tree} -p <previous squash commit>`, starting from main. Each tree equals the stacked
+     tree at that point, so the last one equals the tested tip's tree (`git rev-parse <tip>^{tree}`); nothing is
+     re-tested because the bytes are identical.
+   - Message: a title summarising the chain's change, then one `- <subject>` line per original commit
+     (`git log --reverse --format='- %s' <previous end>..<end>`), then the single trailer. No batch numbers or other
+     internal labels; the author is the usual one.
+   - Fast-forward main to the last commit and push main to origin (never force).
    - Pushing main deploys the web app to Cloudflare Pages.
    - Other branches only build and test.
+6. Branches built on commits of a squashed batch move onto main with `git rebase --onto main <tested tip>`; the
+   trees are identical, so this applies only the branch's own commits. A branch built on an earlier point of the
+   stack uses that chain's squash commit and `<end>` instead.
 
 ## Standing rules
 

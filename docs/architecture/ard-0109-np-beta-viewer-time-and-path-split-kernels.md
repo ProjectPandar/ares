@@ -47,6 +47,13 @@ checkout of that commit); no Ares-owned pipeline design.
 - RED: ares-wasm `marker_time_transport_preserves_native_bits_after_buffer_transfer`
   at `f416e1718` fails the count gate 71 (Ares) vs 72 (Native).
 - Included: predicate change only; no vertex layout change.
+- Web e2e model: `web/e2e/toolpathPreview.ts` `movesSliderVertices` rebuilds the
+  expected vertex list for the moves slider and tool position checks from the
+  dumped GCodeProcessor moves. It applies the same predicate (`LibVGCodeWrapper.cpp:227-235`
+  at `40ecc66f7`): the acceleration and jerk splits join the type, role and
+  `mm3_per_mm` splits. The values are the per-move `acceleration` and `jerk` from
+  `--dump-move-dynamics`, compared as f32. Without them the model misses the phantom
+  vertices of these splits, and its count falls below Native (`slice`: 7272 against 7468).
 
 ## Slice 3 — tagged fixture raw/stable retirement
 
