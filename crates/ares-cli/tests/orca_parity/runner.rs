@@ -7,6 +7,8 @@ mod bbl_eager_enforce;
 mod brim_flow_ratio_state;
 #[path = "runner/fan_speedup_sign.rs"]
 mod fan_speedup_sign;
+#[path = "runner/loaded_filament_dev_scalars.rs"]
+mod loaded_filament_dev_scalars;
 #[path = "runner/loaded_system_inherits_group.rs"]
 mod loaded_system_inherits_group;
 #[path = "runner/modifier_feature_filament.rs"]
