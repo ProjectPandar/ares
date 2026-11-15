@@ -30,6 +30,20 @@ impl Generator<'_> {
         let mut remaining = xr - xl;
         let mut done = 0.0;
         let do_ramming = (semm && enabled) || filament.multitool_ramming;
+        let planned_ramming_depth = if do_ramming && !semm && self.use_gap_wall() {
+            self.plan
+                .layers
+                .get(self.layer_index)
+                .and_then(|layer| {
+                    layer
+                        .changes
+                        .iter()
+                        .find(|change| change.old_tool == self.current_tool)
+                })
+                .map_or(0.0, |change| change.ramming_depth)
+        } else {
+            0.0
+        };
         if do_ramming {
             writer.travel(start, 0.0);
             if !self.mk4_mmu3 {
@@ -164,7 +178,22 @@ impl Generator<'_> {
         if enabled {
             writer.gcode.push_str("; Ramming end\n");
         }
-        if do_ramming {
+        if planned_ramming_depth > 0.0 {
+            writer.travel(
+                [
+                    start[0],
+                    bounds.lower[1]
+                        + self.depth_traversed
+                        + self.wipe_start_offset_after_ram(
+                            planned_ramming_depth,
+                            self.is_first_layer(),
+                        )
+                        + perimeter,
+                ],
+                2400.0,
+            );
+            self.left_to_right = true;
+        } else if do_ramming {
             writer.travel(
                 [
                     end[0],
