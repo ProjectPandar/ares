@@ -1,6 +1,7 @@
 mod rng;
 pub(crate) use rng::Mt19937;
 
+use crate::ThumbnailData;
 use std::fmt;
 
 /// `PrintBase::SlicingStatus` (`PrintBase.hpp:443-481`): the slice's progress, its current
@@ -23,6 +24,7 @@ pub struct SlicerContext<'a> {
     seed: u32,
     rng: Mt19937,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
+    thumbnail_images: Vec<ThumbnailData>,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -31,7 +33,15 @@ impl<'a> SlicerContext<'a> {
             seed,
             rng: Mt19937::new(seed),
             status: None,
+            thumbnail_images: Vec::new(),
         }
+    }
+
+    /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.
+    #[must_use]
+    pub fn with_thumbnail_images(mut self, images: Vec<ThumbnailData>) -> Self {
+        self.thumbnail_images = images;
+        self
     }
 
     /// `PrintBase::set_status_callback` (`PrintBase.hpp:489`): `callback` receives every status
@@ -58,6 +68,10 @@ impl<'a> SlicerContext<'a> {
                 flags,
             }),
         }
+    }
+
+    pub(crate) fn thumbnail_images(&self) -> &[ThumbnailData] {
+        &self.thumbnail_images
     }
 
     pub(crate) fn seed(&self) -> u32 {

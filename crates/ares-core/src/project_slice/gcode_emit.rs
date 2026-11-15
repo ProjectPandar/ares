@@ -26,6 +26,7 @@ pub(in crate::project_slice) mod motion;
 mod object;
 mod offset;
 mod placeholders;
+mod preamble;
 mod pressure_advance;
 pub(crate) mod processor;
 mod retained_output;
