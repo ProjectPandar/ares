@@ -78,9 +78,7 @@ fn print_applied_map_flat_missing_map_lookup_guard_is_preserved() {
 
 #[test]
 fn print_applied_map_unchanged_recommendation_preserves_export_bytes() {
-    // Frozen on independent pre-product04a8 source using the native-backed O1 control.
-    // One colour/master1/single nozzle: original map[1] == recommended map[1].
-    let expected = "f54fae2fe9fa77d67c7f489de595d8dd1eba88541c456405f3583578cbf29f5d";
+    // Print.cpp:4661-4755: a single-colour applied map equals the recommendation.
     let fields = json!({"before_layer_change_gcode":"G92 E0\n"});
     let overrides = ConfigOverrides::from_json(fields.to_string().as_bytes()).unwrap();
     let metadata = GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0);
@@ -98,7 +96,49 @@ fn print_applied_map_unchanged_recommendation_preserves_export_bytes() {
         .unwrap();
     let directory = super::evidence_directory("print-map-export-");
     std::fs::write(directory.join("ares.gcode"), &gcode).unwrap();
-    let actual = super::sha256(&gcode);
-    std::fs::write(directory.join("result.json"),serde_json::to_vec_pretty(&json!({"input_sha256":super::sha256(super::RELATIVE_INPUT),"overrides":fields,"baseline_commit":"04a8e24932e3373f932e26d075595f044a82c956","baseline_sha256":expected,"actual_sha256":actual})).unwrap()).unwrap();
-    assert_eq!(actual, expected, "{directory:?}");
+    let input = directory.join("input.3mf");
+    std::fs::write(&input, super::RELATIVE_INPUT).unwrap();
+    let runner = crate::runner::OrcaRunner::from_env().unwrap().unwrap();
+    let mut comparisons = Vec::new();
+    for label in ["native", "native-replay"] {
+        let output = directory.join(label);
+        std::fs::create_dir(&output).unwrap();
+        crate::runner::stages::run_live(
+            runner.bin(),
+            [
+                "--before-layer-change-gcode".to_owned(),
+                "G92 E0\n".to_owned(),
+                "--slice".to_owned(),
+                "0".to_owned(),
+                "--outputdir".to_owned(),
+                output.to_string_lossy().into_owned(),
+                input.to_string_lossy().into_owned(),
+            ],
+            crate::runner::stages::Stage::Slice,
+            &output,
+        )
+        .unwrap();
+        let native = std::fs::read(output.join("plate_1.gcode")).unwrap();
+        let comparison = crate::golden::compare_ordered_bytes_generator_only(&native, &gcode);
+        comparisons.push(json!({
+            "label":label,"native_sha256":super::sha256(&native),"comparison":comparison,
+        }));
+        std::fs::write(
+            directory.join("result.json"),
+            serde_json::to_vec_pretty(&json!({
+                "input_sha256":super::sha256(super::RELATIVE_INPUT),"overrides":fields,
+                "ares_sha256":super::sha256(&gcode),"comparisons":comparisons,
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        comparison.unwrap_or_else(|error| panic!("{error}; {directory:?}"));
+    }
+    let exported = std::str::from_utf8(&gcode).unwrap();
+    assert!(exported.lines().any(|line| line == "; filament_map = 1"));
+    assert!(
+        exported
+            .lines()
+            .any(|line| line == "; before_layer_change_gcode = G92 E0\\n")
+    );
 }
