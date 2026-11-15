@@ -101,3 +101,28 @@ this public boundary.
 - Web E2E: edit layer height, re-slice, and assert that the layer count changes
   and the G-code SHA matches the native CLI given the same overrides. The CLI
   gains `--overrides <json>` for this, as an adapter-only change.
+
+## Reference: typed CLI options (OrcaSlicer 2.5.0, `40ecc66f7`)
+
+The Native reference passes the edits as typed CLI options (`--layer-height 0.12`).
+It does not write them into a 3MF copy's `project_settings.config`. The CLI oracle
+`crates/ares-cli/tests/orca_parity/runner/user_overrides.rs` and the web project-edit
+check in `web/e2e/slice.spec.ts` both do this.
+
+Upstream applies the edit on three paths. They all apply the same value, but they write
+`different_settings_to_system` differently. That option lists, per preset, the keys changed
+against its system parent:
+- GUI edit: `PresetBundle::full_fff_config` (`PresetBundle.cpp:5586-5595`) writes
+  `dirty_options_without_option_list` of the edited process preset against its parent. An
+  edited `layer_height` on the fixture's system process preset gives `layer_height;;`.
+- Typed CLI option: `OrcaSlicer.cpp:4138-4223` records each typed key whose value changed
+  into the column of the preset type that owns it, which gives `layer_height;;`.
+- Edit inside the project config, plain CLI: the column is read from the project
+  (`OrcaSlicer.cpp:1896`) and only resized (`:3202-3207`). Nothing on this path rewrites it
+  from the edited values, so the fixture's empty column stays `;;`.
+
+A web sidebar edit is a GUI edit. Ares records it through
+`options/overrides/dirty_columns.rs`, the port of `OrcaSlicer.cpp:4157-4223`, and that
+agrees with the GUI path. The typed option is the CLI path that matches both. The
+project-config path describes a project saved without the edit marked as changed, which
+is not what an edit produces.
