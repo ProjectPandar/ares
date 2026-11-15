@@ -20,8 +20,12 @@ use sha2::{Digest, Sha256};
 
 use crate::runner::{OrcaRunner, stages};
 
+#[path = "power_loss_recovery/planner_boundaries.rs"]
+mod planner_boundaries;
 #[path = "power_loss_recovery/queue_flush.rs"]
 mod queue_flush;
+#[path = "power_loss_recovery/restore_layer_z.rs"]
+mod restore_layer_z;
 
 const BY_LAYER: &[u8] =
     include_bytes!("../../../../tests/parity/power-loss-recovery/target-by-layer.3mf");

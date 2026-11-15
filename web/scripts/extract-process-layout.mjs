@@ -42,11 +42,12 @@ function body(signature) {
 
 const STATEMENTS = new RegExp([
   /add_options_page\((?:L\("(?<page>[^"]+)"\)|(?<pageName>page_name))/,
-  /new_optgroup\((?:L\()?"(?<group>[^"]*)"\)?(?:,\s*L?"(?<icon>[a-z0-9_]+)")?/,
+  /(?<groupVar>\w+)\s*=\s*\w+->new_optgroup\((?:L\()?"(?<group>[^"]*)"\)?(?:,\s*L?"(?<icon>[a-z0-9_]+)")?/,
   /std::vector<std::string>\s+(?<listName>\w+)\s*\{(?<listItems>[^}]*)\}/,
+  /auto\s+(?<helper>\w+)\s*=\s*\[this,\s*(?<helperReceiver>\w+)\]/,
   /for\s*\(const std::string\s*&?\s*(?<loopVar>\w+)\s*:\s*(?<loopList>\w+|\{[^}]*\})\s*\)\s*\{?\s*(?<loopBody>[^;]*);/,
-  /append_single_option_line\("(?<single>[a-z0-9_]+)"/,
-  /append_single_option_line\((?<singleVar>\w+)[,)]/,
+  /(?<singleReceiver>\w+)->append_single_option_line\("(?<single>[a-z0-9_]+)"/,
+  /(?<singleVarReceiver>\w+)->append_single_option_line\((?<singleVar>\w+)[,)]/,
   /append_option_line\(optgroup,\s*"(?<indexed>[a-z0-9_]+)"/,
   /(?:Option\s+|auto\s+)?(?<optVar>\w+)\s*=\s*optgroup->get_option\("(?<optKey>[a-z0-9_]+)"/,
   /(?<labelVar>\w+)\.opt\.label\s*=\s*L\("(?<subLabel>[^"]*)"\)/,
@@ -54,8 +55,8 @@ const STATEMENTS = new RegExp([
   /(?:Line\s+)?(?<lineVar>\w+)\s*=\s*(?:Line\s*)?\{\s*L\("(?<lineLabel>[^"]*)"\)/,
   /(?<appendLine>\w+)\.append_option\(optgroup->get_option\("(?<appendKey>[a-z0-9_]+)"/,
   /(?<appendVarLine>\w+)\.append_option\((?<appendVar>\w+)\)/,
-  /append_line\((?<emitLine>\w+)\)/,
-  /(?<separator>append_separator)\(\)/,
+  /(?<lineReceiver>\w+)->append_line\((?<emitLine>\w+)\)/,
+  /(?<separatorReceiver>\w+)->(?<separator>append_separator)\(\)/,
   /create_line_with_widget\(optgroup\.get\(\),\s*"(?<widget>[a-z0-9_]+)"/,
   /(?<![:\w])(?<overrides>add_filament_overrides_page)\(\)/,
 ].map((pattern) => pattern.source).join("|"), "g");
@@ -67,7 +68,9 @@ function parsePages(source, pages = []) {
   const vars = {};
   const lines = {};
   const lists = {};
-  const group = () => pages.at(-1).groups.at(-1);
+  const helpers = {};
+  const groups = {};
+  const group = (receiver) => groups[receiver];
   // The extruder page binds every option to `extruder_idx` (slot 0 for the first extruder).
   let extruderPage = false;
   for (const { groups: m } of source.matchAll(STATEMENTS)) {
@@ -75,20 +78,26 @@ function parsePages(source, pages = []) {
       pages.push({ title: m.page ?? "Extruder", groups: [] });
       extruderPage = Boolean(m.pageName);
     }
-    else if (m.group !== undefined) pages.at(-1).groups.push({ title: m.group, icon: m.icon, rows: [] });
+    else if (m.group !== undefined) {
+      groups[m.groupVar] = { title: m.group, icon: m.icon, rows: [] };
+      pages.at(-1).groups.push(groups[m.groupVar]);
+    }
     else if (m.listName) lists[m.listName] = quoted(m.listItems);
+    else if (m.helper) helpers[m.helper] = m.helperReceiver;
     else if (m.loopVar) {
       const items = m.loopList.startsWith("{") ? quoted(m.loopList) : lists[m.loopList];
       const prefix = m.loopBody.match(new RegExp(`"([a-z0-9_]*)"\\s*\\+\\s*${m.loopVar}\\b`))?.[1] ?? "";
       const index = m.loopBody.includes("append_option_line") ? 0 : undefined;
-      for (const item of items) group().rows.push({ kind: "option", key: prefix + item, index });
+      const call = m.loopBody.match(/(?:(\w+)->)?(\w+)\((\w+)/);
+      const receiver = call[1] ?? helpers[call[2]] ?? call[3];
+      for (const item of items) group(receiver).rows.push({ kind: "option", key: prefix + item, index });
     }
-    else if (m.single) group().rows.push({ kind: "option", key: m.single, index: extruderPage ? 0 : undefined });
+    else if (m.single) group(m.singleReceiver).rows.push({ kind: "option", key: m.single, index: extruderPage ? 0 : undefined });
     else if (m.singleVar) {
       const option = vars[m.singleVar];
-      if (option) group().rows.push({ kind: "option", ...option });
+      if (option) group(m.singleVarReceiver).rows.push({ kind: "option", ...option });
     }
-    else if (m.indexed) group().rows.push({ kind: "option", key: m.indexed, index: 0 });
+    else if (m.indexed) group("optgroup").rows.push({ kind: "option", key: m.indexed, index: 0 });
     else if (m.optVar) vars[m.optVar] = { key: m.optKey, index: extruderPage ? 0 : undefined };
     else if (m.labelVar) vars[m.labelVar].label = m.subLabel;
     else if (m.flagVar) vars[m.flagVar][m.flag === "full_width" ? "full" : "code"] = true;
@@ -100,10 +109,10 @@ function parsePages(source, pages = []) {
     }
     else if (m.emitLine) {
       const line = lines[m.emitLine];
-      if (line?.options.length) group().rows.push(structuredClone(line));
+      if (line?.options.length) group(m.lineReceiver).rows.push(structuredClone(line));
     }
-    else if (m.separator) group().rows.push({ kind: "separator" });
-    else if (m.widget) group().rows.push({ kind: "widget", key: m.widget });
+    else if (m.separator) group(m.separatorReceiver).rows.push({ kind: "separator" });
+    else if (m.widget) group("optgroup").rows.push({ kind: "widget", key: m.widget });
     else if (m.overrides) parsePages(body("void TabFilament::add_filament_overrides_page"), pages);
   }
   for (const page of pages) page.groups = page.groups.filter((candidate) => candidate.rows.length);

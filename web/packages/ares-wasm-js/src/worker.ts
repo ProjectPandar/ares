@@ -14,6 +14,7 @@ import init, {
   placementScene,
   printConfigDef,
   profileSettings,
+  resolveDefaultBedType,
   roleColors,
   sliceProjectPlateProcessed,
   sliceWithProfilesProcessed,
@@ -133,6 +134,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const definition: PrintConfigDef = JSON.parse(new TextDecoder().decode(printConfigDef()));
       return [definition, []];
     }
+    case "resolveDefaultBedType": return [resolveDefaultBedType(request.hint, request.modelId), []];
     case "loadScene":
       return sceneResult(loadScene(request.input));
     case "placementScene": {

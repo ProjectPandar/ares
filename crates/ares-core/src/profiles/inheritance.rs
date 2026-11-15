@@ -116,15 +116,15 @@ impl MergedProfileMetadata {
 pub enum MergedProfile {
     Machine {
         metadata: MergedProfileMetadata,
-        options: PrinterOptions,
+        options: Box<PrinterOptions>,
     },
     Process {
         metadata: MergedProfileMetadata,
-        options: ProcessOptions,
+        options: Box<ProcessOptions>,
     },
     Filament {
         metadata: MergedProfileMetadata,
-        options: FilamentOptions,
+        options: Box<FilamentOptions>,
     },
 }
 
@@ -165,11 +165,11 @@ pub fn unselected_profile(kind: UnselectedKind) -> MergedProfile {
     match kind {
         UnselectedKind::Machine => MergedProfile::Machine {
             metadata,
-            options: PrinterOptionsBuilder::default().resolve(),
+            options: Box::new(PrinterOptionsBuilder::default().resolve()),
         },
         UnselectedKind::Process => MergedProfile::Process {
             metadata,
-            options: ProcessOptionsBuilder::default().resolve(),
+            options: Box::new(ProcessOptionsBuilder::default().resolve()),
         },
     }
 }
@@ -238,7 +238,7 @@ fn merge_chain(
             }
             Ok(MergedProfile::Machine {
                 metadata,
-                options: merged.resolve(),
+                options: Box::new(merged.resolve()),
             })
         }
         ProfileKind::Process => {
@@ -251,7 +251,7 @@ fn merge_chain(
             }
             Ok(MergedProfile::Process {
                 metadata,
-                options: merged.resolve(),
+                options: Box::new(merged.resolve()),
             })
         }
         ProfileKind::Filament => {
@@ -272,7 +272,7 @@ fn merge_chain(
             }
             Ok(MergedProfile::Filament {
                 metadata,
-                options: merged,
+                options: Box::new(merged),
             })
         }
     }

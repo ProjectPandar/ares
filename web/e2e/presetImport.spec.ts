@@ -1,4 +1,5 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
@@ -16,7 +17,7 @@ const defaultPrint = (machine: string) => {
 
 /** A BBL machine's first `default_filament_profile`, inherited from its parents. */
 const defaultFilament = (machine: string): string => {
-  const file = readFileSync(`${orca}/resources/profiles/BBL/machine/${machine}.json`, "utf8");
+  const file = readFileSync(join(orca, "resources/profiles/BBL/machine", `${machine}.json`), "utf8");
   const preset = JSON.parse(file) as { inherits: string; default_filament_profile?: string[] };
   return preset.default_filament_profile?.[0] ?? defaultFilament(preset.inherits);
 };
@@ -75,7 +76,7 @@ const ordinal = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** The vendor's instantiable machine presets with their (inherited) model and variant, from the raw files. */
 function systemPrinters(vendor: string) {
-  const readJson = (path: string) => JSON.parse(readFileSync(`${orca}resources/profiles/${path}`, "utf8"));
+  const readJson = (path: string) => JSON.parse(readFileSync(join(orca, "resources/profiles", path), "utf8"));
   const index = readJson(`${vendor}.json`) as { machine_list: { sub_path: string }[] };
   const machines = new Map(index.machine_list.map(({ sub_path }) => {
     const machine = readJson(`${vendor}/${sub_path}`) as Record<string, string>;

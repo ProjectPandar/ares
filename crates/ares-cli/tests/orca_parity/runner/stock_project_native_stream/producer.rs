@@ -20,6 +20,9 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
     .all(|(key, value)| std::env::var_os(key).as_deref() == Some(value))
         && std::env::var("ORCA_REPLAY_SEED").as_deref() == Ok("0");
     if !selected {
+        let replay_cpu = std::env::var_os("ORCA_REPLAY_CPU").expect(
+            "ORCA_REPLAY_CPU must be supplied by the outer runner to preserve lane affinity",
+        );
         let artifacts = tempfile::Builder::new()
             .prefix("ksr-initialized-dispatch-")
             .tempdir_in(root)
@@ -33,7 +36,7 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
             .env("ARES_ORCA_RESOURCES_DIR", &resources)
             .env("ORCA_REPLAY_BIN", &bin)
             .env("ORCA_REPLAY_SEED", "0")
-            .env("ORCA_REPLAY_CPU", "0")
+            .env("ORCA_REPLAY_CPU", replay_cpu)
             .output()
             .unwrap();
         fs::write(artifacts.join("child.stdout"), &output.stdout).unwrap();
@@ -54,14 +57,14 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
         );
         return None;
     }
-    // Historical producer identity verified by the serial fresh-capture preflight.
+    // 2.5.0 seed-replay producer identity (ard-ksr-initialized-runtime-authority.md).
     assert_eq!(
         cache_identity::raw_digest(&fs::read(&bin).unwrap()),
-        "3d05d4ccab740ca5e13aa94d0d00867a75f867ba2159b9f5b024dc0fcaa3bfaa"
+        "9d285c9995cdd0eacef354afb76853c81e3def3154b12e38a50238bf268004d6"
     );
     assert_eq!(
         cache_identity::raw_digest(&fs::read(&native).unwrap()),
-        "8f0cf69dd9494ccfe53bf6749d6b685ccb5a0dd0df206694ce50d421007cc03d"
+        "84a7780653be3b46fe909e43ae98b3576907c561e8ff337c208ff97c2b23a84a"
     );
     OrcaRunner::from_env().unwrap()
 }

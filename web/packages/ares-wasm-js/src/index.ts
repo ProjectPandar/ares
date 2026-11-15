@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
+import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -64,6 +64,12 @@ export class AresSlicer {
   async printConfigDef(): Promise<PrintConfigDef> {
     await this.#ready;
     return (await this.#call({ kind: "printConfigDef" })) as PrintConfigDef;
+  }
+
+  /** `Preset::get_default_bed_type`, with an inherited hint and resolved catalog model ID. */
+  async resolveDefaultBedType(hint: string, modelId: string): Promise<string> {
+    await this.#ready;
+    return (await this.#call({ kind: "resolveDefaultBedType", hint, modelId })) as string;
   }
 
   /** Loads a 3MF project or STL model into plater scene data. */
@@ -206,7 +212,7 @@ export class AresSlicer {
     input: Uint8Array,
     filename: string,
     catalogJson: string,
-    selection: ProfileSelection,
+    selection: ProfileSelection | ProjectPresetSelection,
     options: ProfileSliceOptions,
   ): Promise<PlaterSession> {
     await this.#ready;

@@ -1,9 +1,11 @@
-//! The parameter and inflation updates of `Arrange.cpp:104-353` and its bed-exclusion rules.
+//! The parameter, inflation and bed-exclusion updates of `Arrange.cpp` at `40ecc66f7`.
 
 use super::{
     ArrangeConfig, ArrangeParams, ArrangePolygon, BoundingBox, Coord, MAX_OUTER_NOZZLE_DIAMETER,
     Point, Polygon,
 };
+
+use crate::geometry::{JoinType, offset_expolygon};
 
 /// `EPSILON` (`libslic3r.h:52`).
 const EPSILON: f64 = 1e-4;
@@ -22,8 +24,7 @@ fn bed_bounds(config: &ArrangeConfig) -> BoundingBox {
     BoundingBox::from_polygon(&Polygon::new(config.bed_shape.clone())).expect("a bed shape")
 }
 
-/// `update_arrange_params` (`Arrange.cpp:148-161`): the bed keeps the skirt's room; sequential
-/// printing widens it back by half the extruder clearance.
+/// `update_arrange_params` (`Arrange.cpp:150-158`): the bed keeps the skirt's room.
 pub fn update_arrange_params(
     params: &mut ArrangeParams,
     config: &ArrangeConfig,
@@ -32,13 +33,9 @@ pub fn update_arrange_params(
     params.brim_skirt_distance = config.real_skirt_distance as f32;
     params.bed_shrink_x += params.brim_skirt_distance;
     params.bed_shrink_y += params.brim_skirt_distance;
-    if params.is_seq_print {
-        params.bed_shrink_x -= params.clearance_radius / 2.0;
-        params.bed_shrink_y -= params.clearance_radius / 2.0;
-    }
 }
 
-/// `update_selected_items_inflation` (`Arrange.cpp:163-211`).
+/// `update_selected_items_inflation` (`Arrange.cpp:160-226`).
 pub fn update_selected_items_inflation(
     selected: &mut [ArrangePolygon],
     config: &ArrangeConfig,
@@ -52,9 +49,8 @@ pub fn update_selected_items_inflation(
             .iter()
             .all(|item| item.height < f64::from(params.nozzle_height));
         let floor = if all_short {
-            f64::from(
-                (MAX_OUTER_NOZZLE_DIAMETER as f32 / 2.0).max(params.object_skirt_offset * 2.0),
-            ) + 0.001
+            f64::from((MAX_OUTER_NOZZLE_DIAMETER as f32).max(params.object_skirt_offset * 2.0))
+                + 0.001
         } else {
             // +0.001 mm against a clearance check failing on rounding.
             f64::from(params.clearance_radius) + 0.001
@@ -89,16 +85,12 @@ pub fn update_selected_items_inflation(
     }
     // Give the bed margin back where the largest item needs it; the skirt keeps its room.
     if !selected.is_empty() {
-        let widest = selected
+        let [widest, deepest] = selected
             .iter()
-            .map(|item| item_size(item)[0] + 2 * item.inflation)
-            .max()
-            .unwrap();
-        let deepest = selected
-            .iter()
-            .map(|item| item_size(item)[1] + 2 * item.inflation)
-            .max()
-            .unwrap();
+            .map(|item| margin_size(item, params))
+            .fold([0_i64; 2], |largest, size| {
+                [largest[0].max(size[0]), largest[1].max(size[1])]
+            });
         let margin = |bed: Coord, item: Coord| {
             (((bed - item) as f64 * params.scaling_factor) / 2.0).max(0.0)
         };
@@ -108,6 +100,38 @@ pub fn update_selected_items_inflation(
         params.bed_shrink_y =
             f64::from(params.bed_shrink_y).min(brim_skirt.max(margin(bed_size[1], deepest))) as f32;
     }
+    if params.is_seq_print {
+        let growth = params.min_obj_distance as f32 * params.scaling_factor as f32 / 2.0;
+        params.bed_shrink_x -= growth;
+        params.bed_shrink_y -= growth;
+    }
+}
+
+// Arrange.cpp:200-218: measure the square-join outline as it is packed, then remove spacing.
+fn margin_size(item: &ArrangePolygon, params: &ArrangeParams) -> [Coord; 2] {
+    if !params.is_seq_print {
+        let [width, height] = item_size(item);
+        return [width + 2 * item.inflation, height + 2 * item.inflation];
+    }
+    let inflated = offset_expolygon(&item.poly, item.inflation as f32, JoinType::Square, 3.0)
+        .expect("offset of an arrangement shape");
+    let mut outline = inflated
+        .first()
+        .map_or(item.poly.contour(), |shape| shape.contour())
+        .clone();
+    let (sin, cos) = item.rotation.sin_cos();
+    outline.rotate(cos, sin);
+    let bounds = BoundingBox::from_polygon(&outline).expect("an item outline");
+    let inflation = scaled(params, EPSILON)
+        - if inflated.is_empty() {
+            0
+        } else {
+            item.inflation
+        };
+    [
+        bounds.max().x() - bounds.min().x() + 2 * inflation,
+        bounds.max().y() - bounds.min().y() + 2 * inflation,
+    ]
 }
 
 fn item_size(item: &ArrangePolygon) -> [Coord; 2] {
@@ -118,7 +142,7 @@ fn item_size(item: &ArrangePolygon) -> [Coord; 2] {
     ]
 }
 
-/// `update_unselected_items_inflation` (`Arrange.cpp:213-232`): fixed parts keep their brim or
+/// `update_unselected_items_inflation` (`Arrange.cpp:228-246`): fixed parts keep their brim or
 /// half the object distance; virtual regions take the exclusion gap, except the extrusion
 /// calibration region, which a brim may overlap.
 pub fn update_unselected_items_inflation(
@@ -128,11 +152,11 @@ pub fn update_unselected_items_inflation(
 ) {
     let mut exclusion_gap = 1.0_f32;
     if params.is_seq_print {
-        exclusion_gap =
-            exclusion_gap.max(params.clearance_radius / 2.0 + params.bed_shrink_x + 1.0);
+        let growth = params.min_obj_distance as f32 * params.scaling_factor as f32 / 2.0;
+        exclusion_gap = exclusion_gap.max(growth + params.bed_shrink_x + 1.0);
         let shift = Point::new(
-            scaled_f32(params, params.bed_shrink_x),
-            scaled_f32(params, params.bed_shrink_y),
+            scaled_f32(params, params.bed_shrink_x.min(0.0)),
+            scaled_f32(params, params.bed_shrink_y.min(0.0)),
         );
         for region in unselected.iter_mut().filter(|region| region.is_virt_object) {
             region.poly = translated(&region.poly, shift);

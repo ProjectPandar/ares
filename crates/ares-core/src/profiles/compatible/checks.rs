@@ -29,7 +29,7 @@ pub(super) fn active_printer(
     }
     Ok(ActivePrinter {
         name,
-        is_system: !catalog.is_user_scope(position),
+        is_system: !catalog.is_user_scope(position) && !catalog.is_default(position),
         inherits: catalog.leaf_inherits(position),
         config,
     })

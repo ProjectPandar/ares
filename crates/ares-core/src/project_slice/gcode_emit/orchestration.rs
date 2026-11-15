@@ -1,3 +1,5 @@
+mod tower;
+
 use super::*;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
@@ -177,26 +179,8 @@ pub(in crate::project_slice) fn emit(
             &brim,
         )?,
         wipe_tower: schedule.tower.take().map(|data| {
-            let settings = &traversal.resolved.views.full;
-            let first_z = schedule.merged[0].0;
-            let second_z = schedule
-                .merged
-                .iter()
-                .map(|entry| entry.0)
-                .find(|&z| z > first_z)
-                .unwrap_or(first_z);
-            let overlap = settings
-                .process
-                .gcode
-                .single_extruder_multi_material_priming
-                .0
-                && data.priming_overlaps(wipe_tower::PrintExtents {
-                    traversal,
-                    objects: &prepared.objects,
-                    instances: &schedule.instances,
-                    skirt: skirt.as_ref(),
-                    max_print_z: second_z + 1e-4,
-                });
+            let overlap =
+                tower::priming_overlaps(&data, traversal, prepared, &schedule, skirt.as_ref());
             let center = footprint::first_layer_object_center(
                 traversal,
                 &schedule.instances,
@@ -205,10 +189,10 @@ pub(in crate::project_slice) fn emit(
             );
             wipe_tower::Integration::new(
                 data,
-                settings,
+                traversal,
+                schedule.tool_ordering.all_extruders(),
                 center,
                 overlap,
-                wipe_tower::plate_position(traversal),
             )
         }),
         auto_lift: motion::auto_lift::AutoLift::prepare(traversal)

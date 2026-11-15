@@ -87,7 +87,7 @@ impl Plan {
                 .collect(),
             area: (std::f64::consts::FRAC_PI_4 * diameter.powi(2)) as f32,
             tpu: used.iter().any(|&i| at(&g.filament_type.0, i) == "TPU"),
-            no_sparse: settings.process.gcode.wipe_tower_no_sparse_layers.0,
+            no_sparse: super::super::sparse_layers_skipped(settings),
             extra_rib: p.wipe_tower_extra_rib_length.0 as f32,
         }
     }
