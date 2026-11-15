@@ -6,6 +6,8 @@ mod estimation;
 mod filament_legend;
 mod heights_widths;
 mod moves;
+#[cfg(feature = "panic-probe")]
+mod panic_probe;
 mod plater;
 mod profiles;
 mod raw_moves;
