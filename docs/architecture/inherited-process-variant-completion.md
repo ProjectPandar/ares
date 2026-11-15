@@ -60,8 +60,9 @@ loading, not an independently designed configuration system.
 Use `inherited_user_process_scalar_array_whole_file`, which compares public
 `slice_with_profiles` output to fresh Native output for inherited user process
 bridge-speed arrays `[50,50]` and `[50,60]`. Both Native outputs first compare
-against its `[50]` Native control. Include the existing single-value input in
-Ares comparison too, so the correction also preserves the unaffected control.
+against its `[50]` Native-only control. Keep that singleton outside the Ares
+comparison. Retain the Ares process identity/variant columns alongside its
+complete streams before assertions, so vector cardinality remains observable.
 All comparisons retain the existing strict ordered generator-line comparator.
 
 The unchanged-production fresh baseline in both modes differs at byte115988,
