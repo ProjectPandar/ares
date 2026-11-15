@@ -50,7 +50,7 @@
      //BBS: add config related logs
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,111 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
@@ -135,6 +135,8 @@
 +            const std::string filename = project.at("filename").get<std::string>();
 +            if (!boost::algorithm::iends_with(filename, ".3mf"))
 +                throw std::runtime_error("preset-select probe requires a 3MF filename");
++            if (combined.option<ConfigOptionStrings>("filament_colour")->size() != 1)
++                throw std::runtime_error("preset-select probe requires one filament");
 +            const Json imported = config(combined);
 +            materialized = Json::array();
 +            presets.load_config_model(filename, std::move(combined),

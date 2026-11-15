@@ -298,9 +298,7 @@ fn scalar(value: &Value) -> String {
 fn wire(key: &str, value: &Value) -> String {
     match value {
         Value::Array(values) => {
-            if ares_core::option_definition(key)
-                .is_some_and(|definition| definition.kind == OptionValueKind::Strings)
-            {
+            if ares_core::option_definition(key).unwrap().kind == OptionValueKind::Strings {
                 values
                     .iter()
                     .map(|value| serde_json::to_string(value).unwrap())

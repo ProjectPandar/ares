@@ -1,7 +1,3 @@
-mod selection;
-
-pub(super) use selection::SelectionArgs;
-use selection::{FinishArgs, apply_non_connection, inherited_name};
 use serde::Serialize;
 
 use super::{
@@ -27,13 +23,6 @@ pub struct PresetRecord {
     pub config: PresetConfig,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub(super) enum LoadAndSelect {
-    Always,
-    Never,
-    OnlyIfModified,
-}
-
 #[derive(Clone, Copy, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PresetOutcome {
@@ -48,7 +37,6 @@ pub struct PresetCollectionState {
     pub selected: PresetRecord,
     pub edited: PresetRecord,
     pub dirty: bool,
-    pub modified: bool,
     pub dirty_options: Vec<String>,
     pub records: Vec<PresetRecord>,
 }
@@ -184,65 +172,24 @@ impl Collection {
 
     // Preset.cpp:3027-3262, LoadAndSelect::Always: installed reference is never replaced by its edit.
     pub(super) fn select(
-        &mut self,
-        SelectionArgs {
-            mut config,
-            filename,
-            project_version,
-            filament_id,
-            select,
-        }: SelectionArgs<'_>,
+        mut self,
+        mut config: PresetConfig,
+        filename: &str,
+        project_version: &str,
+        filament_id: &str,
     ) -> Result<PresetCollectionState, SliceError> {
         let identity = identity(self.kind);
         let original = config.string(identity);
         let parent = config.string("inherits");
         if let Some(index) = self.find(&original).or_else(|| self.find(&parent)) {
-            if matches!(select, LoadAndSelect::Never)
-                && (self.records[index].name == original || self.records[index].name == parent)
-                && self.records[index].config.same(&config)?
-            {
-                return self.finish(FinishArgs {
-                    index,
-                    outcome: PresetOutcome::ExistingClean,
-                    edited_config: None,
-                    modified: false,
-                    select,
-                });
-            }
             if self.records[index].config.same(&config)? {
-                return self.finish(FinishArgs {
-                    index,
-                    outcome: PresetOutcome::ExistingClean,
-                    edited_config: None,
-                    modified: false,
-                    select,
-                });
+                return self.finish(index, PresetOutcome::ExistingClean, None);
             }
-            if matches!(select, LoadAndSelect::Always) {
-                let mut edited = self.records[index].config.clone();
-                apply_non_connection(&mut edited, &config);
-                let modified = self.records[index].config.dirty(&edited)?.0;
-                return self.finish(FinishArgs {
-                    index,
-                    outcome: PresetOutcome::ExistingEdited,
-                    edited_config: Some(edited),
-                    modified,
-                    select,
-                });
+            let mut edited = self.records[index].config.clone();
+            for (key, value) in config.0.entries().filter(|(key, _)| !connection(key)) {
+                edited.0.insert(key.clone(), value.clone());
             }
-            if self.records[index].project_local {
-                self.records[index].config = config;
-                return self.finish(FinishArgs {
-                    index,
-                    outcome: PresetOutcome::ExistingEdited,
-                    edited_config: None,
-                    modified: false,
-                    select: LoadAndSelect::Never,
-                });
-            }
-            if config.string("inherits").is_empty() {
-                config.set_string("inherits", inherited_name(&self.records[index]));
-            }
+            return self.finish(index, PresetOutcome::ExistingEdited, Some(edited));
         }
         let prefix = if original.is_empty() {
             &parent
@@ -264,13 +211,7 @@ impl Collection {
             if let Some(index) = found
                 && self.records[index].config.same(&config)?
             {
-                return self.finish(FinishArgs {
-                    index,
-                    outcome: PresetOutcome::ExistingClean,
-                    edited_config: None,
-                    modified: false,
-                    select,
-                });
+                return self.finish(index, PresetOutcome::ExistingClean, None);
             }
             if found.is_some() {
                 suffix += 1;
@@ -278,7 +219,7 @@ impl Collection {
             }
             config.set_string(identity, name.clone());
             self.records.push(PresetRecord {
-                name: name.clone(),
+                name,
                 version: version(project_version)?,
                 default: false,
                 system: false,
@@ -293,36 +234,24 @@ impl Collection {
             let index = self
                 .records
                 .iter()
-                .position(|record| record.name == name)
+                .position(|record| record.project_local)
                 .expect("inserted project preset");
-            return self.finish(FinishArgs {
-                index,
-                outcome: PresetOutcome::ProjectLocal,
-                edited_config: None,
-                modified: false,
-                select,
-            });
+            return self.finish(index, PresetOutcome::ProjectLocal, None);
         }
     }
 
     fn finish(
-        &mut self,
-        FinishArgs {
-            index,
-            outcome,
-            edited_config,
-            modified,
-            select,
-        }: FinishArgs,
+        mut self,
+        index: usize,
+        outcome: PresetOutcome,
+        edited_config: Option<PresetConfig>,
     ) -> Result<PresetCollectionState, SliceError> {
         for record in &mut self.records {
             record.dirty = false;
         }
         let mut edited = self.records[index].clone();
-        if !matches!(select, LoadAndSelect::Never) {
-            self.records[0].visible = index == 0;
-            self.records[index].visible = true;
-        }
+        self.records[0].visible = index == 0;
+        self.records[index].visible = true;
         if let Some(config) = edited_config {
             edited.config = config;
         }
@@ -334,9 +263,8 @@ impl Collection {
             selected: self.records[index].clone(),
             edited,
             dirty,
-            modified,
             dirty_options,
-            records: self.records.clone(),
+            records: self.records,
         })
     }
 }

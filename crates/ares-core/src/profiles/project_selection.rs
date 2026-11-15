@@ -1,6 +1,5 @@
 mod collection;
 mod config;
-mod external;
 mod typed;
 mod variants;
 
@@ -15,7 +14,6 @@ use crate::{
 pub use collection::{PresetCollectionState, PresetOutcome, PresetRecord};
 pub use config::PresetConfig;
 use serde::Serialize;
-use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct PresetSelection {
@@ -31,10 +29,9 @@ pub(super) fn refresh(
     filename: &str,
 ) -> Result<(ProjectSettingsRaw, PresetSelection), SliceError> {
     let raw = &project.documents().project_settings_raw;
-    let filament_count = strings(raw, "filament_colour").len();
-    if filament_count == 0 {
+    if strings(raw, "filament_colour").len() != 1 {
         return Err(SliceError::InvalidInput(
-            "Always selection requires at least one filament".to_owned(),
+            "Always selection requires a single filament".to_owned(),
         ));
     }
     if strings(raw, "printer_technology")
@@ -52,9 +49,7 @@ pub(super) fn refresh(
     let filament_ids = strings(raw, "filament_ids");
     let print_compatible = strings(raw, "print_compatible_printers");
     let mut combined = raw.clone();
-    if filament_count == 1 {
-        combined.insert_strings("filament_self_index", &[]);
-    }
+    combined.insert_strings("filament_self_index", &[]);
     if strings(&combined, "filament_extruder_variant").is_empty() {
         combined.insert_strings(
             "filament_extruder_variant",
@@ -89,7 +84,7 @@ pub(super) fn refresh(
                 &[]
             },
         );
-        let mut collection = collection::Collection::load(catalog, kind)?;
+        let collection = collection::Collection::load(catalog, kind)?;
         let mut protected = dirty_keys(&differences, slot)?;
         protected.extend(
             [
@@ -106,42 +101,15 @@ pub(super) fn refresh(
         } else {
             ""
         };
-        collection.select(collection::SelectionArgs {
-            config,
-            filename,
-            project_version: version,
-            filament_id,
-            select: collection::LoadAndSelect::Always,
-        })
-    };
-    let process = load(ProfileKind::Process, 0)?;
-    let printer = load(ProfileKind::Machine, filament_count + 1)?;
-    let filament_states = if filament_count == 1 {
-        let state = load(ProfileKind::Filament, 1)?;
-        drop(load);
-        vec![state]
-    } else {
-        drop(load);
-        external::load_external_filaments(external::ExternalFilamentArgs {
-            catalog,
-            source: &combined,
-            filament_ids: &filament_ids,
-            inherited: &inherited,
-            machine_conditions: &machine_conditions,
-            process_conditions: &process_conditions,
-            differences: &differences,
-            filament_count,
-            filename,
-            version,
-        })?
+        collection.select(config, filename, version, filament_id)
     };
     let selection = PresetSelection {
-        process,
-        printer,
-        filament: filament_states[0].clone(),
+        process: load(ProfileKind::Process, 0)?,
+        printer: load(ProfileKind::Machine, 2)?,
+        filament: load(ProfileKind::Filament, 1)?,
     };
     let mut result = raw.clone();
-    for state in [&selection.process, &selection.printer] {
+    for state in [&selection.process, &selection.printer, &selection.filament] {
         for (key, value) in state.edited.config.0.entries() {
             if matches!(
                 key.as_str(),
@@ -159,31 +127,6 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
     }
-    let mut filament_values = BTreeMap::new();
-    for state in &filament_states {
-        for (key, value) in state.edited.config.0.entries() {
-            if matches!(
-                key.as_str(),
-                "inherits"
-                    | "compatible_printers"
-                    | "compatible_prints"
-                    | "compatible_printers_condition"
-                    | "compatible_prints_condition"
-                    | "filament_self_index"
-                    | "filament_extruder_variant"
-                    | "filament_map"
-            ) {
-                continue;
-            }
-            if matches!(value, RawConfigValue::List(_)) {
-                continue;
-            }
-            filament_values.insert(key.clone(), value.clone());
-        }
-    }
-    for (key, value) in filament_values {
-        result.insert(key, value);
-    }
     for (kind, state) in [
         (ProfileKind::Process, &selection.process),
         (ProfileKind::Machine, &selection.printer),
@@ -195,10 +138,7 @@ pub(super) fn refresh(
     }
     result.insert_strings(
         "filament_settings_id",
-        &filament_states
-            .iter()
-            .map(|state| state.selected.name.clone())
-            .collect::<Vec<_>>(),
+        std::slice::from_ref(&selection.filament.selected.name),
     );
     Ok((result, selection))
 }
