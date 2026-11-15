@@ -1,7 +1,7 @@
 import { type ReactNode, useRef, useState } from "react";
 import { OrcaIcon } from "../shell/icons";
 import { ctrlLabel } from "../shell/keys";
-import { importFile } from "../state/actions";
+import { importFiles } from "../state/actions";
 import { addPlate, changeInstances, MAX_PLATES } from "../state/plates";
 import { useApp } from "../state/store";
 import { instanceEdits } from "../sidebar/ObjectMenu";
@@ -65,11 +65,10 @@ export function PlaterToolbar({ gizmo, onGizmo }: { gizmo: GizmoMode | null; onG
     <div className="plater-toolbar" data-testid="plater-toolbar">
       <Bar name="Main toolbar">
         <Item name="Add" title={`Add [${ctrlLabel}I]`} icon={icon("toolbar_open")} enabled={!slicing} onClick={() => input.current?.click()} />
-        <input ref={input} type="file" accept=".3mf,.stl" hidden
+        <input ref={input} type="file" accept=".3mf,.stl" multiple hidden
           onChange={(event) => {
-            const picked = event.target.files?.[0];
+            importFiles([...(event.target.files ?? [])]);
             event.target.value = "";
-            if (picked) void importFile(picked);
           }} />
         <Item name="Add plate" title="Add plate" icon={icon("toolbar_add_plate")} enabled={!slicing && plates < MAX_PLATES}
           onClick={() => void addPlate()} />

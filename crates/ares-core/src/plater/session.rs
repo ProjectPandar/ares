@@ -12,8 +12,11 @@ use crate::{Project, SliceError, Transform3d};
 mod plates;
 use super::arrange_job;
 
+mod input;
+pub(super) use input::SessionInput;
+
 pub struct PlaterSession {
-    input: Vec<u8>,
+    input: SessionInput,
     pub(super) project: Project,
     pub(super) plates: PlateList,
     /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
@@ -94,6 +97,10 @@ impl PlaterSession {
     }
 
     pub(super) fn with_project(input: Vec<u8>, project: Project) -> Self {
+        Self::from_source(SessionInput::Bytes(input), project)
+    }
+
+    pub(super) fn from_source(input: SessionInput, project: Project) -> Self {
         let plates = project
             .plates()
             .iter()
@@ -144,10 +151,6 @@ impl PlaterSession {
             current_plate: 0,
             loaded_instances,
         }
-    }
-
-    pub fn input(&self) -> &[u8] {
-        &self.input
     }
 
     pub fn project(&self) -> &Project {

@@ -169,7 +169,8 @@ pub use pipeline::{PipelineDiagnostics, PipelineStage, SlicingPipeline, run_slic
 pub use planning::{Layer, plan_layers};
 pub use plater::{
     ArrangeScope, ArrangeSettings, PlaterEdits, PlaterPlate, PlaterSession, PlaterSlice,
-    PlaterSnapshot, ScaleEdit, slice_plater_plate, slice_plater_with_profiles,
+    PlaterSnapshot, ScaleEdit, StlFile, StlImportOptions, slice_plater_plate,
+    slice_plater_with_profiles,
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};
@@ -194,6 +195,9 @@ pub use profiles::{
     merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
     slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
     validate_load_settings_input, validate_with_profiles,
+};
+pub use profiles::{
+    PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
 };
 pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,

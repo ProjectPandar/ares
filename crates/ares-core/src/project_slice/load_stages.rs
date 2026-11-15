@@ -9,7 +9,7 @@ use super::{
 pub(super) fn prepare_post_closing(
     mut project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
-    let sliced_plate = project.sliced_plate.take();
+    let mut sliced_plate = project.sliced_plate.take();
     let state::ProjectSliceState {
         project,
         resolved,
@@ -17,7 +17,13 @@ pub(super) fn prepare_post_closing(
         scale,
         looped_objects,
     } = if let Some(profile) = project.profile {
-        profile_entry::prepare_profile_slice(&project, profile)?
+        profile_entry::prepare_profile_slice(
+            &project,
+            profile,
+            sliced_plate
+                .as_deref_mut()
+                .map(|report| &mut report.upward_machines),
+        )?
     } else {
         state::prepare_project_source(project)?
     };
@@ -27,6 +33,7 @@ pub(super) fn prepare_post_closing(
         let settings = &resolved.views.full;
         *sliced_plate = crate::SlicedPlate {
             warnings: Vec::new(),
+            upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
             triangle_count: state::inside_triangle_count(&project)?,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,

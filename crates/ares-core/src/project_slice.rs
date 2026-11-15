@@ -57,8 +57,9 @@ pub use validated::{
 /// `profile_settings` view.
 pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project, SliceError> {
     if let Some(refresh) = source.refresh {
-        return refresh
-            .load(source.bytes, source.overrides, source.validate_print)
+        return source
+            .input
+            .load(source.overrides, Some(refresh), source.validate_print)
             .map(|(project, _)| project);
     }
     let Some(profile) = source.profile else {
@@ -83,7 +84,7 @@ mod slicing_mode_intersections;
 mod source;
 mod state;
 use source::ProjectBytes;
-pub(crate) use source::{ProfileInput, ProjectSource};
+pub(crate) use source::{ProfileInput, ProjectInput, ProjectSource};
 pub(crate) use state::{BedShape, Circle, PrintVolume, instance_partly_outside};
 mod support_material;
 
@@ -117,7 +118,7 @@ pub async fn slice_project_plate(
 ) -> Result<Vec<u8>, SliceError> {
     slice_source(
         ProjectSource {
-            bytes: project.as_ref(),
+            input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,
             refresh: None,
@@ -146,7 +147,7 @@ pub async fn slice_project_plate_processed(
 ) -> Result<ProcessedGCode, SliceError> {
     slice_source(
         ProjectSource {
-            bytes: project.as_ref(),
+            input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,
             refresh: None,
