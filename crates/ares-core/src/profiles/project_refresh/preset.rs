@@ -82,7 +82,7 @@ pub(super) fn refresh(
     Ok(result)
 }
 
-fn system_config(
+pub(super) fn system_config(
     catalog: &Catalog,
     kind: ProfileKind,
     name: &str,
