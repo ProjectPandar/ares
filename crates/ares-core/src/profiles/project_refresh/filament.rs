@@ -92,23 +92,61 @@ pub(super) fn apply(
         "filament_self_index".to_owned(),
         RawConfigValue::List(self_index),
     );
+    if refresh_unlisted && filaments.iter().any(Option::is_none) {
+        return Ok(());
+    }
+    set_filament_dev_options(
+        result,
+        filaments.iter().map(Option::as_ref),
+        (!refresh_unlisted).then_some(project),
+    )?;
+    Ok(())
+}
+
+// PrintConfig.cpp:11430-11443; CLI:3815-3834 preserves original project keys on refresh.
+pub(crate) fn set_filament_dev_options<'a>(
+    result: &mut ProjectSettingsRaw,
+    filaments: impl Iterator<Item = Option<&'a ProjectSettingsRaw>> + Clone,
+    preserved: Option<&ProjectSettingsRaw>,
+) -> Result<(), SliceError> {
     for key in DEV_KEYS {
-        if !refresh_unlisted && project.contains_key(key) {
-            continue;
-        }
-        if refresh_unlisted && filaments.iter().any(Option::is_none) {
+        if preserved.is_some_and(|project| project.contains_key(key))
+            || !filaments
+                .clone()
+                .flatten()
+                .any(|config| config.contains_key(key))
+        {
             continue;
         }
         let mut values = Vec::new();
-        for config in filaments {
+        for config in filaments.clone() {
             let default;
-            let source = if let Some(value) = config.as_ref().and_then(|raw| raw.get(key)) {
+            let source = if let Some(value) = config.and_then(|raw| raw.get(key)) {
                 value
             } else {
                 default = keys::default_value(key)?.unwrap();
                 &default
             };
-            values.extend(vector(source));
+            // Config.cpp:985-987 routes scalar strings to the option decoder;
+            // Config.hpp:1225-1229 decodes coStrings wire into a vector.
+            let decoded = match source {
+                RawConfigValue::Text(wire) => Some(crate::options::json_deserialize::decode(
+                    crate::option_definition(key).unwrap().kind,
+                    wire,
+                )),
+                _ => None,
+            }
+            .transpose()
+            .map_err(|error| {
+                SliceError::InvalidInput(format!("invalid Orca option {key}: {error}"))
+            })?;
+            let source = decoded.as_ref().unwrap_or(source);
+            let RawConfigValue::List(source) = source else {
+                return Err(SliceError::InvalidInput(format!(
+                    "invalid Orca option {key}: expected a vector"
+                )));
+            };
+            values.extend_from_slice(source);
         }
         result.insert((*key).to_owned(), RawConfigValue::List(values));
     }
@@ -200,7 +238,7 @@ fn is_vector(kind: crate::OptionValueKind) -> bool {
     )
 }
 
-fn dev_key(key: &str) -> bool {
+pub(crate) fn dev_key(key: &str) -> bool {
     DEV_KEYS.contains(&key)
 }
 
