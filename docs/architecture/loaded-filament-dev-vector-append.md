@@ -78,6 +78,17 @@ boundary, stop implementation and report it rather than widening this slice.
 A corrected first difference alone does not establish whole-file equality.
 Run formatting and workspace all-target clippy checks before completion.
 
+## Scalar JSON wire boundary
+
+`Config.cpp:985–987` sends scalar JSON strings through `set_deserialize`;
+`Config.hpp:1225–1229` decodes coStrings wire into a vector. Raw preset fields
+are not guaranteed to have that shape after `handle_legacy`. Device assembly
+therefore uses the shared config-definition decoder for scalar strings instead
+of assuming a list. Valid and empty wire retain upstream semantics; malformed
+wire or an invalid vector shape returns `SliceError`, never a shape panic.
+The public `slice_with_load_settings` regression compares synthetic scalar and
+array JSON against each other and Native, and checks malformed quoted wire.
+
 ## Deferred boundaries
 
 Authored filament identity, process-vector sizing, loaded-source admission,
