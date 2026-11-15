@@ -188,7 +188,7 @@ pub(super) fn append<'a>(
     // c7ea935f lesson: no already-retracted mid-print deferrals).
     // The deferred lift exists only when the change-layer retract ran —
     // same `will_move_z` gate (`GCode.cpp:5693`).
-    let layer_retract_pending = state.pending_layer_retract
+    let layer_retract_pending = state.options.retract_when_changing_layer
         && will_move_z
         && state.options.z_hop > 0.0
         && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
