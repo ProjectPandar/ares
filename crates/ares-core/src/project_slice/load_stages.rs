@@ -25,14 +25,18 @@ pub(super) fn prepare_post_closing(
                 .map(|report| &mut report.upward_machines),
         )?
     } else {
-        state::prepare_project_source(project)?
+        state::prepare_project_source(ProjectSource {
+            sliced_plate: sliced_plate.as_deref_mut(),
+            ..project
+        })?
     };
     if let Some(sliced_plate) = sliced_plate {
         // `OrcaSlicer.cpp:6576-6640, 6926-6931`: the plate's facets and `m_print_config` values, read
         // as `Print::validate`'s failure families read them (`print/validate.rs`).
+        let warnings = std::mem::take(&mut sliced_plate.warnings);
         let settings = &resolved.views.full;
         *sliced_plate = crate::SlicedPlate {
-            warnings: Vec::new(),
+            warnings,
             upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
             triangle_count: state::inside_triangle_count(&project)?,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
