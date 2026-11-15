@@ -141,17 +141,21 @@ fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
     expanded
 }
 
-// PrintConfig.cpp:11984-11992: the id list is remapped last, one id per filament taken at its
-// selected variant slot; an empty list is left untouched.
+// OrcaSlicer 2.5.0 PrintConfig.cpp:11954-11962 remaps IDs last with get_at;
+// Config.hpp:676-680 reuses the first ID for an index beyond the list length.
 fn remap_filament_self_index(
     settings: &mut ProjectSettings,
     source: &ProjectSettings,
     indices: &[usize],
 ) {
     let ids = &source.project.preset.filament_self_index.0;
-    if ids.is_empty() {
+    let Some(first) = ids.first() else {
         return;
-    }
-    settings.project.preset.filament_self_index =
-        OrcaInts(indices.iter().map(|&index| ids[index]).collect());
+    };
+    settings.project.preset.filament_self_index = OrcaInts(
+        indices
+            .iter()
+            .map(|&index| *ids.get(index).unwrap_or(first))
+            .collect(),
+    );
 }
