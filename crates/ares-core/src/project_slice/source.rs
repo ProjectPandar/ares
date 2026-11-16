@@ -89,18 +89,23 @@ impl ProjectInput<'_> {
             Self::Bytes(bytes) => {
                 let (mut project, preparation) = match refresh {
                     Some(refresh) => refresh.load(bytes, overrides, validate_print)?,
+                    None if system_catalog.is_some() => {
+                        crate::project::load_project_for_profiles(bytes)?
+                    }
                     None => crate::project::load_project_with_preparation(bytes, overrides)?,
                 };
-                // OrcaSlicer.cpp:2803–2807: a lookup miss keeps the embedded slot.
-                if project.documents().bbl_family_3mf
-                    && refresh.is_none()
+                if refresh.is_none()
                     && let Some(system_catalog) = system_catalog
                 {
-                    let raw =
-                        system_catalog.refresh_direct(&project.documents().project_settings_raw)?;
+                    let mut raw = if project.documents().bbl_family_3mf {
+                        system_catalog.refresh_direct(&project.documents().project_settings_raw)?
+                    } else {
+                        project.documents().project_settings_raw.clone()
+                    };
+                    crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
                     project.apply_project_preset_refresh(raw, overrides)?;
                 }
-                Ok((project, preparation))
+                Ok((project, preparation.for_overrides(overrides)))
             }
             Self::Model(model) => {
                 if refresh.is_some() {
