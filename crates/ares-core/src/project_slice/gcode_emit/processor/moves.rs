@@ -5,11 +5,13 @@
 pub(super) mod actual_speed;
 pub(super) mod dynamics;
 mod extrusion;
+pub(super) mod insert;
+mod timing;
 use extrusion::move_type;
 pub(super) mod tags;
 
 use super::ProcessorConfig;
-use super::estimate::options_z::{Log, Scheduled};
+use super::estimate::options_z::Corrector;
 use super::motion::MotionState;
 use super::motion_util::{MMMIN_TO_MMSEC, word};
 use crate::ExtrusionRole;
@@ -46,7 +48,7 @@ pub(super) struct MoveRecorder {
     color_change_volumes: Vec<f64>,
     /// The `custom_gcode_per_print_z` item of a pending `set()`.
     pending_option: Option<usize>,
-    pub(super) options_z: Log,
+    options_z: Corrector,
     tags: &'static Tags,
     role: ExtrusionRole,
     processing_start_custom_gcode: bool,
@@ -115,7 +117,7 @@ impl MoveRecorder {
             color_change_volume: 0.0,
             color_change_volumes: Vec::new(),
             pending_option: None,
-            options_z: Log::new(),
+            options_z: Corrector::new(),
             tags: if config.limits.bbl_printer {
                 &BBL_TAGS
             } else {
@@ -274,23 +276,6 @@ impl MoveRecorder {
         self.store(source, move_type, [start, end], delta[3]);
     }
 
-    /// `OptionsZCorrector::update` (`GCodeProcessor.hpp:693-705`); the copy
-    /// and erase of `moves` replay in `Log::replay` once the flushes are known.
-    fn correct_options_z(&mut self) {
-        if let Some(item_id) = self.pending_option.take() {
-            let position = self.moves[self.moves.len() - 1].position;
-            self.options_z.update(self.height);
-            self.custom_gcode_per_print_z[item_id].print_z = f64::from(position[2]);
-        }
-    }
-
-    /// `OptionsZCorrector::set` (`GCodeProcessor.hpp:688-691`) after a marker
-    /// vertex and its `custom_gcode_per_print_z` item.
-    fn set_option(&mut self) {
-        self.pending_option = Some(self.custom_gcode_per_print_z.len() - 1);
-        self.options_z.set();
-    }
-
     /// `store_move_vertex` (`:5630-5718`); `source` is the input line the
     /// vertex reports before the export remap, `[start, end]` are
     /// `m_start_position`/`m_end_position`.
@@ -314,8 +299,7 @@ impl MoveRecorder {
             (end[2] - f64::from(self.z_offset)) as f32
         };
         let position = [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z];
-        self.options_z.vertex();
-        self.moves.push(MoveVertex {
+        let vertex = MoveVertex {
             gcode_id: source as u32,
             move_type,
             extrusion_role: self.role,
@@ -337,16 +321,9 @@ impl MoveRecorder {
             time: 0.0,
             layer_id: self.layer_id.max(1) - 1,
             internal_only: false,
-        });
-    }
-
-    pub(super) fn apply_schedule(
-        &mut self,
-        scheduled: &Scheduled<'_>,
-        cache_eligible: &mut [bool],
-    ) {
-        let recorded = std::mem::take(&mut self.moves);
-        self.moves = self.options_z.replay(recorded, scheduled, cache_eligible);
+        };
+        self.options_z.vertex(&vertex);
+        self.moves.push(vertex);
     }
 
     /// `finalize` wipe sizes (`:2689-2695`); `gcode_id` moves from processor
