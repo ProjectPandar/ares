@@ -5,6 +5,7 @@ use super::{OrcaRunner, Stage, StageError, cache_identity, fs, io, lock, publish
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
+#[cfg(target_os = "linux")]
 mod success;
 
 pub(crate) struct CliResultReference {
@@ -18,14 +19,20 @@ pub(crate) struct CliResultReference {
 #[derive(Clone, Copy)]
 pub(crate) enum EarlyExit {
     InvalidValues,
+    #[cfg(target_os = "linux")]
     Postprocess,
+    #[cfg(target_os = "linux")]
     EmptyPlate,
+    #[cfg(target_os = "linux")]
     Validation,
+    #[cfg(target_os = "linux")]
     NotFound,
+    #[cfg(target_os = "linux")]
     ProcessNotCompatible,
     /// Absent `--load-settings` entry: the 3MF admission gate
     /// (`OrcaSlicer.cpp:1682-1690`) fires before the file reads
     /// (`:1953-2024`), so the native outcome stays `-19`.
+    #[cfg(target_os = "linux")]
     MissingSettingsFile,
 }
 
@@ -67,11 +74,17 @@ impl EarlyExit {
     pub(crate) fn code(self) -> i32 {
         match self {
             Self::InvalidValues => -18,
+            #[cfg(target_os = "linux")]
             Self::Postprocess => -19,
+            #[cfg(target_os = "linux")]
             Self::EmptyPlate => -50,
+            #[cfg(target_os = "linux")]
             Self::Validation => -51,
+            #[cfg(target_os = "linux")]
             Self::NotFound => -3,
+            #[cfg(target_os = "linux")]
             Self::ProcessNotCompatible => -17,
+            #[cfg(target_os = "linux")]
             Self::MissingSettingsFile => -19,
         }
     }
@@ -79,63 +92,87 @@ impl EarlyExit {
 
 #[derive(Clone, Copy)]
 enum ResultKind {
+    #[cfg(target_os = "linux")]
     CustomGCode,
+    #[cfg(target_os = "linux")]
     CustomGCodeSuccess,
+    #[cfg(target_os = "linux")]
     SequentialCollision,
+    #[cfg(target_os = "linux")]
     SequentialLast,
     Early(EarlyExit),
+    #[cfg(target_os = "linux")]
     RetainedFirst,
+    #[cfg(target_os = "linux")]
     RetainedSecond,
 }
 
 impl ResultKind {
     fn code(self) -> i32 {
         match self {
+            #[cfg(target_os = "linux")]
             Self::CustomGCode => -100,
+            #[cfg(target_os = "linux")]
             Self::CustomGCodeSuccess => 0,
+            #[cfg(target_os = "linux")]
             Self::SequentialCollision => -63,
+            #[cfg(target_os = "linux")]
             Self::SequentialLast => 0,
             Self::Early(early) => early.code(),
+            #[cfg(target_os = "linux")]
             Self::RetainedFirst | Self::RetainedSecond => -102,
         }
     }
 
     fn schema(self) -> &'static str {
         match self {
+            #[cfg(target_os = "linux")]
             Self::CustomGCode => "custom-gcode-failure-v1",
+            #[cfg(target_os = "linux")]
             Self::CustomGCodeSuccess => "custom-gcode-success-v1",
+            #[cfg(target_os = "linux")]
             Self::SequentialCollision => "sequential-collision-v1",
+            #[cfg(target_os = "linux")]
             Self::SequentialLast => "sequential-last-v1",
             Self::Early(_) => "early-cli-failure-v1",
+            #[cfg(target_os = "linux")]
             Self::RetainedFirst => "retained-first-v1",
+            #[cfg(target_os = "linux")]
             Self::RetainedSecond => "retained-second-v1",
         }
     }
 
     fn native_products(self) -> &'static [&'static str] {
         match self {
-            Self::CustomGCode | Self::SequentialCollision | Self::Early(_) => &["result.json"],
+            Self::Early(_) => &["result.json"],
+            #[cfg(target_os = "linux")]
+            Self::CustomGCode | Self::SequentialCollision => &["result.json"],
+            #[cfg(target_os = "linux")]
             Self::SequentialLast | Self::RetainedFirst | Self::CustomGCodeSuccess => {
                 &["plate_1.gcode", "result.json"]
             }
+            #[cfg(target_os = "linux")]
             Self::RetainedSecond => &["plate_2.gcode", "result.json"],
         }
     }
 
     fn slice(self) -> u32 {
         match self {
+            Self::Early(_) => 0,
+            #[cfg(target_os = "linux")]
             Self::RetainedSecond => 2,
+            #[cfg(target_os = "linux")]
             Self::CustomGCodeSuccess
             | Self::CustomGCode
             | Self::SequentialCollision
             | Self::SequentialLast
-            | Self::Early(_)
             | Self::RetainedFirst => 0,
         }
     }
 }
 
 impl OrcaRunner {
+    #[cfg(target_os = "linux")]
     pub(crate) fn retained_cli_reference(
         &self,
         project: &Path,
@@ -169,6 +206,7 @@ impl OrcaRunner {
     }
 
     /// The `--load-settings`/`--load-filaments` argv variant.
+    #[cfg(target_os = "linux")]
     pub(crate) fn load_settings_early_reference(
         &self,
         project: &Path,
@@ -188,6 +226,7 @@ impl OrcaRunner {
         )
     }
 
+    #[cfg(target_os = "linux")]
     pub(crate) fn sequential_clearance_reference(
         &self,
         project: &Path,
@@ -218,7 +257,11 @@ impl OrcaRunner {
             load_settings,
         } = request;
         let stage = Stage::Slice;
-        let (project, mut components) = if matches!(kind, ResultKind::Early(EarlyExit::NotFound)) {
+        #[cfg(target_os = "linux")]
+        let absent_input = matches!(kind, ResultKind::Early(EarlyExit::NotFound));
+        #[cfg(not(target_os = "linux"))]
+        let absent_input = false;
+        let (project, mut components) = if absent_input {
             let project = std::path::absolute(project).map_err(|error| io(stage, error))?;
             if project.try_exists().map_err(|error| io(stage, error))? {
                 return Err(io(stage, "Native missing-file input must remain absent"));
@@ -289,17 +332,19 @@ impl OrcaRunner {
             stderr: stages::read(&entry.join("stderr"), stage)?,
             result_json: stages::read(&entry.join("result.json"), stage)?,
             gcode: match kind {
+                #[cfg(target_os = "linux")]
                 ResultKind::SequentialLast
                 | ResultKind::RetainedFirst
                 | ResultKind::CustomGCodeSuccess => {
                     Some(stages::read(&entry.join("plate_1.gcode"), stage)?)
                 }
+                #[cfg(target_os = "linux")]
                 ResultKind::RetainedSecond => {
                     Some(stages::read(&entry.join("plate_2.gcode"), stage)?)
                 }
-                ResultKind::CustomGCode
-                | ResultKind::SequentialCollision
-                | ResultKind::Early(_) => None,
+                ResultKind::Early(_) => None,
+                #[cfg(target_os = "linux")]
+                ResultKind::CustomGCode | ResultKind::SequentialCollision => None,
             },
             directory: entry,
         })

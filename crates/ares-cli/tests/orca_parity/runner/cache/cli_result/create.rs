@@ -106,6 +106,7 @@ impl OrcaRunner {
         if parsed["return_code"] != kind.code() {
             return Err(io(stage, "Native result.json return code mismatch"));
         }
+        #[cfg(target_os = "linux")]
         if matches!(
             kind,
             ResultKind::SequentialLast | ResultKind::CustomGCodeSuccess
@@ -117,6 +118,7 @@ impl OrcaRunner {
             fs::write(staging.path().join("plate_1.gcode"), gcode)
                 .map_err(|error| io(stage, error))?;
         }
+        #[cfg(target_os = "linux")]
         if matches!(kind, ResultKind::RetainedFirst | ResultKind::RetainedSecond) {
             let filename = kind.native_products()[0];
             let gcode = stages::read(&output.join(filename), stage)?;
