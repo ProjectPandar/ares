@@ -65,7 +65,6 @@ pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project
                 source.overrides,
                 Some(refresh),
                 source.system_catalog,
-                None,
                 source.validate_print,
             )
             .map(|(project, _)| project);

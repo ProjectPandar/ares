@@ -29,7 +29,7 @@ pub(super) struct ProjectSliceState {
 }
 
 pub(super) fn prepare_project_source(
-    mut source: super::ProjectSource<'_>,
+    source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut project, preparation) = source.input.load(
         source.overrides,
