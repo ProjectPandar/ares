@@ -1,50 +1,45 @@
-//! `process_custom_gcode_time`, `finalize`, `get_custom_gcode_times`
-//! (GCodeProcessor.cpp:5917-5934, 2702-2707, 2737-2750).
+//! `process_custom_gcode_time`, `finalize`, `get_custom_gcode_times`.
 
 use crate::gcode_processor::{CustomGCodeTime, CustomGCodeType};
 
-pub(super) fn custom_times(
-    events: &[(CustomGCodeType, usize)],
-    flush_ends: &[usize],
-    times: &[f64],
-    trailing_delay: f64,
-    total: f64,
-) -> Vec<CustomGCodeTime> {
-    if events.is_empty() {
-        return Vec::new();
+#[derive(Default)]
+pub(super) struct CustomTimes {
+    records: Vec<(CustomGCodeType, f32)>,
+    cache: f32,
+    registered: bool,
+}
+
+impl CustomTimes {
+    pub(super) fn add(&mut self, time: f64) {
+        self.cache = (f64::from(self.cache) + time) as f32;
     }
-    let mut records = Vec::with_capacity(events.len() + 1);
-    let mut cursor = 0;
-    for &(kind, flush) in events {
-        // A synchronize may retain a single pending block. Count only blocks
-        // actually processed by that flush, not every block parsed so far.
-        let end = flush_ends[flush];
-        let duration = times[cursor..end]
-            .iter()
-            .fold(0.0_f32, |cache, time| (f64::from(cache) + time) as f32);
-        cursor = end;
-        if duration != 0.0 {
-            records.push((kind, duration));
+
+    pub(super) fn register(&mut self, kind: CustomGCodeType) {
+        self.registered = true;
+        if self.cache != 0.0 {
+            self.records.push((kind, self.cache));
         }
+        self.cache = 0.0;
     }
-    let trailing = times[cursor..]
-        .iter()
-        .fold(0.0_f32, |cache, time| (f64::from(cache) + time) as f32)
-        + trailing_delay as f32;
-    if trailing != 0.0 {
-        records.push((CustomGCodeType::ColorChange, trailing));
+
+    pub(super) fn finish(mut self, trailing_delay: f64, total: f64) -> Vec<CustomGCodeTime> {
+        if !self.registered {
+            return Vec::new();
+        }
+        self.cache += trailing_delay as f32;
+        self.register(CustomGCodeType::ColorChange);
+        let mut elapsed = 0.0_f32;
+        self.records
+            .into_iter()
+            .map(|(kind, duration)| {
+                let remaining = (total - f64::from(elapsed)) as f32;
+                elapsed += duration;
+                CustomGCodeTime {
+                    kind,
+                    duration,
+                    remaining,
+                }
+            })
+            .collect()
     }
-    let mut elapsed = 0.0_f32;
-    records
-        .into_iter()
-        .map(|(kind, duration)| {
-            let remaining = (total - f64::from(elapsed)) as f32;
-            elapsed += duration;
-            CustomGCodeTime {
-                kind,
-                duration,
-                remaining,
-            }
-        })
-        .collect()
 }
