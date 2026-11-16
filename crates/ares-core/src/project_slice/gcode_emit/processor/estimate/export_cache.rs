@@ -18,11 +18,15 @@ pub(super) struct Entry {
     pub(super) elapsed: f32,
 }
 
-pub(super) fn snapshots(lines: &[String], cache: &[Entry]) -> Vec<Option<f32>> {
-    let mut snapshots = vec![None; lines.len() + 1];
+pub(super) fn snapshots<'a>(
+    lines: impl IntoIterator<Item = &'a str>,
+    line_count: usize,
+    cache: &[Entry],
+) -> Vec<Option<f32>> {
+    let mut snapshots = vec![None; line_count + 1];
     let mut cache_index = 0;
     let mut counter = 0;
-    for (index, line) in lines.iter().enumerate() {
+    for (index, line) in lines.into_iter().enumerate() {
         let command = command(line);
         if !matches!(command, "G0" | "G1" | "G2" | "G3" | "G28") {
             continue;
