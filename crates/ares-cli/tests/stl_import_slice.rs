@@ -107,20 +107,24 @@ async fn compare_slice(case: &str) {
         LoadSettingsSliceRequest {
             filename: &format!("{case}.stl"),
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             settings: &[
                 LoadSettingsFile {
                     label: "machine.json",
                     json: MACHINE,
+                    source_identity: None,
                 },
                 LoadSettingsFile {
                     label: "process.json",
                     json: PROCESS,
+                    source_identity: None,
                 },
             ],
             filaments: &[LoadSettingsFile {
                 label: "filament.json",
                 json: FILAMENT,
+                source_identity: None,
             }],
             plate: None,
             overrides: &ConfigOverrides::default(),

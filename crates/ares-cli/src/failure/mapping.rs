@@ -267,5 +267,10 @@ pub(crate) fn slice_error_to_failure(
         | SliceError::InvalidInput(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),
+        SliceError::PresetAdmission(error) => CliFailure::config_file_error(
+            #[cfg(target_os = "linux")]
+            output,
+            format!("{error}\n"),
+        ),
     }
 }

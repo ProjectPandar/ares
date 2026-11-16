@@ -42,18 +42,45 @@ pub(super) async fn slice(
     let filaments = read_preset_files(load_filaments)?;
     let settings = settings
         .iter()
-        .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+        .map(
+            |(label, json, source_identity)| ares_core::LoadSettingsFile {
+                label,
+                json,
+                source_identity: source_identity.as_ref(),
+            },
+        )
         .collect::<Vec<_>>();
     let filaments = filaments
         .iter()
-        .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+        .map(
+            |(label, json, source_identity)| ares_core::LoadSettingsFile {
+                label,
+                json,
+                source_identity: source_identity.as_ref(),
+            },
+        )
         .collect::<Vec<_>>();
+    let loaded_sources = crate::preset_sources::load(settings.iter().chain(&filaments).copied())
+        .map_err(|error| match error.downcast::<ares_core::SliceError>() {
+            Ok(error) => slice_error_to_failure(
+                *error,
+                &args.output,
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            ),
+            Err(error) => CliFailure::config_file_error(
+                #[cfg(target_os = "linux")]
+                &args.output,
+                format!("{error}\n"),
+            ),
+        })?;
     let mut sliced_plate = ares_core::SlicedPlate::default();
     let gcode = match ares_core::slice_with_load_settings(
         input,
         ares_core::LoadSettingsSliceRequest {
             filename,
             catalog_json: catalog.as_deref(),
+            loaded_sources: Some(&loaded_sources),
             uptodate: args.uptodate,
             settings: &settings,
             filaments: &filaments,

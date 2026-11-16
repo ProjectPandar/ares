@@ -104,15 +104,18 @@ fn check(case: &str, repeat: u8) -> Recorded {
         LoadSettingsFile {
             label: "machine.json",
             json: &texts[0],
+            source_identity: None,
         },
         LoadSettingsFile {
             label: "process.json",
             json: &texts[1],
+            source_identity: None,
         },
     ];
     let filaments = [LoadSettingsFile {
         label: "filament.json",
         json: &texts[2],
+        source_identity: None,
     }];
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
@@ -122,6 +125,7 @@ fn check(case: &str, repeat: u8) -> Recorded {
             LoadSettingsSliceRequest {
                 filename: "single.3mf",
                 catalog_json: None,
+                loaded_sources: None,
                 uptodate: false,
                 settings: &settings,
                 filaments: &filaments,

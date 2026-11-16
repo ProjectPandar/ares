@@ -95,6 +95,7 @@ fn load_settings_progress_preserves_status_order_and_gcode() {
     let settings = [ares_core::LoadSettingsFile {
         label: "machine.json",
         json: std::str::from_utf8(&machine).unwrap(),
+        source_identity: None,
     }];
     let overrides = ares_core::ConfigOverrides::default();
     let mut sliced_plate = ares_core::SlicedPlate::default();
@@ -106,6 +107,7 @@ fn load_settings_progress_preserves_status_order_and_gcode() {
             ares_core::LoadSettingsSliceRequest {
                 filename: "input.3mf",
                 catalog_json: None,
+                loaded_sources: None,
                 uptodate: false,
                 settings: &settings,
                 filaments: &[],

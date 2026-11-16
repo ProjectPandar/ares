@@ -83,21 +83,25 @@ async fn profile_overlay_default_gcodes() {
         LoadSettingsFile {
             label: "machine.json",
             json: &settings_json[0],
+            source_identity: None,
         },
         LoadSettingsFile {
             label: "process.json",
             json: &settings_json[1],
+            source_identity: None,
         },
     ];
     let filaments = [LoadSettingsFile {
         label: "filament.json",
         json: &settings_json[2],
+        source_identity: None,
     }];
     let ares = ares_core::slice_with_load_settings(
         input,
         LoadSettingsSliceRequest {
             filename: "input.3mf",
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             settings: &settings,
             filaments: &filaments,
