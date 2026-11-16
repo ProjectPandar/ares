@@ -43,7 +43,8 @@ fn partial_records_keep_pause_and_trailing_print_separate_from_layer_brackets() 
                 cp_color_id: 2,
                 ..Default::default()
             },
-        ],
+        ]
+        .into(),
         custom_gcode_per_print_z: vec![
             event(CustomGCodeType::ColorChange, 0.2, "#FF0000"),
             event(CustomGCodeType::PausePrint, 0.4, ""),

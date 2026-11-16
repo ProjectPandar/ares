@@ -79,7 +79,7 @@ impl Corrector {
     /// pending blocks after the erased vertex.
     pub(in crate::project_slice::gcode_emit::processor) fn update(
         &mut self,
-        moves: &mut Vec<MoveVertex>,
+        moves: &mut crate::gcode_processor::ChunkedMoves,
         height: f32,
     ) {
         let public = self.pending_public.take().unwrap();
@@ -111,7 +111,7 @@ impl Corrector {
     /// the existing buffers (`GCodeProcessor.cpp:8103-8192`).
     pub(in crate::project_slice::gcode_emit::processor) fn flush(
         &mut self,
-        moves: &mut Vec<MoveVertex>,
+        moves: &mut crate::gcode_processor::ChunkedMoves,
         batch: &[(f64, Trapezoid)],
     ) -> Vec<Option<bool>> {
         let mut eligible = Vec::with_capacity(batch.len());

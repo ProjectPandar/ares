@@ -20,7 +20,7 @@ fn processed_buffers_preserve_ids_and_owned_data() {
         warnings: Vec::new(),
         gcode: b"G1 X1\n".to_vec(),
         result: GCodeProcessorResult {
-            moves: vec![MoveVertex::default(), vertex],
+            moves: vec![MoveVertex::default(), vertex].into(),
             spiral_vase_mode: true,
             extruder_colors: vec!["#FF0000".into()],
             ..Default::default()
@@ -75,7 +75,8 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
                 at(EMoveType::Travel, 1, 0.6),
                 at(EMoveType::Extrude, 1, 0.4),
                 at(EMoveType::Travel, 2, 0.8),
-            ],
+            ]
+            .into(),
             spiral_vase_mode: false,
             ..Default::default()
         },
@@ -112,7 +113,8 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
                 at(EMoveType::Travel, 1),
                 at(EMoveType::Extrude, 1),
                 at(EMoveType::Travel, 2),
-            ],
+            ]
+            .into(),
             spiral_vase_mode: false,
             ..Default::default()
         },
