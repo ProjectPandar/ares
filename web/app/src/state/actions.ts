@@ -138,7 +138,8 @@ export async function sliceAllPlates() {
 }
 
 async function slicePlates(indices: number[]) {
-  await stlSessionOpened();
+  const opened = stlSessionOpened();
+  await opened;
   const { file, scene, slice, overrides, presetSelection, plater } = useApp.getState();
   if (!file || !scene || slice.status === "slicing") return;
   if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;
@@ -157,6 +158,12 @@ async function slicePlates(indices: number[]) {
           ? await plater.sliceWithProfiles(await catalogJson(useApp.getState()), FROM_PROJECT, { plate, seed: 0, placement: "none", overrides: await overrideTokens(overrides) }, onStatus)
           : await slicer.sliceStl(file.bytes);
       if (useApp.getState().file !== file) return;
+      // A preset switch opened another STL session and freed this one: upstream applies the new config to
+      // the one current print, stops the slice and invalidates the plate (Plater.cpp:11402-11466).
+      if (stlSessionOpened() !== opened) {
+        useApp.setState({ slice: { status: "idle" } });
+        return;
+      }
       setSliceResult(result, performance.now() - startedAt);
       useApp.setState(({ plateSlices, slice: done }) => ({ plateSlices: { ...plateSlices, [index]: done as SlicedPlate } }));
     } catch (error) {
