@@ -108,15 +108,16 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
             break;
         }
     }
-    let runtime = &traversal.resolved.views.runtime.project.gcode;
+    let runtime = &traversal.resolved.views.runtime.project;
     let filaments = (0..count)
         .map(|index| {
             Filament::new(
                 settings,
                 index,
                 (
-                    at(&runtime.retraction_length.0, index).0 as f32,
-                    at(&runtime.retraction_speed.0, index).0 as f32,
+                    at(&runtime.gcode.retraction_length.0, index).0 as f32,
+                    at(&runtime.gcode.retraction_speed.0, index).0 as f32,
+                    at(&runtime.print.wipe_distance.0, index).0 as f32,
                 ),
             )
         })
