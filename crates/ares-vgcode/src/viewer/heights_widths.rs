@@ -47,8 +47,12 @@ impl ViewerImpl {
     /// clamped to at least 0.05, so the `<= 0` early return (:918-919) never
     /// applies.
     pub fn heights_widths(&self) -> Vec<[f32; 2]> {
+        self.heights_widths_range(0..self.vertices.len())
+    }
+
+    pub fn heights_widths_range(&self, range: std::ops::Range<usize>) -> Vec<[f32; 2]> {
         let Radii { travels, wipes } = self.radii;
-        self.vertices
+        self.vertices[range]
             .iter()
             .map(|v| {
                 if v.is_travel() {
@@ -66,7 +70,11 @@ impl ViewerImpl {
     /// extrusion vertices are pushed down by half their height, the others keep
     /// the nozzle z.
     pub fn positions(&self) -> Vec<Vec3> {
-        self.vertices
+        self.positions_range(0..self.vertices.len())
+    }
+
+    pub fn positions_range(&self, range: std::ops::Range<usize>) -> Vec<Vec3> {
+        self.vertices[range]
             .iter()
             .map(|v| {
                 let [x, y, z] = v.position;
@@ -83,12 +91,16 @@ impl ViewerImpl {
     /// 979-980): `atan2` of the z cross and the dot of the previous and the next
     /// line, each zero when that line is not valid (`valid_lines`).
     pub fn angles(&self) -> Vec<f32> {
+        self.angles_range(0..self.vertices.len())
+    }
+
+    pub fn angles_range(&self, range: std::ops::Range<usize>) -> Vec<f32> {
         let line = |i: usize| {
             let [ax, ay, az] = self.vertices[i].position;
             let [bx, by, bz] = self.vertices[i + 1].position;
             [bx - ax, by - ay, bz - az]
         };
-        (0..self.vertices.len())
+        range
             .map(|i| {
                 let prev = if i > 0 && self.valid_lines[i - 1] {
                     line(i - 1)

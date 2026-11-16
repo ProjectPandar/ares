@@ -68,7 +68,7 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
         print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
-    let values = vertices.take_values();
+    let values = vertices.values_range(0, vertices.count() as u32).unwrap();
     let actual: Vec<_> = values
         .as_chunks::<16>()
         .0
@@ -77,7 +77,9 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
         .collect();
     assert_eq!(actual, [5.0, 20.0, 40.0, 40.0, 150.0]);
     let range = |vertices: &mut ares_wasm::VertexBuffers, name: &str, options| {
-        vertices.vertex_colors(name, ALL_ROLES, options).unwrap();
+        vertices
+            .prepare_vertex_colors(name, ALL_ROLES, options)
+            .unwrap();
         let range: serde_json::Value =
             serde_json::from_str(&vertices.color_range(name).unwrap()).unwrap();
         serde_json::from_value::<[f32; 2]>(range["range"].clone()).unwrap()

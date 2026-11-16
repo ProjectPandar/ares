@@ -15,13 +15,14 @@ impl MoveBuffers {
     pub(crate) fn new(count: usize) -> Self {
         Self {
             count,
-            values: Vec::with_capacity(12 * count),
-            ids: Vec::with_capacity(2 * count),
-            tags: Vec::with_capacity(5 * count),
+            ..Self::default()
         }
     }
 
     pub(crate) fn extend(&mut self, moves: &[MoveVertex]) {
+        self.values.reserve_exact(12 * moves.len());
+        self.ids.reserve_exact(2 * moves.len());
+        self.tags.reserve_exact(5 * moves.len());
         for m in moves {
             self.values.extend_from_slice(&[
                 m.position[0],

@@ -35,7 +35,7 @@ impl SliceOutput {
             .expect("PrintEstimatedStatistics serializes");
         let estimation = serde_json::to_string(&crate::estimation::Estimation::from(&output))
             .expect("Estimation serializes");
-        let mut vertices = VertexBuffers::pack(viewer, palettes);
+        let mut vertices = VertexBuffers::from_viewer(viewer, palettes);
         vertices.move_type_counts = move_type_counts;
         vertices.filament_legend = filament_legend;
         Self {
