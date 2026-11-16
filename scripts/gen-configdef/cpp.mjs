@@ -38,6 +38,11 @@ export function stripComments(src) {
 // Decode a C++ string literal sequence such as `"abc" "def"` or u8"..." into
 // the UTF-8 string. Adjacent literals concatenate.
 export function decodeStringLiterals(text) {
+    const contextCall = /^\s*L_CONTEXT\s*\(/.exec(text);
+    if (contextCall) {
+        const [args] = callArgs(text, contextCall[0].length - 1);
+        [text] = splitArgs(args);
+    }
     const re = /(?:u8)?"((?:[^"\\]|\\.)*)"/g;
     let m;
     let out = '';
