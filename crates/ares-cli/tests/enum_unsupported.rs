@@ -86,6 +86,41 @@ async fn plate_nozzle_manual_is_not_ignored() {
     );
 }
 
+#[tokio::test]
+async fn ultimaker_host() {
+    let work = enum_declarations_support::artifacts("host_type-ultimaker");
+    let input = enum_declarations_support::input("host_type", "ultimaker");
+    std::fs::write(work.join("input.3mf"), &input).unwrap();
+    let project = ares_core::load_project(&input).unwrap();
+    assert_eq!(
+        enum_declarations_support::loaded_value(&project, "host_type"),
+        "ultimaker"
+    );
+    let substitutions = ares_core::project_config_substitutions(&input).unwrap();
+    assert!(!substitutions.iter().any(|entry| entry.key == "host_type"));
+    let result =
+        ares_core::slice_project(&input, GenerationMetadata::default(), SlicerContext::new(1))
+            .await;
+    std::fs::write(
+        work.join("result.json"),
+        serde_json::to_vec_pretty(&json!({
+            "loaded": "ultimaker", "substitutions": [],
+            "error": result.as_ref().err().map(|error| format!("{error:?}")),
+            "output_bytes": result.as_ref().ok().map(Vec::len),
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let bytes = result.unwrap();
+    std::fs::write(work.join("output.gcode"), &bytes).unwrap();
+    assert!(
+        std::str::from_utf8(&bytes)
+            .unwrap()
+            .lines()
+            .any(|line| line == "; host_type = ultimaker")
+    );
+}
+
 macro_rules! unsupported_states {
     ($($name:ident: $key:literal, $value:literal;)*) => {$(
         #[tokio::test]
@@ -101,6 +136,5 @@ unsupported_states! {
     leading_edge_brim: "brim_type", "leading_edge_only";
     best_of_order: "print_order", "best_of";
     snake_order: "print_order", "snake";
-    ultimaker_host: "host_type", "ultimaker";
     nozzle_manual: "filament_map_mode", "Nozzle Manual";
 }
