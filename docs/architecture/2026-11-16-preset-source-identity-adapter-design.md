@@ -1,6 +1,6 @@
 # Preset source identity adapter design
 
-状态：实施前设计说明。此文只定义 source identity 的数据边界，不实现准入行为。
+状态：已批准设计，实施与验证中。
 
 ## 目标
 
@@ -27,8 +27,9 @@ host-provided companion 数据传入，避免把 host 路径或文件 stat 写�
 `ares-cli` 在读取 `--load-settings`/`--load-filaments` 文件时取得每个文件的
 source identity，并为实际 loaded user/system collection 建立相同的 identity
 记录。Unix 使用稳定的 device/inode 对；Windows 使用 volume serial/file
-index；浏览器调用由资源/目录会话提供稳定的不透明 token。adapter 负责符号
+index。文件内容和 identity 从同一个打开的文件句柄读取。adapter 负责符号
 链接/硬链接的同文件等价，core 不 canonicalize、扫描目录或读取环境。
+浏览器 token 的 producer 本轮延期；`ares-wasm` API 不改变。
 
 CLI 读取文件字节与 identity 必须是同一次输入准备；缺 identity 的 external
 user source 不得被名字或内容放行。system source-manifest 的目录发现和
@@ -48,6 +49,29 @@ records：零匹配返回 source-not-found，多个匹配返回 ambiguous，唯�
 `SliceError::InvalidInput` 继续保持原 Legacy 映射。测试先覆盖 identity
 唯一匹配、未加载同名/同字节文件、歧义 identity、typed standalone early
 return，以及两个现有 inherited rejection witnesses。
+
+## Rust destination
+
+`profiles::catalog::source_records::LoadedPresetSources` 是独立 companion。
+`LoadSettingsSliceRequest.loaded_sources` 将其借用传给 resolver；external
+文件不会通过 `push_import` 注册到该集合。`add_loaded` 接收 host 已加载的
+canonical collection config；`add_vendor` 接收 manifest envelope 和单独的
+`sub_path → SourceIdentity` 绑定。sub_path 只绑定 manifest 中的实际 record，
+不参与 external admission。core 从已加载 record 按 kind + identity 匹配，
+通过现有 catalog 的 `resolved_layers` 展开唯一 record，再替换 external config。
+
+CLI `preset_sources` 对 `from: system` 的 inherited 文件查找最近祖先的 sibling
+manifest（`PresetBundle.cpp:614–650`），加载 manifest 列出的文件，先加载可用
+的 `OrcaFilamentLibrary` JSON（`:654–688`），随后调用 core 的 vendor loader。
+未声明的同名/同字节副本不获准；同一文件的硬链接可通过 identity 匹配。
+`from: user` 不启动 manifest discovery。浏览器 token、`.opc` source-vendor
+cache 读取及 AppConfig user-collection 的 filesystem producer 不在此实现中；
+CLI user producer 延后，当前行为是 unresolved：需要 resolver 的 user 文件在
+adapter 直接返回 `CLI user preset source is unresolved (datadir/AppConfig producer
+is deferred): <file>`，不声称已经加载空 user bundle，也不给该状态上游运行
+信用；typed standalone 的 early return 不受影响。不能因缺这些 producer 而
+按名字放行。已有 catalog scaffold 只作为上述 upstream
+loader/resolver 边界的临时兼容壳，不定义新的 Ares pipeline。
 
 ## 实施顺序
 

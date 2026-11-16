@@ -223,20 +223,24 @@ async fn typed_sparse_cli_empty_filament_gcodes_complete_slicing() {
             orient: false,
             filename: "cube.stl",
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             settings: &[
                 ares_core::LoadSettingsFile {
                     label: "machine.json",
                     json: &machine,
+                    source_identity: None,
                 },
                 ares_core::LoadSettingsFile {
                     label: "process.json",
                     json: process,
+                    source_identity: None,
                 },
             ],
             filaments: &[ares_core::LoadSettingsFile {
                 label: "filament.json",
                 json: filament,
+                source_identity: None,
             }],
             plate: None,
             overrides: &ConfigOverrides::default(),
