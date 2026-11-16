@@ -60,20 +60,23 @@ pub(super) async fn slice(
             },
         )
         .collect::<Vec<_>>();
-    let loaded_sources = crate::preset_sources::load(settings.iter().chain(&filaments).copied())
-        .map_err(|error| match error.downcast::<ares_core::SliceError>() {
-            Ok(error) => slice_error_to_failure(
-                *error,
-                &args.output,
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            ),
-            Err(error) => CliFailure::config_file_error(
-                #[cfg(target_os = "linux")]
-                &args.output,
-                format!("{error}\n"),
-            ),
-        })?;
+    let loaded_sources = crate::preset_sources::load(
+        args.datadir.as_deref(),
+        settings.iter().chain(&filaments).copied(),
+    )
+    .map_err(|error| match error.downcast::<ares_core::SliceError>() {
+        Ok(error) => slice_error_to_failure(
+            *error,
+            &args.output,
+            #[cfg(target_os = "linux")]
+            args.plate.unwrap_or(1),
+        ),
+        Err(error) => CliFailure::config_file_error(
+            #[cfg(target_os = "linux")]
+            &args.output,
+            format!("{error}\n"),
+        ),
+    })?;
     let mut sliced_plate = ares_core::SlicedPlate::default();
     let gcode = match ares_core::slice_with_load_settings(
         input,
