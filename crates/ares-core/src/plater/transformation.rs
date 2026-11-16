@@ -89,16 +89,23 @@ fn euler_angles(mut m: Matrix3) -> [f64; 3] {
 }
 
 /// `Transformation::get_rotation` (`Geometry.cpp:471-474`).
-pub(super) fn rotation(transform: Transform3d) -> [f64; 3] {
+pub(crate) fn rotation(transform: Transform3d) -> [f64; 3] {
     euler_angles(rotation_scale(transform).0)
 }
 
 /// `Transformation::set_rotation(const Vec3d&)` (`Geometry.cpp:491-496`).
-pub(super) fn with_rotation(transform: Transform3d, angles: [f64; 3]) -> Transform3d {
+pub(crate) fn with_rotation(transform: Transform3d, angles: [f64; 3]) -> Transform3d {
     affine(
         rotated(angles, rotation_scale(transform).1),
         offset(transform),
     )
+}
+
+/// `ModelInstance::rotate(Matrix3d)` (`Model.hpp:1483-1487`): compose with
+/// the current rotation, preserving the original instance offset and scale.
+pub(super) fn rotated_instance(transform: Transform3d, matrix: Matrix3) -> Transform3d {
+    let composed = affine(multiply(matrix, rotation_scale(transform).0), [0.; 3]);
+    with_rotation(transform, rotation(composed))
 }
 
 /// `Transformation::set_rotation(Axis, double)` (`Geometry.cpp:498-512`): the angle wrapped

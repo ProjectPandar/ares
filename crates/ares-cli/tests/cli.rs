@@ -38,6 +38,22 @@ fn slice_accepts_percent_sparse_infill_width() {
 }
 
 #[test]
+fn slice_stl_orientation_requires_preset_backed_route() {
+    let temp = tempfile::tempdir().unwrap();
+    let options = temp.path().join("options.json");
+    let input = temp.path().join("input.stl");
+    let output = temp.path().join("output.gcode");
+    fs::write(&options, br#"{"layer_change_gcode":"G92 E0","sparse_infill_density":0,"sparse_infill_line_width":"120%"}"#).unwrap();
+    fs::write(&input, square_pyramid_ascii_stl()).unwrap();
+    Command::cargo_bin("ares").unwrap().args([
+        "slice", "--orient", "1", "--options", options.to_str().unwrap(),
+        "-o", output.to_str().unwrap(), input.to_str().unwrap(),
+    ]).assert().failure().stderr(predicate::str::contains(
+        "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
+    ));
+}
+
+#[test]
 fn slice_3mf_rejects_explicit_options() {
     let temp = tempfile::tempdir().unwrap();
     let options = temp.path().join("option.json");

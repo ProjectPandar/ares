@@ -63,6 +63,9 @@ pub(super) fn prepare_project_source(
         let filament_count = project.cli_filament_count();
         project.initialize_cli_loaded_project_config(filament_count);
     }
+    if source.orient {
+        crate::plater::apply_cli_orientation(&mut project, source.plate)?;
+    }
     prepare_loaded_project_slice_with_validation(
         project,
         source.plate,

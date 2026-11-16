@@ -22,6 +22,7 @@ pub struct LoadSettingsSliceRequest<'a> {
     pub plate: Option<u32>,
     pub overrides: &'a crate::ConfigOverrides,
     pub placement: Placement,
+    pub orient: bool,
     /// Filled with the plate's success report values (`crate::SlicedPlate`).
     pub sliced_plate: &'a mut crate::SlicedPlate,
 }
@@ -55,6 +56,7 @@ fn with_load_settings_source<T>(
         plate,
         overrides,
         placement,
+        orient,
         sliced_plate,
     } = request;
     if filename.is_empty() {
@@ -96,6 +98,7 @@ fn with_load_settings_source<T>(
         overrides,
         validate_print,
         validate_config: true,
+        orient,
         upward: None,
         sliced_plate: Some(sliced_plate),
         edits: &crate::plater::NO_EDITS,

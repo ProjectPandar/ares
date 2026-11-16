@@ -129,6 +129,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     let processed = match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
+                            orient: args.orient == 1,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: true,
@@ -179,6 +180,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
+                            orient: args.orient == 1,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: false,
@@ -234,6 +236,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             return Ok(());
         }
         Some(extension) if extension == "stl" => {
+            if args.orient == 1 {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
+                ).into());
+            }
             let options = args.options.ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidInput, "STL input requires --options")
             })?;
