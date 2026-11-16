@@ -66,18 +66,27 @@ Upstream has SpiralInset: `Fill/FillBase.cpp:65–70` constructs
 points are in `Fill/FillSpiralInset.cpp:310,347`. Ares does not yet implement
 that algorithm. Concentric/Archimedean/Octagram are not substitutes.
 
+Included: `host_type=ultimaker` is ordinary configuration data. Within
+`libslic3r`, `host_type` appears only in its declaration and the key lists in
+`Preset.cpp:1623,4688`; it has no slicing consumer. Upload transport belongs
+to GUI/PrintHost, not the slicing capability boundary. Accept this enum, retain
+it in the G-code config footer, and require complete-output parity with Native
+through the existing generator-line-only comparator. Transport implementation
+is not required to slice and must not cause an unsupported slicing error.
+
 Deferred: SpiralInset fill/support/raft generation; belt leading-edge brim
 (`Brim.cpp:506–508`); Best/Snake ordering (`GCode.cpp:3685–3687`);
-NozzleManual physical planning; UltiMaker host transport. Settings import,
-metadata and codecs may represent these states, but slicing must return an
-explicit `SliceError::UnsupportedProjectFeature` for each of the seven states.
-No mapping to an existing algorithm, silent success, `panic!`, or
+NozzleManual physical planning. Settings import, metadata and codecs may
+represent these states, but slicing must return an explicit
+`SliceError::UnsupportedProjectFeature` for these six execution-affecting
+states. No mapping to an existing algorithm, silent substitution, `panic!`, or
 `unreachable!` is permitted for user-admitted input. Extend the existing
 capability/error boundary, not a new execution architecture.
 
 The previous public project path silently substitutes defaults for all seven
-states and successfully slices. This change intentionally replaces that
-success with a named unsupported error after source-correct admission:
+states and successfully slices. Source-correct admission now preserves
+`ultimaker` while slicing successfully; the other six states instead return a
+named unsupported error because they would require unported execution:
 
 | Authored state | Previous substituted value |
 |---|---|
@@ -90,7 +99,9 @@ success with a named unsupported error after source-correct admission:
 | filament_map_mode=Nozzle Manual | Auto For Flush |
 
 RR must compare these per-state outcomes and disclose this intentional API
-behavior change. Existing unrelated inputs must not acquire failures.
+behavior change. The UltiMaker case must retain successful slicing and match
+Native's complete output including the unchanged wire value in its footer.
+Existing unrelated inputs must not acquire failures.
 
 Before implementation, audit tracked fixture/parity text and compressed 3MF
 configuration members for all seven states. Report any existing affected
@@ -111,9 +122,13 @@ Tests precede production edits at public boundaries:
    leading-edge brim, NozzleManual, UltiMaker, Best, Snake. Retain producer,
    exact runtime input, input SHA, export and comparison. If a field is omitted
    by Native export, report visibility rather than skipping or inventing data.
-3. Seven independent public slicing cases must get a precise unsupported error,
-   not default-substituted success, a different input error, or a panic. Retain
-   loaded values, substitutions, and the slice result for before/after review.
+3. Six independent public slicing cases must get a precise unsupported error,
+   not default-substituted success, a different input error, or a panic. The
+   seventh, `host_type=ultimaker`, must slice successfully without substitution
+   and preserve its footer value. Extend its existing Native wire case to
+   compare complete Native/API/CLI output, allowing only the existing generator
+   line normalization. Retain inputs, outputs, substitutions and comparisons
+   for before/after review.
 4. Preserve existing valid members, unknown-token substitution, sparse GUI
    exclusion, source Default sentinel behavior, and undefine wire spelling.
 5. Audit exhaustive and non-exhaustive readers before admitting new states:
