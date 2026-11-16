@@ -12,15 +12,18 @@ pub struct MoveBuffers {
 }
 
 impl MoveBuffers {
-    pub(crate) fn pack(moves: &[MoveVertex]) -> Self {
-        let mut out = Self {
-            count: moves.len(),
-            values: Vec::with_capacity(12 * moves.len()),
-            ids: Vec::with_capacity(2 * moves.len()),
-            tags: Vec::with_capacity(5 * moves.len()),
-        };
+    pub(crate) fn new(count: usize) -> Self {
+        Self {
+            count,
+            values: Vec::with_capacity(12 * count),
+            ids: Vec::with_capacity(2 * count),
+            tags: Vec::with_capacity(5 * count),
+        }
+    }
+
+    pub(crate) fn extend(&mut self, moves: &[MoveVertex]) {
         for m in moves {
-            out.values.extend_from_slice(&[
+            self.values.extend_from_slice(&[
                 m.position[0],
                 m.position[1],
                 m.position[2],
@@ -34,8 +37,8 @@ impl MoveBuffers {
                 m.temperature,
                 m.time,
             ]);
-            out.ids.extend_from_slice(&[m.gcode_id, m.layer_id]);
-            out.tags.extend_from_slice(&[
+            self.ids.extend_from_slice(&[m.gcode_id, m.layer_id]);
+            self.tags.extend_from_slice(&[
                 m.move_type as u8,
                 m.extrusion_role as u8,
                 m.extruder_id,
@@ -43,7 +46,6 @@ impl MoveBuffers {
                 u8::from(m.internal_only),
             ]);
         }
-        out
     }
 }
 

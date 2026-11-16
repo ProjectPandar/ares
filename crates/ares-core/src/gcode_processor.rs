@@ -2,7 +2,9 @@
 //! `EMoveType`, `:184-218` `MoveVertex`), recorded by the processor pass
 //! that also stamps the exported G-code.
 
+mod chunked_moves;
 pub(crate) mod printable_area;
+pub use chunked_moves::ChunkedMoves;
 
 use crate::ExtrusionRole;
 pub use crate::project_slice::gcode_emit::processor::process_gcode;
@@ -157,7 +159,7 @@ pub struct CustomGCodeTime {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GCodeProcessorResult {
-    pub moves: Vec<MoveVertex>,
+    pub moves: ChunkedMoves,
     pub spiral_vase_mode: bool,
     /// `GCodeProcessorResult::custom_gcode_per_print_z` (`:260`).
     pub custom_gcode_per_print_z: Vec<CustomGCodeItem>,

@@ -26,7 +26,7 @@ impl Pass {
     /// `:472-573` for a block whose `move_id` is `id`.
     pub(in crate::project_slice::gcode_emit::processor) fn block(
         &mut self,
-        moves: &mut [MoveVertex],
+        moves: &mut crate::gcode_processor::ChunkedMoves,
         id: usize,
         time: f64,
         trapezoid: &Trapezoid,
@@ -74,7 +74,7 @@ impl Pass {
     /// inserted count that renumber the queued blocks (`:6003-6008`).
     pub(in crate::project_slice::gcode_emit::processor) fn insert(
         &mut self,
-        moves: &mut Vec<MoveVertex>,
+        moves: &mut crate::gcode_processor::ChunkedMoves,
     ) -> (Vec<(usize, usize)>, usize) {
         for detected in &self.detected {
             moves[detected.move_id].actual_feedrate = detected.speed;
