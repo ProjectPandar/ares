@@ -108,6 +108,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) top_surface_jerk: f64,
     pub(in crate::project_slice::gcode_emit) infill_jerk: f64,
     pub(in crate::project_slice::gcode_emit) initial_layer_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) initial_layer_travel_jerk: f64,
     pub(in crate::project_slice::gcode_emit) travel_jerk: f64,
     pub(in crate::project_slice::gcode_emit) max_jerk_x: f64,
     pub(in crate::project_slice::gcode_emit) max_jerk_y: f64,
