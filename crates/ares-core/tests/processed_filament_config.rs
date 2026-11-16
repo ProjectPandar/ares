@@ -50,12 +50,14 @@ fn floats(settings: &Map<String, Value>, key: &str) -> Vec<f32> {
         .collect()
 }
 
-async fn processed(project: Vec<u8>) -> ares_core::GCodeProcessorResult {
-    ares_core::slice_project_plate_processed(
+async fn processed_after_system_preset_miss(project: Vec<u8>) -> ares_core::GCodeProcessorResult {
+    let catalog = ares_core::PresetCatalogHandle::default();
+    ares_core::slice_project_plate_processed_with_catalog(
         project,
         ares_core::GenerationMetadata::default(),
         Some(1),
         &ares_core::ConfigOverrides::default(),
+        Some(&catalog),
         ares_core::SlicerContext::new(0),
     )
     .await
@@ -75,7 +77,7 @@ async fn filament_diameters_and_densities_follow_the_project_config() {
             serde_json::json!(["1.26", "1.31"]),
         );
     });
-    let result = processed(project).await;
+    let result = processed_after_system_preset_miss(project).await;
     assert_eq!(
         result.filament_diameters,
         floats(&settings, "filament_diameter")
@@ -91,7 +93,7 @@ async fn missing_filament_density_reads_the_print_config_default() {
     let (project, settings) = project_with(|settings| {
         settings.remove("filament_density");
     });
-    let result = processed(project).await;
+    let result = processed_after_system_preset_miss(project).await;
     let diameters = floats(&settings, "filament_diameter");
     // `PrintConfig.cpp:2870`: `filament_density` defaults to `{ 0. }`, read through `get_at`.
     assert_eq!(result.filament_densities, vec![0.0; diameters.len()]);

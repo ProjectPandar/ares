@@ -8,6 +8,8 @@
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
 
+#[path = "../../../tests/support/slice_project_plate.rs"]
+mod direct_project;
 use std::{
     fs,
     io::{Cursor, Read, Write},
@@ -112,7 +114,7 @@ async fn ares_statuses(project: &[u8]) -> Vec<(i32, String, u32)> {
 }
 
 async fn slice(project: &[u8], context: ares_core::SlicerContext<'_>) -> Vec<u8> {
-    ares_core::slice_project_plate(
+    direct_project::slice_project_plate(
         project,
         ares_core::GenerationMetadata::default(),
         None,

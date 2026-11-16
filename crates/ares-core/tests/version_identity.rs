@@ -1,3 +1,5 @@
+#[path = "../../../tests/support/slice_project_plate_validated.rs"]
+mod direct_project;
 #[tokio::test]
 async fn byte_input_output_uses_the_package_version_generator_identity() {
     let input = include_bytes!("../../../tests/parity/cube10.stl");
@@ -23,7 +25,7 @@ async fn byte_input_output_uses_the_package_version_generator_identity() {
 async fn project_output_uses_the_package_version_generator_identity() {
     let input =
         include_bytes!("../../../tests/parity/klipper-separate-jerk-precision/integer-control.3mf");
-    let output = ares_core::slice_project_plate_validated(
+    let output = direct_project::slice_project_plate_validated(
         input,
         ares_core::GenerationMetadata::default(),
         Some(1),
@@ -59,7 +61,7 @@ async fn btt_omits_automatic_producer_on_both_public_paths() {
         include_bytes!("../../../tests/parity/klipper-separate-jerk-precision/integer-control.3mf");
     let overrides =
         ares_core::ConfigOverrides::from_json(br#"{"thumbnails":"32x24/BTT_TFT"}"#).unwrap();
-    let project = ares_core::slice_project_plate_validated(
+    let project = direct_project::slice_project_plate_validated(
         project,
         ares_core::GenerationMetadata::default(),
         Some(1),

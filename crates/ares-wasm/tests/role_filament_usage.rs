@@ -1,7 +1,8 @@
-use ares_core::{
-    ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
-};
+#[path = "../../../tests/support/slice_project_plate_processed.rs"]
+mod direct_project;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use ares_wasm::SliceOutput;
+use direct_project::slice_project_plate_processed;
 
 // Failure inventory: role map omitted, recomputed, converted to f32, or lost
 // when the owned statistics buffer is taken. Core uses the Native reference.
