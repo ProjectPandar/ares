@@ -5,15 +5,17 @@ import { test } from "./failureDiagnostics";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/persistence/", import.meta.url));
-// Two filaments, so the selection has two filament slots.
+// A two-filament project.
 const PROJECT = `${repositoryRoot}tests/parity/master-extruder-id/stock-right-only.3mf`;
 const IMPORT = `${repositoryRoot}tests/presets/My X1C 0.4 nozzle.orca_printer`;
 const A1_MINI = "Bambu Lab A1 mini 0.4 nozzle";
 const orca = process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`;
+// The never-used single-extruder printer has slot 1 and no stored filament_NN (PresetBundle::update_selections,
+// PresetBundle.cpp:3929-3937), and min_filament_count() is 1 (5419-5424): one slot, whatever the project has.
 const SELECTION = {
   printer: "My X1C 0.4 nozzle",
   process: "0.20mm Standard @BBL X1C - Mine",
-  filaments: ["Bambu PLA Basic @BBL X1C - Mine", "Bambu PETG HF @BBL X1C"],
+  filaments: ["Bambu PLA Basic @BBL X1C - Mine"],
 };
 
 const combo = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
@@ -43,6 +45,7 @@ async function expectSelection(page: Page) {
   await settled(page);
   await expect(combo(page, "Process preset")).toHaveText(SELECTION.process);
   for (const [slot, filament] of SELECTION.filaments.entries()) await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(filament);
+  await expect(combo(page, `Filament ${SELECTION.filaments.length + 1} preset`)).toHaveCount(0);
 }
 
 /** Names in a combo's group; Escape closes the list. */
@@ -94,7 +97,7 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   await expectSelection(page);
   await page.screenshot({ path: `${artifacts}before-reload.png` });
 
-  // The model is not persisted; its two filament slots come back with the project. Opening it selects
+  // The model is not persisted; it comes back with the project. Opening it selects
   // its presets (PresetBundle::load_config_model, Plater.cpp:9514-9515, :9623); choosing the printer
   // again brings back its process and filaments (remember_printer_config).
   await page.reload();
