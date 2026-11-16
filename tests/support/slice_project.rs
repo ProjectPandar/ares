@@ -10,8 +10,7 @@ pub async fn slice_project(
     ares_core::slice_project_plate_with_catalog(
         input,
         metadata,
-        None,
-        &ares_core::ConfigOverrides::default(),
+        (None, &ares_core::ConfigOverrides::default()),
         Some(&catalog),
         context,
     )
