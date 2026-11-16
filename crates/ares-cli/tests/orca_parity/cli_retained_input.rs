@@ -1,9 +1,11 @@
+#[cfg(target_os = "linux")]
 use std::{
     fs,
     io::{Cursor, Read, Write},
     path::{Path, PathBuf},
 };
 
+#[cfg(target_os = "linux")]
 pub(super) fn second_plate(temp: &Path, fixtures: &Path, translation_x: &str) -> PathBuf {
     let input = temp.join("selected-plate.3mf");
     let original = fs::read(fixtures.join("print-volume-stock-circle-inward.3mf")).unwrap();

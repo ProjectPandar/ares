@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use super::super::{
     OrcaRunner, application, cache_identity,
     command::{self, Limits},
