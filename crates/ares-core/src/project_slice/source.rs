@@ -97,8 +97,8 @@ impl ProjectInput<'_> {
                 if refresh.is_none()
                     && (project.documents().bbl_family_3mf || system_catalog.is_some())
                 {
-                    let system_catalog = system_catalog
-                        .ok_or(crate::SliceError::MissingSystemPresetBundle)?;
+                    let system_catalog =
+                        system_catalog.ok_or(crate::SliceError::MissingSystemPresetBundle)?;
                     let mut raw = if project.documents().bbl_family_3mf {
                         system_catalog.refresh_direct(&project.documents().project_settings_raw)?
                     } else {
