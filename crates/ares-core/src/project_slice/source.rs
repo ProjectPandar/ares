@@ -97,13 +97,7 @@ impl ProjectInput<'_> {
                 if refresh.is_none()
                     && let Some(system_catalog) = system_catalog
                 {
-                    let mut raw = if project.documents().bbl_family_3mf {
-                        system_catalog.refresh_direct(&project.documents().project_settings_raw)?
-                    } else {
-                        project.documents().project_settings_raw.clone()
-                    };
-                    crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
-                    project.apply_project_preset_refresh(raw, overrides)?;
+                    apply_direct_catalog(&mut project, system_catalog, overrides)?;
                 }
                 Ok((project, preparation.for_overrides(overrides)))
             }
@@ -128,6 +122,20 @@ impl ProjectInput<'_> {
             }
         }
     }
+}
+
+fn apply_direct_catalog(
+    project: &mut crate::Project,
+    catalog: &crate::PresetCatalogHandle,
+    overrides: &ConfigOverrides,
+) -> Result<(), crate::SliceError> {
+    let mut raw = if project.documents().bbl_family_3mf {
+        catalog.refresh_direct(&project.documents().project_settings_raw)?
+    } else {
+        project.documents().project_settings_raw.clone()
+    };
+    crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
+    project.apply_project_preset_refresh(raw, overrides)
 }
 
 pub(super) trait ProjectBytes<'a> {
