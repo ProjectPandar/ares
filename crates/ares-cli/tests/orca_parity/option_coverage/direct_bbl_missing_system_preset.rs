@@ -11,7 +11,7 @@ fn direct_bbl_missing_system_preset_preserves_complete_output() {
     let project = missing_preset_project();
     let case = NativeCase::slice(&runner, &project, "direct-bbl-missing-system-preset-");
     for setting in [
-        "filament_settings_id = "Missing system filament fixture"",
+        r#"filament_settings_id = "Missing system filament fixture""#,
         "filament_density = 1.24",
         "filament_flow_ratio = 0.98",
         "filament_diameter = 1.75",
@@ -27,8 +27,8 @@ fn missing_preset_project() -> Vec<u8> {
     let base = include_bytes!("../../../../../tests/parity/orca_cli_ender3.3mf");
     let mut archive = zip::ZipArchive::new(Cursor::new(base)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    let options = zip::write::SimpleFileOptions::default()
-        .last_modified_time(zip::DateTime::default());
+    let options =
+        zip::write::SimpleFileOptions::default().last_modified_time(zip::DateTime::default());
     for index in 0..archive.len() {
         let mut file = archive.by_index(index).unwrap();
         let mut bytes = Vec::new();

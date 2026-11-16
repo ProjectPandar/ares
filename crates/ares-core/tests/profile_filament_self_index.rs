@@ -67,7 +67,11 @@ async fn direct_bbl_missing_filament_preset_keeps_slot_without_print_warning() {
     .expect("missing system filament presets preserve the direct project slot");
     assert!(sliced_plate.warnings.is_empty());
     let gcode = std::str::from_utf8(&output.gcode).unwrap();
-    for setting in ["filament_density = 1.24", "filament_flow_ratio = 0.98", "filament_diameter = 1.75"] {
+    for setting in [
+        "filament_density = 1.24",
+        "filament_flow_ratio = 0.98",
+        "filament_diameter = 1.75",
+    ] {
         assert!(gcode.contains(&format!("\n; {setting}\n")));
     }
     let direct = ares_core::slice_project_plate_with_catalog(
@@ -76,7 +80,9 @@ async fn direct_bbl_missing_filament_preset_keeps_slot_without_print_warning() {
         (Some(1), &ares_core::ConfigOverrides::default()),
         Some(&catalog),
         ares_core::SlicerContext::new(0),
-    ).await.unwrap();
+    )
+    .await
+    .unwrap();
     assert_eq!(output.gcode, direct, "complete direct/CLI-aware output");
 }
 

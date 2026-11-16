@@ -55,8 +55,7 @@ async fn processed_after_system_preset_miss(project: Vec<u8>) -> ares_core::GCod
     ares_core::slice_project_plate_processed_with_catalog(
         project,
         ares_core::GenerationMetadata::default(),
-        Some(1),
-        &ares_core::ConfigOverrides::default(),
+        (Some(1), &ares_core::ConfigOverrides::default()),
         Some(&catalog),
         ares_core::SlicerContext::new(0),
     )
