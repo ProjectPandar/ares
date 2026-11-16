@@ -140,6 +140,18 @@ fn check(label: &str, input: &[u8], expected_sha: &str, temperature: &str) {
         .lines()
         .filter(|line| line.starts_with("M140 ") || line.starts_with("M190 "))
         .collect();
+    fs::write(
+        reference.root.join("bed-command-comparison.json"),
+        serde_json::to_vec_pretty(&json!({
+            "oracle": "ALL_M140_M190_COMMANDS",
+            "whole_output_parity_claimed": false,
+            "native": native_bed_commands,
+            "api": api_bed_commands,
+            "matches": native_bed_commands == api_bed_commands
+        }))
+        .unwrap(),
+    )
+    .unwrap();
     assert_eq!(native_bed_commands, api_bed_commands, "all bed commands");
 }
 
@@ -192,6 +204,33 @@ fn initial_bed_unused_hotter_filament_labelled_start() {
             "/../../tests/parity/m140-initial-bed/unused-hotter-filament.3mf"
         )),
         "893689e2ea06b9f6de4704fc21ca6743618ac483e4e02d00eb1e50419431f6b0",
+        "63",
+    );
+}
+
+// GCode.cpp:5532–5541,6958–6967: ordinary targets still use first-layer usage.
+#[test]
+fn second_layer_bed_unchanged_used_filament_ignores_unused_hotter() {
+    check(
+        "second-layer-unchanged-used",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/second-layer-bed/unchanged-used.3mf"
+        )),
+        "954b414bf9beef0c85f9934e73d61e24485de478960acd09bac3ded836572054",
+        "63",
+    );
+}
+
+#[test]
+fn second_layer_bed_cooler_used_filament_ignores_unused_hotter() {
+    check(
+        "second-layer-cooler-used",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tests/parity/second-layer-bed/cooler-used.3mf"
+        )),
+        "00fba885d384491b1c4a16ef719983de54748f410b8988a4184d96e890af55ae",
         "63",
     );
 }
