@@ -67,19 +67,25 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 ),
                 "equal_speed" => (
                     json!(["7"]),
-                    json!(["Direct Drive Standard", "Direct Drive Standard"]),
-                    json!(["200", "200"]),
+                    json!([
+                        "Direct Drive High Flow",
+                        "Direct Drive Standard",
+                        "Direct Drive High Flow",
+                        "Direct Drive Standard"
+                    ]),
+                    json!(["200", "200", "200", "200"]),
                 ),
                 _ => (
                     json!(["7"]),
-                    json!(["Direct Drive Standard", "Direct Drive Standard"]),
-                    json!(["500", "200"]),
+                    json!([
+                        "Direct Drive High Flow",
+                        "Direct Drive Standard",
+                        "Direct Drive High Flow",
+                        "Direct Drive Standard"
+                    ]),
+                    json!(["500", "500", "200", "200"]),
                 ),
             };
-            if !singleton {
-                settings["extruder_variant_list"] =
-                    json!(["Direct Drive Standard", "Direct Drive Standard"]);
-            }
             settings["print_extruder_id"] = ids;
             settings["print_extruder_variant"] = variants;
             settings["outer_wall_speed"] = speeds;
@@ -96,10 +102,9 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 settings["initial_layer_infill_speed"] = json!(["40", "70"]);
             }
             if case == "overhang" {
-                settings["overhang_1_4_speed"] = json!(["15", "30"]);
-                settings["overhang_2_4_speed"] = json!(["15", "30"]);
-                settings["overhang_3_4_speed"] = json!(["15", "30"]);
-                settings["overhang_4_4_speed"] = json!(["15", "30"]);
+                for quarter in 1..=4 {
+                    settings[format!("overhang_{quarter}_4_speed")] = json!(["15", "30"]);
+                }
             }
             if case == "support" {
                 settings["enable_support"] = json!("1");

@@ -186,11 +186,13 @@ exposed, report that first difference and stop rather than broadening this port.
 Add a small public Native/API/CLI witness from the public cube10 model and stock
 H2D project. Construct its archive in the test from public bytes, with explicit
 two-column process identities, distinct finite outer-wall speeds, role-based
-Wipe, filament retract length .4 and wipe distance 1. Reduce each physical
-head's supported variant list to Standard for the minimal witness; otherwise
-stock H2D's wider variant expansion duplicates the first speed into both
-finalized process columns. The unmatched input uses a short `[7]` ID vector;
-Native must independently finalize that to `[7,7]` with speeds `[500,200]`. Keep a single object and
+Wipe, filament retract length .4 and wipe distance 1. Preserve stock H2D's
+supported variant lists. Its CLI normalization requires four authored process
+requests (High Flow/Standard for each head) and short `[7]` IDs to preserve
+two distinct finalized Standard columns. Native must independently finalize
+those to `[7,7]` with speeds `[500,200]`. Narrowing hardware variant lists to
+force two raw columns exposes a separate import/refresh mismatch and is not
+a runtime-resolver witness. Keep a single object and
 one used filament mapped to the right physical head. Avoid carrying the broad
 witness's unnecessary original authored variant cardinality into this new case.
 
