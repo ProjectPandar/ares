@@ -16,8 +16,7 @@ pub(crate) async fn slice_direct_project_plate(
     ares_core::slice_project_plate_with_catalog(
         input,
         metadata,
-        plate,
-        overrides,
+        (plate, overrides),
         catalog.as_ref(),
         context,
     )
