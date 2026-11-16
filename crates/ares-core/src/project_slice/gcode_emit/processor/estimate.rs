@@ -37,8 +37,9 @@ impl Estimate {
     /// Runs the time estimate and, with a `recorder`, records the
     /// `GCodeProcessorResult::moves` of the same pass. The progress lines
     /// read the vertex types, so a pass without one records them unused.
-    pub(super) fn record(
-        lines: &[String],
+    pub(super) fn record<'a>(
+        lines: impl IntoIterator<Item = &'a str> + Clone,
+        line_count: usize,
         machine_load_filament_time: f64,
         config: &ProcessorConfig<'_>,
         recorder: Option<&mut MoveRecorder>,
@@ -49,6 +50,8 @@ impl Estimate {
             None => owned.insert(MoveRecorder::new(config)),
         };
         let limits = config.limits;
+        let cache_lines = lines.clone();
+        let elapsed_lines = lines.clone();
         let mut blocks = Vec::new();
         let mut state = MotionState::with_limits(limits);
         let mut prepare_stages = Vec::new();
@@ -69,7 +72,7 @@ impl Estimate {
         let mut remaining_internal = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::new(config.detect_layer_based_on_tag);
-        for (index, line) in lines.iter().enumerate() {
+        for (index, line) in lines.into_iter().enumerate() {
             seams.role(line);
             used_filaments.tags(line, filaments.selection().1);
             printable_area.tag(line, limits.bbl_printer);
@@ -370,8 +373,8 @@ impl Estimate {
                 })
             })
             .collect::<Vec<_>>();
-        let export_elapsed = export_cache::snapshots(lines, &cache);
-        let elapsed = elapsed_snapshots(lines, &cache);
+        let export_elapsed = export_cache::snapshots(cache_lines, line_count, &cache);
+        let elapsed = elapsed_snapshots(elapsed_lines, line_count, &cache);
         // `prepare_time += block_time` adds the double block time to the float
         // total and narrows once (`GCodeProcessor.cpp:649-650`).
         let prepare = times

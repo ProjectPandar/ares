@@ -183,13 +183,14 @@ pub(super) fn process(
     crate::gcode_processor::printable_area::PrintableAreaTracker,
 ) {
     let limits = config.limits;
-    let text = String::from_utf8(output).expect("generated G-code is UTF-8");
-    let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
+    let text = std::str::from_utf8(&output).expect("generated G-code is UTF-8");
+    let line_count = text.lines().count();
     // The injector reads the moves and the line map.
     let record_moves = config.record_moves || config.pre_heating;
     let mut recorder = record_moves.then(|| MoveRecorder::new(&config));
     let estimate = Estimate::record(
-        &lines,
+        text.lines(),
+        line_count,
         machine_load_filament_time,
         &config,
         recorder.as_mut(),
@@ -201,12 +202,12 @@ pub(super) fn process(
         limits.gcode_flavor,
         limits.bbl_printer,
         text.len(),
-        record_moves.then_some(lines.len()),
+        record_moves.then_some(line_count),
     );
     let mut last_progress = None;
     let mut stop_export = estimate.stop_times.exporter(estimate.total);
-    let first_marker = lines
-        .iter()
+    let first_marker = text
+        .lines()
         .position(|line| line == "M73 P0 R0")
         .unwrap_or(0);
     let prepare_time = estimate.prepare;
@@ -216,13 +217,15 @@ pub(super) fn process(
         estimate.print_statistics.total_used_filament,
     );
 
-    for (index, (line, original)) in lines.iter().zip(text.split_inclusive('\n')).enumerate() {
+    for (index, original) in text.split_inclusive('\n').enumerate() {
         // GCodeProcessor.cpp:1794-1803 retains CR/LF for every ordinary line;
         // ExportLines (:1027-1040,1105-1133) and GCodeFileWriter (:867-881) keep them.
-        let ending = if original.ends_with("\r\n") {
-            "\r\n"
+        let (line, ending) = if let Some(line) = original.strip_suffix("\r\n") {
+            (line, "\r\n")
+        } else if let Some(line) = original.strip_suffix('\n') {
+            (line, "\n")
         } else {
-            "\n"
+            (original, "\n")
         };
         let material = materials.process(line);
         let line = material.as_deref().unwrap_or(line);
@@ -301,6 +304,7 @@ pub(super) fn process(
         .map(|(recorder, line_map)| {
             let mut result = recorder.finish(&line_map);
             if config.pre_heating {
+                let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
                 pre_heating::inject(
                     &lines,
                     &line_map,
