@@ -11,6 +11,8 @@ mod config_block;
 mod policy;
 #[path = "stock_project_native_stream/producer.rs"]
 mod producer;
+#[path = "stock_project_native_stream/retained_config.rs"]
+mod retained_config;
 
 use super::{ExportedCase, cache_identity, repo_root};
 use assert_cmd::assert::OutputAssertExt;
