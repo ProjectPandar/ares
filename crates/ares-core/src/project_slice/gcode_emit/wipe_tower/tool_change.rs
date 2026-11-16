@@ -16,15 +16,19 @@ impl Generator<'_> {
             .enable_tower_interface_features
             .0
             && self.current_interface;
-        let (mut volume, area) = tool
+        let (mut volume, area, ramming_depth) = tool
             .and_then(|tool| {
                 self.plan.layers[self.layer_index]
                     .changes
                     .iter()
                     .find(|c| c.new_tool == tool)
             })
-            .map_or((0.0, 0.0), |change| {
-                (change.wipe_volume, change.required_depth)
+            .map_or((0.0, 0.0, 0.0), |change| {
+                (
+                    change.wipe_volume,
+                    change.required_depth,
+                    change.ramming_depth,
+                )
             });
         if interface && let Some(tool) = tool {
             let filament = &self.filaments[tool];
@@ -55,7 +59,7 @@ impl Generator<'_> {
         writer.speed_override_backup();
         writer.speed_override(100);
         writer.set_initial_position(
-            self.toolchange_entry_pos(self.depth_traversed),
+            self.toolchange_entry_pos(self.depth_traversed, ramming_depth, self.is_first_layer()),
             [self.plan.width, self.plan.depth],
             self.rotation,
         );

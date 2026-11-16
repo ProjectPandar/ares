@@ -124,11 +124,22 @@ impl<'a> Generator<'a> {
         use_gap_wall(&self.settings.process.print)
     }
 
-    /// `WipeTower2::toolchange_entry_pos` (`WipeTower2.hpp:341-347`) without the non-SEMM
-    /// ramming offset.
-    pub(super) fn toolchange_entry_pos(&self, depth_traversed: f32) -> [f32; 2] {
+    /// `WipeTower2::toolchange_entry_pos` (`WipeTower2.hpp:341-347`).
+    pub(super) fn toolchange_entry_pos(
+        &self,
+        depth_traversed: f32,
+        ramming_depth: f32,
+        first_layer: bool,
+    ) -> [f32; 2] {
         let half = self.plan.perimeter_width / 2.0;
-        [half, half + depth_traversed]
+        let mut position = [half, half + depth_traversed];
+        if !self.settings.printer.gcode.single_extruder_multi_material.0
+            && self.use_gap_wall()
+            && ramming_depth > 0.0
+        {
+            position[1] += self.wipe_start_offset_after_ram(ramming_depth, first_layer);
+        }
+        position
     }
 
     pub(super) fn is_first_layer(&self) -> bool {

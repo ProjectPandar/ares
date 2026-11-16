@@ -30,7 +30,8 @@ impl Generator<'_> {
         let mut remaining = xr - xl;
         let mut done = 0.0;
         let do_ramming = (semm && enabled) || filament.multitool_ramming;
-        let planned_ramming_depth = if do_ramming && !semm && self.use_gap_wall() {
+        let boundary_wipe_start = do_ramming && !semm && self.use_gap_wall();
+        let planned_ramming_depth = if boundary_wipe_start {
             self.plan
                 .layers
                 .get(self.layer_index)
@@ -45,6 +46,9 @@ impl Generator<'_> {
             0.0
         };
         if do_ramming {
+            if boundary_wipe_start {
+                writer.travel([start[0], writer.position[1]], 0.0);
+            }
             writer.travel(start, 0.0);
             if !self.mk4_mmu3 {
                 writer.disable_linear_advance();
@@ -57,6 +61,7 @@ impl Generator<'_> {
         }
         // set_layer always selects SHAPE_NORMAL in the source.
         if do_ramming
+            && !boundary_wipe_start
             && self.layer_index > 1
             && self.layer_index < self.plan.layers.len()
             && let Some(first_line) = self.ramming_first_line(y_step)
