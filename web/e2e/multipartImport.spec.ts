@@ -200,6 +200,32 @@ test("batch replacement, cancellation and malformed input preserve the right pro
   await page.screenshot({ path: info.outputPath("preserved.png") });
 });
 
+// Plater.cpp:10097-10102: every load asks with a new modal dialog. Escape closes the <dialog> at once and its
+// close event follows as a later task; a batch dropped before that event still gets its own dialog.
+test("a batch dropped before the closed dialog's close event opens its own dialog", async ({ page }) => {
+  const files = [part("base.stl", [0.8, 0.3, 0.2], [0, 0, 0]), part("upper.stl", [0.3, 0.8, 0.2], [12, 4, 2])];
+  await openWithPresets(page);
+  await page.getByTestId("import-input").setInputFiles({ name: "old.stl", buffer: cube, mimeType: "model/stl" });
+  await expect(page.getByTestId("object-count")).toHaveText("1");
+  const add = page.getByTestId("plater-toolbar").getByRole("button", { name: "Add", exact: true });
+  const [picker] = await Promise.all([page.waitForEvent("filechooser"), add.click()]);
+  await picker.setFiles(files.map(({ name, bytes: buffer }) => ({ name, buffer, mimeType: "model/stl" })));
+  const dialog = page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true });
+  await expect(dialog).toBeVisible();
+  // One task: the Escape close (cancel now, the close event in a later task) and the drop, before that event runs.
+  await page.evaluate((inputs) => {
+    (document.querySelector("dialog[open]") as HTMLDialogElement).requestClose();
+    const data = new DataTransfer();
+    for (const { name, base64 } of inputs) data.items.add(new File([Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))], name));
+    const workspace = document.querySelector("[data-testid=workspace]")!;
+    for (const type of ["dragenter", "dragover", "drop"]) workspace.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
+  }, files.map(({ name, bytes }) => ({ name, base64: bytes.toString("base64") })));
+  await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
+  await dialog.getByRole("button", { name: "Yes", exact: true }).click();
+  await expect(page.getByTestId("object-count")).toHaveText("1");
+  await expect(page.getByTestId("object-list")).not.toContainText("old.stl");
+});
+
 test("single STL and 3MF imports keep their single-file entry", async ({ page }, info) => {
   await openWithPresets(page);
   await page.getByTestId("import-input").setInputFiles({ name: "single.stl", buffer: cube, mimeType: "model/stl" });
