@@ -92,8 +92,8 @@ impl ProjectInput<'_> {
                     None => crate::project::load_project_with_preparation(bytes, overrides)?,
                 };
                 if project.documents().bbl_family_3mf && refresh.is_none() {
-                    let system_catalog = system_catalog
-                        .ok_or(crate::SliceError::MissingSystemPresetBundle)?;
+                    let system_catalog =
+                        system_catalog.ok_or(crate::SliceError::MissingSystemPresetBundle)?;
                     let raw =
                         system_catalog.refresh_direct(&project.documents().project_settings_raw)?;
                     project.apply_project_preset_refresh(raw, overrides)?;
