@@ -1,10 +1,11 @@
 //! Real processed slice -> conversion -> public WASM adapter, stable native authority.
 //! Failure inventory: stale marker identity, extra phantom, G-code id drift,
 //! wrong duration bits, exclusive/visible-only prefixes, drained timing storage.
-use ares_core::{
-    ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
-};
+#[path = "../../../tests/support/slice_project_plate_processed.rs"]
+mod direct_project;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use ares_wasm::SliceOutput;
+use direct_project::slice_project_plate_processed;
 
 #[path = "../../../tests/support/marker_time.rs"]
 pub mod marker_time_native;

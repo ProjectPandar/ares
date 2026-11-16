@@ -1,3 +1,5 @@
+#[path = "../../../tests/support/slice_project_plate_validated.rs"]
+mod direct_project;
 use ares_core::{ConfigOverrides, GenerationMetadata, SliceOptions, SlicerContext};
 use serde_json::json;
 
@@ -54,7 +56,7 @@ async fn project_rejects_global_default_and_preserves_concrete_bed() {
             .unwrap(),
         )
         .unwrap();
-        let result = ares_core::slice_project_plate_validated(
+        let result = direct_project::slice_project_plate_validated(
             include_bytes!("../../../tests/parity/bed-type-selection/omitted.3mf"),
             GenerationMetadata::default(),
             Some(1),

@@ -7,6 +7,12 @@ use crate::{
     failure::{CliFailure, slice_error_to_failure},
 };
 
+fn resource_json(path: &Path) -> Result<Value, io::Error> {
+    let bytes = fs::read(path)?;
+    serde_json::from_slice(bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(&bytes))
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+}
+
 #[allow(clippy::excessive_nesting)]
 pub(super) fn load_resources_catalog(
     resources_dir: &Path,
@@ -24,8 +30,7 @@ pub(super) fn load_resources_catalog(
             .file_stem()
             .and_then(|name| name.to_str())
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid vendor filename"))?;
-        let index: Value = serde_json::from_slice(&fs::read(&index_path)?)
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+        let index = resource_json(&index_path)?;
         if index.get("name").and_then(Value::as_str).is_none() {
             continue;
         }
@@ -41,8 +46,7 @@ pub(super) fn load_resources_catalog(
                     continue;
                 };
                 let path = profiles_dir.join(id).join(sub_path);
-                let value: Value = serde_json::from_slice(&fs::read(path)?)
-                    .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+                let value = resource_json(&path)?;
                 files.insert(sub_path.to_owned(), value);
             }
         }

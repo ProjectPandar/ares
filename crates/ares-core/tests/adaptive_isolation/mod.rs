@@ -6,7 +6,10 @@
 //! twice each in one process, must produce byte-identical outputs per
 //! project (fixed `GenerationMetadata` makes a slice fully deterministic).
 
-use ares_core::{GenerationMetadata, slice_project};
+#[path = "../../../../tests/support/slice_project.rs"]
+mod direct_project;
+use ares_core::GenerationMetadata;
+use direct_project::slice_project;
 use std::{fs, path::Path};
 
 async fn slice_fixture(name: &str) -> Vec<u8> {
