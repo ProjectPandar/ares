@@ -37,17 +37,20 @@ impl PreferedPrint {
 
 /// `current` while it is a compatible print of `printer`, else the compatible print that
 /// matches best, the first in collection order on a tie, or the initialized collection default.
-/// A `current` that is not a loaded print stands for that default print, which every collection
-/// selects first (`Preset.cpp:1739`): no alias, and its initialized layer height.
+/// No `current` stands for that default print, which every collection selects first
+/// (`Preset.cpp:1739`): no alias, and its initialized layer height. A `current` that is not a
+/// loaded print leaves no selection, as `select_preset_by_name_strict` does
+/// (`Preset.cpp:4335-4357`): `PreferedPrintProfileMatch(nullptr, ...)` has no alias and no layer
+/// height (`PresetBundle.cpp:8749-8750, 8838`).
 pub(in crate::profiles) fn compatible_print(
     catalog: &Catalog,
     printer: &str,
-    current: Option<&str>,
+    requested: Option<&str>,
 ) -> Result<Option<String>, SliceError> {
     let printer_position =
         selectable_without_missing_parent(catalog, ProfileKind::Machine, printer)?;
     let active = active_printer(catalog, printer_position)?;
-    let current = current.and_then(|name| {
+    let current = requested.and_then(|name| {
         selectable_without_missing_parent(catalog, ProfileKind::Process, name).ok()
     });
     if let Some(position) = current.filter(|position| catalog.is_default(*position)) {
@@ -59,9 +62,10 @@ pub(in crate::profiles) fn compatible_print(
             Some(position) => print_alias(catalog, position, &Candidate::load(catalog, position)?),
             None => String::new(),
         },
-        layer_height: match current {
-            Some(position) => layer_height(catalog, position)?,
-            None => layer_height(catalog, catalog.default_position(ProfileKind::Process))?,
+        layer_height: match (current, requested) {
+            (Some(position), _) => layer_height(catalog, position)?,
+            (None, Some(_)) => 0.,
+            (None, None) => layer_height(catalog, catalog.default_position(ProfileKind::Process))?,
         },
         default_print_profile: text(&printer_values["default_print_profile"]).to_owned(),
     };
