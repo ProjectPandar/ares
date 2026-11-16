@@ -91,7 +91,7 @@ pub(in crate::project_slice) fn build_project_raft(
         object,
         interface_flow_spacing,
         fill_params.interface_fill_pattern,
-    );
+    )?;
     for plan in &mut plans {
         if plan.z.kind == super::super::grid::RaftLayerKind::Contact {
             plan.spec.pattern = contact_pattern;

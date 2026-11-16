@@ -14,6 +14,10 @@ pub enum ProcessPrintOrder {
     Default,
     #[serde(rename = "as_obj_list")]
     AsObjectList,
+    #[serde(rename = "best_of")]
+    BestOfStrategies,
+    #[serde(rename = "snake")]
+    Snake,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]

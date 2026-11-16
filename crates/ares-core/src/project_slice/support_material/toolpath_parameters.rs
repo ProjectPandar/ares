@@ -38,7 +38,7 @@ impl ToolpathParameters {
         slicing: &SlicingParameters,
         flows: &SupportFlows,
         object_extruders: &[usize],
-    ) -> Self {
+    ) -> Result<Self, crate::SliceError> {
         let base_flow = flows.base;
         let interface_flow = flows.interface;
         let raft_interface_flow = interface_flow;
@@ -121,6 +121,11 @@ impl ToolpathParameters {
             RaftFillPattern::SupportBase
         };
         let contact_fill_pattern = match object.support_interface_pattern {
+            ProcessSupportInterfacePattern::SpiralInset => {
+                return Err(crate::SliceError::UnsupportedProjectFeature(
+                    "support_interface_pattern: spiralinset".to_owned(),
+                ));
+            }
             ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
             ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
             ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
@@ -131,7 +136,7 @@ impl ToolpathParameters {
                 interface_fill_pattern
             }
         };
-        Self {
+        Ok(Self {
             first_layer_flow: flows.first_layer,
             base_flow,
             interface_flow,
@@ -151,7 +156,7 @@ impl ToolpathParameters {
             base_fill_pattern,
             interface_fill_pattern,
             contact_fill_pattern,
-        }
+        })
     }
 
     /// `SupportParameters.hpp:308–329::support_interface_angle`.
@@ -179,9 +184,9 @@ impl ToolpathParameters {
                     }
             }
             ProcessSupportInterfacePattern::Grid => self.base_angle,
-            ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Concentric => {
-                self.interface_angle
-            }
+            ProcessSupportInterfacePattern::Auto
+            | ProcessSupportInterfacePattern::Concentric
+            | ProcessSupportInterfacePattern::SpiralInset => self.interface_angle,
         }
     }
 
