@@ -53,6 +53,17 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         )
         .into());
     }
+    if let Some(datadir) = &args.datadir
+        && !datadir.as_os_str().is_empty()
+        && !datadir.exists()
+        && let Err(error) = fs::create_dir_all(datadir)
+    {
+        eprintln!(
+            "Could not create data directory: {}: {error}\nsetup params error",
+            datadir.display()
+        );
+        std::process::exit(-2);
+    }
     let overrides = match &args.overrides {
         None => ares_core::ConfigOverrides::default(),
         Some(json) => ares_core::ConfigOverrides::from_json(json.as_bytes())
