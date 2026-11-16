@@ -1,7 +1,7 @@
 use crate::MoveBuffers;
 use ares_vgcode::{
     CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, MovesSlider, OptionType,
-    SequentialView, ViewerImpl, move_type_to_option,
+    SequentialView, ViewerImpl,
 };
 use wasm_bindgen::prelude::*;
 
@@ -20,6 +20,7 @@ pub struct SliceOutput {
 }
 
 mod processed;
+mod ranges;
 
 #[wasm_bindgen]
 impl SliceOutput {
@@ -82,10 +83,6 @@ pub struct VertexBuffers {
     pub(crate) viewer: ViewerImpl,
     moves_slider: MovesSlider,
     pub(crate) sequential_view: SequentialView,
-    values: Vec<f32>,
-    ids: Vec<u32>,
-    tags: Vec<u8>,
-    options: Vec<u8>,
     move_type_counts: Vec<u32>,
     tool_colors: Vec<u8>,
     color_print_colors: Vec<u8>,
@@ -94,61 +91,23 @@ pub struct VertexBuffers {
 }
 
 impl VertexBuffers {
-    fn pack(
+    fn from_viewer(
         mut viewer: ViewerImpl,
         (spiral_vase_mode, tool_colors, color_print_colors): (bool, Vec<u8>, Vec<u8>),
     ) -> Self {
-        let count = viewer.vertices().len();
         // GCodeViewer::load_as_gcode (GCodeViewer.cpp:1128-1131) with the
         // `seq_top_layer_only` default "1" (AppConfig.cpp:202-203).
         viewer.toggle_top_layer_only_view_range();
-        let mut out = Self {
-            count,
+        Self {
+            count: viewer.vertices().len(),
             spiral_vase_mode,
-            values: Vec::with_capacity(16 * count),
-            ids: Vec::with_capacity(2 * count),
-            tags: Vec::with_capacity(4 * count),
-            options: Vec::with_capacity(count),
-            move_type_counts: Vec::new(),
             tool_colors,
             color_print_colors,
             layer_zs: viewer.layers().get_zs(),
-            viewer: ViewerImpl::default(),
             moves_slider: MovesSlider::new(&viewer),
-            sequential_view: SequentialView::default(),
-            filament_legend: FilamentLegend::default(),
-        };
-        for v in viewer.vertices() {
-            out.values.extend_from_slice(&[
-                v.position[0],
-                v.position[1],
-                v.position[2],
-                v.height,
-                v.width,
-                v.feedrate,
-                v.actual_feedrate,
-                v.mm3_per_mm,
-                v.fan_speed,
-                v.temperature,
-                v.times[0],
-                v.times[1],
-                v.layer_duration,
-                v.pressure_advance,
-                v.acceleration,
-                v.jerk,
-            ]);
-            out.ids.extend_from_slice(&[v.gcode_id, v.layer_id]);
-            out.tags.extend_from_slice(&[
-                v.role as u8,
-                v.move_type as u8,
-                v.extruder_id,
-                v.color_id,
-            ]);
-            out.options
-                .push(move_type_to_option(v.move_type).map_or(u8::MAX, |option| option as u8));
+            viewer,
+            ..Self::default()
         }
-        out.viewer = viewer;
-        out
     }
 
     fn moves_thumbs(&self) -> [u32; 2] {
@@ -189,28 +148,6 @@ impl VertexBuffers {
     #[wasm_bindgen(getter, js_name = spiralVaseMode)]
     pub fn spiral_vase_mode(&self) -> bool {
         self.spiral_vase_mode
-    }
-    /// Float32Array stride16: xyz,height,width,feedrate,actual_feedrate,mm3/mm,
-    /// fan,temp,time_normal,time_stealth,layer_duration,PA,acceleration,jerk.
-    #[wasm_bindgen(js_name = takeValues)]
-    pub fn take_values(&mut self) -> Vec<f32> {
-        std::mem::take(&mut self.values)
-    }
-    /// Uint32Array stride2: gcode_id,layer_id.
-    #[wasm_bindgen(js_name = takeIds)]
-    pub fn take_ids(&mut self) -> Vec<u32> {
-        std::mem::take(&mut self.ids)
-    }
-    /// Uint8Array stride4: role,type,extruder,color.
-    #[wasm_bindgen(js_name = takeTags)]
-    pub fn take_tags(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.tags)
-    }
-    /// Uint8Array: libvgcode `move_type_to_option` of each vertex as an
-    /// `EOptionType` index (`optionTypes` order), 255 for none.
-    #[wasm_bindgen(js_name = takeOptions)]
-    pub fn take_options(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.options)
     }
     /// Uint32Array: processed moves by `EMoveType`, internal split moves excluded
     /// (GCodeViewer `m_move_type_counts`).
@@ -256,7 +193,7 @@ impl VertexBuffers {
     }
     /// The visibility as `viewRange` sets it, then `MovesSlider::set_layers_z_range`
     /// (GCodeViewer `set_layers_z_range` / `update_moves_slider`). Returns
-    /// `[lower, higher, ...gcodeIds]`: the thumbs and the G-code line id of each stop.
+    /// `[lower, higher, count]`; `sliderGcodeIdsRange` transfers the stop IDs.
     #[wasm_bindgen(js_name = movesSlider)]
     pub fn moves_slider(
         &mut self,
@@ -268,10 +205,12 @@ impl VertexBuffers {
         self.set_visibility(visible_roles, visible_options);
         self.moves_slider
             .set_layers_z_range(&mut self.viewer, [min_layer as usize, max_layer as usize]);
-        self.moves_thumbs()
-            .into_iter()
-            .chain(self.moves_slider.alternate_values.iter().copied())
-            .collect()
+        let [lower, higher] = self.moves_thumbs();
+        vec![
+            lower,
+            higher,
+            self.moves_slider.alternate_values.len() as u32,
+        ]
     }
     /// `MovesSlider::set_higher_value` (`IMSlider::SetHigherValue`). Returns
     /// the thumbs `[lower, higher]`.
@@ -291,7 +230,7 @@ impl VertexBuffers {
         self.viewer.set_view_visible_range(min, max);
         Ok(self.visible_range())
     }
-    /// `SequentialView::update` after `setMovesRange` and `vertexColors`:
+    /// `SequentialView::update` after `setMovesRange` and `prepareVertexColors`:
     /// `[vertex, windowVertex]` of the shown tool marker, empty while hidden.
     #[wasm_bindgen(js_name = toolMarker)]
     pub fn tool_marker(&mut self) -> Vec<u32> {
@@ -312,16 +251,6 @@ impl VertexBuffers {
         Ok(vec![time.elapsed_seconds, time.vertex_seconds])
     }
 
-    /// Uint32Array: vertex ids of libvgcode's enabled segments (`i` to `i + 1`).
-    #[wasm_bindgen(js_name = enabledSegments)]
-    pub fn enabled_segments(&mut self) -> Vec<u32> {
-        self.viewer.enabled_segments().to_vec()
-    }
-    /// Uint32Array: vertex ids of libvgcode's enabled option markers.
-    #[wasm_bindgen(js_name = enabledOptions)]
-    pub fn enabled_options(&mut self) -> Vec<u32> {
-        self.viewer.enabled_options().to_vec()
-    }
     /// Float32Array: libvgcode `Layers::get_zs`, one z per layer.
     #[wasm_bindgen(js_name = takeLayerZs)]
     pub fn take_layer_zs(&mut self) -> Vec<f32> {
@@ -330,7 +259,7 @@ impl VertexBuffers {
 }
 
 /// libvgcode `EOptionType` names in index order: the bits of `viewRange`
-/// `visible_options` and the values of `VertexBuffers::takeOptions`.
+/// `visible_options` and the values of `VertexBuffers::optionsRange`.
 #[wasm_bindgen(js_name = optionTypes)]
 pub fn option_types() -> Vec<String> {
     OptionType::ALL

@@ -103,10 +103,10 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
         },
         print_statistics: Default::default(),
     });
-    let mut vertices = output.take_vertices();
-    vertices.take_values();
-    vertices.take_ids();
-    vertices.take_tags();
+    let vertices = output.take_vertices();
+    vertices.values_range(0, vertices.count() as u32).unwrap();
+    vertices.ids_range(0, vertices.count() as u32).unwrap();
+    vertices.tags_range(0, vertices.count() as u32).unwrap();
     let records_tsv = std::fs::read_to_string(root.join("vertices.tsv")).unwrap();
     let records: Vec<_> = records_tsv.lines().collect();
     assert_eq!(vertices.count(), records.len());
