@@ -13,50 +13,78 @@ use crate::{
 /// `LibVGCodeWrapper::convert` with result-derived palettes from
 /// `Plater.cpp:16927-16946` and `GUI_Preview.cpp:680-688` (G-code viewer path).
 pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
-    let tools_colors: Vec<_> = result
-        .extruder_colors
-        .iter()
-        .map(|color| decode(color))
-        .collect();
-    let mut color_print_colors = tools_colors.clone();
-    if !result.custom_gcode_per_print_z.is_empty() {
-        color_print_colors.extend(
-            result
-                .custom_gcode_per_print_z
-                .iter()
-                .filter(|item| item.kind == CustomGCodeType::ColorChange)
-                .map(|item| decode(&item.color)),
-        );
-        color_print_colors.push([128; 3]);
+    let mut conversion = ProcessorConversion::new(result);
+    for chunk in result.moves.chunks() {
+        conversion.extend(chunk);
     }
-    let moves = &result.moves;
-    let vertex_count = moves.len().saturating_sub(1)
-        + moves
-            .windows(2)
-            .enumerate()
-            .filter(|(index, pair)| starts_path(&pair[0], &pair[1], *index == 0))
-            .count();
-    let mut vertices = Vec::with_capacity(vertex_count);
-    for (index, pair) in moves.windows(2).enumerate() {
-        let [prev, curr] = pair else { unreachable!() };
-        let move_type = move_type(curr.move_type);
-        if starts_path(prev, curr, index == 0) {
-            // Phantom vertex at the previous position so libvgcode detects the
-            // path start; its times stay zero.
-            vertices.push(PathVertex {
-                position: prev.position,
-                actual_feedrate: prev.actual_feedrate,
-                times: [0.0; TimeMode::COUNT],
-                ..vertex(curr, move_type)
-            });
+    conversion.finish()
+}
+
+/// Chunk-wise `LibVGCodeWrapper::convert`; only the adjacent previous move is retained.
+pub struct ProcessorConversion {
+    data: GCodeInputData,
+    previous: Option<MoveVertex>,
+    move_id: usize,
+}
+
+impl ProcessorConversion {
+    pub fn new(result: &GCodeProcessorResult) -> Self {
+        let tools_colors: Vec<_> = result
+            .extruder_colors
+            .iter()
+            .map(|color| decode(color))
+            .collect();
+        let mut color_print_colors = tools_colors.clone();
+        if !result.custom_gcode_per_print_z.is_empty() {
+            color_print_colors.extend(
+                result
+                    .custom_gcode_per_print_z
+                    .iter()
+                    .filter(|item| item.kind == CustomGCodeType::ColorChange)
+                    .map(|item| decode(&item.color)),
+            );
+            color_print_colors.push([128; 3]);
         }
-        vertices.push(vertex(curr, move_type));
+        let moves = &result.moves;
+        let vertex_count = moves.len().saturating_sub(1)
+            + moves
+                .pairs()
+                .enumerate()
+                .filter(|(index, pair)| starts_path(pair[0], pair[1], *index == 0))
+                .count();
+        Self {
+            data: GCodeInputData {
+                spiral_vase_mode: result.spiral_vase_mode,
+                vertices: Vec::with_capacity(vertex_count),
+                tools_colors,
+                color_print_colors,
+            },
+            previous: None,
+            move_id: 0,
+        }
     }
-    GCodeInputData {
-        spiral_vase_mode: result.spiral_vase_mode,
-        vertices,
-        tools_colors,
-        color_print_colors,
+
+    pub fn extend(&mut self, moves: &[MoveVertex]) {
+        for curr in moves {
+            let previous = self.previous.replace(*curr);
+            self.move_id += 1;
+            let Some(prev) = previous else { continue };
+            let move_type = move_type(curr.move_type);
+            if starts_path(&prev, curr, self.move_id == 2) {
+                // Phantom vertex at the preceding position; its times stay zero.
+                self.data.vertices.push(PathVertex {
+                    position: prev.position,
+                    actual_feedrate: prev.actual_feedrate,
+                    times: [0.0; TimeMode::COUNT],
+                    ..vertex(curr, move_type)
+                });
+            }
+            self.data.vertices.push(vertex(curr, move_type));
+        }
+    }
+
+    pub fn finish(self) -> GCodeInputData {
+        self.data
     }
 }
 
@@ -99,7 +127,9 @@ fn vertex(curr: &MoveVertex, move_type: MoveType) -> PathVertex {
 
 /// GCodeViewer::load_as_preview `m_move_type_counts` (`GCodeViewer.cpp:1318-1324`):
 /// processed moves by `MoveType` index, internal split moves skipped.
-pub fn move_type_counts(moves: &[MoveVertex]) -> [u32; MoveType::COUNT] {
+pub fn move_type_counts(
+    moves: &ares_core::gcode_processor::ChunkedMoves,
+) -> [u32; MoveType::COUNT] {
     let mut counts = [0; MoveType::COUNT];
     for m in moves.iter().filter(|m| !m.internal_only) {
         counts[move_type(m.move_type).index()] += 1;
