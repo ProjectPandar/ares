@@ -16,6 +16,55 @@ const KEYS: [&str; 4] = [
     "filament_map_2",
 ];
 
+fn settings(bytes: &[u8]) -> Vec<u8> {
+    let mut settings: Value = serde_json::from_slice(bytes).unwrap();
+    for (key, value) in settings.as_object_mut().unwrap() {
+        if key.starts_with("filament_")
+            && let Some(values) = value.as_array_mut()
+        {
+            assert_eq!(values.len(), 1, "single-filament source {key}");
+            values.resize(4, values[0].clone());
+        }
+    }
+    for (key, value) in [
+        ("printer_model", json!("Snapmaker U1")),
+        ("nozzle_diameter", json!(vec!["0.4"; 4])),
+        ("extruder_type", json!(vec!["Direct Drive"; 4])),
+        ("extruder_colour", json!(vec!["#F2754E"; 4])),
+        ("extruder_max_nozzle_count", json!(["1"])),
+        ("nozzle_volume_type", json!(vec!["Standard"; 4])),
+        ("print_extruder_id", json!(["1", "2", "3", "4"])),
+        (
+            "print_extruder_variant",
+            json!(vec!["Direct Drive Standard"; 4]),
+        ),
+        ("filament_self_index", json!(["1", "2", "3", "4"])),
+        ("filament_map", json!(vec!["1"; 4])),
+        ("filament_nozzle_map", json!(vec!["0"; 4])),
+        ("filament_volume_map", json!(vec!["0"; 4])),
+        ("inherits_group", json!(vec![""; 6])),
+        ("different_settings_to_system", json!(vec![""; 6])),
+        ("flush_multiplier", json!(vec!["1"; 4])),
+        ("machine_start_gcode", json!("G28\n")),
+        ("machine_end_gcode", json!("M104 S0\nM140 S0\n")),
+    ] {
+        settings[key] = value;
+    }
+    settings["flush_volumes_matrix"] = Value::Array(
+        (0..64)
+            .map(|index| {
+                let value = if index % 16 / 4 == index % 4 {
+                    "0"
+                } else {
+                    "280"
+                };
+                json!(value)
+            })
+            .collect(),
+    );
+    serde_json::to_vec(&settings).unwrap()
+}
+
 fn project(used: usize) -> Vec<u8> {
     let source = include_bytes!("../../../../../../../tests/parity/arachne/default-prisms.3mf");
     let mut archive = zip::ZipArchive::new(Cursor::new(source)).unwrap();
@@ -25,51 +74,7 @@ fn project(used: usize) -> Vec<u8> {
         let mut bytes = Vec::new();
         member.read_to_end(&mut bytes).unwrap();
         if member.name() == "Metadata/project_settings.config" {
-            let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-            for (key, value) in settings.as_object_mut().unwrap() {
-                if key.starts_with("filament_") {
-                    if let Some(values) = value.as_array_mut() {
-                        assert_eq!(values.len(), 1, "single-filament source {key}");
-                        values.resize(4, values[0].clone());
-                    }
-                }
-            }
-            for (key, value) in [
-                ("printer_model", json!("Snapmaker U1")),
-                ("nozzle_diameter", json!(vec!["0.4"; 4])),
-                ("extruder_type", json!(vec!["Direct Drive"; 4])),
-                ("extruder_colour", json!(vec!["#F2754E"; 4])),
-                ("extruder_max_nozzle_count", json!(["1"])),
-                ("nozzle_volume_type", json!(vec!["Standard"; 4])),
-                ("print_extruder_id", json!(["1", "2", "3", "4"])),
-                (
-                    "print_extruder_variant",
-                    json!(vec!["Direct Drive Standard"; 4]),
-                ),
-                ("filament_self_index", json!(["1", "2", "3", "4"])),
-                ("filament_map", json!(vec!["1"; 4])),
-                ("filament_nozzle_map", json!(vec!["0"; 4])),
-                ("filament_volume_map", json!(vec!["0"; 4])),
-                ("inherits_group", json!(vec![""; 6])),
-                ("different_settings_to_system", json!(vec![""; 6])),
-                ("flush_multiplier", json!(vec!["1"; 4])),
-                ("machine_start_gcode", json!("G28\n")),
-                ("machine_end_gcode", json!("M104 S0\nM140 S0\n")),
-            ] {
-                settings[key] = value;
-            }
-            settings["flush_volumes_matrix"] = Value::Array(
-                (0..64)
-                    .map(|index| {
-                        json!(if index % 16 / 4 == index % 4 {
-                            "0"
-                        } else {
-                            "280"
-                        })
-                    })
-                    .collect(),
-            );
-            bytes = serde_json::to_vec(&settings).unwrap();
+            bytes = settings(&bytes);
         } else if member.name() == "Metadata/model_settings.config" {
             let text = String::from_utf8(bytes).unwrap();
             let selector = "<metadata key=\"extruder\" value=\"1\"/>";
