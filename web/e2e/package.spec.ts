@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
+import { systemPresetCatalog } from "./systemPresetCatalog";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -11,6 +12,7 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/package/", import.
 const consumer = `${artifacts}consumer/`;
 const installed = `${consumer}node_modules/@ares-slicer/wasm/`;
 const fixture = "tests/parity/arachne/default-prisms.3mf";
+const resources = process.env.ARES_PARITY_PROFILE_RESOURCES_DIR ?? `${repositoryRoot}OrcaSlicer/resources`;
 
 const PACKED_FILES = [
   "LICENSE",
@@ -53,6 +55,8 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
 
   // Type exports: a consumer outside the workspace, under both module resolutions.
   cpSync(`${web}e2e/consumer`, consumer, { recursive: true });
+  mkdirSync(`${consumer}public`, { recursive: true });
+  writeFileSync(`${consumer}public/system-presets.json`, await systemPresetCatalog());
   for (const resolution of ["bundler", "nodenext"]) {
     try {
       run(`${web}node_modules/.bin/tsc`, ["-p", `tsconfig.${resolution}.json`], consumer);
@@ -63,15 +67,15 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
 
   // Runtime: the README usage, bundled by Vite from the extracted tarball, slices byte-identically to native.
   await build({ root: consumer, logLevel: "warn", build: { outDir: "dist", target: "es2022" } });
-  const server = await preview({ root: consumer, logLevel: "warn", preview: { host: "127.0.0.1", port: 4175, strictPort: true } });
+  const server = await preview({ root: consumer, logLevel: "warn", preview: { host: "127.0.0.1", port: 4245, strictPort: true } });
   try {
-    await page.goto("http://127.0.0.1:4175/");
+    await page.goto("http://127.0.0.1:4245/");
     await page.getByTestId("input").setInputFiles(`${repositoryRoot}${fixture}`);
     const result = page.getByTestId("result");
     await expect(result).not.toBeEmpty({ timeout: 120_000 });
     const browser = JSON.parse((await result.textContent())!);
 
-    run(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", `${artifacts}native.gcode`, fixture], repositoryRoot);
+    run(`${repositoryRoot}target/release/ares`, ["slice", "--resources-dir", resources, "--plate", "1", "-o", `${artifacts}native.gcode`, fixture], repositoryRoot);
     const native = run("sha256sum", [`${artifacts}native.gcode`], artifacts).split(" ")[0];
     writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ tarball: packed.filename, files: PACKED_FILES, browser, native }, null, 2)}\n`);
     expect(browser).toEqual({ objects: 3, bytes: readFileSync(`${artifacts}native.gcode`).length, sha256: native });

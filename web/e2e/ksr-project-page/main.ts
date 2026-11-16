@@ -7,8 +7,9 @@ const slicer = new AresSlicer({ worker: new AresWorker(), wasmUrl });
 
 async function slice(bytes: number[]) {
   const input = new Uint8Array(bytes);
-  const first = (await slicer.sliceProject(input)).gcode;
-  const second = (await slicer.sliceProject(input)).gcode;
+  const catalogJson = await (await fetch("/system-presets.json")).text();
+  const first = (await slicer.sliceProject(input, undefined, {}, { catalogJson })).gcode;
+  const second = (await slicer.sliceProject(input, undefined, {}, { catalogJson })).gcode;
   return {
     gcode: new TextDecoder().decode(first),
     byteLength: first.length,
