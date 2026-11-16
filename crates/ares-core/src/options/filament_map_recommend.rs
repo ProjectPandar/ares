@@ -4,9 +4,9 @@
 //! `Print::update_filament_maps_to_config` (`Print.cpp:3166`) updates
 //! `m_config` before G-code export.
 //!
-//! BBL multi-head grouping runs after actual layer usage is available in
-//! `gcode_emit::tool_ordering::recommend`. This early phase preserves its
-//! input map; it only resolves the independent single-head/non-BBL routes.
+//! Multi-head recommendations run after actual layer usage is available in
+//! `gcode_emit::tool_ordering::recommend`. This early phase preserves their
+//! input maps; it only resolves the independent single-head route.
 
 use crate::{OrcaInt, ProjectFilamentMapMode, ProjectSettings};
 
@@ -25,24 +25,11 @@ pub(crate) fn apply_recommended_filament_map(settings: &mut ProjectSettings) {
     }
     let filament_count = settings.filament.gcode.filament_colour.0.len().max(1);
     let nozzle_count = settings.project.print.nozzle_diameter.0.len();
-    let is_bbl = settings
-        .printer
-        .remaining
-        .printer_model
-        .0
-        .starts_with("Bambu Lab");
-    if nozzle_count > 1 && is_bbl {
+    if nozzle_count != 1 {
         return;
     }
     let master = settings.printer.gcode.master_extruder_id.0;
-    let map = if nozzle_count == 1 {
-        vec![OrcaInt(master); filament_count]
-    } else if nozzle_count > 1 {
-        (1..=filament_count as i32).map(OrcaInt).collect()
-    } else {
-        return;
-    };
-    settings.project.gcode.filament_map.0 = map;
+    settings.project.gcode.filament_map.0 = vec![OrcaInt(master); filament_count];
 }
 
 /// ToolOrdering.cpp:1171-1173,1200-1206 and FilamentGroup.cpp:40-50.
