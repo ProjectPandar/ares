@@ -317,10 +317,14 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         (state.options.travel_acceleration > 0.0).then_some(state.options.travel_acceleration)
     };
-    let jerk = if state.options.default_jerk <= 0.0 {
+    let jerk = if state.on_first_layer {
+        if state.options.default_jerk > 0.0 && state.options.initial_layer_travel_jerk > 0.0 {
+            state.options.initial_layer_travel_jerk
+        } else {
+            0.0
+        }
+    } else if state.options.default_jerk <= 0.0 {
         0.0
-    } else if state.layer_index == 0 {
-        state.options.travel_jerk
     } else if travel_distance < state.options.short_travel_distance
         && matches!(destination_feature, "Outer wall" | "Overhang wall")
         && state.options.outer_wall_jerk > 0.0
