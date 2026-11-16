@@ -121,6 +121,10 @@ impl Generator<'_> {
                 done = 0.0;
             }
         }
+        if planned_ramming_depth > 0.0 {
+            self.left_to_right =
+                self.finish_planned_ram_band(writer, bounds, planned_ramming_depth);
+        }
         let end = writer.position;
         writer.change_width(perimeter);
         if enabled {
@@ -214,6 +218,61 @@ impl Generator<'_> {
         writer
             .gcode
             .push_str(Writer::flush_planner_queue_command(self.flavor));
+    }
+
+    fn finish_planned_ram_band(
+        &self,
+        writer: &mut Writer,
+        bounds: BoxCoordinates,
+        planned_depth: f32,
+    ) -> bool {
+        let filament = &self.filaments[self.current_tool];
+        let perimeter = self.plan.perimeter_width;
+        let x_bounds = [bounds.lower[0] + perimeter, bounds.upper[0] - perimeter];
+        let line_width = perimeter * filament.ramming_width;
+        let y_step = line_width * filament.ramming_step * self.plan.ramming_spacing;
+        let start_y = bounds.lower[1] + self.depth_traversed + y_step / 2.0;
+        let mut left_to_right = self.left_to_right;
+        let reserved_rows = (planned_depth / y_step).round().max(1.0) as usize;
+        let last_row_y = start_y + (reserved_rows - 1) as f32 * y_step;
+        let e_per_mm =
+            1.0 / (volume_to_length(1.0, line_width, self.layer_height) * self.filaments[0].area);
+        let fill_feed = filament.ramming_speeds.last().map_or(3000.0, |speed| {
+            60.0 * volume_to_length(*speed, line_width, self.layer_height)
+        });
+        loop {
+            let target_x = if left_to_right {
+                x_bounds[1]
+            } else {
+                x_bounds[0]
+            };
+            let distance = (target_x - writer.position[0]).abs();
+            if distance > 1e-3 {
+                writer.extrude_explicit(
+                    writer.position,
+                    Extrude {
+                        amount: 0.0,
+                        feedrate: fill_feed,
+                        record: true,
+                        limit: false,
+                    },
+                );
+                writer.extrude_explicit(
+                    [target_x, writer.position[1]],
+                    Extrude {
+                        amount: e_per_mm * distance,
+                        feedrate: 0.0,
+                        record: true,
+                        limit: false,
+                    },
+                );
+            }
+            if writer.position[1] + 0.5 * y_step > last_row_y {
+                return left_to_right;
+            }
+            writer.travel([writer.position[0], writer.position[1] + y_step], 7200.0);
+            left_to_right = !left_to_right;
+        }
     }
 
     fn ramming_first_line(&self, y_step: f32) -> Option<f32> {
