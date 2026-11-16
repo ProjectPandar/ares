@@ -5,42 +5,28 @@ use super::time::minutes;
 
 struct StopTime {
     g1_id: usize,
-    processed_before_registration: usize,
     elapsed: f32,
 }
 
+#[derive(Default)]
 pub(super) struct StopTimes {
     stops: Vec<StopTime>,
-    processed_blocks: usize,
 }
 
 impl StopTimes {
-    pub(super) fn new(
-        registrations: &[(usize, usize)],
-        flush_starts: &[usize],
-        processed_blocks: usize,
-    ) -> Self {
-        Self {
-            stops: registrations
-                .iter()
-                .map(|&(g1_id, event)| StopTime {
-                    g1_id,
-                    processed_before_registration: flush_starts[event],
-                    elapsed: 0.0,
-                })
-                .collect(),
-            processed_blocks,
-        }
+    pub(super) fn register(&mut self, g1_id: usize) {
+        self.stops.push(StopTime {
+            g1_id,
+            elapsed: 0.0,
+        });
     }
 
     // Observe the existing eligible cache snapshot; do not calculate time.
     // lower_bound updates only the first stop with a repeated G1 ID (:576).
-    pub(super) fn record(&mut self, id: usize, block: usize, elapsed: f32) {
+    pub(super) fn record(&mut self, id: usize, elapsed: f32) {
         let index = self.stops.partition_point(|stop| stop.g1_id < id);
         if let Some(stop) = self.stops.get_mut(index)
             && stop.g1_id == id
-            && block >= stop.processed_before_registration
-            && block < self.processed_blocks
         {
             stop.elapsed = elapsed;
         }
