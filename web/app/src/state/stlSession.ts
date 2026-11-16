@@ -26,8 +26,8 @@ export function openStlSession(file: ModelFile, scene: Scene, selection: PresetS
 
 /**
  * The latest STL session opening. The GUI places a model before it can be sliced (Plater::load_files
- * runs on the UI thread); a slice waits for this, so it slices the session the plater ends with and
- * its result outlives the session that opens after it.
+ * runs on the UI thread); a slice waits for this, so it slices the session the plater ends with. A newer
+ * opening replaces that session, and a slice of it is then discarded (`slicePlates`).
  */
 let stlSessionOpening: Promise<unknown> = Promise.resolve();
 /** The session the plater holds and the inputs it was opened for. */
