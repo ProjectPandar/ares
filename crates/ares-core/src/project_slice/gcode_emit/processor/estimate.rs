@@ -3,12 +3,14 @@
 mod commands;
 mod custom_time;
 mod elapsed;
-use commands::{arc_seams, record_motions, synchronizes_planner};
+use commands::{arc_seams, synchronizes_planner};
 mod export_cache;
 pub(super) mod options_z;
 mod seam;
+mod timing;
 use elapsed::elapsed_snapshots;
 use seam::SeamDetector;
+use timing::{Metadata, Timing};
 
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
@@ -17,7 +19,7 @@ use super::motion::{IndexedMotion, MotionState};
 use super::motion_util::word;
 use super::moves::tags::ParsedLine;
 use super::moves::{MoveRecorder, RecordedMotion};
-use super::schedule::{DelayTarget, FlushEvent, PendingDelay, Schedule, scheduled_times};
+use super::schedule::{DelayTarget, PendingDelay};
 use super::stop_times::StopTimes;
 use super::used_filaments::UsedFilaments;
 use super::{ProcessorConfig, is_progress_motion};
@@ -52,12 +54,8 @@ impl Estimate {
         let limits = config.limits;
         let cache_lines = lines.clone();
         let elapsed_lines = lines.clone();
-        let mut blocks = Vec::new();
+        let mut timing = Timing::new(limits.gcode_flavor);
         let mut state = MotionState::with_limits(limits);
-        let mut prepare_stages = Vec::new();
-        let mut events = Vec::new();
-        let mut custom_events = Vec::new();
-        let mut stop_events = Vec::new();
         let mut prepare_stage = false;
         let mut skip_end_gcode_delays = false;
         let mut saw_motion_command = false;
@@ -68,9 +66,6 @@ impl Estimate {
         // GCode.cpp's fresh export processor keeps its default XY offset zero.
         let mut printable_area = PrintableAreaTracker::new(config.settings, [0.0; 2]);
         let mut g1_line_id = 0;
-        let mut block_line_ids = Vec::new();
-        let mut remaining_internal = Vec::new();
-        let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::new(config.detect_layer_based_on_tag);
         for (index, line) in lines.into_iter().enumerate() {
             seams.role(line);
@@ -99,19 +94,12 @@ impl Estimate {
                 state.e_position,
             ];
             recorder.machine(&state);
-            recorder.options_z.tick(events.len());
             recorder.line(index + 1, parsed, g1_line_id, line_start);
             if let Some(kind) = parsed
                 .custom
                 .and_then(|tag| tag.time_kind(filaments.current_filament()))
             {
-                stop_events.push((g1_line_id, events.len()));
-                custom_events.push((kind, events.len()));
-                events.push(FlushEvent {
-                    block_count: blocks.len(),
-                    delay: None,
-                    klipper: state.klipper,
-                });
+                timing.custom(g1_line_id, kind, state.klipper, recorder);
             }
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
                 measure_g29_time = true;
@@ -135,14 +123,14 @@ impl Estimate {
                 limits.gcode_flavor,
                 skip_end_gcode_delays,
             ) {
-                events.push(FlushEvent {
-                    block_count: blocks.len(),
-                    klipper: state.klipper,
-                    delay: delay.map(|seconds| PendingDelay {
+                timing.flush(
+                    state.klipper,
+                    delay.map(|seconds| PendingDelay {
                         target: DelayTarget::Any,
                         seconds: seconds as f32,
                     }),
-                });
+                    recorder,
+                );
             }
             let previous_selection = filaments.selection();
             let initialized = filaments.initialized();
@@ -151,22 +139,27 @@ impl Estimate {
                 used_filaments.tool_change(previous_selection.0, previous_selection.1);
             }
             if let Some((filament, extra_time)) = change {
-                let vertex = recorder.options_z.next_vertex();
+                let vertex = recorder.next_vertex();
                 recorder.tool_change(index + 1, filament, line_start);
-                recorder.options_z.block(vertex);
-                blocks.push(commands::tool_change_block(state.klipper));
-                block_line_ids.push(g1_line_id);
-                remaining_internal.push(0);
-                cache_eligible.push(false);
-                prepare_stages.push(prepare_stage);
-                events.push(FlushEvent {
-                    block_count: blocks.len(),
-                    klipper: state.klipper,
-                    delay: Some(PendingDelay {
+                recorder.queue_block(vertex);
+                timing.push(
+                    &commands::tool_change_block(state.klipper),
+                    Metadata {
+                        id: g1_line_id,
+                        remaining: 0,
+                        prepare: prepare_stage,
+                        eligible: false,
+                    },
+                    recorder,
+                );
+                timing.flush(
+                    state.klipper,
+                    Some(PendingDelay {
                         target: DelayTarget::ToolChange,
                         seconds: extra_time,
                     }),
-                });
+                    recorder,
+                );
             }
             let command = code.split_whitespace().next().unwrap_or_default();
             if command == "VG1" {
@@ -186,12 +179,17 @@ impl Estimate {
             }
             if let Some(block) = virtual_block {
                 used_filaments.motion(block.delta, true, state.wiping, &filaments);
-                blocks.push(block);
-                recorder.options_z.virtual_block();
-                block_line_ids.push(g1_line_id);
-                prepare_stages.push(prepare_stage);
-                cache_eligible.push(false);
-                remaining_internal.push(0);
+                recorder.queue_virtual();
+                timing.push(
+                    &block,
+                    Metadata {
+                        id: g1_line_id,
+                        remaining: 0,
+                        prepare: prepare_stage,
+                        eligible: false,
+                    },
+                    recorder,
+                );
                 continue;
             }
             let arc_internal = matches!(command, "G2" | "G3")
@@ -208,6 +206,7 @@ impl Estimate {
                 );
             }
             let mut seam_vertices = Vec::new();
+            let mut cache_eligible = Vec::new();
             // Linear commands produce at most one block; only arcs subdivide.
             // `GCodeProcessor::process_G10/G11` calls `process_G1` after
             // `--m_g1_line_id` (`GCodeProcessor.cpp:4873-4893`), so the
@@ -265,131 +264,44 @@ impl Estimate {
             if matches!(command, "G10" | "G11") || word(code, 'F').is_some() {
                 recorder.set_feedrate(state.feedrate, arc);
             }
-            record_motions(
-                recorder,
-                RecordedMotion {
+            let base_id =
+                g1_line_id + usize::from(matches!(command, "G0" | "G1" | "G28" | "G2" | "G3"));
+            let mut start = line_start;
+            for (segment, motion) in motion_blocks.iter().enumerate() {
+                let vertex = recorder.next_vertex();
+                recorder.motion(RecordedMotion {
                     source: index + 1,
-                    start: line_start,
-                    end: line_start,
+                    start,
+                    end: motion.end,
                     wiping: state.wiping,
                     linear: !arc,
-                    seam: None,
-                },
-                &motion_blocks,
-                &seam_vertices,
-            );
-            remaining_internal.extend(
-                motion_blocks
-                    .iter()
-                    .map(|motion| arc_internal.map_or(0, |internal| internal - motion.index)),
-            );
-            match command {
-                "G0" | "G1" | "G28" => {
-                    g1_line_id += 1;
-                    let count = motion_blocks.len();
-                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
-                    block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                }
-                // `GCodeProcessor::process_G10/G11` decrements the fake
-                // G1's line id (`GCodeProcessor.cpp:4873-4893`), so a
-                // firmware retract occupies NO g1 line id — the M73 cache
-                // alignment skips over it.
-                "G10" | "G11" => {
-                    let count = motion_blocks.len();
-                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
-                    block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    // `cache_eligible` was already pushed by the shared
-                    // G1-branch above: `e_only && !wiping` keeps the fake
-                    // Retract/Unretract out of `g1_times_cache`.
-                }
-                "G2" | "G3" => {
-                    let count = motion_blocks.len();
-                    // Every discretized internal `process_G1` consumes its own
-                    // g1 line id (`GCodeProcessor.cpp:3868` `++m_g1_line_id`),
-                    // including the zero-displacement segments dropped at
-                    // :3891 — so a retained block carries
-                    // `base + discretization_index` (a hole opens where a
-                    // segment dropped), and `g1_line_id` advances by the full
-                    // internal-call count `1 + arc_internal` = `segments`.
-                    g1_line_id += 1;
-                    block_line_ids
-                        .extend(motion_blocks.iter().map(|motion| g1_line_id + motion.index));
-                    blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    g1_line_id += arc_internal.unwrap_or(0);
-                }
-                _ => debug_assert!(motion_blocks.is_empty()),
+                    seam: seam_vertices.get(segment).copied().flatten(),
+                });
+                recorder.queue_block(vertex);
+                let motion_id = motion.index * usize::from(arc);
+                timing.push(
+                    &motion.block,
+                    Metadata {
+                        id: base_id + motion_id,
+                        remaining: arc_internal.map_or(0, |internal| internal - motion.index),
+                        prepare: prepare_stage,
+                        eligible: cache_eligible[segment],
+                    },
+                    recorder,
+                );
+                start = motion.end;
             }
+            g1_line_id = base_id + if arc { arc_internal.unwrap_or(0) } else { 0 };
             saw_motion_command |= is_progress_motion(code);
         }
-        let Schedule {
-            times,
-            trapezoids,
-            trailing_delay,
-            flush_ends,
-            flush_starts,
-            pushed,
-            processed_blocks,
-        } = scheduled_times(&blocks, &events, limits.gcode_flavor);
-        let mut stop_times = StopTimes::new(&stop_events, &flush_starts, processed_blocks);
-        let scheduled = options_z::Scheduled {
-            times: &times,
-            trapezoids: &trapezoids,
-            pushed: &pushed,
-            flush_ends: &flush_ends,
-        };
-        recorder.apply_schedule(&scheduled, &mut cache_eligible);
-        debug_assert_eq!(block_line_ids.len(), times.len());
-        // Per-block signature dump (id, cumulative, distance, speed) for
-        // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env
-        // gated like the cache dump.
-        // `machine.time` accumulates `time += double(block_time)`
-        // (`GCodeProcessor.cpp:471`) in f64; `g1_times_cache` then snapshots
-        // each entry as `float(time)` (:576). Keep the f64 accumulator for
-        // `total`, but round each cache entry to f32 — the M73 boundary
-        // reads the f32 snapshot, not the running f64 sum.
-        let mut cumulative = 0.0;
-
-        let cache = block_line_ids
-            .into_iter()
-            .zip(&times)
-            .zip(cache_eligible)
-            .zip(remaining_internal)
-            .enumerate()
-            .filter_map(|(block, (((id, time), eligible), remaining))| {
-                // calculate_time adds every block's time before testing the
-                // associated move vertex for Extrude, Travel or Wipe.
-                cumulative += time;
-                if eligible {
-                    stop_times.record(id, block, cumulative as f32);
-                }
-                // (g1_line_id, f32 elapsed snapshot)
-                eligible.then_some(export_cache::Entry {
-                    id,
-                    remaining,
-                    elapsed: cumulative as f32,
-                })
-            })
-            .collect::<Vec<_>>();
-        let export_elapsed = export_cache::snapshots(cache_lines, line_count, &cache);
-        let elapsed = elapsed_snapshots(elapsed_lines, line_count, &cache);
-        // `prepare_time += block_time` adds the double block time to the float
-        // total and narrows once (`GCodeProcessor.cpp:649-650`).
-        let prepare = times
-            .iter()
-            .zip(prepare_stages)
-            .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
-            .fold(0.0_f32, |sum, time| (f64::from(sum) + time) as f32) as f64;
-        let total = cumulative + trailing_delay;
-        let custom_gcode_times =
-            custom_time::custom_times(&custom_events, &flush_ends, &times, trailing_delay, total);
+        timing.finish(recorder);
+        let export_elapsed = export_cache::snapshots(cache_lines, line_count, &timing.cache);
+        let elapsed = elapsed_snapshots(elapsed_lines, line_count, &timing.cache);
         Self {
-            total,
-            custom_gcode_times,
-            stop_times,
-            prepare,
+            total: timing.total,
+            custom_gcode_times: timing.custom_gcode_times,
+            stop_times: timing.stop_times,
+            prepare: f64::from(timing.prepare),
             print_statistics: used_filaments.finish(filaments.selection().1),
             printable_area,
             elapsed,
