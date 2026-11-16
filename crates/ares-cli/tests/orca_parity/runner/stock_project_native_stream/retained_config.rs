@@ -63,8 +63,7 @@ fn direct_ksr_retained_missing_options_match_native_effective_config() {
         .block_on(ares_core::slice_project_plate_with_catalog(
             &project,
             ares_core::GenerationMetadata::default(),
-            None,
-            &overrides,
+            (None, &overrides),
             Some(&catalog),
             ares_core::SlicerContext::new(0),
         ))
