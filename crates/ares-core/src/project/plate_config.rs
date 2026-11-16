@@ -129,6 +129,7 @@ fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
         "Auto For Flush" | "Auto" => Some(ProjectFilamentMapMode::AutoForFlush),
         "Auto For Match" => Some(ProjectFilamentMapMode::AutoForMatch),
         "Manual" => Some(ProjectFilamentMapMode::Manual),
+        "Nozzle Manual" => Some(ProjectFilamentMapMode::NozzleManual),
         _ => None,
     }
 }

@@ -17,7 +17,7 @@ pub struct ExclusionFilamentMap<'a> {
 pub(crate) fn is_auto_filament_map_mode(mode: ProjectFilamentMapMode) -> bool {
     match mode {
         ProjectFilamentMapMode::AutoForFlush | ProjectFilamentMapMode::AutoForMatch => true,
-        ProjectFilamentMapMode::Manual => false,
+        ProjectFilamentMapMode::Manual | ProjectFilamentMapMode::NozzleManual => false,
     }
 }
 
