@@ -24,7 +24,7 @@ impl Filament {
     pub(super) fn new(
         settings: &ProjectSettings,
         index: usize,
-        (retract_length, retract_speed): (f32, f32),
+        (retract_length, retract_speed, wipe_distance): (f32, f32, f32),
     ) -> Self {
         let g = &settings.filament.gcode;
         let p = &settings.filament.print;
@@ -64,7 +64,7 @@ impl Filament {
             },
             retract_length,
             retract_speed,
-            wipe_distance: at(&settings.project.print.wipe_distance.0, index).0 as f32,
+            wipe_distance,
         }
     }
 }
