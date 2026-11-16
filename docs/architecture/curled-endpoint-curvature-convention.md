@@ -98,10 +98,43 @@ Do **not** add an `angle=0` zero-vector branch, clamp signed zeros, force
 endpoint curvature, change loop wrapping, or change the angle formula. The
 result must follow from the upstream sample-vector construction.
 
+## Zero-length partial interpolation
+
+The partial branch in `ExtrusionProcessor.hpp:395–400,415–420` assigns its
+sample even when the traversed direction has zero length. The source-pinned
+Eigen5.0.1 `Eigen/src/Core/Dot.h:83–102`, `MatrixBase::normalized()`, returns
+a copy of the original vector when its squared norm is zero. This is defined
+behavior, not division by zero or uninitialized memory.
+
+The first implementation draft removed whole-step sample writes but retained
+an Ares `if norm > 0` around the partial assignment. The old whole-step writes
+had masked that guard's mismatch: after whole-step progress, a zero-direction
+partial must assign the current anchor, not retain the initial sample.
+
+A whole-output-qualified Native MK4 capture demonstrates the branch:
+layer0, entity0, point1, window3 starts at `(-4.760001,4.760001)`;
+a zero-distance whole step advances backward to point0 at
+`(4.760001,4.760001)`. The following partial has zero direction. Native
+normalization preserves that direction (the compiled divisor is `(1,1)`),
+then writes `(4.760001,4.760001)` to the back sample. Its resulting curvature
+is `0.5235987901687622`. The initial draft's guard instead keeps the initial
+back sample. This also affects the Sermoon witnesses; the complete first-draft
+inventory rejects four P→F identities in each mode.
+
+Both directions must therefore implement Eigen's zero-vector preservation
+and assign the partial sample unconditionally. A unit divisor for a zero
+normalization length preserves the vector and the existing positive-length
+arithmetic order. Do not change precision, angle guards, signed-zero handling,
+whole-step behavior, or any consumer to compensate. Evidence is retained in
+`tiq2-curvature-regression-firstdraft-64a5e4ab9-r1/native-gdb` and
+`native-first-zero-branch.json`; its Native whole output matches the public
+MK4 strict-test artifact.
+
 ## Included and deferred behavior
 
 Included: backward and forward window sample position updates and the
-interpolation anchor required by that update rule, for the shared curl
+interpolation anchor and unconditional zero-length partial assignment required
+by that update rule, for the shared curl
 `curvatures` helper. The existing module is the temporary compatibility shell
 around the upstream annotation concept; replace only this mismatched rule.
 
