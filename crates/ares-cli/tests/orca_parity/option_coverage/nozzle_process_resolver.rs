@@ -15,7 +15,7 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
     } else {
         "Bambu Lab H2D 0.4 nozzle"
     };
-    let selected = crate::select_printer(&profiles, "BBL", printer).unwrap();
+    let selected = crate::case_helpers::select_printer(&profiles, "BBL", printer).unwrap();
     let machine = profiles.machine(&selected.printer).unwrap();
     let mut process = profiles.process(&selected.process).unwrap();
     crate::normalize_process_defaults(&machine, &mut process);
@@ -34,7 +34,11 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 filaments: &filaments,
             },
             &crate::smoke_overrides(),
-            &runner::repo_root().join("tests/parity/cube10.stl"),
+            &runner::repo_root().join(if matches!(case, "overhang" | "support") {
+                "tests/parity/overhang.stl"
+            } else {
+                "tests/parity/cube10.stl"
+            }),
         )
         .unwrap();
     let mut source = zip::ZipArchive::new(Cursor::new(exported.project)).unwrap();
@@ -78,6 +82,26 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
             settings["role_based_wipe_speed"] = json!("1");
             settings["filament_retraction_length"] = json!(["0.4"]);
             settings["filament_wipe_distance"] = json!(["1"]);
+            if case == "small_loop" {
+                settings["small_perimeter_threshold"] = json!(["100", "0"]);
+                settings["small_perimeter_speed"] = json!(["50%", "100%"]);
+            }
+            if case == "skirt" {
+                settings["skirt_loops"] = json!("2");
+                settings["initial_layer_speed"] = json!(["25", "50"]);
+                settings["initial_layer_infill_speed"] = json!(["40", "70"]);
+            }
+            if case == "overhang" {
+                settings["overhang_1_4_speed"] = json!(["15", "30"]);
+                settings["overhang_2_4_speed"] = json!(["15", "30"]);
+                settings["overhang_3_4_speed"] = json!(["15", "30"]);
+                settings["overhang_4_4_speed"] = json!(["15", "30"]);
+            }
+            if case == "support" {
+                settings["enable_support"] = json!("1");
+                settings["support_speed"] = json!(["80", "120"]);
+                settings["support_interface_speed"] = json!(["40", "60"]);
+            }
             if case == "kinematics" {
                 settings["outer_wall_acceleration"] = json!(["1200", "2400"]);
                 settings["outer_wall_jerk"] = json!(["5", "9"]);
@@ -121,7 +145,10 @@ fn wipe(gcode: &[u8]) -> Vec<String> {
     let end = (start..lines.len())
         .find(|&i| lines[i].contains("WIPE_END"))
         .unwrap();
-    lines[before..=end]
+    let recovered = (end..lines.len())
+        .find(|&i| lines[i].starts_with("G1 E") && !lines[i].starts_with("G1 E-"))
+        .unwrap();
+    lines[before..=recovered]
         .iter()
         .map(|line| (*line).to_owned())
         .collect()
@@ -188,4 +215,20 @@ fn nozzle_process_resolver_acceleration_and_jerk() {
 #[test]
 fn nozzle_process_resolver_percentage_wipe_keeps_physical_travel() {
     compare("percent_wipe");
+}
+#[test]
+fn nozzle_process_resolver_small_loop_threshold() {
+    compare("small_loop");
+}
+#[test]
+fn nozzle_process_resolver_initial_layer_and_skirt() {
+    compare("skirt");
+}
+#[test]
+fn nozzle_process_resolver_overhang_speeds() {
+    compare("overhang");
+}
+#[test]
+fn nozzle_process_resolver_support_speeds() {
+    compare("support");
 }
