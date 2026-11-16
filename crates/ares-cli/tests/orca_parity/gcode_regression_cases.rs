@@ -60,6 +60,9 @@ mod rear_seam_visibility;
 #[path = "retract_after_wipe.rs"]
 mod retract_after_wipe;
 
+#[path = "type1_tower_retraction.rs"]
+mod type1_tower_retraction;
+
 #[path = "xl_curl_segmentation.rs"]
 mod xl_curl_segmentation;
 
