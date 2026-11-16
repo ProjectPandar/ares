@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { wasmMemory } from "./wasmMemory";
 
 function cube200Stl() {
   const scale = (point: number[]) => point.map((coordinate) => coordinate * 200);
@@ -69,4 +70,12 @@ test("slices a runtime cube and exposes matching viewer layers", async ({ page }
     body: JSON.stringify({ viewerLayers, headerLayers, gcodeBytes: Buffer.byteLength(gcode) }),
     contentType: "application/json",
   });
+  const records = await wasmMemory(page.context().browser()!, new URL(page.url()).origin);
+  const sizes = records.flatMap(({ linearBytes }) => linearBytes);
+  await testInfo.attach("cube200-linear-memory", {
+    body: JSON.stringify({ records, highwaterBytes: Math.max(...sizes), limitBytes: 3_850_000_000 }),
+    contentType: "application/json",
+  });
+  expect(sizes.length, "live slicing-worker WebAssembly.Memory objects").toBeGreaterThan(0);
+  expect(Math.max(...sizes), "cube200 grow-only WASM linear-memory highwater").toBeLessThanOrEqual(3_850_000_000);
 });
