@@ -8,9 +8,11 @@ use std::{
 };
 
 pub(super) fn load<'a>(
+    datadir: Option<&Path>,
     files: impl Iterator<Item = LoadSettingsFile<'a>>,
 ) -> Result<LoadedPresetSources, Box<dyn std::error::Error>> {
     let mut sources = LoadedPresetSources::new();
+    let mut users_loaded = false;
     let mut loaded = BTreeSet::new();
     for file in files {
         if file.json.is_empty() {
@@ -20,11 +22,12 @@ pub(super) fn load<'a>(
         if document["inherits"].as_str().is_none_or(str::is_empty) {
             continue;
         }
-        if matches!(document["from"].as_str(), Some("user" | "User") | None) {
-            return Err(io::Error::new(
-                io::ErrorKind::Unsupported,
-                format!("CLI user preset source is unresolved (datadir/AppConfig producer is deferred): {}", file.label),
-            ).into());
+        if matches!(document["from"].as_str(), Some("user" | "User")) {
+            if !users_loaded && let Some(datadir) = datadir {
+                load_user_presets(datadir, &mut sources)?;
+                users_loaded = true;
+            }
+            continue;
         }
         if document["from"].as_str() != Some("system") {
             continue;
@@ -58,6 +61,99 @@ pub(super) fn load<'a>(
         }
     }
     Ok(sources)
+}
+
+fn load_user_presets(
+    datadir: &Path,
+    sources: &mut LoadedPresetSources,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let system = datadir.join("system");
+    let mut vendors = fs::read_dir(&system)?
+        .map(|entry| entry.map(|entry| entry.path()))
+        .collect::<Result<Vec<_>, _>>()?;
+    vendors.retain(|path| path.extension().and_then(|value| value.to_str()) == Some("json"));
+    vendors.sort_by_key(|path| {
+        (
+            path.file_stem().unwrap() != "OrcaFilamentLibrary",
+            path.clone(),
+        )
+    });
+    let mut loaded = BTreeSet::new();
+    for path in vendors {
+        add_vendor(
+            sources,
+            &mut loaded,
+            &system,
+            path.file_stem().unwrap().to_str().unwrap(),
+        )?;
+    }
+    let app_config = datadir.join("OrcaSlicer.conf");
+    let user = if app_config.is_file() {
+        let document = match serde_json::from_slice::<Value>(&fs::read(app_config)?) {
+            Ok(document) => document,
+            Err(error) => {
+                eprintln!("Ignoring invalid app config during CLI preset resolution: {error}");
+                Value::Null
+            }
+        };
+        document
+            .get("app")
+            .and_then(|presets| presets.get("preset_folder"))
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+            .unwrap_or("default")
+            .to_owned()
+    } else {
+        "default".to_owned()
+    };
+    let root = datadir.join("user").join(user);
+    for (kind, directory) in [
+        ("machine", "machine"),
+        ("process", "process"),
+        ("filament", "filament"),
+    ] {
+        let path = root.join(directory);
+        if !path.is_dir() {
+            continue;
+        }
+        load_user_directory(&path, kind, sources)?;
+    }
+    Ok(())
+}
+
+fn load_user_directory(
+    directory: &Path,
+    kind: &str,
+    sources: &mut LoadedPresetSources,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let base = directory.join("base");
+    if base.is_dir() {
+        load_user_directory(&base, kind, sources)?;
+    }
+    let mut entries = Vec::new();
+    for entry in fs::read_dir(directory)? {
+        let path = entry?.path();
+        if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+            continue;
+        }
+        let Ok((json, identity)) = crate::read_preset_source(&path) else {
+            continue;
+        };
+        let Ok(mut document) = serde_json::from_str::<Value>(&json) else {
+            continue;
+        };
+        if !document.is_object() {
+            continue;
+        }
+        document["type"] = Value::String(kind.to_owned());
+        entries.push((
+            path.file_stem().unwrap().to_str().unwrap().to_owned(),
+            document.to_string(),
+            identity,
+        ));
+    }
+    sources.add_user_collection(&entries)?;
+    Ok(())
 }
 
 fn add_vendor(

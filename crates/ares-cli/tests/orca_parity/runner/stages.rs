@@ -224,6 +224,26 @@ pub(crate) fn run_live_with_env(
     )
 }
 
+#[cfg(target_os = "linux")]
+pub(crate) fn run_exact_with_env(
+    bin: &Path,
+    args: impl IntoIterator<Item = String>,
+    envs: &[(&str, &str)],
+    stage: Stage,
+    work: &Path,
+) -> Result<(), StageError> {
+    super::command::run_exact(
+        bin,
+        args,
+        envs,
+        super::command::Limits {
+            stage,
+            work,
+            timeout: Duration::from_secs(300),
+        },
+    )
+}
+
 pub(super) fn capture_error(failure: &mut Option<(FailureKind, String)>, detail: String) {
     match failure {
         Some((FailureKind::Timeout | FailureKind::Wait, primary)) => {
