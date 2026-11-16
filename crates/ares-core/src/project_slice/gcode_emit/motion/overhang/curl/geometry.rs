@@ -274,22 +274,20 @@ fn walk(
         };
         if distance + line_dist > half_window {
             let remaining = half_window - distance;
-            let delta = (
-                points[neighbor].0 - position.0,
-                points[neighbor].1 - position.1,
-            );
+            let start = points[index];
+            let delta = (points[neighbor].0 - start.0, points[neighbor].1 - start.1);
             let norm = delta.0.hypot(delta.1);
-            if norm > 0.0 {
-                position = (
-                    position.0 + remaining * delta.0 / norm,
-                    position.1 + remaining * delta.1 / norm,
-                );
-            }
+            // Eigen::MatrixBase::normalized preserves zero vectors; the partial branch
+            // still assigns its sample (ExtrusionProcessor.hpp:395–400,415–420).
+            let divisor = if norm > 0.0 { norm } else { 1.0 };
+            position = (
+                start.0 + remaining * delta.0 / divisor,
+                start.1 + remaining * delta.1 / divisor,
+            );
             break;
         }
         distance += line_dist;
         index = neighbor;
-        position = points[index];
     }
     position
 }
