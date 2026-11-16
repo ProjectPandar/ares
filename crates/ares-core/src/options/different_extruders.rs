@@ -33,7 +33,7 @@ impl SliceOptions {
         let Some(nozzle_volume_types) = optional_enum_vector(
             self.values().get("nozzle_volume_type"),
             "nozzle_volume_type",
-            &["Standard", "High Flow"],
+            super::NozzleVolumeType::TYPE_KEYS,
         )?
         else {
             return Ok(false);
