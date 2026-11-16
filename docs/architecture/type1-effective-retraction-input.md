@@ -53,9 +53,35 @@ to any existing comparator or whole-stream assertion. Run both cases with
 official and seeded Native configurations, plus the existing tower-related
 case inventory with no passing case becoming a failure.
 
+## Effective wipe distance extension
+
+`Print.cpp:5332–5333` also admits effective wipe distance into
+`GCode/WipeTower.cpp:2080,2208`. The consumers are `finish_layer:3984–3985`
+and `only_generate_out_wall:5296`, which call `add_wipe_path:1355–1365`.
+That writer collects polygon points for a future wipe, stopping immediately
+for zero distance. `GCode.cpp:1652–1657` installs the resulting path and
+retracts after leaving the tower. Reuse the existing merged
+`runtime.project.print.wipe_distance` at the Type1 filament constructor;
+do not change polygon path generation or ordinary motion retraction.
+
+A separate public API test derives a single-layer smooth Type1 project from
+the same public input. Machine distance zero plus filament distance five
+must produce the complete Native first departure wipe block. Machine five
+plus nil filament distance is the equal-effective control. Select the first
+`WIPE_TOWER_END`, then collect the entire `WIPE_START` through `WIPE_END`
+block before the next ordinary XY travel. This excludes object wipes and
+later tower results with unrelated scheduling differences. Require Native
+nonempty, equal Native/API line counts, and complete ordered line equality;
+retain inputs, outputs and extracted blocks. Do not claim whole-stream
+parity. Run both cases in official and seeded modes and the existing Type1
+and tower inventory without a passing case becoming a failure.
+
+Derive the synthetic archives at test runtime; do not alter the existing
+fixture or commit a generator script. Use fixed ZIP timestamps, require
+empty creation/modification dates, and reject local source paths in archive
+metadata. Stock printer-template revision dates are not fixture provenance.
+
 ## Excluded behavior
 
-Do not change wipe distance, other Type1 attributes, ordinary nozzle Wipe,
-Type2, cooling, time estimation, configuration export, or comparators.
-Wipe distance has a similar input pattern but no independent discriminating
-output in this slice.
+Other Type1 attributes, ordinary nozzle Wipe, Type2, cooling, time estimation,
+configuration export, polygon wipe generation and comparators are unchanged.
