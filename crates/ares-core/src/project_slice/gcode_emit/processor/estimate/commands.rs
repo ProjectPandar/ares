@@ -1,6 +1,6 @@
 use super::super::filament_change::unloads_filament;
 use super::super::motion::{KlipperConfig, MotionBlock, MotionKind};
-use super::{IndexedMotion, MoveRecorder, RecordedMotion, SeamDetector, word};
+use super::{IndexedMotion, SeamDetector, word};
 use crate::GCodeFlavor;
 
 pub(super) fn tool_change_block(klipper: KlipperConfig) -> MotionBlock {
@@ -59,24 +59,6 @@ pub(super) fn arc_seams(
             seam
         })
         .collect()
-}
-
-/// Records one command's `process_G1` vertices; each arc segment starts
-/// where the previous one ended.
-pub(super) fn record_motions(
-    recorder: &mut MoveRecorder,
-    mut motion: RecordedMotion,
-    motions: &[IndexedMotion],
-    seams: &[Option<[f32; 3]>],
-) {
-    for (index, indexed) in motions.iter().enumerate() {
-        motion.end = indexed.end;
-        motion.seam = seams.get(index).copied().flatten();
-        let vertex = recorder.options_z.next_vertex();
-        recorder.motion(motion);
-        recorder.options_z.block(vertex);
-        motion.start = indexed.end;
-    }
 }
 
 /// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay, as do the
