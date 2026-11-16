@@ -79,7 +79,11 @@ export function Shell() {
         {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
       </main>
       <StatusBar />
-      {stlImport && <MultipartDialog files={stlImport} onClose={() => useApp.setState({ stlImport: null })} />}
+      {stlImport && (
+        // A replaced dialog's late close event must not clear the import that replaced it.
+        <MultipartDialog key={stlImport.id} files={stlImport.files}
+          onClose={() => useApp.setState((state) => (state.stlImport?.id === stlImport.id ? { stlImport: null } : {}))} />
+      )}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       {wizard && (
         <Suspense>

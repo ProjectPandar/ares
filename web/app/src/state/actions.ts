@@ -40,11 +40,13 @@ export function showFieldError(fieldError: { key: string; message: string } | nu
   useApp.setState({ fieldError });
 }
 
+let stlImports = 0;
+
 /** Shared picker/drop entry (`Plater::add_model`, Plater.cpp:16670–16692). */
 export function importFiles(files: File[]) {
   if (!files.length) return;
   if (files.length === 1) void importFile(files[0]);
-  else if (files.every((file) => /\.stl$/i.test(file.name))) useApp.setState({ stlImport: files, loadError: undefined });
+  else if (files.every((file) => /\.stl$/i.test(file.name))) useApp.setState({ stlImport: { id: ++stlImports, files }, loadError: undefined });
   else useApp.setState({ loadError: "multiple inputs must all be STL files" });
 }
 
