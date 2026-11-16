@@ -57,7 +57,8 @@ fn motion_view_types_expose_processor_values_and_ranges() {
                 at(EMoveType::Extrude, 1.0, 0.02, 1000.0, 8.0),
                 at(EMoveType::Extrude, 2.0, 0.05, 1500.0, 10.5),
                 at(EMoveType::Travel, 3.0, 0.9, 3000.0, 12.25),
-            ],
+            ]
+            .into(),
             extruder_colors: vec!["#FF0000".into()],
             ..Default::default()
         },
