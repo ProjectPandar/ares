@@ -10,11 +10,11 @@ use crate::{
 
 /// Model identity and preset files supplied by the native
 /// `--load-settings`/`--load-filaments` CLI lists.
-#[derive(Debug)]
 pub struct LoadSettingsSliceRequest<'a> {
     pub filename: &'a str,
     /// Explicit catalog bytes for retained kinds (OrcaSlicer.cpp:3164–3200).
     pub catalog_json: Option<&'a str>,
+    pub loaded_sources: Option<&'a crate::LoadedPresetSources>,
     pub uptodate: bool,
     pub settings: &'a [LoadSettingsFile<'a>],
     pub filaments: &'a [LoadSettingsFile<'a>],
@@ -49,6 +49,7 @@ fn with_load_settings_source<T>(
     let LoadSettingsSliceRequest {
         filename,
         catalog_json,
+        loaded_sources,
         uptodate,
         settings,
         filaments,
@@ -64,6 +65,7 @@ fn with_load_settings_source<T>(
         ));
     }
     let request = LoadSettingsRequest {
+        loaded_sources,
         settings,
         filaments,
     };

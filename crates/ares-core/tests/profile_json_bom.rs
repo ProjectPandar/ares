@@ -195,6 +195,7 @@ fn original_and_up_to_date_machine_bytes_use_one_json_lexical_policy() {
     let files = [LoadSettingsFile {
         label: "machine.json",
         json,
+        source_identity: None,
     }];
     let source = UpwardMachineSource::from_project(PROJECT).unwrap().unwrap();
     assert_eq!(
@@ -240,6 +241,7 @@ fn malformed_repeated_displaced_and_unsupported_boms_are_rejected() {
         let files = [LoadSettingsFile {
             label: "machine.json",
             json: &json,
+            source_identity: None,
         }];
         let source = UpwardMachineSource::from_project(PROJECT).unwrap().unwrap();
         assert!(

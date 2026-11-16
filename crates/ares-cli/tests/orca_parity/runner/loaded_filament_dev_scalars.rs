@@ -60,6 +60,7 @@ async fn public_slice(json: &str, settings: &[String]) -> Result<Vec<u8>, SliceE
         .map(|json| LoadSettingsFile {
             label: "settings.json",
             json,
+            source_identity: None,
         })
         .collect::<Vec<_>>();
     ares_core::slice_with_load_settings(
@@ -67,11 +68,13 @@ async fn public_slice(json: &str, settings: &[String]) -> Result<Vec<u8>, SliceE
         LoadSettingsSliceRequest {
             filename: "input.3mf",
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             settings: &files,
             filaments: &[LoadSettingsFile {
                 label: "filament.json",
                 json,
+                source_identity: None,
             }],
             plate: None,
             overrides: &ConfigOverrides::default(),
