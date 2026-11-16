@@ -1,3 +1,9 @@
+/** Direct BBL/Orca projects require the installed system preset bundle. */
+export interface DirectProjectSliceOptions {
+  /** Same `{vendors, imports}` JSON transport as `sliceWithProfiles`. */
+  catalogJson: string;
+}
+
 export interface StlFile {
   name: string;
   bytes: Uint8Array;

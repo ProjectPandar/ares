@@ -18,7 +18,7 @@ import init, {
   profileSettings,
   resolveDefaultBedType,
   roleColors,
-  sliceProjectPlateProcessed,
+  sliceProjectPlateProcessedWithCatalog,
   sliceWithProfilesProcessed,
   type SceneData,
   type SliceOutput,
@@ -148,7 +148,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "sliceProject":
       // Both palettes come from GCodeProcessorResult.
-      return processedResult(await sliceProjectPlateProcessed(request.input, request.plate, request.overrides));
+      return processedResult(await sliceProjectPlateProcessedWithCatalog(request.input, request.plate, request.overrides, request.catalog));
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));
