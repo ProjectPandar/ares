@@ -35,7 +35,7 @@ pub(super) const LATE_TAIL_AFTER_MATERIAL_OPTION_DEFINITIONS: &[OptionDefinition
     definition!("nozzle_temperature_range_low", Ints, "190"; true, false, "190"),
     definition!("nozzle_type", EnumsNullable, "undefine"; true, false, "undefine"),
     definition!("nozzle_volume", FloatsNullable, "0.0"; true, false, "0"),
-    definition!("nozzle_volume_type", Enums, "Standard"; true, false, "Standard"),
+    definition!("nozzle_volume_type", Enums, "Standard", crate::NozzleVolumeType::TYPE_KEYS; true, false, "Standard"),
     definition!("only_one_wall_first_layer", Bool, "false"; true, false, "0"),
     definition!("only_one_wall_top", Bool, "false"; true, false, "0"),
     definition!("ooze_prevention", Bool, "false"; true, false, "0"),
