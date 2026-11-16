@@ -33,6 +33,7 @@ import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResul
 import type { Scene } from "./types.js";
 import { handlePlaterSource } from "./workerPlaterSource.js";
 import { crash, trapped } from "./workerCrash.js";
+import { readColors, readEnabled, readRanges, readVertexArrays } from "./workerTransfer.js";
 
 declare const self: DedicatedWorkerGlobalScope;
 
@@ -87,40 +88,47 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
   const estimation = JSON.parse(output.estimation);
   const customGcodeOverview = JSON.parse(output.customGcodeOverview());
   output.free();
-  const toolpaths: Toolpaths = {
-    vertexCount: vertices.count,
-    values: vertices.takeValues() as Float32Array<ArrayBuffer>,
-    ids: vertices.takeIds() as Uint32Array<ArrayBuffer>,
-    tags: owned(vertices.takeTags()),
-    options: owned(vertices.takeOptions()),
-    optionTypes: optionTypes(),
-    moveTypeCounts: vertices.takeMoveTypeCounts() as Uint32Array<ArrayBuffer>,
-    visibleOptions: vertices.visibleOptions,
-    // Every extrusion role shown, the default options.
-    colors: owned(vertices.vertexColors("FeatureType", 0xffffffff, vertices.visibleOptions)),
-    viewTypes: viewTypes(),
-    roleColors: owned(roleColors()),
-    optionColors: owned(optionColors()),
-    layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
-    spiralVaseMode: vertices.spiralVaseMode,
-    filamentLegend: JSON.parse(vertices.filamentLegend()),
-    estimation,
-    customGcodeOverview,
-    extrusionRoles: owned(vertices.extrusionRoles()),
-    extrusionRoleTimes: vertices.extrusionRoleTimes() as Float32Array<ArrayBuffer>,
-    heightsWidths: vertices.heightsWidths() as Float32Array<ArrayBuffer>,
-    segmentPositions: vertices.segmentPositions() as Float32Array<ArrayBuffer>,
-    segmentAngles: vertices.segmentAngles() as Float32Array<ArrayBuffer>,
-    travelsTime: vertices.travelsTime,
-    estimatedTime: vertices.estimatedTime,
-  };
-  replaceViewer(vertices);
-  const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes, heightsWidths, segmentPositions, segmentAngles } = toolpaths;
-  return [
-    { gcode, toolpaths },
-    [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer,
-      extrusionRoles.buffer, extrusionRoleTimes.buffer, heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer],
-  ];
+  let retained = false;
+  try {
+    const arrays = readVertexArrays(vertices);
+    const toolpaths: Toolpaths = {
+      vertexCount: vertices.count,
+      values: arrays.values,
+      ids: arrays.ids,
+      tags: arrays.tags,
+      options: arrays.options,
+      optionTypes: optionTypes(),
+      moveTypeCounts: vertices.takeMoveTypeCounts() as Uint32Array<ArrayBuffer>,
+      visibleOptions: vertices.visibleOptions,
+      colors: arrays.colors,
+      viewTypes: viewTypes(),
+      roleColors: owned(roleColors()),
+      optionColors: owned(optionColors()),
+      layerZs: vertices.takeLayerZs() as Float32Array<ArrayBuffer>,
+      spiralVaseMode: vertices.spiralVaseMode,
+      filamentLegend: JSON.parse(vertices.filamentLegend()),
+      estimation,
+      customGcodeOverview,
+      extrusionRoles: owned(vertices.extrusionRoles()),
+      extrusionRoleTimes: vertices.extrusionRoleTimes() as Float32Array<ArrayBuffer>,
+      heightsWidths: arrays.heightsWidths,
+      segmentPositions: arrays.segmentPositions,
+      segmentAngles: arrays.segmentAngles,
+      travelsTime: vertices.travelsTime,
+      estimatedTime: vertices.estimatedTime,
+    };
+    const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes, heightsWidths, segmentPositions, segmentAngles } = toolpaths;
+    const result: [SliceResult, Transferable[]] = [
+      { gcode, toolpaths },
+      [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer,
+        extrusionRoles.buffer, extrusionRoleTimes.buffer, heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer],
+    ];
+    replaceViewer(vertices);
+    retained = true;
+    return result;
+  } finally {
+    if (!retained) vertices.free();
+  }
 }
 
 /** Posts each slicing status of request `id` to the client before the request's response. */
@@ -323,7 +331,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "viewColors": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { viewType, visibleRoles, visibleOptions } = request;
-      const colors = owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions));
+      const colors = readColors(viewer, viewType, visibleRoles, visibleOptions);
       const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null };
       return [value, [colors.buffer]];
     }
@@ -331,8 +339,9 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions, higher } = request;
       if (higher !== undefined) viewer.setMovesHigher(higher);
-      const slider = viewer.movesSlider(layers[0], layers[1], visibleRoles, visibleOptions) as Uint32Array<ArrayBuffer>;
-      const value: MovesSlider = { thumbs: [slider[0], slider[1]], gcodeIds: slider.slice(2) };
+      const [lower, high, count] = viewer.movesSlider(layers[0], layers[1], visibleRoles, visibleOptions);
+      const gcodeIds = readRanges(new Uint32Array(count), 1, (first, size) => viewer!.sliderGcodeIdsRange(first, size));
+      const value: MovesSlider = { thumbs: [lower, high], gcodeIds };
       return [value, [value.gcodeIds.buffer]];
     }
     case "movesHigher": {
@@ -343,9 +352,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const value: MovesView = {
         range,
         thumbs: [lower, high],
-        segments: viewer.enabledSegments() as Uint32Array<ArrayBuffer>,
-        options: viewer.enabledOptions() as Uint32Array<ArrayBuffer>,
-        colors: owned(viewer.vertexColors(viewType, visibleRoles, visibleOptions)),
+        ...readEnabled(viewer),
+        colors: readColors(viewer, viewType, visibleRoles, visibleOptions),
         marker: null,
       };
       const [vertex, windowVertex] = viewer.toolMarker();

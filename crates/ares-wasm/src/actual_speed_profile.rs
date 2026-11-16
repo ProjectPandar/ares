@@ -29,7 +29,7 @@ struct ActualSpeedProfileView {
 impl VertexBuffers {
     /// JSON `{yRange, levels: [{value, color}], data: [{pos, speed, internal}]}`
     /// of `SequentialView::update_actual_speed` after `setMovesRange` and
-    /// `vertexColors` (`GCodeViewer.cpp:1681-1753`). Without an update the
+    /// `prepareVertexColors` (`GCodeViewer.cpp:1681-1753`). Without an update the
     /// previous profile is returned.
     #[wasm_bindgen(js_name = actualSpeedProfile)]
     pub fn actual_speed_profile(&mut self) -> String {
