@@ -6,7 +6,7 @@ use super::super::{
     },
     filament::at,
 };
-use super::plan::Plan;
+use super::{filament::Filament, plan::Plan};
 use crate::project_slice::{
     extrusion_islands::PreparedPostExtrusionIslands,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -15,6 +15,7 @@ use crate::project_slice::{
 
 pub(in crate::project_slice::gcode_emit) struct Planned {
     pub(super) plan: Plan,
+    pub(super) filaments: Vec<Filament>,
     pub(super) first_tool: usize,
     pub(super) used: Vec<usize>,
 }
@@ -107,8 +108,22 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
             break;
         }
     }
+    let runtime = &traversal.resolved.views.runtime.project.gcode;
+    let filaments = (0..count)
+        .map(|index| {
+            Filament::new(
+                settings,
+                index,
+                (
+                    at(&runtime.retraction_length.0, index).0 as f32,
+                    at(&runtime.retraction_speed.0, index).0 as f32,
+                ),
+            )
+        })
+        .collect();
     Planned {
         plan,
+        filaments,
         first_tool,
         used: used.into_iter().collect(),
     }
