@@ -119,16 +119,17 @@ impl Project {
     }
 }
 
-/// `OrcaSlicer.cpp:3766-3796` classification with the `:3990-4021` plate-0
+/// OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`):
+/// `OrcaSlicer.cpp:4414-4443` classification with the `:4641-4673` plate-0
 /// offsets: `Some([dx, dy])` for shrink 1 (bed-center delta) and shrink 2
 /// (plain object-bbox centering), `None` otherwise (shrink 0). The
 /// shared-center, exclude-area, and wipe-tower-inclusive-bbox refinements
 /// of shrink 2 are deferred. Widths/heights truncate to int like upstream
-/// (`:1780`, `:1338`). The current bed comes from the fully parsed typed
-/// config — `OrcaSlicer.cpp:3708,3711` `opt<ConfigOptionPoints>(
+/// (`:1903-1909`, `:4373-4376`). The current bed comes from the fully parsed typed
+/// config — `OrcaSlicer.cpp:4350,4354` `opt<ConfigOptionPoints>(
 /// "printable_area")`/`opt_float("printable_height")` over a config that
 /// carries the `PrintConfigDef` defaults. An unrecorded old bed dimension
-/// takes the current one (`:3729-3734`) and the classification proceeds.
+/// takes the current one (`:4377-4382`) and the classification proceeds.
 fn shrink_to_new_bed_offset(
     old: &ProjectSettingsRaw,
     settings: &crate::ProjectSettings,
@@ -166,7 +167,7 @@ fn shrink_to_new_bed_offset(
         return None;
     }
     if shrink == 2 {
-        // `:4008-4021`: center the object bbox on the new bed center.
+        // `OrcaSlicer.cpp:4654-4673`: center the object bbox on the new bed center.
         return Some([
             new_width as f64 / 2.0 - (bbox_min[0] + bbox_max[0]) * 0.5,
             new_depth as f64 / 2.0 - (bbox_min[1] + bbox_max[1]) * 0.5,
@@ -178,9 +179,9 @@ fn shrink_to_new_bed_offset(
     ])
 }
 
-/// `OrcaSlicer.cpp:1779-1780`: the diagonal-corner difference of the
-/// embedded `printable_area`; fewer than four parsable points leave the old
-/// bed size at zero (`:1778` guard) for the caller to substitute.
+/// Old bed-size loading (`OrcaSlicer.cpp:1899-1904`): the diagonal-corner
+/// difference of the embedded `printable_area`; fewer than four parsable points
+/// leave the old bed size at zero (`:1901` guard) for the caller to substitute.
 fn printable_bed_size(area: &RawConfigValue) -> (f64, f64) {
     let points = point_pairs(area);
     if points.len() < 4 {
