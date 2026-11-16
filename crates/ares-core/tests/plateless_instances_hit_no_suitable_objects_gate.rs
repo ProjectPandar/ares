@@ -2,7 +2,10 @@
 //! objects" geometric gate (`OrcaSlicer.cpp:137,5710-5724`,
 //! `Model.cpp:692-702,3423-3469`, `BuildVolume.hpp:91-106`).
 
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+#[path = "../../../tests/support/slice_project_plate.rs"]
+mod direct_project;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
+use direct_project::slice_project_plate;
 use serde_json::json;
 
 const CONTENT_TYPES: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
