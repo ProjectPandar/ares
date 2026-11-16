@@ -3,7 +3,9 @@ pub(crate) mod compatible;
 mod composition;
 pub(crate) mod entry;
 mod settings;
+mod source_identity;
 pub use settings::{ProfileSettings, profile_settings};
+pub use source_identity::SourceIdentity;
 mod import;
 mod load_settings;
 mod preset_normalization;
@@ -23,6 +25,7 @@ pub use filament_slots::FilamentSlotState;
 mod fragment;
 mod inheritance;
 
+pub use catalog::LoadedPresetSources;
 pub(crate) use catalog::VendorType;
 pub use catalog::{
     CurrentPrinter, GuideFilament, GuideModel, InstalledPrinters, PresetCatalogHandle,

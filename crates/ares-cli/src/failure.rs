@@ -51,6 +51,7 @@ impl CliFailure {
             wall_loops: 0,
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
             error_string: "The input preset file is invalid and can not be parsed.",
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]

@@ -12,7 +12,9 @@ mod preset_values;
 mod printer_models;
 #[allow(unused_imports)]
 mod raw;
+mod source_records;
 mod store;
+pub use source_records::LoadedPresetSources;
 mod vendor_models;
 
 use std::collections::BTreeMap;
@@ -24,6 +26,7 @@ use super::composition::ComposedProfile;
 use super::composition::ProfileSelection;
 use crate::{
     FilteredPresets, SliceError,
+    profiles::SourceIdentity,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
@@ -58,6 +61,7 @@ pub(super) enum Scope {
 
 pub(super) struct Catalog {
     records: Vec<Record>,
+    source_records: Vec<Record>,
     index: BTreeMap<(Scope, ProfileKind, String), usize>,
     selectable: BTreeMap<(ProfileKind, String), usize>,
     /// Vendor index name per vendor scope (`VendorProfile::name`).
@@ -75,10 +79,13 @@ pub(super) struct Catalog {
     direct_imports: bool,
 }
 
+#[derive(Clone)]
 pub(in crate::profiles) struct Record {
     scope: Scope,
     kind: ProfileKind,
     document: ProfileDocument,
+    source_identity: Option<SourceIdentity>,
+    direct: bool,
 }
 
 #[derive(Deserialize)]
