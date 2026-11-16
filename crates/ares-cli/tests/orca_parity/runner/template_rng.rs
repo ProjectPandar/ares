@@ -38,43 +38,84 @@ fn seeded_template_distributions_and_shared_stream() {
 }
 
 #[test]
-fn seeded_template_file_start_has_no_rng_context() {
+fn seeded_template_file_start_draws_from_the_shared_stream() {
     if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
         return;
     }
     let runner = OrcaRunner::from_env()
         .unwrap()
-        .expect("seeded native runner");
-    let input = super::repo_root().join("tests/parity/template-rng/raise3d-left.3mf");
+        .expect("seeded template E2E requires the native runner");
+    let seed = std::env::var("ORCA_REPLAY_SEED")
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
+    let input = super::repo_root()
+        .join("tests/parity/template-rng/raise3d-left.3mf");
+    // GCode.cpp:4230-4231 emits file start before machine start (:4381) on the
+    // one stream seeded in the GCode constructor (:3585), so these draws shift
+    // every later draw. The stock machine_start_gcode already draws, which is
+    // what makes the comparison fail for a separate or later-seeded stream.
     let project = rewrite_settings(&std::fs::read(input).unwrap(), |settings| {
-        settings["file_start_gcode"] = "; RNG no context {random(2,8)}\n".into();
+        let template = settings["file_start_gcode"].as_str().unwrap();
+        settings["file_start_gcode"] = serde_json::Value::String(format!(
+            "{template}; RNG file-start {{random(2,8)}}\n; RNG file-start-real {{digits(random(2.0,8.0),0,20)}}\n"
+        ));
     });
-    let project_path = runner.work.join("input.3mf");
-    std::fs::write(&project_path, &project).unwrap();
     let output_dir = runner.work.join("reference");
     std::fs::create_dir(&output_dir).unwrap();
+    let project_path = runner.work.join("input.3mf");
+    std::fs::write(&project_path, &project).unwrap();
     let exported = ExportedCase {
-        label: "template-rng/no-context".to_owned(),
+        label: format!("template-rng/file-start-shared-stream/seed-{seed}"),
         project,
         project_path,
         output_dir,
     };
-    assert!(runner.slice_case(&exported).is_err());
-    let error = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(crate::runner::application::slice_project(
-            &exported.project,
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            ares_core::SlicerContext::new(0),
-        ))
-        .unwrap_err();
-    std::fs::write(runner.work.join("ares-error.txt"), error.to_string()).unwrap();
-    assert!(
-        error
-            .to_string()
-            .contains("Random number generator not available in this context.")
+    let first = runner.slice_case(&exported).unwrap();
+    let text = std::str::from_utf8(&first.reference).unwrap();
+    let mut lines = text.lines();
+    for marker in ["; RNG file-start ", "; RNG file-start-real "] {
+        let line = lines.next().unwrap_or_default();
+        assert!(
+            line.starts_with(marker),
+            "file start must open the file, got {line:?}"
+        );
+    }
+    std::fs::write(runner.work.join("reference-first.gcode"), &first.reference).unwrap();
+    let second = runner.rerun_reference(&exported).unwrap();
+    std::fs::write(
+        runner.work.join("reference-repeat.gcode"),
+        &second.reference,
+    )
+    .unwrap();
+    let normalize = |bytes: &[u8]| {
+        crate::golden::normalize_one_generator_line(bytes, crate::golden::GeneratorKind::Orca)
+            .unwrap()
+    };
+    assert_eq!(
+        normalize(&first.reference),
+        normalize(&second.reference),
+        "native repeat differs"
     );
+    let actual = slice(&exported.project, seed);
+    std::fs::write(runner.work.join("ares.gcode"), &actual).unwrap();
+    let comparison = crate::golden::compare_ordered_bytes_generator_only(&first.reference, &actual);
+    std::fs::write(
+        runner.work.join("result.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "label": exported.label,
+            "seed": seed,
+            "cpu": std::env::var("ORCA_REPLAY_CPU").unwrap(),
+            "binary": std::env::var("ORCA_REPLAY_BIN").unwrap(),
+            "evidence": crate::artifacts::EVIDENCE,
+            "native_repeat": "PASS",
+            "status": if comparison.is_ok() { "PASS" } else { "DIVERGENT" },
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    comparison.unwrap();
+    verify_isolation(&runner, &exported.project, seed, &actual);
 }
 
 fn verify(fixture: &str, probe: bool) {
