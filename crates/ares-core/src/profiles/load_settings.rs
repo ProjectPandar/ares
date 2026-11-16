@@ -62,21 +62,6 @@ fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), 
     Ok((document.kind.clone(), document))
 }
 
-/// Composes the loaded files through the single catalog composition
-/// (`Catalog::compose`), mirroring the upstream merge order: machine,
-/// default printer G-codes, process, per-slot filaments with their own
-/// raws (`OrcaSlicer.cpp:2849-2867,2993-3011,3150`).
-///
-/// Duplicate machine/process files are rejected like
-/// `OrcaSlicer.cpp:2036-2040,2073-2077`. Empty filament slots are
-/// dropped (`:2202-2215` with `use_first_fila_as_default` false, the
-/// CLI default at `:1438,:1474-1476`).
-pub fn compose_load_settings(
-    request: &LoadSettingsRequest<'_>,
-) -> Result<ComposedSelection, SliceError> {
-    compose_with_project(request, None)
-}
-
 pub(crate) fn compose_project_load_settings(
     input: &[u8],
     request: &LoadSettingsRequest<'_>,
@@ -87,24 +72,27 @@ pub(crate) fn compose_project_load_settings(
     ),
     SliceError,
 > {
-    let mut names = load_settings_preset_names(request)?;
+    let catalog = loaded_catalog(request)?;
+    let mut names = load_settings_preset_names(request, &catalog)?;
     names.embedded = project::retained_config(input, request, &names)?;
-    let composed = match names.embedded.as_ref() {
-        Some(embedded) => compose_with_project(request, Some(embedded))?,
-        None => compose_load_settings(request)?,
-    };
+    let composed = compose_with_project(request, names.embedded.as_ref(), catalog)?;
     Ok((composed, names))
 }
 
-fn compose_with_project(
-    request: &LoadSettingsRequest<'_>,
-    embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
-) -> Result<ComposedSelection, SliceError> {
+fn loaded_catalog(request: &LoadSettingsRequest<'_>) -> Result<Catalog, SliceError> {
     let mut catalog = Catalog::empty();
     catalog.enable_direct_imports();
     if let Some(sources) = request.loaded_sources {
         sources.populate(&mut catalog)?;
     }
+    Ok(catalog)
+}
+
+fn compose_with_project(
+    request: &LoadSettingsRequest<'_>,
+    embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
+    mut catalog: Catalog,
+) -> Result<ComposedSelection, SliceError> {
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
     for file in request.settings {
@@ -172,8 +160,9 @@ fn compose_with_project(
 /// Reuses `parse_file` so per-file validation errors are identical to
 /// `compose_load_settings`; duplicate-kind lists surface the same
 /// duplicate error (`:2035-2038,:2074-2078`).
-pub(crate) fn load_settings_preset_names(
+fn load_settings_preset_names(
     request: &LoadSettingsRequest<'_>,
+    catalog: &Catalog,
 ) -> Result<crate::project_slice::compatibility::LoadedPresetNames, SliceError> {
     use crate::project_slice::compatibility::LoadedPresetNames;
     let mut machine = None;
@@ -182,6 +171,12 @@ pub(crate) fn load_settings_preset_names(
     let mut process_seen = false;
     for file in request.settings {
         let (kind, document) = parse_file(file)?;
+        let document = catalog.admit_document(
+            ProfileKind::parse(&kind)?,
+            document,
+            file.label,
+            file.source_identity,
+        )?;
         match kind.as_str() {
             "machine" => {
                 if machine_seen {
