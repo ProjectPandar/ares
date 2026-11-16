@@ -101,9 +101,6 @@ OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 
 ## Deferred
 
-- The filament count of the remembered selection: `update_selections` makes the count the
-  remembered one (`PresetBundle.cpp:3929-3939`). The web keeps the project's count, and slots
-  past the remembered list are missing presets for `update_compatible`.
 - Loading a project's own printer, process and filament presets when a printer is selected
   (`load_config_file_config`, `PresetBundle.cpp:6122-6419`). The web keeps the selected printer.
 - The process branch of `update_compatible` (`PreferedPrintProfileMatch` with
