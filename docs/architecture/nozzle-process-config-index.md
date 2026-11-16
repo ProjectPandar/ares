@@ -156,6 +156,23 @@ columns follow the source, even if that exposes another previous physical-only
 selection error. Matching identity does not justify a blanket promise that all
 multi-head output is unchanged.
 
+## Existing-consumer boundary
+
+The inventory has 40 Native keys, not 40 existing Ares G-code consumers. Port
+all existing Ares process selectors in this slice. Ares currently defines
+`small_support_perimeter_speed` and `small_support_perimeter_threshold` only
+as typed/wire configuration: it has no corresponding G-code consumption.
+Implementing that missing support algorithm is deferred to an independent
+slice; this resolver port must not add it.
+
+`top_solid_infill_flow_ratio` already consumes a process column in
+`group_fills/params/projection.rs`. Keep that consumption in pre-generation
+and select its column through the same resolver there. Do not move top-flow
+application into motion. If the pre-generation boundary lacks the supported
+static assignment producer required by the resolver, stop and report rather
+than inventing another assignment engine. The review report must distinguish
+these existing consumers from the two deferred Native-only consumers.
+
 ## Public tests before implementation
 
 Keep the original `print_process_identity_short_ids_use_generated_group_identity`
