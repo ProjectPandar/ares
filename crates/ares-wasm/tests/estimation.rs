@@ -1,7 +1,8 @@
-use ares_core::{
-    ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate_processed,
-};
+#[path = "../../../tests/support/slice_project_plate_processed.rs"]
+mod direct_project;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use ares_wasm::SliceOutput;
+use direct_project::slice_project_plate_processed;
 
 // Failure inventory: a total or time lost, swapped, or rounded on the way to
 // JSON (f32 times printed by their shortest f32 form). Values come from the
