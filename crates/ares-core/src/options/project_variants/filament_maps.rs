@@ -1,4 +1,4 @@
-//! Static ToolOrdering.cpp:1752–1776,1869–1908 → Print.cpp:4656–4745.
+//! Static ToolOrdering.cpp:1752–1805,1869–1908 → Print.cpp:4656–4745.
 use crate::{
     SliceError,
     options::{
@@ -13,6 +13,7 @@ pub(crate) fn update_static_filament_maps(
     current: &ProjectSettings,
     raw: &ProjectSettingsRaw,
     used: &[usize],
+    is_bbl: bool,
 ) -> Result<Option<ProjectConfigViews>, SliceError> {
     let multiple_nozzles = raw
         .get("extruder_max_nozzle_count")
@@ -65,6 +66,21 @@ pub(crate) fn update_static_filament_maps(
                 current.printer.gcode.master_extruder_id.0 - 1;
                 current.filament.gcode.filament_colour.0.len()
             ]
+        }
+        crate::ProjectFilamentMapMode::AutoForFlush
+        | crate::ProjectFilamentMapMode::AutoForMatch
+            if !is_bbl =>
+        {
+            let master = current.printer.gcode.master_extruder_id.0 - 1;
+            (0..current.filament.gcode.filament_colour.0.len())
+                .map(|index| {
+                    if index < physical_count {
+                        index as i32
+                    } else {
+                        master
+                    }
+                })
+                .collect()
         }
         crate::ProjectFilamentMapMode::AutoForFlush
         | crate::ProjectFilamentMapMode::AutoForMatch => current
