@@ -122,6 +122,13 @@ impl PresetCatalogHandle {
         }
     }
 
+    /// Parses the same `{vendors, imports}` transport used by profile slicing.
+    pub fn from_json(input: &str) -> Result<Self, SliceError> {
+        Ok(Self {
+            catalog: Catalog::from_json(input)?,
+        })
+    }
+
     /// One vendor envelope `{id, index, files}` as JSON bytes, exactly the
     /// one-shot transport's `vendors[]` element.
     pub fn add_vendor(&mut self, vendor_json: &[u8]) -> Result<(), SliceError> {
