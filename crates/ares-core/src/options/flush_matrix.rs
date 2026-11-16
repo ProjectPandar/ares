@@ -161,6 +161,9 @@ fn dataset(settings: &ProjectSettings, raw: &ProjectSettingsRaw, nozzle: usize) 
         let volume = match at(&settings.project.gcode.nozzle_volume_type.0, nozzle) {
             NozzleVolumeType::Standard | NozzleVolumeType::Hybrid => "Standard",
             NozzleVolumeType::HighFlow => "High Flow",
+            NozzleVolumeType::TpuHighFlow => "TPU High Flow",
+            NozzleVolumeType::E3dHighFlow => "E3D High Flow",
+            NozzleVolumeType::ExtraHighFlow => "Extra High Flow",
         };
         let variant = format!("{extruder} {volume}");
         let groups = if raw.contains_key("extruder_variant_list") {

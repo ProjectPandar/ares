@@ -67,7 +67,7 @@ pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("extruder_max_nozzle_count", IntsNullable, "1"; true, false, "1"),
     definition!("extruder_nozzle_count", Ints, "1"; false, false, "1"),
     definition!("extruder_nozzle_stats", Strings, ""; true, false, ""),
-    definition!("extruder_nozzle_volume_type", Enums, "Standard"; false, false, "Standard"),
+    definition!("extruder_nozzle_volume_type", Enums, "Standard", crate::NozzleVolumeType::TYPE_KEYS; false, false, "Standard"),
     definition!("extruder_offset", Points, "0x0"; true, false, "0x0"),
     definition!("extruder_printable_area", PointsGroups, ""; true, false, ""),
     definition!("extruder_printable_height", Floats, "0"; true, false, "0"),
