@@ -29,7 +29,8 @@ test("a project sliced twice through the worker API is complete, repeatable and 
 
   const root = `${web}e2e/ksr-project-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 } });
-  writeFileSync(`${artifacts}page/system-presets.json`, await systemPresetCatalog());
+  const catalogPath = process.env.ARES_PARITY_PROJECT_PRESET_CATALOG;
+  writeFileSync(`${artifacts}page/system-presets.json`, catalogPath ? readFileSync(catalogPath, "utf8") : await systemPresetCatalog());
   const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4245, strictPort: true } });
   let result: Slice;
   try {

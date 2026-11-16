@@ -9,7 +9,7 @@
 
 use std::{path::PathBuf, process::Command};
 
-use ares_wasm::slice_project_plate_processed_bytes;
+use ares_wasm::slice_project_plate_processed_with_catalog_bytes;
 
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
@@ -29,13 +29,18 @@ type Row = (String, String, u32);
 /// the Native zero-based plate key.
 fn rows(plate: Option<u32>, key: &str) -> Option<(Vec<Row>, Vec<Vec<String>>)> {
     let project = repo().join("tests/parity/custom-gcode-overview/two-plates.3mf");
+    let catalog = match std::env::var_os("ARES_PARITY_PROJECT_PRESET_CATALOG") {
+        Some(path) => std::fs::read_to_string(path).unwrap(),
+        None => r#"{"vendors":[],"imports":[]}"#.to_owned(),
+    };
     let mut output = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(slice_project_plate_processed_bytes(
+        .block_on(slice_project_plate_processed_with_catalog_bytes(
             std::fs::read(&project).unwrap(),
             plate,
             None,
+            Some(&catalog),
         ))
         .unwrap();
     let json: serde_json::Value =
