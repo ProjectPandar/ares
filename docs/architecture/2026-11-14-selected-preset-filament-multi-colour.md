@@ -60,8 +60,8 @@ the scene settings, which hold the resolved project options with defaults filled
   copies `filament_colour` into `filament_multi_colour`) is a GUI preset-bundle step; the
   CLI (`src/OrcaSlicer.cpp`) never calls it. A one-slot 3MF sliced on the four-slot
   Snapmaker U1 with four `--load-filaments` ends Native with SIGSEGV, with or without the
-  key, and the core rejects the selection ("selection has 4 filaments but the project
-  embeds 1"). With no Native output, this case is not tested.
+  key, so the `--load-settings` route keeps rejecting it. The plater route is tested against
+  the plater's saved project instead (`2026-11-16-printer-switch-update-selections.md`).
 
 ## Verification
 
