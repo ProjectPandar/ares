@@ -79,6 +79,44 @@ fn check_wire(key: &str, value: &str) {
             .iter()
             .any(|entry| entry.key == key)
     );
+    if key == "host_type" {
+        let native = super::super::native_api_cli::NativeCase::slice(
+            &runner,
+            &input,
+            "enum-ultimaker-complete-",
+        );
+        assert!(
+            native
+                .native
+                .lines()
+                .any(|line| line == "; host_type = ultimaker")
+        );
+        let (api, cli) = native.compare(ares_core::GenerationMetadata::deterministic(
+            2026, 8, 27, 0, 0, 0,
+        ));
+        assert!(
+            std::str::from_utf8(&api)
+                .unwrap()
+                .lines()
+                .any(|line| line == "; host_type = ultimaker")
+        );
+        assert!(
+            std::str::from_utf8(&cli)
+                .unwrap()
+                .lines()
+                .any(|line| line == "; host_type = ultimaker")
+        );
+        std::fs::write(
+            evidence.join("complete-output.json"),
+            serde_json::to_vec_pretty(&json!({
+                "native_work": native.root,
+                "comparator": "golden::compare_ordered_bytes_generator_only",
+                "api": "PASS", "cli": "PASS", "footer": "host_type = ultimaker",
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+    }
 }
 
 macro_rules! wire_cases {

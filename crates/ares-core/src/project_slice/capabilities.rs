@@ -103,11 +103,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
             "print_order: {value}"
         )));
     }
-    if settings.printer.remaining.host_type == crate::PrintHostType::UltiMaker {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "host_type: ultimaker".to_owned(),
-        ));
-    }
     if settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual {
         return Err(SliceError::UnsupportedProjectFeature(
             "filament_map_mode: Nozzle Manual".to_owned(),
