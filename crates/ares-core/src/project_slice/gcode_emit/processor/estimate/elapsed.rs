@@ -32,15 +32,16 @@ pub(super) struct Snapshot {
     pub(super) next: Option<f32>,
 }
 
-pub(super) fn elapsed_snapshots(
-    lines: &[String],
+pub(super) fn elapsed_snapshots<'a>(
+    lines: impl IntoIterator<Item = &'a str>,
+    line_count: usize,
     cache: &[export_cache::Entry],
 ) -> Vec<Option<Snapshot>> {
-    let mut elapsed = vec![None; lines.len() + 1];
+    let mut elapsed = vec![None; line_count + 1];
     let mut cache_index = 0;
     let mut update_cache_index = 0;
     let mut exported_g1_lines = 0;
-    for (index, line) in lines.iter().enumerate() {
+    for (index, line) in lines.into_iter().enumerate() {
         let command = line
             .split(';')
             .next()
