@@ -41,6 +41,9 @@ pub(in crate::project_slice) fn surface_polylines(
     request: &SurfaceRequest,
 ) -> Result<Vec<Polyline>, SliceError> {
     match request.pattern {
+        ProcessInfillPattern::SpiralInset => Err(SliceError::UnsupportedProjectFeature(
+            "infill pattern: spiralinset".to_owned(),
+        )),
         ProcessInfillPattern::Rectilinear
         | ProcessInfillPattern::AlignedRectilinear
         | ProcessInfillPattern::Monotonic

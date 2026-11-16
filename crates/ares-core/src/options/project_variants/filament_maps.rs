@@ -43,6 +43,11 @@ pub(crate) fn update_static_filament_maps(
         .collect::<Vec<_>>();
     // LayeredNozzleGroupResult::create stores the complete 0-based map.
     let assignments: Vec<i32> = match current.project.gcode.filament_map_mode {
+        crate::ProjectFilamentMapMode::NozzleManual => {
+            return Err(crate::SliceError::UnsupportedProjectFeature(
+                "filament_map_mode: Nozzle Manual".to_owned(),
+            ));
+        }
         crate::ProjectFilamentMapMode::Manual => current
             .project
             .gcode

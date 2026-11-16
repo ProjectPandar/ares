@@ -13,6 +13,8 @@ pub enum PrintHostType {
     CrealityPrint,
     #[serde(rename = "duet")]
     Duet,
+    #[serde(rename = "ultimaker")]
+    UltiMaker,
     #[serde(rename = "flashair")]
     FlashAir,
     #[serde(rename = "astrobox")]

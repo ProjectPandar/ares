@@ -9,4 +9,6 @@ pub enum ProjectFilamentMapMode {
     AutoForMatch,
     #[serde(rename = "Manual")]
     Manual,
+    #[serde(rename = "Nozzle Manual")]
+    NozzleManual,
 }

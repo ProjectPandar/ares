@@ -17,6 +17,8 @@ pub enum ProcessBrimType {
     OuterAndInner,
     #[serde(rename = "no_brim")]
     NoBrim,
+    #[serde(rename = "leading_edge_only")]
+    LeadingEdgeOnly,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -115,6 +117,8 @@ pub enum ProcessSupportInterfacePattern {
     Rectilinear,
     #[serde(rename = "concentric")]
     Concentric,
+    #[serde(rename = "spiralinset")]
+    SpiralInset,
     #[serde(rename = "rectilinear_interlaced")]
     RectilinearInterlaced,
     #[serde(rename = "grid")]
@@ -209,6 +213,8 @@ pub enum ProcessInfillPattern {
     Gyroid,
     #[serde(rename = "concentric")]
     Concentric,
+    #[serde(rename = "spiralinset")]
+    SpiralInset,
     #[serde(rename = "hilbertcurve")]
     HilbertCurve,
     #[serde(rename = "archimedeanchords")]
@@ -243,6 +249,7 @@ impl ProcessInfillPattern {
             | Self::LateralHoneycomb
             | Self::LateralLattice
             | Self::TpmsD
+            | Self::SpiralInset
             | Self::TpmsFk
             | Self::Gyroid
             | Self::ArchimedeanChords => false,
