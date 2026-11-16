@@ -6,7 +6,8 @@ use std::{
     io::{Cursor, Read, Write},
 };
 
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+use crate::runner::application::slice_direct_project_plate as slice_project_plate;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 
 use crate::runner::{ExportedCase, OrcaRunner, application, cache_identity, repo_root};
 

@@ -187,7 +187,8 @@ fn cli_unprintable_area_reports_selected_nonminimum_plate() {
 /// GCode.cpp:2166-2173 then rejects the complete retained export with -102.
 #[tokio::test]
 async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
-    use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+    use crate::runner::application::slice_direct_project_plate as slice_project_plate;
+    use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 
     let artifacts = tempfile::Builder::new()
         .prefix("core-o6-retained-")
