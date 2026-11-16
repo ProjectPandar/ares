@@ -165,13 +165,15 @@ as typed/wire configuration: it has no corresponding G-code consumption.
 Implementing that missing support algorithm is deferred to an independent
 slice; this resolver port must not add it.
 
-`top_solid_infill_flow_ratio` already consumes a process column in
-`group_fills/params/projection.rs`. Keep that consumption in pre-generation
-and select its column through the same resolver there. Do not move top-flow
-application into motion. If the pre-generation boundary lacks the supported
-static assignment producer required by the resolver, stop and report rather
-than inventing another assignment engine. The review report must distinguish
-these existing consumers from the two deferred Native-only consumers.
+`top_solid_infill_flow_ratio` is also deferred to an independent slice.
+`group_fills/params/projection.rs` pre-bakes its physical-column value before
+`gcode_emit/layers/schedule.rs` publishes the static grouping result through
+`build_recommended`. There is no earlier assignment producer or group-fill
+replay at that boundary. Preserve the current projection and physical-column
+behavior; do not move top-flow application into motion, advance assignment
+publication, or invent a producer. This slice covers existing motion/G-code
+consumers with an available producer: 37 of the 40 inventoried Native keys.
+The review report must distinguish these from all three deferred keys.
 
 ## Public tests before implementation
 
@@ -210,7 +212,8 @@ success is not a replacement for whole-output equality.
 
 Supplement these with discriminating non-default process vectors covering each
 inventory family: extrusion speed/thresholds, acceleration, jerk/junction,
-top-flow, overhang, support/skirt and travel acceleration. A percentage-Wipe
+overhang, support/skirt and travel acceleration. Top-flow is excluded for the
+pre-generation producer-order reason above. A percentage-Wipe
 case must distinguish its process travel base while ordinary writer travel
 remains tied to the physical head. Use complete outputs, not helper return-value
 unit tests, source-text assertions, or expected answers derived from Rust.
