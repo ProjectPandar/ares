@@ -80,13 +80,18 @@ impl Generator<'_> {
             .plan
             .layers
             .iter()
-            .map(|layer| {
+            .enumerate()
+            .map(|(layer_index, layer)| {
                 let mut depth_traversed = 0.0;
                 layer
                     .changes
                     .iter()
                     .map(|change| {
-                        let entry = self.toolchange_entry_pos(depth_traversed);
+                        let entry = self.toolchange_entry_pos(
+                            depth_traversed,
+                            change.ramming_depth,
+                            self.plan.first_layer == Some(layer_index),
+                        );
                         depth_traversed += change.required_depth;
                         entry
                     })
