@@ -268,6 +268,35 @@ domain on both sides, so neither behavior is asserted as a contract
 (pinning Ares's own behavior on a UB input would fix self-designed
 behavior against the rewrite gate).
 
+## Four-head scalar witness: same undefined selector boundary
+
+The synthetic four-head saved project (SHA-256
+`556b46a58bbc321d614ff9edce063d6b4b2bb44ab6fd1f4d7a5e0154806cba43`)
+has four physical heads, one raw `Standard` nozzle-volume type and a complete
+64-cell seed matrix. At pinned revision
+`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`, the corresponding boundary is
+`OrcaSlicer.cpp:3951–3980`: dataset selection copies raw `volume_types`, replaces
+it only for an explicit `m_extra_config` override, then indexes
+`volume_types[eidx]` unchecked. The separate four-item `new_nozzle_volume_type`
+vector used for change detection does not resize that raw selector vector.
+A complete matrix does not make the selector reads for heads 2–4 defined.
+
+The archived test source and patch invoke Native with only `--slice 0`,
+`--outputdir` and the saved project; no type override is supplied. No direct
+runtime argv receipt was recovered, so this is a pinned-source/archived-patch
+reconstruction, not a claimed process trace. Its Native 61/203 versus Ares
+84/280 is an upstream-UB-derived observation, not a numerical parity target.
+Do not add a matrix-size special case or extend raw types to imitate it.
+
+A separate defined control retained the same raw input and explicitly supplied
+four `Standard` types through Native `--nozzle-volume-type` and Ares public
+CLI `--overrides`. This preserves the old one-item snapshot, triggers the
+new-vs-current type change, and provides all four selector entries. Both CLIs
+exited 0 and their complete 64-cell matrices matched: zero diagonal, 61 in
+the first-head off-diagonal cells, 203 in the other heads. No production
+flush reconstruction change is justified by this witness. This is matrix
+parity only, not whole-stream parity or closure of the original O8 UB case.
+
 ## Included, deferred and exit
 
 Included: original-input fresh-main E2E RED, precise current/new context and
