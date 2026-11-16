@@ -11,6 +11,9 @@ use serde_json::Value;
 
 use crate::load_settings_3mf::load_settings_3mf_fixture;
 
+#[path = "load_settings_3mf_inherits/user_datadir.rs"]
+mod user_datadir;
+
 #[test]
 fn load_settings_source_manifest_admits_only_manifest_file_identity() {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {

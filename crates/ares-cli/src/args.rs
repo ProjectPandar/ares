@@ -16,6 +16,9 @@ pub(crate) enum Commands {
 
 #[derive(Parser)]
 pub(crate) struct SliceArgs {
+    /// Native data directory used for AppConfig and selected user presets
+    #[arg(long)]
+    pub(crate) datadir: Option<PathBuf>,
     /// Complete preset catalog supplied explicitly for project-derived refresh
     #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
     pub(crate) project_preset_catalog: Option<PathBuf>,
