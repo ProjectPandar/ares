@@ -303,6 +303,9 @@ mod seam_visibility_eigen_distance;
 #[cfg(test)]
 #[path = "runner/seam_visibility_search_radius.rs"]
 mod seam_visibility_search_radius;
+#[cfg(test)]
+#[path = "runner/short_curled_entity.rs"]
+mod short_curled_entity;
 #[path = "runner/simple_rotation_list.rs"]
 mod simple_rotation_list;
 #[cfg(test)]
