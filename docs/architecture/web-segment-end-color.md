@@ -89,8 +89,9 @@ slice only, with Travel shown**. Travel visibility changes the speed range
 
 ## Native oracle
 
-A new read-only chain-probe `tools/chain-probe/segment-colors.nix`, built on
-`procgcode.nix` like `segment-hw.nix`. It calls the real `libvgcode::convert` and links
+A new read-only chain-probe `tools/chain-probe/segment-colors.nix`, built on the 2.5.0
+build recipe of the checked 40ecc66f7 source with `procgcode.patch`, both given through
+the environment like `preset-select.nix`. It calls the real `libvgcode::convert` and links
 the real `ColorRange` (`ColorRange.cpp:57-80`) and `Layers`. The source kernel is
 extracted verbatim and checked by `extract-segment-colors.mjs --check`, like segment-hw.
 It contains:
