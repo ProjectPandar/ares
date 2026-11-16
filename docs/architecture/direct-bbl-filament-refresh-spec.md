@@ -77,9 +77,10 @@ The direct CLI route therefore becomes source-cited parity with Native's complet
 
 ## B2 WASM/web interface contract
 
-B2 is deferred to WEB, but B1 must leave these interfaces explicit:
+The browser changes share the core/CLI branch; these interfaces remain explicit:
 
 - `ares-wasm::sliceProject`, `sliceProjectPlate`, and processed direct variants currently call direct core APIs without a catalog (`crates/ares-wasm/src/lib.rs:49–105`). B2 must add a catalog-bearing API or a catalog JSON argument. The browser supplies vendor envelopes/imports as bytes or JSON; core performs no filesystem access.
+- Validated core direct calls carry `plate`, `overrides`, and `system_catalog` in `DirectProjectSliceRequest`; the validated byte/processed counterparts accept that request plus metadata and context. This is an argument carrier for the existing source-loading boundary, not a separate slicing orchestration.
 - The existing `PresetCatalog`/catalog JSON transport in `crates/ares-wasm/src/profiles/catalog.rs` and `profiles.rs` is the compatible transport. B2 should either pass its underlying parsed handle to the direct request or add a direct slice method accepting the same catalog JSON. It must not create a second incompatible bundle type.
 - `web/packages/ares-wasm-js/src/index.ts:87–90`, its worker/protocol types, README API contract, and direct consumers need coordinated signature/type updates. The exact direct fixtures are:
   - `web/e2e/consumer/main.ts` is the generic file-upload consumer; `web/e2e/package.spec.ts:15` supplies `tests/parity/arachne/default-prisms.3mf`. That fixture has `Application=BambuStudio-02.06.00.51` and `OrcaSlicer=2.4.2`, so it is BBL/Orca and will require a bundle under B1.
@@ -89,7 +90,7 @@ B2 is deferred to WEB, but B1 must leave these interfaces explicit:
 - A browser caller that supplies no catalog for a BBL/Orca 3MF receives the same explicit missing-bundle error as the core direct API. Non-BBL projects remain usable without a bundle.
 - **Batch constraint:** B1 and B2 must land in the same batch. B1 must not be landed alone while these existing direct WASM/web consumers still call the no-catalog API with BBL fixtures; B2 must first provide the catalog-bearing browser interface and update these consumers (or explicitly change their fixture/expectation under the same reviewed batch).
 
-B1 implementation requires WEB coordination for the shared batch even though B1 itself does not modify web files. B2 is the WEB-owned follow-up input defined above.
+The core/CLI and browser changes form one landing batch and are reviewed together.
 
 ## Existing tests affected by B1
 
@@ -113,9 +114,37 @@ The direct-call inventory is retained at `/home/indexyz/ares-evidence/w3-geometr
 
 The B1 test additions are exactly the three hull cases run through the public direct API with a supplied bundle, plus one BBL/Orca direct call with `None` asserting the dedicated missing-bundle error. A supplied-bundle unresolved-name case should also assert the existing warning channel and slot preservation if the current warning fixture can exercise Native `2805–2807`; otherwise it is a focused follow-up test within B1, not a changed expectation.
 
+### Core and WASM direct-call inventory
+
+These callers also cross the direct load boundary (`OrcaSlicer.cpp:2786–2817`). Their existing assertions remain unchanged; a supplied catalog is an explicit load input, not a replacement expected output. Invalid-input and non-BBL controls keep their original inputs when the refresh predicate is not reached. Each owning test binary is included in both base/tip modes.
+
+| Test file | Input disposition | Existing behavior retained |
+|---|---|---|
+| `crates/ares-core/tests/adaptive_isolation/mod.rs` | Supply a catalog for BBL direct cases; retain non-BBL inputs | Adaptive slicing remains isolated from unrelated config. |
+| `crates/ares-core/tests/gcode_thumbnail_image_free.rs` | Supply a catalog for BBL direct cases | Image-free thumbnail export assertions. |
+| `crates/ares-core/tests/gcode_thumbnail_images/support.rs` | Supply a catalog in its direct BBL helper | All thumbnail image assertions in the owning `gcode_thumbnail_images` binary. |
+| `crates/ares-core/tests/multi_plate_instances_keep_global_coordinates.rs` | Supply a catalog for direct BBL slicing | Global coordinates and selected-plate instance behavior. |
+| `crates/ares-core/tests/painted_attribute_in_wrong_namespace_is_rejected.rs` | Keep malformed-input rejection; supply a catalog only if a valid BBL control reaches slicing | Namespace rejection, not a missing-bundle substitution. |
+| `crates/ares-core/tests/plateless_instances_hit_no_suitable_objects_gate.rs` | Supply a catalog when its BBL input reaches the direct load stage | Original no-suitable-objects rejection. |
+| `crates/ares-core/tests/post_process_rejection.rs` | Supply a catalog for BBL direct cases; keep STL inputs | Post-process validation and export rejection. |
+| `crates/ares-core/tests/processed_filament_config.rs` | Supply a catalog to the processed direct request | Processed filament config and color assertions. |
+| `crates/ares-core/tests/profile_entry_processed.rs` | Keep profile-selected requests; supply a catalog only to direct BBL comparison calls | Processed-versus-profile output comparisons, without a second profile refresh. |
+| `crates/ares-core/tests/slice_bed_type_initialization.rs` | Supply a catalog for BBL direct cases; keep model-only cases | Bed-type initialization and validation. |
+| `crates/ares-core/tests/slicing_status.rs` | Supply a catalog for BBL direct cases | Status reporting assertions. |
+| `crates/ares-core/tests/template_errors_surface_upstream_format.rs` | Supply a catalog for BBL direct cases | Upstream template error text and attribution. |
+| `crates/ares-core/tests/version_identity.rs` | Supply a catalog for BBL direct cases | Exact generated-by version identity. |
+| `crates/ares-core/tests/profile_filament_self_index.rs` | Keep explicit missing-bundle control and supplied-catalog cases | Variant/self-index behavior, successful supplied input, and unresolved-slot warning. |
+| `crates/ares-wasm/tests/custom_gcode_overview.rs` | Supply catalog JSON to processed direct BBL calls | Custom G-code overview rows. |
+| `crates/ares-wasm/tests/estimation.rs` | Supply catalog JSON to processed direct BBL calls | Estimation data. |
+| `crates/ares-wasm/tests/marker_time_tagged.rs` | Supply catalog JSON to processed direct BBL calls | Marker timing and move tags. |
+| `crates/ares-wasm/tests/role_filament_usage.rs` | Supply catalog JSON to processed direct BBL calls | Per-role filament usage. |
+| `crates/ares-wasm/tests/direct_project_catalog.rs` | New explicit no-catalog rejection and supplied-catalog success | Public WASM byte API contract and repeatable G-code artifact; absent from the base. |
+
+The table records the required disposition, not an unverified claim that every listed file needs an edit. The final inventory records which inputs actually reach the BBL predicate and the exact input-only adaptations made. No comparator, retained assertion, or expected output is weakened.
+
 ## Base/tip inventory acceptance
 
-Every affected test file listed above must be included in a frozen base-versus-tip inventory at base `0a2e546bcd3aaa1189b3770f7c7e039c3d39d3ae` and the B1 implementation tip, in both official and seeded modes, with complete parity environments and the worker's CPU range 36–39. The inventory must prove P→F = 0. The direct BBL hull cases, native BBL boundary cases, CLI direct 3MF cases, and the B1 missing-bundle witness must be selected explicitly; STL/non-BBL controls remain in the inventory to prove they are unaffected.
+Every affected test file listed above must be included in a frozen base-versus-tip inventory at base `317f774c06033bdabbfaefa24d8fae7c9fd45106` and the combined B1/B2 implementation tip, in both official and seeded modes, with complete parity environments and the worker's CPU range 36–39. The inventory must prove P→F = 0. The base includes the application adapter's routing changes for the BBL boundary and jerk/SEMM witnesses; earlier `0a2e546bc` runs are invalid for this comparison. The direct BBL hull cases, native BBL boundary cases, CLI direct 3MF cases, and the B1 missing-bundle witness must be selected explicitly; STL/non-BBL controls remain in the inventory to prove they are unaffected.
 
 A supplied bundle can legitimately change output for a previously passing Native comparison if the old Ares path omitted Native's refresh. That is still a P→F and is not admissible as an unexplained fixture update. Such a change must be attributed to the exact upstream refresh operation and lines (`OrcaSlicer.cpp:1880–1893`, `2786–2817`, and/or `3510–3845`), with the before/after first difference and the bundle identity recorded. A new failure without that source-cited explanation is a rejected B1 result.
 

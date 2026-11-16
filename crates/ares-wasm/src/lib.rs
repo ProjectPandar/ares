@@ -2,6 +2,7 @@ mod actual_speed_profile;
 mod color_print;
 mod colors;
 mod custom_gcode_overview;
+mod direct_project;
 mod estimation;
 mod filament_legend;
 mod heights_widths;
@@ -14,6 +15,10 @@ mod scene;
 mod status;
 
 pub use colors::{option_colors, role_colors, view_types};
+pub use direct_project::{
+    slice_project_plate_processed_with_catalog, slice_project_plate_processed_with_catalog_bytes,
+    slice_project_plate_with_catalog, slice_project_with_catalog,
+};
 pub use moves::{SliceOutput, VertexBuffers, option_types};
 pub use plater::{
     PlaterSession, PlaterSnapshot, create_plater_session_from_stl_files,
@@ -21,7 +26,7 @@ pub use plater::{
 };
 pub use raw_moves::MoveBuffers;
 
-use ares_core::{GenerationMetadata, SliceError, SliceOptions};
+use ares_core::{SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
 
 pub use profiles::{
@@ -59,17 +64,7 @@ pub async fn slice_project_plate(
     plate: Option<u32>,
     overrides_json: Option<String>,
 ) -> Result<Vec<u8>, JsValue> {
-    let overrides =
-        parse_overrides(overrides_json.as_deref()).map_err(|error| JsValue::from_str(&error))?;
-    ares_core::slice_project_plate_validated(
-        input,
-        GenerationMetadata::default(),
-        plate,
-        &overrides,
-        ares_core::SlicerContext::new(0),
-    )
-    .await
-    .map_err(slice_error_js)
+    slice_project_plate_with_catalog(input, plate, overrides_json, None).await
 }
 
 /// Palettes derive from processed filament colors and custom G-code items.
@@ -91,19 +86,7 @@ pub async fn slice_project_plate_processed_bytes(
     plate: Option<u32>,
     overrides_json: Option<&str>,
 ) -> Result<SliceOutput, String> {
-    let overrides = parse_overrides(overrides_json)?;
-    let output = ares_core::slice_project_plate_processed_validated(
-        &input,
-        GenerationMetadata::default(),
-        plate,
-        &overrides,
-        ares_core::SlicerContext::new(0),
-    )
-    .await
-    .map_err(|error| error.to_string())?;
-    let custom_gcodes = custom_gcode_overview::plate_custom_gcodes(&input, plate)
-        .map_err(|error| error.to_string())?;
-    Ok(SliceOutput::from_processed(output).with_custom_gcodes(&custom_gcodes))
+    slice_project_plate_processed_with_catalog_bytes(input, plate, overrides_json, None).await
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

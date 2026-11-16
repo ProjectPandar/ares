@@ -7,13 +7,20 @@
 //! required/optional dependency policy and slice_case caching.
 
 use super::{ExportedCase, OrcaRunner, cache_identity, repo_root};
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+use ares_core::{
+    ConfigOverrides, GenerationMetadata, PresetCatalogHandle, SlicerContext,
+    slice_project_plate_with_catalog,
+};
 use std::fs;
 
 async fn check(fixture: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let supply = super::application::project_supply()
+        .unwrap()
+        .expect("supplied system bundle");
+    let catalog = PresetCatalogHandle::from_json(&supply.catalog).unwrap();
     let source = repo_root().join("tests/parity/validation").join(fixture);
     let project = fs::read(&source).unwrap();
     let project_path = runner.work.join(source.file_name().unwrap());
@@ -28,11 +35,12 @@ async fn check(fixture: &str) {
             output_dir,
         })
         .unwrap();
-    let actual = slice_project_plate(
+    let actual = slice_project_plate_with_catalog(
         project,
         GenerationMetadata::default(),
         None,
         &ConfigOverrides::default(),
+        Some(&catalog),
         SlicerContext::new(0),
     )
     .await
@@ -62,6 +70,8 @@ async fn check(fixture: &str) {
             "native_lines": expected_lines.len(),
             "first_difference_line": first_difference.map(|index| index + 1),
             "comparison": "ordered complete lines and line count; generated-by only",
+            "catalog_sha256": supply.digest,
+            "catalog_path": supply.catalog_path,
             "artifacts": runner.work,
         }))
         .unwrap(),
@@ -139,6 +149,10 @@ async fn configured_zero_tolerance_preserves_native_rotation_hull() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let supply = super::application::project_supply()
+        .unwrap()
+        .expect("supplied system bundle");
+    let catalog = PresetCatalogHandle::from_json(&supply.catalog).unwrap();
     let original =
         fs::read(repo_root().join("tests/parity/validation/exclude-outline-jitter.3mf")).unwrap();
     let mut streams = Vec::new();
@@ -161,11 +175,12 @@ async fn configured_zero_tolerance_preserves_native_rotation_hull() {
                 output_dir,
             })
             .unwrap();
-        let actual = slice_project_plate(
+        let actual = slice_project_plate_with_catalog(
             project,
             GenerationMetadata::default(),
             None,
             &ConfigOverrides::default(),
+            Some(&catalog),
             SlicerContext::new(0),
         )
         .await
@@ -188,6 +203,8 @@ async fn configured_zero_tolerance_preserves_native_rotation_hull() {
         let native_lines = normalize(&expected);
         records.push(serde_json::json!({
             "tolerance_mm": tolerance,
+            "catalog_sha256": supply.digest,
+            "catalog_path": supply.catalog_path,
             "input_sha256": cache_identity::raw_digest(&case.project),
             "ares_sha256": cache_identity::raw_digest(actual.as_bytes()),
             "native_sha256": cache_identity::raw_digest(expected.as_bytes()),

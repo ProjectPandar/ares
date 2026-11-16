@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
+import type { CompatiblePresets, ConfigValue, DirectProjectSliceOptions, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -84,9 +84,9 @@ export class AresSlicer {
    * `ConfigOption::serialize()` string from `encodeConfigValues`, or one string
    * per element of a vector option. Rejects an unknown key or invalid value.
    */
-  async sliceProject(input: Uint8Array, plate?: number, overrides: Record<string, string | string[]> = {}): Promise<SliceResult> {
+  async sliceProject(input: Uint8Array, plate?: number, overrides: Record<string, string | string[]> = {}, options?: DirectProjectSliceOptions): Promise<SliceResult> {
     await this.#ready;
-    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate, overrides: JSON.stringify(overrides) })) as SliceResult;
+    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate, overrides: JSON.stringify(overrides), catalog: options?.catalogJson })) as SliceResult;
   }
 
   /**
