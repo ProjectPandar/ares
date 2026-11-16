@@ -65,7 +65,7 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options: &mut MotionOptions,
     default: &ProcessRegionSourceOptions,
     region: Option<&RegionOptions>,
-    travel_speed: f64,
+    wipe_travel_speed: f64,
     nozzle: f64,
 ) {
     options.wall_direction = region.map_or(default.wall_direction, |value| value.wall_direction);
@@ -182,7 +182,7 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     });
     options.wipe_speed = absolute(
         region.map_or(default.wipe_speed, |value| value.wipe_speed),
-        travel_speed,
+        wipe_travel_speed,
     );
     options.wipe_on_loops = region.map_or(default.wipe_on_loops.0, |value| value.wipe_on_loops.0);
     options.wipe_inward = region.map_or(default.wipe_inward.0, |value| value.wipe_inward.0);

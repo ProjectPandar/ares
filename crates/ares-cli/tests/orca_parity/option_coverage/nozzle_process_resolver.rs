@@ -3,6 +3,12 @@ use crate::{OrcaRunner, presets::VendorProfiles, runner};
 use serde_json::{Value, json};
 use std::io::{Cursor, Read, Write};
 
+fn set_overhang_speeds(settings: &mut Value) {
+    for quarter in 1..=4 {
+        settings[format!("overhang_{quarter}_4_speed")] = json!(["15", "30"]);
+    }
+}
+
 fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
     let singleton = case == "singleton";
     let profiles = VendorProfiles::load(
@@ -102,9 +108,7 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 settings["initial_layer_infill_speed"] = json!(["40", "70"]);
             }
             if case == "overhang" {
-                for quarter in 1..=4 {
-                    settings[format!("overhang_{quarter}_4_speed")] = json!(["15", "30"]);
-                }
+                set_overhang_speeds(&mut settings);
             }
             if case == "support" {
                 settings["enable_support"] = json!("1");

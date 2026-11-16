@@ -5,6 +5,8 @@ mod filament_select;
 
 pub(crate) use filament_maps::update_static_filament_maps;
 mod index;
+mod nozzle;
+pub(crate) use nozzle::{ProcessNozzle, process_nozzle_config_index};
 mod printer;
 mod process;
 mod select;
