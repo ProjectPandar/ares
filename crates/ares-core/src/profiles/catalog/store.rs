@@ -7,9 +7,63 @@ use super::{Catalog, Record, Scope, invalid, invalid_json};
 use crate::profiles::ProfileKind;
 use std::collections::BTreeMap;
 
-use crate::SliceError;
+use crate::{PresetAdmissionError, PresetAdmissionReason, SliceError, profiles::SourceIdentity};
+
+fn kind_name(kind: ProfileKind) -> &'static str {
+    match kind {
+        ProfileKind::Machine => "machine",
+        ProfileKind::Process => "process",
+        ProfileKind::Filament => "filament",
+    }
+}
 
 impl Catalog {
+    pub(in crate::profiles) fn admit_document(
+        &self,
+        kind: ProfileKind,
+        document: ProfileDocument,
+        source: &str,
+        source_identity: Option<&SourceIdentity>,
+    ) -> Result<ProfileDocument, SliceError> {
+        if document.inherits.as_deref().is_none_or(str::is_empty) {
+            return Ok(document);
+        }
+        let Some(source_identity) = source_identity else {
+            return Err(SliceError::PresetAdmission(PresetAdmissionError {
+                kind: kind_name(kind).to_owned(),
+                source: source.to_owned(),
+                reason: PresetAdmissionReason::NotFound,
+            }));
+        };
+        let matches = self.source_records.iter().filter(|record| {
+            record.kind == kind
+                && record.source_identity.as_ref() == Some(source_identity)
+                && (matches!(record.scope, Scope::Vendor(_))
+                    == (document
+                        .fields
+                        .get("from")
+                        .and_then(|value| value.token())
+                        .as_deref()
+                        == Some("system")))
+        });
+        let mut matches = matches.map(|record| record.document.clone());
+        let Some(document) = matches.next() else {
+            return Err(SliceError::PresetAdmission(PresetAdmissionError {
+                kind: kind_name(kind).to_owned(),
+                source: source.to_owned(),
+                reason: PresetAdmissionReason::NotFound,
+            }));
+        };
+        if matches.next().is_some() {
+            return Err(SliceError::PresetAdmission(PresetAdmissionError {
+                kind: kind_name(kind).to_owned(),
+                source: source.to_owned(),
+                reason: PresetAdmissionReason::Ambiguous,
+            }));
+        }
+        Ok(document)
+    }
+
     pub(in crate::profiles) fn from_json(input: &str) -> Result<Self, SliceError> {
         let input = input.strip_prefix('\u{feff}').unwrap_or(input);
         let input: CatalogInput = serde_json::from_str(input).map_err(invalid_json)?;
@@ -19,7 +73,7 @@ impl Catalog {
         }
         for package in input.imports {
             for document in package.profiles {
-                catalog.push_document(Scope::User, document)?;
+                catalog.push_document(Scope::User, document, None)?;
             }
         }
         Ok(catalog)
@@ -28,6 +82,7 @@ impl Catalog {
     pub(in crate::profiles) fn empty() -> Self {
         Self {
             records: super::defaults::records(),
+            source_records: Vec::new(),
             index: BTreeMap::new(),
             selectable: BTreeMap::new(),
             vendor_names: Vec::new(),
@@ -63,23 +118,53 @@ impl Catalog {
         &mut self,
         document: ProfileDocument,
     ) -> Result<(), SliceError> {
-        self.push_document(Scope::User, document)
+        self.push_document(Scope::User, document, None)
+    }
+
+    pub(in crate::profiles) fn push_import_with_identity(
+        &mut self,
+        document: ProfileDocument,
+        source_identity: Option<&SourceIdentity>,
+    ) -> Result<(), SliceError> {
+        let kind = ProfileKind::parse(&document.kind)?;
+        self.insert(
+            Scope::User,
+            (kind, document.name.clone()),
+            document,
+            source_identity.cloned(),
+        )
     }
 
     pub(in crate::profiles) fn push_filament_slot(
         &mut self,
         document: ProfileDocument,
         slot: usize,
+        source_identity: Option<&SourceIdentity>,
     ) -> Result<String, SliceError> {
         // CLI file slots own configs independently; authored preset names stay metadata.
         let key = slot.to_string();
-        self.insert(Scope::User, ProfileKind::Filament, key.clone(), document)?;
+        self.insert(
+            Scope::User,
+            (ProfileKind::Filament, key.clone()),
+            document,
+            source_identity.cloned(),
+        )?;
         Ok(key)
     }
 
-    fn push_document(&mut self, scope: Scope, document: ProfileDocument) -> Result<(), SliceError> {
+    fn push_document(
+        &mut self,
+        scope: Scope,
+        document: ProfileDocument,
+        source_identity: Option<SourceIdentity>,
+    ) -> Result<(), SliceError> {
         let kind = ProfileKind::parse(&document.kind)?;
-        self.insert(scope, kind, document.name.clone(), document)
+        self.insert(
+            scope,
+            (kind, document.name.clone()),
+            document,
+            source_identity,
+        )
     }
 
     fn insert_vendor(&mut self, scope: Scope, mut vendor: VendorInput) -> Result<(), SliceError> {
@@ -103,7 +188,7 @@ impl Catalog {
             let document = vendor.files.remove(&entry.sub_path).ok_or_else(|| {
                 invalid(format!("missing vendor profile file {}", entry.sub_path))
             })?;
-            self.insert(scope, kind, document.name.clone(), document)?;
+            self.insert(scope, (kind, document.name.clone()), document, None)?
         }
         Ok(())
     }
@@ -111,9 +196,9 @@ impl Catalog {
     fn insert(
         &mut self,
         scope: Scope,
-        kind: ProfileKind,
-        identity: String,
+        key: (ProfileKind, String),
         mut document: ProfileDocument,
+        source_identity: Option<SourceIdentity>,
     ) -> Result<(), SliceError> {
         // Bare empty preset strings on vector-kind options are EMPTY
         // vectors upstream (`ConfigOptionStrings::deserialize`,
@@ -136,10 +221,10 @@ impl Catalog {
                 && value.token().is_some_and(|token| token.contains('%')))
         });
         let position = self.records.len();
-        let key = (kind, identity.clone());
+        let (kind, identity) = key;
         if self
             .index
-            .insert((scope, kind, identity), position)
+            .insert((scope, kind, identity.clone()), position)
             .is_some()
         {
             return Err(invalid(format!(
@@ -148,17 +233,22 @@ impl Catalog {
             )));
         }
         if document.instantiation.as_deref() != Some("false")
-            && self.selectable.insert(key, position).is_some()
+            && self.selectable.insert((kind, identity), position).is_some()
         {
             return Err(invalid(format!(
                 "ambiguous selectable profile {}",
                 document.name
             )));
         }
+        let direct = self.direct_imports
+            && (source_identity.is_some()
+                || document.inherits.as_deref().is_none_or(str::is_empty));
         self.records.push(Record {
             scope,
             kind,
             document,
+            source_identity,
+            direct,
         });
         Ok(())
     }

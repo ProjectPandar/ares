@@ -107,7 +107,11 @@ async fn fresh_stl_loaded_presets_apply_orientation_like_native() {
     let files: Vec<_> = presets
         .iter()
         .zip(&texts)
-        .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+        .map(|(label, json)| ares_core::LoadSettingsFile {
+            label,
+            json,
+            source_identity: None,
+        })
         .collect();
     let overrides = ares_core::ConfigOverrides::default();
     for (index, orient) in [false, true, false].into_iter().enumerate() {
@@ -117,6 +121,7 @@ async fn fresh_stl_loaded_presets_apply_orientation_like_native() {
             ares_core::LoadSettingsSliceRequest {
                 filename: "fresh.stl",
                 catalog_json: None,
+                loaded_sources: None,
                 uptodate: false,
                 settings: &files[..2],
                 filaments: &files[2..],

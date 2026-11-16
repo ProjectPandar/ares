@@ -24,6 +24,7 @@ pub(in crate::runner) fn slice_flattened(
         .map(|(path, json)| LoadSettingsFile {
             label: path.to_str().unwrap(),
             json,
+            source_identity: None,
         })
         .collect();
     let filaments: Vec<_> = filament_paths
@@ -32,6 +33,7 @@ pub(in crate::runner) fn slice_flattened(
         .map(|(path, json)| LoadSettingsFile {
             label: path.to_str().unwrap(),
             json,
+            source_identity: None,
         })
         .collect();
     // OrcaSlicer.cpp:2121-2123 skips preset resolution for typed files without inherits.
@@ -44,6 +46,7 @@ pub(in crate::runner) fn slice_flattened(
                 orient: false,
                 filename,
                 catalog_json: None,
+                loaded_sources: None,
                 uptodate: false,
                 settings: &settings,
                 filaments: &filaments,
