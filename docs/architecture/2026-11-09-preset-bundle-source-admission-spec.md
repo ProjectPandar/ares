@@ -4,8 +4,8 @@
 
 ## 1. 起点与源码归属
 
-上游固定为 OrcaSlicer `345efec64c7b95a05ce5cf96df0dde66a158835c`。
-Rust 起点为 `8ba63961f0c42cea7b798b8d7e4082a88e334297`。
+上游固定为 OrcaSlicer 2.5.0 `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`。
+CLI 已有 `CLI_CONFIG_FILE_ERROR` family（`ares-cli/src/failure.rs::CliFailure::config_file_error`）。
 
 | 上游位置 | 本切片的含义 |
 | --- | --- |
@@ -19,7 +19,7 @@ Rust 起点为 `8ba63961f0c42cea7b798b8d7e4082a88e334297`。
 
 这不是新增 Ares pipeline。现有 `profiles/load_settings.rs` 把 CLI 文件
 当作独立 import，`Catalog::enable_direct_imports` 全局绕过父链，不能代表
-当前 beta 的 `PresetBundle`。本切片用上游逐文件准入替换这个豁免壳；
+OrcaSlicer 2.5.0 的 `PresetBundle`。本切片用上游逐文件准入替换这个豁免壳；
 其后的已有组合、项目加载及 Print 生命周期不另建一套。
 
 `native-cli-preset-input-transport.md` 只规定另一批测试的输入传递，
@@ -30,8 +30,29 @@ Rust 起点为 `8ba63961f0c42cea7b798b8d7e4082a88e334297`。
 
 ## 2. 已有证据与缺口
 
-测试切片 `e5e7363c2bdebd14419678e1308b2849c9d6c858` 保留原
-`load_settings_3mf_filament_inherits_no_chain` 的文件、3MF、参数和成功流比较。
+### 2.1 Citation audit against the pinned source
+
+The source locations in this document were rechecked against the pinned
+OrcaSlicer 2.5.0 tree before this spec revision. The resolver boundary is
+`PresetBundle.cpp:556–650` (`resolve_preset_config`), including compatibility
+mapping, collection selection, absolute/lexically-normalized source identity,
+ambiguous-match rejection, canonical-config replacement, and the
+source-manifest loop. Its manifest loader is `PresetBundle.cpp:654–688`;
+`load_presets` is `PresetBundle.cpp:881–904`, and the collection file loader is
+`Preset.cpp:2032–2070`. The CLI resolver state and typed/no-inherits early
+return are `OrcaSlicer.cpp:2084–2157`; file parsing and resolver error mapping
+are `OrcaSlicer.cpp:2202–2240`, and the machine/process/filament loop begins at
+`OrcaSlicer.cpp:2281`.
+
+The source also confirms the surrounding contracts: the 3MF post-process gate is
+`OrcaSlicer.cpp:1803–1807`; data-directory setup is `OrcaSlicer.cpp:8237–8245`;
+`record_exit_reson` and its Linux-only result-file behavior are
+`OrcaSlicer.cpp:535–590`. The existing CLI adapter family
+`ares-cli/src/failure.rs::CliFailure::config_file_error` must be reused rather
+than duplicated. No citation in the behavior or destination tables
+authorizes a broader source-discovery or fallback implementation.
+
+测试切片 `load_settings_3mf_filament_inherits_no_chain` 保留原文件、3MF、参数和成功流比较。
 官方与 seeded 都是五个控制通过、目标失败：Native 拒绝原 child filament，
 Ares CLI 接受并写 G-code。实测进程码为 Native 251、Ares 0；这些是观察，
 不是新测试常量，也不代替 `CLI_CONFIG_FILE_ERROR` 的源码语义。
