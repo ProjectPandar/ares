@@ -99,7 +99,7 @@ key must use the same process selector.
 | Extrusion jerk, `:9449–9462` | `default_jerk`, `initial_layer_jerk`, `outer_wall_jerk`, `inner_wall_jerk`, `top_surface_jerk`, `infill_jerk`. Existing region jerk assembly. |
 | Top infill extrusion flow, `:9481` | `top_solid_infill_flow_ratio`. Deferred: pre-generation projection precedes assignment publication. Do not apply this index to filament flow ratio. |
 | Layer/object entry and reset, `:4596–4601,6860–6869,6898–6903` | Outer-wall/default/initial acceleration and jerk plus `default_junction_deviation`. Existing `layers/{boundary,object_entry}.rs` and motion initialization. |
-| Travel acceleration/jerk, `:10523–10556` | `initial_layer_travel_acceleration`, `initial_layer_travel_jerk`, `travel_acceleration`, `travel_jerk`, bridge/outer/default acceleration and outer/default jerk. Initial-layer travel keys are direct resolver reads in addition to the forty-key set. Existing motion travel kinematics. |
+| Travel acceleration/jerk, `:10523–10556` | `initial_layer_travel_acceleration`, `travel_acceleration`, `travel_jerk`, bridge/outer/default acceleration and outer/default jerk. Initial-layer travel acceleration is a direct resolver read in addition to the forty-key set. `initial_layer_travel_jerk` is deferred: no Ares consumer exists. Existing motion travel kinematics remain in place. |
 | Skirt/brim requested speed, `:5966–5969,6055,6085,6284` | Selected `support_speed`. Existing `motion/skirt_brim.rs` must not re-index with the physical slot. |
 | Percentage Wipe speed, `:574,685` | `travel_speed` selected through the process resolver is the base of `wipe_speed`. Keep this base separate from normal writer travel speed. Existing motion retraction option assembly. Role-based Wipe still consumes saved extrusion speed. |
 
@@ -174,6 +174,13 @@ behavior; do not move top-flow application into motion, advance assignment
 publication, or invent a producer. This slice covers existing motion/G-code
 consumers with an available producer: 37 of the 40 inventoried Native keys.
 The review report must distinguish these from all three deferred keys.
+
+The direct Native `initial_layer_travel_jerk` read lies outside the forty-key
+macro/local-nozzle inventory and is also deferred. Ares defines the option but
+`motion/state.rs::begin_path_travel` reuses `travel_jerk` on the first layer;
+it has no consumer for the separate initial-layer option. Preserve that branch
+and treat the missing first-layer travel-jerk algorithm as an independent slice.
+Do not add its absent consumption while porting existing selectors.
 
 ## Public tests before implementation
 
