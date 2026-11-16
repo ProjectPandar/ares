@@ -15,7 +15,7 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
     } else {
         "Bambu Lab H2D 0.4 nozzle"
     };
-    let selected = crate::case_helpers::select_printer(&profiles, "BBL", printer).unwrap();
+    let selected = crate::select_printer(&profiles, "BBL", printer).unwrap();
     let machine = profiles.machine(&selected.printer).unwrap();
     let mut process = profiles.process(&selected.process).unwrap();
     crate::normalize_process_defaults(&machine, &mut process);
