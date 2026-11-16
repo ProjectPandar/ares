@@ -7,6 +7,9 @@ Port the boundary ram-band restart in OrcaSlicer2.5.0
 
 - `1489–1493`: when the old tool has a boundary wipe start and the plan iterator
   is valid, obtain its planned `ramming_depth` by matching `old_tool`;
+- `1574–1600`: when that depth is positive, quantize the reserved ram band to
+  complete rows, finish any partial ram row with the source ram fill feed,
+  walk the remaining rows, and toggle direction at each row;
 - `1699–1707`: when that depth is positive, travel to the left edge of the fresh
   wipe row beyond the reserved ram band, then set `m_left_to_right=true`;
 - otherwise retain the ordinary ramming and non-ramming restart branches.
@@ -38,10 +41,14 @@ Port the upstream transition at its owning unload boundary.
 1. Resolve planned depth only for non-SEMM, ramming-enabled gap-wall starts.
 2. Preserve planless priming and no-matching-old-tool behavior as zero planned
    depth, corresponding to the upstream end-iterator/matching guard.
-3. For positive planned depth, reuse the source expression:
+3. For positive planned depth, quantize the reserved band to at least one whole
+   row, complete the current row when needed with the existing explicit
+   extrusion path, and walk/toggle the remaining rows using the upstream
+   `y_step` boundary.
+4. For positive planned depth, reuse the source expression:
    `box.lower.y + depth_traversed + wipe_start_offset_after_ram(depth, first_layer) + perimeter`.
    The X coordinate is the existing ram-start left edge.
-4. Set the outgoing wipe direction to left-to-right only in that positive-depth
+5. Set the outgoing wipe direction to left-to-right only in that positive-depth
    restart branch. Preserve existing ordinary restart behavior otherwise.
 
 This remains a private, platform-neutral rewrite of `WipeTower2`, with no
