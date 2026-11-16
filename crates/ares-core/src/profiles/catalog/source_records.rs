@@ -1,3 +1,5 @@
+mod user;
+
 use super::{Catalog, ProfileDocument, Record, Scope, VendorInput, invalid};
 use crate::{ProfileKind, SliceError, SourceIdentity};
 
@@ -29,6 +31,81 @@ impl LoadedPresetSources {
             source_identity: Some(identity.clone()),
             direct: true,
         });
+        Ok(())
+    }
+
+    /// `Preset.cpp:2032–2115`: resolve one directory against previously loaded collections.
+    pub fn add_user_collection(
+        &mut self,
+        entries: &[(String, String, SourceIdentity)],
+    ) -> Result<(), SliceError> {
+        let mut documents = Vec::with_capacity(entries.len());
+        for (collection_name, json, identity) in entries {
+            let mut document: ProfileDocument =
+                serde_json::from_str(json).map_err(|error| invalid(error.to_string()))?;
+            let authored_name = std::mem::replace(&mut document.name, collection_name.clone());
+            let kind = ProfileKind::parse(&document.kind)?;
+            if !user::valid_version(&document) {
+                continue;
+            }
+            if self
+                .catalog
+                .index
+                .contains_key(&(Scope::User, kind, document.name.clone()))
+                || self
+                    .catalog
+                    .selectable
+                    .contains_key(&(kind, document.name.clone()))
+            {
+                continue;
+            }
+            let record = Record {
+                scope: Scope::User,
+                kind,
+                document,
+                source_identity: Some(identity.clone()),
+                direct: false,
+            };
+            if let Some(parent) = record
+                .document
+                .inherits
+                .as_deref()
+                .filter(|name| !name.is_empty())
+                && self.catalog.parent_position(&record, parent).is_none()
+            {
+                continue;
+            }
+            documents.push((record, authored_name));
+        }
+        for (record, _) in &documents {
+            self.catalog.push_import(record.document.clone())?;
+        }
+        for (mut record, authored_name) in documents {
+            let position =
+                self.catalog.index[&(Scope::User, record.kind, record.document.name.clone())];
+            let mut raw = crate::project::raw_settings::ProjectSettingsRaw::default();
+            raw.extend(super::super::project_refresh::default_preset_fields(
+                record.kind,
+            )?);
+            for layer in self.catalog.resolved_layers(position)? {
+                let mut authored = crate::project::raw_settings::ProjectSettingsRaw::default();
+                authored.extend(layer.fields.clone());
+                authored.handle_legacy();
+                super::super::preset_normalization::replace_nil_from_defaults(&mut authored, &raw)?;
+                raw.extend_raw(&authored);
+                super::super::preset_normalization::extend_default_config_length(&mut raw)?;
+            }
+            if record.kind == ProfileKind::Machine {
+                super::super::preset_normalization::normalize_machine(&mut raw)?;
+            }
+            record.document.fields = raw
+                .entries()
+                .map(|(key, value)| (key.clone(), value.clone()))
+                .collect();
+            record.document.name = authored_name;
+            record.direct = true;
+            self.loaded.push(record);
+        }
         Ok(())
     }
 
