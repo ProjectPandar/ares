@@ -31,20 +31,14 @@ pub(crate) fn update_static_filament_maps(
     }
     let volumes = (0..physical_count)
         .map(|head| {
-            match current
+            current
                 .project
                 .gcode
                 .nozzle_volume_type
                 .0
                 .get(head)
                 .copied()
-                .unwrap_or(NozzleVolumeType::Standard)
-            {
-                NozzleVolumeType::Standard => 0,
-                NozzleVolumeType::HighFlow => 1,
-                // PrintConfig.hpp:618-623: the volume map retains nvtHybrid = 2.
-                NozzleVolumeType::Hybrid => 2,
-            }
+                .unwrap_or(NozzleVolumeType::Standard) as i32
         })
         .collect::<Vec<_>>();
     // LayeredNozzleGroupResult::create stores the complete 0-based map.

@@ -342,6 +342,9 @@ fn volume_type(variant: &str) -> Option<i32> {
             match volume.trim() {
                 "Standard" => Some(0),
                 "High Flow" => Some(1),
+                "TPU High Flow" => Some(3),
+                "E3D High Flow" => Some(5),
+                "Extra High Flow" => Some(6),
                 _ => None,
             }
         })

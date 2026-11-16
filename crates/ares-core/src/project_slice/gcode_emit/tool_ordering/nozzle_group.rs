@@ -25,19 +25,14 @@ pub(super) fn static_groups(settings: &ProjectSettings) -> Vec<NozzleGroup> {
             extruder,
             group_id: extruder,
             diameter: canonical_diameter(diameter.0),
-            volume: match settings
+            volume: settings
                 .project
                 .gcode
                 .nozzle_volume_type
                 .0
                 .get(extruder)
                 .copied()
-                .unwrap_or(NozzleVolumeType::Standard)
-            {
-                NozzleVolumeType::Standard => 0,
-                NozzleVolumeType::HighFlow => 1,
-                NozzleVolumeType::Hybrid => 2,
-            },
+                .unwrap_or(NozzleVolumeType::Standard) as i32,
         })
         .collect()
 }
