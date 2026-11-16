@@ -21,7 +21,11 @@ pub(super) struct Filament {
 }
 
 impl Filament {
-    pub(super) fn new(settings: &ProjectSettings, index: usize) -> Self {
+    pub(super) fn new(
+        settings: &ProjectSettings,
+        index: usize,
+        (retract_length, retract_speed): (f32, f32),
+    ) -> Self {
         let g = &settings.filament.gcode;
         let p = &settings.filament.print;
         let chosen = settings.process.print.wipe_tower_filament.0;
@@ -58,8 +62,8 @@ impl Filament {
             } else {
                 maximum / first_area
             },
-            retract_length: at(&settings.project.gcode.retraction_length.0, index).0 as f32,
-            retract_speed: at(&settings.project.gcode.retraction_speed.0, index).0 as f32,
+            retract_length,
+            retract_speed,
             wipe_distance: at(&settings.project.print.wipe_distance.0, index).0 as f32,
         }
     }
