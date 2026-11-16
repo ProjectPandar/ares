@@ -1,6 +1,9 @@
 use std::{fs, process::Command};
 
-use ares_core::{GenerationMetadata, SlicerContext, ThumbnailData, slice_project};
+#[path = "../../../../tests/support/slice_project.rs"]
+mod direct_project;
+use ares_core::{GenerationMetadata, SlicerContext, ThumbnailData};
+use direct_project::slice_project;
 use serde_json::{Value, json};
 use sha2::{Digest as _, Sha256};
 

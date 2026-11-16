@@ -2,7 +2,10 @@
 //! message format (GCode.cpp:3636-3649 aggregation,
 //! PlaceholderParser.cpp:1726-1770 line/caret, :988-1000 vs :918-932 kind).
 
-use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+#[path = "../../../tests/support/slice_project_plate.rs"]
+mod direct_project;
+use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
+use direct_project::slice_project_plate;
 
 fn fixture(name: &str) -> Vec<u8> {
     std::fs::read(format!(
