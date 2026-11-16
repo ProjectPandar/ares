@@ -28,6 +28,19 @@ Current behavior converts the complete output into `text`, eagerly clones every 
 - Keep output bytes identical for the existing supported inputs.
 - Verify the browser public API still slices a runtime-generated 200 mm cube and exposes layer data in the viewer.
 
+## Incremental time and move ownership
+
+The line-iterator change alone does not bound processor ownership. Extend this same rewrite slice to OrcaSlicer 2.5.0's incremental `TimeMachine` and move insertion:
+
+- `GCodeProcessor.cpp:578-613`, `:613-759`, `:782-796`: calculate queued block times, attribute delays/cache/statistics, then erase processed blocks while preserving the planner boundary. Do not retain an entire file's `MotionBlock` values for a later schedule pass.
+- `GCodeProcessor.hpp:948-955`: Marlin planner `queue_size = 64`, `refresh_threshold = 256`; `GCodeProcessor.cpp:5685-5692` enqueues a G1 block and triggers calculation. Preserve the separate Klipper junction-flush condition on those same lines and its lazy-flush behavior; do not replace it with a fixed 256-block rule.
+- `GCodeProcessor.cpp:4000-4002`: final `calculate_time(..., is_final=true)` drains pending delays under the existing flavor-specific final-block rules.
+- `GCodeProcessor.cpp:8103-8192`: collect actual-speed insertions only for the current flush, resize the existing result move vector by the actual insertion count, and move its affected tail backwards into final slots. Remap queued block move IDs and the pending OptionsZ marker after insertion. This is in-place growth, not a second all-moves vector with a speculative `2 * recorded.len()` reservation.
+
+The Rust destination extends to `processor/{estimate,schedule,moves}.rs`, `processor/estimate/options_z.rs`, and `processor/moves/actual_speed.rs`. Reuse the existing flavor-specific rolling planners and their arithmetic; replace the full-file scheduling/replay compatibility shell with incremental block admission, flush attribution, and in-place move insertion. Retain exported timing/cache and line-end metadata, result moves, material/custom-stop statistics, and the existing approved distinction between official export-cache marker identity and stable public marker identity. That distinction must not require copying the complete MoveVertex buffer.
+
+Verification retains the public browser cube test and existing processor/processed-output parity checks in both modes. Reuse the established failing WASM cube workload before this ownership change, then require slice completion and positive viewer layers matching the exported header. Compare same-input output SHA once before/after in uncommitted evidence only. Keep all timing arithmetic, G-code bytes, line mappings, marker positions, actual-speed geometry, delays, and finalization semantics unchanged. Do not add a standalone early-drop workaround or a legacy scheduling fallback.
+
 ## Explicitly deferred
 
 - Arachne/perimeter aggregate lifetime changes (`materialize.rs` and `PreparedArachnePerimeters`).
