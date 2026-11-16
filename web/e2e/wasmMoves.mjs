@@ -73,9 +73,16 @@ try {
       await upload("move-values", moves.takeValues());
       await upload("move-ids", moves.takeIds());
       await upload("move-tags", moves.takeTags());
-      await upload("vertex-values", vertices.takeValues());
-      await upload("vertex-ids", vertices.takeIds());
-      await upload("vertex-tags", vertices.takeTags());
+      const collect = (ArrayType, stride, read) => {
+        const values = new ArrayType(stride * vertices.count);
+        for (let first = 0; first < vertices.count; first += 1_048_576) {
+          values.set(read(first, Math.min(1_048_576, vertices.count - first)), first * stride);
+        }
+        return values;
+      };
+      await upload("vertex-values", collect(Float32Array, 16, (first, count) => vertices.valuesRange(first, count)));
+      await upload("vertex-ids", collect(Uint32Array, 2, (first, count) => vertices.idsRange(first, count)));
+      await upload("vertex-tags", collect(Uint8Array, 4, (first, count) => vertices.tagsRange(first, count)));
       await upload("tool-colors", vertices.takeToolColors());
       await upload("print-colors", vertices.takeColorPrintColors());
       moves.free(); vertices.free(); output.free();

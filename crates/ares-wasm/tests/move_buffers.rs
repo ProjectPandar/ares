@@ -45,8 +45,11 @@ fn processed_buffers_preserve_ids_and_owned_data() {
     );
     assert_eq!(vertices.count(), 2);
     assert!(vertices.spiral_vase_mode());
-    assert_eq!(vertices.take_ids(), [16777217, 0, 16777217, 0]);
-    let values = vertices.take_values();
+    assert_eq!(
+        vertices.ids_range(0, vertices.count() as u32).unwrap(),
+        [16777217, 0, 16777217, 0]
+    );
+    let values = vertices.values_range(0, vertices.count() as u32).unwrap();
     assert_eq!(&values[..3], &[0.0; 3]);
     assert_eq!(&values[16..19], &[1.0, 2.0, 3.0]);
     assert_eq!(values[10], 0.0);
@@ -84,7 +87,7 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
     });
     let mut vertices = output.take_vertices();
     assert_eq!(
-        vertices.take_ids()[1..]
+        vertices.ids_range(0, vertices.count() as u32).unwrap()[1..]
             .iter()
             .step_by(2)
             .copied()
@@ -121,8 +124,8 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
         print_statistics: Default::default(),
     });
     let mut vertices = output.take_vertices();
-    let tags = vertices.take_tags();
-    let ids = vertices.take_ids();
+    let tags = vertices.tags_range(0, vertices.count() as u32).unwrap();
+    let ids = vertices.ids_range(0, vertices.count() as u32).unwrap();
     let all_roles = u32::MAX;
     let (travels, seams) = (1 << 0, 1 << 4);
     for (layers, current_layer) in [([0, 0], 0), ([0, 1], 1)] {

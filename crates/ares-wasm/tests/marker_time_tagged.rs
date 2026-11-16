@@ -57,10 +57,10 @@ async fn tagged_normal_time_matches_every_stable_native_vertex() {
     .unwrap();
     let mut output = SliceOutput::from_processed(processed);
     let gcode = String::from_utf8(output.take_gcode()).unwrap();
-    let mut vertices = output.take_vertices();
-    let ids = vertices.take_ids();
-    let values = vertices.take_values();
-    vertices.take_tags();
+    let vertices = output.take_vertices();
+    let ids = vertices.ids_range(0, vertices.count() as u32).unwrap();
+    let values = vertices.values_range(0, vertices.count() as u32).unwrap();
+    vertices.tags_range(0, vertices.count() as u32).unwrap();
     marker_time_native::tagged_pair(&root, &gcode);
     let records_tsv = std::fs::read_to_string(root.join("stable.tsv")).unwrap();
     let records: Vec<_> = records_tsv.lines().collect();
