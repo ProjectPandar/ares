@@ -22,16 +22,17 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         filament,
         filament_diameter,
         travel_speed,
+        nozzle_index,
         travel_acceleration,
         outer_wall_acceleration,
         default_acceleration,
         ..
     } = prelude;
-    let nozzle_index = crate::options::mapped_extruder_id(full, filament);
+    let physical_index = crate::options::mapped_extruder_id(full, filament);
     let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
         adaptive_pa: crate::project_slice::gcode_emit::adaptive_pa::Options::new(full, filament),
-        nozzle_config_index: crate::options::mapped_extruder_id(full, filament),
+        nozzle_config_index: nozzle_index,
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
         // — the multiplication order matters for f64 parity with upstream.
         filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,
@@ -53,9 +54,9 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             .or_else(|| gcode.filament_max_volumetric_speed.0.first())
             .map_or(0.0, |value| value.0),
         travel_feedrate: travel_speed * 60.0,
-        z_travel_feedrate: gcode.travel_speed_z.get_at(nozzle_index) * 60.0,
+        z_travel_feedrate: gcode.travel_speed_z.get_at(physical_index) * 60.0,
         first_layer_travel_feedrate: absolute(
-            gcode.initial_layer_travel_speed.get_at(nozzle_index),
+            gcode.initial_layer_travel_speed.get_at(physical_index),
             travel_speed,
         ) * 60.0,
         initial_layer_speed: full.process.print.initial_layer_speed.get_at(nozzle_index),
@@ -304,7 +305,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
         &mut options,
         &prelude.full.process.region,
         prelude.region,
-        prelude.travel_speed,
+        prelude.wipe_travel_speed,
         nozzle,
     );
     options
