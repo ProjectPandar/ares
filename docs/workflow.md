@@ -239,6 +239,100 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
    trees are identical, so this applies only the branch's own commits. A branch built on an earlier point of the
    stack uses that chain's squash commit and `<end>` instead.
 
+## Batch script entry points
+
+The batch scripts are installed outside the repository. Set `$BATCH_SCRIPTS` to their
+installation directory and use one JSON configuration to name the repository, base and tip,
+ordered chains, resource checkout and revision, environments, baselines, CPU allocations,
+ports and artifact directories. Paths in that configuration must be absolute. Use complete
+commit SHAs and fresh worktree paths under `$WORKTREES`.
+
+Every entry point requires a distinct attempt name:
+
+```sh
+"$BATCH_SCRIPTS/restack" ranges.json --attempt source-plan --plan
+"$BATCH_SCRIPTS/restack" ranges.json --attempt source-stack
+```
+
+`--plan` records intended work without compiling or executing tests. It does not prove that
+ranges apply without conflicts. Remove it only when that stage is authorized. `collect`
+reads existing results and does not take `--plan`.
+
+| Entry point | Input and action |
+|---|---|
+| `restack` | Read ordered `{id, range: "START..END", title}` entries. Rebase each range onto the preceding result in a detached worktree with recorded-resolution reuse disabled. On conflict, save hunks, index stages and the stopped patch, abort and HOLD. Never skip or resolve a chain automatically. After every chain succeeds, write `LINEAR-CONFIG.json`. |
+| `assemble` | Consume a linear configuration. Prove adjacent ancestry intervals cover every source commit exactly once, then replay them in order. Apply an optional final release commit last. |
+| `check-ends` | Run `cargo check --workspace --all-targets` at every chain endpoint and the optional release endpoint. Retain every exit, including compiler failures. |
+| `static` | Run formatting, workspace/all-target Clippy with warnings denied, and the core/WASM target check on the exact tip. |
+| `incremental` | Select tests from actual inventories and run both base and candidate once in both parity modes. Count only entries whose filter status is `matches`. Never reuse an earlier base execution. |
+| `prepare` | Build Native binaries and browser artifacts in separate worktrees. Retain dependency order within each lane, both parity inventories and artifact hashes. |
+| `full` | Require exact-tip endpoint, static and paired incremental results plus the prepared manifest hash. Consume that manifest once and run official, seeded and browser lanes on disjoint CPU allocations without retries. |
+| `collect` | Compare inventories and results with the baselines. Write summary JSON, complete nonPASS frames and a report. Partial coverage cannot qualify. |
+| `land` | Require external approval bound to the tested tip. Create one local commit per chain with `git commit-tree`, followed by the optional release commit. Verify the final tree equals the tested tree. Print the push command without executing it. |
+
+After `restack`, use its generated linear configuration for `assemble`. Change only destination
+worktree and output paths when allocating the next stage. If `assemble` changes commit IDs,
+use its exact resulting tip and endpoints for subsequent stages. Any source restack invalidates
+previous endpoint, static, incremental and prepared results.
+
+```sh
+"$BATCH_SCRIPTS/assemble" linear.json --attempt assembly
+"$BATCH_SCRIPTS/check-ends" execution.json --attempt endpoints
+"$BATCH_SCRIPTS/static" execution.json --attempt static
+"$BATCH_SCRIPTS/incremental" execution.json --attempt paired
+"$BATCH_SCRIPTS/prepare" execution.json --attempt artifacts
+"$BATCH_SCRIPTS/full" execution.json --attempt verification
+"$BATCH_SCRIPTS/collect" execution.json --attempt report
+"$BATCH_SCRIPTS/land" execution.json --attempt local-landing
+```
+
+These commands show the order, not blanket authorization to run every stage. Freeze the
+prepared manifest path/hash and prerequisite result hashes in the execution configuration
+before `full`. Keep canonical environments and SHA-contract suppliers byte-identical. Do not
+wrap suppliers to set affinity. The outer runner supplies the replay CPU inside its lane.
+
+### Preparation requirements
+
+- Every worktree must contain an `OrcaSlicer` resource symlink to the configured pinned upstream
+  checkout. Verify the link target and resource revision before building.
+- Set `CARGO_TARGET_DIR` to `<worktree>/target` for every Cargo command in that worktree.
+  Native and browser lanes have separate worktrees, not separate target directories elsewhere.
+  Fixtures and browser producers discover sibling binaries and generated files under this root.
+- Build Native binaries alongside the ordered browser preparation lane. The browser lane runs
+  dependency installation, the release CLI build, Rust fixtures, the print-config-definition
+  producer, WASM, app assets, the fixture binary and test inventory listing. Do not copy prior
+  bindings or distribution files to make preparation pass.
+- Read the expected version from `[workspace.package].version` in the prepared worktree's
+  `Cargo.toml`. Require its `Ares <version>` marker in the target release WASM, the package
+  `dist/ares_wasm_bg.wasm`, and every app `dist/assets/ares_wasm_bg*.wasm`. Scan all files in
+  `web/packages/ares-wasm-js/dist` and `web/app/dist/assets` for other Ares generator versions.
+  Missing required files, missing current markers or mixed versions HOLD before manifest creation.
+  This scan covers generated outputs, not arbitrary historical strings throughout the repository.
+- Set `web_environment.ARES_E2E_NIXPKGS` to the pinned nixpkgs source. Run Playwright through
+  `web/e2e/webkit-env.sh`, including mobile WebKit projects, so the bundled browser receives its
+  runtime libraries. Also provide the explicit SHA-bound Native suppliers in the web environment.
+- Use `web/playwright.config.ts` from the tested repository. Override workers, retries, output
+  directories and reporters through Playwright CLI flags. Do not generate an out-of-tree config.
+  Keep the configured port consistent with the repository's baseURL and preview server URL.
+- Before launching the browser lane and after its owned processes exit, run
+  `ss -H -ltn 'sport = :<port>'`. The check passes only when the command succeeds and its output
+  is empty. TIME_WAIT sockets are not listeners. Never kill unrelated processes to free a port.
+
+### Outcomes and closeout
+
+Each attempt directory is exclusive. Keep failed attempts, commands, raw logs and actual exits.
+A preparation failure is not a test result. Do not retry an executed test to replace its outcome.
+
+Stop owned processes on an unapproved baseline PASS becoming nonPASS, a failing unpaired new
+test, an abnormal terminal outcome, an unapproved Native signal or a CPU escape. Preserve the
+stopping frame, signals, interrupted terminals and missing tests. A stopped run remains incomplete.
+
+Report actual PASS-to-FAIL changes, new tests, removals, approved predecessor/successor pairs and
+inventory counts. Keep complete browser errors, configuration streams and artifacts. An explicit
+exception permits proceeding but does not turn an actual FAIL into PASS. Baseline carry-forward
+or rename approval establishes neither byte equality nor causal attribution. Never weaken a
+comparator or silently omit a test.
+
 ## Standing rules
 
 - **Git.**
