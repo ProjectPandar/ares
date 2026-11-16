@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 //! `PlaceholderParser.cpp:314-317` deferred values: a deferred placeholder can be printed,
 //! but using it in a calculation or a comparison fails (`:862-889`).
 

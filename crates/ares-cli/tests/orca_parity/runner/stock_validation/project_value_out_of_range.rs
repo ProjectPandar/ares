@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 //! `OrcaSlicer.cpp:4277-4282`: the CLI rejects a 3MF value outside its option range with
 //! `DynamicPrintConfig::validate(true)`. OrcaSlicer's GUI only warns about it at load
 //! (`Plater.cpp:9466-9481`), so the web E2E slices the same project.

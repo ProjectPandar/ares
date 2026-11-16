@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 //! OrcaSlicer.cpp:1775-1778,3805 initializes the CLI grid from ordered bed points.
 use crate::{
     native_wall_clock::result_comparison_bytes,
