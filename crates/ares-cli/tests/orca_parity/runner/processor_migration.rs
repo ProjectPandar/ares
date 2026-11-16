@@ -9,6 +9,10 @@ use serde_json::{Map, Value};
 mod klipper_m204;
 #[path = "processor_migration/klipper_waits.rs"]
 mod klipper_waits;
+#[path = "processor_migration/long_preheating.rs"]
+mod long_preheating;
+#[path = "processor_migration/pause_sequence.rs"]
+mod pause_sequence;
 #[path = "processor_migration/roles.rs"]
 mod roles;
 #[path = "processor_migration/stops.rs"]
