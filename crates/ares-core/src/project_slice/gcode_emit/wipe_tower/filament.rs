@@ -43,7 +43,7 @@ impl Filament {
     pub(super) fn from_config(
         settings: &ProjectSettings,
         index: usize,
-        retract_speed: f32,
+        (retract_length, retract_speed): (f32, f32),
     ) -> Self {
         let g = &settings.filament.gcode;
         let p = &settings.filament.print;
@@ -91,7 +91,7 @@ impl Filament {
             ramming_speeds: Vec::new(),
             multitool_ramming: false,
             multitool_ramming_time: 0.0,
-            retract_length: at(&settings.project.gcode.retraction_length.0, index).0 as f32,
+            retract_length,
             retract_speed,
             interface_distance: at(&g.filament_tower_interface_pre_extrusion_dist.0, index).0
                 as f32,
