@@ -196,7 +196,8 @@ impl PresetCatalogHandle {
     /// `PresetSelectCompatibleType::Always`: `current` while compatible, else the best
     /// `PreferedPrintProfileMatch` against `current` and the printer's `default_print_profile`
     /// (`PresetBundle.cpp:8635-8639`), or the initialized collection default
-    /// when no ordinary print is compatible.
+    /// when no ordinary print is compatible. A `current` that names no loaded print, such as
+    /// `""`, is a cleared selection (`Preset.cpp:4335-4357`).
     pub fn compatible_print(
         &self,
         printer: &str,
