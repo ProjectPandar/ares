@@ -2,7 +2,7 @@
  * The dual-extruder sidebar (Sidebar::priv::layout_printer, Plater.cpp:584-660): per-nozzle
  * diameter and volume type, and the filament-to-nozzle map (FilamentGroupPopup, FilamentMapDialog).
  */
-import { filamentNames, firstString, presetFilamentSlots, stringList } from "../sidebar/options";
+import { filamentNames, firstString, stringList } from "../sidebar/options";
 import { setOverride } from "./actions";
 import { saveConfig, storedConfig } from "./persistence";
 import { saveSelection } from "./presets";
@@ -35,7 +35,7 @@ export interface ExtruderState {
 /** The project config values of the selection, or of the project with its edits. */
 export function extruderState(): ExtruderState {
   const { presetSelection: selection, scene, overrides } = useApp.getState();
-  const slots = selection ? presetFilamentSlots(scene?.settings ?? null) : filamentNames(scene?.settings ?? null).length;
+  const slots = selection ? selection.filaments.length : filamentNames(scene?.settings ?? null).length;
   const project = scene?.settings?.project;
   const edited = (key: string) => overrides[key] as string | string[] | undefined;
   const volumeTypes = selection?.nozzleVolumeTypes ?? (edited("nozzle_volume_type") as string[] | undefined) ?? stringList(project, "nozzle_volume_type");
