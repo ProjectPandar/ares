@@ -16,7 +16,7 @@ fn used_extruders_select_volume_columns_and_pad_colors() {
         ..MoveVertex::default()
     };
     let mut result = GCodeProcessorResult {
-        moves: vec![MoveVertex::default(), extrude(2), extrude(0)],
+        moves: vec![MoveVertex::default(), extrude(2), extrude(0)].into(),
         print_statistics: PrintEstimatedStatistics {
             model_volumes_per_extruder: vec![1000.0, 5.0, 2000.0],
             support_volumes_per_extruder: vec![0.0, 0.0, 300.0],
