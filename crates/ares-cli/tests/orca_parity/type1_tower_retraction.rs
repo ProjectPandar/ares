@@ -97,7 +97,7 @@ fn sequence(text: &str) -> Vec<&str> {
         "entry and wall must both retract"
     );
     assert_eq!(result.len() % 2, 0, "paired tower retractions");
-    for pair in result.chunks_exact(2) {
+    for pair in result.chunks(2) {
         let negative = pair[0].strip_prefix("G1 E-").unwrap();
         assert_eq!(
             pair[1].strip_prefix("G1 E"),
@@ -137,7 +137,7 @@ fn check(overridden: bool) {
     } else {
         "G1 E-0.8000 F1800"
     };
-    assert!(native.chunks_exact(2).all(|pair| pair[0] == retract));
+    assert!(native.chunks(2).all(|pair| pair[0] == retract));
     fs::write(
         case.root.join("sequences.json"),
         serde_json::to_vec_pretty(&json!({
