@@ -62,20 +62,24 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 ),
                 "same_id" => (
                     json!(["2", "2"]),
-                    json!(["Direct Drive High Flow", "Direct Drive High Flow"]),
+                    json!(["Bowden Standard", "Bowden Standard"]),
                     json!(["500", "200"]),
                 ),
                 "equal_speed" => (
-                    json!(["7", "7"]),
+                    json!(["7"]),
                     json!(["Direct Drive Standard", "Direct Drive Standard"]),
                     json!(["200", "200"]),
                 ),
                 _ => (
-                    json!(["7", "7"]),
+                    json!(["7"]),
                     json!(["Direct Drive Standard", "Direct Drive Standard"]),
                     json!(["500", "200"]),
                 ),
             };
+            if !singleton {
+                settings["extruder_variant_list"] =
+                    json!(["Direct Drive Standard", "Direct Drive Standard"]);
+            }
             settings["print_extruder_id"] = ids;
             settings["print_extruder_variant"] = variants;
             settings["outer_wall_speed"] = speeds;
@@ -170,6 +174,38 @@ fn compare(case: &str) {
         &hash,
         false,
     );
+    if case != "singleton" {
+        assert!(native.native.contains("\n; filament_map = 2\n"));
+        let (ids, variants, speeds) = match case {
+            "matched" => (
+                "1,2",
+                "\"Direct Drive Standard\";\"Direct Drive Standard\"",
+                "500,200",
+            ),
+            "same_id" => ("2,2", "\"Bowden Standard\";\"Bowden Standard\"", "500,500"),
+            "equal_speed" => (
+                "7,7",
+                "\"Direct Drive Standard\";\"Direct Drive Standard\"",
+                "200,200",
+            ),
+            _ => (
+                "7,7",
+                "\"Direct Drive Standard\";\"Direct Drive Standard\"",
+                "500,200",
+            ),
+        };
+        for (key, value) in [
+            ("print_extruder_id", ids),
+            ("print_extruder_variant", variants),
+            ("outer_wall_speed", speeds),
+        ] {
+            assert!(
+                native.native.contains(&format!("\n; {key} = {value}\n")),
+                "finalized {key}: {:?}",
+                native.root
+            );
+        }
+    }
     let native_wipe = wipe(native.native.as_bytes());
     assert!(
         native_wipe
