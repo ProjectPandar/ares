@@ -268,6 +268,7 @@ mod processor_migration;
 #[cfg(test)]
 #[path = "runner/profile_entry.rs"]
 mod profile_entry;
+#[cfg(target_os = "linux")]
 pub(crate) use profile_entry::placed_cube;
 #[cfg(test)]
 #[path = "runner/native_api_cli.rs"]
