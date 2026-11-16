@@ -9,7 +9,7 @@ use std::{
 
 const BASE: &[u8] = include_bytes!("../../../../tests/parity/bbl-type1-tower/enabled.3mf");
 
-fn project(overridden: bool) -> Vec<u8> {
+pub(super) fn project(overridden: bool) -> Vec<u8> {
     assert_eq!(
         crate::runner::native_api_cli::sha(BASE),
         "ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506"
