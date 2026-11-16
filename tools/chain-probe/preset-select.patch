@@ -25,7 +25,7 @@
 +void sync_loaded_project_filament_config(DynamicConfig& proj_cfg)
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,252 @@
+@@ -0,0 +1,265 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
@@ -187,11 +187,24 @@
 +// A pick in a sidebar combo after the load: the collection selection of Tab::select_preset (Tab.cpp:7701-7714)
 +// for the printer and the process; PresetBundle::set_filament_preset for a filament slot
 +// (Plater::priv::on_select_preset), and the tab's selection for a single filament.
-+inline void select(PresetBundle &presets, const Json &selection)
++inline void select(PresetBundle &presets, AppConfig &app, const Json &selection)
 +{
 +    if (selection.contains("printer")) {
++        const int extruders_count = presets.get_printer_extruder_count();
 +        presets.printers.select_preset_by_name(selection.at("printer").get<std::string>(), false);
 +        presets.update_compatible(PresetSelectCompatibleType::Always, PresetSelectCompatibleType::Always);
++        // Tab::select_preset (Tab.cpp:7740-7742): with remember_printer_config, on by default (AppConfig.cpp:544-545),
++        // PresetBundle::update_selections (PresetBundle.cpp:3914-4017) restores the print, filaments and colours the
++        // AppConfig remembers for the printer, then runs update_compatible and update_multi_material_filament_presets
++        // (4002-4003); the session AppConfig is never loaded, so the printer is never used.
++        if (app.get_bool("remember_printer_config"))
++            presets.update_selections(app);
++        // Tab::load_current_preset (Tab.cpp:7744, 7248) runs TabPrinter::on_preset_loaded: a nozzle_diameter count
++        // other than the tab's extruder count (Tab.cpp:6455-6460) runs TabPrinter::extruders_count_changed
++        // (Tab.cpp:5866-5872), PresetBundle::on_extruders_count_changed (PresetBundle.cpp:8590-8595), which pads
++        // filament_presets to min_filament_count() in update_multi_material_filament_presets (PresetBundle.cpp:8598-8617).
++        if (presets.get_printer_extruder_count() != extruders_count)
++            presets.on_extruders_count_changed(presets.get_printer_extruder_count());
 +    }
 +    if (selection.contains("process")) {
 +        presets.prints.select_preset_by_name(selection.at("process").get<std::string>(), false);
@@ -254,7 +267,7 @@
 +                if (project.contains("wizard"))
 +                    wizard(presets, app, project.at("wizard"));
 +                if (project.contains("select"))
-+                    select(presets, project.at("select"));
++                    select(presets, app, project.at("select"));
 +                if (project.contains("process_edit"))
 +                    edit_process(presets, project.at("process_edit"));
 +            }
