@@ -90,6 +90,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                 &traversal.resolved.views.full,
                 &traversal.project.documents().project_settings_raw,
                 &used,
+                is_bbl,
             )?
         };
         if static_views.is_some()
