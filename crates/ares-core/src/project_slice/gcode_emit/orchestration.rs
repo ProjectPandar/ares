@@ -101,13 +101,22 @@ pub(in crate::project_slice) fn emit(
         Some(initial_filaments.compat_temperatures(traversal)),
         &mut export_config,
     )?;
+    // GCode.cpp:3585: one stream per emission, seeded in the GCode constructor, so it
+    // is available to file start (:4230-4231) before machine start (:4381) and is not
+    // the fuzzy stream.
+    let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
+        crate::slicer_context::Mt19937::new(context.seed()),
+    ));
     let mut output = Vec::new();
     file_start::append(
         &mut output,
-        traversal,
-        metadata,
-        first_layer_bounds,
-        sliced_layer_count,
+        file_start::FileStart {
+            traversal,
+            metadata,
+            first_layer_bounds,
+            layer_count: sliced_layer_count,
+            template_rng: &template_rng,
+        },
     )?;
     let tags = preamble::append(
         &mut output,
@@ -140,10 +149,6 @@ pub(in crate::project_slice) fn emit(
             .0
             .len(),
     );
-    // GCode.cpp:2707: independent PlaceholderParser context, not the fuzzy stream.
-    let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
-        crate::slicer_context::Mt19937::new(context.seed()),
-    ));
     let mut state = motion::EmitState {
         total_layer_count: tail_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
