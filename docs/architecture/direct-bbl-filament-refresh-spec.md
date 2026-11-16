@@ -17,7 +17,8 @@ The rewrite boundary is the Native direct project load/refresh path in `OrcaSlic
 - `3510–3545`: validate/regenerate `filament_self_index` and normalize variant-aware values;
 - `3639–3701` and `3753–3759`: apply retained and newly supplied per-filament variant segments;
 - `3823–3845`: rebuild `filament_self_index` from the resulting variant counts;
-- `2805–2807`: unresolved system preset warning and keep-slot behavior.
+- `2805–2807`: unresolved system preset log and keep-slot behavior;
+- `libslic3r/PrintBase.hpp:66–75`: the slicing-notification enum, which has no unresolved-system-preset variant.
 
 The exact unresolved-preset source behavior is:
 
@@ -55,9 +56,9 @@ Non-BBL 3MF input, STL input, and `ProjectInput::Model` behavior are unchanged.
 
 A BBL/Orca 3MF with `None` is not allowed to silently use the old direct path. It returns a dedicated missing-system-bundle `SliceError` before effective-config resolution. This makes the missing dependency explicit at the public boundary and prevents a false parity result. The error must identify that a system preset bundle is required for direct BBL/Orca 3MF slicing; it must not be a generic preset-not-found error.
 
-With `Some(bundle)`, each embedded filament system name is resolved in slot order. A named preset that is absent from the supplied bundle follows Native `OrcaSlicer.cpp:2805–2807`: preserve that slot's existing values, emit an unresolved-system-filament warning through the existing public warning path, and continue resolving later slots. No slot compaction or fallback to a different preset is allowed.
+With `Some(bundle)`, each embedded filament system name is resolved in slot order. A named preset that is absent from the supplied bundle follows Native `OrcaSlicer.cpp:2805–2807`: preserve that slot's existing values and continue resolving later slots. Native emits `BOOST_LOG_TRIVIAL(warning)` at line 2806; this is a diagnostic log, not a slicing notification or an exception. No slot compaction or substitution with another preset is allowed.
 
-The existing public warning transport is `SlicedPlate.warnings` (`crates/ares-core/src/project_slice/source.rs:27–39`) and the `PrintWarning` vocabulary (`crates/ares-core/src/print/warnings.rs`). B1 should extend that existing warning vocabulary/serialization as needed for an unresolved system filament; it must not introduce a parallel warning channel. CLI-aware direct calls already carry `SlicedPlate` and expose it through the existing result/report path. Plain direct byte APIs must preserve their current return shape; if they cannot carry a warning, the shared direct seam still records it for the CLI-aware path and must not convert a missing named preset into a silent success. The exact warning representation is part of the implementation review, but a second refresh or implicit fallback is prohibited.
+Do not create an unresolved-system-preset `PrintWarning`. `PrintBase.hpp:66–75` defines notification values 0 through 6; value 3 belongs to `SlicingEmptyGcodeLayers`. Its enum has no unresolved-preset variant. Keep `SlicedPlate.warnings` for source-defined slicing notifications and leave direct byte API return shapes unchanged. The public behavior to verify on a resolver miss is the preserved slot, successful continuation and complete Native-equivalent output, not an invented warning transport.
 
 The refresh must run before direct effective-config resolution and CONFIG block serialization, after the embedded project has been loaded and metadata classified. Caller overrides retain their current ordering. The implementation may share the lower-level preset-chain and filament variant replacement primitives with `ProjectPresetRefresh`; it must not construct or call the selected-profile refresh orchestration, because that path already owns project-derived selection and would apply a second refresh.
 
@@ -93,7 +94,7 @@ B1 implementation requires WEB coordination for the shared batch even though B1 
 
 ## Existing tests affected by B1
 
-The direct-call inventory is retained at `/home/indexyz/ares-evidence/w3-geometry-variant-layout-7505e5b56/slice-b-direct-callers.log` and the fixture context at `/home/indexyz/ares-evidence/w3-geometry-variant-layout-7505e5b56/slice-b-spec-test-context.log`. Every direct 3MF test must make the bundle dependency explicit. Tests using STL or a non-BBL project remain unchanged and are listed to prevent accidental scope expansion.
+The direct-call inventory and fixture contexts are listed below. Every direct 3MF test must make the bundle dependency explicit. Tests using STL or a non-BBL project remain unchanged and are listed to prevent accidental scope expansion.
 
 | Existing test/caller | B1 disposition | Reason |
 |---|---|---|
@@ -111,7 +112,7 @@ The direct-call inventory is retained at `/home/indexyz/ares-evidence/w3-geometr
 | `orca_parity::print_validation::bed_compatibility_controls.rs` | Leave STL-only calls unchanged; pass a bundle only for any BBL 3MF branch | Its direct API coverage includes STL validation. The B1 predicate is input-format and metadata based, not caller-name based. |
 | `orca_parity::runner::application::project_presets.rs` and `support/project_preset_catalog.rs` | Keep the supplied-catalog/profile branch; change the `None` direct branch to pass the bundle or assert missing-bundle explicitly | This helper intentionally has two modes. The project-supply mode already uses `slice_with_profiles`; it must not receive a second refresh. |
 
-The B1 test additions are exactly the three hull cases run through the public direct API with a supplied bundle, plus one BBL/Orca direct call with `None` asserting the dedicated missing-bundle error. A supplied-bundle unresolved-name case should also assert the existing warning channel and slot preservation if the current warning fixture can exercise Native `2805–2807`; otherwise it is a focused follow-up test within B1, not a changed expectation.
+The B1 test additions are exactly the three hull cases run through the public direct API with a supplied bundle, plus one BBL/Orca direct call with `None` asserting the dedicated missing-bundle error. A supplied-bundle unresolved-name case must exercise Native `2805–2807`, assert slot preservation and compare complete output. It must not require a `PrintWarning` for Native's diagnostic-only log.
 
 ## Base/tip inventory acceptance
 
