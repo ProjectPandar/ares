@@ -26,14 +26,6 @@ export function filamentNames(settings: ProjectSettings | null): string[] {
   return names.length ? names : stringList(settings?.project, "filament_settings_id");
 }
 
-/**
- * Filament combos of a preset selection: one per project filament, at least the first
- * (Plater.cpp:2188-2191; PresetBundle.cpp:435-436 keeps the selected filament).
- */
-export function presetFilamentSlots(settings: ProjectSettings | null): number {
-  return Math.max(1, filamentNames(settings).length);
-}
-
 export function isBoolean(value: unknown): value is boolean {
   return typeof value === "boolean";
 }

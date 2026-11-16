@@ -18,6 +18,14 @@ export interface PrinterSettings {
   filaments: string[];
   /** `curr_bed_type`, a `curr_bed_type` enum value. */
   bedType?: string;
+  /** `filament_colors`, `filament_multi_colors`, `filament_color_types`: the project palette (PresetBundle.cpp:4264-4273). */
+  filamentColours?: string[];
+  filamentMultiColours?: string[];
+  filamentColourTypes?: string[];
+  /** `flush_volumes_matrix`, `flush_volumes_vector`, `flush_multiplier`, each value std::to_string's six decimals (4279-4292). */
+  flushVolumesMatrix?: number[];
+  flushVolumesVector?: number[];
+  flushMultiplier?: number[];
 }
 
 export interface StoredConfig {
@@ -61,9 +69,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isStrings = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 const isOptionalString = (value: unknown) => value === undefined || typeof value === "string";
+const isOptionalStrings = (value: unknown) => value === undefined || isStrings(value);
+const isOptionalNumbers = (value: unknown) => value === undefined || (Array.isArray(value) && value.every((item) => typeof item === "number"));
 
 function isPrinterSettings(value: unknown): value is PrinterSettings {
-  return isRecord(value) && isOptionalString(value.process) && isStrings(value.filaments) && isOptionalString(value.bedType);
+  return isRecord(value) && isOptionalString(value.process) && isStrings(value.filaments) && isOptionalString(value.bedType)
+    && [value.filamentColours, value.filamentMultiColours, value.filamentColourTypes].every(isOptionalStrings)
+    && [value.flushVolumesMatrix, value.flushVolumesVector, value.flushMultiplier].every(isOptionalNumbers);
 }
 
 function isStoredConfig(value: Record<string, unknown>): boolean {
