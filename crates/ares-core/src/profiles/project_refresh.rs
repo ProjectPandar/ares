@@ -8,7 +8,7 @@ pub(crate) use filament::{dev_key as is_filament_dev_key, set_filament_dev_optio
 
 use std::collections::BTreeMap;
 
-use super::{Placement, project_selection::LoadedCatalog};
+use super::{Placement, catalog::Catalog, project_selection::LoadedCatalog};
 use crate::{
     ConfigOverrides, Project, ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
