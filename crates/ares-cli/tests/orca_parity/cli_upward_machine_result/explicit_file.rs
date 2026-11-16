@@ -133,6 +133,7 @@ fn exercise(label: &str, empty_inherits: bool, entry: Entry) {
             let file = LoadSettingsFile {
                 label: "machine.json",
                 json: &machine,
+                source_identity: None,
             };
             let api = UpwardMachineSource::from_project(&input)
                 .unwrap()

@@ -157,7 +157,7 @@ impl Catalog {
             .get(&(kind, name.to_owned()))
             .ok_or_else(|| invalid(format!("selectable profile '{name}' was not found")))?;
         // Typed sparse files bypass preset resolution (OrcaSlicer.cpp:2121-2123).
-        let layers = if self.direct_imports {
+        let layers = if self.records[position].direct {
             vec![Cow::Borrowed(self.document(position))]
         } else {
             self.resolved_layers(position)?
@@ -215,10 +215,10 @@ impl Catalog {
             }
             fragments.push(fragment);
         }
-        let mut merged = if self.direct_imports {
+        let mut merged = if self.records[position].direct {
             merge_direct_profile_fragment(&fragments, kind, &self.document(position).name)?
         } else {
-            merge_profile_fragments(&fragments, kind, name)?
+            merge_profile_fragments(&fragments, kind, &self.document(position).name)?
         };
         if kind == ProfileKind::Process && !self.direct_imports && self.is_user_scope(position) {
             // Preset.cpp:1925–1944: user process completion precedes CLI variant selection.

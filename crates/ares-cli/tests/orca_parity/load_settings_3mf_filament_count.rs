@@ -151,10 +151,12 @@ async fn run_case(empty: bool, count: usize) {
         LoadSettingsFile {
             label: machine.to_str().unwrap(),
             json: &machine_json,
+            source_identity: None,
         },
         LoadSettingsFile {
             label: process.to_str().unwrap(),
             json: &process_json,
+            source_identity: None,
         },
     ];
     let filaments = filament_paths
@@ -163,6 +165,7 @@ async fn run_case(empty: bool, count: usize) {
         .map(|(path, json)| LoadSettingsFile {
             label: path.to_str().unwrap(),
             json,
+            source_identity: None,
         })
         .collect::<Vec<_>>();
     let mut sliced_plate = ares_core::SlicedPlate::default();
@@ -172,6 +175,7 @@ async fn run_case(empty: bool, count: usize) {
             orient: false,
             filename: "input.3mf",
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             settings: &settings,
             filaments: &filaments,
