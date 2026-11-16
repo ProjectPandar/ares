@@ -5,6 +5,48 @@ use super::{CaseInputs, ExportedCase, OrcaRunner, application, repo_root};
 use crate::{self as parity, golden, presets::VendorProfiles};
 use serde_json::Value;
 use std::io::{Cursor, Read, Write};
+use std::path::PathBuf;
+
+/// SHA-256 of the seed-replay executable the seeded reference must report against
+/// when the environment does not pin `ARES_ORCA_SEEDED_NATIVE_SHA256`. See
+/// `docs/architecture/seeded-oracle-identity-assertion-spec.md`.
+const SEEDED_NATIVE_SHA256: &str =
+    "84a7780653be3b46fe909e43ae98b3576907c561e8ff337c208ff97c2b23a84a";
+
+/// The reference must come from the seed replay, not from the official release: the
+/// launcher has to route through `ORCA_REPLAY_BIN`, it has to be the launcher the
+/// environment declares, and the native binary compared against has to be that build.
+#[track_caller]
+fn assert_seeded_oracle(runner: &OrcaRunner) {
+    let launcher = std::fs::read_to_string(runner.bin()).unwrap_or_else(|error| {
+        panic!(
+            "seed launcher {:?} is not a readable wrapper: {error}",
+            runner.bin()
+        )
+    });
+    assert!(
+        launcher.contains("setarch -R \"$ORCA_REPLAY_BIN\""),
+        "seed launcher {:?} does not run \"$ORCA_REPLAY_BIN\" under setarch",
+        runner.bin()
+    );
+    if let Some(declared) = std::env::var_os("ARES_ORCA_SEEDED_BIN") {
+        let declared = PathBuf::from(declared).canonicalize().unwrap();
+        assert_eq!(
+            runner.bin(),
+            &declared,
+            "ARES_ORCA_BIN is not the launcher ARES_ORCA_SEEDED_BIN declares"
+        );
+    }
+    let native = std::env::var_os("ARES_ORCA_NATIVE_BIN")
+        .expect("the seeded lane must name ARES_ORCA_NATIVE_BIN");
+    let expected = std::env::var("ARES_ORCA_SEEDED_NATIVE_SHA256")
+        .unwrap_or_else(|_| SEEDED_NATIVE_SHA256.to_owned());
+    assert_eq!(
+        crate::runner::native_api_cli::sha(&std::fs::read(&native).unwrap()),
+        expected,
+        "ARES_ORCA_NATIVE_BIN {native:?} is not the seed-replay build"
+    );
+}
 
 #[test]
 fn initialized_loop_chain_matches_complete_output() {
@@ -21,13 +63,7 @@ fn initialized_loop_chain_matches_complete_output() {
         .parse::<u32>()
         .unwrap();
     let runner = OrcaRunner::from_env().unwrap().unwrap();
-    assert_eq!(
-        runner.bin(),
-        &repo_root()
-            .join("scripts/orca-seeded-parity.sh")
-            .canonicalize()
-            .unwrap()
-    );
+    assert_seeded_oracle(&runner);
     let directory = tempfile::tempdir().unwrap();
     let model = directory.path().join("three-posts-on-plate.stl");
     std::fs::write(&model, model::plate()).unwrap();
@@ -111,7 +147,15 @@ fn initialized_loop_chain_matches_complete_output() {
     let project_path = runner.work.join("loop-chain.3mf");
     std::fs::write(&project_path, &project).unwrap();
     for (key, value) in settings {
-        application::verify_value(&project, key, &Value::String(value.into())).unwrap();
+        // `PrintConfig.cpp:1959,1967`: both keys are `coBools`, so the exported project keeps
+        // one value per extruder instead of the scalar the CLI override carries.
+        let requested = match key {
+            "enable_overhang_speed" | "slowdown_for_curled_perimeters" => {
+                Value::Array(vec![Value::String(value.into())])
+            }
+            _ => Value::String(value.into()),
+        };
+        application::verify_value(&project, key, &requested).unwrap();
     }
     assert_eq!(
         application::settings(&project).unwrap()["slow_down_layer_time"],
