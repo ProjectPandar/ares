@@ -1,8 +1,8 @@
 # KSR direct retained refresh order — conditional rewrite slice
 
-## Status and baseline
+## Scope
 
-COORD authorized branch `w3/ksr-timelapse-alignment` at B59-22 tip `b54e738fa3a6ef328933774374b089f01ded5dae`, ordered after B59-22. The initially requested main baseline did not contain its catalog seam; this baseline adjustment avoids reimplementing that chain. The source boundary is retained-preset construction, not a new timelapse or timing subsystem.
+The source boundary is retained-preset construction on the direct catalog-bearing project seam, not a new timelapse or timing subsystem.
 
 ## Exact observed branch
 
@@ -14,8 +14,7 @@ All source citations below are actual lines in the complete `40ecc66f78ed72dc368
 
 ## First executable divergence, line by line
 
-Artifacts under `/home/indexyz/ares-evidence/w3-geometry-variant-layout-7505e5b56/`:
-`ksr-native-base-official.gcode` and `ksr-time-owner/cli.gcode` (the latter is byte-identical to browser).
+The following compares Native output with direct catalog slicing before the load-order fix. The browser uses that same direct core seam.
 
 | Native line(s) | Ares line(s) | Meaning |
 |---|---|---|
@@ -45,13 +44,13 @@ Ares does not omit all snapshots: its first is delayed to line 3090, `M9711 M0 E
 
 `OrcaSlicer.cpp:3164–3200` constructs retained printer/process presets from collection defaults, project membership and current system resolution; missing saved options receive the current system value. X2D therefore supplies the absent timelapse flag as 1.
 
-B59-22 direct loading currently calls `project::load_project_with_preparation` before `refresh_direct`. `project/load.rs:86–90,191–193` materializes retained defaults first; printer option `gcode_source.rs:78` supplies 0. `profiles/project_refresh/preset.rs:50–57` then preserves this now-present key when `refresh_unlisted=false`. The direct loader has erased original membership before catalog refresh. The profile-owned loader already avoids this by using `load_project_for_profiles` and only applying remaining collection defaults after refresh (`profiles/project_refresh.rs:172–194`).
+Direct catalog loading previously called `project::load_project_with_preparation` before `refresh_direct`. `project/load.rs:86–90,191–193` materializes retained defaults first; printer option `gcode_source.rs:78` supplies 0. `profiles/project_refresh/preset.rs:50–57` then preserves this now-present key when `refresh_unlisted=false`. The direct loader has erased original membership before catalog refresh. The profile-owned loader already avoids this by using `load_project_for_profiles` and only applying remaining collection defaults after refresh (`profiles/project_refresh.rs:172–194`).
 
 This is the same ordering contract documented by `retained-project-preset-membership.md` and explicitly deferred for original KSR in `2026-11-13-farthest-point-snapshot-wall-paths.md:81–83`. Do not work around it by forcing the flag, changing its default, moving snapshots, or adding KSR-specific conditionals.
 
 ## Conditional implementation boundary
 
-Defer retained default construction for catalog-bearing direct BBL loads until after existing system refresh, then fill remaining defaults and apply caller overrides. Preserve the non-BBL/no-catalog and explicitly selected-profile boundaries, preparation snapshot, warnings, connection credential exclusion, missing-bundle error and unresolved resolver-miss semantics. Reuse existing upstream-owned constructors; core remains I/O-free.
+Defer retained default construction for catalog-bearing direct BBL loads until after existing system refresh, then fill remaining defaults and apply caller overrides. Preserve the non-BBL/no-catalog and explicitly selected-profile boundaries, preparation snapshot, genuine slicing warnings, connection credential exclusion and missing-bundle error. An unresolved filament keeps its slot without a new `PrintWarning`: `OrcaSlicer.cpp:2805–2807` only logs and continues, and `PrintBase.hpp:66–75` has no such notification. Reuse existing upstream-owned constructors; core remains I/O-free.
 
 Included: raw membership ordering at the existing direct project load seam. Deferred: new machine-selection semantics, new timelapse algorithms, geometry ordering and all processor/TimeMachine behavior. Existing typed/raw Ares scaffold remains a temporary compatibility shell around retained Native preset construction.
 
