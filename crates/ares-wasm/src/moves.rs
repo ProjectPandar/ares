@@ -1,8 +1,8 @@
 use crate::MoveBuffers;
 use ares_core::ProcessedGCode;
 use ares_vgcode::{
-    CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, GCodeInputData, MovesSlider,
-    OptionType, SequentialView, ViewerImpl,
+    CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, MovesSlider, OptionType,
+    SequentialView, ViewerImpl,
     convert::{from_processor_result, move_type_counts},
     filament_legend, move_type_to_option,
 };
@@ -25,21 +25,32 @@ pub struct SliceOutput {
 impl SliceOutput {
     /// Tool colors are the result's `extruder_colors`: the `filament_colour`
     /// GUI_Preview passes (`GUI_Preview.cpp:680`, `Plater.cpp:16889-16901`).
-    pub fn from_processed(output: ProcessedGCode) -> Self {
+    pub fn from_processed(mut output: ProcessedGCode) -> Self {
         let result = &output.result;
         let data = from_processor_result(result);
-        let mut vertices = VertexBuffers::pack(data);
-        vertices.move_type_counts = move_type_counts(&result.moves).to_vec();
-        vertices.filament_legend = filament_legend(&vertices.viewer, result);
+        let palettes = (
+            data.spiral_vase_mode,
+            data.tools_colors.as_flattened().to_vec(),
+            data.color_print_colors.as_flattened().to_vec(),
+        );
+        let mut viewer = ViewerImpl::default();
+        viewer.load(data);
+        let move_type_counts = move_type_counts(&result.moves).to_vec();
+        let filament_legend = filament_legend(&viewer, result);
+        let moves = MoveBuffers::pack(&result.moves);
         // `PrintEstimatedStatistics` passes through as JSON — volumes in
         // mm³ dense-indexed by filament id; `total_used_filament` in mm.
         let print_statistics = serde_json::to_vec(&output.result.print_statistics)
             .expect("PrintEstimatedStatistics serializes");
         let estimation = serde_json::to_string(&crate::estimation::Estimation::from(&output))
             .expect("Estimation serializes");
+        drop(std::mem::take(&mut output.result.moves));
+        let mut vertices = VertexBuffers::pack(viewer, palettes);
+        vertices.move_type_counts = move_type_counts;
+        vertices.filament_legend = filament_legend;
         Self {
             gcode: output.gcode,
-            moves: MoveBuffers::pack(&output.result.moves),
+            moves,
             vertices,
             print_statistics,
             estimation,
@@ -124,13 +135,11 @@ pub struct VertexBuffers {
 }
 
 impl VertexBuffers {
-    fn pack(data: GCodeInputData) -> Self {
-        let count = data.vertices.len();
-        let tool_colors = data.tools_colors.as_flattened().to_vec();
-        let color_print_colors = data.color_print_colors.as_flattened().to_vec();
-        let spiral_vase_mode = data.spiral_vase_mode;
-        let mut viewer = ViewerImpl::default();
-        viewer.load(data);
+    fn pack(
+        mut viewer: ViewerImpl,
+        (spiral_vase_mode, tool_colors, color_print_colors): (bool, Vec<u8>, Vec<u8>),
+    ) -> Self {
+        let count = viewer.vertices().len();
         // GCodeViewer::load_as_gcode (GCodeViewer.cpp:1128-1131) with the
         // `seq_top_layer_only` default "1" (AppConfig.cpp:202-203).
         viewer.toggle_top_layer_only_view_range();
