@@ -10,7 +10,7 @@ use ares_vgcode::{DUMMY_COLOR, MoveType, convert::from_processor_result};
 fn empty_and_dummy_results_have_no_vertices() {
     for moves in [vec![], vec![MoveVertex::default()]] {
         let input = from_processor_result(&GCodeProcessorResult {
-            moves,
+            moves: moves.into(),
             spiral_vase_mode: true,
             ..Default::default()
         });
@@ -65,7 +65,7 @@ fn path_starts_use_previous_position_and_zero_time() {
         ..e
     };
     let data = from_processor_result(&GCodeProcessorResult {
-        moves: vec![MoveVertex::default(), a, b, c, d, e, f],
+        moves: vec![MoveVertex::default(), a, b, c, d, e, f].into(),
         spiral_vase_mode: false,
         ..Default::default()
     });

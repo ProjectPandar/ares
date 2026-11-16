@@ -210,8 +210,10 @@ async fn color_change_z_follows_the_next_extrusion_position() {
         .iter()
         .position(|vertex| vertex.move_type == EMoveType::ColorChange)
         .unwrap();
-    let extrusion = output.result.moves[marker + 1..]
-        .iter()
+    let extrusion = output
+        .result
+        .moves
+        .range(marker + 1..output.result.moves.len())
         .find(|vertex| vertex.move_type == EMoveType::Extrude)
         .unwrap();
     assert_eq!(
