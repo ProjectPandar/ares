@@ -93,11 +93,11 @@ key must use the same process selector.
 | --- | --- |
 | Role and first-layer speed, `GCode.cpp:9531–9564,9600–9627` | `inner_wall_speed`, `outer_wall_speed`, `bridge_speed`, `internal_bridge_speed`, `sparse_infill_speed`, `internal_solid_infill_speed`, `top_surface_speed`, `gap_infill_speed`, `support_speed`, `support_interface_speed`, `initial_layer_speed`, `initial_layer_infill_speed`. Existing motion kinematics and region speed assembly. |
 | Small wall loops, `:8588–8592` | `small_perimeter_threshold`, `small_perimeter_speed`, and the selected outer-wall speed. Existing loop/path kinematics. |
-| Small support loops, `:9020–9031` | `small_support_perimeter_threshold`, `small_support_perimeter_speed`, support/interface base speed. Existing support/skirt speed consumers. |
+| Small support loops, `:9020–9031` | `small_support_perimeter_threshold`, `small_support_perimeter_speed`. Deferred: Ares has no corresponding G-code consumer. Existing support/skirt base speed remains in scope. |
 | Overhang processing, `:6997,9693–9765` | `enable_overhang_speed`, `slowdown_for_curled_perimeters`, all four quarter-overhang speed vectors (`overhang_{1_4,2_4,3_4,4_4}_speed`), bridge and inner/outer reference speeds. Existing overhang estimator inputs. |
 | Extrusion acceleration, `:9414–9443` | `default_acceleration`, `initial_layer_acceleration`, `outer_wall_acceleration`, `inner_wall_acceleration`, `top_surface_acceleration`, `bridge_acceleration`, `sparse_infill_acceleration`, `internal_solid_infill_acceleration`. Existing motion region/context acceleration assembly. |
 | Extrusion jerk, `:9449–9462` | `default_jerk`, `initial_layer_jerk`, `outer_wall_jerk`, `inner_wall_jerk`, `top_surface_jerk`, `infill_jerk`. Existing region jerk assembly. |
-| Top infill extrusion flow, `:9481` | `top_solid_infill_flow_ratio`. Existing region flow input. Do not apply this index to filament flow ratio. |
+| Top infill extrusion flow, `:9481` | `top_solid_infill_flow_ratio`. Deferred: pre-generation projection precedes assignment publication. Do not apply this index to filament flow ratio. |
 | Layer/object entry and reset, `:4596–4601,6860–6869,6898–6903` | Outer-wall/default/initial acceleration and jerk plus `default_junction_deviation`. Existing `layers/{boundary,object_entry}.rs` and motion initialization. |
 | Travel acceleration/jerk, `:10523–10556` | `initial_layer_travel_acceleration`, `initial_layer_travel_jerk`, `travel_acceleration`, `travel_jerk`, bridge/outer/default acceleration and outer/default jerk. Initial-layer travel keys are direct resolver reads in addition to the forty-key set. Existing motion travel kinematics. |
 | Skirt/brim requested speed, `:5966–5969,6055,6085,6284` | Selected `support_speed`. Existing `motion/skirt_brim.rs` must not re-index with the physical slot. |
@@ -186,7 +186,11 @@ exposed, report that first difference and stop rather than broadening this port.
 Add a small public Native/API/CLI witness from the public cube10 model and stock
 H2D project. Construct its archive in the test from public bytes, with explicit
 two-column process identities, distinct finite outer-wall speeds, role-based
-Wipe, filament retract length .4 and wipe distance 1. Keep a single object and
+Wipe, filament retract length .4 and wipe distance 1. Reduce each physical
+head's supported variant list to Standard for the minimal witness; otherwise
+stock H2D's wider variant expansion duplicates the first speed into both
+finalized process columns. The unmatched input uses a short `[7]` ID vector;
+Native must independently finalize that to `[7,7]` with speeds `[500,200]`. Keep a single object and
 one used filament mapped to the right physical head. Avoid carrying the broad
 witness's unnecessary original authored variant cardinality into this new case.
 
@@ -197,8 +201,11 @@ Qualify these variants in Native before asserting Ares results:
 2. Matching ID/variant: IDs `[1,2]` with two Standard variants. Verify finalized
    exported identities/speeds because the CLI can reorder authored vectors.
    Both implementations must select the matching process column.
-3. Matching ID but absent requested variant: force the defined first-same-ID
-   selection with distinct observable speeds. This is not the no-ID case.
+3. Matching ID but absent requested variant: qualify the defined same-ID
+   branch with finalized `[2,2]` IDs and two Bowden Standard process variants
+   against the Direct Drive physical assignment. Native normalizes both speed
+   columns to the first value, so this is a path control, not an independently
+   discriminating first-same-ID-column witness. It is not the no-ID case.
 4. Singleton single-nozzle control and an equal-speed-column control. Neither
    may hide a primary failure by being the sole asserted case.
 
