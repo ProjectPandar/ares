@@ -1,6 +1,9 @@
 import type { GuideFilament, GuideModel, InstalledPrinters } from "@ares-slicer/wasm";
-import { saveConfig, storedConfig } from "./persistence";
-import { FILAMENT_LIBRARY, presetCatalog, selectFilament, selectPrinter, updateInstalledFilaments, updateSystemPrinters } from "./presets";
+import { type PrinterSettings, saveConfig, storedConfig } from "./persistence";
+import {
+  exportedProject, FILAMENT_LIBRARY, presetCatalog, projectFilamentState, saveSelection, selectFilament, selectPrinter, updateInstalledFilaments,
+  updateSystemPrinters,
+} from "./presets";
 import { slicer } from "./slicer";
 import { installedVendors, useApp } from "./store";
 
@@ -76,6 +79,21 @@ export function preferredPrinter(installed: InstalledPrinters, previous: Install
 }
 
 /**
+ * The selection GuideFrame::run stores before the wizard (WebGuideDialog.cpp:1224), from which load_selections
+ * gives the wizard's printer its print, slots, palette and flush data (PresetBundle.cpp:4045-4155). An opened
+ * project's presets are external presets (load_config_model) that load_presets drops: its print and slots are
+ * cleared (Preset.cpp:4335-4357), its palette and flush data kept.
+ */
+function wizardInitialSelection(): PrinterSettings | undefined {
+  saveSelection();
+  const { presetSelection, scene } = useApp.getState();
+  if (presetSelection) return storedConfig.printers[presetSelection.printer];
+  if (!scene?.settings) return undefined;
+  const project = projectFilamentState(scene.settings);
+  return { process: "", filaments: (project.filament_colour ?? [""]).map(() => ""), ...exportedProject(project) };
+}
+
+/**
  * GuideFrame::apply_config into PresetBundle::apply_vendor_config with `overwrite`
  * (PresetBundle.cpp:2050-2095): the installed printers and filaments are stored, the catalog reloads
  * them, load_selections selects the preferred printer, else the stored one, else the first visible
@@ -83,6 +101,7 @@ export function preferredPrinter(installed: InstalledPrinters, previous: Install
  * not one of `filaments` becomes the first of them that is visible and compatible.
  */
 export async function finishWizard(installed: InstalledPrinters, filaments: readonly string[], models: readonly GuideModel[]) {
+  const initial = wizardInitialSelection();
   const preferred = preferredPrinter(installed, useApp.getState().installedPrinters, models);
   saveConfig({ installedPrinters: installed, installedFilaments: [...filaments].sort() });
   const vendors = installedVendors(installed);
@@ -93,7 +112,7 @@ export async function finishWizard(installed: InstalledPrinters, filaments: read
   const catalog = await presetCatalog();
   const visible = (await catalog.printers()).map(({ name }) => name).sort();
   const name = (preferred && await catalog.systemPrinter(...preferred)) ?? storedConfig.printer;
-  await selectPrinter(name !== null && visible.includes(name) ? name : visible[0] ?? null);
+  await selectPrinter(name !== null && visible.includes(name) ? name : visible[0] ?? null, initial);
   const { presetSelection, compatible, installedFilaments } = useApp.getState();
   if (filaments.length > 0 && presetSelection && compatible?.status === "done" && !filaments.includes(presetSelection.filaments[0] ?? "")) {
     const first = [...filaments].sort().find((filament) => installedFilaments.has(filament) && compatible.presets.filaments.includes(filament));
