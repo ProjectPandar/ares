@@ -30,23 +30,17 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
         color_print_colors.push([128; 3]);
     }
     let moves = &result.moves;
-    let mut vertices = Vec::with_capacity(2 * moves.len());
-    for pair in moves.windows(2) {
+    let vertex_count = moves.len().saturating_sub(1)
+        + moves
+            .windows(2)
+            .enumerate()
+            .filter(|(index, pair)| starts_path(&pair[0], &pair[1], *index == 0))
+            .count();
+    let mut vertices = Vec::with_capacity(vertex_count);
+    for (index, pair) in moves.windows(2).enumerate() {
         let [prev, curr] = pair else { unreachable!() };
         let move_type = move_type(curr.move_type);
-        let starts_path = matches!(
-            move_type_to_option(move_type),
-            None | Some(OptionType::Travels | OptionType::Wipes)
-        ) && (vertices.is_empty()
-            || prev.move_type != curr.move_type
-            || prev.extrusion_role != curr.extrusion_role
-            // ORCA: flow rate changes start a new path.
-            || prev.mm3_per_mm != curr.mm3_per_mm
-            // ORCA: split the path when a preview value changes
-            // (LibVGCodeWrapper.cpp:236-238).
-            || prev.acceleration != curr.acceleration
-            || prev.jerk != curr.jerk);
-        if starts_path {
+        if starts_path(prev, curr, index == 0) {
             // Phantom vertex at the previous position so libvgcode detects the
             // path start; its times stay zero.
             vertices.push(PathVertex {
@@ -64,6 +58,18 @@ pub fn from_processor_result(result: &GCodeProcessorResult) -> GCodeInputData {
         tools_colors,
         color_print_colors,
     }
+}
+
+fn starts_path(prev: &MoveVertex, curr: &MoveVertex, first: bool) -> bool {
+    matches!(
+        move_type_to_option(move_type(curr.move_type)),
+        None | Some(OptionType::Travels | OptionType::Wipes)
+    ) && (first
+        || prev.move_type != curr.move_type
+        || prev.extrusion_role != curr.extrusion_role
+        || prev.mm3_per_mm != curr.mm3_per_mm
+        || prev.acceleration != curr.acceleration
+        || prev.jerk != curr.jerk)
 }
 
 /// Stealth time (deferred by M853) stays zero.
