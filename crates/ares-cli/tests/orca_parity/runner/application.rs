@@ -10,9 +10,9 @@ mod project_presets;
 use super::stages::{FailureKind, Stage, StageError};
 pub(crate) use cli_command::{CliCommand, cli_command};
 pub(crate) use project_presets::{
-    native_arguments, project_supply, slice_plater_plate, slice_project, slice_project_plate,
-    slice_project_plate_processed, slice_project_plate_processed_validated,
-    slice_project_plate_validated,
+    native_arguments, project_supply, slice_direct_project_plate, slice_plater_plate,
+    slice_project, slice_project_plate, slice_project_plate_processed,
+    slice_project_plate_processed_validated, slice_project_plate_validated,
 };
 use serde_json::{Map, Value};
 use std::io::{Cursor, Read};

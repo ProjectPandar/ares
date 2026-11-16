@@ -11,7 +11,8 @@ input.addEventListener("change", async () => {
   try {
     const bytes = new Uint8Array(await input.files![0].arrayBuffer());
     const scene = await slicer.loadScene(bytes);
-    const { gcode } = await slicer.sliceProject(bytes);
+    const catalogJson = await (await fetch("/system-presets.json")).text();
+    const { gcode } = await slicer.sliceProject(bytes, undefined, {}, { catalogJson });
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", gcode));
     const sha256 = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
     output.textContent = JSON.stringify({ objects: scene.objects.length, bytes: gcode.length, sha256 });
