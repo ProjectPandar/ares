@@ -342,6 +342,7 @@ fn bridge_pattern(top: ProcessInfillPattern) -> ProcessInfillPattern {
         | ProcessInfillPattern::TpmsFk
         | ProcessInfillPattern::Gyroid
         | ProcessInfillPattern::Concentric
+        | ProcessInfillPattern::SpiralInset
         | ProcessInfillPattern::HilbertCurve
         | ProcessInfillPattern::ArchimedeanChords
         | ProcessInfillPattern::OctagramSpiral => ProcessInfillPattern::Rectilinear,
