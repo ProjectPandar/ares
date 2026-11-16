@@ -15,6 +15,8 @@ mod complete_block;
 mod definition_defaults;
 #[path = "config_block_roundtrip/nullable_vectors.rs"]
 mod nullable_vectors;
+#[path = "config_block_roundtrip/nozzle_volume_types.rs"]
+mod nozzle_volume_types;
 #[path = "config_block_roundtrip/preset_include_controls.rs"]
 mod preset_include_controls;
 #[path = "config_block_roundtrip/preset_include_e3d.rs"]
