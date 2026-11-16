@@ -12,9 +12,9 @@
 
 mod project;
 
-use super::ProfileSelection;
 use super::catalog::{Catalog, ComposedSelection, ProfileDocument};
-use crate::{SliceError, project::raw_settings::RawConfigValue};
+use super::{ProfileKind, ProfileSelection};
+use crate::{SliceError, profiles::SourceIdentity, project::raw_settings::RawConfigValue};
 
 /// One `--load-settings`/`--load-filaments` list entry: the file label
 /// (path, for upstream error text) and its JSON text. An empty JSON
@@ -23,11 +23,13 @@ use crate::{SliceError, project::raw_settings::RawConfigValue};
 pub struct LoadSettingsFile<'a> {
     pub label: &'a str,
     pub json: &'a str,
+    pub source_identity: Option<&'a SourceIdentity>,
 }
 
 /// The parsed halves of one list, preserving upstream ordering
 /// (`OrcaSlicer.cpp:1344,:1352` read each list once, `;`-separated).
 pub struct LoadSettingsRequest<'a> {
+    pub loaded_sources: Option<&'a super::catalog::LoadedPresetSources>,
     pub settings: &'a [LoadSettingsFile<'a>],
     pub filaments: &'a [LoadSettingsFile<'a>],
 }
@@ -100,10 +102,16 @@ fn compose_with_project(
 ) -> Result<ComposedSelection, SliceError> {
     let mut catalog = Catalog::empty();
     catalog.enable_direct_imports();
+    if let Some(sources) = request.loaded_sources {
+        sources.populate(&mut catalog)?;
+    }
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
     for file in request.settings {
         let (kind, document) = parse_file(file)?;
+        let profile_kind = ProfileKind::parse(&kind)?;
+        let document =
+            catalog.admit_document(profile_kind, document, file.label, file.source_identity)?;
         match kind.as_str() {
             "machine" => {
                 if machine.is_some() {
@@ -113,7 +121,7 @@ fn compose_with_project(
                     )));
                 }
                 machine = Some(document.name.clone());
-                catalog.push_import(document)?;
+                catalog.push_import_with_identity(document, file.source_identity)?;
             }
             "process" => {
                 if process.is_some() {
@@ -123,7 +131,7 @@ fn compose_with_project(
                     )));
                 }
                 process = Some(document.name.clone());
-                catalog.push_import(document)?;
+                catalog.push_import_with_identity(document, file.source_identity)?;
             }
             // A filament-typed file inside `--load-settings` validates but
             // merges nothing in the upstream loop (`:2025-2106` has no
@@ -143,7 +151,13 @@ fn compose_with_project(
                 file.label
             )));
         }
-        filament_slots.push(catalog.push_filament_slot(document, slot)?);
+        let document = catalog.admit_document(
+            ProfileKind::Filament,
+            document,
+            file.label,
+            file.source_identity,
+        )?;
+        filament_slots.push(catalog.push_filament_slot(document, slot, file.source_identity)?);
     }
     let selection = match embedded {
         Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
