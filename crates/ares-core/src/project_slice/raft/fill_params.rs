@@ -56,11 +56,11 @@ pub(crate) fn contact_fill_pattern(
     object: &crate::ObjectOptions,
     interface_spacing: f64,
     raft_interface_pattern: RaftFillPattern,
-) -> RaftFillPattern {
+) -> Result<RaftFillPattern, crate::SliceError> {
     use crate::ProcessSupportInterfacePattern;
     // `filler_raft_contact_ptr` (`SupportCommon.cpp:1569-1572`).
     if object.support_interface_top_layers.0 == 0 {
-        return raft_interface_pattern;
+        return Ok(raft_interface_pattern);
     }
     let top_spacing = if object.support_ironing.0 {
         0.0
@@ -70,7 +70,12 @@ pub(crate) fn contact_fill_pattern(
     let density = (interface_spacing / (top_spacing + interface_spacing)).min(1.0);
     let zero_gap_top =
         object.support_interface_top_layers.0 > 0 && object.support_top_z_distance.0 == 0.0;
-    match object.support_interface_pattern {
+    Ok(match object.support_interface_pattern {
+        ProcessSupportInterfacePattern::SpiralInset => {
+            return Err(crate::SliceError::UnsupportedProjectFeature(
+                "support_interface_pattern: spiralinset".to_owned(),
+            ));
+        }
         ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
         ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
         ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
@@ -82,7 +87,7 @@ pub(crate) fn contact_fill_pattern(
                 RaftFillPattern::SupportBase
             }
         }
-    }
+    })
 }
 
 #[derive(Clone, Copy, Debug)]

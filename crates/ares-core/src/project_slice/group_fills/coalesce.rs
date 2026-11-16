@@ -178,9 +178,10 @@ const fn pattern_rank(pattern: SurfaceFillPattern) -> u8 {
             ProcessInfillPattern::TpmsFk => 22,
             ProcessInfillPattern::Gyroid => 23,
             ProcessInfillPattern::Concentric => 24,
-            ProcessInfillPattern::HilbertCurve => 25,
-            ProcessInfillPattern::ArchimedeanChords => 26,
-            ProcessInfillPattern::OctagramSpiral => 27,
+            ProcessInfillPattern::SpiralInset => 25,
+            ProcessInfillPattern::HilbertCurve => 26,
+            ProcessInfillPattern::ArchimedeanChords => 27,
+            ProcessInfillPattern::OctagramSpiral => 28,
         },
         SurfaceFillPattern::ConcentricInternal => 29,
     }

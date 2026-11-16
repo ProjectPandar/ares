@@ -60,6 +60,7 @@ pub(super) fn prepare_project_source(
             None => Vec::new(),
         };
     }
+    super::capabilities::validate_settings(project.settings())?;
     if source.validate_config {
         project.settings().validate_loaded_config(
             &project.documents().project_settings_raw,
@@ -92,6 +93,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         &crate::ConfigOverrides,
     )>,
 ) -> Result<ProjectSliceState, SliceError> {
+    super::capabilities::validate_settings(project.settings())?;
     let project = crate::plater::initialize_slice_plates(project);
     let project = crate::plater::fit_slice_wipe_tower(project, plate)?;
     let mut project = project.select_plate(plate)?;
@@ -109,6 +111,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
     };
+    super::capabilities::validate_settings(&resolved.views.full)?;
     painted_fuzzy::validate(&project, &resolved)?;
     if validate_print {
         crate::print::validate::validate_applied_project(
