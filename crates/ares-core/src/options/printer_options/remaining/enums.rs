@@ -62,12 +62,30 @@ pub enum AuthorizationType {
 pub enum NozzleVolumeType {
     #[default]
     #[serde(rename = "Standard")]
-    Standard,
+    Standard = 0,
     #[serde(rename = "High Flow")]
-    HighFlow,
-    // PrintConfig.hpp:618-623 / PrintConfig.cpp:724-731: stable serialized value.
+    HighFlow = 1,
     #[serde(rename = "Hybrid")]
     Hybrid = 2,
+    // PrintConfig.hpp:619-630: integer 4 is reserved.
+    #[serde(rename = "TPU High Flow")]
+    TpuHighFlow = 3,
+    #[serde(rename = "E3D High Flow")]
+    E3dHighFlow = 5,
+    #[serde(rename = "Extra High Flow")]
+    ExtraHighFlow = 6,
+}
+
+impl NozzleVolumeType {
+    // PrintConfig.cpp:724-732: shared config keys, independent of GUI choices.
+    pub(crate) const TYPE_KEYS: &[&str] = &[
+        "Standard",
+        "High Flow",
+        "Hybrid",
+        "TPU High Flow",
+        "E3D High Flow",
+        "Extra High Flow",
+    ];
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]

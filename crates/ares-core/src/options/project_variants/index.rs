@@ -349,6 +349,9 @@ pub(crate) fn canonical_variant(extruder: ExtruderType, volume: NozzleVolumeType
     let volume = match volume {
         NozzleVolumeType::Standard | NozzleVolumeType::Hybrid => "Standard",
         NozzleVolumeType::HighFlow => "High Flow",
+        NozzleVolumeType::TpuHighFlow => "TPU High Flow",
+        NozzleVolumeType::E3dHighFlow => "E3D High Flow",
+        NozzleVolumeType::ExtraHighFlow => "Extra High Flow",
     };
     format!("{extruder} {volume}")
 }
