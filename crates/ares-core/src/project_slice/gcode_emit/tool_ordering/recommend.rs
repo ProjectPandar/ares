@@ -56,6 +56,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         multiple_nozzles,
     )?;
     let mut nozzle_groups = None;
+    let mut assignments_published = false;
     let current = &traversal.resolved.views.full;
     let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;
     let single_head_auto = current.project.print.nozzle_diameter.0.len() == 1
@@ -93,6 +94,7 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
                 is_bbl,
             )?
         };
+        assignments_published = static_views.is_some();
         if static_views.is_some()
             || changed
             || (traversal
@@ -150,6 +152,13 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
     if let Some(groups) = nozzle_groups {
         ordering.nozzle_groups = groups;
     }
+    traversal.resolved.process_nozzle_assignments = assignments_published.then(|| {
+        super::nozzle_group::process_assignments(
+            &traversal.resolved.views.full,
+            &ordering.nozzle_groups,
+            traversal.resolved.logical_filament_count,
+        )
+    });
     Ok(ordering)
 }
 
