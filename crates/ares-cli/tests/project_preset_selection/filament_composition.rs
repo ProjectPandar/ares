@@ -38,26 +38,23 @@ fn dual_extruder_settings(filaments: &[&str]) -> Value {
     settings
 }
 
-fn catalog() -> Value {
-    input::catalog(
-        &[
-            filament(
-                "Acme TPU @H2D",
-                "acme-tpu",
-                ["230", "235"],
-                "20",
-                ["14", "15"],
-            ),
-            filament(
-                "Acme PLA @H2D",
-                "acme-pla",
-                ["220", "225"],
-                "15.99",
-                ["2", "3"],
-            ),
-        ],
-        &[],
-    )
+fn presets() -> [Value; 2] {
+    [
+        filament(
+            "Acme TPU @H2D",
+            "acme-tpu",
+            ["230", "235"],
+            "20",
+            ["14", "15"],
+        ),
+        filament(
+            "Acme PLA @H2D",
+            "acme-pla",
+            ["220", "225"],
+            "15.99",
+            ["2", "3"],
+        ),
+    ]
 }
 
 #[tokio::test]
@@ -65,17 +62,40 @@ async fn always_composes_every_filament_from_its_selected_preset() {
     composition(
         "selection-filament-composition",
         &["Acme TPU @H2D", "Acme PLA @H2D"],
+        presets(),
     )
     .await;
 }
 
 #[tokio::test]
 async fn always_applies_the_single_selected_filament_preset() {
-    composition("selection-filament-single", &["Acme TPU @H2D"]).await;
+    composition("selection-filament-single", &["Acme TPU @H2D"], presets()).await;
 }
 
-async fn composition(label: &str, filaments: &[&str]) {
-    let Some(case) = Case::with_catalog(label, dual_extruder_settings(filaments), catalog()) else {
+// Like the H2D presets, each preset holds slow_down_min_speed once per extruder variant.
+// Loading it keeps one value per filament (Preset::normalize, Preset.cpp:576-591, 1947), while
+// a variant option such as filament_max_volumetric_speed keeps every variant.
+#[tokio::test]
+async fn always_keeps_one_value_per_filament_for_options_without_variants() {
+    let mut presets = presets();
+    for (preset, (slow_down, volumetric)) in presets
+        .iter_mut()
+        .zip([(["10", "12"], ["3.2", "3.6"]), (["20", "22"], ["25", "40"])])
+    {
+        preset["slow_down_min_speed"] = json!(slow_down);
+        preset["filament_max_volumetric_speed"] = json!(volumetric);
+    }
+    composition(
+        "selection-filament-normalized",
+        &["Acme TPU @H2D", "Acme PLA @H2D"],
+        presets,
+    )
+    .await;
+}
+
+async fn composition(label: &str, filaments: &[&str], presets: [Value; 2]) {
+    let catalog = input::catalog(&presets, &[]);
+    let Some(case) = Case::with_catalog(label, dual_extruder_settings(filaments), catalog) else {
         return;
     };
     let native = &case.native["projects"][0]["result"];

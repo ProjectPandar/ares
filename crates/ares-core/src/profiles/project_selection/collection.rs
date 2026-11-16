@@ -53,6 +53,7 @@ pub struct PresetCollectionState {
     pub records: Vec<PresetRecord>,
 }
 
+#[derive(Clone)]
 pub(super) struct Collection {
     pub(super) kind: ProfileKind,
     pub(super) records: Vec<PresetRecord>,
@@ -141,11 +142,7 @@ impl Collection {
         protected: &std::collections::BTreeSet<String>,
     ) -> Result<PresetConfig, SliceError> {
         let mut config = PresetConfig::defaults(self.kind)?;
-        for (key, value) in project.entries() {
-            if config.0.contains_key(key) && !connection(key) {
-                config.0.insert(key.clone(), value.clone());
-            }
-        }
+        config.apply_project(project)?;
         let parent = config.string("inherits");
         let base = if parent.is_empty() {
             self.find(&config.string(identity(self.kind)))
@@ -377,9 +374,7 @@ fn load_config(
     // PresetCollection::load_presets pads each loaded preset's variant vectors
     // (Preset.cpp:1930, 1944; extend_default_config_length, :313-370).
     super::super::preset_normalization::extend_default_config_length(&mut config.0)?;
-    if kind == ProfileKind::Machine {
-        super::super::preset_normalization::normalize_machine(&mut config.0)?;
-    }
+    super::super::preset_normalization::normalize(&mut config.0, kind)?;
     Ok((config, filament_id))
 }
 

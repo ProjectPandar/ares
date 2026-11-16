@@ -7,6 +7,8 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { platerExport } from "./platerExport";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/dual-extruder/", import.meta.url));
@@ -42,6 +44,8 @@ const nozzleFilaments = (page: Page, nozzle: string) =>
 
 test("an H2D project shows the left and right nozzles and slices its filament map and flow like OrcaSlicer", async ({ page }) => {
   const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
+  const probe = presetSelectProbe();
+  if (orca && !probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export");
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -56,7 +60,8 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
   await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(wizard).toHaveCount(0, { timeout: 60_000 });
-  await page.getByTestId("import-input").setInputFiles(project("legal.3mf", LEGAL));
+  const legal = project("legal.3mf", LEGAL);
+  await page.getByTestId("import-input").setInputFiles(legal);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
 
   // The Left / Right Nozzle groups replace the nozzle combo (Plater.cpp:641-652, 2645-2648).
@@ -93,7 +98,16 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   // A key the project lacks comes from its system printer preset (OrcaSlicer.cpp:3167-3200,
   // PresetBundle::load_config_file_config): the H2D's 50, not the option default 40.
   expect(web).toContain("; extruder_clearance_dist_to_rod = 50\n");
-  if (orca) expect(normalize(web, "Ares"), "the sidebar edits slice as the edited project").toBe(orcaGcode(project("edited.3mf", { ...LEGAL, ...EDITS })));
+  // The plater opens the 3MF through load_config_model (Plater.cpp:9622): each preset loads with LoadAndSelect::Always
+  // (PresetBundle.cpp:6300-6354), and load_external_config (Preset.cpp:1090-1119) replaces every key outside
+  // different_settings_to_system with the current system preset value, since project_different_keys always lists the
+  // *_settings_id keys (PresetBundle.cpp:5525-5532). The fixture lists no changed key, so the plater slices the
+  // system H2D values, while a CLI slice of the edited 3MF keeps the stored ones (OrcaSlicer.cpp:2775-2791). The
+  // reference is therefore the 3MF the plater saves after the edits, sliced by OrcaSlicer.
+  if (orca) {
+    const selection = nativeSelection(probe!, `${artifacts}selection/`, legal, ["BBL"]);
+    expect(normalize(web, "Ares"), "the sidebar edits slice as the plater export").toBe(orcaGcode(platerExport(selection, legal, `${artifacts}edited.3mf`, EDITS)));
+  }
 
   // Different diameters cannot print together: the question picks one for both nozzles; Cancel keeps both.
   await select(page, "Left Nozzle diameter").selectOption("0.6");

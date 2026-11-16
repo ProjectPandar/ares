@@ -1,8 +1,8 @@
-import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/presets/", import.meta.url));
@@ -14,18 +14,17 @@ interface Expected {
   colours: string[];
 }
 
-/** Preset ids and colours from the native ares-cli G-code config block (Orca `; key = value`). */
-function nativePresets(fixture: string, name: string): Expected {
-  const output = `${artifacts}${name}.native.gcode`;
-  execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", output, `${repositoryRoot}${fixture}`]);
-  const gcode = readFileSync(output, "utf8");
-  const value = (key: string) => gcode.match(new RegExp(`^; ${key} = (.*)$`, "m"))![1];
-  const list = (key: string) => value(key).split(";").map((item) => item.replace(/^"|"$/g, ""));
+/**
+ * The presets the plater selects when it opens `fixture` (PresetBundle::load_config_model, Plater.cpp:9622) with
+ * the first-run config's installed vendors, and the project's filament colours.
+ */
+function nativePresets(probe: string, fixture: string, name: string): Expected {
+  const native = nativeSelection(probe, `${artifacts}${name}/`, `${repositoryRoot}${fixture}`, []);
   return {
-    printer: value("printer_settings_id"),
-    process: value("print_settings_id"),
-    filaments: list("filament_settings_id"),
-    colours: list("filament_colour"),
+    printer: native.printer.selected.name,
+    process: native.process.selected.name,
+    filaments: native.filament_presets,
+    colours: native.project_config.filament_colour.serialized.split(";").map((item) => item.replace(/^"|"$/g, "")),
   };
 }
 
@@ -50,6 +49,8 @@ async function checkCombo(page: Page, fixture: string, combo: string, selected: 
 }
 
 test("preset combo boxes show the project's embedded presets", async ({ page }) => {
+  const probe = presetSelectProbe();
+  if (!probe) test.skip();
   test.setTimeout(240_000);
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
@@ -67,7 +68,7 @@ test("preset combo boxes show the project's embedded presets", async ({ page }) 
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   for (const fixture of fixtures) {
-    const expected = nativePresets(fixture.path, fixture.name);
+    const expected = nativePresets(probe!, fixture.path, fixture.name);
     results[fixture.name] = expected;
     await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}${fixture.path}`);
     await expect(page.getByTestId("status")).toHaveText("Ready to slice");

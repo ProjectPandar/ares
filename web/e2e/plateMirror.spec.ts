@@ -59,7 +59,7 @@ test("the object menu mirrors an instance about its centre and slices like OrcaS
   // Native slices the prism's own mesh frame: (110, 108, 5) - diag(-1, 1, 1) (10, 8, 5) = (120, 100, 0).
   const oracle = `${artifacts}mirrored.3mf`;
   writeFileSync(oracle, prismProject("-1 0 0 0 1 0 0 0 1 120 100 0"));
-  const legs = { official: orcaPlate(oracle, 1, "official"), seeded: orcaPlate(oracle, 1, "seeded") };
+  const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

@@ -6,6 +6,8 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { aresGeneratorLine, normalize } from "./orcaGcode";
 import { oraclePath } from "./oracleEnv";
+import { presetSelectProbe } from "./presetSelectOracle";
+import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 import { canvasDigest } from "./toolpathPreview";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -30,7 +32,7 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
   test.setTimeout(240_000);
   const official = oraclePath("ORCA_APPDIR", "the unmodified slicing oracle", "official OrcaSlicer 2.5.0-beta AppImage");
   const oracle = oraclePath("ARES_PROCGCODE_BIN", "raw ColorChange processor", "tools/chain-probe/procgcode.nix");
-  if (!official || !oracle) test.skip();
+  if (!official || !oracle || !presetSelectProbe()) test.skip();
   mkdirSync(artifacts, { recursive: true });
   execFileSync(process.execPath, [`${root}web/e2e/colorChangeOracle.mjs`, artifacts], { cwd: root });
   const errors: string[] = [];
@@ -47,7 +49,8 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
     await download.saveAs(path);
     const gcode = readFileSync(path, "utf8");
     const nativeGcode = readFileSync(`${directory}/plate_1.gcode`, "utf8");
-    expect(normalize(gcode, "Ares")).toBe(normalize(nativeGcode, "OrcaSlicer"));
+    const selection = openedSelection(`${directory}/project.3mf`, `${directory}/selection/`)!;
+    expect(normalize(gcode, "Ares")).toBe(withSelectedPresets(normalize(nativeGcode, "OrcaSlicer"), selection));
     const m73 = (text: string) => text.split("\n").filter((line) => line.startsWith("M73 ")).join("\n");
     expect(m73(gcode).length).toBeGreaterThan(0);
     expect(m73(gcode)).toBe(m73(nativeGcode));

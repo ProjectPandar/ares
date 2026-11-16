@@ -141,3 +141,84 @@ async fn local_selection(label: &str, settings: Value, catalog: Value, expected:
     assert_eq!(process["dirty_options"], json!([]));
     assert_eq!(view["settings"]["print_settings_id"], name);
 }
+
+// filament_extruder_override_keys (PrintConfig.cpp:97-122) and the ironing keys
+// is_filament_extruder_override_key adds (PrintConfig.cpp:130-139).
+const FILAMENT_OVERRIDE_KEYS: [&str; 24] = [
+    "filament_retraction_length",
+    "filament_z_hop",
+    "filament_z_hop_types",
+    "filament_retract_lift_above",
+    "filament_retract_lift_below",
+    "filament_retract_lift_enforce",
+    "filament_retraction_speed",
+    "filament_deretraction_speed",
+    "filament_retract_restart_extra",
+    "filament_retraction_minimum_travel",
+    "filament_retract_length_toolchange",
+    "filament_retract_restart_extra_toolchange",
+    "filament_wipe_distance",
+    "filament_retract_when_changing_layer",
+    "filament_wipe",
+    "filament_retract_before_wipe",
+    "filament_retract_after_wipe",
+    "filament_long_retractions_when_cut",
+    "filament_retraction_distances_when_cut",
+    "filament_retract_length_nc",
+    "filament_ironing_flow",
+    "filament_ironing_spacing",
+    "filament_ironing_inset",
+    "filament_ironing_speed",
+];
+
+// The plater completes the project config with FullPrintConfig::defaults() (Plater.cpp:9463)
+// and builds the project-local filament preset from it (load_external_preset,
+// PresetBundle.cpp:6354), so an override key the project lacks holds its option default, not
+// the default filament preset's nil (PresetBundle.cpp:508-518).
+#[tokio::test]
+async fn project_local_filament_takes_the_option_defaults_the_project_lacks() {
+    let Some(case) = Case::new(
+        "selection-filament-option-defaults",
+        input::settings("Missing Process", "0.2"),
+    ) else {
+        return;
+    };
+    let native = &case.native["projects"][0]["result"];
+    // Native premise: the filament is project-local and the plater's config holds the default.
+    assert_eq!(
+        native["filament_presets"],
+        json!(["Missing Filament(selection.3mf)"])
+    );
+    let plater: Value = serde_json::from_str(native["full_fff_config"].as_str().unwrap()).unwrap();
+    assert_eq!(plater["filament_retract_length_nc"], json!(["10"]));
+    let view = case
+        .api()
+        .await
+        .expect("valid Always request must load the project");
+    let actual =
+        FILAMENT_OVERRIDE_KEYS.map(|key| (key, super::support::wire(key, &view["settings"][key])));
+    case.write("api-override-keys.json", &json!(actual));
+    for (key, value) in actual {
+        assert_eq!(value, super::support::wire(key, &plater[key]), "{key}");
+    }
+}
+
+// full_fff_config erases compatible_printers_condition (PresetBundle.cpp:5790-5794), so the
+// plater's project config lacks it even where the 3MF stores it.
+#[tokio::test]
+async fn project_config_drops_the_stored_compatible_printers_condition() {
+    let mut settings = input::settings("Missing Process", "0.2");
+    settings["compatible_printers_condition"] = json!("");
+    let Some(case) = Case::new("selection-erased-printers-condition", settings) else {
+        return;
+    };
+    let native = &case.native["projects"][0]["result"];
+    let plater: Value = serde_json::from_str(native["full_fff_config"].as_str().unwrap()).unwrap();
+    // Native premise: the plater's config lacks the key the project stores.
+    assert_eq!(plater.get("compatible_printers_condition"), None);
+    let view = case
+        .api()
+        .await
+        .expect("valid Always request must load the project");
+    assert_eq!(view["settings"].get("compatible_printers_condition"), None);
+}

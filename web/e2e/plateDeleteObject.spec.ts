@@ -64,7 +64,7 @@ test("the object menu deletes an object, and the other plate slices like OrcaSli
 
   const oracle = `${artifacts}without-object-2.3mf`;
   writeFileSync(oracle, withoutPlateOneCube());
-  const legs = { official: orcaPlate(oracle, 2, "official"), seeded: orcaPlate(oracle, 2, "seeded") };
+  const legs = { official: orcaPlate(oracle, 2, "official", `${repositoryRoot}${FIXTURE}`), seeded: orcaPlate(oracle, 2, "seeded", `${repositoryRoot}${FIXTURE}`) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

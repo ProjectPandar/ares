@@ -4,6 +4,7 @@ import { firstString, presetFilamentSlots } from "../sidebar/options";
 import { deleteImport, loadImports, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
 import { selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
+import { catalogJson } from "./projectPresets";
 import { slicer } from "./slicer";
 import { type PresetSelection, useApp } from "./store";
 
@@ -33,6 +34,7 @@ export function presetCatalog(): Promise<PresetCatalog> {
 
 async function syncCatalog(): Promise<PresetCatalog> {
   const { vendors, installedPrinters } = useApp.getState();
+  const changed = synced?.vendors !== vendors || synced.imports !== importFiles.length;
   if (synced?.vendors !== vendors) {
     const start = performance.now();
     void synced?.catalog.free();
@@ -53,6 +55,9 @@ async function syncCatalog(): Promise<PresetCatalog> {
   }
   for (const { input, filename } of importFiles.slice(synced.imports)) await synced.catalog.addImport(input, filename);
   synced.imports = importFiles.length;
+  // PresetBundle::load_presets at startup (GUI_App.cpp:3723) and after the wizard (ConfigWizard.cpp:2597):
+  // the project load that follows selects from these presets instead of loading them again.
+  if (changed) await slicer.loadPresetBundle(await catalogJson(useApp.getState()));
   return synced.catalog;
 }
 

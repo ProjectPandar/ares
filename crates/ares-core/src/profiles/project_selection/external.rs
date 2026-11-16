@@ -1,9 +1,6 @@
 use super::{
-    super::{
-        catalog::Catalog,
-        project_refresh::preset::{dirty_keys, strings},
-    },
-    PresetConfig, collection,
+    super::project_refresh::preset::{dirty_keys, strings},
+    LoadedCatalog, PresetConfig, collection,
 };
 use crate::{
     ProfileKind, SliceError,
@@ -11,7 +8,7 @@ use crate::{
 };
 
 pub(super) struct ExternalFilamentArgs<'a> {
-    pub(super) catalog: &'a Catalog,
+    pub(super) catalog: &'a LoadedCatalog,
     pub(super) source: &'a ProjectSettingsRaw,
     pub(super) filament_ids: &'a [String],
     pub(super) inherited: &'a [String],
@@ -81,11 +78,11 @@ pub(super) fn load_external_filaments(
     for filament in 0..filament_count {
         let mut config = PresetConfig(defaults.clone());
         for (key, _default) in defaults.entries() {
-            let Some(value) = source.get(key) else {
+            let Some(value) = super::config::project_value(source, key)? else {
                 continue;
             };
-            let RawConfigValue::List(values) = value else {
-                config.0.insert(key.clone(), value.clone());
+            let RawConfigValue::List(values) = value.as_ref() else {
+                config.0.insert(key.clone(), value.into_owned());
                 continue;
             };
             if matches!(key.as_str(), "compatible_printers" | "compatible_prints") {
@@ -105,10 +102,15 @@ pub(super) fn load_external_filaments(
                     .min(values.len());
                 RawConfigValue::List(values[start..end].to_vec())
             } else {
-                values.get(filament).cloned().map_or_else(
-                    || RawConfigValue::List(Vec::new()),
-                    |value| RawConfigValue::List(vec![value]),
-                )
+                // ConfigOptionVector::get_at (Config.hpp:676-680).
+                values
+                    .get(filament)
+                    .or(values.first())
+                    .cloned()
+                    .map_or_else(
+                        || RawConfigValue::List(Vec::new()),
+                        |value| RawConfigValue::List(vec![value]),
+                    )
             };
             config.0.insert(key.clone(), values);
         }
@@ -154,7 +156,7 @@ pub(super) fn load_external_filaments(
         configs.push(config);
     }
 
-    let mut collection = collection::Collection::load(catalog, ProfileKind::Filament)?;
+    let mut collection = catalog.collection(ProfileKind::Filament)?.clone();
     let mut states = Vec::with_capacity(filament_count);
     for filament in (0..filament_count).rev() {
         let mut protected = dirty_keys(differences, filament + 1)?;

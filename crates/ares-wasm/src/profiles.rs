@@ -38,6 +38,14 @@ pub fn guide_models_json(vendors_json: &[u8]) -> Result<String, String> {
         .map_err(|error| format!("guide models cannot serialize: {error}"))
 }
 
+/// Loads and pads the catalog's presets once (`PresetBundle::load_presets`), so the next project
+/// load with the same catalog selects from them.
+#[wasm_bindgen(js_name = loadPresetBundle)]
+pub fn load_preset_bundle(catalog_json: &str) -> Result<(), JsValue> {
+    ares_core::load_preset_bundle(catalog_json)
+        .map_err(|error| JsValue::from_str(&error.to_string()))
+}
+
 #[wasm_bindgen(js_name = filterCompatiblePresets)]
 pub fn filter_compatible_presets(
     catalog_json: String,
