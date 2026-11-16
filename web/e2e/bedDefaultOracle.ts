@@ -21,6 +21,8 @@ export function firstBedCommands(gcode: string) {
 
 /** Independent native CLI inputs from unchanged pinned resource files. */
 export async function nativeBedReference(binary: string, selection: BedSelection, model: string, directory: string) {
+  const cpu = process.env.ORCA_REPLAY_CPU;
+  if (!cpu || !/^\d+$/.test(cpu)) throw new Error(`ORCA_REPLAY_CPU=${cpu ?? "(unset)"} must name the one CPU the Native probe runs on`);
   mkdirSync(directory, { recursive: true });
   const vendors = await Promise.all([loadVendor("Qidi"), loadVendor("OrcaFilamentLibrary")]);
   const repository = fileURLToPath(new URL("../../", import.meta.url));
@@ -54,7 +56,7 @@ export async function nativeBedReference(binary: string, selection: BedSelection
   if (!bedType) throw new Error(`The U1 resource no longer declares a concrete bed name: ${hint}`);
   const args = ["--slice", "0", "--curr-bed-type", bedType, "--load-settings", `${machine};${processFile}`, "--load-filaments", filaments.join(";"), "--outputdir", directory, model];
   writeFileSync(`${directory}/command.json`, JSON.stringify({ binary, binary_sha256: createHash("sha256").update(readFileSync(binary)).digest("hex"), args, cwd: directory, selection, gui_bed_initialization: { hint, bedType, source: "Plater.cpp:3876–3908; Preset.cpp:1140–1175" }, resource_commit: ORCA_SLICER_COMMIT, inputs: Object.fromEntries(inputs) }, null, 2));
-  const result = spawnSync(binary, args, { cwd: directory, env: { ...process.env, ORCA_JOB_APPDIR: `${directory}/appdir` }, encoding: "utf8", timeout: 240_000, maxBuffer: 16 * 1024 * 1024 });
+  const result = spawnSync("taskset", ["-c", cpu, binary, ...args], { cwd: directory, env: { ...process.env, ORCA_JOB_APPDIR: `${directory}/appdir` }, encoding: "utf8", timeout: 240_000, maxBuffer: 16 * 1024 * 1024 });
   writeFileSync(`${directory}/stdout.log`, result.stdout ?? "");
   writeFileSync(`${directory}/stderr.log`, result.stderr ?? "");
   writeFileSync(`${directory}/status.json`, JSON.stringify({ status: result.status, signal: result.signal, error: result.error?.message }));
