@@ -29,8 +29,8 @@ Upstream sources:
 
 | Upstream | Persisted value |
 | --- | --- |
-| `libslic3r/PresetBundle.cpp:2917-2980` `export_selections` | Section `presets`: the selected printer. Per printer (`AppConfig::set_printer_setting`, `AppConfig.hpp:239-249`): `print`, `filament`, `filament_NN`, `curr_bed_type`. |
-| `libslic3r/PresetBundle.cpp:2625-2650` `update_selections` + `slic3r/GUI/Tab.cpp:6229-6233` | When `remember_printer_config` is set (default true, `AppConfig.cpp:436-437`), selecting a printer restores that printer's process and filaments. |
+| `libslic3r/PresetBundle.cpp:4232-4292` `export_selections` | Section `presets`: the selected printer. Per printer (`AppConfig::set_printer_setting`, `AppConfig.hpp:239-249`): `print`, `filament`, `filament_NN`, `curr_bed_type`, `filament_colors`, `filament_multi_colors`, `filament_color_types`, the flush matrix, vector and multiplier. |
+| `libslic3r/PresetBundle.cpp:3914-4017` `update_selections` + `slic3r/GUI/Tab.cpp:7740-7742` | When `remember_printer_config` is set (default true, `AppConfig.cpp:544-545`), selecting a printer restores that printer's process, filaments and palette (`2026-11-16-printer-switch-update-selections.md`). |
 | `slic3r/GUI/Plater.cpp:2510-2540` (`Sidebar::update_presets` printer branch) | On printer change the bed type is the printer setting `curr_bed_type`, else `Preset::get_default_bed_type` (`libslic3r/Preset.cpp:966-990`). |
 | `slic3r/GUI/Plater.cpp:9431-9470` `on_select_bed_type` | A bed type change is stored globally and per printer. |
 | `libslic3r/AppConfig.cpp:1555-1580`, `PresetBundle.cpp:2880-2900`, `slic3r/GUI/Tab.cpp:7121-7138` `TabPrinter::set_extruder_volume_type` | Section `nozzle_volume_types` per base printer, falling back to `default_nozzle_volume_type`. |
@@ -43,7 +43,9 @@ Design:
 - `web/app/src/state/persistence.ts` is the only module that touches browser
   storage. It holds one `localStorage` record, `ares.config`:
   `{ version: 1, theme, mode, gcodeWindow, printer: string | null,
-  printers: { [printerName]: {process?, filaments[], bedType?} },
+  printers: { [printerName]: {process?, filaments[], bedType?, filamentColours?,
+  filamentMultiColours?, filamentColourTypes?, flushVolumesMatrix?, flushVolumesVector?,
+  flushMultiplier?} },
   installedPrinters: { [vendor]: { [model]: string[] } },
   installedFilaments, nozzleVolumeTypes: { [basePrinter]: string[] },
   preferredFilamentMapMode }`. Fields arrive with the features that use them,
