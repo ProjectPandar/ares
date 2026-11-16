@@ -197,7 +197,10 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
    - stacks a release commit last: `chore: release 0.1.<N>` for batch N. It sets `version` in `[workspace.package]`
      of the root `Cargo.toml` and in `web/app/package.json` (plus the `app` entry of `web/package-lock.json`), and
      updates `Cargo.lock` with `cargo update -w --offline`;
-   - runs fmt, clippy --all-targets and the wasm32 check;
+   - runs fmt, clippy --all-targets and the wasm32 check on the stacked tip, again on every restacked tip;
+   - runs `cargo check --workspace --all-targets` at every chain's `<end>`, because each one becomes a commit on main.
+     An `<end>` that does not build is reported to COORD, who reorders the chains or merges it with the chains it
+     depends on into one commit;
    - pushes an integration ref.
 
    Before the FULL, W5 runs the non-parity gate once: the workspace tests outside the parity suite, plus the web
