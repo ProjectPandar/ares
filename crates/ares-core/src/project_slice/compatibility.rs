@@ -60,6 +60,7 @@ impl PresetDescriptor {
 #[derive(Clone)]
 pub(crate) struct LoadedPresetNames {
     pub machine: Option<PresetDescriptor>,
+    pub printer_model: String,
     pub process: Option<PresetDescriptor>,
     pub embedded: Option<ProjectSettingsRaw>,
 }

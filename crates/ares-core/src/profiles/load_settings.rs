@@ -163,6 +163,7 @@ pub(crate) fn load_settings_preset_names(
 ) -> Result<crate::project_slice::compatibility::LoadedPresetNames, SliceError> {
     use crate::project_slice::compatibility::LoadedPresetNames;
     let mut machine = None;
+    let mut printer_model = String::new();
     let mut process = None;
     let mut machine_seen = false;
     let mut process_seen = false;
@@ -178,6 +179,15 @@ pub(crate) fn load_settings_preset_names(
                 }
                 machine_seen = true;
                 machine = Some(descriptor(&document));
+                if let Some(RawConfigValue::Text(model)) = document.fields.get("printer_model")
+                    && let Ok(RawConfigValue::Text(model)) =
+                        crate::options::json_deserialize::decode(
+                            crate::OptionValueKind::String,
+                            model,
+                        )
+                {
+                    printer_model = model;
+                }
             }
             "process" => {
                 if process_seen {
@@ -194,6 +204,7 @@ pub(crate) fn load_settings_preset_names(
     }
     Ok(LoadedPresetNames {
         machine,
+        printer_model,
         process,
         embedded: None,
     })
