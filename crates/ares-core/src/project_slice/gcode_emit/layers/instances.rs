@@ -11,7 +11,9 @@ pub(in crate::project_slice::gcode_emit) struct Instance {
     pub(super) arrange_order: usize,
 }
 
-pub(super) fn collect(traversal: &PreparedPostClassicTraversal) -> Vec<Vec<Instance>> {
+pub(in crate::project_slice::gcode_emit) fn collect(
+    traversal: &PreparedPostClassicTraversal,
+) -> Vec<Vec<Instance>> {
     let mut instances = Vec::with_capacity(traversal.objects.len());
     let mut owners = Vec::new();
     let mut centers = Vec::new();

@@ -10,7 +10,25 @@ pub(in crate::project_slice) fn emit(
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
 ) -> Result<ProcessedGCode, SliceError> {
-    let mut schedule = layers::build_schedule(prepared)?;
+    let traversal = &prepared
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
+    let instances = layers::instances::collect(traversal);
+    let farthest_object_targets =
+        layers::farthest::ObjectTargets::capture(traversal, &prepared.objects, &instances);
+    crate::project_slice::seam_placement::apply(prepared);
+    // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
+    // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
+    for _ in &prepared.objects {
+        context.set_status(71, format_args!("Detect overhangs for auto-lift"), 0);
+    }
+    context.set_status(70, format_args!("Generating skirt & brim"), 0);
+    let mut schedule = layers::build_schedule(prepared, instances)?;
     warnings.append(&mut schedule.warnings);
     let traversal = &prepared
         .predecessor
@@ -264,6 +282,7 @@ pub(in crate::project_slice) fn emit(
             brim: &brim,
             skirt: &skirt,
             schedule,
+            farthest_object_targets: farthest_object_targets.as_ref(),
         },
         context,
     )?;

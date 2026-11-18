@@ -240,7 +240,6 @@ pub(crate) fn slice_source(
     ordered.support_layers = support_layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
-    seam_placement::apply(&mut ordered);
     let output = consume_post_island_print_order(
         ordered,
         metadata,
@@ -303,12 +302,6 @@ fn consume_post_island_print_order(
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
 ) -> Result<ProcessedGCode, SliceError> {
-    // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
-    // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
-    for _ in &prepared.objects {
-        context.set_status(71, format_args!("Detect overhangs for auto-lift"), 0);
-    }
-    context.set_status(70, format_args!("Generating skirt & brim"), 0);
     let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context, warnings)?;
     output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);
