@@ -120,6 +120,11 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 settings["outer_wall_jerk"] = json!(["5", "9"]);
                 settings["initial_layer_travel_acceleration"] = json!(["1300", "2600"]);
             }
+            if case == "travel_jerk" {
+                settings["default_jerk"] = json!(["5", "5"]);
+                settings["travel_jerk"] = json!(["16", "12"]);
+                settings["initial_layer_travel_jerk"] = json!(["50%", "25%"]);
+            }
             if case == "percent_wipe" {
                 settings["role_based_wipe_speed"] = json!("0");
                 settings["wipe_speed"] = json!("80%");
@@ -176,7 +181,11 @@ fn compare(case: &str) {
     let (native, _) = runner::native_stream_case::qualify(
         (
             "process-nozzle-resolver",
-            &["Print.cpp:5113–5184", "PrintConfig.cpp:798–837"],
+            &[
+                "Print.cpp:5113–5184",
+                "PrintConfig.cpp:798–837",
+                "GCode.cpp:10524,10555–10556",
+            ],
         ),
         case,
         &project,
@@ -214,6 +223,20 @@ fn compare(case: &str) {
                 native.root
             );
         }
+    }
+    if case == "travel_jerk" {
+        assert!(
+            native
+                .native
+                .contains("\n; initial_layer_travel_jerk = 25%,50%\n")
+        );
+        assert!(native.native.contains("\n; travel_jerk = 12,16\n"));
+        assert!(
+            native
+                .native
+                .lines()
+                .any(|line| line == "M205 X3 Y3 Z3 E2.5")
+        );
     }
     let native_wipe = wipe(native.native.as_bytes());
     assert!(
@@ -272,6 +295,10 @@ fn nozzle_process_resolver_initial_layer_and_skirt() {
 #[test]
 fn nozzle_process_resolver_overhang_speeds() {
     compare("overhang");
+}
+#[test]
+fn nozzle_process_resolver_initial_layer_travel_jerk() {
+    compare("travel_jerk");
 }
 #[test]
 fn nozzle_process_resolver_support_speeds() {
