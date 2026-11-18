@@ -21,14 +21,24 @@ struct Filament {
 /// The filament of each slot after `update_compatible(Always)` for `printer` and `process`;
 /// the initialized default where no compatible visible ordinary preset exists. System filaments are visible when
 /// `installed` names them (`PresetBundle::load_installed_filaments`), user filaments always.
-/// The slots are not padded: `update_multi_material_filament_presets` pads them afterwards
-/// (`PresetBundle.cpp:4002-4003, 4163-4164, 6455-6456`).
+/// The slots are first padded as `update_selections` and `load_selections` do before
+/// `update_compatible` (`PresetBundle.cpp:3939, 4101`).
 pub(in crate::profiles) fn select_compatible_filaments(
     catalog: &Catalog,
     (printer, process): (&str, Option<&str>),
     filaments: &[String],
     installed: &[String],
 ) -> Result<Vec<String>, SliceError> {
+    // `update_filament_count` (`PresetBundle.cpp:5426-5436`): up to `min_filament_count()` with
+    // the last slot, or the first visible filament when there is none. SLA needs no filament.
+    let (_, minimum) = catalog.filament_slot_counts(printer)?;
+    let mut filaments = filaments.to_vec();
+    if filaments.len() < minimum {
+        let last = filaments
+            .last()
+            .map_or_else(|| catalog.first_visible_filament().to_owned(), Clone::clone);
+        filaments.resize(minimum, last);
+    }
     let compatible = filter_with_catalog(catalog, printer, process)?.filaments;
     let installed: BTreeSet<&str> = installed.iter().map(String::as_str).collect();
     let mut candidates = Vec::new();
@@ -54,7 +64,7 @@ pub(in crate::profiles) fn select_compatible_filaments(
             .map(|position| filament(catalog, position))
             .transpose()
     };
-    if let [name] = filaments {
+    if let [name] = filaments.as_slice() {
         // `:8660-8664`: the edited preset after `PresetCollection::update_compatible`
         // (`Preset.hpp:877-885`) with `PreferedFilamentsProfileMatch` (`:8600-8628`).
         if compatible.contains(name)
