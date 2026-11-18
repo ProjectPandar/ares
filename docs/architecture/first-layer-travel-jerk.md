@@ -67,7 +67,7 @@ Rust's existing `OrcaFloatOrPercentsNullable::get_at` already represents nil
 as `FloatOrPercent::Float(f64::NAN)` (`options/config_types/vector.rs:114-119`).
 Reuse that getter and the upstream positive-value comparison; add no special
 nil handling. Public-project nil normalization/inheritance and end-to-end nil
-parity are deferred because the qualified projects contain explicit values,
+parity are deferred because the projects used for verification contain explicit values,
 not nil. No unqualified input-loader or nil-resolution policy is introduced.
 
 ## Included and deferred behavior
