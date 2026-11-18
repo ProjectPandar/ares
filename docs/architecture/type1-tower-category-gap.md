@@ -52,6 +52,22 @@ opening but two lines in the 31.5 mm replan opening. At the category pitch
 of 1.25 mm, the replanned depth is 2.5 mm, not 3.75 mm. This distinguishes
 the opening change from the pitch change.
 
+## Planner and emission boundaries
+
+The planner no longer doubles TPU nozzle-change depth: neither
+`WipeTower.cpp:3107–3132` (replan) nor `:3181–3192` (initial reservation)
+applies a TPU multiplier to depth. The division by two is in emission
+(`WipeTower.cpp:2464`); the Ares emission paths in
+`type1/nozzle_change.rs:19` and `type1/tool_change.rs:29` are unchanged.
+
+Native selects the nozzle-change perimeter width from the table at
+`WipeTower.cpp:51,2186–2190`: 0.2 → 0.5, 0.4 → 1.0, 0.6 → 1.2,
+0.8 → 1.4 mm. Unlisted diameters use twice the wipe perimeter.
+The Ares planner still uses twice the wipe perimeter, which matches the
+0.2 and 0.4 mm table entries but not the 0.6 and 0.8 mm entries. The latter
+two are deferred; the Ares table currently exists only in
+`wipe_tower/estimate/statics.rs:24`.
+
 Wall polygon and gap processing, nozzle-change path emission, object-wipe
 ordering and finish-block eligibility remain separate upstream boundaries.
 No changes to Type2, first-layer hull construction or G29 rendering.
