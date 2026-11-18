@@ -41,6 +41,7 @@ pub(crate) struct PresetDescriptor {
     pub inherits: Option<String>,
     /// `compatible_printers` (`:2090`), process files only.
     pub compatible_printers: Vec<String>,
+    pub compatible_printers_condition: String,
 }
 
 impl PresetDescriptor {
@@ -62,11 +63,10 @@ pub(crate) struct LoadedPresetNames {
     pub machine: Option<PresetDescriptor>,
     pub process: Option<PresetDescriptor>,
     pub embedded: Option<ProjectSettingsRaw>,
+    pub direct_stl_machine: Option<ProjectSettingsRaw>,
 }
 
-/// The project-backed machine-only entry ports `OrcaSlicer.cpp:2922–2945`.
-/// Existing complete-list adjudication stays unchanged; process-only and
-/// other printer-switch contexts remain separate rewrite slices.
+/// Ports the retained-process and direct STL paths of `OrcaSlicer.cpp:2922–2945`.
 pub(crate) fn reject_incompatible_load_settings(
     raw: &ProjectSettingsRaw,
     names: &LoadedPresetNames,
@@ -79,6 +79,20 @@ pub(crate) fn reject_incompatible_load_settings(
         return reject_incompatible_process(raw);
     };
     let new_printer_system_name = machine.system_name();
+    // Direct STL has no embedded preset to enter the printer-switch path.
+    if let (Some(machine_config), Some(process)) = (&names.direct_stl_machine, &names.process)
+        && process.compatible_printers.is_empty()
+    {
+        return if machine_condition_compatible(
+            &process.compatible_printers_condition,
+            machine_config,
+            new_printer_system_name,
+        )? {
+            Ok(())
+        } else {
+            Err(SliceError::ProcessNotCompatible)
+        };
+    }
     let compatible = if let Some(embedded) = &names.embedded {
         retained_process_compatible(embedded, machine_config, new_printer_system_name)?
     } else if let Some(process) = &names.process {
@@ -133,6 +147,14 @@ fn retained_process_compatible(
                 .and_then(scalar_text)
         })
         .unwrap_or_default();
+    machine_condition_compatible(&condition, machine, printer_name)
+}
+
+fn machine_condition_compatible(
+    condition: &str,
+    machine: &ProjectSettingsRaw,
+    printer_name: &str,
+) -> Result<bool, SliceError> {
     if condition.is_empty() {
         return Ok(true);
     }
@@ -174,7 +196,7 @@ fn retained_process_compatible(
         config.insert("num_extruders", Value::Integer(nozzles.len() as i64));
     }
     // Preset.cpp:929–937 accepts a malformed compatibility expression.
-    Ok(evaluate_condition(&condition, &config, 0).unwrap_or(true))
+    Ok(evaluate_condition(condition, &config, 0).unwrap_or(true))
 }
 
 /// The printer's system name: the printer slot of `inherits_group` — the
