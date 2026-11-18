@@ -33,7 +33,7 @@ The Rust destination is `crates/ares-core/src/project/domain/profile_input/overl
 4. Preserve the existing non-variant per-slot `set_at` behavior and identity-key handling.
 5. Keep the existing compatibility and dynamic-group behavior at the same overlay boundary.
 
-The authorized B59-01 expectation is Native CLI behavior: `filament_self_index = 1,2,3,4`. The scoped profile/overlay witnesses cover the selected-profile overlay and processed configuration paths.
+The `filament_self_index` `get_at` fix matches the Native CLI result: `filament_self_index = 1,2,3,4`. The scoped profile/overlay witnesses cover the selected-profile overlay and processed configuration paths.
 
 ## Explicitly deferred behavior
 
@@ -45,7 +45,7 @@ The three Native exclude-hull cases are therefore not Slice A witnesses. On the 
 
 Slice A must pass:
 
-- B59-01 with Native CLI `filament_self_index = 1,2,3,4`; the evidence path is `tests/support/filament_self_index.rs` and the parity fixture/runner that invokes the official Orca CLI, with the authorized assertion in `crates/ares-core/tests/profile_filament_self_index.rs`;
+- `filament_self_index` `get_at` parity with the Native CLI result `1,2,3,4`, covered by the official Orca CLI parity fixture and runner, `tests/support/filament_self_index.rs`, and the assertion in `crates/ares-core/tests/profile_filament_self_index.rs`;
 - the existing scoped profile/overlay tests;
 - formatting, clippy, and the wasm32 check;
 - scoped base-vs-tip parity with no P→F regressions.
