@@ -35,6 +35,25 @@ path), `--load-settings` input resolution, upward-machine reporting and
 catalog/profile entry unchanged. Extending preset inheritance resolution or
 porting the other CLI compatibility branches is outside this slice.
 
+## Shared placeholder regex semantics
+
+`PlaceholderParser.cpp:103–106` selects Boost.Regex for this build.
+`regex_op` (`:754–781`), `regex_replace` (`:785–797`), and `one_of`
+(`:823,:841`) use that same engine. Both compatibility predicates and
+G-code templates reach `regex_op` for `=~` and `!~`. In the default Boost Perl
+mode, `.` spans line breaks. The stock Prusa condition needs this for its
+multiline `printer_notes`; the negated match alone rejects the printer in
+Native, confirming a true match rather than an accepted parser error.
+
+In `project_slice/gcode_emit/expression/parser.rs`, enable dot-matches-new-line
+on the existing byte-regex comparison shared by the two callers. Both engines
+are case-sensitive by default. Native `regex_match` consumes the whole subject;
+keep Ares's existing outer anchors and byte semantics. The regex engines are
+not otherwise interchangeable: Boost enables line-sensitive pattern-internal
+`^`/`$` by default, while Rust's `m` is off by default. A Native template probe
+accepts `front$\n^CORE$\n^back` over three lines. Do not change anchor modes,
+pattern grammar, supported regex functions, or template string decoding here.
+
 ## Verification
 
 Use the grounded Prusa CORE One 0.4 nozzle cube through the public CLI with
@@ -47,4 +66,9 @@ keeping `--arrange 0` on Native. Compare exit and signed report return code;
 for successful slices compare the whole ordered G-code after removing only the
 generator banner. Rejections must produce no G-code. Retain the bytes, commands
 and outputs, demonstrate the failing assertions before the production fix,
-and compare identical scoped inventories across the fix in each mode.
+and compare identical scoped inventories across the fix in each mode. Include
+template and embedded/overlaid 3MF compatibility cases. An independent 3MF
+machine-start template evaluates `=~` on a synthetic multiline printer note;
+require the true marker from Native and strict Native/API/CLI G-code parity.
+Use a template-local copy with literal line feeds to isolate regex evaluation
+from the emitted config block's escaping of the notes field.
