@@ -15,7 +15,7 @@ belongs here.
 
 ## Failure inventory and checks
 
-The approved seams are the exported literal decoder and the real generator
+The ported seams are the exported literal decoder and the real generator
 `--dump` CLI followed by the existing Rust metadata renderer.
 
 - Context text must not enter msgids: `ssecond`, `XAxis`, and `YAxis` are wrong.
