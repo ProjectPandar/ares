@@ -19,6 +19,11 @@ const THREE_FILAMENTS = `${repositoryRoot}tests/parity/filament-group-flush-cont
 const U1 = { model: "Snapmaker U1", combo: "Variant", variant: "0.4", printer: "Snapmaker U1 (0.4 nozzle)" };
 const A350 = { model: "Snapmaker A350", combo: "Nozzle diameter", variant: "0.4", printer: "Snapmaker A350 (0.4 nozzle)" };
 
+// The probe loads no AppConfig, so the browser does not start from the shared first-run config either but from the
+// one the probe's wizard leaves (selectInBrowser). With several empty slots update_compatible gives each the first
+// compatible visible filament (PresetBundle.cpp:8864-8874), so both sides must see the same installed filaments.
+test.use({ firstRunConfig: false });
+
 /** The GuideFrame "All Snapmaker models" check: every model with its `nozzle_diameter` variants (PresetBundle.cpp:8319-8327). */
 function snapmakerModels() {
   const vendor = JSON.parse(readFileSync(`${profiles}Snapmaker.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
@@ -48,19 +53,34 @@ function platerSession(probe: string, artifacts: string, project: string, printe
   });
 }
 
-/** The same session in the browser: open the 3MF, install every Snapmaker model, pick the model and its variant. */
-async function selectInBrowser(page: Page, project: string, { model, combo: variants, variant, printer }: typeof U1) {
+/** The system filaments the probe's session shows: those load_installed_filaments made visible. */
+function sessionInstalledFilaments(session: NativeSelection) {
+  const { records } = session.filament as unknown as { records: { name: string; system: boolean; visible: boolean }[] };
+  return records.filter(({ system, visible }) => system && visible).map(({ name }) => name).sort();
+}
+
+/**
+ * The same session in the browser. It starts from the app config the probe's wizard leaves: every Snapmaker model
+ * and variant installed, no filament section and no printer. The installed printers keep the first run's wizard
+ * closed (GUI_App::config_wizard_startup, GUI_App.cpp:10129-10135), and load_installed_filaments then adds each
+ * installed model's default_materials (PresetBundle.cpp:3757-3816), as it does after the probe's wizard. The 3MF
+ * opens and the sidebar picks the model and its variant.
+ */
+async function selectInBrowser(page: Page, project: string, session: NativeSelection, { model, combo: variants, variant, printer }: typeof U1) {
   const combo = page.getByRole("button", { name: "Printer preset", exact: true });
+  await page.addInitScript((record) => {
+    if (localStorage.getItem("ares.config") === null) localStorage.setItem("ares.config", record);
+  }, JSON.stringify({
+    version: 1, theme: "dark", mode: "simple", gcodeWindow: true,
+    installedPrinters: { Snapmaker: snapmakerModels() }, printer: null, printers: {}, installedFilaments: [],
+    nozzleVolumeTypes: {}, preferredFilamentMapMode: "Auto For Flush",
+  }));
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  const installed = await page.evaluate(() => (JSON.parse(localStorage.getItem("ares.config")!) as { installedFilaments: string[] }).installedFilaments);
+  expect([...installed].sort(), "the installed filaments are those the session shows").toEqual(sessionInstalledFilaments(session));
   await page.getByTestId("import-input").setInputFiles(project);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
-  await combo.click();
-  await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
-  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
-  await wizard.getByRole("checkbox", { name: "All Snapmaker models", exact: true }).check();
-  await wizard.getByRole("button", { name: "Confirm" }).click();
-  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   await combo.click();
   await page.getByRole("option", { name: model, exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -98,11 +118,12 @@ test("selecting the never-used four-nozzle Snapmaker U1 for a one-filament 3MF s
   page.on("pageerror", (error) => errors.push(error.message));
   expect(embeddedFilaments(ONE_FILAMENT), "the project embeds one filament").toHaveLength(1);
   // Tab::select_preset runs update_selections for the printer (Tab.cpp:7740-7742): with nothing remembered the print
-  // and slot 1 are the printer's preferred compatible presets and the colours "#26A69A" (PresetBundle.cpp:3914-4003),
-  // then min_filament_count pads the slots with the last one (8611-8617).
+  // and slot 1 are empty and the colours "#26A69A" (PresetBundle.cpp:3914-3929), update_filament_count pads the slots
+  // to four with the empty one (3939, 5426-5436), and update_compatible gives each the first compatible visible
+  // filament (4002, 8864-8874).
   const session = platerSession(probe!, artifacts, ONE_FILAMENT, U1.printer);
   expect(session.filament_presets, "the U1 selects four filaments").toHaveLength(4);
-  await selectInBrowser(page, ONE_FILAMENT, U1);
+  await selectInBrowser(page, ONE_FILAMENT, session, U1);
   await page.screenshot({ path: `${artifacts}prepare.png` });
   await expectSidebar(page, session);
   expect(errors).toEqual([]);
@@ -125,7 +146,7 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
   const exported = cliSwitchedExport(session, ONE_FILAMENT, `${artifacts}plater-export.3mf`);
   const native = withoutCliGroups(orcaGcode(artifacts, `${artifacts}plater-export.3mf`), exported);
 
-  await selectInBrowser(page, ONE_FILAMENT, U1);
+  await selectInBrowser(page, ONE_FILAMENT, session, U1);
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toHaveText(/^(Slice complete|Slicing failed)/, { timeout: 240_000 });
   await expect(page.getByTestId("status")).toContainText("Slice complete");
@@ -156,7 +177,7 @@ test("a three-filament 3MF switched to the never-used single-nozzle Snapmaker A3
   // the never-used A350 keeps one slot, min_filament_count is 1, and its colour is "#26A69A" (3941-3947).
   const session = platerSession(probe!, artifacts, THREE_FILAMENTS, A350.printer);
   expect(session.filament_presets, "the A350 selects one filament").toHaveLength(1);
-  await selectInBrowser(page, THREE_FILAMENTS, A350);
+  await selectInBrowser(page, THREE_FILAMENTS, session, A350);
   await page.screenshot({ path: `${artifacts}prepare.png` });
   await expectSidebar(page, session);
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
