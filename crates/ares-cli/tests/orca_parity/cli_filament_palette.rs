@@ -46,9 +46,13 @@ fn cli_filament_support_palette_mismatch_matches_native() {
         "filament_is_support": ["0"]
     })
     .to_string();
-    // Match the raw embedded-project admission, without the test adapter's catalog injection.
+    // Use the direct project route with the reference's system preset resources.
+    let resources = crate::native_environment::value("ARES_ORCA_RESOURCES_DIR")
+        .expect("Native reference resources");
     let argv = vec![
         "slice".to_owned(),
+        "--resources-dir".to_owned(),
+        resources.to_string_lossy().into_owned(),
         project.to_string_lossy().into_owned(),
         "-o".to_owned(),
         gcode.to_string_lossy().into_owned(),
