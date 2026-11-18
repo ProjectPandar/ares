@@ -52,9 +52,10 @@ travel acceleration is 650, and both are positive. Native/API/CLI whole-stream
 comparison therefore fails before the fix.
 
 The same mesh with support disabled and a zero-gap support variant were also
-probed read-only. Only the elevated-support case is needed in the parity suite. No raft or Z-offset input produced a qualified difference: raft
-object IDs start after raft layers and the raft schedule's first-layer state is
-already explicit; a global Z offset changes machine Z but not the layer
+probed read-only. Only the elevated-support case is needed in the parity suite.
+No raft or Z-offset input produced an observable difference: raft object IDs
+start after raft layers, and the raft schedule records first-layer state
+explicitly. A global Z offset changes machine Z but not the layer
 `bottom_z` relationship. Those paths remain deferred rather than receiving an
 unwitnessed branch.
 
