@@ -299,7 +299,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
 ) {
     let acceleration = if state.options.default_acceleration <= 0.0 {
         None
-    } else if state.layer_index == 0 {
+    } else if state.on_first_layer {
         // `GCode.cpp:7371-7375`: truncate the unsigned local before its gate and rounding.
         let initial_layer_travel_acceleration =
             state.options.initial_layer_travel_acceleration as u32;
