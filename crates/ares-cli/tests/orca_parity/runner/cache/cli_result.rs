@@ -29,6 +29,7 @@ pub(crate) enum EarlyExit {
     NotFound,
     #[cfg(target_os = "linux")]
     ProcessNotCompatible,
+    #[cfg(target_os = "linux")]
     FilamentSupportPaletteMismatch,
     /// Absent `--load-settings` entry: the 3MF admission gate
     /// (`OrcaSlicer.cpp:1682-1690`) fires before the file reads
@@ -85,6 +86,7 @@ impl EarlyExit {
             Self::NotFound => -3,
             #[cfg(target_os = "linux")]
             Self::ProcessNotCompatible => -17,
+            #[cfg(target_os = "linux")]
             Self::FilamentSupportPaletteMismatch => -5,
             #[cfg(target_os = "linux")]
             Self::MissingSettingsFile => -19,
