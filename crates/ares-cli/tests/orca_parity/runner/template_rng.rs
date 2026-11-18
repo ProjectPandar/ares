@@ -49,8 +49,7 @@ fn seeded_template_file_start_draws_from_the_shared_stream() {
         .unwrap()
         .parse::<u32>()
         .unwrap();
-    let input = super::repo_root()
-        .join("tests/parity/template-rng/raise3d-left.3mf");
+    let input = super::repo_root().join("tests/parity/template-rng/raise3d-left.3mf");
     // GCode.cpp:4230-4231 emits file start before machine start (:4381) on the
     // one stream seeded in the GCode constructor (:3585), so these draws shift
     // every later draw. The stock machine_start_gcode already draws, which is
