@@ -27,7 +27,7 @@ fn random_start_gcode_skip(
 }
 
 fn run() {
-    if !crate::runner::reference_enabled("ARES_PARITY_STOCK_SWEEP") {
+    if !crate::runner::sweep_enabled("ARES_PARITY_STOCK_SWEEP") {
         return;
     }
     let root = crate::artifacts::root_from_env().unwrap();

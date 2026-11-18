@@ -6,10 +6,12 @@ use crate::runner::CaseInputs;
 
 #[test]
 fn initialized_transition_snap_matches_complete_internal_fill() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_TRANSITION_SNAP_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let directory = tempfile::tempdir().unwrap();
     let model = directory.path().join("transition-snap.stl");

@@ -136,7 +136,7 @@ def main(evidence):
         expression = " | ".join(f"test(={name})" for name in SWEEPS)
         status = nextest(label, "run", "--profile", profile, "--no-tests=pass", "-E", expression)
         log = (evidence / f"{label}.stderr").read_text()
-        check(status == 0 and "no tests to run" in log and "PASS " not in log,
+        check(status == 0 and "0 tests run: 0 passed" in log and "PASS " not in log,
               f"{profile} must not execute either sweep, got exit {status}")
 
     if errors:

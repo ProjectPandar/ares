@@ -17,17 +17,12 @@
 //! whose selected seam distances have a previous object slice.
 //! Upstream `345efec64c7b95a05ce5cf96df0dde66a158835c`,
 //! `SeamPlacer.cpp:1683-1727,2384`, `GCode.cpp:8519-8541`.
-use crate::runner::{
-    OrcaRunner, cache_identity, profile_entry, reference_enabled, repo_root, stages,
-};
+use crate::runner::{OrcaRunner, cache_identity, profile_entry, repo_root, stages};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
 #[test]
 fn raft_conditional_scarf_matches_native_public_slicing() {
-    if !reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
-        return;
-    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

@@ -2,7 +2,7 @@ use serde_json::json;
 
 #[test]
 fn mapped_tool_load_and_change_delays_match_native_total_deltas() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (native_base, ares_base) = super::outputs("", "", false, &[]);
@@ -26,7 +26,7 @@ fn mapped_tool_load_and_change_delays_match_native_total_deltas() {
 
 #[test]
 fn shared_hotend_unload_and_load_delays_match_native_total_deltas() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     for end in ["", "M702 MACRO", "M702 C", "M702\u{b}C"] {

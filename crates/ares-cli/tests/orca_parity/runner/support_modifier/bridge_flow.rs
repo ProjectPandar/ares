@@ -67,10 +67,9 @@ fn export_landed_case(runner: &OrcaRunner) -> ExportedCase {
 
 #[test]
 fn landed_support_preserves_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let exported = export_landed_case(&runner);
     let mut sliced = runner.slice_case(&exported).unwrap();
     sliced.label.push_str("/landed-control");
@@ -83,10 +82,9 @@ fn landed_support_preserves_complete_output() {
 
 #[test]
 fn support_modifier_bridge_flow_averages_printing_regions() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_MODIFIER_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let exported = export_landed_case(&runner);
     let mut baseline = runner.slice_case(&exported).unwrap();
     baseline.label.push_str("/without-modifier");

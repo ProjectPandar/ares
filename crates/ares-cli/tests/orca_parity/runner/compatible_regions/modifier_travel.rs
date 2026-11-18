@@ -4,7 +4,7 @@ use serde_json::json;
 
 #[test]
 fn modifier_preserves_layer_63_native_feedrate() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(true);
@@ -23,7 +23,7 @@ fn modifier_preserves_layer_63_native_feedrate() {
 
 #[test]
 fn modifier_without_wall_routing_preserves_layer_63_native_feedrate() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(false);
@@ -42,7 +42,7 @@ fn modifier_without_wall_routing_preserves_layer_63_native_feedrate() {
 
 #[test]
 fn modifier_without_cooling_slowdown_preserves_layer_63_native_feedrate() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs_with_cooling(true, false);
@@ -61,7 +61,7 @@ fn modifier_without_cooling_slowdown_preserves_layer_63_native_feedrate() {
 
 #[test]
 fn modifier_without_cooling_slowdown_preserves_complete_layer_63_motion() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs_with_cooling(true, false);
@@ -72,7 +72,7 @@ fn modifier_without_cooling_slowdown_preserves_complete_layer_63_motion() {
 
 #[test]
 fn modifier_without_cooling_or_wall_routing_preserves_complete_layer_63_motion() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs_with_cooling(false, false);
@@ -84,7 +84,7 @@ fn modifier_without_cooling_or_wall_routing_preserves_complete_layer_63_motion()
 
 #[test]
 fn modifier_preserves_final_use_cooldown_section() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(true);
@@ -124,7 +124,7 @@ fn layer_63_object(bytes: &[u8]) -> &str {
 
 #[test]
 fn modifier_preserves_ninth_layer_native_approach() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(true);
@@ -135,7 +135,7 @@ fn modifier_preserves_ninth_layer_native_approach() {
 
 #[test]
 fn modifier_without_wall_routing_preserves_ninth_layer_native_approach() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(false);
@@ -165,7 +165,7 @@ fn ninth_layer_approach(bytes: &[u8]) -> &str {
 
 #[test]
 fn modifier_preserves_fourth_layer_outer_wall_exit() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(true);
@@ -181,7 +181,7 @@ fn modifier_preserves_fourth_layer_outer_wall_exit() {
 
 #[test]
 fn modifier_without_wall_routing_preserves_fourth_layer_outer_wall_exit() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(false);
@@ -208,7 +208,7 @@ fn fourth_layer_object(bytes: &[u8]) -> &str {
 
 #[test]
 fn modifier_preserves_second_layer_native_approach() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(true);
@@ -223,7 +223,7 @@ fn modifier_preserves_second_layer_native_approach() {
 
 #[test]
 fn modifier_without_wall_routing_preserves_second_layer_native_approach() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(false);

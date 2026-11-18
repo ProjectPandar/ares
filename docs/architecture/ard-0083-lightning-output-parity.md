@@ -104,9 +104,8 @@ the actual call-order repair; broader inputs still need verification.
 After the motion-witness refinement, public regression and full
 26-value `sparse_infill_pattern` enum sweep pass 2/2, with 26/26
 strict comparisons and zero rejections.
-Enable `ARES_PARITY_LIGHTNING_REFERENCE=1` for the public
-regression, and `ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=sparse_infill_pattern`
-without a value filter for the complete enum. Both use explicit artifact
+Select the public regression directly. For the complete enum, set
+`ARES_PARITY_OPTIONS=1 ARES_OPTION_KEYS=sparse_infill_pattern` without a value filter. Both use explicit artifact
 root, initialized replay wrapper and seed 0 with single-core affinity as above.
 
 Shared initialized consumers pass 10/10:

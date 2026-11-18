@@ -363,7 +363,7 @@ mod environment;
 #[path = "runner/initialization.rs"]
 mod initialization;
 pub(crate) use environment::{
-    official_reference_enabled, reference_enabled, seeded_reference_enabled,
+    official_reference_enabled, reference_available, seeded_reference_enabled, sweep_enabled,
 };
 #[path = "runner/cache.rs"]
 mod cache;

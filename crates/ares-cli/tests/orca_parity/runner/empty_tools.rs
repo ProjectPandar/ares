@@ -5,10 +5,9 @@ use serde_json::json;
 
 #[test]
 fn final_empty_geometry_layer_preserves_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

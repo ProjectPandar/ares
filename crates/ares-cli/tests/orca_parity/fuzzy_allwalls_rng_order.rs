@@ -60,7 +60,7 @@ fn inner_wall_motion_lines(gcode: &str, layer_z: &str) -> usize {
 
 #[test]
 fn fuzzy_allwalls_seeded_oracle_ordered_bytes() {
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/allwalls.3mf");
@@ -85,7 +85,7 @@ fn fuzzy_allwalls_seeded_oracle_ordered_bytes() {
 
 #[test]
 fn fuzzy_external_seeded_oracle_control() {
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/external.3mf");
@@ -106,7 +106,7 @@ fn fuzzy_external_seeded_oracle_control() {
 
 #[test]
 fn fuzzy_all_seeded_oracle_control() {
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/all.3mf");

@@ -8,22 +8,38 @@ use super::{
 const SEEDED_REFERENCE: &str = "ARES_PARITY_SEEDED_REFERENCE";
 
 #[track_caller]
-pub(crate) fn reference_enabled(flag: &str) -> bool {
-    reference_gate(None, Some(flag))
+pub(crate) fn sweep_enabled(flag: &str) -> bool {
+    let required = crate::native_environment::required();
+    if required {
+        required_lane(std::env::var(SEEDED_REFERENCE).as_deref());
+    }
+    if std::env::var(flag).as_deref() == Ok("1") {
+        return true;
+    }
+    assert!(!required, "ARES_REQUIRE_ORCA=1 requires {flag}=1");
+    crate::native_environment::skipped(&format!("{flag} is not enabled"));
+    false
 }
 
 #[track_caller]
-pub(crate) fn seeded_reference_enabled(flag: Option<&str>) -> bool {
-    reference_gate(Some("seeded"), flag)
+pub(crate) fn reference_available() -> bool {
+    available()
+        .unwrap_or_else(|error| panic!("{error}"))
+        .is_some()
+}
+
+#[track_caller]
+pub(crate) fn seeded_reference_enabled() -> bool {
+    lane_reference_enabled("seeded")
 }
 
 #[track_caller]
 pub(crate) fn official_reference_enabled() -> bool {
-    reference_gate(Some("official"), None)
+    lane_reference_enabled("official")
 }
 
 #[track_caller]
-fn reference_gate(expected: Option<&str>, flag: Option<&str>) -> bool {
+fn lane_reference_enabled(expected: &str) -> bool {
     let required = crate::native_environment::required();
     let seeded = std::env::var(SEEDED_REFERENCE);
     let lane = if required {
@@ -33,9 +49,7 @@ fn reference_gate(expected: Option<&str>, flag: Option<&str>) -> bool {
     } else {
         "official"
     };
-    if let Some(expected) = expected
-        && lane != expected
-    {
+    if lane != expected {
         assert!(
             !required,
             "expected ARES_PARITY_LANE={expected}, got {lane}"
@@ -43,20 +57,7 @@ fn reference_gate(expected: Option<&str>, flag: Option<&str>) -> bool {
         crate::native_environment::skipped(&format!("{expected}-only reference"));
         return false;
     }
-    if required {
-        available().unwrap_or_else(|error| panic!("{error}"));
-    }
-    if let Some(flag) = flag
-        && std::env::var(flag).as_deref() != Ok("1")
-    {
-        assert!(
-            !required || expected.is_none(),
-            "ARES_PARITY_LANE={lane} requires {flag}=1"
-        );
-        crate::native_environment::skipped(&format!("{flag} is not enabled"));
-        return false;
-    }
-    true
+    reference_available()
 }
 
 #[track_caller]
@@ -138,7 +139,7 @@ pub(super) fn available() -> Result<Option<(PathBuf, PathBuf)>, StageError> {
             let configured = std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some();
             let flagged = [
                 "ARES_PARITY_SWEEP",
-                "ARES_PARITY_CLUSTER",
+                "ARES_PARITY_STOCK_SWEEP",
                 "ARES_PARITY_OPTIONS",
             ]
             .iter()

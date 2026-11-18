@@ -3,10 +3,9 @@ use std::{fmt::Write as _, io::Write as _};
 
 #[test]
 fn initialized_tilted_mesh_matches_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let directory = tempfile::tempdir().unwrap();
     let model = directory.path().join("tilted-overhang.3mf");
     std::fs::write(&model, project()).unwrap();

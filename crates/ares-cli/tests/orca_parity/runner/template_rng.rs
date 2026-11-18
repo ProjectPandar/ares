@@ -39,7 +39,7 @@ fn seeded_template_distributions_and_shared_stream() {
 
 #[test]
 fn seeded_template_file_start_has_no_rng_context() {
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -78,7 +78,7 @@ fn seeded_template_file_start_has_no_rng_context() {
 }
 
 fn verify(fixture: &str, probe: bool) {
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     let runner = OrcaRunner::from_env()

@@ -35,7 +35,6 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
-      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
       ARES_ORCA_BIN: launcher,
       ...(seeded ? {} : nativeEnv(orca!)),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
