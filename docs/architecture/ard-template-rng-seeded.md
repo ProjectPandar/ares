@@ -106,7 +106,7 @@ records that file-start raised the unavailable-context error on the Rust side;
 that was read at the time as reproducing Native. It does not: `GCode.cpp:4230-4231`
 evaluates file start with `&ppi.context` like any other custom G-code, so Native
 draws there while Rust rejected it. File start is therefore one of the Rust
-divergences the record covers, not an accepted distinction. An earlier run used the
+divergences the record covers, not a difference to preserve. An earlier run used the
 Orca/Ares comparator incorrectly for two native streams; it is not the RED
 basis. The correction uses the existing Orca normalization on both streams.
 
