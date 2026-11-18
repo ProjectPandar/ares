@@ -130,13 +130,11 @@ Keep this ordering rather than copying Type1's guard into Type2.
 | `plan.rs::Plan::new` | `WipeTower2.cpp:1060`, constructor sparse-skipped state | Type2 variants exercise full-height planning and emission. Exact first-layer speed, cone shape and filament accounting are not independently compared by the height observer. |
 | `type1/generator.rs::finish_result` | `WipeTower.cpp:3099–3102,3999–4002`, printed-layer filament accounting | The variants exercise generated sparse results, but exact per-filament consumed length is not independently asserted. Full output and its unchanged comparison result remain available; height success is not an accounting-parity claim. |
 
-The other helper consumers in final upstream are not implemented by these Rust
-shells: `WipeTower.cpp:79`'s sparse-layer combination and
-`Print.cpp:1434/1504`'s estimated/actual compacted-tower clearance validators.
-Sparse combination currently has registry/profile vocabulary only; the existing
-`print/validate/estimated_tower.rs` checks printable-region containment, not
-compacted-tower clearance. Those absent behaviors are deferred and have no
-claimed coverage here. There is also no corresponding incremental
+The [pre-slice compacted-tower clearance slice](compacted-wipe-tower-clearance.md)
+ports the estimated check at `Print.cpp:1431–1478,2267–2275`. The post-plan
+check using actual extrusions (`Print.cpp:1499–1584,3639`) remains deferred, as
+does `WipeTower.cpp:79`'s sparse-layer combination, which has registry/profile
+vocabulary only. There is also no corresponding incremental
 `Print::invalidate_state_by_config_options` implementation for `Print.cpp:571`.
 Do not change its raw option vocabulary in export, registry or profile-refresh
 keys: the effective predicate controls behavior, not configuration identity.
