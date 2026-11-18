@@ -27,6 +27,7 @@ impl fmt::Display for PresetAdmissionError {
 #[derive(Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
+    MissingProjectPlate(u32),
     InvalidInput(String),
     PresetAdmission(PresetAdmissionError),
     /// Support/palette admission (`OrcaSlicer.cpp:3929-3933`).
@@ -109,6 +110,7 @@ impl fmt::Display for SliceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
+            Self::MissingProjectPlate(plate) => write!(f, "project has no plate {plate}"),
             Self::InvalidInput(message) => f.write_str(message),
             Self::PresetAdmission(error) => error.fmt(f),
             Self::FilamentSupportPaletteMismatch {

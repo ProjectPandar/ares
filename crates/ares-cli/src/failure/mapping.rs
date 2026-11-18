@@ -41,6 +41,21 @@ pub(crate) fn slice_error_to_failure(
         }))
     };
     match error {
+        // OrcaSlicer.cpp:5291–5295 rejects before slicing, with plate index 0.
+        SliceError::MissingProjectPlate(_) => family(
+            -2,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            "Invalid parameters to the slicer.",
+            String::new(),
+        ),
         SliceError::FilamentSupportPaletteMismatch { .. } => CliFailure::config_file_error(
             #[cfg(target_os = "linux")]
             output,

@@ -17,7 +17,7 @@ impl Project {
             .plates
             .iter()
             .position(|plate| plate.id() == plate_id)
-            .ok_or_else(|| SliceError::InvalidInput(format!("project has no plate {plate_id}")))?;
+            .ok_or(SliceError::MissingProjectPlate(plate_id))?;
         let identity = self.plates[index]
             .instances()
             .iter()
