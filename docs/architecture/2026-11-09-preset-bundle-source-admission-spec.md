@@ -228,7 +228,7 @@ API/CLI 各自真实调用，保留参数、退出、配置、原输出与 raw d
    浏览器调用必须实际到达 `slice_with_load_settings` 的字节/身份数据入口；
    未经过本 resolver 的 `sliceWithProfiles` 成功不计此切片。若现有 binding
    不能表达该输入，先列 `ares-wasm` 的薄绑定子切片，不把解析逻辑移入 web。
-4. Native CPU13、Ares28–31/jobs4，原 source/profile/binary 字节绑定、
+4. 固定 Native 与 Ares 的 source/profile/binary 字节、
    独立精确 tip、前后逐身份结果、P→F/F→P、全通道/输入/输出/diff/哈希及
    receipt 绑定。原证明和已接收交付不改写，不运行未经授权的 FULL。
 5. 只有原目标完整实时错误协议一致，才能称该准入差异修复；成功控制的
