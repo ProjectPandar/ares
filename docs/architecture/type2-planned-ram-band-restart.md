@@ -50,15 +50,16 @@ filesystem, renderer, terminal, public API or adapter behavior changes.
 ## Test-first verification
 
 Use the existing public TiQ2 whole-file and retained-role-fan E2E witnesses.
-Commit this specification, record their unchanged RED on the prerequisite base,
-then port the restart. Keep fixture bytes, generated-by-only normalization,
-complete ordered-line/line-count comparisons and all existing assertions.
+Commit this specification and confirm that both tests still fail on the
+prerequisite base before porting the restart. Keep fixture bytes,
+generated-by-only normalization, complete ordered-line/line-count comparisons
+and all existing assertions.
 
 Run a paired wipe-tower/TiQ2/SEMM/Type2 scope, including the existing BBL boundary
 controls. Retain identical selected identities and report every transition;
-require zero passing-to-failing transitions. The two original witnesses may
-remain red: progress requires the first complete-stream mismatch to move later
-or a real fail-to-pass result, not a weaker comparator.
+require zero passing-to-failing transitions. The two original tests may still
+fail, but the first complete-stream mismatch must move later or the tests must
+pass without weakening the comparator.
 
 Read-only GDB must qualify complete streams and observe the restart/wipe handoff
 before and after. Record all75 cooling handoff IDs as downstream evidence;
