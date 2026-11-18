@@ -2,7 +2,6 @@
 
 ## Rewrite boundary
 
-Base: B59-26 `c0efd1742235db9d96faf0049d3b46645b538122`.
 Upstream: OrcaSlicer v2.5.0 `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
 
 This slice ports the ordinary selected-user JSON directory part of the lazy CLI
@@ -42,9 +41,9 @@ source-cited preset defaults and normalization. The externally supplied source
 list never self-registers into this transport. Admission remains kind + opaque
 identity, not name, basename, bytes, or parent-name matching.
 
-The B59-26 `add_loaded` API remains the host-canonical companion entry point. The
-new collection entry point ports ordinary Native user-directory loading rather
-than pretending raw inherited documents are already canonical loaded records.
+The `add_loaded` API remains the entry point for host-canonical records. The
+collection entry point resolves raw inherited documents as part of Native
+user-directory loading.
 
 ## Empirical boundaries
 
@@ -76,8 +75,8 @@ AppConfig migrations/selection UI state, browser-token producers, and WASM
 producer bindings. A sparse external user filament without authored `filament_id`
 also exposed a distinct CLI metadata mismatch (Native empty ID versus inherited
 Ares ID); the inherited-option witness supplies its authored filament ID and does
-not claim that adjacent metadata behavior. The JSON system-loader boundary is the existing B59-26 port;
-this slice does not claim cache-only vendor installation parity.
+not claim that adjacent metadata behavior. The JSON system loader remains part
+of preset source admission. Cache-only vendor installation is out of scope.
 
 The existing sparse typed-file compatibility shell is retained unchanged. A
 separate exploratory typed `from:user`/no-inherits fixture exposed an adjacent
