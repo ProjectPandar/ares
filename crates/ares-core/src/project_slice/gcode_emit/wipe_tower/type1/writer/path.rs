@@ -1,7 +1,10 @@
-//! Type1 always fits arcs (`WipeTower.cpp:865–907,1102–1153`), unlike Type2.
+//! Type1 path simplification follows the resolved arc mode (`WipeTower.cpp:1122–1130,1382–1388`).
 use super::Writer;
 use crate::geometry::{CoordinateScale, Point, Polygon, Polyline};
-use crate::project_slice::{gcode_emit::motion, perimeters::classic::materialize::FittedArc};
+use crate::project_slice::{
+    gcode_emit::motion,
+    perimeters::classic::materialize::{FittedArc, FittedMove},
+};
 use std::fmt::Write;
 
 struct Segment {
@@ -9,7 +12,12 @@ struct Segment {
     end: [f32; 2],
     arc: Option<(FittedArc, [f32; 2])>,
 }
-fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: CoordinateScale) {
+fn append_segments(
+    segments: &mut Vec<Segment>,
+    path: &mut Polyline,
+    scale: CoordinateScale,
+    enable_arc_fitting: bool,
+) {
     if path.points().len() < 2 {
         return;
     }
@@ -18,7 +26,17 @@ fn append_segments(segments: &mut Vec<Segment>, path: &mut Polyline, scale: Coor
         .iter()
         .map(|p| (scale.unscale(p.x()), scale.unscale(p.y())))
         .collect::<Vec<_>>();
-    let fitting = motion::simplify_points(&mut points, 0.1, 1.0 / scale.factor());
+    let units_per_mm = 1.0 / scale.factor();
+    let fitting = if enable_arc_fitting {
+        motion::simplify_points(&mut points, 0.1, units_per_mm)
+    } else {
+        motion::simplify_linear_points(&mut points, 0.1, units_per_mm);
+        vec![FittedMove {
+            start: 0,
+            end: points.len() - 1,
+            arc: None,
+        }]
+    };
     *path = Polyline::new(
         points
             .into_iter()
@@ -83,7 +101,7 @@ impl Writer {
     ) {
         let mut segments = Vec::new();
         for path in paths {
-            append_segments(&mut segments, path, scale);
+            append_segments(&mut segments, path, scale, self.enable_arc_fitting);
         }
         let mut nearest = 0;
         let mut minimum = f32::MAX;
