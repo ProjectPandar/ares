@@ -8,8 +8,11 @@ OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`), `src/libslic3r/G
 - For a selected filament, layer index, and Z, `is_valid_last_layer` (`:5528–5533`) rejects only when its physical extruder has a height slot, that extruder's last change is on this layer, and Z is strictly greater than the slot's stored height. An unmapped extruder or missing height slot does not fail the predicate. The check does not depend on framework being enabled and does not replace a stored zero with the global printable height.
 - Consume the predicate in `type1/generate.rs::finish_remaining` after selecting the finish filament but before either solid or sparse finish emission. Initialize `finish_depth` before checking eligibility, as upstream does. Do not change the plan's depth calculation, finish-tool selection, or G-code writer to compensate.
 
-## Deferred consumers
+For an initial change with `old_tool == -1`, Native skips the outgoing head (`WipeTower.cpp:4503`) but still checks the incoming head (`:4505–4506`). Ares starts `current` at `first_tool` and has no `-1` tool ID. Its `(current, current)` layer registration (`type1/planning.rs:51–64`) creates no `Change` (`type1/plan.rs:121–122`), so registration alone does not update a last-change index.
 
+## Deferred behavior
+
+- Per-layer nozzle grouping: Native `WipeTower::get_extruder_id(tool, layer_id)` delegates to `m_multi_nozzle_group_result` (`WipeTower.cpp:5563–5565`). It resolves the filament through the layer's nozzle map to the physical extruder (`MultiNozzleUtils.cpp:380–388,448–464`). Ares Type1 uses the same static, zero-based `Plan::nozzle_map` derived from `filament_map` on every layer (`type1/plan.rs:76–83`). Porting the per-layer lookup for both last-change recording and eligibility is deferred.
 - Wall-filament candidate selection at `WipeTower.cpp:4983–4988` qualifies the first outgoing filament before preferring it or its category. This slice does not change wall selection.
 - Ramming-depth planning at `WipeTower.cpp:3425` zeros nozzle-change depth for an ineligible outgoing filament. This slice does not change planned depth.
 - Ramming emission at `WipeTower.cpp:3503–3507` qualifies the outgoing filament before ramming. This slice does not change tool-change emission.
