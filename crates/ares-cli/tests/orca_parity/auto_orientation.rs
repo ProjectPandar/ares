@@ -4,6 +4,7 @@ use std::fs;
 mod coverage;
 #[path = "auto_orientation/fixtures.rs"]
 mod fixtures;
+#[cfg(target_os = "linux")]
 #[path = "auto_orientation/fresh.rs"]
 mod fresh;
 use fixtures::asymmetric_project;
