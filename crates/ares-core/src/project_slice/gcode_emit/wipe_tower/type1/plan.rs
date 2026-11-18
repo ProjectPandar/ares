@@ -1,6 +1,6 @@
 //! `WipeTower.hpp::WipeTowerInfo`; `WipeTower.cpp:2449–2510,3705–3806`.
 use super::blocks::Block;
-use crate::ProjectSettings;
+use crate::{Nullable, NullableFloats, ProjectSettings};
 
 pub(super) struct Change {
     pub(super) old: usize,
@@ -39,6 +39,8 @@ pub(super) struct Plan {
     pub(super) wrapping: bool,
     pub(super) framework: bool,
     pub(super) nozzle_map: Vec<usize>,
+    printable_height: NullableFloats,
+    last_change_layer: Vec<Option<usize>>,
     pub(super) categories: Vec<i32>,
     pub(super) change_lengths: Vec<f32>,
     pub(super) area: f32,
@@ -79,6 +81,8 @@ impl Plan {
                 .iter()
                 .map(|id| (id.0 - 1) as usize)
                 .collect(),
+            printable_height: settings.printer.remaining.extruder_printable_height.clone(),
+            last_change_layer: vec![None; settings.project.print.nozzle_diameter.0.len()],
             categories: (0..count)
                 .map(|i| at(&g.filament_adhesiveness_category.0, i).0)
                 .collect(),
@@ -176,6 +180,32 @@ impl Plan {
         self.spacing = 1.0;
     }
 
+    // WipeTower.cpp:4496–4507: record both ends of each planned change per physical head.
+    fn set_nozzle_last_layer_id(&mut self) {
+        let layer_tools = self.layers.iter().enumerate().flat_map(|(layer, plan)| {
+            plan.changes
+                .iter()
+                .flat_map(|change| [change.old, change.new])
+                .map(move |tool| (layer, tool))
+        });
+        for (layer, tool) in layer_tools {
+            if let Some(&extruder) = self.nozzle_map.get(tool)
+                && let Some(last) = self.last_change_layer.get_mut(extruder)
+            {
+                *last = Some(layer);
+            }
+        }
+    }
+
+    // WipeTower.cpp:5528–5533: a nil height (Native NaN) never rejects a layer.
+    pub(super) fn is_valid_last_layer(&self, tool: usize, layer: usize, z: f32) -> bool {
+        !self.nozzle_map.get(tool).is_some_and(|&extruder| {
+            self.last_change_layer.get(extruder) == Some(&Some(layer))
+                && matches!(self.printable_height.0.get(extruder),
+                    Some(Nullable::Value(height)) if f64::from(z) > height.0)
+        })
+    }
+
     pub(super) fn plan_tower_new(&mut self) {
         self.height = self.layers.last().map_or(0.0, |layer| layer.z);
         if self.brim < 0.0 {
@@ -219,6 +249,7 @@ impl Plan {
             apply_spacing(layer, index, self.spacing, self.perimeter, self.width);
         }
         self.update_depth(depth);
+        self.set_nozzle_last_layer_id();
         let diagonal = (self.depth * self.depth + self.width * self.width).sqrt();
         self.rib_length = self.rib_length.max(diagonal);
         self.rib_length += self.extra_rib;
