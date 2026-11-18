@@ -30,8 +30,8 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
     } = prelude;
     let physical_index = crate::options::mapped_extruder_id(full, filament);
     let travel_jerk = object.map_or(
-        full.process.object.travel_jerk.get_at(physical_index),
-        |value| value.object.travel_jerk.get_at(physical_index),
+        full.process.object.travel_jerk.get_at(nozzle_index),
+        |value| value.object.travel_jerk.get_at(nozzle_index),
     );
     let use_mach_limits = use_mach_limits(full.printer.gcode.gcode_flavor);
     let mut options = MotionOptions {
@@ -247,7 +247,7 @@ pub(in crate::project_slice::gcode_emit::motion::options::build) fn assemble(
             |value| value.object.initial_layer_jerk.get_at(nozzle_index),
         ),
         initial_layer_travel_jerk: absolute(
-            gcode.initial_layer_travel_jerk.get_at(physical_index),
+            gcode.initial_layer_travel_jerk.get_at(nozzle_index),
             travel_jerk,
         ),
         travel_jerk,
