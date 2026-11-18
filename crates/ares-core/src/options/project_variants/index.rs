@@ -240,11 +240,11 @@ fn resolve_requests<'a>(
         return Err(invalid(variant_key));
     }
     let requests = requests.into_iter().collect::<Vec<_>>();
-    // ConfigOptionVector::get_at repeats its first value when a serialized
-    // vector carries one shared value (`Config.hpp:322-330`). Orca exports
-    // this compact form for multi-tool printers whose variants are equal.
+    // Short ID maps use generated head IDs even when the variant tokens
+    // are identical (`PrintConfig.cpp:10836–10868`).
     let shared_variant = &variants[0];
-    if variants.iter().all(|variant| variant == shared_variant)
+    if ids.len() >= variants.len()
+        && variants.iter().all(|variant| variant == shared_variant)
         && requests
             .iter()
             .all(|(_, requested_variant)| *requested_variant == shared_variant)
