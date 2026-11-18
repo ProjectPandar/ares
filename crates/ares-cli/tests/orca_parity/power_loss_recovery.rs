@@ -39,6 +39,9 @@ const MARLIN2_SHA256: &str = "713ce074266ef0a26682e7d3ff74db2e138f487555afa8cd2d
 const COMMENTS: &[u8] =
     include_bytes!("../../../../tests/parity/power-loss-recovery/target-comments.3mf");
 const COMMENTS_SHA256: &str = "0b47be231f6e6d3f00f36a759a58f277351661a7e7ba996ae8ef940f2706a0e7";
+#[path = "tower_sparse_combination.rs"]
+mod tower_sparse_combination;
+
 const EMPTY_KLIPPER: &[u8] =
     include_bytes!("../../../../tests/parity/power-loss-recovery/empty-klipper.3mf");
 const EMPTY_KLIPPER_SHA256: &str =
