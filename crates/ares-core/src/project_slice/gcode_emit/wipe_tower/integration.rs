@@ -117,13 +117,36 @@ impl Integration {
         self.first_print = true;
     }
 
+    /// `GCode.cpp:2142–2166`, without the deferred combined-away marker.
+    pub(in crate::project_slice::gcode_emit) fn has_gcode(
+        &self,
+        needs_change: bool,
+        finish_layer: bool,
+    ) -> bool {
+        let layer = self.layer.expect("tower dispatch follows next_layer");
+        let Some(changes) = self.data.changes.get(layer) else {
+            return false;
+        };
+        if self.extra_wall && self.first_print {
+            return true;
+        }
+        if !needs_change && !finish_layer {
+            return false;
+        }
+        assert!(
+            self.change < changes.len(),
+            "tower result missing for scheduled pass"
+        );
+        !(self.no_sparse && layer_is_sparse(changes))
+    }
+
     pub(super) fn first_wall(&mut self) -> Option<(usize, Option<f64>)> {
         let layer = self.layer.expect("tower dispatch follows next_layer");
         let changes = self.data.changes.get(layer)?;
         if !self.data.type1 || !self.extra_wall || !self.first_print {
             return None;
         }
-        let ignore = changes.len() == 1 && changes[0].initial_tool == changes[0].new_tool;
+        let ignore = layer_is_sparse(changes);
         let z = self.no_sparse.then(|| {
             self.last_z
                 + if ignore {
@@ -147,11 +170,7 @@ impl Integration {
         if !needs_change && !finish_layer {
             return None;
         }
-        if self.no_sparse
-            && (self.data.type1 || layer != 0)
-            && changes.len() == 1
-            && changes[0].initial_tool == changes[0].new_tool
-        {
+        if self.no_sparse && (self.data.type1 || layer != 0) && layer_is_sparse(changes) {
             return None;
         }
         let z = self.no_sparse.then(|| {
@@ -167,4 +186,8 @@ impl Integration {
         self.last_z = z.unwrap_or(-1.0);
         Some((layer, change, z))
     }
+}
+
+fn layer_is_sparse(changes: &[super::result::ToolChangeResult]) -> bool {
+    changes.len() == 1 && changes[0].initial_tool == changes[0].new_tool
 }
