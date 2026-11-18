@@ -368,7 +368,9 @@ use stages::{FailureKind, Stage, StageError};
 mod environment;
 #[path = "runner/initialization.rs"]
 mod initialization;
-pub(crate) use environment::reference_enabled;
+pub(crate) use environment::{
+    official_reference_enabled, reference_enabled, seeded_reference_enabled,
+};
 #[path = "runner/cache.rs"]
 mod cache;
 pub(crate) use cache::EarlyExit;

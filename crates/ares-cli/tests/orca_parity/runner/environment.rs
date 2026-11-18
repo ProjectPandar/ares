@@ -5,16 +5,74 @@ use super::{
     stages::{FailureKind, Stage, StageError},
 };
 
+const SEEDED_REFERENCE: &str = "ARES_PARITY_SEEDED_REFERENCE";
+
 #[track_caller]
 pub(crate) fn reference_enabled(flag: &str) -> bool {
-    if crate::native_environment::required() {
+    reference_gate(None, Some(flag))
+}
+
+#[track_caller]
+pub(crate) fn seeded_reference_enabled(flag: Option<&str>) -> bool {
+    reference_gate(Some("seeded"), flag)
+}
+
+#[track_caller]
+pub(crate) fn official_reference_enabled() -> bool {
+    reference_gate(Some("official"), None)
+}
+
+#[track_caller]
+fn reference_gate(expected: Option<&str>, flag: Option<&str>) -> bool {
+    let required = crate::native_environment::required();
+    let seeded = std::env::var(SEEDED_REFERENCE);
+    let lane = if required {
+        required_lane(seeded.as_deref())
+    } else if seeded.as_deref() == Ok("1") {
+        "seeded"
+    } else {
+        "official"
+    };
+    if let Some(expected) = expected
+        && lane != expected
+    {
+        assert!(
+            !required,
+            "expected ARES_PARITY_LANE={expected}, got {lane}"
+        );
+        crate::native_environment::skipped(&format!("{expected}-only reference"));
+        return false;
+    }
+    if required {
         available().unwrap_or_else(|error| panic!("{error}"));
     }
-    let enabled = std::env::var(flag).as_deref() == Ok("1");
-    if !enabled {
+    if let Some(flag) = flag
+        && std::env::var(flag).as_deref() != Ok("1")
+    {
+        assert!(
+            !required || expected.is_none(),
+            "ARES_PARITY_LANE={lane} requires {flag}=1"
+        );
         crate::native_environment::skipped(&format!("{flag} is not enabled"));
+        return false;
     }
-    enabled
+    true
+}
+
+#[track_caller]
+fn required_lane(seeded: Result<&str, &std::env::VarError>) -> &'static str {
+    use std::env::VarError::NotPresent;
+
+    match (std::env::var("ARES_PARITY_LANE").as_deref(), seeded) {
+        (Ok("official"), Ok("0") | Err(NotPresent)) => "official",
+        (Ok("seeded"), Ok("1")) => "seeded",
+        (Ok("official"), _) => {
+            panic!("ARES_PARITY_LANE=official requires {SEEDED_REFERENCE} unset or 0")
+        }
+        (Ok("seeded"), _) => panic!("ARES_PARITY_LANE=seeded requires {SEEDED_REFERENCE}=1"),
+        (Err(NotPresent), _) => panic!("ARES_REQUIRE_ORCA=1: missing ARES_PARITY_LANE"),
+        (value, _) => panic!("invalid ARES_PARITY_LANE {value:?}; expected official or seeded"),
+    }
 }
 
 #[track_caller]

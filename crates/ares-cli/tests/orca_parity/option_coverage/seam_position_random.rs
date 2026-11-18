@@ -11,8 +11,7 @@ fn seam_position_random_concave_epsilon_matches_complete_output() {
     // `native_stream_case::qualify` would panic with Native
     // nondeterminism in official mode (same qualification as
     // `initialized_object_id.rs`).
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
-        crate::native_environment::skipped("seeded-only reference");
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     check(

@@ -39,7 +39,7 @@ fn seeded_template_distributions_and_shared_stream() {
 
 #[test]
 fn seeded_template_file_start_draws_from_the_shared_stream() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     let runner = OrcaRunner::from_env()
@@ -118,7 +118,7 @@ fn seeded_template_file_start_draws_from_the_shared_stream() {
 }
 
 fn verify(fixture: &str, probe: bool) {
-    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     let runner = OrcaRunner::from_env()
