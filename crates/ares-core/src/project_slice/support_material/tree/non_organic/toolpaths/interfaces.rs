@@ -127,7 +127,8 @@ impl InterfaceArea<'_, '_> {
             }
             ProcessSupportInterfacePattern::Auto
             | ProcessSupportInterfacePattern::Rectilinear
-            | ProcessSupportInterfacePattern::Concentric => {}
+            | ProcessSupportInterfacePattern::Concentric
+            | ProcessSupportInterfacePattern::SpiralInset => {}
         }
         filler
             .append(destination, &areas, fill)

@@ -90,6 +90,7 @@ pub(crate) const INFILL_PATTERN_TYPE_KEYS: &[&str] = &[
     "tpmsfk",
     "gyroid",
     "concentric",
+    "spiralinset",
     "hilbertcurve",
     "archimedeanchords",
     "octagramspiral",

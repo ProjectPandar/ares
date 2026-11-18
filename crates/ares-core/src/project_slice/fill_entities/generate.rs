@@ -308,6 +308,15 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                     )?;
                 }
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::SpiralInset) => {
+                super::spiral_inset::append(
+                    &mut output,
+                    fill,
+                    layer.height,
+                    minimum_nozzle_diameter,
+                    traversal.scale,
+                )?;
+            }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
                 super::concentric::append_configured(
                     &mut output,

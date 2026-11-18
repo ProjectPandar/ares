@@ -18,7 +18,7 @@ use crate::{
 };
 
 mod finalize;
-mod generate;
+pub(super) mod generate;
 
 use finalize::finalize_standard_polylines;
 

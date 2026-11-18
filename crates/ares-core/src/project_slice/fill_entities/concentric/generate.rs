@@ -27,7 +27,7 @@ pub(super) fn generate_thick_polylines(
     )
 }
 
-pub(super) fn generate_standard_thick_polylines(
+pub(in crate::project_slice::fill_entities) fn generate_standard_thick_polylines(
     expolygon: ExPolygon,
     spacing: i64,
     layer_height: f64,

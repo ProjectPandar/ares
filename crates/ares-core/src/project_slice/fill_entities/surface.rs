@@ -283,7 +283,8 @@ pub(in crate::project_slice) fn surface_polylines(
             request.params,
             request.call.scale,
         ),
-        ProcessInfillPattern::Lightning
+        ProcessInfillPattern::SpiralInset
+        | ProcessInfillPattern::Lightning
         | ProcessInfillPattern::AdaptiveCubic
         | ProcessInfillPattern::SupportCubic => Err(SliceError::UnsupportedProjectFeature(
             "support_ironing_pattern".into(),

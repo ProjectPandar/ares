@@ -9,8 +9,8 @@ use super::super::{
     OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
     ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
     ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
-    region_fields::region_option_fields,
+    ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
+    ProcessWallSequence, region_fields::region_option_fields,
 };
 use super::metadata::RegionMetadataCodec;
 
@@ -28,6 +28,8 @@ macro_rules! declare_region_option_overrides {
         #[derive(Clone, Debug, Default, PartialEq)]
         pub(crate) struct RegionOptionOverrides {
             $(pub(crate) $field: Option<$ty>),*,
+            pub(crate) top_surface_fill_order: Option<ProcessSurfaceFillOrder>,
+            pub(crate) bottom_surface_fill_order: Option<ProcessSurfaceFillOrder>,
             pub(crate) extruder: Option<OrcaInt>,
         }
 
@@ -42,6 +44,14 @@ macro_rules! declare_region_option_overrides {
                         self.$field = Some(deserialize_value(key, value)?);
                         Ok(true)
                     }),*,
+                    "top_surface_fill_order" => {
+                        self.top_surface_fill_order = Some(deserialize_value(key, value)?);
+                        Ok(true)
+                    }
+                    "bottom_surface_fill_order" => {
+                        self.bottom_surface_fill_order = Some(deserialize_value(key, value)?);
+                        Ok(true)
+                    }
                     "extruder" => {
                         self.extruder = Some(deserialize_value(key, value)?);
                         Ok(true)

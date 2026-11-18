@@ -48,6 +48,7 @@ pub(crate) enum RaftFillPattern {
     SupportBase,
     Honeycomb,
     Concentric,
+    SpiralInset,
     Grid,
 }
 
@@ -74,6 +75,7 @@ pub(crate) fn contact_fill_pattern(
         ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
         ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
         ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
+        ProcessSupportInterfacePattern::SpiralInset => RaftFillPattern::SpiralInset,
         ProcessSupportInterfacePattern::Auto if zero_gap_top => RaftFillPattern::Concentric,
         ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Rectilinear => {
             if density > 0.95 {

@@ -128,6 +128,7 @@ fn compare(left: &SurfaceFillParams, right: &SurfaceFillParams) -> Ordering {
         .then_with(|| compare_f32(left.infill_overhang_angle, right.infill_overhang_angle))
         .then_with(|| left.gyroid_optimized.cmp(&right.gyroid_optimized))
         .then_with(|| compare_f64(left.smooth_factor, right.smooth_factor))
+        .then_with(|| (left.fill_order as u8).cmp(&(right.fill_order as u8)))
 }
 
 fn compare_f32(left: f32, right: f32) -> Ordering {
@@ -178,9 +179,10 @@ const fn pattern_rank(pattern: SurfaceFillPattern) -> u8 {
             ProcessInfillPattern::TpmsFk => 22,
             ProcessInfillPattern::Gyroid => 23,
             ProcessInfillPattern::Concentric => 24,
-            ProcessInfillPattern::HilbertCurve => 25,
-            ProcessInfillPattern::ArchimedeanChords => 26,
-            ProcessInfillPattern::OctagramSpiral => 27,
+            ProcessInfillPattern::SpiralInset => 25,
+            ProcessInfillPattern::HilbertCurve => 26,
+            ProcessInfillPattern::ArchimedeanChords => 27,
+            ProcessInfillPattern::OctagramSpiral => 28,
         },
         SurfaceFillPattern::ConcentricInternal => 29,
     }

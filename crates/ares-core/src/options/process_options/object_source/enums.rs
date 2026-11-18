@@ -115,6 +115,8 @@ pub enum ProcessSupportInterfacePattern {
     Rectilinear,
     #[serde(rename = "concentric")]
     Concentric,
+    #[serde(rename = "spiralinset")]
+    SpiralInset,
     #[serde(rename = "rectilinear_interlaced")]
     RectilinearInterlaced,
     #[serde(rename = "grid")]
@@ -209,6 +211,8 @@ pub enum ProcessInfillPattern {
     Gyroid,
     #[serde(rename = "concentric")]
     Concentric,
+    #[serde(rename = "spiralinset")]
+    SpiralInset,
     #[serde(rename = "hilbertcurve")]
     HilbertCurve,
     #[serde(rename = "archimedeanchords")]
@@ -226,6 +230,7 @@ impl ProcessInfillPattern {
             | Self::Lightning
             | Self::Honeycomb
             | Self::ThreeDHoneycomb
+            | Self::SpiralInset
             | Self::Concentric
             | Self::CrossHatch => true,
             Self::Grid | Self::Triangles | Self::TriHexagon | Self::Cubic => multiline > 1,

@@ -124,6 +124,7 @@ impl ToolpathParameters {
             ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
             ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
             ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
+            ProcessSupportInterfacePattern::SpiralInset => RaftFillPattern::SpiralInset,
             ProcessSupportInterfacePattern::Auto if slicing.zero_gap_interface_top => {
                 RaftFillPattern::Concentric
             }
@@ -179,9 +180,9 @@ impl ToolpathParameters {
                     }
             }
             ProcessSupportInterfacePattern::Grid => self.base_angle,
-            ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Concentric => {
-                self.interface_angle
-            }
+            ProcessSupportInterfacePattern::Auto
+            | ProcessSupportInterfacePattern::Concentric
+            | ProcessSupportInterfacePattern::SpiralInset => self.interface_angle,
         }
     }
 
