@@ -260,6 +260,7 @@ impl InputFormat {
 #[derive(Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
+    MissingProjectPlate(u32),
     InvalidInput(String),
     /// Resolved non-FFF technology (`OrcaSlicer.cpp:3619,3627-3633`).
     InvalidPrinterTechnology,
@@ -336,6 +337,7 @@ impl fmt::Display for SliceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
+            Self::MissingProjectPlate(plate) => write!(f, "project has no plate {plate}"),
             Self::InvalidInput(message) => f.write_str(message),
             Self::InvalidPrinterTechnology => f.write_str("invalid printer_technology"),
             Self::PostProcessNotSupported => {

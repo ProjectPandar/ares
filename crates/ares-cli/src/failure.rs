@@ -109,23 +109,8 @@ impl CliFailure {
 }
 
 mod report;
+pub(super) use report::substitution_warnings;
 pub(crate) mod slicing;
-
-/// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
-pub(super) fn substitution_warnings(
-    file: &str,
-    substitutions: &[ares_core::ConfigSubstitution],
-) -> String {
-    substitutions
-        .iter()
-        .map(|substitution| {
-            format!(
-                "warning: {file}: value \"{}\" for {} is not valid, using \"{}\" instead\n",
-                substitution.old_value, substitution.key, substitution.new_value
-            )
-        })
-        .collect()
-}
 
 /// Exhaustive variant → CLI code mapping (`Utils.hpp:24-59`). The four
 /// family variants carry the result.json payload; everything else keeps
@@ -166,6 +151,21 @@ pub(super) fn slice_error_to_failure(
         }))
     };
     match error {
+        // OrcaSlicer.cpp:5291–5295 rejects before slicing, with plate index 0.
+        SliceError::MissingProjectPlate(_) => family(
+            -2,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            "Invalid parameters to the slicer.",
+            String::new(),
+        ),
         SliceError::InvalidPrinterTechnology => family(
             -7,
             #[cfg(target_os = "linux")]

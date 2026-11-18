@@ -1,5 +1,21 @@
 use super::*;
 
+/// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
+pub(crate) fn substitution_warnings(
+    file: &str,
+    substitutions: &[ares_core::ConfigSubstitution],
+) -> String {
+    substitutions
+        .iter()
+        .map(|substitution| {
+            format!(
+                "warning: {file}: value \"{}\" for {} is not valid, using \"{}\" instead\n",
+                substitution.old_value, substitution.key, substitution.new_value
+            )
+        })
+        .collect()
+}
+
 impl From<io::Error> for CliFailure {
     fn from(error: io::Error) -> Self {
         Self::Legacy(Box::new(error))
