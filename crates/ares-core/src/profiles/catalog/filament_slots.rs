@@ -2,6 +2,15 @@ use super::{Catalog, PresetCatalogHandle, ProfileKind, invalid};
 use crate::{SliceError, project::raw_settings::RawConfigValue};
 
 impl Catalog {
+    /// `filaments.first_visible().name`.
+    pub(in crate::profiles) fn first_visible_filament(&self) -> &str {
+        self.selectable_positions(ProfileKind::Filament)
+            .into_iter()
+            .find(|position| self.missing_parent(*position).is_none())
+            .map(|position| self.document(position).name.as_str())
+            .unwrap_or_default()
+    }
+
     pub(in crate::profiles) fn filament_slot_counts(
         &self,
         printer: &str,
@@ -55,15 +64,7 @@ impl PresetCatalogHandle {
         mut state: crate::FilamentSlotState,
     ) -> Result<crate::FilamentSlotState, SliceError> {
         let (nozzles, minimum) = self.catalog.filament_slot_counts(printer)?;
-        let first = self
-            .catalog
-            .selectable_positions(ProfileKind::Filament)
-            .into_iter()
-            .find(|position| self.catalog.missing_parent(*position).is_none());
-        let first = first
-            .map(|position| self.catalog.document(position).name.as_str())
-            .unwrap_or_default();
-        state.normalize(minimum, nozzles, first)?;
+        state.normalize(minimum, nozzles, self.catalog.first_visible_filament())?;
         Ok(state)
     }
 
