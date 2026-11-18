@@ -1,0 +1,20 @@
+# Orca parity lanes
+
+An exclusive reference test must either run its comparison in the correct lane or not be selected. Returning successfully because the reference mode is wrong makes a test appear to pass without running its assertions. This is a harness contract; it changes no Native supplier, slicer behavior, or comparator.
+
+## Selection and runtime checks
+
+- `.config/nextest.toml` owns lane membership. `parity-official` excludes the 23 seeded-only `ares-cli::orca_parity` test identities; `parity-seeded` excludes `object_emission_cases::fuzzy_allwalls_rng_order::official_fuzzy_allwalls_oracle_is_explicitly_unstable`. Both preserve all other identities and the normal ignore policy. Use exact names scoped to the suite; do not rename or mark tests ignored to select a lane.
+- Nextest intersects `-E` and name filters with the profile's `default-filter` (`cargo nextest list --help`, nextest 0.9.137). Both listing and execution must use the same profile. `--ignore-default-filter` bypasses this protection; use it only to test the runtime guard, not to collect parity evidence.
+- At the runner's reference gate, `ARES_REQUIRE_ORCA=1` requires `ARES_PARITY_LANE=official` or `seeded`. The lane must agree with `ARES_PARITY_SEEDED_REFERENCE`: unset or `0` means official, `1` means seeded, and other values are invalid. Keep the seeded flag for existing producer, replay, and diagnostic consumers; it cannot stand in for the explicit lane. Missing or inconsistent configuration and execution of an exclusive test in the wrong lane must fail.
+- Route each exclusive guard through `runner/environment.rs`, including tests that previously read the seeded flag directly. A required run of an eligible exclusive case also fails if its case-specific reference switch (such as `ARES_PARITY_BOOKKEEPING_REFERENCE`) is not `1`. Unrelated optional reference switches retain their existing meaning. When Orca is not required, no parity evidence is implied by a successful optional skip. Mixed-contract tests keep their existing official and seeded assertions. This does not add an outer-lane requirement to standalone CLI probes or a new rule for per-case initialized replay suppliers.
+
+## Batch migration
+
+After the frozen run lands, set `ARES_PARITY_LANE` in each frozen parity environment and pass `--profile parity-official` or `--profile parity-seeded` to both preparation-time listing and execution. Retain the existing supplier paths, replay variables, runner, and pinning. Confirm required case switches for the selected seeded tests; don't rely on an implicit skip. The browser fixture-producing run and compile-only checks do not switch profiles. Keep the orchestration outside this repository unchanged until that migration.
+
+For incremental checks, use the corresponding lane profile on each side and add the existing task filter with `-E`; only entries with `filter-match.status == "matches"` are expected to produce terminals. Do not use `--ignore-default-filter`. If the base predates the profiles, either arrange an approved baseline replay on a profile-aware tip, or project the legacy inventory onto the same exact eligible identities and run the corresponding exact selection on the base. Do not count old no-op passes as comparison evidence. Record the selected IDs with each lane, separate intentional exclusions from test outcomes, and require exactly one terminal for each expected ID. Continue to protect baseline passes among eligible IDs; an unexplained missing result is not a lane exclusion. An intentionally empty scoped lane earns no parity credit.
+
+## Acceptance
+
+Run the public nextest entrypoints: force a seeded-only and the official-only case through the opposite profile and require a failure with a lane diagnostic. Omit the lane in required mode and require a failure instead of a skip. Exercise a missing case flag in the correct lane. Compare JSON `list` selections for both profiles to unfiltered discovery: exactly 23 scheduled tests are removed in official, exactly one in seeded, and `-E` still intersects with the lane profile. Retain the listings and actual test exit statuses.
