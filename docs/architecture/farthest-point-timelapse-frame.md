@@ -2,25 +2,23 @@
 
 ## Decision
 
-`GCode::compute_farthest_point` (`OrcaSlicer/src/libslic3r/GCode.cpp:6326-6483`) and the
-per-extrusion inline hook `check_and_insert_timelapse` (`GCode.cpp:9974-9996`, call sites
-`:10118`, `:10148`, `:10174`, `:10321`) must agree on which extrusion vertex is the snapshot
-target, and the selected target must be checked on the same move Native checks it. On the
-arc-fitted X1 Carbon fixture the emitted fitting split matches, but the target's squared norm
-differs between Ares and Native on the divergent layer. The symptom is a snapshot
-after, rather than before, the closing Inner wall arc.
+Match `GCode::compute_farthest_point` (`OrcaSlicer/src/libslic3r/GCode.cpp:6332-6483`) by selecting
+from fitted paths before seam placement. The per-extrusion inline hook then uses that target
+(`GCode.cpp:9974-9996`, call sites `:10118`, `:10148`, `:10174`, `:10321`). On the arc-fitted X1
+Carbon fixture the emitted fitting split is identical, but Ares scans after seam placement
+while Native scans before it.
 
-This document records the parity boundary and evidence; it does not yet assign the implementation.
+This document records the parity boundary and evidence. Implementation remains deferred pending GO.
 
 ## Upstream boundary
 
 | upstream | role |
 | --- | --- |
-| `GCode.cpp:6326-6483` `compute_farthest_point` | selects `farthest_point` / `farthest_gcode_pos` once per layer |
-| `GCode.cpp:6342-6368` `for_each_path` | enumerates leaf `ExtrusionPath`s through collections, loops, multipaths |
-| `GCode.cpp:6370-6377` role predicates | external pass is `erExternalPerimeter`; fallback is `erSolidInfill`/`erInternalInfill`/`erTopSolidInfill`; support pass is support roles |
-| `GCode.cpp:6379-6387` `update_max` | metric is `dsq = global.x² + global.y²` with `global = point + instance shift`; strict `>` so the first wins ties |
-| `GCode.cpp:6394-6420` `collect_from_path` | with fitting data: first segment's `start_point_index`, `Linear_move` walks `start..=end`, arc moves contribute `arc_data.end_point` only; without fitting: every point |
+| `GCode.cpp:6332-6483` `compute_farthest_point` | selects `farthest_point` / `farthest_gcode_pos` once per layer |
+| `GCode.cpp:6350-6363` `for_each_path` | enumerates leaf `ExtrusionPath`s through collections, loops, multipaths |
+| `GCode.cpp:6365-6373`, `:6428-6445`, `:6466-6476` | only `erExternalPerimeter` enters the external pass; a positive external maximum takes precedence over the infill/support fallback |
+| `GCode.cpp:6376-6385` `update_max` | metric is `dsq = global.x² + global.y²` with `global = point + instance shift`; strict `>` so the first wins ties |
+| `GCode.cpp:6390-6412` `collect_from_path` | with fitting data: first segment's `start_point_index`, `Linear_move` walks `start..=end`, arc moves contribute `arc_data.end_point` only; without fitting: every point |
 | `GCode.cpp:6470-6483` | `farthest_gcode_pos = unscale(farthest_point)` (`:6479`); `farthest_is_photo_head = single_nozzle || candidate extruder == most_used` |
 | `GCode.cpp:9974-9996` `check_and_insert_timelapse` | early-returns unless enabled, photo head, not yet inserted this layer, current extruder is the photo head; compares `unscale(endpoint_scaled) + m_origin` against `farthest_gcode_pos` with a 0.5 mm radius; on success renders with `skip_pos_pick = true` and latches `inserted_this_layer` |
 | `GCode.cpp:9981-9984` | the comment that states the frame rule: comparing in `point_to_gcode()` space would subtract `extruder_offset` on the endpoint side only |
@@ -65,22 +63,41 @@ idx47 and is already latched. Neither output emits a separate move for the old i
 the G3 at 91938 instead runs from `(170.329,141.981)` to `(168.957,143.726)`. These matches
 do not identify Native's hidden fitting indices.
 
-## Remaining boundary
+## Resolved boundary: scan fitted paths before seam placement
 
-Native runs its scan once per layer (`GCode.cpp:7259-7262`). The prior comparison used hit 46
-(zero-based P45), not hit 45 (P44). On P44, the logged Native maximum is exactly
-`170329206² + 143980694²` in scaled units and does not equal the squared norm of Ares' logged
-target. The later Outer wall endpoint `(170.329206,143.980694)` is consistent with that Native
-maximum and with a hit at the preceding Inner wall G1 (0.435641 mm from it); the scalar maximum
-alone does not prove Native's XY. Both endpoint checks use the global print frame, not the
-G-code frame: on this fixture G-code XY subtracts nozzle offset `(0,2)` and writer XY offset is zero
-(`GCode.cpp:9981-9985,11644-11648`).
+Native scans `ltp.object_layer` → `region->perimeters.entities` with the shifts from
+`ltp.original_object->instances()` (`GCode.cpp:6419-6435`). It calls the scan after grouping the
+layer's extrusions (`:7259-7262`), before `extrude_loop` copies the loop (`:8526`), places the seam
+on the copy (`:8547`), and clips the loop tail (`:8583`). Precomputing seam choices is not the same
+as mutating the scanned path. The ExternalPerimeter path passes the role predicate; the
+seam-created endpoint is absent from the pre-seam data, not excluded by role.
 
-Compare candidate membership at the **pre-emission target scan** (`GCode.cpp:6394-6414,6464-6483`
-versus `layers/farthest/target.rs` and `target/object.rs`). The equal rendered split does not
-establish equal fitting data at that earlier point. The cause of the target difference is still
-open; neither a change to arc fitting nor a reordering of the inline hook is justified by this
-trace.
+Ares simplifies/fits `ordered` and then applies seam placement to it
+(`crates/ares-core/src/project_slice.rs:242-244`). `seam_placement.rs:187-189` applies the chosen
+seam to each layer before emission. `gcode_emit/layers/drive.rs:161-172` passes those same objects
+to `farthest::begin_layer`; `target.rs:114-122` forwards `objects[object][layer]`,
+`target/object.rs:56-67` passes the external path's polyline, and `target.rs:34-69` scans its
+already-mutated points and fitting ranges. The divergence is in **the input to the target scan**.
+
+The P44 winner on both Ares snapshots belongs to object 0, instance 0, region 0, perimeter
+collection `source_order=2`, leaf 12 (`ExternalPerimeter`). An offline replay of all 14 external
+paths at each phase gives:
+
+| Ares scan input | Winning candidate | Local scaled XY | Global XY (mm) | Squared norm (mm²) |
+| --- | --- | --- | --- | ---: |
+| After path fitting, before seam placement | linear `7→8`, point 8 | `(37290001,27988589)` | `(170.329206,143.980694)` | 49742.478661312 |
+| After seam placement, before export clipping | arc fit 12 `47→53`, endpoint 53 | `(35890937,29740824)` | `(168.930142,145.732929)` | 49775.479471059 |
+
+The post-seam winner does not exist at that XY in the original fitted path. Its nearest original
+point is idx14, an interior point of arc `8→15`; seam splitting creates a projected endpoint
+(`seam_placement/split.rs:209-216`, `seam_placement/fitting.rs:19-31,151-162`). The pre-seam
+winner's squared norm exactly matches the Native P44 scalar (hit 45); the scalar does not directly
+expose Native XY. The pre-seam Ares winner is 0.435641 mm from the Inner wall G1, consistent with
+Native's observed placement. The `(170.285920,144.375192)` candidate and hit 46 belong to P45.
+
+Both checks use the global print frame, not the G-code frame: on this fixture G-code XY subtracts
+nozzle offset `(0,2)` and writer XY offset is zero (`GCode.cpp:9981-9985,11644-11648`). Neither the
+coordinate frame, arc emission, nor inline insertion order needs to change for this boundary.
 
 ## Deferred behaviour
 
@@ -90,8 +107,10 @@ trace.
 
 ## Existing scaffolding
 
-Retain the existing target scan and inline hook while investigating the candidate input. No
-replacement or arc-fitting ownership change is prescribed.
+The existing post-seam `OrderedExtrusionLayer` view is the mismatched input to
+`GCode::compute_farthest_point` parity. The scope is to supply the fitted, pre-seam candidates to
+the existing target scan; retain its role/metric rules, the inline hook, and emitted fitting.
+No implementation is authorized until GO.
 
 ## Verification
 
