@@ -247,7 +247,7 @@ overhang, travel, cooling and tower controls. Preserve each existing comparator.
 Require zero PASS-to-FAIL transitions. Do not replace the actual base inventory
 with historical suite counts.
 
-After the separately approved implementation, require both-mode original and
+After implementation, require both-mode original and
 new witnesses, all planned controls, `cargo fmt --all -- --check`, workspace
 all-target Clippy with `-D warnings`, and browser-WASM compilation. Changed
 files remain at most 400 lines. Core stays platform-neutral for WASM, Windows,
