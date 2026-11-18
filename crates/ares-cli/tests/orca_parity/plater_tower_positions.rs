@@ -19,6 +19,8 @@ mod wipe_tower2_final_purge;
 mod wipe_tower2_gap_travel;
 #[path = "wipe_tower2_gap_wall.rs"]
 mod wipe_tower2_gap_wall;
+#[path = "wipe_tower2_multitool.rs"]
+mod wipe_tower2_multitool;
 #[path = "wipe_tower2_rib.rs"]
 mod wipe_tower2_rib;
 #[path = "wipe_tower2_tower_lift.rs"]
