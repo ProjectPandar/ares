@@ -297,6 +297,34 @@ the first-head off-diagonal cells, 203 in the other heads. No production
 flush reconstruction change is justified by this witness. This is matrix
 parity only, not whole-stream parity or closure of the original O8 UB case.
 
+## Decision: multi-head flush reconstruction requires per-head selectors
+
+On OrcaSlicer 2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`),
+`OrcaSlicer.cpp:3951–3980` selects a flush dataset for each physical head
+when CLI matrix reconstruction is triggered. With variant lookup enabled,
+`extruders[eidx]` and `volume_types[eidx]` are unchecked at `:3974–3977`.
+On a multi-head machine, a singleton `extruder_type` **or**
+`nozzle_volume_type` leaves the corresponding read undefined from the second
+head onward. The expanded type vector used by the rebuild predicate is not
+the selector vector used by the lookup. A correctly sized stored matrix does
+not prevent reconstruction when another trigger fires.
+
+Snapmaker U1 0.4 and Prusa XL 5T 0.4 two-colour stock-derived archives
+illustrate the same boundary. Both contain a complete stored matrix and
+singleton selectors. Neither a successful slice nor repeatable output makes
+the reconstructed Native numbers a parity oracle.
+
+Do not port the undefined read or silently broadcast singleton selectors.
+When reconstruction needs a dataset but per-head selectors are unavailable,
+`crates/ares-core/src/options/flush_matrix.rs:69–100` retains the archived
+matrix. Independent multiplier preparation and the ordinary export size and
+scaling rules still apply. This is not a global ban on singleton values.
+
+For multi-head Native parity fixtures, explicitly provide one valid
+`extruder_type` and `nozzle_volume_type` entry per physical head, with valid
+dataset lookup inputs if reconstruction is exercised. A fixture derived in
+this way is a distinct input, not evidence of parity on the original archive.
+
 ## Included, deferred and exit
 
 Included: original-input fresh-main E2E RED, precise current/new context and
