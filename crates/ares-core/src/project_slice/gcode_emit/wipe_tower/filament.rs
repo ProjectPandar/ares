@@ -9,6 +9,7 @@ pub(super) fn at<T>(values: &[T], index: usize) -> &T {
 pub(super) struct Filament {
     pub(super) material: String,
     pub(super) soluble: bool,
+    pub(super) support: bool,
     pub(super) temperature: i32,
     pub(super) first_temperature: i32,
     pub(super) interface_temperature: i32,
@@ -61,6 +62,7 @@ impl Filament {
             } else {
                 at(&g.filament_soluble.0, index).0
             },
+            support: at(&g.filament_is_support.0, index).0,
             temperature: at(&p.nozzle_temperature.0, index).0,
             first_temperature: at(&p.nozzle_temperature_initial_layer.0, index).0,
             interface_temperature: if interface_temperature == -1 {

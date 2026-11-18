@@ -237,15 +237,26 @@ impl<'a> Generator<'a> {
         }
     }
 
+    // WipeTower2.cpp:2405-2431: None finishes with the incoming filament.
     pub(super) fn first_nonsoluble_change(&self) -> Option<usize> {
         let changes = &self.plan.layers[self.layer_index].changes;
+        let first = changes.first()?;
         if self.settings.process.print.wipe_tower_filament.0 > 0 {
-            changes
+            return changes
                 .iter()
-                .position(|change| !self.filaments[change.new_tool].soluble)
-        } else {
-            (!changes.is_empty()).then_some(0)
+                .position(|change| !self.filaments[change.new_tool].soluble);
         }
+
+        let wall_filament = |tool: usize| {
+            let filament = &self.filaments[tool];
+            !filament.soluble && !filament.support
+        };
+        changes
+            .iter()
+            .position(|change| wall_filament(change.new_tool))
+            // If all filaments are soluble or support, retain the first change
+            // so the finish-volume saving and minimum purge still apply.
+            .or_else(|| (!wall_filament(first.old_tool)).then_some(0))
     }
 
     pub(super) fn first_layer_speed(&self) -> f32 {
