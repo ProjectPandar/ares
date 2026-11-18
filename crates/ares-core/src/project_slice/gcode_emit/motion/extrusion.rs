@@ -165,8 +165,7 @@ pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
     }
 }
 
-/// `GCode.cpp:6469-6507`: one effective flow for extrusion, speed caps and PA.
-/// Earlier ungated fill ratios still arrive in the geometric handoff.
+/// `GCode.cpp:9475–9506`: one effective flow for extrusion, speed caps and PA.
 pub(super) fn effective_flow(
     properties: PathProperties<'_>,
     options: &super::MotionOptions,
@@ -174,7 +173,9 @@ pub(super) fn effective_flow(
 ) -> f64 {
     let mut flow = properties.mm3_per_mm * options.print_flow_ratio;
     flow *= options.filament_flow_ratio;
-    if let Some(slope) = properties.slope {
+    if properties.feature == "Top surface" {
+        flow *= options.top_solid_infill_flow_ratio;
+    } else if let Some(slope) = properties.slope {
         flow *= slope.flow_ratio;
     }
     if options.set_other_flow_ratios {
