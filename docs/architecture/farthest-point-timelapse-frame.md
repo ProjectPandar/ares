@@ -1,4 +1,4 @@
-# Farthest-point timelapse snapshot frame mismatch
+# Farthest-point timelapse target parity
 
 ## Decision
 
@@ -6,11 +6,11 @@
 per-extrusion inline hook `check_and_insert_timelapse` (`GCode.cpp:9974-9996`, call sites
 `:10118`, `:10148`, `:10174`, `:10321`) must agree on which extrusion vertex is the snapshot
 target, and the selected target must be checked on the same move Native checks it. On the
-arc-fitted X1 Carbon fixture the target values already agree bit-for-bit, yet the rendered block
-lands one move later in Ares — after the arc that closes the perimeter loop instead of before it.
+arc-fitted X1 Carbon fixture the emitted fitting split matches, but the target's squared norm
+differs between Ares and Native on the divergent layer. The symptom is a snapshot
+after, rather than before, the closing Inner wall arc.
 
-This document records the upstream boundary, the measurements that localise the difference, and
-what is still open. It does not yet prescribe the implementation.
+This document records the parity boundary and evidence; it does not yet assign the implementation.
 
 ## Upstream boundary
 
@@ -41,75 +41,46 @@ what is still open. It does not yet prescribe the implementation.
 
 ## Measured defect
 
-Fixture `tests/parity/seam-position-random/x1c-seam-position-random.3mf`, harness with
-`ORCA_REPLAY_SEED=0`. Native emits the timelapse block **before** the arc that closes the
-external-perimeter loop; Ares emits it **after**, a 14-line / 5-byte divergence inside lines
-91886-91899 of a 263837-line file.
+Fixture `tests/parity/seam-position-random/x1c-seam-position-random.3mf`, seeded harness with
+`ORCA_REPLAY_SEED=0`. The divergent layer is `M991 S0 P44` (Z=9.0). Its 2,308 motion commands
+are byte-identical and in the same order. The 14 differing line positions (91888–91901) are the
+snapshot block crossing one Inner wall move; the Outer wall starts after this block on both sides.
 
-Ares-side dump of the winning polyline shows the target is the Outer wall closed loop
-(`points = 55`, `fitting = 16`, point 54 == point 0). The winning vertex is index 43 at global
-`(170.2859, 144.3752)`, which is the **end** of the linear fit `start=41 end=43` and the
-**start** of the arc fit `start=43 end=49`, so it lies inside `Linear_move`'s
-`start_point_index..=end_point_index` range.
+| Inner wall endpoint | Native line | Ares line | Ares inline check |
+| --- | ---: | ---: | --- |
+| `G1 X169.894 Y141.957 E2.02179` | 91887 | 91887 | fit 9, idx41, global `(169.894207,143.957057)`, d=2.020679 mm: miss |
+| `G3 X168.873 Y143.299 I-1.382 J.008 E.06016` | 91901 | 91888 | fit 10, idx47, global `(168.873441,145.299101)`, d=0.437518 mm: fires |
 
-Resolved runtime offsets on this fixture (`@@OFFS`, throwaway build):
+Ares measures against target `(168.930142,145.732929)`. The closing G3 starts at the end of the
+G1 in both streams. Its Ares fitting range is 41→47: points 42–46 are interior and not checked.
+Native checks after each non-short fitted linear move (`GCode.cpp:10128-10150`), but only at
+`arc.end_point` for an arc (`:10152-10175`). The observed block position is consistent with Native
+firing after the G1. No Native endpoint or target XY was read at the inline call site.
 
-| value | measurement | config source |
-| --- | --- | --- |
-| planning origin `state.origin` | `(133.0392, 115.9921)` | instance shift, **not** the plate origin |
-| `state.extruder_offset` | `(0.0000, 2.0000)` | `extruder_offset = ["0x2"]` in `Metadata/project_settings.config` |
-| `state.xy_offset` | `(0.0000, -0.0000)` | zero on this fixture |
-| `plate_origin` | `(0.0000, -0.0000)` | zero on this fixture |
+The old winning idx43 at `(170.285920,144.375192)` is from an Outer wall scan dump, not an
+endpoint of the emitted Inner wall on P44. At rendered precision on P44, the old indices
+40/41/42 map to the same Outer wall endpoints on both sides: G1 `(170.293,80.636)`, G3
+`(170.329,80.997)`, and G1 `(170.329,141.981)` (lines 91935–91937). The last is Ares emitter
+idx47 and is already latched. Neither output emits a separate move for the old indices 43/44;
+the G3 at 91938 instead runs from `(170.329,141.981)` to `(168.957,143.726)`. These matches
+do not identify Native's hidden fitting indices.
 
-Two representative near-miss pairs:
+## Remaining boundary
 
-| endpoint | target | delta | distance |
-| --- | --- | --- | --- |
-| `(169.8942, 143.9763)` | `(170.3292, 143.9870)` | `(0.435, 0.0107)` | `0.4351` |
-| `(170.3292, 143.9806)` | `(170.2859, 144.3752)` | — | `0.5591` |
+Native runs its scan once per layer (`GCode.cpp:7259-7262`). The prior comparison used hit 46
+(zero-based P45), not hit 45 (P44). On P44, the logged Native maximum is exactly
+`170329206² + 143980694²` in scaled units and does not equal the squared norm of Ares' logged
+target. The later Outer wall endpoint `(170.329206,143.980694)` is consistent with that Native
+maximum and with a hit at the preceding Inner wall G1 (0.435641 mm from it); the scalar maximum
+alone does not prove Native's XY. Both endpoint checks use the global print frame, not the
+G-code frame: on this fixture G-code XY subtracts nozzle offset `(0,2)` and writer XY offset is zero
+(`GCode.cpp:9981-9985,11644-11648`).
 
-Because `line_width 0.42 + gap 0.015 = 0.435` exactly, the first pair is one **Inner wall**
-endpoint compared against an **Outer wall** target: a genuine geometric separation, not a frame
-mismatch. `local_points[endpoint] + state.origin` already has the upstream form
-`unscale(endpoint_scaled) + m_origin`, and `xy_offset` contributes zero here, so rewriting the
-endpoint expression would not change any number.
-
-## What is actually open
-
-The target itself is settled: breaking `GCode.cpp:6479` on the seeded oracle with its split
-debuginfo (build id `4ad7c739…`, firing once per layer) gives
-`max_dist_sq_ext = 49841490615283264` for the layer that owns the divergent block, which is
-**bit-identical** to Ares' winning candidate `d2` on the same layer; all 460 layers agree to the
-last printed digit. So the scan rule, the role set, the metric and the target vertex all match.
-
-Both sides also emit and check **one move per source point**: Native walks
-`point_index = start_index + 1 .. end_index` (`GCode.cpp:10128-10141`), and Ares emits
-`points[start..=end].windows(2)` (`motion/arc/retained.rs:8-37`) zipped with endpoints
-`fitted.start + 1 ..= fitted.end` (`motion/path/constant.rs:86-94`) — the same count.
-
-The fire table for the winning Outer-wall polyline (target = vertex 43
-global `(170.2859, 144.3752)`):
-
-| index | global | d to target | verdict |
-| --- | --- | --- | --- |
-| 41 | `(170.3292, 82.9973)` | 61.3779 | miss |
-| 42 | `(170.3292, 143.9806)` | **0.3970** | **fires** |
-| 43 | `(170.2859, 144.3752)` | 0.0000 | suppressed by the once-per-layer latch |
-
-Ares fires at index 42, and Native must fire at index 42 too, because it selects the identical
-target over the same per-point endpoint stream. **That is the unresolved contradiction**: with the
-fire endpoint and the target identical on both sides, the block should be spliced at the same
-point, yet Native emits it before the closing arc and Ares after it. The remaining candidate is
-where the rendered block is spliced relative to the adjacent arc-fit emission
-(`constant.rs:138-148` versus `GCode.cpp:10156-10180`), and it could not be confirmed at runtime:
-`GCode.cpp:9986` resolves once the new image is loaded (`catch exec`) and hits 31 967 times, but
-`endpoint_scaled`, `m_origin`, `endpoint_mm` and `farthest_gcode_pos` are all optimised out at
-that inlined site, so no runtime state is recoverable without reading ABI registers by hand.
-
-Earlier drafts of this document attributed the divergence to a frame mismatch (citing
-`GCode.cpp:6507-6512`) and then to a scan-set difference. Both are withdrawn: the resolved
-offsets show the endpoint frame is correct, and the GDB measurement shows the targets are
-numerically equal.
+Compare candidate membership at the **pre-emission target scan** (`GCode.cpp:6394-6414,6464-6483`
+versus `layers/farthest/target.rs` and `target/object.rs`). The equal rendered split does not
+establish equal fitting data at that earlier point. The cause of the target difference is still
+open; neither a change to arc fitting nor a reordering of the inline hook is justified by this
+trace.
 
 ## Deferred behaviour
 
@@ -117,21 +88,16 @@ numerically equal.
 - the layer-end fallback insert (`GCode.cpp:8193-8227`);
 - non-inline traditional inserts and their position picking.
 
-## Existing scaffolding replaced
+## Existing scaffolding
 
-`layers/farthest.rs` and `layers/farthest/target.rs` are already ported to this upstream boundary
-and are kept; the change is confined to target selection inside `target.rs` once the open question
-above is settled. No Ares-owned pipeline concept is introduced, and no new module is created.
+Retain the existing target scan and inline hook while investigating the candidate input. No
+replacement or arc-fitting ownership change is prescribed.
 
 ## Verification
 
-The seeded reference lane must show the block preceding the closing arc, i.e. the 14 differing
-line positions inside 91886-91899 disappear while the total line count stays 263837. Two cases
-must be locked:
-
-- a printer whose `extruder_offset`/`xy_offset` are non-zero asserts the layer-44 block position
-  matches Native;
-- a zero-offset printer asserts byte-identical output before and after the change.
+The seeded reference lane must match the Native placement before the Inner wall G3, without
+changing the motion commands or the 263837-line count. Lock the P44 regression on the non-zero
+`extruder_offset` fixture and preserve byte-identical output on a zero-offset control.
 
 ## Citations to correct while implementing
 
