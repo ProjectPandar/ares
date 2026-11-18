@@ -15,6 +15,9 @@ use super::{
 
 include!("profile_entry_3mf/load_settings.rs");
 
+#[path = "profile_entry_3mf/explicit_machine_limits.rs"]
+mod explicit_machine_limits;
+
 include!("profile_entry_3mf/overrides.rs");
 
 include!("profile_entry_3mf/settings_3mf.rs");
