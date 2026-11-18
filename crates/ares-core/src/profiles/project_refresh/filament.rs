@@ -161,14 +161,29 @@ pub(crate) fn loaded_filament_ordinary_values(
     let mut slots: BTreeMap<String, Vec<RawConfigValue>> = BTreeMap::new();
     for (slot, config) in filaments.iter().enumerate() {
         for (key, source) in config.entries() {
+            let Some(definition) = crate::option_definition(key) else {
+                continue;
+            };
             if SKIPPED_BY_SET_AT.contains(&key.as_str())
                 || dev_key(key)
                 || crate::filament_options_with_variant().contains(&key.as_str())
-                || !crate::option_definition(key)
-                    .is_some_and(|definition| is_vector(definition.kind))
+                || !is_vector(definition.kind)
             {
                 continue;
             }
+            // Config.cpp:985–987 and Config.hpp:1225–1229 decode coStrings wire
+            // before set_at reads the first element. Array elements are already decoded.
+            let decoded;
+            let source = if let (crate::OptionValueKind::Strings, RawConfigValue::Text(wire)) =
+                (definition.kind, source)
+            {
+                decoded = crate::options::json_deserialize::decode(definition.kind, wire).map_err(
+                    |error| SliceError::InvalidInput(format!("invalid Orca option {key}: {error}")),
+                )?;
+                &decoded
+            } else {
+                source
+            };
             let first = source.element(0).ok_or_else(|| {
                 SliceError::InvalidInput(
                     "ConfigOptionVector::set_at(): Assigning from an empty vector".to_owned(),
