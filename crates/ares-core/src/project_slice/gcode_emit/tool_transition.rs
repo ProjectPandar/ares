@@ -31,44 +31,56 @@ pub(super) fn initial(
     )
 }
 
+/// `GCode.cpp:7512–7530,7542–7560`: the caller has an eligible tower event
+/// or a real non-tower change.
+pub(super) fn before_change(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    context: timelapse::Context<'_>,
+    tower: bool,
+) -> Result<(), SliceError> {
+    let photo = &state.farthest_point;
+    if !state.traditional_timelapse
+        || state.has_insert_timelapse_gcode
+        || (photo.enabled && photo.farthest_is_photo_head)
+    {
+        return Ok(());
+    }
+    let dual_nozzle = context
+        .traversal
+        .resolved
+        .views
+        .full
+        .project
+        .print
+        .nozzle_diameter
+        .0
+        .len()
+        == 2;
+    let current_is_photo_head =
+        state.extruder_selected && state.extruders.active_physical() == state.most_used_extruder;
+    let is_case_b = photo.enabled && !photo.farthest_is_photo_head;
+    let should_insert = if dual_nozzle {
+        current_is_photo_head != is_case_b
+    } else {
+        tower
+    };
+    if !should_insert || (!tower && !state.extruder_selected) {
+        return Ok(());
+    }
+    motion::prepare_traditional_timelapse(output, state);
+    motion::append_object_start(output, state);
+    timelapse::append_and_track(output, state, context)?;
+    state.has_insert_timelapse_gcode = true;
+    Ok(())
+}
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     filament: usize,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
-    // GCode.cpp:7476-7478,7513-7539: synchronize inline insertion before
-    // the ordinary pre-toolchange timelapse gate.
-    let settings = &context.traversal.resolved.views.full;
-    let current_extruder = settings
-        .project
-        .gcode
-        .filament_map
-        .0
-        .get(state.extruders.active_id())
-        .map_or(0, |value| (value.0 - 1).max(0) as usize);
-    let photo = &state.farthest_point;
-    state.has_insert_timelapse_gcode |= photo.inserted_this_layer;
-    let current_is_photo_head = current_extruder == state.most_used_extruder;
-    let is_case_b = photo.enabled && !photo.farthest_is_photo_head;
-    let should_insert = if is_case_b {
-        !current_is_photo_head
-    } else {
-        current_is_photo_head
-    };
-    if state.traditional_timelapse
-        && !state.has_insert_timelapse_gcode
-        && !(photo.enabled && photo.farthest_is_photo_head)
-        && state.extruders.active_id() != filament
-        && settings.project.print.nozzle_diameter.0.len() == 2
-        && state.extruder_selected
-        && should_insert
-    {
-        motion::prepare_traditional_timelapse(output, state);
-        motion::append_exclude_end(output, state);
-        timelapse::append_and_track(output, state, context)?;
-        state.has_insert_timelapse_gcode = true;
-    }
     emit_inner(
         output,
         state,

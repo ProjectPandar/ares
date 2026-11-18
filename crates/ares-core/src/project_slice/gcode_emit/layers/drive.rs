@@ -252,32 +252,41 @@
                 chunk_perimeter_spacing,
             },
         )?;
-        // `GCode.cpp:5281-5284, 5302-5305`: the wrapping-detection retract +
-        // template insert fire once per layer inside the per-extruder loop
-        // — AFTER the combined skirt (`GCode.cpp:5244-5252`) but BEFORE the
-        // toolchange and every instance block (object skirt group, brim,
-        // `; printing object` marker, content).
+
         let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
         if has_tower {
             state.wipe_tower.as_mut().unwrap().next_layer();
         }
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
         let mut final_entry = entries[0];
+        let mut wrapping_inserted = false;
         for (tool, tool_entries) in &mut by_tool {
-            wrapping::emit(output, state, &timelapse_context)?;
             if let Some(instances) = &filament_instances {
                 state.filament_instances_code = Some(
                     instances.encode(tool_entries.instances.iter().map(|entry| entry.instance.label_id)),
                 );
             }
             let needs_change = !state.extruder_selected || state.extruders.active_id() != *tool;
-            if has_tower {
+            let finish_layer = Some(*tool) == last_tool;
+            // GCode.cpp:7507–7568: a tower with no output does not take
+            // the pre-change inserts or call the tower writer.
+            state.has_insert_timelapse_gcode |= state.farthest_point.inserted_this_layer;
+            let emits_tower = has_tower
+                && state.wipe_tower.as_ref().unwrap().has_gcode(needs_change, finish_layer);
+            if emits_tower || (!has_tower && needs_change) {
+                super::tool_transition::before_change(output, state, timelapse_context, has_tower)?;
+            }
+            if (!has_tower || emits_tower) && !wrapping_inserted {
+                wrapping::emit(output, state, &timelapse_context)?;
+                wrapping_inserted = true;
+            }
+            if emits_tower {
                 tower::emit(
                     output,
                     state,
                     tower::Event::Change {
                         tool: *tool,
-                        finish_layer: Some(*tool) == last_tool,
+                        finish_layer,
                     },
                     tower::Input {
                         context: timelapse_context,
@@ -290,9 +299,12 @@
                         spacing: chunk_perimeter_spacing,
                     },
                 )?;
-                state.last_feature = Some("Prime tower");
-            } else if needs_change {
+            } else if !has_tower && needs_change {
                 super::tool_transition::emit(output, state, *tool, timelapse_context)?;
+            }
+            // GCode.cpp:7579–7580: the analyzer role changes even for an empty event.
+            if has_tower {
+                state.last_feature = Some("Prime tower");
             }
             if needs_change {
                 last_object_copy = None;
