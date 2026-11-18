@@ -14,7 +14,11 @@ mod project;
 
 use super::catalog::{Catalog, ComposedSelection, ProfileDocument};
 use super::{ProfileKind, ProfileSelection};
-use crate::{SliceError, profiles::SourceIdentity, project::raw_settings::RawConfigValue};
+use crate::{
+    InputFormat, SliceError,
+    profiles::SourceIdentity,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
+};
 
 /// One `--load-settings`/`--load-filaments` list entry: the file label
 /// (path, for upstream error text) and its JSON text. An empty JSON
@@ -73,7 +77,10 @@ pub(crate) fn compose_project_load_settings(
     SliceError,
 > {
     let catalog = loaded_catalog(request)?;
-    let mut names = load_settings_preset_names(request, &catalog)?;
+    // Binary STL can be Unknown to the signature probe; the profile loader
+    // sends every non-3MF input through STL parsing before adjudication.
+    let direct_stl = InputFormat::detect(input) != InputFormat::ThreeMf;
+    let mut names = load_settings_preset_names(request, &catalog, direct_stl)?;
     names.embedded = project::retained_config(input, request, &names)?;
     let composed = compose_with_project(request, names.embedded.as_ref(), catalog)?;
     Ok((composed, names))
@@ -180,18 +187,20 @@ fn compose_with_project(
 
 /// Extracts the adjudication inputs of the `--load-settings` file loop
 /// (`OrcaSlicer.cpp:2034-2098`): the first machine and process
-/// descriptors (`config_name`/`from`/`inherits`/`compatible_printers`).
+/// descriptors, and the supplied machine's own options for direct STL.
 /// Reuses `parse_file` so per-file validation errors are identical to
 /// `compose_load_settings`; duplicate-kind lists surface the same
 /// duplicate error (`:2035-2038,:2074-2078`).
 fn load_settings_preset_names(
     request: &LoadSettingsRequest<'_>,
     catalog: &Catalog,
+    direct_stl: bool,
 ) -> Result<crate::project_slice::compatibility::LoadedPresetNames, SliceError> {
     use crate::project_slice::compatibility::LoadedPresetNames;
     let mut machine = None;
     let mut printer_model = String::new();
     let mut process = None;
+    let mut direct_stl_machine = None;
     let mut machine_seen = false;
     let mut process_seen = false;
     for file in request.settings {
@@ -221,6 +230,15 @@ fn load_settings_preset_names(
                 {
                     printer_model = model;
                 }
+                if direct_stl {
+                    let mut raw = ProjectSettingsRaw::default();
+                    raw.extend(document.fields);
+                    raw.insert(
+                        "printer_settings_id".to_owned(),
+                        RawConfigValue::Text(document.name),
+                    );
+                    direct_stl_machine = Some(raw);
+                }
             }
             "process" => {
                 if process_seen {
@@ -230,7 +248,13 @@ fn load_settings_preset_names(
                     )));
                 }
                 process_seen = true;
-                process = Some(descriptor(&document));
+                let mut preset = descriptor(&document);
+                if direct_stl
+                    && matches!(document.fields.get("compatible_printers"), Some(RawConfigValue::Text(s)) if s.is_empty())
+                {
+                    preset.compatible_printers.clear();
+                }
+                process = Some(preset);
             }
             _ => {}
         }
@@ -240,6 +264,7 @@ fn load_settings_preset_names(
         printer_model,
         process,
         embedded: None,
+        direct_stl_machine,
     })
 }
 
@@ -267,5 +292,9 @@ fn descriptor(document: &ProfileDocument) -> crate::project_slice::compatibility
                 _ => Vec::new(),
             })
             .unwrap_or_default(),
+        compatible_printers_condition: match document.fields.get("compatible_printers_condition") {
+            Some(RawConfigValue::Text(condition)) => condition.clone(),
+            _ => String::new(),
+        },
     }
 }
