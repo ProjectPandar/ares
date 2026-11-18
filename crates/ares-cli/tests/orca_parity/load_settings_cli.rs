@@ -62,6 +62,27 @@ pub(crate) fn banner_normalized(bytes: &[u8]) -> Vec<u8> {
 
 #[tokio::test]
 async fn load_settings_cli_ender3_whole_file() {
+    compare_ender3(|_| {}, &[]);
+}
+
+#[tokio::test]
+async fn load_settings_cli_ender3_preserves_string_elements() {
+    // Config.hpp:1225–1229 decodes the scalar wire before slot assignment.
+    compare_ender3(
+        |path| {
+            let mut filament: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+            filament["default_filament_colour"] = r#""""#.into();
+            filament["filament_notes"] = r#""PLA with \"quotes\"""#.into();
+            fs::write(path, serde_json::to_vec_pretty(&filament).unwrap()).unwrap();
+        },
+        &[
+            r#"; default_filament_colour = """#,
+            r#"; filament_notes = "PLA with \"quotes\"""#,
+        ],
+    );
+}
+
+fn compare_ender3(edit_filament: impl FnOnce(&Path), expected_lines: &[&str]) {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -72,6 +93,7 @@ async fn load_settings_cli_ender3_whole_file() {
         .keep();
     let presets = preset_files(&directory, "Creality", "Creality Ender-3 0.4 nozzle");
     let machine_process = format!("{};{}", presets[0], presets[1]);
+    edit_filament(Path::new(&presets[2]));
     let filaments = presets[2..].join(";");
     fs::write(
         directory.join("cube10.stl"),
@@ -132,6 +154,15 @@ async fn load_settings_cli_ender3_whole_file() {
         String::from_utf8_lossy(&output.stderr),
     );
     let ares = fs::read(directory.join("ares.gcode")).unwrap();
+    for expected in expected_lines {
+        assert!(
+            native
+                .split(|byte| *byte == b'\n')
+                .any(|line| line == expected.as_bytes()),
+            "Native did not emit {expected:?}; artifacts {}",
+            directory.display(),
+        );
+    }
 
     assert_eq!(
         banner_normalized(&native),
