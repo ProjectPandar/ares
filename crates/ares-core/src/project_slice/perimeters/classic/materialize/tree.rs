@@ -1,6 +1,8 @@
 use crate::{
     SliceError,
-    geometry::{Coord, CoordinateScale},
+    arachne::{ExtrusionJunction, ExtrusionLine},
+    geometry::{Coord, CoordinateScale, ThickPolyline},
+    project_slice::perimeters::arachne::fuzzy::Layer,
 };
 
 use super::{
@@ -12,8 +14,8 @@ use super::{
             chain_loops_by_first_points,
         },
         traversal::{
-            PendingPathBranch, PostClassicTraversalPrintObject, PreparedTraversalSurface,
-            TraversalSeed,
+            ClassicTraversalRecord, PendingPathBranch, PostClassicTraversalPrintObject,
+            PreparedTraversalSurface, TraversalSeed,
         },
     },
     path::materialize_seed,
@@ -36,9 +38,6 @@ struct RebuiltLevel {
 /// once and stored on the tree for the emission traversal to consume.
 struct LevelFrame<'a> {
     seeds: &'a [TraversalSeed],
-    /// Thin-wall entities chain with the root level only
-    /// (`PerimeterGenerator.cpp:230-233`); child levels pass `None`.
-    thin_entities: Option<&'a [ExtrusionEntity]>,
     flat_done: bool,
     paths: Vec<Vec<ExtrusionPath>>,
     /// Child visit order: chain-ordered loop slots, then the compacted-out
@@ -55,10 +54,9 @@ struct LevelFrame<'a> {
 }
 
 impl<'a> LevelFrame<'a> {
-    fn new(seeds: &'a [TraversalSeed], thin_entities: Option<&'a [ExtrusionEntity]>) -> Self {
+    fn new(seeds: &'a [TraversalSeed]) -> Self {
         Self {
             seeds,
-            thin_entities,
             flat_done: false,
             paths: Vec::with_capacity(seeds.len()),
             visits: Vec::new(),
@@ -79,18 +77,8 @@ pub(super) fn materialize_surface(
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedRawPathSurface, SliceError> {
     let record = record_context.record;
-    // `variable_width(thin_walls, erExternalPerimeter, ext_perimeter_flow,
-    // coll.entities)` (`PerimeterGenerator.cpp:231`) — materialized once here
-    // because the root chain interleaves the entities; the emission traversal
-    // consumes them verbatim.
-    let thin_entities = convert_entities(
-        &surface.thin_walls,
-        record.ext_perimeter_flow,
-        record.scale,
-        ExtrusionRole::ExternalPerimeter,
-    )
-    .unwrap_or_default();
-    let mut frames = vec![LevelFrame::new(&surface.roots, Some(&thin_entities))];
+    let mut thin_entities = Vec::new();
+    let mut frames = vec![LevelFrame::new(&surface.roots)];
     let mut completed: Option<RebuiltLevel> = None;
     loop {
         if let Some(rebuilt) = completed.take() {
@@ -104,6 +92,7 @@ pub(super) fn materialize_surface(
             continue;
         }
 
+        let is_root = frames.len() == 1;
         let frame = frames
             .last_mut()
             .expect("the root level remains until return");
@@ -122,7 +111,11 @@ pub(super) fn materialize_surface(
                     return Err(error);
                 }
             };
-            let chain = level_chain(&frame.paths, frame.thin_entities);
+            if is_root && !surface.thin_walls.is_empty() {
+                // PerimeterGenerator.cpp:258-278: sibling loops consume fuzzy draws first.
+                thin_entities = materialize_thin_walls(&surface.thin_walls, record, context)?;
+            }
+            let chain = level_chain(&frame.paths, is_root.then_some(thin_entities.as_slice()));
             let loop_count = frame.paths.iter().filter(|paths| !paths.is_empty()).count();
             frame.visits = chain
                 .iter()
@@ -161,8 +154,42 @@ pub(super) fn materialize_surface(
         frame.next_visit += 1;
         frame.pending_slot = Some(slot);
         let child_seeds = frame.seeds[slot].children.as_slice();
-        frames.push(LevelFrame::new(child_seeds, None));
+        frames.push(LevelFrame::new(child_seeds));
     }
+}
+
+fn materialize_thin_walls(
+    walls: &[ThickPolyline],
+    record: &ClassicTraversalRecord,
+    context: &mut crate::SlicerContext,
+) -> Result<Vec<ExtrusionEntity>, SliceError> {
+    let layer = Layer {
+        id: record.layer_id,
+        slice_z: record.slice_z,
+        layer_height: record.layer_height,
+        scale: record.scale,
+    };
+    let mut thin_walls = Vec::with_capacity(walls.len());
+    for wall in walls {
+        let mut line = ExtrusionLine::new(0, true);
+        let closed = wall.points.first() == wall.points.last();
+        line.is_closed = closed;
+        line.junctions.reserve(wall.points.len());
+        for (i, &point) in wall.points.iter().enumerate() {
+            // Upstream indexes segment endpoint widths by point index.
+            line.push(ExtrusionJunction::new(point, wall.width[i] as Coord, 0));
+        }
+        record
+            .fuzzy_skin
+            .apply(&mut line, (true, closed), layer, context)?;
+        thin_walls.push(line.to_thick_polyline());
+    }
+    convert_entities(
+        &thin_walls,
+        record.ext_perimeter_flow,
+        record.scale,
+        ExtrusionRole::ExternalPerimeter,
+    )
 }
 
 /// The `traverse_loops` flat pass for one level — every same-level sibling
