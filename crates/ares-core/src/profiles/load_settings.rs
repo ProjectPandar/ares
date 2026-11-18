@@ -128,6 +128,7 @@ fn compose_with_project(
         }
     }
     let mut filament_slots = Vec::new();
+    let mut authored_user_ids = Vec::new();
     for (slot, file) in request.filaments.iter().enumerate() {
         if file.json.is_empty() {
             continue;
@@ -139,6 +140,14 @@ fn compose_with_project(
                 file.label
             )));
         }
+        let inherited_user = document
+            .inherits
+            .as_deref()
+            .is_some_and(|name| !name.is_empty())
+            && matches!(document.fields.get("from"), Some(RawConfigValue::Text(from)) if matches!(from.as_str(), "User" | "user"));
+        // OrcaSlicer.cpp:2238–2255 resolves config without replacing the per-file ID.
+        authored_user_ids
+            .push(inherited_user.then(|| super::catalog::document_text(&document, "filament_id")));
         let document = catalog.admit_document(
             ProfileKind::Filament,
             document,
@@ -151,7 +160,22 @@ fn compose_with_project(
         Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
         None => ProfileSelection::new_partial(process, machine, filament_slots)?,
     };
-    catalog.compose(&selection)
+    let mut composed = catalog.compose(&selection)?;
+    for (id, authored) in composed
+        .profile
+        .settings
+        .project
+        .gcode
+        .filament_ids
+        .0
+        .iter_mut()
+        .zip(authored_user_ids)
+    {
+        if let Some(authored) = authored {
+            *id = authored;
+        }
+    }
+    Ok(composed)
 }
 
 /// Extracts the adjudication inputs of the `--load-settings` file loop
