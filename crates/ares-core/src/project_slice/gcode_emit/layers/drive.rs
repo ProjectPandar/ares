@@ -342,6 +342,8 @@
                 )?;
             }
         }
+        // An empty final visit can bypass the per-entry tail.
+        layer_end::append_farthest_fallback(output, state, timelapse_context)?;
         cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
         if state.wipe_tower.is_some() {
             final_chunk = Some((tool_ordering, final_entry, chunk_slices, chunk_perimeter_spacing));

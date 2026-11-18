@@ -19,8 +19,11 @@ pub(super) fn emit(
     }: LayerTimelapse,
     timelapse_context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
-    // `GCode.cpp:8165`: publish the inline insert before the layer-end tail.
+    // `GCode.cpp:8193`: publish the inline insert before the layer-end tail.
     state.has_insert_timelapse_gcode |= state.farthest_point.inserted_this_layer;
+    if append_farthest_fallback(output, state, timelapse_context)? {
+        return Ok(());
+    }
     // The layer-end timelapse sequence closes every layer chunk
     // (`GCode.cpp:5527-5546`), after all of the chunk's objects.
     if timelapse_inserted || state.has_insert_timelapse_gcode {
@@ -35,4 +38,25 @@ pub(super) fn emit(
         traditional_timelapse,
         timelapse_context,
     )
+}
+
+/// `GCode.cpp:8192-8206`: a photo-head target that the inline hook missed.
+pub(super) fn append_farthest_fallback(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    context: timelapse::Context<'_>,
+) -> Result<bool, SliceError> {
+    if !state.farthest_point.targets_photo_head()
+        || state.farthest_point.inserted_this_layer
+        || state.has_insert_timelapse_gcode
+    {
+        return Ok(false);
+    }
+    if state.options.retract_when_changing_layer {
+        motion::prepare_traditional_timelapse(output, state);
+    }
+    motion::append_object_start(output, state);
+    timelapse::append_and_track(output, state, context)?;
+    state.has_insert_timelapse_gcode = true;
+    Ok(true)
 }
