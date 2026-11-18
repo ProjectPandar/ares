@@ -137,7 +137,7 @@ fn slice(applied: Option<(&str, Value)>, label: &str) -> (PathBuf, Vec<u8>, Vec<
 
 #[test]
 fn absent_dynamic_only_defaults_are_not_emitted() {
-    if !crate::runner::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (work, native, actual) = slice(None, "absent-fourteen");
@@ -157,8 +157,7 @@ macro_rules! applied_control {
     ($test:ident, $key:literal, $default:expr, $nondefault:expr) => {
         #[test]
         fn $test() {
-            if !crate::runner::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE")
-            {
+            if !crate::runner::reference_available() {
                 return;
             }
             for (label, value) in [("default", $default), ("nondefault", $nondefault)] {

@@ -4,10 +4,9 @@ use serde_json::json;
 
 #[test]
 fn fully_clipped_loops_preserve_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_CLIPPED_LOOP_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

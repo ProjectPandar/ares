@@ -33,10 +33,9 @@ fn shorten_payloads(project: &[u8]) -> Vec<u8> {
 
 #[test]
 fn short_filament_variants_preserve_zero_slots_in_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_FILAMENT_VARIANTS_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "BBL").unwrap();
     let selection = parity::select_printer(&profiles, "BBL", "Bambu Lab H2D 0.4 nozzle").unwrap();
     let mut machine = profiles.machine(&selection.printer).unwrap();

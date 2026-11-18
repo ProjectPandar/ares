@@ -17,7 +17,7 @@ mod prime_tower_export;
 /// Gated behind `ARES_PARITY_SWEEP=1` because slicing every vendor preset
 /// through both slicers takes hours.
 pub(super) fn run_printer_sweep() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SWEEP") {
+    if !crate::runner::sweep_enabled("ARES_PARITY_SWEEP") {
         eprintln!("skipping: set ARES_PARITY_SWEEP=1 to run the full printer sweep");
         return;
     }

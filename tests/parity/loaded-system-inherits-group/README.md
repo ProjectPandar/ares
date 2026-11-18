@@ -40,5 +40,5 @@ Artifacts: fresh per-leg source copies, full native/ares/cli.gcode, native
 cache producer/request receipts and command status/stdout/stderr, complete config
 maps/digests/comparator results in loaded-system-result.json, plus three-leg
 loaded-system-summary.json. Run via canonical official/seeded environment with
-ARES_PARITY_PROFILE_ENTRY_REFERENCE=1, ARES_REQUIRE_ORCA=1 and fresh
+ARES_REQUIRE_ORCA=1 and fresh
 artifact/cache roots. This is a test-only RED; no production correction.

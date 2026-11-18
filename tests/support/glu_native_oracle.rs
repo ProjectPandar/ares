@@ -30,31 +30,24 @@ pub struct NativeOracle {
 
 impl NativeOracle {
     pub fn from_env() -> Result<Option<Self>> {
-        let enabled = std::env::var("ARES_PARITY_PROFILE_ENTRY_REFERENCE").as_deref() == Ok("1");
-        if !enabled {
-            if native_environment::required() {
-                return Err(
-                    "ARES_REQUIRE_ORCA=1: ARES_PARITY_PROFILE_ENTRY_REFERENCE must be 1".into(),
-                );
-            }
-            native_environment::skipped("ARES_PARITY_PROFILE_ENTRY_REFERENCE is not enabled");
+        let Some(_) = native_environment::binary("ARES_ORCA_NATIVE_BIN") else {
             return Ok(None);
-        }
-        native_environment::binary("ARES_ORCA_NATIVE_BIN")
-            .ok_or("enabled Native reference requires ARES_ORCA_NATIVE_BIN")?;
-        let resources = PathBuf::from(
-            native_environment::value("ARES_ORCA_RESOURCES_DIR")
-                .ok_or("enabled Native reference requires ARES_ORCA_RESOURCES_DIR")?,
-        );
+        };
+        let Some(resources) =
+            native_environment::value("ARES_ORCA_RESOURCES_DIR").map(PathBuf::from)
+        else {
+            return Ok(None);
+        };
         if !resources.is_dir() {
             return Err(
                 format!("configured Native resources are not a directory: {resources:?}").into(),
             );
         }
-        let artifacts = PathBuf::from(
-            native_environment::value("ARES_PARITY_ARTIFACT_ROOT")
-                .ok_or("enabled Native reference requires ARES_PARITY_ARTIFACT_ROOT")?,
-        );
+        let Some(artifacts) =
+            native_environment::value("ARES_PARITY_ARTIFACT_ROOT").map(PathBuf::from)
+        else {
+            return Ok(None);
+        };
         let root = artifacts.join(format!(
             "glu-tessellation-{}-{}",
             std::process::id(),

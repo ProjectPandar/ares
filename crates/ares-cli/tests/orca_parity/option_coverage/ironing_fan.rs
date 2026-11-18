@@ -4,10 +4,9 @@ use serde_json::json;
 
 #[test]
 fn ironing_fan_preserves_complete_output_and_role_speed() {
-    if !crate::runner::reference_enabled("ARES_PARITY_IRONING_FAN_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();

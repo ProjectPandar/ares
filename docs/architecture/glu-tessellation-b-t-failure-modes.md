@@ -54,12 +54,11 @@ included by priorityq.c and is not compiled twice. No prebuilt oracle or
 committed Native index orders/coordinates serve as expected values.
 Authored input JSON, generator and failure-mode inventory remain committed.
 
-The gate is ARES_PARITY_PROFILE_ENTRY_REFERENCE, also used by OrcaRunner;
-the parity control-set script sets it to 1, together with
-ARES_REQUIRE_ORCA=1. Optional unconfigured runs emit the shared explicit
-Native SKIPPED notice, never a parity claim. Required runs and enabled runs
-with missing Native binary/resources/artifact root/vendor sources/compiler
-fail. No custom optional gate is introduced and the canonical script is unchanged.
+The test-time oracle uses the shared Native availability policy. Optional
+unconfigured runs emit an explicit skip, never a parity claim. With
+`ARES_REQUIRE_ORCA=1`, missing Native binary, resources, or artifact root
+fail the test. Once configured, missing vendor sources or compiler failures
+also fail the test.
 
 Each oracle gets a fresh directory below ARES_PARITY_ARTIFACT_ROOT. Source
 hashes, compiler commands/status/stdout/stderr, submitted input, Native raw

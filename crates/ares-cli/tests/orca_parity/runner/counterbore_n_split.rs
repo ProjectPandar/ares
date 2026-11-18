@@ -11,12 +11,9 @@ const FILAMENT: &str = "Generic PLA @System";
 
 #[test]
 fn counterbore_n_split_arachne_filled_complete_output() {
-    if !super::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = super::repo_root();
     let fixtures = root.join("tests/parity/counterbore-n-split");
     let manifest: Value =

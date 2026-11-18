@@ -50,12 +50,9 @@ fn geometry(gcode: &[u8]) -> (String, Vec<Value>) {
 }
 
 pub(super) fn run(label: &str, settings: Value, moved: bool) {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let presets = super::presets(&runner);
     let process_file = runner.work.join("stl-session-process.json");
     let mut process: Value = serde_json::from_slice(&fs::read(&process_file).unwrap()).unwrap();

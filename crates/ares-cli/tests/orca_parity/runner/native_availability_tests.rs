@@ -12,7 +12,6 @@ fn invoke(selector: &str, root: &Path, missing: &str, required: bool) -> std::pr
         .env("ARES_ORCA_RESOURCES_DIR", root)
         .env("ARES_PARITY_ARTIFACT_ROOT", root)
         .env_remove("ARES_PARITY_SWEEP")
-        .env_remove("ARES_PARITY_CLUSTER")
         .env_remove("ARES_PARITY_OPTIONS")
         .env_remove("ARES_PARITY_HONEYCOMB_MULTILINE")
         .env_remove("ORCA_REPLAY_BIN")

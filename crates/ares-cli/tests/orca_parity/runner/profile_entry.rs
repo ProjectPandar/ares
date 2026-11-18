@@ -98,12 +98,9 @@ fn resolved_vendor_presets_preserve_applied_default_members() {
 }
 
 fn run_profile_entry(overrides: &[(&str, &str, Value)]) {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "LH").unwrap();
@@ -286,12 +283,9 @@ pub(super) fn write_json(path: &Path, value: &Value) {
 /// G-code.
 #[test]
 fn profile_entry_stl_center_placement() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = super::repo_root();
     let profiles_root = root.join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "LH").unwrap();

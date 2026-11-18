@@ -208,39 +208,10 @@ jobs:
     needs: native-oracle-build
     env:
       ARES_REQUIRE_ORCA: "1"
+      ARES_PARITY_LANE: seeded
       ARES_PARITY_SEEDED_REFERENCE: "1"
       ARES_ROLE_ORACLE_LIVE: "1"
-      ARES_PARITY_BOOKKEEPING_REFERENCE: "1"
-      ARES_PARITY_BRIDGE_DIRECTION_REFERENCE: "1"
-      ARES_PARITY_CLIPPED_LOOP_REFERENCE: "1"
-      ARES_PARITY_EMISSION_PHASES_REFERENCE: "1"
-      ARES_PARITY_FILAMENT_STATS_REFERENCE: "1"
-      ARES_PARITY_FILAMENT_VARIANTS_REFERENCE: "1"
       ARES_PARITY_HONEYCOMB_MULTILINE: "1"
-      ARES_PARITY_IRONING_FAN_REFERENCE: "1"
-      ARES_PARITY_LIGHTNING_REFERENCE: "1"
-      ARES_PARITY_LOOP_CHAIN_REFERENCE: "1"
-      ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE: "1"
-      ARES_PARITY_NORMAL_SUPPORT_REFERENCE: "1"
-      ARES_PARITY_OBJECT_ID_REFERENCE: "1"
-      ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE: "1"
-      ARES_PARITY_OVERRIDE_REFERENCE: "1"
-      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1"
-      ARES_PARITY_REGION_FILAMENT_REFERENCE: "1"
-      ARES_PARITY_REGION_PERIMETERS_REFERENCE: "1"
-      ARES_PARITY_SHORT_LINE_REFERENCE: "1"
-      ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE: "1"
-      ARES_PARITY_STITCH_JUNCTION_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_ANGLE_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_FLOW_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_MODIFIER_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_STYLE_REFERENCE: "1"
-      ARES_PARITY_TRANSITION_SNAP_REFERENCE: "1"
-      ARES_PARITY_TREE_CONTAINMENT_REFERENCE: "1"
-      ARES_PARITY_TREE_SUPPORT_REFERENCE: "1"
-      ARES_PARITY_VOLUME_OFFSETS_REFERENCE: "1"
-      ARES_PARITY_WIDTH_OWNER_PAIR: "1"
       ORCA_REPLAY_SEED: "0"
     steps:
       - uses: actions/checkout@v4
@@ -310,45 +281,16 @@ jobs:
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - name: Verify profile input fail-closed boundary
         run: python3 tests/parity/profile-inputs/check.py
-      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8 --profile parity-seeded
 
   parity-official:
     runs-on: self-hosted
     needs: native-oracle-build
     env:
       ARES_REQUIRE_ORCA: "1"
+      ARES_PARITY_LANE: official
       ARES_ROLE_ORACLE_LIVE: "1"
-      ARES_PARITY_BOOKKEEPING_REFERENCE: "1"
-      ARES_PARITY_BRIDGE_DIRECTION_REFERENCE: "1"
-      ARES_PARITY_CLIPPED_LOOP_REFERENCE: "1"
-      ARES_PARITY_EMISSION_PHASES_REFERENCE: "1"
-      ARES_PARITY_FILAMENT_STATS_REFERENCE: "1"
-      ARES_PARITY_FILAMENT_VARIANTS_REFERENCE: "1"
       ARES_PARITY_HONEYCOMB_MULTILINE: "1"
-      ARES_PARITY_IRONING_FAN_REFERENCE: "1"
-      ARES_PARITY_LIGHTNING_REFERENCE: "1"
-      ARES_PARITY_LOOP_CHAIN_REFERENCE: "1"
-      ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE: "1"
-      ARES_PARITY_NORMAL_SUPPORT_REFERENCE: "1"
-      ARES_PARITY_OBJECT_ID_REFERENCE: "1"
-      ARES_PARITY_OVERHANG_INTERSECTION_REFERENCE: "1"
-      ARES_PARITY_OVERRIDE_REFERENCE: "1"
-      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1"
-      ARES_PARITY_REGION_FILAMENT_REFERENCE: "1"
-      ARES_PARITY_REGION_PERIMETERS_REFERENCE: "1"
-      ARES_PARITY_SHORT_LINE_REFERENCE: "1"
-      ARES_PARITY_SMALL_LOOP_SPEED_REFERENCE: "1"
-      ARES_PARITY_STITCH_JUNCTION_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_ANGLE_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_ANNOTATIONS_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_FLOW_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_MODIFIER_REFERENCE: "1"
-      ARES_PARITY_SUPPORT_STYLE_REFERENCE: "1"
-      ARES_PARITY_TRANSITION_SNAP_REFERENCE: "1"
-      ARES_PARITY_TREE_CONTAINMENT_REFERENCE: "1"
-      ARES_PARITY_TREE_SUPPORT_REFERENCE: "1"
-      ARES_PARITY_VOLUME_OFFSETS_REFERENCE: "1"
-      ARES_PARITY_WIDTH_OWNER_PAIR: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -421,4 +363,4 @@ jobs:
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
       - name: Verify profile input fail-closed boundary
         run: python3 tests/parity/profile-inputs/check.py
-      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8
+      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8 --profile parity-official

@@ -10,9 +10,6 @@ use std::{
 
 #[test]
 fn resource_part_without_build_public_slicing() {
-    if !super::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
-        return;
-    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

@@ -31,16 +31,12 @@ mod custom_gcode_unknown_function;
 mod custom_gcode_vector_scalar;
 
 /// Focused re-check of the nearest-seam / layer-1 deposition cluster
-/// after seam-placement changes (env-gated, prints outcomes).
+/// after seam-placement changes; prints each comparison outcome.
 #[test]
 fn nearest_cluster_check() {
-    if !crate::runner::reference_enabled("ARES_PARITY_CLUSTER") {
-        eprintln!("skipping: set ARES_PARITY_CLUSTER=1");
+    let Some(runner) = OrcaRunner::from_env().unwrap_or_else(|e| panic!("{e}")) else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap_or_else(|e| panic!("{e}"))
-        .expect("explicit cluster requires an Orca executable");
+    };
     // `ARES_RACE_TARGET="vendor|printer"` drives a single case dump for
     // the fresh-oracle race-batch script; the default runs the cluster pair.
     let targets: Vec<(String, String)> = std::env::var("ARES_RACE_TARGET")

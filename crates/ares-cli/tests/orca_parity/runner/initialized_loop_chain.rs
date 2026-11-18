@@ -50,7 +50,7 @@ fn assert_seeded_oracle(runner: &OrcaRunner) {
 
 #[test]
 fn initialized_loop_chain_matches_complete_output() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_LOOP_CHAIN_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");

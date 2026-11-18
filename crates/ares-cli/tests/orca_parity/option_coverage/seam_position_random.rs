@@ -15,7 +15,7 @@ fn seam_position_random_concave_epsilon_matches_complete_output() {
     // `native_stream_case::qualify` would panic with Native
     // nondeterminism in official mode (same qualification as
     // `initialized_object_id.rs`).
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     check(

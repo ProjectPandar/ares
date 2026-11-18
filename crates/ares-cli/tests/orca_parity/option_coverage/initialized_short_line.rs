@@ -3,10 +3,12 @@ use crate::runner::CaseInputs;
 
 #[test]
 fn initialized_short_line_matches_complete_internal_fill_output() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_SHORT_LINE_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
