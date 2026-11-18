@@ -8,7 +8,7 @@ from fitted paths before seam placement. The per-extrusion inline hook then uses
 Carbon fixture the emitted fitting split is identical, but Ares scans after seam placement
 while Native scans before it.
 
-This document records the parity boundary and evidence. Implementation remains deferred pending GO.
+The pre-seam scan input is the scope of this rewrite slice.
 
 ## Upstream boundary
 
@@ -99,8 +99,18 @@ Both checks use the global print frame, not the G-code frame: on this fixture G-
 nozzle offset `(0,2)` and writer XY offset is zero (`GCode.cpp:9981-9985,11644-11648`). Neither the
 coordinate frame, arc emission, nor inline insertion order needs to change for this boundary.
 
+## Included behaviour
+
+- Select candidates from simplified and fitted paths before seam placement and loop-tail clipping,
+  matching `GCode.cpp:6390-6435` and `:7259-7262`.
+- Carry only the selection data needed across seam placement, not a second copy of the paths.
+  Retain the existing role and tie rules, instance shifts, tool attribution, and photo-head gate.
+- Keep candidate selection and output independent of available CPU count. The P44 public API
+  comparison must place the snapshot before the unchanged Inner wall arc.
+
 ## Deferred behaviour
 
+- Changes to seam placement, clipping, arc fitting/emission, and the inline insertion hook;
 - `timelapse_pos.rs` pos-picker semantics and `printed_objects` label ids;
 - the layer-end fallback insert (`GCode.cpp:8193-8227`);
 - non-inline traditional inserts and their position picking.
@@ -110,7 +120,7 @@ coordinate frame, arc emission, nor inline insertion order needs to change for t
 The existing post-seam `OrderedExtrusionLayer` view is the mismatched input to
 `GCode::compute_farthest_point` parity. The scope is to supply the fitted, pre-seam candidates to
 the existing target scan; retain its role/metric rules, the inline hook, and emitted fitting.
-No implementation is authorized until GO.
+The previous post-seam scan input is replaced, not retained as a fallback.
 
 ## Verification
 
