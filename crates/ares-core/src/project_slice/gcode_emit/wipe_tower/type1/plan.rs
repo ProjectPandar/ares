@@ -1,4 +1,5 @@
 //! `WipeTower.hpp::WipeTowerInfo`; `WipeTower.cpp:3107–3195,4690–4800`.
+use super::super::estimate::nozzle_change_perimeter_width;
 use super::{blocks::Block, category_depths::Depths};
 use crate::{Nullable, NullableFloats, ProjectSettings};
 use std::collections::BTreeMap;
@@ -17,9 +18,14 @@ struct CategoryGap {
 }
 
 impl CategoryDepth {
-    fn gap(&self, perimeter: f32, extra: f32, height_spacing: f32) -> CategoryGap {
+    fn gap(
+        &self,
+        perimeter: f32,
+        nozzle_perimeter: f32,
+        extra: f32,
+        height_spacing: f32,
+    ) -> CategoryGap {
         let wipe = perimeter + extra;
-        let nozzle_perimeter = 2.0 * perimeter;
         if !self.ramming {
             return CategoryGap { wipe, nozzle: wipe };
         }
@@ -69,6 +75,7 @@ pub(super) struct Plan {
     pub(super) depth: f32,
     pub(super) height: f32,
     pub(super) perimeter: f32,
+    pub(super) nozzle_perimeter: f32,
     pub(super) spacing: f32,
     pub(super) infill_gap: f32,
     pub(super) brim: f32,
@@ -97,6 +104,7 @@ impl Plan {
         let g = &settings.filament.gcode;
         let count = g.filament_colour.0.len();
         let diameter = g.filament_diameter.0[0].0;
+        let nozzle_diameter = at(&settings.project.print.nozzle_diameter.0, count - 1).0 as f32;
         Self {
             layers: Vec::new(),
             blocks: Vec::new(),
@@ -104,7 +112,8 @@ impl Plan {
             width: p.prime_tower_width.0 as f32,
             depth: 0.0,
             height: 0.0,
-            perimeter: at(&settings.project.print.nozzle_diameter.0, count - 1).0 as f32 * 1.25,
+            perimeter: nozzle_diameter * 1.25,
+            nozzle_perimeter: nozzle_change_perimeter_width(nozzle_diameter),
             spacing: p.prime_tower_infill_gap.0 as f32 / 100.0,
             infill_gap: 0.0,
             brim: p.prime_tower_brim_width.0 as f32,
@@ -173,9 +182,8 @@ impl Plan {
             return;
         }
         let length = super::super::plan::volume_to_length(volume, self.perimeter, height);
-        let nozzle_perimeter = 2.0 * self.perimeter;
-        let opening = self.width - 2.0 * nozzle_perimeter;
-        let nozzle_depth = self.nozzle_lines((old, new), height, opening) * nozzle_perimeter;
+        let opening = self.width - 2.0 * self.nozzle_perimeter;
+        let nozzle_depth = self.nozzle_lines((old, new), height, opening) * self.nozzle_perimeter;
         self.layers.last_mut().unwrap().changes.push(Change {
             old,
             new,
@@ -191,15 +199,15 @@ impl Plan {
         if self.nozzle_map[old] == self.nozzle_map[new] {
             return 0.0;
         }
-        let perimeter = 2.0 * self.perimeter;
-        let flow = height * (perimeter - height * (1.0 - std::f32::consts::PI / 4.0)) / self.area;
+        let flow = height * (self.nozzle_perimeter - height * (1.0 - std::f32::consts::PI / 4.0))
+            / self.area;
         let length = f64::from(self.change_lengths[old]) / f64::from(flow);
         (length / f64::from(opening)).ceil() as f32
     }
 
     fn replan_changes(&mut self, gaps: &BTreeMap<i32, CategoryGap>) {
         let width = self.width - 2.0 * self.perimeter;
-        let nozzle_opening = self.width - 3.0 * self.perimeter;
+        let nozzle_opening = self.width - (self.nozzle_perimeter + self.perimeter);
         for layer_idx in 0..self.layers.len() {
             for change_idx in 0..self.layers[layer_idx].changes.len() {
                 let layer = &self.layers[layer_idx];
@@ -208,7 +216,7 @@ impl Plan {
                     self.nozzle_lines((change.old, change.new), layer.height, nozzle_opening);
                 let nozzle_gap = gaps
                     .get(&self.categories[change.old])
-                    .map_or(2.0 * self.perimeter, |gap| gap.nozzle);
+                    .map_or(self.nozzle_perimeter, |gap| gap.nozzle);
                 let wipe_gap = gaps[&self.categories[change.new]].wipe;
                 let change = &mut self.layers[layer_idx].changes[change_idx];
                 change.nozzle_depth = lines * nozzle_gap;
@@ -245,7 +253,12 @@ impl Plan {
         self.infill_gap = self.perimeter + extra;
         let gaps = depths
             .into_iter()
-            .map(|(category, depth)| (category, depth.gap(self.perimeter, extra, height_spacing)))
+            .map(|(category, depth)| {
+                (
+                    category,
+                    depth.gap(self.perimeter, self.nozzle_perimeter, extra, height_spacing),
+                )
+            })
             .collect();
         self.replan_changes(&gaps);
         self.spacing = 1.0;
