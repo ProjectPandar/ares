@@ -189,14 +189,18 @@ pub(super) fn append(
         state.total_layer_count,
     )?;
     motion::refresh_writer_state(&mut config, state);
-    config.insert("change_filament_gcode", Value::String(change));
+    config.insert("change_filament_gcode", serialized_substitution(&change));
     config.insert(
         "restore_layer_z_before_toolchange",
-        Value::String(String::from_utf8(restore_layer_z).expect("writer G-code is UTF-8")),
+        serialized_substitution(
+            std::str::from_utf8(&restore_layer_z).expect("writer G-code is UTF-8"),
+        ),
     );
     config.insert(
         "deretraction_from_wipe_tower_generator",
-        Value::String(String::from_utf8(deretraction).expect("writer G-code is UTF-8")),
+        serialized_substitution(
+            std::str::from_utf8(&deretraction).expect("writer G-code is UTF-8"),
+        ),
     );
     config.insert(
         "layer_num",
@@ -254,6 +258,23 @@ pub(super) fn append(
         );
     }
     Ok(())
+}
+
+// The legacy [name] expansion uses ConfigOptionString::serialize before the motion scan.
+fn serialized_substitution(gcode: &str) -> Value {
+    let mut escaped = String::with_capacity(gcode.len());
+    for ch in gcode.chars() {
+        match ch {
+            '\r' => escaped.push_str("\\r"),
+            '\n' => escaped.push_str("\\n"),
+            '\\' | '"' => {
+                escaped.push('\\');
+                escaped.push(ch);
+            }
+            _ => escaped.push(ch),
+        }
+    }
+    Value::String(escaped)
 }
 
 fn append_entry_travel(
