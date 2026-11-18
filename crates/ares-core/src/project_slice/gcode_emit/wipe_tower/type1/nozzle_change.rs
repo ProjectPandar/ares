@@ -1,5 +1,5 @@
 //! `WipeTower.cpp:2915–3033`: old-nozzle extrusion before Type1 filament change.
-use super::{generator::Generator, result::NozzleChange, writer::Writer};
+use super::{generator::Generator, result::NozzleChange};
 use crate::geometry::ClipperError;
 use std::fmt::Write;
 
@@ -34,7 +34,7 @@ impl Generator<'_> {
         }
         let bridge_speed =
             (60.0 * self.filaments[self.current].max_e_speed / bridge_flow).min(speed);
-        let mut writer = Writer::new(self.height, width, self.filaments[0].area, self.current);
+        let mut writer = self.new_writer(self.height, width, self.current);
         writer.flow = flow;
         writer.max_e_speed = self.filaments[self.current].max_e_speed;
         writer.set_y_shift(self.y_shift);

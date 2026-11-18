@@ -98,13 +98,18 @@ impl<'a> Generator<'a> {
         }
     }
 
-    pub(super) fn writer(&self, tool: usize) -> Writer {
-        let mut writer = Writer::new(
-            self.height,
-            self.plan.perimeter,
+    pub(super) fn new_writer(&self, height: f32, width: f32, tool: usize) -> Writer {
+        Writer::new(
+            height,
+            width,
             self.filaments[0].area,
             tool,
-        );
+            self.settings.process.gcode.enable_arc_fitting == crate::ArcFittingMode::Enabled,
+        )
+    }
+
+    pub(super) fn writer(&self, tool: usize) -> Writer {
+        let mut writer = self.new_writer(self.height, self.plan.perimeter, tool);
         writer.configure_accelerations(self.settings, self.index == 0);
         writer.flow = self.flow;
         writer.max_e_speed = self.filaments[tool].max_e_speed;

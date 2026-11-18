@@ -22,6 +22,7 @@ pub(super) struct Writer {
     size: [f32; 2],
     angle: f32,
     y_shift: f32,
+    enable_arc_fitting: bool,
     accelerations: Vec<[u32; 2]>,
     max_acceleration: u32,
     last_acceleration: u32,
@@ -31,7 +32,13 @@ pub(super) struct Writer {
 }
 
 impl Writer {
-    pub(super) fn new(height: f32, width: f32, area: f32, tool: usize) -> Self {
+    pub(super) fn new(
+        height: f32,
+        width: f32,
+        area: f32,
+        tool: usize,
+        enable_arc_fitting: bool,
+    ) -> Self {
         Self {
             gcode: format!(
                 "; LAYER_HEIGHT: {height:.6}\n; FEATURE: Prime tower\n; LINE_WIDTH: {width:.6}\n"
@@ -51,6 +58,7 @@ impl Writer {
             size: [0.0; 2],
             angle: 0.0,
             y_shift: 0.0,
+            enable_arc_fitting,
             accelerations: Vec::new(),
             max_acceleration: 0,
             last_acceleration: 0,
