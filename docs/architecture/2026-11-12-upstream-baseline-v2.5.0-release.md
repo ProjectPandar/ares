@@ -120,7 +120,7 @@ only the profiles exercised by smoke tests.
 | `BeltBrim.cpp` | `make_belt_brim`, belt band paths | Belt brim execution remains deferred with belt transforms. |
 | `Fill/FillBase.cpp` | `insert_gap_fill` ordering constraints | `fill` and `project_slice/fill_entities` |
 | `Fill/FillGyroid.cpp` | `FillGyroid::_fill_surface_single` | `fill/gyroid` |
-| `Fill/FillSpiralInset.cpp` | `FillSpiralInset::_fill_surface_single` | Source-owned spiral-inset slice. Changing pins does not implement this behavior. |
+| `Fill/FillSpiralInset.cpp` | `FillSpiralInset::_fill_surface_single` | [Spiral Inset for project surfaces and support interfaces](spiral-inset-fill.md). |
 | `Fill/FillTpmsD.cpp` | `FillTpmsD::_fill_surface_single` | `fill/tpms_d` |
 | `Fill/FillTpmsFK.cpp` | `FillTpmsFK::_fill_surface_single` | `fill/tpms_fk` |
 | `Fill/Lightning/DistanceField.cpp` | `DistanceField` construction | `fill/lightning/distance_field` |
