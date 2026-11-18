@@ -10,6 +10,8 @@ use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 #[path = "semm_ramming/input.rs"]
 mod input;
+#[path = "semm_ramming/type2_finish_filament.rs"]
+mod type2_finish_filament;
 use input::{DEFAULT, SHORT, WIDTH};
 
 struct Case {
