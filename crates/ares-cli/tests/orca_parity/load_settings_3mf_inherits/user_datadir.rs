@@ -54,7 +54,30 @@ fn user_preset_new_datadir_standalone_is_lazy() {
     run_case("new-datadir");
 }
 
+#[test]
+fn user_preset_sparse_filament_omits_id() {
+    run_filament_id_case("omitted-id", None, r#"; filament_ids = """#);
+}
+
+#[test]
+fn user_preset_sparse_filament_keeps_empty_id() {
+    run_filament_id_case("empty-id", Some(""), r#"; filament_ids = """#);
+}
+
+#[test]
+fn user_preset_sparse_filament_keeps_authored_id() {
+    run_filament_id_case("authored-id", Some("USER99"), "; filament_ids = USER99");
+}
+
 fn run_case(case: &str) {
+    run(case, None);
+}
+
+fn run_filament_id_case(case: &str, authored: Option<&str>, expected: &str) {
+    run(case, Some((authored, expected)));
+}
+
+fn run(case: &str, filament_id_case: Option<(Option<&str>, &str)>) {
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -67,10 +90,11 @@ fn run_case(case: &str) {
     let mut process = load_settings_3mf_fixture("process.json");
     let mut filament = load_settings_3mf_fixture("compatible-filament-0.json");
     let explicit = case != "cwd-only";
-    let success = matches!(
-        case,
-        "explicit" | "selected" | "invalid-app" | "malformed" | "new-datadir" | "all-kinds"
-    );
+    let success = filament_id_case.is_some()
+        || matches!(
+            case,
+            "explicit" | "selected" | "invalid-app" | "malformed" | "new-datadir" | "all-kinds"
+        );
     let cwd = root.join(case);
     fs::create_dir_all(cwd.join("system")).unwrap();
     let user = cwd.join(if case == "selected" {
@@ -146,16 +170,21 @@ fn run_case(case: &str) {
         )
         .unwrap();
     }
-    if case == "all-kinds" {
-        for (kind, file) in [("process", &mut process), ("filament", &mut filament)] {
-            let template: Value = serde_json::from_slice(&fs::read(&*file).unwrap()).unwrap();
-            let mut child = json!({"type":kind,"name":template["name"],"from":"user","version":"2.5.0","inherits":"root"});
-            if kind == "filament" {
-                child["filament_id"] = template["filament_id"].clone();
-            }
-            *file = user.join(kind).join("child.json");
-            fs::write(&*file, child.to_string()).unwrap();
+    for (kind, file) in [("process", &mut process), ("filament", &mut filament)] {
+        if case != "all-kinds" && !(kind == "filament" && filament_id_case.is_some()) {
+            continue;
         }
+        let template: Value = serde_json::from_slice(&fs::read(&*file).unwrap()).unwrap();
+        let mut child = json!({"type":kind,"name":template["name"],"from":"user","version":"2.5.0","inherits":"root"});
+        if kind == "filament" {
+            match filament_id_case {
+                None => child["filament_id"] = template["filament_id"].clone(),
+                Some((Some(id), _)) => child["filament_id"] = id.into(),
+                Some((None, _)) => {}
+            }
+        }
+        *file = user.join(kind).join("child.json");
+        fs::write(&*file, child.to_string()).unwrap();
     }
     let settings = format!("{};{}", source.display(), process.display());
     let output = cwd.join("native-output");
@@ -203,7 +232,18 @@ fn run_case(case: &str) {
     if success {
         assert!(native.is_ok(), "{}: {}", cwd.display(), native.unwrap_err());
         assert_eq!(result["return_code"], 0, "{}", cwd.display());
-        assert!(output.join("plate_1.gcode").is_file());
+        let gcode = output.join("plate_1.gcode");
+        assert!(gcode.is_file());
+        if let Some((_, expected)) = filament_id_case {
+            assert!(
+                fs::read_to_string(gcode)
+                    .unwrap()
+                    .lines()
+                    .any(|line| line == expected),
+                "Native did not emit {expected:?}: {}",
+                cwd.display()
+            );
+        }
     } else {
         let failure = native.unwrap_err();
         assert_eq!(failure.kind, stages::FailureKind::Process);
@@ -272,6 +312,10 @@ fn ares(
             String::from_utf8_lossy(&result.stderr)
         );
         assert!(output.is_file());
+        let ares_result: Value =
+            serde_json::from_slice(&fs::read(output.with_file_name("result.json")).unwrap())
+                .unwrap();
+        assert_eq!(ares_result["return_code"], 0, "{}", cwd.display());
         let native = fs::read(cwd.join("native-output/plate_1.gcode")).unwrap();
         let ares = fs::read(&output).unwrap();
         let native = crate::load_settings_cli::banner_normalized(&native);
