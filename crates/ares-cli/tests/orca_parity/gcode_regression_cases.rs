@@ -80,3 +80,6 @@ mod raw_intersection_capacity;
 
 #[path = "moonraker_metadata.rs"]
 mod moonraker_metadata;
+
+#[path = "type1_writer_arc_mode.rs"]
+mod type1_writer_arc_mode;
