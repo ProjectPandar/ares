@@ -123,7 +123,12 @@ impl InitialFilaments {
             "initial_no_support_filament_id",
             value::Value::Integer(self.non_support as i64),
         );
-        for name in ["current_extruder", "filament_extruder_id"] {
+        for name in [
+            "current_extruder",
+            "filament_extruder_id",
+            "current_filament_id",
+            "initial_filament_id",
+        ] {
             config.insert(name, value::Value::Integer(self.initial as i64));
         }
         config.insert(
