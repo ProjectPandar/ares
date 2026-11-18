@@ -121,8 +121,8 @@ pub(super) fn validate(
         .map_err(|error| SliceError::InvalidInput(format!("{error:?}")))?
         .is_empty()
     {
-        if let Some((depth, brim)) = compacted_estimate {
-            super::compacted_tower::validate(project, resolved, plate_number, scale, depth, brim)?;
+        if let Some(estimate) = compacted_estimate {
+            super::compacted_tower::validate(project, resolved, plate_number, scale, estimate)?;
         }
         return Ok(());
     }

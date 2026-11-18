@@ -19,8 +19,7 @@ pub(super) fn validate(
     resolved: &BoundedResolvedProjectConfig,
     plate_index: u32,
     scale: CoordinateScale,
-    depth: f32,
-    brim: f32,
+    (depth, brim): (f32, f32),
 ) -> Result<(), SliceError> {
     if f64::from(depth) < EPSILON {
         return Ok(());
