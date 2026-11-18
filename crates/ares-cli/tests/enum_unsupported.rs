@@ -131,8 +131,7 @@ macro_rules! unsupported_states {
 }
 
 unsupported_states! {
-    infill_spiral_inset: "top_surface_pattern", "spiralinset";
-    support_spiral_inset: "support_interface_pattern", "spiralinset";
+    internal_solid_spiral_inset: "internal_solid_infill_pattern", "spiralinset";
     leading_edge_brim: "brim_type", "leading_edge_only";
     best_of_order: "print_order", "best_of";
     snake_order: "print_order", "snake";

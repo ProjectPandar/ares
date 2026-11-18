@@ -115,11 +115,6 @@ impl InterfaceArea<'_, '_> {
         }
         let mut fill = fill;
         match input.object.support_interface_pattern {
-            ProcessSupportInterfacePattern::SpiralInset => {
-                return Err(crate::SliceError::UnsupportedProjectFeature(
-                    "support_interface_pattern: spiralinset".to_owned(),
-                ));
-            }
             ProcessSupportInterfacePattern::Grid => {
                 filler.angle = input.base_angle();
                 fill.dont_sort = true;
@@ -132,7 +127,8 @@ impl InterfaceArea<'_, '_> {
             }
             ProcessSupportInterfacePattern::Auto
             | ProcessSupportInterfacePattern::Rectilinear
-            | ProcessSupportInterfacePattern::Concentric => {}
+            | ProcessSupportInterfacePattern::Concentric
+            | ProcessSupportInterfacePattern::SpiralInset => {}
         }
         filler
             .append(destination, &areas, fill)

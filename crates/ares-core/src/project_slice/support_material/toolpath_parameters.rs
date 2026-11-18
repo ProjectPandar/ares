@@ -121,14 +121,10 @@ impl ToolpathParameters {
             RaftFillPattern::SupportBase
         };
         let contact_fill_pattern = match object.support_interface_pattern {
-            ProcessSupportInterfacePattern::SpiralInset => {
-                return Err(crate::SliceError::UnsupportedProjectFeature(
-                    "support_interface_pattern: spiralinset".to_owned(),
-                ));
-            }
             ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
             ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
             ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
+            ProcessSupportInterfacePattern::SpiralInset => RaftFillPattern::SpiralInset,
             ProcessSupportInterfacePattern::Auto if slicing.zero_gap_interface_top => {
                 RaftFillPattern::Concentric
             }

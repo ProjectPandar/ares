@@ -93,6 +93,16 @@ pub(super) fn project_surface(
         }
     }
     params.extrusion_role = extrusion_role(kind, solid, is_bridge);
+    use crate::ProcessSurfaceFillOrder::Default;
+    params.fill_order = if params.pattern == configured(ProcessInfillPattern::SpiralInset) {
+        match params.extrusion_role {
+            ExtrusionRole::TopSolidInfill => context.region.top_surface_fill_order,
+            ExtrusionRole::BottomSurface => context.region.bottom_surface_fill_order,
+            _ => Default,
+        }
+    } else {
+        Default
+    };
     params.extruder = output_selector(context.region, params.extrusion_role, params.extruder);
     params.multiline = if params.extrusion_role == ExtrusionRole::InternalInfill {
         context.region.fill_multiline.0
@@ -188,6 +198,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
     SurfaceFillParams {
         extruder: 0,
         pattern: configured(ProcessInfillPattern::Monotonic),
+        fill_order: crate::ProcessSurfaceFillOrder::Default,
         spacing: 0.0,
         overlap: 0.0,
         angle: 0.0,
