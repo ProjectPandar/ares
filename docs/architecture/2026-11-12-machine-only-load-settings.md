@@ -45,8 +45,8 @@ embedded configuration read by `src/libslic3r/Format/bbs_3mf.cpp`.
 
 - Admit omitted process and filament files only on the project-backed path
   with embedded process and filament state. Keep the public, context-free
-  `ProfileSelection` constructor checks and existing complete-list behavior.
-  A format extension or a Boolean flag alone is not proof of retained state.
+  `ProfileSelection` constructor checks. A format extension or a Boolean
+  flag alone is not proof of retained state.
 - Do not synthesize process or filament files, select omitted kinds by a
   replacement machine's default names, or serialize an intermediate archive.
   Resolve retained identities only through explicitly supplied original catalog
@@ -148,8 +148,10 @@ The loaded project's embedded post-process check and retained-process
 compatibility precede the original upward snapshot. Commit that snapshot before
 retained refresh and later validation so a later refresh/slice failure cannot
 lose it. Run refresh before collection-default materialization and explicit
-machine overlay; apply user overrides last. Keep complete-list adjudication on
-its existing path and load mesh geometry only once.
+machine overlay; apply user overrides last. Load mesh geometry only once.
+The supplied pair uses a separate path; see
+[direct STL process compatibility](direct-stl-process-compatibility.md) for the
+empty-list rule when both presets are supplied.
 
 Runtime Native in both official and seeded modes is the independent oracle.
 Both cases must return exit 0, report return code 0 and upward machines exactly
