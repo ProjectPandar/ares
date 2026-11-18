@@ -30,7 +30,7 @@ leaves the first full-stream difference at the preheat insertion: the same
 `GCodeProcessor::ExportLines::insert_lines` backtraces from the future T1 elapsed
 time, so later tower-entry motion can affect that earlier output position.
 
-The retained source-qualified trace still enters unload at `(0.25,0.25)` in
+The retained source-cited trace still enters unload at `(0.25,0.25)` in
 Rust versus `(0.25,2.0)` in Native. Native moves inward through `(0.75,2.0)`
 before the common ram start `(0.75,1.0)`. Rust also erroneously executes the
 ordinary sparse-row continuation in this boundary case. These are real input
@@ -54,10 +54,10 @@ compensating its output location.
 
 ## Test-first verification
 
-Commit this specification and run the existing two public TiQ2 E2E witnesses
-RED on the prerequisite production tree. Then port the entry behavior. Keep
-fixture bytes, whole-file line order and line-count assertions, marker/config/
-footer assertions, and generated-by-only normalization unchanged.
+Commit this specification and confirm that the two existing public TiQ2 E2E
+witnesses fail on the prerequisite production tree. Then port the entry
+behavior. Keep fixture bytes, whole-file line order and line-count assertions,
+marker/config/footer assertions, and generated-by-only normalization unchanged.
 
 Repeat the same110-identity tower/TiQ2/SEMM/Type2/BBL scope in both runtime modes;
 require no passing-to-failing transition. Report the original two tests and the

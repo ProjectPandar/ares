@@ -36,10 +36,11 @@ ExportLines, cooling, timing precision, fixture or comparator change is included
 ## Failure witness and verification
 
 Retain the existing public two TiQ2 whole-output tests and unchanged fixture.
-Before production changes, run them RED on this spec-only tree: first mismatch
-5236 is T0 preheat, Native5246/time30s versus Rust5236/time31s. A qualified
-read-only elapsed trace shows four tower E-only amounts4 versus0.8 between T1
-and T0; T1 timestamps match and Rust T0 is0.511993408203125s shorter. The
+Before changing production code, confirm that the tests fail with the T0 preheat
+as the first mismatch: Native at line 5246 and time 30 s, Rust at line 5236 and
+time 31 s. A read-only trace verified against the complete streams shows four
+tower E-only moves of 4 in Native versus 0.8 in Rust between T1 and T0. T1
+timestamps match, and Rust T0 is 0.511993408203125 s shorter. The
 threshold crosses the same1.009s travel, accounting for the ten-line insertion
 jump. This is an input difference, not a reason to change the backtrace consumer.
 
@@ -48,6 +49,7 @@ without relaxing full-stream/line-count/config/footer/marker assertions or the
 existing generated-by-only normalization. Repeat the same110 test identities in
 both runtime modes with zero P→F transitions, report every remaining failure,
 and retain repeatable artifacts. Verify formatting, workspace all-targets
-Clippy, core wasm32 and diff checks. Original E2Es remaining RED is not full
-parity success. Existing Ares constructors remain a compatibility shell around
-this exact upstream configuration admission, not a separately designed pipeline.
+Clippy, core wasm32 and diff checks. If the original E2E tests still fail,
+full-stream parity has not been established. Existing Ares constructors remain
+a compatibility shell around this exact upstream configuration admission, not
+a separately designed pipeline.
