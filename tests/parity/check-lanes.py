@@ -15,6 +15,18 @@ OFFICIAL = FUZZY + "official_fuzzy_allwalls_oracle_is_explicitly_unstable"
 BOOKKEEPING = (
     "option_coverage::bookkeeping_export::bookkeeping_short_vectors_pad_to_filament_count"
 )
+ORDINARY = (
+    "runner::profile_entry::plater_stl_session::klipper_time_estimator::"
+    "klipper_stl_session_processor_times_match_native"
+)
+SHORT_LINE = (
+    "option_coverage::initialized_short_line::"
+    "initialized_short_line_matches_complete_internal_fill_output"
+)
+SWEEPS = {
+    "smoke::printer_sweep": "ARES_PARITY_SWEEP",
+    "stock_presets::sweep::tests::stock_printer_sweep": "ARES_PARITY_STOCK_SWEEP",
+}
 
 
 def main(evidence):
@@ -53,6 +65,8 @@ def main(evidence):
             ARES_ORCA_RESOURCES_DIR=scratch,
             ARES_PARITY_ARTIFACT_ROOT=scratch,
         )
+        official_env = {"ARES_PARITY_LANE": "official"}
+        seeded_env = {"ARES_PARITY_LANE": "seeded", "ARES_PARITY_SEEDED_REFERENCE": "1"}
         for label, test, settings, diagnostic in [
             ("seeded-in-official", SEEDED, {"ARES_PARITY_LANE": "official"},
              "expected ARES_PARITY_LANE=seeded, got official"),
@@ -65,9 +79,11 @@ def main(evidence):
             ("invalid-lane", SEEDED, {"ARES_PARITY_LANE": ""}, "invalid ARES_PARITY_LANE"),
             ("contradictory-lane", SEEDED, {"ARES_PARITY_LANE": "seeded"},
              "ARES_PARITY_LANE=seeded requires ARES_PARITY_SEEDED_REFERENCE=1"),
-            ("missing-case-flag", BOOKKEEPING,
-             {"ARES_PARITY_LANE": "seeded", "ARES_PARITY_SEEDED_REFERENCE": "1"},
-             "requires ARES_PARITY_BOOKKEEPING_REFERENCE=1"),
+            ("ordinary-without-switch", ORDINARY, official_env, "missing ARES_PROCGCODE_BIN"),
+            ("seeded-without-switch", SHORT_LINE,
+             seeded_env | {"ORCA_REPLAY_SEED": "invalid-replay-seed"}, "invalid-replay-seed"),
+            *((flag.lower(), test, official_env, f"requires {flag}=1")
+              for test, flag in SWEEPS.items()),
         ]:
             status = nextest(
                 label, "run", "--profile", "default", "--ignore-default-filter",
@@ -79,6 +95,16 @@ def main(evidence):
             ).read_text()
             check(status == 100 and diagnostic in log and test in log,
                   f"{label}: expected test failure ({diagnostic}), got exit {status}")
+
+        status = nextest(
+            "optional-missing-native", "run", "--profile", "default", "--success-output",
+            "immediate", "-E", f"test(={ORDINARY})",
+            extra={"ARES_ORCA_BIN": str(supplier), "ARES_ORCA_RESOURCES_DIR": scratch,
+                   "ARES_PARITY_ARTIFACT_ROOT": scratch},
+        )
+        log = (evidence / "optional-missing-native.stderr").read_text()
+        check(status == 0 and "SKIPPED: ARES_PROCGCODE_BIN is unset" in log,
+              f"optional case must report absence of its Native supplier, got exit {status}")
 
     def selected(label, profile, *args):
         status = nextest(label, "list", "--profile", profile, "--message-format", "json", *args)
@@ -93,15 +119,25 @@ def main(evidence):
     seeded = selected("seeded-list", "parity-seeded")
     if default is not None and official is not None and seeded is not None:
         removed = default - official
-        check(len(removed) == 23 and {SEEDED, BOOKKEEPING} <= removed,
-              f"official must exclude 23 seeded-only tests, got {sorted(removed)}")
-        check(default - seeded == {OFFICIAL}, "seeded must exclude only the official instability test")
-        check(default == official | seeded, "a test was added or excluded from both lanes")
-        expression = f"test(={SEEDED}) | test(={OFFICIAL})"
+        check(len(removed) == 25 and {SEEDED, BOOKKEEPING, *SWEEPS} <= removed,
+              f"official must exclude 23 seeded-only tests and two sweeps, got {sorted(removed)}")
+        check(default - seeded == {OFFICIAL, *SWEEPS},
+              "seeded must exclude only the official instability test and two sweeps")
+        check(default - SWEEPS.keys() == official | seeded,
+              "only the two sweeps may be excluded from both lanes")
+        expression = " | ".join(f"test(={name})" for name in (SEEDED, OFFICIAL, *SWEEPS))
         check(selected("official-scoped-list", "parity-official", "-E", expression) == {OFFICIAL},
               "official profile must intersect the task filter")
         check(selected("seeded-scoped-list", "parity-seeded", "-E", expression) == {SEEDED},
               "seeded profile must intersect the task filter")
+
+    for profile in ("parity-official", "parity-seeded"):
+        label = f"{profile}-sweeps"
+        expression = " | ".join(f"test(={name})" for name in SWEEPS)
+        status = nextest(label, "run", "--profile", profile, "--no-tests=pass", "-E", expression)
+        log = (evidence / f"{label}.stderr").read_text()
+        check(status == 0 and "no tests to run" in log and "PASS " not in log,
+              f"{profile} must not execute either sweep, got exit {status}")
 
     if errors:
         sys.exit("\n".join(errors))
