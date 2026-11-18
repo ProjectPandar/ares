@@ -51,6 +51,8 @@ mod retraction_column;
 mod scalar_authored;
 #[path = "nullable_vectors/scalar_wire.rs"]
 mod scalar_wire;
+#[path = "nullable_vectors/startup_filament_ids.rs"]
+mod startup_filament_ids;
 #[path = "nullable_vectors/timelapse_toolchange.rs"]
 mod timelapse_toolchange;
 
