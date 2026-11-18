@@ -5,6 +5,8 @@ use crate::{
 };
 use serde_json::Map;
 
+#[path = "stock_presets/elegoo_m6211.rs"]
+mod elegoo_m6211;
 #[path = "stock_presets/sweep.rs"]
 mod sweep;
 #[path = "stock_presets/tests.rs"]
