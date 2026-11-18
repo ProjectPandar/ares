@@ -35,7 +35,7 @@ mod wipe;
 mod writer;
 
 /// `GCode/WipeTower.cpp:53–57`: effective sparse-skipping eligibility.
-pub(super) fn sparse_layers_skipped(settings: &crate::ProjectSettings) -> bool {
+pub(crate) fn sparse_layers_skipped(settings: &crate::ProjectSettings) -> bool {
     settings.process.gcode.wipe_tower_no_sparse_layers.0
         && settings.process.print.timelapse_type != crate::ProcessTimelapseType::Smooth
         && !settings.process.gcode.enable_wrapping_detection.0
