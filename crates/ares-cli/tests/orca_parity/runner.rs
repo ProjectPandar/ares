@@ -15,6 +15,8 @@ mod loaded_system_inherits_group;
 mod modifier_feature_filament;
 #[path = "runner/native_stream_registry.rs"]
 mod native_stream_registry;
+#[path = "runner/type2_tower_template_serialization.rs"]
+mod type2_tower_template_serialization;
 pub(crate) use native_stream_registry::native_stream_case;
 #[path = "runner/processor_time.rs"]
 mod processor_time;
