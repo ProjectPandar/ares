@@ -15,6 +15,8 @@ mod bridge_width;
 mod bridge_width_controls;
 #[path = "print_validation/c1_thresholds.rs"]
 mod c1_thresholds;
+#[path = "print_validation/compacted_tower.rs"]
+mod compacted_tower;
 #[path = "print_validation/entries.rs"]
 mod entries;
 #[path = "print_validation/layer_nozzle.rs"]
