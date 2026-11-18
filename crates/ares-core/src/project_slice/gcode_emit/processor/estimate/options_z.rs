@@ -1,5 +1,5 @@
 //! Incremental OptionsZ correction and actual-speed insertion.
-//! Public marker identity uses the approved stable correction; the compact
+//! Public marker identity uses the stable correction; the compact
 //! cache projection preserves official export-cache membership.
 
 mod cache;
