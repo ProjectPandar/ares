@@ -14,6 +14,7 @@ use timing::{Metadata, Timing};
 
 use super::arc_accounting::arc_internal_g1_lines;
 use super::delays::command_delay;
+use super::elegoo;
 use super::filament_change::FilamentChange;
 use super::motion::{IndexedMotion, MotionState};
 use super::motion_util::word;
@@ -63,6 +64,9 @@ impl Estimate {
         let mut g29_time_added = false;
         let mut filaments = FilamentChange::new(config, machine_load_filament_time);
         let mut used_filaments = UsedFilaments::new(config);
+        let elegoo =
+            elegoo::Model::from_printer_model(&config.settings.printer.remaining.printer_model.0);
+        let filament_count = config.settings.filament.gcode.filament_diameter.0.len();
         // GCode.cpp's fresh export processor keeps its default XY offset zero.
         let mut printable_area = PrintableAreaTracker::new(config.settings, [0.0; 2]);
         let mut g1_line_id = 0;
@@ -134,9 +138,27 @@ impl Estimate {
             }
             let previous_selection = filaments.selection();
             let initialized = filaments.initialized();
-            let change = filaments.command(code);
+            let purge = elegoo.and_then(|model| {
+                model.purge(code, filament_count, [line_start[0], line_start[1]])
+            });
+            let change = if let Some(purge) = &purge {
+                recorder.elegoo_purge_temperature(
+                    filaments.physical_for(purge.filament),
+                    purge.temperature,
+                );
+                filaments.elegoo_purge(purge.filament, purge.seconds)
+            } else {
+                filaments.command(code)
+            };
             if change.is_some() && initialized {
                 used_filaments.tool_change(previous_selection.0, previous_selection.1);
+            }
+            if let Some(purge) = &purge {
+                used_filaments.elegoo_purge(
+                    filaments.physical_for(purge.filament),
+                    initialized.then_some(previous_selection.1),
+                    purge,
+                );
             }
             if let Some((filament, extra_time)) = change {
                 let vertex = recorder.next_vertex();
