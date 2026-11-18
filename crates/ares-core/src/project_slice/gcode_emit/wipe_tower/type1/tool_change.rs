@@ -24,7 +24,7 @@ impl Generator<'_> {
             .map_or((0.0, 0.0, 0.0, 0.0), |c| {
                 (c.length, c.depth, c.purge, c.nozzle_depth)
             });
-        let nozzle_width = 2.0 * self.plan.perimeter;
+        let nozzle_width = self.plan.nozzle_perimeter;
         let nozzle_lines =
             ((nozzle_depth + 1e-3) / nozzle_width / if self.plan.tpu { 2.0 } else { 1.0 }) as i32;
         let interface = solid
