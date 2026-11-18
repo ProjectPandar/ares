@@ -103,6 +103,28 @@ impl<'a> UsedFilaments<'a> {
         self.remaining[physical] = self.nozzle_volumes[physical];
     }
 
+    /// `ElegooGCodeProcessorHelper.cpp:170–189`: purge volume uses the original L word.
+    pub(super) fn elegoo_purge(
+        &mut self,
+        physical: usize,
+        previous: Option<usize>,
+        purge: &super::elegoo::Purge,
+    ) {
+        let radius = 0.5_f32 * self.diameters[purge.filament].0 as f32;
+        let volume = (std::f32::consts::PI * (radius * radius)) * purge.length;
+        let nozzle_volume = self.nozzle_volumes.get(physical).copied().unwrap_or(0.0);
+        if volume >= nozzle_volume {
+            if let Some(previous) = previous.filter(|&id| id != purge.filament) {
+                self.update_flush(previous, nozzle_volume);
+            }
+            self.update_flush(purge.filament, volume - nozzle_volume);
+            self.remaining[physical] = 0.0;
+        } else {
+            self.update_flush(purge.filament, volume);
+            self.remaining[physical] -= volume;
+        }
+    }
+
     pub(super) fn motion(
         &mut self,
         delta: [f64; 4],
