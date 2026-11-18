@@ -128,8 +128,13 @@ impl Plan {
     ) -> ToolChange {
         let filament = &filaments[old_tool];
         let width = self.width - 3.0 * self.perimeter_width;
+        let ramming_step_time = if self.semm {
+            0.25
+        } else {
+            filament.multitool_ramming_time
+        };
         let length = volume_to_length(
-            0.25 * filament.ramming_speeds.iter().sum::<f32>(),
+            ramming_step_time * filament.ramming_speeds.iter().sum::<f32>(),
             self.perimeter_width * filament.ramming_width,
             height,
         );
