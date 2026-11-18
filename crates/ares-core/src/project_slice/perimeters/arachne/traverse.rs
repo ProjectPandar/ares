@@ -104,7 +104,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
         let is_contour = !extrusion.is_closed || pg_extrusion.is_contour;
         context.fuzzy_skin.apply(
             &mut extrusion,
-            is_contour,
+            (is_contour, true),
             super::fuzzy::Layer {
                 id: context.layer_id,
                 slice_z: context.slice_z,
