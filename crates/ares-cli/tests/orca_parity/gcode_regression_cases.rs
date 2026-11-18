@@ -2,6 +2,8 @@
 
 #[path = "custom_gcode_line_endings.rs"]
 mod custom_gcode_line_endings;
+#[path = "spiral_inset.rs"]
+mod spiral_inset;
 
 #[path = "coints_comma_regression.rs"]
 mod coints_comma_regression;
