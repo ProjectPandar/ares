@@ -60,7 +60,7 @@ fn inner_wall_motion_lines(gcode: &str, layer_z: &str) -> usize {
 
 #[test]
 fn fuzzy_allwalls_seeded_oracle_ordered_bytes() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/allwalls.3mf");
@@ -85,7 +85,7 @@ fn fuzzy_allwalls_seeded_oracle_ordered_bytes() {
 
 #[test]
 fn fuzzy_external_seeded_oracle_control() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/external.3mf");
@@ -106,7 +106,7 @@ fn fuzzy_external_seeded_oracle_control() {
 
 #[test]
 fn fuzzy_all_seeded_oracle_control() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SEEDED_REFERENCE") {
+    if !crate::runner::seeded_reference_enabled(None) {
         return;
     }
     let project = include_bytes!("../../../../tests/parity/fuzzy-allwalls-rng-order/all.3mf");
@@ -145,10 +145,7 @@ fn fuzzy_stock_native_control() {
 
 #[test]
 fn official_fuzzy_allwalls_oracle_is_explicitly_unstable() {
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() == Ok("1") {
-        crate::native_environment::skipped(
-            "seeded reference is deterministic; the instability assertion is official-only",
-        );
+    if !crate::runner::official_reference_enabled() {
         return;
     }
     let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {

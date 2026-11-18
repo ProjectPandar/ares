@@ -8,11 +8,7 @@ use std::io::{Cursor, Read, Write};
 
 #[test]
 fn initialized_loop_chain_matches_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_LOOP_CHAIN_REFERENCE") {
-        return;
-    }
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
-        crate::native_environment::skipped("seeded-only reference");
+    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_LOOP_CHAIN_REFERENCE")) {
         return;
     }
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
