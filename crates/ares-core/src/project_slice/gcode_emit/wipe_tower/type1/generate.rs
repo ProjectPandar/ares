@@ -119,9 +119,7 @@ impl Generator<'_> {
             self.y_shift = ((self.plan.depth - layer.depth) / 2.0 / step).round() * step;
         }
         super::wall_gaps::prepare(self);
-        let mut wall_tool = self
-            .plan
-            .layer_wall_filament(&self.plan.layers[index], wall);
+        let mut wall_tool = self.plan.layer_wall_filament(index, wall);
         let only_wall = self.plan.smooth || (self.plan.wrapping && self.used_tools.len() <= 1);
         let fill = self.plan.layers[index].extruder_fill;
         let mut finish = None;
