@@ -20,6 +20,7 @@ pub(super) fn compose(
     let mut raw = profile.profile_raw.clone();
     let ordinary = crate::profiles::loaded_filament_ordinary_values(profile.filament_raws)?;
     raw.extend_raw(&ordinary);
+    let capped = super::cli_machine_limits::apply(&mut raw, profile.load_names, "");
     // CLI preset identities are injected after loading settings
     // (OrcaSlicer.cpp:2048,2088,3152–3158,3175–3180), before
     // command-line overrides (:3613–3615). Use the same composed data
@@ -58,7 +59,7 @@ pub(super) fn compose(
             ),
         );
     }
-    let (settings, mut raw) = if overrides.is_empty() {
+    let settings = if overrides.is_empty() {
         // The composed profile raw is already the post-`handle_legacy`
         // view (`Config.cpp:577-579` normalizes every loaded preset at
         // compose, before any overlay).
@@ -68,28 +69,33 @@ pub(super) fn compose(
                 .map_err(SliceError::InvalidInput)?
                 .into_profile_parts();
         ordinary.apply_present(&mut settings.filament);
+        if capped {
+            settings.printer.machine = crate::options::json_deserialize::deserialize_config_values(
+                raw.clone().into_object(),
+            )
+            .map_err(|error| {
+                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
+            })?
+            .resolve()
+            .printer
+            .machine;
+        }
         // CLI:4250-4259 adds a missing static default once, not once per
         // loaded filament. Typed composition must not invent raw members.
         settings
             .filament
             .restore_absent_defaults(|key| raw.contains_key(key));
-        (settings, raw)
+        settings
     } else {
-        let mut merged = raw;
-        overrides.apply(&mut merged)?;
+        overrides.apply(&mut raw)?;
         // `handle_legacy` on user edits (Config.cpp:577–579) precedes
         // the typed settings rebuild.
-        merged.handle_legacy();
-        (
-            crate::options::json_deserialize::deserialize_config_values(
-                merged.clone().into_object(),
-            )
+        raw.handle_legacy();
+        crate::options::json_deserialize::deserialize_config_values(raw.clone().into_object())
             .map_err(|error| {
                 SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
             })?
-            .resolve(),
-            merged,
-        )
+            .resolve()
     };
     // CLI:4243-4244 normalizes mixed metadata for the loaded logical slots.
     let filament_count = settings.project.preset.filament_settings_id.0.len();

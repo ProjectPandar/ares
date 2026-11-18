@@ -1,5 +1,6 @@
 //! STL Model import (`Format/STL.cpp:17-40`, `Model.cpp:485-500,1254-1264,2600-2615`).
 
+mod cli_machine_limits;
 mod mapped_prime_tower;
 mod stl;
 mod stl_settings;
