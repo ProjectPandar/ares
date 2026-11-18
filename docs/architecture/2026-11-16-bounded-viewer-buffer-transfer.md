@@ -1,8 +1,8 @@
 # Bounded viewer-buffer transfer and progressive raw ownership
 
-## Status and source boundary
+## Scope and source boundary
 
-**Proposed specification only; no implementation.** Base: accepted eager-chunk tip `ca5898aee` (B59-36), including fixed 1,048,576-move source chunks. This slice combines progressive raw-buffer growth with bounded viewer transport. Neither component alone establishes the intended highwater reduction.
+The eager-chunk base `ca5898aee` uses fixed 1,048,576-move source chunks. This slice combines progressive raw-buffer growth with bounded viewer transport. Neither component alone establishes the intended highwater reduction.
 
 The rewrite boundary is upstream OrcaSlicer 2.5.0 `src/libvgcode/src/ViewerImpl.cpp` in the reviewed `orca-source-250` tree, not a new Ares rendering pipeline:
 
@@ -63,7 +63,7 @@ This is included because eager raw reservation already reaches4,213,571,584 B **
 
 `VertexBuffers` retains ViewerImpl, metadata and counts but no complete values/ids/tags/options transport Vecs. Rename the construction boundary to reflect viewer ownership rather than full packing. Preserve ViewerImpl load, derived layer-duration values, palettes, legend and statistics before serving ranges.
 
-The proposed public WASM binding migration is atomic:
+The public WASM binding migration is atomic:
 
 | Existing binding | Replacement contract |
 |---|---|
@@ -105,7 +105,7 @@ All figures below are **decimal bytes**, not GiB. Cube200 diagnostic anchor:12,8
 
 **Why the previous failure disappears:** there is no request for the old1,097,796,992 B packed-values Vec or simultaneous1,320,787,006 B of packed transport. Vertex-derived output requests are bounded by64 MiB, so the measured fragmented source holes no longer need to coalesce into a1.10GB block. This does **not** eliminate all large contiguous allocations: exact CPU PathVertex1.3036GB and eventual raw values617.2MB still exist. Their already measured conversion behavior is preserved and reverified.
 
-For comparison, accepted eager highwater is4,213,571,584 B; prior accepted ownership was4,254,924,800 B. The new3,850,000,000 B ceiling leaves444,967,296 B below4GiB (10.36%). Never estimate by subtracting1.32GB from the old highwater: those allocations peak at different times, and takes free allocations without shrinking linear memory.
+The previous highwater was 4,213,571,584 B with eager chunk storage and 4,254,924,800 B before chunk storage. The new3,850,000,000 B ceiling leaves444,967,296 B below4GiB (10.36%). Never estimate by subtracting1.32GB from the old highwater: those allocations peak at different times, and takes free allocations without shrinking linear memory.
 
 ### Total tab memory, including JS and GPU
 
@@ -130,7 +130,7 @@ With3.60–3.85GB committed WASM and about2.52GB retained JS/textures, the tab's
 No implementation begins before this spec is reviewed. First extend the agreed public WASM-JS/browser seams, with base `ca5898aee` as oracle for transport bytes and installed Native as oracle for slicing/processor semantics. No private hooks, configurable chunk length, fixture-sized constants or generated expectations.
 
 1. **Byte equivalence:** rerun the existing15-file×2-mode=30/30 complete-output proof, reconstructing range outputs into unchanged canonical files. Add exact complete files for geometry, colors, enabled IDs and slider IDs at default and changed visibility/view/range states. Serialize all bits/global IDs, not samples or count-only checks. Supply the exact same generated G-code/project to Native; do not substitute Rust-only output if Native refuses.
-2. **Boundaries:** runtime-generated inputs must span multiple fixed transfer ranges. Include segments/angles at `C-1/C/C+1`, marker and G-code IDs crossing those edges, zero/final-short ranges, and color/slider updates after initial export. Expected full arrays come from the accepted public base, not reimplemented arithmetic. No large committed fixtures.
+2. **Boundaries:** runtime-generated inputs must span multiple fixed transfer ranges. Include segments/angles at `C-1/C/C+1`, marker and G-code IDs crossing those edges, zero/final-short ranges, and color/slider updates after initial export. Expected full arrays come from the eager-chunk base’s public API, not reimplemented arithmetic. No large committed fixtures.
 3. **Processor invariance:** all3 characterization tests in official/seeded; original221-case paired inventory in both modes with P→F0 and inherited failures listed. Preserve complete G-code/raw/dynamics checks. No new parallelism; retain deterministic global iteration and batch-level invariance coverage.
 4. **Public cube200 E2E:** same runtime cube, full slice/preview/export, positive matching header/viewer layers. Add a deterministic assertion **`highwaterBytes <= 3_850_000_000`**, plus complete phase-ledger JSON artifact. No wall-clock performance assertion. Failure is a failed memory gate, not a reason to relax the number silently.
 5. **Measurement seam:** keep CDP collection external to the library/application. A browser test harness can query the worker's live WebAssembly.Memory after full preview/export and repeated operations; grow-only memory makes final byteLength a highwater. Inspecting the unchanged product binary is required. Phase diagnostics remain evidence-only; artifacts record product/source hashes, environment, peak bytes and phase allocation sizes. Never ship logging exports or allocator wrappers.
