@@ -193,6 +193,8 @@ mod counterbore_partiallybridge;
 #[cfg(test)]
 #[path = "runner/avoid_crossing_routes_around_top_surfaces.rs"]
 mod avoid_crossing_routes_around_top_surfaces;
+#[path = "runner/direct_stl_bed_placement.rs"]
+mod direct_stl_bed_placement;
 #[cfg(test)]
 #[path = "runner/direct_stl_override_bookkeeping.rs"]
 mod direct_stl_override_bookkeeping;
