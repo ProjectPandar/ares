@@ -1,6 +1,46 @@
-//! `WipeTower.hpp::WipeTowerInfo`; `WipeTower.cpp:2449–2510,3705–3806`.
-use super::blocks::Block;
-use crate::ProjectSettings;
+//! `WipeTower.hpp::WipeTowerInfo`; `WipeTower.cpp:3107–3195,4690–4800`.
+use super::{blocks::Block, category_depths::Depths};
+use crate::{Nullable, ProjectSettings};
+use std::collections::BTreeMap;
+
+#[derive(Default)]
+struct CategoryDepth {
+    layer: f32,
+    peak: f32,
+    ramming: bool,
+    reverse: bool,
+}
+
+struct CategoryGap {
+    wipe: f32,
+    nozzle: f32,
+}
+
+impl CategoryDepth {
+    fn gap(&self, perimeter: f32, extra: f32, height_spacing: f32) -> CategoryGap {
+        let wipe = perimeter + extra;
+        let nozzle_perimeter = 2.0 * perimeter;
+        if !self.ramming {
+            return CategoryGap { wipe, nozzle: wipe };
+        }
+        // WipeTower.hpp initializes m_tpu_fixed_spacing to two.
+        let extra = if self.reverse {
+            extra.max(perimeter)
+        } else {
+            extra
+        };
+        let nozzle = nozzle_perimeter + extra;
+        let aligned = nozzle * height_spacing;
+        if aligned < 2.0 * nozzle_perimeter {
+            CategoryGap { wipe, nozzle }
+        } else {
+            CategoryGap {
+                wipe: nozzle,
+                nozzle,
+            }
+        }
+    }
+}
 
 pub(super) struct Change {
     pub(super) old: usize,
@@ -41,6 +81,7 @@ pub(super) struct Plan {
     pub(super) nozzle_map: Vec<usize>,
     pub(super) categories: Vec<i32>,
     pub(super) change_lengths: Vec<f32>,
+    ramming_travel_times: Vec<f32>,
     pub(super) area: f32,
     pub(super) tpu: bool,
     no_sparse: bool,
@@ -85,6 +126,12 @@ impl Plan {
             change_lengths: (0..count)
                 .map(|i| at(&g.filament_change_length.0, i).0 as f32)
                 .collect(),
+            ramming_travel_times: (0..count)
+                .map(|i| match at(&g.filament_ramming_travel_time, i) {
+                    Nullable::Nil => 0.0,
+                    Nullable::Value(time) => time.0 as f32,
+                })
+                .collect(),
             area: (std::f64::consts::FRAC_PI_4 * diameter.powi(2)) as f32,
             tpu: used.iter().any(|&i| at(&g.filament_type.0, i) == "TPU"),
             no_sparse: super::super::sparse_layers_skipped(settings),
@@ -122,7 +169,9 @@ impl Plan {
             return;
         }
         let length = super::super::plan::volume_to_length(volume, self.perimeter, height);
-        let nozzle_depth = self.nozzle_depth(old, new, height);
+        let nozzle_perimeter = 2.0 * self.perimeter;
+        let opening = self.width - 2.0 * nozzle_perimeter;
+        let nozzle_depth = self.nozzle_lines((old, new), height, opening) * nozzle_perimeter;
         self.layers.last_mut().unwrap().changes.push(Change {
             old,
             new,
@@ -134,46 +183,86 @@ impl Plan {
         });
     }
 
-    fn nozzle_depth(&self, old: usize, new: usize, height: f32) -> f32 {
+    fn nozzle_lines(&self, (old, new): (usize, usize), height: f32, opening: f32) -> f32 {
         if self.nozzle_map[old] == self.nozzle_map[new] {
             return 0.0;
         }
         let perimeter = 2.0 * self.perimeter;
         let flow = height * (perimeter - height * (1.0 - std::f32::consts::PI / 4.0)) / self.area;
         let length = f64::from(self.change_lengths[old]) / f64::from(flow);
-        let lines = (length / f64::from(self.width - 2.0 * perimeter) + 1.0) as i32;
-        if self.tpu {
-            2.0 * lines as f32 * perimeter
-        } else {
-            lines as f32 * perimeter
-        }
+        (length / f64::from(opening)).ceil() as f32
     }
 
-    fn resize_rib_changes(&mut self) {
-        for index in 0..self.layers.len() {
-            for change_index in 0..self.layers[index].changes.len() {
-                let change = &self.layers[index].changes[change_index];
-                let nozzle_depth =
-                    self.nozzle_depth(change.old, change.new, self.layers[index].height);
-                let change = &mut self.layers[index].changes[change_index];
-                change.nozzle_depth = nozzle_depth;
-                change.depth = (change.length / (self.width - 2.0 * self.perimeter)).ceil()
-                    * self.infill_gap
-                    + nozzle_depth;
-            }
-        }
-    }
-
-    pub(super) fn calc_block_infill_gap(&mut self) {
+    fn replan_changes(&mut self, gaps: &BTreeMap<i32, CategoryGap>) {
         let width = self.width - 2.0 * self.perimeter;
-        self.infill_gap = self.perimeter * self.spacing;
-        let gap = self.infill_gap;
-        for layer in &mut self.layers {
-            for change in &mut layer.changes {
-                change.depth = (change.length / width).ceil() * gap + change.nozzle_depth;
+        let nozzle_opening = self.width - 3.0 * self.perimeter;
+        for layer_idx in 0..self.layers.len() {
+            for change_idx in 0..self.layers[layer_idx].changes.len() {
+                let layer = &self.layers[layer_idx];
+                let change = &layer.changes[change_idx];
+                let lines =
+                    self.nozzle_lines((change.old, change.new), layer.height, nozzle_opening);
+                let nozzle_gap = gaps
+                    .get(&self.categories[change.old])
+                    .map_or(2.0 * self.perimeter, |gap| gap.nozzle);
+                let wipe_gap = gaps[&self.categories[change.new]].wipe;
+                let change = &mut self.layers[layer_idx].changes[change_idx];
+                change.nozzle_depth = lines * nozzle_gap;
+                change.depth = (change.length / width).ceil() * wipe_gap + change.nozzle_depth;
             }
         }
+    }
+
+    fn calc_block_infill_gap(&mut self) -> BTreeMap<i32, CategoryGap> {
+        let mut depths = BTreeMap::<i32, CategoryDepth>::new();
+        let mut order = Depths::default();
+        for layer in self.layers.iter().rev() {
+            for change in &layer.changes {
+                self.record_nozzle_depth(change, (&mut depths, &mut order));
+                let target = self.categories[change.new];
+                order.add(target, 0.0);
+                depths.entry(target).or_default().layer += change.depth - change.nozzle_depth;
+            }
+            for depth in depths.values_mut() {
+                depth.peak = depth.peak.max(depth.layer);
+                depth.layer = 0.0;
+            }
+        }
+        let peak = order
+            .iter()
+            .map(|(category, _)| depths[&category].peak)
+            .sum::<f32>();
+        let height_spacing = if self.rib {
+            1.0
+        } else {
+            (minimum_depth(self.height) / peak).max(1.0)
+        };
+        let extra = (self.spacing - 1.0) * self.perimeter;
+        self.infill_gap = self.perimeter + extra;
+        let gaps = depths
+            .into_iter()
+            .map(|(category, depth)| (category, depth.gap(self.perimeter, extra, height_spacing)))
+            .collect();
+        self.replan_changes(&gaps);
         self.spacing = 1.0;
+        gaps
+    }
+
+    fn record_nozzle_depth(
+        &self,
+        change: &Change,
+        (depths, order): (&mut BTreeMap<i32, CategoryDepth>, &mut Depths),
+    ) {
+        if self.nozzle_map[change.old] == self.nozzle_map[change.new] {
+            return;
+        }
+        let source = self.categories[change.old];
+        order.add(source, 0.0);
+        let depth = depths.entry(source).or_default();
+        depth.ramming = true;
+        depth.reverse |=
+            self.ramming_travel_times[change.old] > 1e-4 && self.change_lengths[change.old] > 1e-4;
+        depth.layer += change.nozzle_depth;
     }
 
     pub(super) fn plan_tower_new(&mut self) {
@@ -185,13 +274,13 @@ impl Plan {
                 8.0
             };
         }
-        self.calc_block_infill_gap();
+        let gaps = self.calc_block_infill_gap();
         if self.rib {
             self.generate_blocks();
             let depth = self.blocks.iter().map(|b| b.depth).sum::<f32>() + self.perimeter;
             self.width = (depth * self.width * self.spacing).sqrt();
             self.width = (self.width / self.perimeter).ceil() * self.perimeter;
-            self.resize_rib_changes();
+            self.replan_changes(&gaps);
         }
         self.generate_blocks();
         let mut depth = self.blocks.iter().map(|b| b.depth).sum::<f32>();
