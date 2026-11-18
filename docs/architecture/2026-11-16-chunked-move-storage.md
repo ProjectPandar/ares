@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-This is a proposal/specification only. It is based on accepted ownership tip `793c4a1e7`; bounded-reserve work (`68424bf32` and its local branch) is explicitly abandoned and must not enter this chain. No implementation, allocator replacement, late shrink, or count-first pass is included.
+This proposal builds on explicit ownership of recorded moves and excludes bounded reservation. No implementation, allocator replacement, late shrink, or count-first pass is included.
 
 The source boundary is upstream `libslic3r` `GCodeProcessorResult::MoveVertex` storage (`GCodeProcessor.hpp` result `moves`, `GCodeProcessor.cpp:5630-5718` `store_move_vertex`) and the GUI conversion boundary `LibVGCodeWrapper.cpp:258-327`. Upstream uses one `std::vector<MoveVertex>` and converts it into `GCodeInputData` while native `GCodeViewer` retains the processor result (`GCodeViewer.cpp:1698` onward). Ares changes only the internal ownership container: a fixed-size sequence of owned MoveVertex chunks, consumed chunk-by-chunk by the WASM adapter. Move values, ordering, mutations, timing arithmetic, path predicate, output bytes, and public raw/packed representations do not change.
 
@@ -71,7 +71,7 @@ The implementation must account for these failure modes before claiming parity:
 | Range and `partition_point` scans across chunks in pre-heating | The official and seeded processor migration workloads with pre-heating and processor export behavior are included in the complete byte proof. No separate configurable chunk test hook may be added. |
 | Global ID remapping after erase/insert | Complete G-code, raw move IDs/tags, packed IDs/options and vgcode `gcode_id` fields are serialized in both modes; the core-count invariance suite must remain unchanged. |
 
-If a listed failure mode is not reached by the recorded official/seeded workloads or cube200, report that gap to COORD before implementation instead of adding a configurable `CHUNK_LEN`, test hook, or synthetic boundary switch. No test-only chunk sizing API is permitted.
+If a listed failure mode is not reached by the recorded official/seeded workloads or cube200, record the coverage gap before implementation instead of adding a configurable `CHUNK_LEN`, test hook, or synthetic boundary switch. No test-only chunk sizing API is permitted.
 
 ## Verification gate after GO
 
@@ -79,4 +79,4 @@ Follow spec → test → fix without adding configurable chunk sizing or diagnos
 
 Then run the complete external base/tip harness in official and seeded modes, comparing all 30 serialized files: G-code, vgcode metadata/vertices, ViewerImpl vertices, raw values/ids/tags, packed values/ids/tags/options/counts/colors and statistics. Base is `793c4a1e7`; tip must be byte-equal in both modes. Use the existing multi-chunk workloads and cube200; do not introduce a new boundary fixture solely to force a chunk edge.
 
-Rebuild WASM explicitly and run the public cube200 browser E2E on CPUs 20–23 and port 4243. Require successful slice, positive viewer layers, and viewer layer count equal to exported header. Record chunk allocation events, raw/PathVertex/Viewer lifetimes and linear high-water. Target is approximately 3.2 GB, but report the measured value and stop if the remaining ceiling is not resolved. No bounded-reserve commit may be included.
+Rebuild WASM explicitly and run the public cube200 browser E2E. Require successful slice, positive viewer layers, and viewer layer count equal to exported header. Record chunk allocation events, raw/PathVertex/Viewer lifetimes and linear high-water. Target is approximately 3.2 GB, but report the measured value and stop if the remaining ceiling is not resolved. No bounded-reserve commit may be included.
