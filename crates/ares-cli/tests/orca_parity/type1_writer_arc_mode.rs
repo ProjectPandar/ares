@@ -121,11 +121,23 @@ fn compare_disabled(runner: &OrcaRunner, label: &str, project: &[u8], qidi_progr
     let scoped = |gcode| {
         golden::compare_ordered_bytes_generator_only(&span, &first_tower(gcode, qidi_progress))
     };
-    let scopes = [scoped(replay.native.as_bytes()), scoped(&api), scoped(&cli)];
+    let native_replay = |reference: &[u8], replay: &[u8]| {
+        let reference =
+            golden::normalize_one_generator_line(reference, golden::GeneratorKind::Orca)?;
+        let replay = golden::normalize_one_generator_line(replay, golden::GeneratorKind::Orca)?;
+        golden::first_difference(&reference, &replay)
+            .map_or(Ok(()), |difference| Err(difference.to_string()))
+    };
+    let replay_bytes = replay.native.as_bytes();
+    let scopes = [
+        native_replay(&span, &first_tower(replay_bytes, qidi_progress)),
+        scoped(&api),
+        scoped(&cli),
+    ];
     fs::write(root.join("comparison.json"), serde_json::to_vec_pretty(&json!({
         "case": label, "input_sha256": sha(project), "upstream": UPSTREAM,
         "replay_root": replay.root,
-        "whole_native_replay": whole(replay.native.as_bytes()),
+        "whole_native_replay": native_replay(native, replay_bytes),
         "whole_native_api": whole(&api), "whole_native_cli": whole(&cli),
         "scope": "through the first WIPE_TOWER_END, inclusive",
         "excludes_qidi_progress": qidi_progress,
