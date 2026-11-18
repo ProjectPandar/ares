@@ -43,7 +43,7 @@ pub(super) fn tools(
 }
 
 pub(super) fn collect(
-    search: &mut Search<'_>,
+    maximum: &mut Maximum,
     (support, raft): (
         Option<&InstalledSupportLayer>,
         Option<&OrderedExtrusionLayer>,
@@ -69,11 +69,10 @@ pub(super) fn collect(
                         && role == ExtrusionRole::SupportTransition)
             })
             .expect("candidate support role has a filament");
-        let physical = search.physical(filament);
-        search.fallback.collect(
+        maximum.collect(
             polyline,
             shift,
-            physical,
+            filament,
             (object, copy, usize::MAX, collection, leaf),
         );
     };

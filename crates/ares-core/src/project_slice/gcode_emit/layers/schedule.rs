@@ -67,6 +67,7 @@ impl Schedule {
 
 pub(in crate::project_slice::gcode_emit) fn build(
     prepared: &mut crate::project_slice::island_print_order::PreparedPostIslandPrintOrder,
+    instances: Vec<Vec<super::instances::Instance>>,
 ) -> Result<Schedule, crate::SliceError> {
     let objects = &prepared.objects;
     let support = &mut prepared.support_layers;
@@ -266,7 +267,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         }
         begin = end;
     }
-    let instances = super::instances::collect(traversal);
     let print_position = instances
         .iter()
         .map(|copies| {

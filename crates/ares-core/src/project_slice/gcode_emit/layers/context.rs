@@ -10,4 +10,6 @@ pub(crate) struct Context<'a> {
     pub(crate) brim: &'a [Option<brim::BrimPlan>],
     pub(crate) skirt: &'a Option<skirt::SkirtPlan>,
     pub(in crate::project_slice::gcode_emit) schedule: super::schedule::Schedule,
+    pub(in crate::project_slice::gcode_emit) farthest_object_targets:
+        Option<&'a super::farthest::ObjectTargets>,
 }
