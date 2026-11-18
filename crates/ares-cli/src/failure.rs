@@ -313,9 +313,17 @@ pub(super) fn slice_error_to_failure(
             sparse_infill_density,
             #[cfg(target_os = "linux")]
             "Object conflicts were detected. Please verify the slicing of all plates in Orca Slicer before uploading.",
-            // Print.cpp:1734/5634 stores this validation string with a trailing newline;
-            // OrcaSlicer.cpp:7015 writes it through cerr and appends std::endl.
-            format!("{message}\n\n"),
+            // Keep the existing diagnostic framing for wrapping and for the
+            // containment message whose core representation omits Orca's final newline.
+            // The compacted-tower diagnostic has no built-in newline (Print.cpp:1352–1357).
+            if message.ends_with('\n')
+                || message
+                    == "Prime tower is partially outside the printable area, and it cannot be printed."
+            {
+                format!("{message}\n\n")
+            } else {
+                format!("{message}\n")
+            },
         ),
         // OrcaSlicer.cpp:6286-6291: generic slicing/export exceptions share -100.
         SliceError::Slicing {

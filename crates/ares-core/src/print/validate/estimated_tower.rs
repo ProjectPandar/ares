@@ -39,8 +39,9 @@ pub(super) fn validate(
     let has_tower = has_tower(&config);
     let scale = CoordinateScale::from_printable_area(&settings.printer.remaining.printable_area);
     let mut checked = Vec::new();
+    let mut compacted_estimate = None;
     if has_tower {
-        let slots = extruders(project, resolved, &config);
+        let slots = extruders(project, resolved, &config, true);
         let (mut max_height, mut layer_height) = (0.0_f64, f64::MAX);
         for object in &resolved.objects {
             let source = &project.objects()[object.source_object_index];
@@ -64,6 +65,12 @@ pub(super) fn validate(
                 footprint.brim_width as f32,
             )
         };
+        if settings.process.print.print_sequence == ProcessPrintSequence::ByLayer
+            && crate::project_slice::gcode_emit::wipe_tower_sparse_layers_skipped(settings)
+            && !extruders(project, resolved, &config, false).is_empty()
+        {
+            compacted_estimate = Some((depth, brim));
+        }
         let index = (plate_number - 1) as usize;
         let (ox, oy) = project.plate_origin();
         let x = (get_at(config.option("wipe_tower_x").floats(), index) + ox) as f32;
@@ -114,6 +121,9 @@ pub(super) fn validate(
         .map_err(|error| SliceError::InvalidInput(format!("{error:?}")))?
         .is_empty()
     {
+        if let Some((depth, brim)) = compacted_estimate {
+            super::compacted_tower::validate(project, resolved, plate_number, scale, depth, brim)?;
+        }
         return Ok(());
     }
     Err(SliceError::LayeredPrintCollision {
@@ -141,6 +151,7 @@ fn extruders(
     project: &Project,
     resolved: &BoundedResolvedProjectConfig,
     config: &DynamicPrintConfig,
+    include_custom_gcode: bool,
 ) -> Vec<u32> {
     let count = config.option("filament_diameter").floats().len() as u32;
     let bounded = |index| if index >= count { 0 } else { index };
@@ -248,10 +259,12 @@ fn extruders(
     support.sort_unstable();
     support.dedup();
     slots.extend(support);
-    let colour_count = config.option("filament_colour").strings().len() as u32;
-    for item in project.curr_plate_custom_gcodes().gcodes {
-        if item.kind == CustomGCodeType::ToolChange && item.extruder <= colour_count {
-            slots.push(item.extruder.wrapping_sub(1));
+    if include_custom_gcode {
+        let colour_count = config.option("filament_colour").strings().len() as u32;
+        for item in project.curr_plate_custom_gcodes().gcodes {
+            if item.kind == CustomGCodeType::ToolChange && item.extruder <= colour_count {
+                slots.push(item.extruder.wrapping_sub(1));
+            }
         }
     }
     let selected = config.option("wipe_tower_filament").int();
