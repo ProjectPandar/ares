@@ -58,13 +58,18 @@ impl Plan {
         selected.expect("wall category retains its filament")
     }
 
-    pub(super) fn layer_wall_filament(&self, layer: &Layer, wall: usize) -> Option<usize> {
+    pub(super) fn layer_wall_filament(&self, index: usize, wall: usize) -> Option<usize> {
+        let layer = &self.layers[index];
         let first = layer.changes.first()?;
-        if first.old == wall {
-            return Some(wall);
+        let mut candidate = None;
+        if self.is_valid_last_layer(first.old, index, layer.z) {
+            if first.old == wall {
+                return Some(wall);
+            }
+            if self.categories[first.old] == self.categories[wall] {
+                candidate = Some(first.old);
+            }
         }
-        let mut candidate =
-            (self.categories[first.old] == self.categories[wall]).then_some(first.old);
         for change in &layer.changes {
             if change.new == wall {
                 return Some(wall);
