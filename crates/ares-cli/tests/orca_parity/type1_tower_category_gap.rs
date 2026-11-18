@@ -1,4 +1,4 @@
-//! Compare the planned first-layer footprint, not complete tower emission.
+//! Public parity for the first Type1 tower footprint and entry.
 use crate::{
     OrcaRunner,
     runner::{application, native_api_cli::NativeCase},
@@ -7,6 +7,7 @@ use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
 use std::{
     fs,
     io::{Cursor, Write},
+    path::Path,
 };
 
 const X2D: &[u8] = include_bytes!(
@@ -88,7 +89,7 @@ fn footprint(gcode: &str) -> Footprint<'_> {
     }
 }
 
-fn check(narrower: bool, prefix: &str) {
+fn check(narrower: bool, prefix: &str, compare: fn(&str, &str, &str, &Path)) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -116,36 +117,81 @@ fn check(narrower: bool, prefix: &str) {
         .unwrap();
     assert!(
         cli.status.success(),
-        "CLI footprint at {:?}: {:?}",
+        "CLI slice at {:?}: {:?}",
         case.root,
         cli.status
     );
     let cli = fs::read_to_string(cli_path).unwrap();
-    let expected = footprint(&case.native);
     for (producer, output) in [
         ("API", std::str::from_utf8(&api).unwrap()),
         ("CLI", cli.as_str()),
     ] {
-        let observed = footprint(output);
+        compare(&case.native, output, producer, &case.root);
+    }
+}
+
+fn compare_footprint(native: &str, output: &str, producer: &str, root: &Path) {
+    let expected = footprint(native);
+    let observed = footprint(output);
+    assert_eq!(
+        expected.bed_leveling_rectangle, observed.bed_leveling_rectangle,
+        "{producer} Type1 bed-leveling rectangle at {root:?}"
+    );
+    assert_eq!(
+        expected.outer_wall, observed.outer_wall,
+        "{producer} Type1 first-layer outer-wall coordinates at {root:?}"
+    );
+}
+
+fn tower_entry(gcode: &str) -> &str {
+    let (before_tower, _) = gcode
+        .split_once("\n; WIPE_TOWER_START\n")
+        .expect("first Type1 tower start");
+    before_tower
+        .rsplit_once("\n; WIPE_END\n")
+        .expect("last model wipe before the tower entry")
+        .1
+}
+
+fn compare_entry(native: &str, output: &str, producer: &str, root: &Path) {
+    const FIRST_LAYER_START: &str = "; object ids of layer 1 start: ";
+    const FIRST_LAYER_END: &str = "; object ids of this layer1 end: ";
+    let expected = tower_entry(native);
+    assert!(expected.contains(FIRST_LAYER_START) && expected.contains(FIRST_LAYER_END));
+    assert_eq!(
+        expected,
+        tower_entry(output),
+        "{producer} first Type1 tower-entry sequence at {root:?}"
+    );
+    for marker in [FIRST_LAYER_START, FIRST_LAYER_END] {
         assert_eq!(
-            expected.bed_leveling_rectangle, observed.bed_leveling_rectangle,
-            "{producer} Type1 bed-leveling rectangle at {:?}",
-            case.root
-        );
-        assert_eq!(
-            expected.outer_wall, observed.outer_wall,
-            "{producer} Type1 first-layer outer-wall coordinates at {:?}",
-            case.root
+            output.matches(marker).count(),
+            1,
+            "{producer} first-layer mask must not repeat at {root:?}"
         );
     }
 }
 
 #[test]
 fn type1_planned_footprint_uses_category_nozzle_gap() {
-    check(false, "type1-cross-head-category-nozzle-gap-");
+    check(
+        false,
+        "type1-cross-head-category-nozzle-gap-",
+        compare_footprint,
+    );
 }
 
 #[test]
 fn type1_planned_footprint_uses_replan_nozzle_opening() {
-    check(true, "type1-cross-head-replan-opening-");
+    check(true, "type1-cross-head-replan-opening-", compare_footprint);
+}
+
+#[test]
+fn type1_tower_entry_places_the_layer_mask_before_travel() {
+    check(false, "type1-cross-head-tower-entry-", compare_entry);
+}
+
+#[test]
+fn type1_narrow_tower_entry_places_the_layer_mask_before_travel() {
+    check(true, "type1-cross-head-narrow-tower-entry-", compare_entry);
 }
