@@ -111,7 +111,7 @@ an Ares `if norm > 0` around the partial assignment. The old whole-step writes
 had masked that guard's mismatch: after whole-step progress, a zero-direction
 partial must assign the current anchor, not retain the initial sample.
 
-A whole-output-qualified Native MK4 capture demonstrates the branch:
+A Native MK4 capture checked against the complete output demonstrates the branch:
 layer0, entity0, point1, window3 starts at `(-4.760001,4.760001)`;
 a zero-distance whole step advances backward to point0 at
 `(4.760001,4.760001)`. The following partial has zero direction. Native
@@ -159,7 +159,7 @@ After coordinator review and implementation GO:
 
 1. Add the minimal public synthetic E2E witness for a non-looped entity
    shorter than the half-window, retaining a repeatable Native/Rust artifact;
-   preserve its genuinely failing unchanged RED before production changes.
+   preserve the unchanged witness showing the failure before production changes.
 2. Use the existing public TiQ2 retained-role-fan sequence witness as the
    fan-order F→P target. Preserve the original full-file witness and report
    any later remaining difference honestly rather than relaxing comparison.
@@ -173,7 +173,7 @@ After coordinator review and implementation GO:
    spec-only handoff.
 
 Evidence:
-`/home/indexyz/ares-evidence/worker2/tiq2-curvature-source-acee1a297-r1/`
+The curvature capture
 contains Native atan2 operand bits, Rust sample positions/angle terms and
 source-disassembly mapping. Batch CSV witnesses are under
 `tiq2-curl-batch-acee1a297-r1`. Failed probes are excluded from conclusions.
