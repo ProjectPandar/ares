@@ -33,6 +33,9 @@ fn finish_remaining(
             block.solid_infill[index] && block.category != generator.plan.categories[tool];
         let interface = solid_blocks.contains(&block_index);
         let last_filament = block.last_filament;
+        if !generator.plan.is_valid_last_layer(tool, index, generator.z) {
+            continue;
+        }
         let result = if interface || different {
             if different {
                 next_solid.insert(block_index);
