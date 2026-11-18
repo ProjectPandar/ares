@@ -22,6 +22,12 @@ pub(in crate::project_slice::gcode_emit) struct Context {
     pub(in crate::project_slice::gcode_emit) inserted_this_layer: bool,
 }
 
+impl Context {
+    pub(super) fn targets_photo_head(&self) -> bool {
+        self.enabled && self.farthest_is_photo_head
+    }
+}
+
 pub(super) struct LayerViews<'a> {
     pub(super) entries: &'a [LayerToPrint],
     pub(super) object_targets: Option<&'a ObjectTargets>,
