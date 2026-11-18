@@ -181,8 +181,8 @@ pub(super) fn build_volume_bounds_with_inflation(
         let occurrence_id = VolumeOccurrenceId::promote(released_ordinal);
         let source_volume = &source.volumes()[source_volume_index];
         let transform = object_transform
-            .then(source_volume.transform())
-            .without_xy_translation();
+            .without_xy_translation()
+            .then(source_volume.transform());
         bounds.push(VolumeBound {
             source_volume_index,
             occurrence_id,
