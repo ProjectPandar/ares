@@ -15,6 +15,9 @@ pub(crate) mod vendor_inventory;
 #[path = "cli_project_transforms.rs"]
 mod cli_project_transforms;
 
+#[path = "cli_ground_face.rs"]
+mod cli_ground_face;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
