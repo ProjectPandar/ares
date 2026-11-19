@@ -244,6 +244,12 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             })
             .collect(),
         scores,
+        paint_states: plan
+            .candidates
+            .points
+            .iter()
+            .map(|candidate| candidate.paint)
+            .collect(),
         overhangs: plan.overhangs.clone(),
         unsupported_distances: plan.unsupported_distances.clone(),
         embedded: plan.embedded_distances.clone(),

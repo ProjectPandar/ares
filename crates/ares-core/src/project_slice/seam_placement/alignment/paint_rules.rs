@@ -2,13 +2,24 @@ use super::{
     LayerPlan, Vec3,
     loop_normal::{step, xy},
 };
-use crate::project_slice::{
-    seam_candidates::{PaintState, SeamCandidate},
-    seam_placement::paint::OVERSAMPLING,
+use crate::{
+    ProcessSeamPosition,
+    project_slice::{
+        seam_candidates::{PaintState, SeamCandidate},
+        seam_placement::paint::OVERSAMPLING,
+    },
 };
 
-pub(super) fn priority(a: &SeamCandidate, b: &SeamCandidate) -> Option<bool> {
-    if a.central_enforcer != b.central_enforcer {
+pub(super) fn priority(
+    placement: ProcessSeamPosition,
+    a: &SeamCandidate,
+    b: &SeamCandidate,
+) -> Option<bool> {
+    if matches!(
+        placement,
+        ProcessSeamPosition::Aligned | ProcessSeamPosition::AlignedBack
+    ) && a.central_enforcer != b.central_enforcer
+    {
         Some(a.central_enforcer)
     } else if a.paint != b.paint {
         Some(a.paint > b.paint)

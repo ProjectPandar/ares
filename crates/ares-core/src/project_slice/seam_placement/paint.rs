@@ -29,8 +29,12 @@ pub(in crate::project_slice) fn validate_paint(
     for object in &resolved.objects {
         let source = &project.objects()[object.source_object_index];
         for volume in painted_volumes(source) {
-            if object.object.seam_position != ProcessSeamPosition::Aligned
-                || resolved.views.full.process.print.spiral_mode.0
+            if !matches!(
+                object.object.seam_position,
+                ProcessSeamPosition::Aligned
+                    | ProcessSeamPosition::Nearest
+                    | ProcessSeamPosition::Back
+            ) || resolved.views.full.process.print.spiral_mode.0
                 || volume.mesh().seam_facets.used_states()[3..]
                     .iter()
                     .any(|&used| used)
@@ -52,7 +56,7 @@ fn painted_volumes(object: &ProjectObject) -> impl Iterator<Item = &ProjectVolum
 }
 
 fn deferred() -> SliceError {
-    SliceError::InvalidInput("seam painting is outside the supported aligned domain".to_owned())
+    SliceError::InvalidInput("seam painting is outside the supported domain".to_owned())
 }
 
 pub(in crate::project_slice) struct SeamPaint {
