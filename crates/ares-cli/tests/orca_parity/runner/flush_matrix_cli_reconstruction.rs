@@ -216,7 +216,7 @@ fn flush_matrix_cli_reconstruction_scalar_four_cell_input_fails_exactly_at_the_c
     assert_eq!(output.status.code(), Some(1), "{directory:?}");
     assert_eq!(
         String::from_utf8_lossy(&output.stderr),
-        "Error: InvalidInput(\"Flush volumes matrix do not match to the correct size!\")\n",
+        "Error: Flush volumes matrix do not match to the correct size!\n",
         "{directory:?}"
     );
     assert!(

@@ -13,9 +13,6 @@ fn cli_legacy_stl_missing_options_preserves_debug_channel() {
         .unwrap();
     assert_eq!(output.status.code(), Some(1));
     assert!(output.stdout.is_empty());
-    assert_eq!(
-        output.stderr,
-        b"Error: Custom { kind: InvalidInput, error: \"STL input requires --options\" }\n"
-    );
+    assert_eq!(output.stderr, b"Error: STL input requires --options\n");
     assert!(!temp.path().join("result.json").exists());
 }
