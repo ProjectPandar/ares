@@ -77,7 +77,10 @@ pub(super) fn prepare_project_source(
         Some((preparation, source.overrides)),
     )
     .map_err(|error| {
-        super::cli_transforms::with_arrange_diagnostic(error, source.transforms.forces_arrange())
+        super::cli_transforms::with_arrange_diagnostic(
+            error,
+            source.transforms.arranges_without_rotations(),
+        )
     })
 }
 

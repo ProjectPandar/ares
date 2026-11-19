@@ -150,7 +150,10 @@ pub(super) fn prepare_profile_slice(
         Some((preparation, project.overrides)),
     )
     .map_err(|error| {
-        super::cli_transforms::with_arrange_diagnostic(error, project.transforms.forces_arrange())
+        super::cli_transforms::with_arrange_diagnostic(
+            error,
+            project.transforms.arranges_without_rotations(),
+        )
     })
 }
 

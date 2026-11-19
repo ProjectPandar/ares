@@ -7,12 +7,22 @@ pub enum CliVolumeTransform {
     Rotate(f64),
 }
 
+/// Explicit CLI arrangement inputs (`OrcaSlicer.cpp:1597–1626,1670`).
+#[derive(Clone, Copy, Debug, Default)]
+pub struct CliArrangeModifiers {
+    pub allow_rotations: Option<bool>,
+    pub align_to_y_axis: Option<bool>,
+    pub allow_multicolor_oneplate: Option<bool>,
+    pub avoid_extrusion_cali_region: Option<bool>,
+}
+
 /// Model actions from `OrcaSlicer.cpp:5051–5153,5271–5288,5619–6100`.
 #[derive(Clone, Debug, Default)]
 pub struct CliProjectTransforms {
     pub volume: Vec<CliVolumeTransform>,
     pub orient: bool,
     pub arrange: Option<i32>,
+    pub arrange_modifiers: CliArrangeModifiers,
 }
 
 impl CliProjectTransforms {
@@ -21,6 +31,12 @@ impl CliProjectTransforms {
         volume: Vec::new(),
         orient: false,
         arrange: None,
+        arrange_modifiers: CliArrangeModifiers {
+            allow_rotations: None,
+            align_to_y_axis: None,
+            allow_multicolor_oneplate: None,
+            avoid_extrusion_cali_region: None,
+        },
     };
 
     pub fn has_project_actions(&self) -> bool {
@@ -49,15 +65,15 @@ impl CliProjectTransforms {
         if self.orient {
             crate::plater::apply_cli_orientation(&mut project, plate)?;
         }
-        if self.forces_arrange() {
+        if self.arrange == Some(1) {
             project.prepare_import_scope(plate);
-            return crate::plater::arrange_cli_project(project, plate);
+            return crate::plater::arrange_cli_project(project, plate, self.arrange_modifiers);
         }
         Ok(project)
     }
 
-    pub(super) fn forces_arrange(&self) -> bool {
-        self.arrange == Some(1)
+    pub(super) fn arranges_without_rotations(&self) -> bool {
+        self.arrange == Some(1) && !self.arrange_modifiers.allow_rotations.unwrap_or(false)
     }
 }
 
@@ -71,8 +87,11 @@ fn scale_volumes(project: &mut Project, ratio: f64) -> Result<(), SliceError> {
     Ok(())
 }
 
-pub(super) fn with_arrange_diagnostic(error: SliceError, arranged: bool) -> SliceError {
-    if arranged && matches!(&error, SliceError::NoSuitableObjects(_)) {
+pub(super) fn with_arrange_diagnostic(
+    error: SliceError,
+    arranged_without_rotations: bool,
+) -> SliceError {
+    if arranged_without_rotations && matches!(&error, SliceError::NoSuitableObjects(_)) {
         SliceError::NoSuitableObjectsAfterCliArrange
     } else {
         error

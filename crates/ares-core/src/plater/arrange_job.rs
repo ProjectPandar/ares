@@ -201,7 +201,9 @@ impl PlaterSession {
         let (keys, mut items): (Vec<_>, Vec<_>) = kept.into_iter().unzip();
         // The extrusion and hand-eye calibration region of a first-layer-scanning Bambu Lab
         // printer (`ArrangeJob.cpp:732-734`, `is_bbl_vendor`, `PresetBundle.hpp:374`).
-        if self.vendor_type == VendorType::MarlinBbl
+        // Direct CLI arrangement doesn't construct this region (`OrcaSlicer.cpp:5957–5992`).
+        if origin == ArrangeOrigin::Gui
+            && self.vendor_type == VendorType::MarlinBbl
             && params.avoid_extrusion_cali_region
             && full.option("scan_first_layer").bool()
         {
@@ -268,6 +270,7 @@ enum ArrangeOrigin {
 pub(crate) fn arrange_cli_project(
     project: crate::Project,
     plate: Option<u32>,
+    modifiers: crate::CliArrangeModifiers,
 ) -> Result<crate::Project, SliceError> {
     let project = super::initialize_slice_plates(project);
     let scope = match plate {
@@ -281,9 +284,15 @@ pub(crate) fn arrange_cli_project(
         ),
     };
     let mut session = PlaterSession::with_project(Vec::new(), project);
+    let defaults = session.default_arrange_settings();
     let settings = ArrangeSettings {
-        avoid_extrusion_cali_region: false,
-        ..session.default_arrange_settings()
+        enable_rotation: modifiers.allow_rotations.unwrap_or(false),
+        align_to_y_axis: modifiers
+            .align_to_y_axis
+            .unwrap_or(defaults.align_to_y_axis),
+        allow_multi_materials_on_same_plate: modifiers.allow_multicolor_oneplate.unwrap_or(true),
+        avoid_extrusion_cali_region: modifiers.avoid_extrusion_cali_region.unwrap_or(false),
+        ..defaults
     };
     session.arrange_job(scope, settings, ArrangeOrigin::Cli)?;
     let edits = session.edits();

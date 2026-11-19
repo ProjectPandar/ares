@@ -43,7 +43,7 @@ mod pressure_equalizer;
 mod profile;
 mod profile_entry;
 mod validated;
-pub use cli_transforms::{CliProjectTransforms, CliVolumeTransform};
+pub use cli_transforms::{CliArrangeModifiers, CliProjectTransforms, CliVolumeTransform};
 pub(crate) use profile_entry::validate_profile_source;
 pub(crate) use profile_entry::{center_profile_project, load_and_place};
 

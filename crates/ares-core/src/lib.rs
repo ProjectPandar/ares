@@ -217,9 +217,9 @@ pub use project::{
     project_config_substitutions,
 };
 pub use project_slice::{
-    CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine, CliVolumeTransform,
-    SlicedPlate, slice_cli_project_plate_validated, slice_project_plate_processed_validated,
-    slice_project_plate_validated,
+    CliArrangeModifiers, CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine,
+    CliVolumeTransform, SlicedPlate, slice_cli_project_plate_validated,
+    slice_project_plate_processed_validated, slice_project_plate_validated,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};

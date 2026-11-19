@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use ares_core::{CliProjectTransforms, CliVolumeTransform};
+use ares_core::{CliArrangeModifiers, CliProjectTransforms, CliVolumeTransform};
 use clap::{ArgMatches, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -34,6 +34,18 @@ pub(crate) struct SliceArgs {
     /// Arrange the project: 0 disables, 1 forces, other integers retain automatic eligibility
     #[arg(long, allow_hyphen_values = true)]
     arrange: Vec<i32>,
+    /// Allow packing rotations when arranging
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = arrange_bool)]
+    allow_rotations: Vec<bool>,
+    /// Align long sides along Y before packing (default: on for i3 printers)
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = arrange_bool)]
+    align_to_y_axis: Vec<bool>,
+    /// Allow multiple colors on the same plate when arranging (default: on)
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = arrange_bool)]
+    allow_multicolor_oneplate: Vec<bool>,
+    /// Request calibration-region avoidance (no keep-out for direct 3MF input)
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = arrange_bool)]
+    avoid_extrusion_cali_region: Vec<bool>,
     /// Scale project volumes by this factor
     #[arg(long, allow_hyphen_values = true)]
     scale: Vec<f64>,
@@ -92,6 +104,21 @@ impl SliceArgs {
                 .collect(),
             orient: self.orient == 1,
             arrange: self.arrange.last().copied(),
+            arrange_modifiers: CliArrangeModifiers {
+                allow_rotations: self.allow_rotations.last().copied(),
+                align_to_y_axis: self.align_to_y_axis.last().copied(),
+                allow_multicolor_oneplate: self.allow_multicolor_oneplate.last().copied(),
+                avoid_extrusion_cali_region: self.avoid_extrusion_cali_region.last().copied(),
+            },
         };
+    }
+}
+
+fn arrange_bool(value: &str) -> Result<bool, &'static str> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "" if value.is_empty() => Ok(true),
+        "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+        _ => Err("expected a boolean value"),
     }
 }
