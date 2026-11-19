@@ -156,14 +156,31 @@ pub(in crate::project_slice::gcode_emit) fn finish(
     end: [f32; 2],
     wipe: impl IntoIterator<Item = [f32; 2]>,
 ) {
+    set_exit_position(state, scale, end);
+    prepare_wipe(state, scale, wipe);
+    state.use_external_mp_once = true;
+}
+
+pub(in crate::project_slice::gcode_emit) fn set_exit_position(
+    state: &mut EmitState,
+    scale: CoordinateScale,
+    end: [f32; 2],
+) {
     // The discarded writer XY move does not subtract nozzle offsets; it adds the plate origin
-    // (`GCode.cpp:1933-1934`).
+    // (`GCode.cpp:1643-1645,1933-1934`).
     let [origin_x, origin_y] = state.xy_offset_f32();
     state.x = f64::from(end[0] + origin_x);
     state.y = f64::from(end[1] + origin_y);
     state.last_scaled_position = object_point(end, state, scale);
     state.last_position_defined = true;
     state.positioned = true;
+}
+
+pub(in crate::project_slice::gcode_emit) fn prepare_wipe(
+    state: &mut EmitState,
+    scale: CoordinateScale,
+    wipe: impl IntoIterator<Item = [f32; 2]>,
+) {
     state.wipe_path = wipe
         .into_iter()
         .map(|point| {
@@ -178,7 +195,6 @@ pub(in crate::project_slice::gcode_emit) fn finish(
         x: state.x,
         y: state.y,
     });
-    state.use_external_mp_once = true;
 }
 
 pub(in crate::project_slice::gcode_emit) fn change_layer(
