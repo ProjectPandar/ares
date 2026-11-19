@@ -112,12 +112,12 @@ impl ThickPolyline {
     }
 
     pub(crate) fn start_at_index(&mut self, index: usize) {
-        assert!(index < self.points.len());
-        assert_eq!(self.points.first(), self.points.last());
-        assert_eq!(self.width.first(), self.width.last());
-        if index != 0 && index + 1 != self.points.len() {
+        if index != 0
+            && index + 1 != self.points.len()
+            && self.points.first() == self.points.last()
+            && self.width.first() == self.width.last()
+        {
             self.points.pop();
-            assert_eq!(self.points.len() * 2, self.width.len());
             self.points.rotate_left(index);
             self.width.rotate_left(2 * index);
             self.points.push(self.points[0]);
