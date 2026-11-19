@@ -55,13 +55,17 @@ fn validate(args: &SliceArgs) -> Result<(), AssemblyError> {
                     "can not load 3mf when set loaded_filament_ids or clone_objects",
                 ));
             }
-            for (index, &value) in args.clone_objects.iter().enumerate() {
-                if value > 512 {
-                    return Err(AssemblyError::Invalid(format!(
-                        "invalid clone count {value} at index {}, max 512",
-                        index + 1
-                    )));
-                }
+            if let Some((index, value)) = args
+                .clone_objects
+                .iter()
+                .copied()
+                .enumerate()
+                .find(|&(_, value)| value > 512)
+            {
+                return Err(AssemblyError::Invalid(format!(
+                    "invalid clone count {value} at index {}, max 512",
+                    index + 1
+                )));
             }
             return Err(invalid(
                 "Invalid params: can not set assemble and clone_objects together.",
@@ -74,13 +78,17 @@ fn validate(args: &SliceArgs) -> Result<(), AssemblyError> {
         }
         if let Some(filaments) = &args.load_filaments {
             let max = split_native_list(filaments).len() as i32;
-            for (index, &id) in args.load_filament_ids.iter().enumerate() {
-                if id > max {
-                    return Err(AssemblyError::Invalid(format!(
-                        "invalid filament_id {id} at index {}, max {max}",
-                        index + 1
-                    )));
-                }
+            if let Some((index, id)) = args
+                .load_filament_ids
+                .iter()
+                .copied()
+                .enumerate()
+                .find(|&(_, id)| id > max)
+            {
+                return Err(AssemblyError::Invalid(format!(
+                    "invalid filament_id {id} at index {}, max {max}",
+                    index + 1
+                )));
             }
         }
         if count == 0 {

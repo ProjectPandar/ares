@@ -105,53 +105,55 @@ pub(super) fn outer_wall_extents(gcode: &str) -> Vec<Vec<[i32; 4]>> {
     gcode
         .split(layer_marker)
         .skip(1)
-        .map(|layer| {
-            let mut paths = Vec::new();
-            let mut points = Vec::new();
-            let mut outer = false;
-            let mut xy = [0; 2];
-            for line in layer.lines() {
-                if let Some(feature) = line.strip_prefix(feature_marker) {
-                    add_extents(&mut paths, &mut points);
-                    outer = feature == "Outer wall";
-                    continue;
-                }
-                let Some(move_args) = line
-                    .strip_prefix("G1 ")
-                    .or_else(|| line.strip_prefix("G0 "))
-                else {
-                    continue;
-                };
-                let last = xy;
-                let mut extrude = false;
-                for word in move_args
-                    .split(';')
-                    .next()
-                    .unwrap()
-                    .split_ascii_whitespace()
-                {
-                    if let Some(e) = word.strip_prefix('E') {
-                        extrude = e.parse::<f64>().unwrap() > 0.0;
-                    }
-                    for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
-                        if let Some(value) = word.strip_prefix(letter) {
-                            xy[axis] = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
-                        }
-                    }
-                }
-                if last != xy {
-                    if outer && extrude {
-                        points.extend([last, xy]);
-                    } else {
-                        add_extents(&mut paths, &mut points);
-                    }
+        .map(|layer| layer_outer_wall_extents(layer, feature_marker))
+        .collect()
+}
+
+fn layer_outer_wall_extents(layer: &str, feature_marker: &str) -> Vec<[i32; 4]> {
+    let mut paths = Vec::new();
+    let mut points = Vec::new();
+    let mut outer = false;
+    let mut xy = [0; 2];
+    for line in layer.lines() {
+        if let Some(feature) = line.strip_prefix(feature_marker) {
+            add_extents(&mut paths, &mut points);
+            outer = feature == "Outer wall";
+            continue;
+        }
+        let Some(move_args) = line
+            .strip_prefix("G1 ")
+            .or_else(|| line.strip_prefix("G0 "))
+        else {
+            continue;
+        };
+        let last = xy;
+        let mut extrude = false;
+        for word in move_args
+            .split(';')
+            .next()
+            .unwrap()
+            .split_ascii_whitespace()
+        {
+            if let Some(e) = word.strip_prefix('E') {
+                extrude = e.parse::<f64>().unwrap() > 0.0;
+            }
+            for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
+                if let Some(value) = word.strip_prefix(letter) {
+                    xy[axis] = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
                 }
             }
-            add_extents(&mut paths, &mut points);
-            paths.sort_unstable();
-            paths
-        })
-        .collect()
+        }
+        if last != xy {
+            if outer && extrude {
+                points.extend([last, xy]);
+            } else {
+                add_extents(&mut paths, &mut points);
+            }
+        }
+    }
+    add_extents(&mut paths, &mut points);
+    paths.sort_unstable();
+    paths
 }
 
 fn add_extents(paths: &mut Vec<[i32; 4]>, points: &mut Vec<[i32; 2]>) {
