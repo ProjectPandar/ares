@@ -1,5 +1,5 @@
 //! Non-tower `wipe_volume`/`flush_length` family from `GCode::set_extruder`
-//! (`GCode.cpp:7814-7853, 7884-7948`). `wipe_volume` comes from the flush
+//! (`GCode.cpp:11151-11207, 11263-11341`). `wipe_volume` comes from the flush
 //! matrix for the new filament's physical extruder, scaled by
 //! `flush_multiplier[new_extruder]` and reduced by `grab_length*2.4`;
 //! `wipe_length = wipe_volume / filament_area`, `flush_count =
@@ -30,12 +30,12 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
         filament,
         filament_area,
     } = context;
-    const PURGE_VOLUME_ONE_TIME: f32 = 135.0; // g_purge_volume_one_time, GCode.cpp:93
+    const PURGE_VOLUME_ONE_TIME: f32 = 135.0; // g_purge_volume_one_time, GCode.cpp:209
     const MAX_FLUSH_COUNT: usize = 4; // g_max_flush_count
 
     let full = &traversal.resolved.views.full;
     // `number_of_extruders` upstream is `filament_colour.size()` — the
-    // logical filament count (`GCode.cpp:7811`).
+    // logical filament count (`GCode.cpp:11160`).
     let filament_count = full.filament.gcode.filament_colour.0.len();
     // `get_extruder_id(filament)` — `filament_map` is 1-based.
     let map = &full.project.gcode.filament_map.0;
@@ -54,8 +54,8 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
             let base = new_extruder * filament_count * filament_count;
             let cell = |from: usize, to: usize| values[base + from * filament_count + to] as f32;
             let old_extruder = extruder_of(map, old_filament);
-            let mut volume = if old_extruder != new_extruder {
-                // `GCode.cpp:7827-7836`: filament last loaded in the new
+            let volume = if old_extruder != new_extruder {
+                // `GCode.cpp:11178-11187`: filament last loaded in the new
                 // extruder, or 0 when it was never used.
                 match state.extruders.loaded_filament(new_extruder) {
                     None => 0.0,
@@ -64,14 +64,16 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
             } else {
                 cell(old_filament, filament)
             };
-            // `get_at(i)` — `Config.hpp:624-628`: `values[i]`, else
+            // `get_at(i)` — `Config.hpp:676-680`: `values[i]`, else
             // `values.front()`; non-empty is a prepare-stage invariant.
-            volume *= matrix
+            let multiplier = matrix
                 .flush_multiplier
                 .0
                 .get(new_extruder)
                 .unwrap_or(&matrix.flush_multiplier.0[0])
-                .0 as f32;
+                .0;
+            // Upstream widens the matrix cell before multiplying, then stores a float.
+            let volume = (f64::from(volume) * multiplier) as f32;
             let grab = full
                 .printer
                 .remaining
@@ -79,8 +81,9 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
                 .0
                 .get(new_extruder)
                 .unwrap_or(&full.printer.remaining.grab_length.0[0])
-                .0 as f32;
-            (volume - grab * 2.4).max(0.0)
+                .0;
+            let grab_purge_volume = (grab * 2.4) as f32;
+            (volume - grab_purge_volume).max(0.0)
         }
     };
     let wipe_length = wipe_volume / filament_area;
@@ -93,7 +96,7 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
         Value::number(f64::from(wipe_length / 2.0)),
     );
     config.insert("flush_length", Value::number(f64::from(wipe_length)));
-    // `GCode.cpp:7935-7936`: `flush_unit` divides by the rounded count
+    // `GCode.cpp:11329-11330`: `flush_unit` divides by the rounded count
     // directly; the `flush_length_*` loop never reads it when the count
     // is zero, matching upstream's unused-NaN/inf case.
     let flush_count = MAX_FLUSH_COUNT.min((wipe_volume / PURGE_VOLUME_ONE_TIME).round() as usize);
@@ -126,14 +129,14 @@ pub(super) fn insert_flush(config: &mut Config, context: FlushContext<'_>) {
     let interface = &full.filament.gcode;
     config.insert(
         "filament_tower_interface_purge_volume",
-        Value::number(f64::from(
+        Value::number(
             interface
                 .filament_tower_interface_purge_volume
                 .0
                 .get(filament)
                 .unwrap_or(&interface.filament_tower_interface_purge_volume.0[0])
-                .0 as f32,
-        )),
+                .0,
+        ),
     );
     let mut interface_temp = interface
         .filament_tower_interface_print_temp
