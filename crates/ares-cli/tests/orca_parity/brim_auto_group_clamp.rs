@@ -54,6 +54,36 @@ fn combined_brim_preserves_outer_spacings_and_extrudes_inside_the_hole() {
     compare(&case);
 }
 
+#[test]
+fn brim_ears_preserve_float_width_for_corner_extrusion() {
+    check_inner_or_ear_width(
+        "brim-ears-float-width-",
+        "brim_ears",
+        "0.38",
+        "G1 X122.18 Y100.975 E.01497",
+    );
+}
+
+#[test]
+fn inner_brim_preserves_float_spacing() {
+    check_inner_or_ear_width(
+        "inner-brim-float-spacing-",
+        "inner_only",
+        "0.55",
+        "G1 X113.225 Y110.925 E.07693",
+    );
+}
+
+fn check_inner_or_ear_width(prefix: &str, brim_type: &str, width: &str, native_move: &str) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let project = plate((20., 18., 3.2), Some((10., 8.)), brim_type, width);
+    let case = NativeCase::slice(&runner, &project, prefix);
+    assert!(brim_moves(&case.native).contains(&native_move));
+    compare(&case);
+}
+
 fn axis(line: &str, axis: char) -> f64 {
     line.split_ascii_whitespace()
         .find_map(|word| word.strip_prefix(axis))
