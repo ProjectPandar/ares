@@ -266,7 +266,6 @@ pub(crate) fn slice_error_to_failure(
             )
         }
         SliceError::EmptyInput
-        | SliceError::MissingSystemPresetBundle
         | SliceError::InvalidInput(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),

@@ -27,8 +27,7 @@ impl fmt::Display for PresetAdmissionError {
 #[derive(Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
-    /// Direct BBL/Orca 3MF slicing requires the caller to provide system presets.
-    MissingSystemPresetBundle,
+
     InvalidInput(String),
     PresetAdmission(PresetAdmissionError),
     /// Support/palette admission (`OrcaSlicer.cpp:3929-3933`).
@@ -111,9 +110,7 @@ impl fmt::Display for SliceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
-            Self::MissingSystemPresetBundle => {
-                f.write_str("direct BBL/Orca 3MF slicing requires a system preset bundle")
-            }
+
             Self::InvalidInput(message) => f.write_str(message),
             Self::PresetAdmission(error) => error.fmt(f),
             Self::FilamentSupportPaletteMismatch {
