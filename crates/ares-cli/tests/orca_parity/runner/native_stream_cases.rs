@@ -10,6 +10,8 @@ mod bbl_type1_adhesiveness_categories;
 mod bbl_type1_prime_tower_waypoints;
 #[path = "bridge_monotonic_entry.rs"]
 mod bridge_monotonic_entry;
+#[path = "type1_nozzle_change_acceleration.rs"]
+mod type1_nozzle_change_acceleration;
 
 #[path = "bridge_limiting_offset.rs"]
 mod bridge_limiting_offset;
