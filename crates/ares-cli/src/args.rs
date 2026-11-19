@@ -6,7 +6,8 @@ use clap::{Parser, Subcommand};
 #[command(
     name = "ares",
     args_conflicts_with_subcommands = true,
-    subcommand_negates_reqs = true
+    subcommand_negates_reqs = true,
+    arg_required_else_help = true
 )]
 pub(crate) struct Cli {
     #[command(subcommand)]
@@ -23,13 +24,21 @@ pub(crate) enum Commands {
 #[derive(clap::Args)]
 pub(crate) struct DirectSliceArgs {
     /// Slice all plates (0) or the given one-based plate number.
-    #[arg(long = "slice", required = true, allow_negative_numbers = true)]
+    #[arg(
+        long = "slice",
+        required_unless_present = "export_settings",
+        requires = "outputdir",
+        allow_negative_numbers = true
+    )]
     pub(crate) selection: Option<i32>,
+    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'.
+    #[arg(long, value_name = "FILE", conflicts_with = "selection")]
+    pub(crate) export_settings: Option<PathBuf>,
     /// Maximum triangle count per plate for direct STL slicing (0 means unlimited).
     #[arg(long, allow_negative_numbers = true)]
     pub(crate) mtcpp: Option<i32>,
     /// Directory for plate_<n>.gcode and the slice result.
-    #[arg(long, required = true)]
+    #[arg(long)]
     pub(crate) outputdir: Option<PathBuf>,
     /// Write a statistics JSON sidecar for each sliced plate.
     #[arg(long)]

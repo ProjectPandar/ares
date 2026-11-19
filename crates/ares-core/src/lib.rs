@@ -147,7 +147,7 @@ pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, ImportedStl, LayerConfigRange,
     PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
     ProjectVolume, ProjectVolumeType, StlUnit, Transform3d, UpwardMachineInput,
-    UpwardMachineSource, load_project, project_config_substitutions,
+    UpwardMachineSource, export_project_settings, load_project, project_config_substitutions,
 };
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,

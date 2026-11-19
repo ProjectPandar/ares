@@ -8,6 +8,7 @@ mod moves_csv;
 mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
+mod settings_export;
 mod statistics;
 
 use std::fs;
@@ -34,7 +35,15 @@ async fn main() {
     let strict_mode = cli.direct.strict;
     let result = match cli.command {
         Some(Commands::Slice(args)) => run_slice(args).await,
-        None => direct_stl::run(cli.direct).await,
+        None => match (&cli.direct.export_settings, cli.direct.inputs.as_slice()) {
+            (Some(destination), [project]) => settings_export::run(project, destination),
+            (Some(_), _) => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "--export-settings requires a saved 3MF project",
+            )
+            .into()),
+            (None, _) => direct_stl::run(cli.direct).await,
+        },
     };
     if let Err(failure) = result {
         failure.report(
