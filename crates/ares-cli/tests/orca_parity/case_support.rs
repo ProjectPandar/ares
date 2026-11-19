@@ -36,6 +36,9 @@ mod support_interface_top_layers_base_connect;
 #[path = "sequential_origin_label_flush.rs"]
 mod sequential_origin_label_flush;
 
+#[path = "non_tower_flush_precision.rs"]
+mod non_tower_flush_precision;
+
 #[path = "auto_lift_query_frame.rs"]
 mod auto_lift_query_frame;
 
