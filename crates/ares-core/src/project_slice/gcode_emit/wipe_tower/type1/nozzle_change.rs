@@ -14,10 +14,13 @@ impl Generator<'_> {
         let change = self.plan.layers[self.index]
             .changes
             .iter()
-            .find(|c| c.new == new);
-        let mut count = change.map_or(0, |c| {
-            ((c.nozzle_depth + 1e-3) / width / if self.plan.tpu { 2.0 } else { 1.0 }) as i32
-        });
+            .find(|c| c.old == old && c.new == new);
+        let step = if self.first_layer() || solid {
+            width
+        } else {
+            self.plan.layers[self.index].spacing * change.map_or(width, |c| c.nozzle_gap)
+        };
+        let count = change.map_or(0, |c| ((c.nozzle_depth + 1e-3) / step) as i32);
         let flow_at = |height: f32| {
             height * (width - height * (1.0 - std::f32::consts::PI / 4.0)) / self.filaments[0].area
         };
@@ -47,10 +50,6 @@ impl Generator<'_> {
             .position(|b| b.category == self.filaments[old].category)
             .expect("old nozzle has a planned category block");
         self.current_block = Some(block);
-        let mut step = self.plan.layers[self.index].spacing * width;
-        if self.plan.tpu && self.plan.spacing < 2.0 {
-            step = 2.0 * width;
-        }
         let offset = self.plan.perimeter + (width - self.plan.perimeter) / 2.0;
         let lower = [
             offset,
@@ -59,10 +58,7 @@ impl Generator<'_> {
         let right = self.plan.width - offset;
         let upper = lower[1] + count as f32 * step - (width - self.plan.perimeter) / 2.0;
         writer.set_position(lower, [self.plan.width, self.plan.depth], 0.0);
-        if solid {
-            step = width;
-            count = i32::MAX;
-        }
+        let count = if solid { i32::MAX } else { count };
         self.left_to_right = true;
         let mut real_count = 0;
         let mut thick = false;
