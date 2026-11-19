@@ -51,6 +51,8 @@ mod sequential_origin_label_flush;
 
 #[path = "non_tower_flush_precision.rs"]
 mod non_tower_flush_precision;
+#[path = "plate_loaded_label_first_entry.rs"]
+mod plate_loaded_label_first_entry;
 
 #[path = "auto_lift_query_frame.rs"]
 mod auto_lift_query_frame;
