@@ -8,7 +8,7 @@ mod clipper;
 mod clipper2;
 mod convex_hull;
 mod quickhull;
-pub use quickhull::{ConvexHull3d, convex_hull_3d};
+pub use quickhull::{ConvexHull3d, HullError, convex_hull_3d, try_convex_hull_3d};
 mod coord;
 mod edge_grid;
 pub(crate) mod enclosing_circle;

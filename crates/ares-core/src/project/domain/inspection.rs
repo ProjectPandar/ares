@@ -1,5 +1,6 @@
 //! Read-only measurements on loaded model geometry.
 
+mod mesh;
 mod paint;
 mod statistics;
 
@@ -9,6 +10,7 @@ use super::{
     Point3d, Project, ProjectInstance, ProjectMesh, ProjectObject, ProjectVolumeType, Transform3d,
 };
 use crate::{CliProjectTransforms, ConfigOverrides, SliceError};
+pub use mesh::{MeshInstance, MeshObject, MeshPlane};
 pub use paint::{PaintLayer, PaintLayers, PaintObject, PaintState, PaintSummary, PaintVolume};
 pub use statistics::MeshStatistics;
 

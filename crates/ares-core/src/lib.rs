@@ -100,7 +100,7 @@ use std::fmt;
 
 pub use bridges::BridgeOptions;
 pub use brims::{BrimOptions, BrimPath, BrimType, LayerBrims, generate_brims};
-pub use geometry::{ConvexHull3d, convex_hull_3d};
+pub use geometry::{ConvexHull3d, HullError, convex_hull_3d, try_convex_hull_3d};
 
 pub(crate) use contours::stitch_printable;
 pub use contours::{Contour, LayerContours, stitch_layer_slices};

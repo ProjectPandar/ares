@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     SliceError,
-    geometry::{ConvexHull3d, convex_hull_3d, mesh_normals},
+    geometry::{ConvexHull3d, fixed_gcc_sort_by, mesh_normals, try_convex_hull_3d},
     plater::{rotation_from_two_vectors, rotation_matrix_transform},
 };
 
@@ -15,6 +15,11 @@ const EPSILON: f64 = 1e-4; // libslic3r.h:57
 const UP: [f64; 3] = [0., 0., 1.];
 const DOWN: [f64; 3] = [0., 0., -1.];
 type Vec3 = [f64; 3];
+
+mod inspect;
+mod outline;
+pub(super) use inspect::inspect_planes;
+use outline::outline_hull;
 
 pub(crate) enum FaceChoice {
     Largest,
@@ -58,7 +63,7 @@ impl Project {
     pub(crate) fn ground_cli_face(&mut self, choice: FaceChoice) -> Result<(), SliceError> {
         let (mut laid, mut missed) = (false, false);
         for object in &mut self.objects {
-            let (object_laid, object_missed) = ground_object(object, &choice);
+            let (object_laid, object_missed) = ground_object(object, &choice)?;
             laid |= object_laid;
             missed |= object_missed;
         }
@@ -71,9 +76,12 @@ impl Project {
     }
 }
 
-fn ground_object(object: &mut ProjectObject, choice: &FaceChoice) -> (bool, bool) {
-    let Some(hull) = object_hull(object) else {
-        return (false, false);
+fn ground_object(
+    object: &mut ProjectObject,
+    choice: &FaceChoice,
+) -> Result<(bool, bool), SliceError> {
+    let Some(hull) = object_hull(object)? else {
+        return Ok((false, false));
     };
     let faces = hull_faces(&hull);
     let (mut laid, mut missed) = (false, false);
@@ -102,23 +110,34 @@ fn ground_object(object: &mut ProjectObject, choice: &FaceChoice) -> (bool, bool
         object.instances[index].transform = rotated.pretranslated(Point3d::new(0., 0., -min_z));
         laid = true;
     }
-    (laid, missed)
+    Ok((laid, missed))
 }
 
-fn object_hull(object: &ProjectObject) -> Option<ConvexHull3d> {
-    // The hull of the union of part vertices equals the hull of the union of their hulls.
-    let vertices: Vec<_> = object
+fn object_hull(object: &ProjectObject) -> Result<Option<ConvexHull3d>, SliceError> {
+    let error = |err| SliceError::InvalidInput(format!("{}: {err}", object.name()));
+    let mut vertices = Vec::new();
+    for part in object
         .volumes
         .iter()
         .filter(|v| v.volume_type == ProjectVolumeType::ModelPart)
-        .flat_map(|v| {
-            v.mesh
-                .vertices()
-                .iter()
-                .map(|&p| v.transform.transform_point_f32(p))
-        })
-        .collect();
-    convex_hull_3d(&vertices)
+    {
+        let local: Vec<_> = part
+            .mesh
+            .vertices()
+            .iter()
+            .map(|p| [p.x as f32, p.y as f32, p.z as f32])
+            .collect();
+        if let Some(hull) = try_convex_hull_3d(&local).map_err(error)? {
+            // `its_transform` uses the affine's scalar type (double here),
+            // then casts the transformed vertices back to mesh floats.
+            vertices.extend(
+                hull.vertices
+                    .into_iter()
+                    .map(|p| transform(part.transform, p.map(f64::from)).map(|x| x as f32)),
+            );
+        }
+    }
+    try_convex_hull_3d(&vertices).map_err(error)
 }
 
 struct Face {
@@ -169,8 +188,6 @@ fn hull_faces(hull: &ConvexHull3d) -> Vec<Face> {
             vertices.extend(hull.facets[index]);
             stack.extend(neighbors[index].into_iter().flatten());
         }
-        vertices.sort_unstable();
-        vertices.dedup();
         faces.push(Face {
             normal: seed.map(f64::from),
             vertices,
@@ -197,111 +214,77 @@ fn instance_planes(faces: &[Face], hull: &ConvexHull3d, linear: Transform3d) -> 
     // Columns of the inverse transpose (before division by the determinant).
     let cofactors: [Vec3; 3] =
         std::array::from_fn(|i| cross(columns[(i + 1) % 3], columns[(i + 2) % 3]));
-    let mut planes: Vec<_> = faces
+    let mut outlines: Vec<_> = faces
         .iter()
         .filter_map(|face| {
-            let instance_normal = unit(std::array::from_fn(|r| {
-                (cofactors[0][r] * face.normal[0]
-                    + cofactors[1][r] * face.normal[1]
-                    + cofactors[2][r] * face.normal[2])
-                    / determinant
-            }));
-            let frame = from_to(instance_normal, UP);
-            let mut points: Vec<_> = face
+            let points: Vec<_> = face
                 .vertices
                 .iter()
                 .map(|&i| transform(linear, hull.vertices[i as usize].map(f64::from)))
                 .collect();
             if let [a, b, c] = points[..]
-                && [sub(a, b), sub(b, c), sub(c, a)]
+                && [sub(a, b), sub(a, c), sub(b, c)]
                     .into_iter()
                     .any(|edge| norm(edge) < 1.)
             {
                 return None;
             }
-            for point in &mut points {
-                *point = transform(frame, *point);
-            }
-            let outline = outline_hull(points);
-            let edges = outline
-                .iter()
-                .copied()
-                .zip(outline.iter().copied().cycle().skip(1));
-            let area = edges
-                .clone()
-                .fold(0f32, |sum, (a, b)| (f64::from(sum) + cross_xy(a, b)) as f32)
-                .abs()
-                * 0.5;
-            if area < 5.
-                || edges
-                    .clone()
-                    .zip(edges.cycle().skip(1))
-                    .any(|((a, b), (_, c))| {
-                        dot(unit(sub(a, b)), unit(sub(c, b))) > 1f64.to_radians().cos()
-                    })
-            {
-                return None;
-            }
-            Some(Plane {
-                normal: face.normal,
-                instance_normal,
-                area,
-                frame,
-                outline,
-            })
+            Some((face.normal, points))
         })
         .collect();
-    planes.sort_by(|a, b| b.area.total_cmp(&a.area));
+    let mut planes = Vec::with_capacity(outlines.len());
+    while planes.len() < outlines.len() {
+        let index = planes.len();
+        let (normal, points) = &mut outlines[index];
+        let transformed = std::array::from_fn(|r| {
+            dot(
+                std::array::from_fn(|i| cofactors[i][r] * (1.0 / determinant)),
+                *normal,
+            )
+        });
+        if let Some(plane) = flatten_plane(*normal, transformed, std::mem::take(points)) {
+            planes.push(plane);
+        } else {
+            // LayOnFace.cpp replaces a discarded polygon with the last one.
+            outlines.swap_remove(index);
+        }
+    }
+    planes.reverse();
+    fixed_gcc_sort_by(&mut planes, |a, b| a.area < b.area);
+    planes.reverse();
     planes
 }
 
-// `Geometry/ConvexHull.cpp:50–105`: monotone chain with fixed-point XY tests,
-// keeping the original (rescaled) 3D points for the plane-distance test.
-fn outline_hull(mut points: Vec<Vec3>) -> Vec<Vec3> {
-    points.sort_by(|a, b| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1])));
-    let width = points[points.len() - 1][0] - points[0][0];
-    let (low, high) = points
-        .iter()
-        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
-            (lo.min(p[1]), hi.max(p[1]))
-        });
-    let scale = f64::from((1. / width.max(high - low)) as f32);
+fn flatten_plane(normal: Vec3, transformed: Vec3, mut points: Vec<Vec3>) -> Option<Plane> {
+    let frame = from_to(transformed, UP);
     for point in &mut points {
-        point[0] *= scale;
-        point[1] *= scale;
+        *point = transform(frame, *point);
     }
-    let fixed: Vec<_> = points
+    let outline = outline_hull(points);
+    let edges = outline
         .iter()
-        .map(|p| [(p[0] * 1e6) as i64, (p[1] * 1e6) as i64])
-        .collect();
-    let ccw = |a: usize, b: usize, c: usize| {
-        let [[ax, ay], [bx, by], [cx, cy]] = [fixed[a], fixed[b], fixed[c]];
-        (i128::from(bx) - i128::from(ax)) * (i128::from(cy) - i128::from(ay))
-            > (i128::from(by) - i128::from(ay)) * (i128::from(cx) - i128::from(ax))
-    };
-    let mut outline = Vec::with_capacity(points.len());
-    let count = points.len();
-    for reverse in [false, true] {
-        let floor = if reverse { outline.len() + 1 } else { 2 };
-        for i in 0..count - usize::from(reverse) {
-            let index = if reverse { count - 2 - i } else { i };
-            while outline.len() >= floor
-                && !ccw(
-                    outline[outline.len() - 2],
-                    outline[outline.len() - 1],
-                    index,
-                )
-            {
-                outline.pop();
-            }
-            outline.push(index);
-        }
+        .copied()
+        .zip(outline.iter().copied().cycle().skip(1));
+    let area = 0.5
+        * edges
+            .clone()
+            .fold(0f32, |sum, (a, b)| (f64::from(sum) + cross_xy(a, b)) as f32)
+            .abs();
+    if area < 5.
+        || edges
+            .clone()
+            .zip(edges.cycle().skip(1))
+            .any(|((a, b), (_, c))| dot(unit(sub(a, b)), unit(sub(c, b))) > 1f64.to_radians().cos())
+    {
+        return None;
     }
-    outline.pop();
-    outline
-        .into_iter()
-        .map(|i| [points[i][0] / scale, points[i][1] / scale, points[i][2]])
-        .collect()
+    Some(Plane {
+        normal,
+        instance_normal: unit(transformed),
+        area,
+        frame,
+        outline,
+    })
 }
 
 fn pick<'a>(planes: &'a [Plane], choice: &FaceChoice, linear: Transform3d) -> Option<&'a Plane> {
@@ -312,7 +295,7 @@ fn pick<'a>(planes: &'a [Plane], choice: &FaceChoice, linear: Transform3d) -> Op
                 .iter()
                 .take_while(|p| f64::from(p.area) >= f64::from(first.area) * (1. - 1e-3))
                 .fold(first, |best, p| {
-                    if p.instance_normal[2] < best.instance_normal[2] {
+                    if p.frame.as_matrix()[2][2] < best.frame.as_matrix()[2][2] {
                         p
                     } else {
                         best

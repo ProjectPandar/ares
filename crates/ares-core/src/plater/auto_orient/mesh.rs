@@ -1,8 +1,8 @@
 use crate::{
     ProjectMesh, SliceError,
     geometry::{
-        convex_hull_3d,
         mesh_normals::{face_normal, facet_area},
+        try_convex_hull_3d,
     },
 };
 
@@ -23,11 +23,13 @@ impl Mesh {
             .iter()
             .map(|p| [p.x as f32, p.y as f32, p.z as f32])
             .collect();
-        let hull = convex_hull_3d(&points).ok_or_else(|| {
-            SliceError::InvalidInput(
-                "automatic orientation requires a three-dimensional mesh".into(),
-            )
-        })?;
+        let hull = try_convex_hull_3d(&points)
+            .map_err(|err| SliceError::InvalidInput(format!("automatic orientation: {err}")))?
+            .ok_or_else(|| {
+                SliceError::InvalidInput(
+                    "automatic orientation requires a three-dimensional mesh".into(),
+                )
+            })?;
         let facets = mesh
             .triangles()
             .iter()
@@ -54,13 +56,13 @@ impl Mesh {
         let hull = hull
             .facets
             .iter()
-            .zip(&hull.normals)
-            .map(|(face, &normal)| {
+            .map(|face| {
                 let vertices = face.map(|index| hull.vertices[index as usize]);
                 let [a, b, c] = vertices;
                 Facet {
                     vertices,
-                    normal,
+                    // Orient.cpp recomputes face normals on the triangulated hull.
+                    normal: face_normal(a, b, c),
                     area: facet_area(a, b, c),
                     appearance: false,
                 }

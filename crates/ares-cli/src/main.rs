@@ -26,11 +26,11 @@ async fn main() {
         .subcommand_matches("slice")
         .expect("required subcommand");
     args.parse_transforms(slice);
-    if args.inspect_paint || args.info {
+    if args.inspect_mesh || args.inspect_paint || args.info {
         if let Err(failure) = inspect::run(&args, slice) {
             failure.report();
         }
-        if args.inspect_paint || args.slice_plate.is_none() {
+        if args.inspect_mesh || args.inspect_paint || args.slice_plate.is_none() {
             return;
         }
         args.plate = args.slice_plate.filter(|&plate| plate != 0);

@@ -15,8 +15,17 @@ pub(super) fn run(args: &SliceArgs, matches: &ArgMatches) -> Result<(), CliFailu
     });
     let output = outputdir.join("result.json");
     let has_input = matches.value_source("input") == Some(ValueSource::CommandLine);
-    if args.inspect_paint {
+    let action = if args.inspect_mesh {
+        Some("inspect-mesh")
+    } else if args.inspect_paint {
+        Some("inspect-paint")
+    } else {
+        None
+    };
+    if let Some(action) = action {
         let conflicting = [
+            ("inspect_mesh", "inspect-mesh"),
+            ("inspect_paint", "inspect-paint"),
             ("info", "info"),
             ("slice_plate", "slice"),
             ("plate", "slice"),
@@ -25,13 +34,15 @@ pub(super) fn run(args: &SliceArgs, matches: &ArgMatches) -> Result<(), CliFailu
             ("dump_moves", "dump-moves"),
         ]
         .into_iter()
-        .filter(|&(id, _)| matches.value_source(id) == Some(ValueSource::CommandLine))
+        .filter(|&(id, key)| {
+            key != action && matches.value_source(id) == Some(ValueSource::CommandLine)
+        })
         .min_by_key(|&(id, _)| matches.index_of(id));
         let message = match conflicting {
-            Some((_, other)) => Some(format!("--inspect-paint cannot be combined with --{other}")),
-            None if !has_input => {
-                Some("--inspect-paint needs an input file or --load-assemble-list".to_owned())
-            }
+            Some((_, other)) => Some(format!("--{action} cannot be combined with --{other}")),
+            None if !has_input => Some(format!(
+                "--{action} needs an input file or --load-assemble-list"
+            )),
             None => None,
         };
         if let Some(message) = message {
@@ -41,7 +52,7 @@ pub(super) fn run(args: &SliceArgs, matches: &ArgMatches) -> Result<(), CliFailu
             std::process::exit(-2);
         }
     }
-    if !args.inspect_paint && (args.export_stl || args.export_3mf.is_some()) {
+    if action.is_none() && (args.export_stl || args.export_3mf.is_some()) {
         return Err(
             io::Error::new(io::ErrorKind::Unsupported, "model export is not supported").into(),
         );
@@ -82,7 +93,19 @@ pub(super) fn run(args: &SliceArgs, matches: &ArgMatches) -> Result<(), CliFailu
         };
         let model =
             inspection::load(&bytes, &name, &overrides, &args.transforms).map_err(map_error)?;
-        if args.inspect_paint {
+        if args.inspect_mesh {
+            let objects = model
+                .objects()
+                .iter()
+                .map(ares_core::ProjectObject::inspect_mesh)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(map_error)?;
+            print_json(json!({
+                "note": "Lengths in mm. bbox_object and the plane normals and centers are in object coordinates: the parts as currently transformed, without the instance transformation. --ground-face-normal and --ground-face-point take values in these coordinates. area_mm2 uses instance 0's scale, bbox_world is instance 0 on the plate.",
+                "objects": objects,
+                "sources": [source],
+            }))?;
+        } else if args.inspect_paint {
             let (objects, summary) = model.inspect_paint().map_err(map_error)?;
             print_json(json!({
                 "frame": "mesh_local",

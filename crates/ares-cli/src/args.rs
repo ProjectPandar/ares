@@ -16,7 +16,7 @@ pub(crate) enum Commands {
 }
 
 #[derive(Parser)]
-#[command(group(clap::ArgGroup::new("inspection").args(["inspect_paint", "info"]).multiple(true)))]
+#[command(group(clap::ArgGroup::new("inspection").args(["inspect_mesh", "inspect_paint", "info"]).multiple(true)))]
 pub(crate) struct SliceArgs {
     /// Complete preset catalog supplied explicitly for project-derived refresh
     #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
@@ -76,6 +76,9 @@ pub(crate) struct SliceArgs {
     #[arg(long)]
     pub(crate) progress: bool,
 
+    /// Print model bounds and lay-on-face candidates as JSON without slicing
+    #[arg(long)]
+    pub(crate) inspect_mesh: bool,
     /// Print per-volume facet paint statistics as JSON without slicing
     #[arg(long)]
     pub(crate) inspect_paint: bool,
