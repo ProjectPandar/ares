@@ -162,7 +162,7 @@ fn compare_core_stream(cli: &[u8], root: &Path) {
     assert!(output.gcode == cli, "raw core API != CLI: {root:?}");
 }
 
-fn outputs(work: &Path, exit: i32) -> (Option<Vec<u8>>, Vec<u8>) {
+pub(super) fn outputs(work: &Path, exit: i32) -> (Option<Vec<u8>>, Vec<u8>) {
     let stream = fs::read(work.join("plate_1.gcode"));
     if exit != 0 {
         assert_eq!(

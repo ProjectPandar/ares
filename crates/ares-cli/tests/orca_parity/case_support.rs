@@ -15,6 +15,9 @@ pub(crate) mod vendor_inventory;
 #[path = "cli_project_transforms.rs"]
 mod cli_project_transforms;
 
+#[path = "cli_object_selection.rs"]
+mod cli_object_selection;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
