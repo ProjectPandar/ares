@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use ares_core::{CliProjectTransforms, CliVolumeTransform};
+use clap::{ArgMatches, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "ares")]
@@ -30,6 +31,17 @@ pub(crate) struct SliceArgs {
     /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
     #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
     pub(crate) orient: i32,
+    /// Arrange the project: 0 disables, 1 forces, other integers retain automatic eligibility
+    #[arg(long, allow_hyphen_values = true)]
+    arrange: Vec<i32>,
+    /// Scale project volumes by this factor
+    #[arg(long, allow_hyphen_values = true)]
+    scale: Vec<f64>,
+    /// Rotate project volumes around Z by this angle in degrees
+    #[arg(long, allow_hyphen_values = true)]
+    rotate: Vec<f64>,
+    #[arg(skip)]
+    pub(crate) transforms: CliProjectTransforms,
     /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
     #[arg(long)]
     pub(crate) resources_dir: Option<PathBuf>,
@@ -56,4 +68,30 @@ pub(crate) struct SliceArgs {
     #[arg(short = 'o')]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+}
+
+impl SliceArgs {
+    pub(crate) fn parse_transforms(&mut self, args: &ArgMatches) {
+        // Native retains the first occurrence of each key in the action order,
+        // and applies the final scalar value of that key.
+        let mut ordered = [
+            (
+                args.index_of("scale"),
+                self.scale.last().copied().map(CliVolumeTransform::Scale),
+            ),
+            (
+                args.index_of("rotate"),
+                self.rotate.last().copied().map(CliVolumeTransform::Rotate),
+            ),
+        ];
+        ordered.sort_by_key(|(index, _)| *index);
+        self.transforms = CliProjectTransforms {
+            volume: ordered
+                .into_iter()
+                .filter_map(|(_, action)| action)
+                .collect(),
+            orient: self.orient == 1,
+            arrange: self.arrange.last().copied(),
+        };
+    }
 }

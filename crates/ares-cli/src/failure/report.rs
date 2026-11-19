@@ -28,6 +28,52 @@ impl CliFailure {
     }
 }
 
+impl CliFailure {
+    /// `cli_report_config_substitutions` (`OrcaSlicer.cpp:520-534`) after the 3MF load (`:1992`):
+    /// the stderr lines precede the family's own, and result.json records each substitution. The
+    /// post_process rejection (`:1806`) comes before the report and carries none.
+    pub(crate) fn with_config_substitutions(
+        mut self,
+        file: &str,
+        substitutions: Vec<ares_core::ConfigSubstitution>,
+    ) -> Self {
+        if let Self::Family(family) = &mut self
+            && family.return_code != -19
+        {
+            family.stderr = substitution_warnings(file, &substitutions) + &family.stderr;
+            #[cfg(target_os = "linux")]
+            {
+                family.warnings = substitutions
+                    .into_iter()
+                    .map(
+                        |substitution| crate::result_json::CliWarning::ConfigValueSubstituted {
+                            file: file.to_owned(),
+                            substitution,
+                        },
+                    )
+                    .collect();
+            }
+        }
+        self
+    }
+}
+
+/// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
+pub(crate) fn substitution_warnings(
+    file: &str,
+    substitutions: &[ares_core::ConfigSubstitution],
+) -> String {
+    substitutions
+        .iter()
+        .map(|substitution| {
+            format!(
+                "warning: {file}: value \"{}\" for {} is not valid, using \"{}\" instead\n",
+                substitution.old_value, substitution.key, substitution.new_value
+            )
+        })
+        .collect()
+}
+
 impl FamilyFailure {
     pub(super) fn flush_and_exit(self) -> ! {
         #[cfg(target_os = "linux")]

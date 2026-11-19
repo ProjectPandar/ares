@@ -202,14 +202,14 @@ pub(super) fn get_offset(transform: Transform3d) -> [f64; 3] {
 
 /// `Transformation::get_scaling_factor` (`Geometry.cpp:513-517`): the extracted scale's diagonal,
 /// without signs.
-pub(super) fn scaling_factor(transform: Transform3d) -> [f64; 3] {
+pub(crate) fn scaling_factor(transform: Transform3d) -> [f64; 3] {
     let scale = rotation_scale(transform).1;
     [0, 1, 2].map(|axis| scale[axis][axis].abs())
 }
 
 /// `Transformation::set_scaling_factor(const Vec3d&)` (`Geometry.cpp:528-535`):
 /// `extract_rotation_matrix(m) * scale_transform(scaling_factor)`, the offset kept.
-pub(super) fn with_scaling_factor(transform: Transform3d, scaling_factor: [f64; 3]) -> Transform3d {
+pub(crate) fn with_scaling_factor(transform: Transform3d, scaling_factor: [f64; 3]) -> Transform3d {
     let rotation = rotation_scale(transform).0;
     let scale = linear(scale_transform(scaling_factor));
     affine(multiply(rotation, scale), offset(transform))

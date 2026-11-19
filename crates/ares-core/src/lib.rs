@@ -217,8 +217,9 @@ pub use project::{
     project_config_substitutions,
 };
 pub use project_slice::{
-    CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
-    slice_project_plate_processed_validated, slice_project_plate_validated,
+    CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine, CliVolumeTransform,
+    SlicedPlate, slice_cli_project_plate_validated, slice_project_plate_processed_validated,
+    slice_project_plate_validated,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
@@ -275,6 +276,9 @@ pub enum SliceError {
     /// empty or has no object fully inside it. The payload keeps the
     /// model-read detail for the stderr channel.
     NoSuitableObjects(String),
+    NoSuitableObjectsAfterCliArrange,
+    InvalidCliScale(f32),
+    CliArrangeFailed,
     /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
     /// embedded in the 3MF/config fail validation; the payload is the
     /// `key: detail` block for the stderr channel.
@@ -345,6 +349,9 @@ impl fmt::Display for SliceError {
                 "The selected printer is not compatible with the process preset in the 3mf.",
             ),
             Self::NoSuitableObjects(message) => f.write_str(message),
+            Self::NoSuitableObjectsAfterCliArrange => f.write_str(CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE),
+            Self::InvalidCliScale(ratio) => write!(f, "Invalid params:invalid scale ratio {ratio}"),
+            Self::CliArrangeFailed => f.write_str("An error occurred when auto-arranging object(s)."),
             Self::InvalidValuesInProject(message) => f.write_str(message),
             Self::Validate { message, .. }
             | Self::SequentialPrintCollision { message, .. }

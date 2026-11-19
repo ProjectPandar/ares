@@ -69,34 +69,6 @@ impl CliFailure {
         self
     }
 
-    /// `cli_report_config_substitutions` (`OrcaSlicer.cpp:520-534`) after the 3MF load (`:1992`):
-    /// the stderr lines precede the family's own, and result.json records each substitution. The
-    /// post_process rejection (`:1806`) comes before the report and carries none.
-    pub(super) fn with_config_substitutions(
-        mut self,
-        file: &str,
-        substitutions: Vec<ares_core::ConfigSubstitution>,
-    ) -> Self {
-        if let Self::Family(family) = &mut self
-            && family.return_code != -19
-        {
-            family.stderr = substitution_warnings(file, &substitutions) + &family.stderr;
-            #[cfg(target_os = "linux")]
-            {
-                family.warnings = substitutions
-                    .into_iter()
-                    .map(
-                        |substitution| crate::result_json::CliWarning::ConfigValueSubstituted {
-                            file: file.to_owned(),
-                            substitution,
-                        },
-                    )
-                    .collect();
-            }
-        }
-        self
-    }
-
     pub(super) fn report(self) -> ! {
         match self {
             Self::Family(failure) => failure.flush_and_exit(),
@@ -111,21 +83,7 @@ impl CliFailure {
 mod report;
 pub(crate) mod slicing;
 
-/// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
-pub(super) fn substitution_warnings(
-    file: &str,
-    substitutions: &[ares_core::ConfigSubstitution],
-) -> String {
-    substitutions
-        .iter()
-        .map(|substitution| {
-            format!(
-                "warning: {file}: value \"{}\" for {} is not valid, using \"{}\" instead\n",
-                substitution.old_value, substitution.key, substitution.new_value
-            )
-        })
-        .collect()
-}
+pub(super) use report::substitution_warnings;
 
 /// Exhaustive variant → CLI code mapping (`Utils.hpp:24-59`). The four
 /// family variants carry the result.json payload; everything else keeps
@@ -212,7 +170,28 @@ pub(super) fn slice_error_to_failure(
         // index+1 to record_exit_reson, and :552 writes that plate_id.
         // The progress callback's m_plate_index (:305,:319) is separate.
         // The reason is cli_errors[CLI_NO_SUITABLE_OBJECTS] (:220).
-        SliceError::NoSuitableObjects(_) => family(
+        SliceError::InvalidCliScale(_) | SliceError::CliArrangeFailed => {
+            let invalid_scale = matches!(error, SliceError::InvalidCliScale(_));
+            family(
+                if invalid_scale { -2 } else { -21 },
+                #[cfg(target_os = "linux")]
+                0,
+                #[cfg(target_os = "linux")]
+                0.0,
+                #[cfg(target_os = "linux")]
+                0,
+                #[cfg(target_os = "linux")]
+                0.0,
+                #[cfg(target_os = "linux")]
+                if invalid_scale {
+                    "Invalid parameters to the slicer."
+                } else {
+                    "An error occurred when auto-arranging object(s)."
+                },
+                format!("{error}\n"),
+            )
+        }
+        SliceError::NoSuitableObjects(_) | SliceError::NoSuitableObjectsAfterCliArrange => family(
             -50,
             #[cfg(target_os = "linux")]
             selected_plate_index,
@@ -223,8 +202,16 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             0.0,
             #[cfg(target_os = "linux")]
-            "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume.",
-            String::new(),
+            if matches!(error, SliceError::NoSuitableObjectsAfterCliArrange) {
+                ares_core::CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE
+            } else {
+                "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
+            },
+            if matches!(error, SliceError::NoSuitableObjectsAfterCliArrange) {
+                format!("{error}\n")
+            } else {
+                String::new()
+            },
         ),
         SliceError::InvalidValuesInProject(detail) => family(
             -18,

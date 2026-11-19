@@ -12,12 +12,18 @@ use std::io;
 use std::path::Path;
 
 use args::{Cli, Commands, SliceArgs};
-use clap::Parser;
+use clap::{CommandFactory, FromArgMatches};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let Commands::Slice(args) = Cli::parse().command;
+    let matches = Cli::command().get_matches();
+    let Cli {
+        command: Commands::Slice(mut args),
+    } = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
+    if let Some((_, slice)) = matches.subcommand() {
+        args.parse_transforms(slice);
+    }
     if let Err(failure) = run_slice(args).await {
         failure.report();
     }
@@ -31,6 +37,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if extension.as_deref() != Some("3mf") && args.transforms.has_project_actions() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--arrange, --scale and --rotate require 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() != Some("3mf") && args.dump_moves.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -129,7 +142,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     let processed = match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            transforms: &args.transforms,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: true,
@@ -180,7 +193,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            transforms: &args.transforms,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: false,

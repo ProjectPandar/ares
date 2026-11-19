@@ -96,7 +96,7 @@ async fn profile_overlay_default_gcodes() {
     let ares = ares_core::slice_with_load_settings(
         input,
         LoadSettingsSliceRequest {
-            orient: false,
+            transforms: &ares_core::CliProjectTransforms::NONE,
             filename: "input.3mf",
             catalog_json: None,
             uptodate: false,

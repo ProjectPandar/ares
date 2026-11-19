@@ -117,7 +117,49 @@ fn verify(name: &str, plate: Option<&str>, exit: i32, flags: &[&str]) {
     if let (Some(expected), Some(actual)) = (&native[0].0, &actual.0) {
         compare_ordered_bytes_generator_only(expected, actual)
             .unwrap_or_else(|error| panic!("{root:?}: {error}"));
+        if name == "arrange_after_volume_transforms" {
+            compare_core_stream(actual, &root);
+        }
     }
+}
+
+fn compare_core_stream(cli: &[u8], root: &Path) {
+    use ares_core::{
+        CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine, CliVolumeTransform,
+        ConfigOverrides, GenerationMetadata, SlicedPlate, SlicerContext, UpwardMachineInput,
+    };
+
+    let transforms = CliProjectTransforms {
+        volume: vec![
+            CliVolumeTransform::Scale(1.2),
+            CliVolumeTransform::Rotate(45.0),
+        ],
+        arrange: Some(1),
+        ..CliProjectTransforms::NONE
+    };
+    let output = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(ares_core::slice_cli_project_plate_validated(
+            PROJECT,
+            CliProjectSliceRequest {
+                plate: None,
+                overrides: &ConfigOverrides::default(),
+                record_moves: false,
+                transforms: &transforms,
+                upward: CliUpwardMachine {
+                    source: None,
+                    input: UpwardMachineInput::Embedded,
+                    report: &mut Vec::new(),
+                },
+                sliced_plate: &mut SlicedPlate::default(),
+            },
+            GenerationMetadata::default(),
+            SlicerContext::new(0),
+        ))
+        .unwrap();
+    fs::write(root.join("core.gcode"), &output.gcode).unwrap();
+    assert!(output.gcode == cli, "raw core API != CLI: {root:?}");
 }
 
 fn outputs(work: &Path, exit: i32) -> (Option<Vec<u8>>, Vec<u8>) {

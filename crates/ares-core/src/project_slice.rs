@@ -36,12 +36,14 @@ pub(crate) use perimeters::flow::skirt_flow_width_spacing;
 mod planning;
 mod print_height;
 pub(crate) use print_height::validate as validate_print_height;
+mod cli_transforms;
 mod pre_closing_unions;
 mod prepare_infill;
 mod pressure_equalizer;
 mod profile;
 mod profile_entry;
 mod validated;
+pub use cli_transforms::{CliProjectTransforms, CliVolumeTransform};
 pub(crate) use profile_entry::validate_profile_source;
 pub(crate) use profile_entry::{center_profile_project, load_and_place};
 
@@ -125,7 +127,7 @@ pub async fn slice_project_plate(
             overrides,
             validate_print: false,
             validate_config: true,
-            orient: false,
+            transforms: &crate::CliProjectTransforms::NONE,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
@@ -155,7 +157,7 @@ pub async fn slice_project_plate_processed(
             overrides,
             validate_print: false,
             validate_config: true,
-            orient: false,
+            transforms: &crate::CliProjectTransforms::NONE,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,

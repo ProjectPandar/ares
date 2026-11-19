@@ -123,7 +123,10 @@ async fn fresh_stl_loaded_presets_apply_orientation_like_native() {
                 plate: None,
                 overrides: &overrides,
                 placement: ares_core::Placement::None,
-                orient,
+                transforms: &ares_core::CliProjectTransforms {
+                    orient,
+                    ..Default::default()
+                },
                 sliced_plate: &mut report,
             },
             ares_core::GenerationMetadata::default(),

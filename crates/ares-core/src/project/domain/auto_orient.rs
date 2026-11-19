@@ -1,11 +1,66 @@
 //! `ModelObject::rotate`, `ModelVolume::rotate`, `center_around_origin`,
 //! `ensure_on_bed` (`Model.cpp:1883-1921,1967-1980,3098-3101`).
-use super::{Point3d, Project, ProjectVolumeType};
-use crate::plater::transformation::{rotation, with_rotation};
+use super::{Point3d, Project, ProjectObject, ProjectVolumeType};
+use crate::plater::transformation::{rotation, scaling_factor, with_rotation, with_scaling_factor};
 
 impl Project {
     pub(crate) fn apply_object_orientation(&mut self, index: usize, delta: [f64; 3]) {
         let object = &mut self.objects[index];
+        object.rotate_volumes_and_center(delta);
+        // The legacy build-item carrier is object-wide: any auto_drop="0" wins.
+        if !object.instances.iter().all(|instance| instance.auto_drop) {
+            return;
+        }
+        let mut min_z = f64::INFINITY;
+        for instance in &object.instances {
+            for volume in object
+                .volumes
+                .iter()
+                .filter(|volume| volume.volume_type == ProjectVolumeType::ModelPart)
+            {
+                let transform = instance.transform.then(volume.transform);
+                min_z = volume
+                    .mesh
+                    .vertices()
+                    .iter()
+                    .map(|vertex| transform.transform_point(*vertex).z)
+                    .fold(min_z, f64::min);
+            }
+        }
+        for instance in object
+            .instances
+            .iter_mut()
+            .chain(&mut object.import_instances)
+        {
+            instance.transform = instance
+                .transform
+                .pretranslated(Point3d::new(0., 0., -min_z));
+        }
+    }
+
+    pub(crate) fn scale_cli_volumes(&mut self, ratio: f64) {
+        for object in &mut self.objects {
+            for volume in &mut object.volumes {
+                let transform = volume.transform;
+                volume.transform = with_scaling_factor(
+                    transform,
+                    scaling_factor(transform).map(|value| value * ratio),
+                );
+            }
+        }
+    }
+
+    pub(crate) fn rotate_cli_volumes(&mut self, angle: f64) {
+        let delta = crate::plater::angle_axis_euler(angle, [0.0, 0.0, 1.0]);
+        for object in &mut self.objects {
+            object.rotate_volumes_and_center(delta);
+        }
+    }
+}
+
+impl ProjectObject {
+    fn rotate_volumes_and_center(&mut self, delta: [f64; 3]) {
+        let object = self;
         for volume in &mut object.volumes {
             let angles = rotation(volume.transform);
             volume.transform = with_rotation(
@@ -36,35 +91,6 @@ impl Project {
         );
         for volume in &mut object.volumes {
             volume.transform = volume.transform.pretranslated(shift);
-        }
-        // The legacy build-item carrier is object-wide: any auto_drop="0" wins.
-        if !object.instances.iter().all(|instance| instance.auto_drop) {
-            return;
-        }
-        let mut min_z = f64::INFINITY;
-        for instance in &object.instances {
-            for volume in object
-                .volumes
-                .iter()
-                .filter(|volume| volume.volume_type == ProjectVolumeType::ModelPart)
-            {
-                let transform = instance.transform.then(volume.transform);
-                min_z = volume
-                    .mesh
-                    .vertices()
-                    .iter()
-                    .map(|vertex| transform.transform_point(*vertex).z)
-                    .fold(min_z, f64::min);
-            }
-        }
-        for instance in object
-            .instances
-            .iter_mut()
-            .chain(&mut object.import_instances)
-        {
-            instance.transform = instance
-                .transform
-                .pretranslated(Point3d::new(0., 0., -min_z));
         }
     }
 }

@@ -187,7 +187,7 @@ pub(super) fn rotation_from_two_vectors(
     (axis, angle, matrix)
 }
 
-pub(super) fn angle_axis_euler(angle: f64, axis: [f64; 3]) -> [f64; 3] {
+pub(crate) fn angle_axis_euler(angle: f64, axis: [f64; 3]) -> [f64; 3] {
     let angles = euler_angles_210(Quaternion::from_angle_axis(angle, axis).to_rotation_matrix());
     [angles[2], angles[1], angles[0]]
 }

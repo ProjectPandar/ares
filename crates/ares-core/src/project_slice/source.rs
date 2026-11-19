@@ -14,7 +14,7 @@ pub(crate) struct ProjectSource<'a> {
     /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
-    pub(crate) orient: bool,
+    pub(crate) transforms: &'a crate::CliProjectTransforms,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
     /// The CLI's success report values, filled once the plate is set up.
     pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
@@ -123,23 +123,12 @@ impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
 
 impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
     fn into_source(self) -> ProjectSource<'a> {
-        ProjectSource {
-            input: ProjectInput::Bytes(self.as_ref()),
-            plate: None,
-            profile: None,
-            refresh: None,
-            overrides: &EMPTY_OVERRIDES,
-            validate_print: false,
-            validate_config: true,
-            orient: false,
-            upward: None,
-            sliced_plate: None,
-            edits: &crate::plater::NO_EDITS,
-        }
+        ProjectSource::from(self.as_ref())
     }
 }
 
 static EMPTY_OVERRIDES: ConfigOverrides = ConfigOverrides::empty();
+static NO_TRANSFORMS: crate::CliProjectTransforms = crate::CliProjectTransforms::NONE;
 
 impl<'a> From<&'a [u8]> for ProjectSource<'a> {
     fn from(bytes: &'a [u8]) -> Self {
@@ -151,7 +140,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,
-            orient: false,
+            transforms: &NO_TRANSFORMS,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,

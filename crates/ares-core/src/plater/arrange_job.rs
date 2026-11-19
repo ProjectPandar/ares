@@ -122,6 +122,15 @@ impl PlaterSession {
         scope: ArrangeScope,
         settings: ArrangeSettings,
     ) -> Result<(), SliceError> {
+        self.arrange_job(scope, settings, ArrangeOrigin::Gui)
+    }
+
+    fn arrange_job(
+        &mut self,
+        scope: ArrangeScope,
+        settings: ArrangeSettings,
+        origin: ArrangeOrigin,
+    ) -> Result<(), SliceError> {
         let current = match scope {
             ArrangeScope::All => None,
             ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => {
@@ -131,7 +140,7 @@ impl PlaterSession {
                 // nothing, a locked one warns and arranges nothing. The warning notification is
                 // returned as the error.
                 let target = &self.plates.plates[plate];
-                if !target.instances.is_empty() && target.locked {
+                if origin == ArrangeOrigin::Gui && !target.instances.is_empty() && target.locked {
                     return Err(SliceError::InvalidInput(LOCKED_PLATE.to_owned()));
                 }
                 Some(plate)
@@ -145,19 +154,23 @@ impl PlaterSession {
         let project_settings = self.project.settings();
         let plate_sequence =
             current.map(|plate| prepare::real_print_sequence(&self.project, &self.plates, plate));
-        let mut params = params::arrange_params(
-            project_settings,
-            settings,
-            self.current_print_skirt_offset()?,
-            plate_sequence,
-        );
+        let skirt_offset = if origin == ArrangeOrigin::Gui {
+            self.current_print_skirt_offset()?
+        } else {
+            0.0
+        };
+        let mut params =
+            params::arrange_params(project_settings, settings, skirt_offset, plate_sequence);
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
         let zones = self.plates.imex_zones(&self.project, &full);
         let (mut prepared, uncompatible) = match current {
             None => {
-                let uncompatible =
-                    prepare::lock_uncompatible_plates(&self.project, &mut self.plates);
+                let uncompatible = if origin == ArrangeOrigin::Gui {
+                    prepare::lock_uncompatible_plates(&self.project, &mut self.plates)
+                } else {
+                    Vec::new()
+                };
                 (self.prepare_all(&full), uncompatible)
             }
             Some(plate) => (self.prepare_partplate(plate, &full), Vec::new()),
@@ -178,10 +191,11 @@ impl PlaterSession {
         unselected.extend(exclusion_items(project_settings, &full, beds, 0));
         // check_unprintable (`ArrangeJob.cpp:697-720`)
         let printable_height = f64::from(params.printable_height);
-        let (kept, too_small_or_tall): (Vec<_>, Vec<_>) = prepared
-            .selected
-            .into_iter()
-            .partition(|(_, ap)| !(ap.poly.area() < 0.001 || ap.height > printable_height));
+        let (kept, too_small_or_tall): (Vec<_>, Vec<_>) =
+            prepared.selected.into_iter().partition(|(_, ap)| {
+                origin == ArrangeOrigin::Cli
+                    || !(ap.poly.area() < 0.001 || ap.height > printable_height)
+            });
         prepared.unprintable.extend(too_small_or_tall);
         // process (`ArrangeJob.cpp:722-805`)
         let (keys, mut items): (Vec<_>, Vec<_>) = kept.into_iter().unzip();
@@ -214,6 +228,12 @@ impl PlaterSession {
         };
         arrange(&mut items, &unselected, &bed, &params);
         imex.finish(&mut items, &before, &unselected, &params);
+        if origin == ArrangeOrigin::Cli
+            && current.is_some()
+            && items.iter().any(|ap| ap.bed_idx != 0)
+        {
+            return Err(SliceError::CliArrangeFailed);
+        }
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
         // `finalize` would create a plate on an emptied position list: refused before it changes
@@ -228,6 +248,7 @@ impl PlaterSession {
             for &plate in &uncompatible {
                 self.plates.plates[plate].locked = false;
             }
+
             return Err(error);
         }
         let plates_before = self.plates.plates.len();
@@ -236,4 +257,36 @@ impl PlaterSession {
         self.wipe_tower = Some(positions);
         Ok(())
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ArrangeOrigin {
+    Gui,
+    Cli,
+}
+
+pub(crate) fn arrange_cli_project(
+    project: crate::Project,
+    plate: Option<u32>,
+) -> Result<crate::Project, SliceError> {
+    let project = super::initialize_slice_plates(project);
+    let scope = match plate {
+        None => ArrangeScope::All,
+        Some(id) => ArrangeScope::CurrentPlate(
+            project
+                .plates()
+                .iter()
+                .position(|p| p.id() == id)
+                .ok_or_else(|| SliceError::InvalidInput(format!("project has no plate {id}")))?,
+        ),
+    };
+    let mut session = PlaterSession::with_project(Vec::new(), project);
+    let settings = ArrangeSettings {
+        avoid_extrusion_cali_region: false,
+        ..session.default_arrange_settings()
+    };
+    session.arrange_job(scope, settings, ArrangeOrigin::Cli)?;
+    let edits = session.edits();
+    session.project.apply_plater_edits(&edits);
+    Ok(session.project)
 }

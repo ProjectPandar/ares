@@ -68,9 +68,7 @@ pub(super) fn prepare_project_source(
         let filament_count = project.cli_filament_count();
         project.initialize_cli_loaded_project_config(filament_count);
     }
-    if source.orient {
-        crate::plater::apply_cli_orientation(&mut project, source.plate)?;
-    }
+    let project = source.transforms.apply(project, source.plate)?;
     prepare_loaded_project_slice_with_validation(
         project,
         source.plate,
@@ -78,6 +76,9 @@ pub(super) fn prepare_project_source(
         source.validate_print,
         Some((preparation, source.overrides)),
     )
+    .map_err(|error| {
+        super::cli_transforms::with_arrange_diagnostic(error, source.transforms.forces_arrange())
+    })
 }
 
 pub(super) fn prepare_loaded_project_slice_with_validation(

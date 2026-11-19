@@ -38,7 +38,7 @@ pub async fn slice_plater_plate(
             overrides: slice.overrides,
             validate_print: slice.validate_print,
             validate_config: false,
-            orient: false,
+            transforms: &crate::CliProjectTransforms::NONE,
             upward: None,
             sliced_plate: None,
             edits: &edits,

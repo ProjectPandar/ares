@@ -105,7 +105,7 @@ async fn compare_slice(case: &str) {
     let actual = slice_with_load_settings(
         &input,
         LoadSettingsSliceRequest {
-            orient: false,
+            transforms: &ares_core::CliProjectTransforms::NONE,
             filename: &format!("{case}.stl"),
             catalog_json: None,
             uptodate: false,

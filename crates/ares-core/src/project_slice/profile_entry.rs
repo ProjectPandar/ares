@@ -112,8 +112,7 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (mut loaded, preparation) =
-        load_and_place_with_preparation(project, profile, upward_report)?;
+    let (loaded, preparation) = load_and_place_with_preparation(project, profile, upward_report)?;
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
     // gate fires after load and before parameter validation —
     // loaded-names adjudication for the `--load-settings` composite
@@ -134,9 +133,7 @@ pub(super) fn prepare_profile_slice(
             project.validate_print,
         )?;
     }
-    if project.orient {
-        crate::plater::apply_cli_orientation(&mut loaded, project.plate)?;
-    }
+    let loaded = project.transforms.apply(loaded, project.plate)?;
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,
@@ -152,6 +149,9 @@ pub(super) fn prepare_profile_slice(
         project.validate_print,
         Some((preparation, project.overrides)),
     )
+    .map_err(|error| {
+        super::cli_transforms::with_arrange_diagnostic(error, project.transforms.forces_arrange())
+    })
 }
 
 /// `BuildVolume::bed_center()` (`BuildVolume.hpp:83`): the printable-area

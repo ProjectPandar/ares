@@ -15,6 +15,7 @@ mod current_plate;
 mod delete_object;
 mod edits;
 mod eigen;
+pub(crate) use eigen::angle_axis_euler;
 mod initial_plate;
 mod instances;
 mod min_sphere;
@@ -32,6 +33,7 @@ mod stl_files;
 pub use stl_files::{StlFile, StlImportOptions};
 pub(crate) mod transformation;
 
+pub(crate) use arrange_job::arrange_cli_project;
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;
 pub(crate) use initial_plate::initialize_slice_plates;

@@ -21,7 +21,7 @@ pub struct LoadSettingsSliceRequest<'a> {
     pub plate: Option<u32>,
     pub overrides: &'a crate::ConfigOverrides,
     pub placement: Placement,
-    pub orient: bool,
+    pub transforms: &'a crate::CliProjectTransforms,
     /// Filled with the plate's success report values (`crate::SlicedPlate`).
     pub sliced_plate: &'a mut crate::SlicedPlate,
 }
@@ -55,12 +55,18 @@ fn with_load_settings_source<T>(
         plate,
         overrides,
         placement,
-        orient,
+        transforms,
         sliced_plate,
     } = request;
     if filename.is_empty() {
         return Err(SliceError::InvalidInput(
             "model filename is required".to_owned(),
+        ));
+    }
+    let is_3mf = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
+    if !is_3mf && transforms.has_project_actions() {
+        return Err(SliceError::InvalidInput(
+            "--arrange, --scale and --rotate require 3MF project input".into(),
         ));
     }
     let request = LoadSettingsRequest {
@@ -74,7 +80,6 @@ fn with_load_settings_source<T>(
     // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
     // in the 3MF load block, so the composite entry validates 3MF inputs
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
-    let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
         input: ProjectInput::Bytes(input),
         plate,
@@ -93,13 +98,13 @@ fn with_load_settings_source<T>(
                 }
             }),
             placement,
-            validate_print,
+            validate_print: is_3mf,
         }),
         refresh: None,
         overrides,
-        validate_print,
+        validate_print: is_3mf,
         validate_config: true,
-        orient,
+        transforms,
         upward: None,
         sliced_plate: Some(sliced_plate),
         edits: &crate::plater::NO_EDITS,

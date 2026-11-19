@@ -52,7 +52,7 @@ pub(super) async fn slice(
     let gcode = match ares_core::slice_with_load_settings(
         input,
         ares_core::LoadSettingsSliceRequest {
-            orient: args.orient == 1,
+            transforms: &args.transforms,
             filename,
             catalog_json: catalog.as_deref(),
             uptodate: args.uptodate,

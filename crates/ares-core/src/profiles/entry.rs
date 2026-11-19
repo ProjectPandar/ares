@@ -77,7 +77,7 @@ pub async fn slice_with_profiles_validated(
         input,
         request,
         metadata,
-        (false, false, None, None),
+        (false, &crate::CliProjectTransforms::NONE, None, None),
         context,
     )
     .map(|output| output.gcode)
@@ -89,13 +89,19 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
+    slice_validated_profile_source(
+        input,
+        request,
+        metadata,
+        (true, &crate::CliProjectTransforms::NONE, None, None),
+        context,
+    )
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
 pub struct CliProfileSliceRequest<'a> {
     pub profile: ProfileSliceRequest<'a>,
-    pub orient: bool,
+    pub transforms: &'a crate::CliProjectTransforms,
     pub record_moves: bool,
     pub sliced_plate: &'a mut crate::SlicedPlate,
     pub upward: crate::CliUpwardMachine<'a>,
@@ -111,7 +117,7 @@ pub async fn slice_cli_with_profiles_validated(
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     let CliProfileSliceRequest {
         profile,
-        orient,
+        transforms,
         record_moves,
         sliced_plate,
         upward,
@@ -121,7 +127,7 @@ pub async fn slice_cli_with_profiles_validated(
         input,
         profile,
         metadata,
-        (record_moves, orient, Some(sliced_plate), Some(upward)),
+        (record_moves, transforms, Some(sliced_plate), Some(upward)),
         context,
     )
 }
@@ -130,9 +136,9 @@ fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    (record_moves, orient, sliced_plate, upward): (
+    (record_moves, transforms, sliced_plate, upward): (
         bool,
-        bool,
+        &crate::CliProjectTransforms,
         Option<&mut crate::SlicedPlate>,
         Option<crate::CliUpwardMachine<'_>>,
     ),
@@ -141,7 +147,7 @@ fn slice_validated_profile_source(
     request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |source| {
         let mut source = ProjectSource {
-            orient,
+            transforms,
             sliced_plate,
             upward,
             ..source
@@ -277,7 +283,7 @@ pub(crate) fn with_edited_profile_source<T>(
             overrides,
             validate_print: false,
             validate_config: true,
-            orient: false,
+            transforms: &crate::CliProjectTransforms::NONE,
             upward: None,
             sliced_plate: None,
             edits,
@@ -302,7 +308,7 @@ pub(crate) fn with_edited_profile_source<T>(
         overrides,
         validate_print: false,
         validate_config: true,
-        orient: false,
+        transforms: &crate::CliProjectTransforms::NONE,
         upward: None,
         sliced_plate: None,
         edits,
