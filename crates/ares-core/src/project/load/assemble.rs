@@ -120,14 +120,18 @@ fn project_domain_with_budget(
             .get(&identity)
             .map_or(0, |builder| builder.instances.len() as u32);
         let loaded_label_id = metadata.loaded_labels.get(&(item.object_id, instance_id));
+        let source_settings = metadata
+            .object_settings
+            .get(&item.object_id)
+            .map(|index| &settings.objects[*index]);
+        // The current object attribute takes precedence over legacy build-item flags.
+        let auto_drop = source_settings
+            .and_then(|settings| settings.auto_drop)
+            .unwrap_or(item.auto_drop);
 
         if let std::collections::btree_map::Entry::Vacant(entry) = builders.entry(identity.clone())
         {
             object_ids.add_object();
-            let source_settings = metadata
-                .object_settings
-                .get(&item.object_id)
-                .map(|index| &settings.objects[*index]);
             let object_ordinal = order.len() + 1;
             let object_metadata = object_metadata(
                 source_settings,
@@ -155,13 +159,13 @@ fn project_domain_with_budget(
             Some(&label) => ProjectInstance::new(
                 [item.object_id, instance_id, label],
                 item.printable,
-                item.auto_drop,
+                auto_drop,
                 item.transform,
             ),
             None => ProjectInstance::unassigned(
                 [item.object_id, instance_id, allocated_label_id],
                 item.printable,
-                item.auto_drop,
+                auto_drop,
                 item.transform,
             ),
         };

@@ -40,6 +40,15 @@ pub(crate) struct SliceArgs {
     /// Rotate project volumes around Z by this angle in degrees
     #[arg(long, allow_hyphen_values = true)]
     rotate: Vec<f64>,
+    /// Rotate project volumes around X by this angle in degrees
+    #[arg(long, allow_hyphen_values = true)]
+    rotate_x: Vec<f64>,
+    /// Rotate project volumes around Y by this angle in degrees
+    #[arg(long, allow_hyphen_values = true)]
+    rotate_y: Vec<f64>,
+    /// Drop project objects with auto-drop enabled onto the bed after arrangement
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "1", value_parser = native_bool)]
+    ensure_on_bed: Vec<bool>,
     #[arg(skip)]
     pub(crate) transforms: CliProjectTransforms,
     /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
@@ -83,6 +92,20 @@ impl SliceArgs {
                 args.index_of("rotate"),
                 self.rotate.last().copied().map(CliVolumeTransform::Rotate),
             ),
+            (
+                args.index_of("rotate_x"),
+                self.rotate_x
+                    .last()
+                    .copied()
+                    .map(CliVolumeTransform::RotateX),
+            ),
+            (
+                args.index_of("rotate_y"),
+                self.rotate_y
+                    .last()
+                    .copied()
+                    .map(CliVolumeTransform::RotateY),
+            ),
         ];
         ordered.sort_by_key(|(index, _)| *index);
         self.transforms = CliProjectTransforms {
@@ -92,6 +115,16 @@ impl SliceArgs {
                 .collect(),
             orient: self.orient == 1,
             arrange: self.arrange.last().copied(),
+            ensure_on_bed: self.ensure_on_bed.last().copied().unwrap_or(false),
         };
+    }
+}
+
+// Config.cpp:1758–1785,1900–1906: normalize the scalar CLI bool spelling.
+fn native_bool(value: &str) -> Result<bool, String> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "" | "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+        _ => Err(format!("invalid boolean value: {value}")),
     }
 }

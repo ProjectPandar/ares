@@ -66,7 +66,8 @@ fn with_load_settings_source<T>(
     let is_3mf = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
     if !is_3mf && transforms.has_project_actions() {
         return Err(SliceError::InvalidInput(
-            "--arrange, --scale and --rotate require 3MF project input".into(),
+            "CLI volume transforms, arrangement and explicit grounding require 3MF project input"
+                .into(),
         ));
     }
     let request = LoadSettingsRequest {

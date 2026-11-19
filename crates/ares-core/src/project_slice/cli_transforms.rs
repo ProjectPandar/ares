@@ -5,6 +5,8 @@ use crate::{Project, SliceError};
 pub enum CliVolumeTransform {
     Scale(f64),
     Rotate(f64),
+    RotateX(f64),
+    RotateY(f64),
 }
 
 /// Model actions from `OrcaSlicer.cpp:5051–5153,5271–5288,5619–6100`.
@@ -13,6 +15,7 @@ pub struct CliProjectTransforms {
     pub volume: Vec<CliVolumeTransform>,
     pub orient: bool,
     pub arrange: Option<i32>,
+    pub ensure_on_bed: bool,
 }
 
 impl CliProjectTransforms {
@@ -21,10 +24,11 @@ impl CliProjectTransforms {
         volume: Vec::new(),
         orient: false,
         arrange: None,
+        ensure_on_bed: false,
     };
 
     pub fn has_project_actions(&self) -> bool {
-        self.arrange.is_some() || !self.volume.is_empty()
+        self.arrange.is_some() || !self.volume.is_empty() || self.ensure_on_bed
     }
 
     pub(super) fn apply(
@@ -32,17 +36,20 @@ impl CliProjectTransforms {
         mut project: Project,
         plate: Option<u32>,
     ) -> Result<Project, SliceError> {
-        if !self.volume.is_empty() {
+        if !self.volume.is_empty() || self.ensure_on_bed {
             project.prepare_import_scope(plate);
         }
         for &transform in &self.volume {
             match transform {
                 CliVolumeTransform::Scale(ratio) => scale_volumes(&mut project, ratio)?,
-                CliVolumeTransform::Rotate(degrees) if !degrees.is_finite() => {
-                    return Err(SliceError::InvalidInput("rotation must be finite".into()));
-                }
                 CliVolumeTransform::Rotate(degrees) => {
-                    project.rotate_cli_volumes(degrees.to_radians());
+                    rotate_volumes(&mut project, degrees, [0.0, 0.0, 1.0])?;
+                }
+                CliVolumeTransform::RotateX(degrees) => {
+                    rotate_volumes(&mut project, degrees, [1.0, 0.0, 0.0])?;
+                }
+                CliVolumeTransform::RotateY(degrees) => {
+                    rotate_volumes(&mut project, degrees, [0.0, 1.0, 0.0])?;
                 }
             }
         }
@@ -51,7 +58,10 @@ impl CliProjectTransforms {
         }
         if self.forces_arrange() {
             project.prepare_import_scope(plate);
-            return crate::plater::arrange_cli_project(project, plate);
+            project = crate::plater::arrange_cli_project(project, plate)?;
+        }
+        if self.ensure_on_bed {
+            project.ensure_on_bed();
         }
         Ok(project)
     }
@@ -68,6 +78,14 @@ fn scale_volumes(project: &mut Project, ratio: f64) -> Result<(), SliceError> {
         return Err(SliceError::InvalidCliScale(ratio));
     }
     project.scale_cli_volumes(f64::from(ratio));
+    Ok(())
+}
+
+fn rotate_volumes(project: &mut Project, degrees: f64, axis: [f64; 3]) -> Result<(), SliceError> {
+    if !degrees.is_finite() {
+        return Err(SliceError::InvalidInput("rotation must be finite".into()));
+    }
+    project.rotate_cli_volumes(degrees.to_radians(), axis);
     Ok(())
 }
 

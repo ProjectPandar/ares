@@ -38,6 +38,7 @@ pub(crate) struct ModelSettings {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ObjectSettings {
     pub id: u32,
+    pub auto_drop: Option<bool>,
     pub name: String,
     pub module: String,
     pub overrides: ObjectOptionOverrides,
@@ -49,6 +50,8 @@ pub(crate) struct ObjectSettings {
 struct ObjectSettingsWire {
     #[serde(rename = "@id")]
     id: u32,
+    #[serde(rename = "@auto_drop")]
+    auto_drop: Option<String>,
     #[serde(rename = "$value", default)]
     children: Vec<ObjectChild>,
 }
@@ -76,7 +79,12 @@ impl<'de> Deserialize<'de> for ObjectSettings {
     where
         D: Deserializer<'de>,
     {
-        let ObjectSettingsWire { id, children } = ObjectSettingsWire::deserialize(deserializer)?;
+        let ObjectSettingsWire {
+            id,
+            auto_drop,
+            children,
+        } = ObjectSettingsWire::deserialize(deserializer)?;
+        let auto_drop = auto_drop.as_deref().map(super::model_xml::binary_bool);
         let mut metadata = Vec::new();
         let mut parts = Vec::new();
         for child in children {
@@ -92,7 +100,7 @@ impl<'de> Deserialize<'de> for ObjectSettings {
                 ObjectChild::Metadata(_) | ObjectChild::Other => {}
             }
         }
-        Self::from_ordered_metadata(id, metadata, parts).map_err(D::Error::custom)
+        Self::from_ordered_metadata(id, auto_drop, metadata, parts).map_err(D::Error::custom)
     }
 }
 

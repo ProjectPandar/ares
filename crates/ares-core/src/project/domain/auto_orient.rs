@@ -50,8 +50,8 @@ impl Project {
         }
     }
 
-    pub(crate) fn rotate_cli_volumes(&mut self, angle: f64) {
-        let delta = crate::plater::angle_axis_euler(angle, [0.0, 0.0, 1.0]);
+    pub(crate) fn rotate_cli_volumes(&mut self, angle: f64, axis: [f64; 3]) {
+        let delta = crate::plater::angle_axis_euler(angle, axis);
         for object in &mut self.objects {
             object.rotate_volumes_and_center(delta);
         }

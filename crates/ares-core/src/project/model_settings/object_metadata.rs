@@ -8,6 +8,7 @@ use super::{Metadata, ObjectSettings, PartSettings};
 impl ObjectSettings {
     pub(super) fn from_ordered_metadata(
         id: u32,
+        auto_drop: Option<bool>,
         metadata: Vec<Metadata>,
         parts: Vec<PartSettings>,
     ) -> Result<Self, SliceError> {
@@ -31,6 +32,7 @@ impl ObjectSettings {
         }
         Ok(Self {
             id,
+            auto_drop,
             name,
             module,
             overrides,

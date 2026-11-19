@@ -297,14 +297,17 @@ fn deserialize_binary_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let value = String::deserialize(deserializer)?;
+    Ok(binary_bool(&String::deserialize(deserializer)?))
+}
+
+pub(super) fn binary_bool(value: &str) -> bool {
     let value = value.trim_ascii_start().as_bytes();
     let digits = value
         .strip_prefix(b"+")
         .or_else(|| value.strip_prefix(b"-"))
         .unwrap_or(value);
-    Ok(digits
+    digits
         .iter()
         .take_while(|digit| digit.is_ascii_digit())
-        .any(|digit| *digit != b'0'))
+        .any(|digit| *digit != b'0')
 }

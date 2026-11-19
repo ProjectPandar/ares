@@ -1,7 +1,7 @@
 //! `--center` placement: `Model.cpp:704-722` (`center_instances_around_point`)
 //! and `OrcaSlicer.cpp:4378-4392` (Z ground drop after centering).
 
-use super::{Point3d, Project};
+use super::{Point3d, Project, ProjectObject};
 
 /// `libslic3r.h:52`: the no-op threshold for centering shifts.
 const EPSILON: f64 = 1e-4;
@@ -88,25 +88,39 @@ impl Project {
     /// min Z is subtracted from every instance offset.
     pub(crate) fn drop_instances_to_ground(&mut self) {
         for object in &mut self.objects {
-            let Some(first) = object.instances.first() else {
-                continue;
-            };
-            let mut min_z = f64::INFINITY;
-            for point in world_vertices(object, first.transform) {
-                min_z = min_z.min(point.z);
-            }
-            if !min_z.is_finite() {
-                continue;
-            }
-            for instance in object
-                .instances
-                .iter_mut()
-                .chain(&mut object.import_instances)
+            object.drop_instances_to_ground();
+        }
+    }
+
+    /// `ModelObject::ensure_on_bed(false)` (Model.cpp:1896–1920).
+    pub(crate) fn ensure_on_bed(&mut self) {
+        for object in &mut self.objects {
+            if object
+                .import_instances
+                .iter()
+                .all(|instance| instance.auto_drop)
             {
-                instance.transform = instance
-                    .transform
-                    .pretranslated(Point3d::new(0.0, 0.0, -min_z));
+                object.drop_instances_to_ground();
             }
+        }
+    }
+}
+
+impl ProjectObject {
+    fn drop_instances_to_ground(&mut self) {
+        let Some(first) = self.instances.first() else {
+            return;
+        };
+        let min_z = world_vertices(self, first.transform)
+            .map(|point| point.z)
+            .fold(f64::INFINITY, f64::min);
+        if !min_z.is_finite() || min_z == 0.0 {
+            return;
+        }
+        for instance in self.instances.iter_mut().chain(&mut self.import_instances) {
+            instance.transform = instance
+                .transform
+                .pretranslated(Point3d::new(0.0, 0.0, -min_z));
         }
     }
 }
