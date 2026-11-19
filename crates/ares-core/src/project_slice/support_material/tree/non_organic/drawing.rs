@@ -22,7 +22,8 @@ use super::{
     contacts::ContactNodes, data::TreeSupportData, heights::LayerHeightData, nodes::NodeArena,
 };
 use crate::{
-    ObjectOptions, ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
+    FloatOrPercent, ObjectOptions, ProcessSupportBasePattern, ProcessSupportInterfacePattern,
+    ProcessSupportStyle,
     fill::lightning::generator::SupportSettings,
     geometry::{
         BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon,
@@ -74,6 +75,12 @@ pub(super) struct DrawnLayers {
 impl Drawing<'_> {
     pub(super) fn draw_node_areas(&mut self) -> Result<DrawnLayers, ClipperError> {
         let shapes = NodeShapes::new(self.contacts, self.object, self.scale);
+        // TreeSupport.cpp:2184 uses the raw configured width, not the resolved flow width.
+        let width = match self.object.support_line_width {
+            FloatOrPercent::Float(value) => value,
+            FloatOrPercent::Percent(value) => value.0,
+        };
+        let max_move_sq = self.scale.scaled_delta(width / 2.0).powi(2);
         let mut output = Vec::with_capacity(self.heights.len());
         for (layer, height) in self.heights.iter().enumerate() {
             let nodes = &self.contacts.layers[layer];
@@ -100,13 +107,14 @@ impl Drawing<'_> {
                 base: Vec::new(),
                 sharp_tail: Vec::new(),
             };
-            let mut areas = NodeDrawing {
+            let (mut areas, extra_wall_areas) = NodeDrawing {
                 shapes: &shapes,
                 collision: &mut collision,
                 top_interface_layers: self.counts.top,
                 raft_layers: self.raft_layers,
                 buildplate_only: self.object.support_on_build_plate_only.0,
                 scale: self.scale,
+                max_move_sq,
             }
             .run(self.arena, nodes)?;
             areas.print_z = height.print_z;
@@ -133,7 +141,7 @@ impl Drawing<'_> {
                 }
                 .apply(&mut areas, layer, height.object_layer)?;
             }
-            self.finish_layer(&mut areas, layer)?;
+            self.finish_layer(&mut areas, &extra_wall_areas, layer)?;
             output.push(areas);
         }
         groups::sequence_interfaces(
@@ -190,7 +198,12 @@ impl Drawing<'_> {
         })
     }
 
-    fn finish_layer(&self, areas: &mut LayerAreas, layer: usize) -> Result<(), ClipperError> {
+    fn finish_layer(
+        &self,
+        areas: &mut LayerAreas,
+        extra_wall_areas: &[ExPolygon],
+        layer: usize,
+    ) -> Result<(), ClipperError> {
         if layer == 0
             && self.raft_layers == 0
             && super::super::super::style::resolve(
@@ -222,7 +235,12 @@ impl Drawing<'_> {
                 areas.base = difference_ex_polygons(&areas.base, &trimming)?;
             }
         }
-        groups::build_groups(areas, layer < self.brim_skirt_layers, self.scale)
+        groups::build_groups(
+            areas,
+            extra_wall_areas,
+            layer < self.brim_skirt_layers,
+            self.scale,
+        )
     }
 
     fn simplify_base(&self, areas: &mut LayerAreas) -> Result<(), ClipperError> {

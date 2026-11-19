@@ -23,6 +23,7 @@ pub(in super::super) struct AreaGroup {
 
 pub(super) fn build_groups(
     areas: &mut LayerAreas,
+    extra_wall_areas: &[ExPolygon],
     collect_slices: bool,
     scale: CoordinateScale,
 ) -> Result<(), ClipperError> {
@@ -36,15 +37,19 @@ pub(super) fn build_groups(
         (AreaKind::RoofFirst, &mut areas.roof_first),
     ] {
         for (index, polygon) in polygons.iter().enumerate() {
-            let need_infill =
-                kind == AreaKind::Base && overlaps(std::slice::from_ref(polygon), &areas.polygons)?;
+            let region = std::slice::from_ref(polygon);
+            let need_infill = kind == AreaKind::Base && overlaps(region, &areas.polygons)?;
+            let need_extra_wall = kind == AreaKind::Base
+                && !need_infill
+                && !extra_wall_areas.is_empty()
+                && overlaps(region, extra_wall_areas)?;
             groups.push(AreaGroup {
                 kind,
                 index,
                 interface_id: 0,
                 interface_as_base: kind == AreaKind::Floor && areas.floor_interface_as_base,
                 need_infill,
-                need_extra_wall: kind == AreaKind::Base && areas.need_extra_wall && !need_infill,
+                need_extra_wall,
             });
         }
         remove_small_holes(polygons, scale);

@@ -21,7 +21,6 @@ pub(in super::super) struct LayerAreas {
     pub(super) floor_interface_as_base: bool,
     pub(super) polygons: Vec<ExPolygon>,
     pub(super) has_circle_node: bool,
-    pub(super) need_extra_wall: bool,
     pub(in super::super) groups: Vec<AreaGroup>,
     pub(in super::super) slices: Vec<ExPolygon>,
     pub(super) slice_bounds: Vec<BoundingBox>,
@@ -34,6 +33,7 @@ pub(super) struct NodeDrawing<'a, 's> {
     pub(super) raft_layers: usize,
     pub(super) buildplate_only: bool,
     pub(super) scale: CoordinateScale,
+    pub(super) max_move_sq: f64,
 }
 
 impl NodeDrawing<'_, '_> {
@@ -41,11 +41,18 @@ impl NodeDrawing<'_, '_> {
         &mut self,
         arena: &NodeArena,
         nodes: &[NodeId],
-    ) -> Result<LayerAreas, ClipperError> {
+    ) -> Result<(LayerAreas, Vec<ExPolygon>), ClipperError> {
         let mut output = LayerAreas::default();
+        let mut extra_wall_areas = Vec::new();
         for &id in nodes {
             let node = &arena.nodes[id];
             let mut area = self.node_area(node, &mut output)?;
+            // TreeSupport.cpp:2329–2330 collects the area before role routing.
+            let dx = node.movement.x() as f64;
+            let dy = node.movement.y() as f64;
+            if node.is_processed && dx * dx + dy * dy > self.max_move_sq {
+                extra_wall_areas.extend_from_slice(&area);
+            }
             if self.collision.object_layer > 0 && node.distance_to_top < 0 {
                 output.roof_gap.append(&mut area);
             } else if self.collision.object_layer > 0
@@ -62,7 +69,7 @@ impl NodeDrawing<'_, '_> {
                 output.base.append(&mut area);
             }
         }
-        Ok(output)
+        Ok((output, extra_wall_areas))
     }
 
     fn node_area(
@@ -88,7 +95,7 @@ impl NodeDrawing<'_, '_> {
             self.collision.get(sharp_tail)?,
         )?;
         output.has_circle_node |= !area.is_empty();
-        output.need_extra_wall |= node.need_extra_wall;
+
         if self.top_interface_layers > 0
             && node.roof_layers_below > 0
             && !self.buildplate_only
