@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::{Project, SliceError};
 
 /// Volume operations in the order the CLI first encountered their keys.
@@ -13,6 +15,7 @@ pub struct CliProjectTransforms {
     pub volume: Vec<CliVolumeTransform>,
     pub orient: bool,
     pub arrange: Option<i32>,
+    pub skip_objects: BTreeSet<i32>,
 }
 
 impl CliProjectTransforms {
@@ -21,6 +24,7 @@ impl CliProjectTransforms {
         volume: Vec::new(),
         orient: false,
         arrange: None,
+        skip_objects: BTreeSet::new(),
     };
 
     pub fn has_project_actions(&self) -> bool {

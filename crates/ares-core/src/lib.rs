@@ -217,9 +217,9 @@ pub use project::{
     project_config_substitutions,
 };
 pub use project_slice::{
-    CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine, CliVolumeTransform,
-    SlicedPlate, slice_cli_project_plate_validated, slice_project_plate_processed_validated,
-    slice_project_plate_validated,
+    CliObjectAssignment, CliProjectSliceRequest, CliProjectTransforms, CliUpwardMachine,
+    CliVolumeTransform, SlicedPlate, slice_cli_project_plate_validated,
+    slice_project_plate_processed_validated, slice_project_plate_validated,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
@@ -277,6 +277,9 @@ pub enum SliceError {
     /// model-read detail for the stderr channel.
     NoSuitableObjects(String),
     NoSuitableObjectsAfterCliArrange,
+    NoSuitableObjectsAfterCliSkip,
+    CliObjectPartlyOutside,
+    InvalidCliObjectAssignment(String),
     InvalidCliScale(f32),
     CliArrangeFailed,
     /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
@@ -350,6 +353,9 @@ impl fmt::Display for SliceError {
             ),
             Self::NoSuitableObjects(message) => f.write_str(message),
             Self::NoSuitableObjectsAfterCliArrange => f.write_str(CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE),
+            Self::NoSuitableObjectsAfterCliSkip => f.write_str("No printable objects to slice after skipping."),
+            Self::CliObjectPartlyOutside => f.write_str("Some objects are located over the boundary of the heated bed."),
+            Self::InvalidCliObjectAssignment(detail) => f.write_str(detail),
             Self::InvalidCliScale(ratio) => write!(f, "Invalid params:invalid scale ratio {ratio}"),
             Self::CliArrangeFailed => f.write_str("An error occurred when auto-arranging object(s)."),
             Self::InvalidValuesInProject(message) => f.write_str(message),

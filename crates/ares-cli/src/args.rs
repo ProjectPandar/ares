@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use ares_core::{CliProjectTransforms, CliVolumeTransform};
+use ares_core::{CliObjectAssignment, CliProjectTransforms, CliVolumeTransform};
 use clap::{ArgMatches, Parser, Subcommand};
 
 #[derive(Parser)]
@@ -28,6 +28,15 @@ pub(crate) struct SliceArgs {
     /// 1-based plate number to slice for multi-plate 3MF projects
     #[arg(long)]
     pub(crate) plate: Option<u32>,
+    /// Skip saved 3MF instances by their identify IDs (comma-separated)
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
+    skip_objects: Vec<i32>,
+    /// Clone counts per input; saved 3MF input does not support cloning
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
+    clone_objects: Vec<i32>,
+    /// Filament IDs per input; saved 3MF input does not support assignment
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
+    load_filament_ids: Vec<i32>,
     /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
     #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
     pub(crate) orient: i32,
@@ -71,6 +80,10 @@ pub(crate) struct SliceArgs {
 }
 
 impl SliceArgs {
+    pub(crate) fn object_assignment(&self) -> CliObjectAssignment {
+        CliObjectAssignment::new(&self.clone_objects, &self.load_filament_ids)
+    }
+
     pub(crate) fn parse_transforms(&mut self, args: &ArgMatches) {
         // Native retains the first occurrence of each key in the action order,
         // and applies the final scalar value of that key.
@@ -92,6 +105,7 @@ impl SliceArgs {
                 .collect(),
             orient: self.orient == 1,
             arrange: self.arrange.last().copied(),
+            skip_objects: self.skip_objects.iter().copied().collect(),
         };
     }
 }

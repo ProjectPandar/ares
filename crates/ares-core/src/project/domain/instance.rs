@@ -1,3 +1,7 @@
+use std::collections::BTreeSet;
+
+use crate::SliceError;
+
 use super::{Project, ProjectInstance, Transform3d};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -24,6 +28,33 @@ impl Project {
         state: InstancePvs,
     ) {
         self.objects[object].instances[instance].print_volume_state = state;
+    }
+
+    /// Apply the saved-ID filter after the plate's initial volume check (`OrcaSlicer.cpp:6580–6673`).
+    pub(crate) fn apply_cli_skips(&mut self, ids: &BTreeSet<i32>) -> Result<(), SliceError> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+        let mut any_inside = false;
+        for instance in self
+            .objects
+            .iter_mut()
+            .flat_map(|object| &mut object.instances)
+        {
+            if instance.matches_cli_skip(ids) {
+                instance.printable = false;
+            } else {
+                match instance.print_volume_state {
+                    InstancePvs::Inside => any_inside = true,
+                    InstancePvs::PartlyOutside => return Err(SliceError::CliObjectPartlyOutside),
+                    InstancePvs::FullyOutside => (),
+                }
+            }
+        }
+        if !any_inside {
+            return Err(SliceError::NoSuitableObjectsAfterCliSkip);
+        }
+        Ok(())
     }
 }
 
@@ -75,6 +106,11 @@ impl ProjectInstance {
             InstanceLabel::Loaded(id) => Some(id),
             InstanceLabel::Allocated(_) => None,
         }
+    }
+
+    pub(crate) fn matches_cli_skip(&self, ids: &BTreeSet<i32>) -> bool {
+        // ModelInstance::loaded_id is zero if no saved label was assigned.
+        ids.contains(&(self.loaded_label_id().unwrap_or_default() as i32))
     }
 
     pub(crate) fn labeled_id(&self) -> u32 {

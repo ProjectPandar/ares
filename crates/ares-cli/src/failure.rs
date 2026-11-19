@@ -170,10 +170,12 @@ pub(super) fn slice_error_to_failure(
         // index+1 to record_exit_reson, and :552 writes that plate_id.
         // The progress callback's m_plate_index (:305,:319) is separate.
         // The reason is cli_errors[CLI_NO_SUITABLE_OBJECTS] (:220).
-        SliceError::InvalidCliScale(_) | SliceError::CliArrangeFailed => {
-            let invalid_scale = matches!(error, SliceError::InvalidCliScale(_));
+        SliceError::InvalidCliScale(_)
+        | SliceError::CliArrangeFailed
+        | SliceError::InvalidCliObjectAssignment(_) => {
+            let arranged = matches!(error, SliceError::CliArrangeFailed);
             family(
-                if invalid_scale { -2 } else { -21 },
+                if arranged { -21 } else { -2 },
                 #[cfg(target_os = "linux")]
                 0,
                 #[cfg(target_os = "linux")]
@@ -183,16 +185,23 @@ pub(super) fn slice_error_to_failure(
                 #[cfg(target_os = "linux")]
                 0.0,
                 #[cfg(target_os = "linux")]
-                if invalid_scale {
-                    "Invalid parameters to the slicer."
-                } else {
+                if arranged {
                     "An error occurred when auto-arranging object(s)."
+                } else {
+                    "Invalid parameters to the slicer."
                 },
                 format!("{error}\n"),
             )
         }
-        SliceError::NoSuitableObjects(_) | SliceError::NoSuitableObjectsAfterCliArrange => family(
-            -50,
+        SliceError::NoSuitableObjects(_)
+        | SliceError::NoSuitableObjectsAfterCliArrange
+        | SliceError::NoSuitableObjectsAfterCliSkip
+        | SliceError::CliObjectPartlyOutside => family(
+            match error {
+                SliceError::NoSuitableObjectsAfterCliSkip => -60,
+                SliceError::CliObjectPartlyOutside => -52,
+                _ => -50,
+            },
             #[cfg(target_os = "linux")]
             selected_plate_index,
             #[cfg(target_os = "linux")]
@@ -202,15 +211,24 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             0.0,
             #[cfg(target_os = "linux")]
-            if matches!(error, SliceError::NoSuitableObjectsAfterCliArrange) {
-                ares_core::CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE
-            } else {
-                "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
+            match error {
+                SliceError::NoSuitableObjectsAfterCliArrange => {
+                    ares_core::CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE
+                }
+                SliceError::NoSuitableObjectsAfterCliSkip => {
+                    "No printable objects to slice after skipping."
+                }
+                SliceError::CliObjectPartlyOutside => {
+                    "Some objects are located over the boundary of the heated bed."
+                }
+                _ => {
+                    "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
+                }
             },
-            if matches!(error, SliceError::NoSuitableObjectsAfterCliArrange) {
-                format!("{error}\n")
-            } else {
+            if matches!(error, SliceError::NoSuitableObjects(_)) {
                 String::new()
+            } else {
+                format!("{error}\n")
             },
         ),
         SliceError::InvalidValuesInProject(detail) => family(

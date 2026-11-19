@@ -74,6 +74,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         eprintln!("Params in command line error: \n{error}\nsetup params error");
         std::process::exit(-2);
     }
+    validate_project_object_args(&args, extension.as_deref() == Some("3mf"))?;
     let input = match fs::read(&args.input) {
         Ok(input) => input,
         // `CLI_FILE_NOTFOUND` (-3, Utils.hpp:27): the `No such file:` detail
@@ -277,6 +278,43 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     fs::write(&args.output, output)?;
 
     Ok(())
+}
+
+fn validate_project_object_args(args: &SliceArgs, saved_3mf: bool) -> Result<(), CliFailure> {
+    let assignment = args.object_assignment();
+    if !saved_3mf && (assignment.is_requested() || !args.transforms.skip_objects.is_empty()) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--skip-objects, --clone-objects and --load-filament-ids are only handled for 3MF project input",
+        )
+        .into());
+    }
+    if !assignment.is_requested() {
+        return Ok(());
+    }
+    let failure = |error| {
+        slice_error_to_failure(
+            error,
+            &args.output,
+            #[cfg(target_os = "linux")]
+            0,
+        )
+    };
+    let has_filament_list = args
+        .load_filaments
+        .as_deref()
+        .is_some_and(|list| !list.trim_matches([' ', '\t']).is_empty());
+    assignment
+        .validate_prerequisites(has_filament_list)
+        .map_err(failure)?;
+    if !args.input.try_exists()? {
+        return Err(CliFailure::missing_input(
+            &args.input,
+            #[cfg(target_os = "linux")]
+            &args.output,
+        ));
+    }
+    assignment.validate_project_input().map_err(failure)
 }
 
 /// The end of a successful 3MF slice: the load's substitution report on stderr

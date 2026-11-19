@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::{
     Project, SliceError,
     geometry::CoordinateScale,
@@ -71,7 +73,7 @@ pub(super) fn prepare_project_source(
     let project = source.transforms.apply(project, source.plate)?;
     prepare_loaded_project_slice_with_validation(
         project,
-        source.plate,
+        (source.plate, &source.transforms.skip_objects),
         None,
         source.validate_print,
         Some((preparation, source.overrides)),
@@ -83,7 +85,7 @@ pub(super) fn prepare_project_source(
 
 pub(super) fn prepare_loaded_project_slice_with_validation(
     project: Project,
-    plate: Option<u32>,
+    (plate, skip_objects): (Option<u32>, &BTreeSet<i32>),
     selected_printer: Option<&str>,
     validate_print: bool,
     preparation: Option<(
@@ -104,6 +106,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
                 .to_owned(),
         ));
     }
+    project.apply_cli_skips(skip_objects)?;
     let resolved = match preparation {
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
         None => resolve_bounded_project_config(&project)?,

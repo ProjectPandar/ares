@@ -258,13 +258,18 @@ pub(crate) fn update_print_volume_state(project: &mut Project) -> Result<usize, 
 
 /// The plate's `triangle_count` for the CLI success report (`OrcaSlicer.cpp:6576-6640` at v2.5.0-beta
 /// `345efec64`): the facets of every model-part volume of each instance whose print-volume state is
-/// inside. The Ares CLI skips no object, so no instance is excluded as skipped.
-pub(crate) fn inside_triangle_count(project: &Project) -> Result<usize, SliceError> {
+/// inside, excluding any skipped instances.
+pub(crate) fn inside_triangle_count(
+    project: &Project,
+    skip_objects: &std::collections::BTreeSet<i32>,
+) -> Result<usize, SliceError> {
     let volume = PrintVolume::new(project)?;
     let mut count = 0;
     for object in project.objects() {
         for instance in object.instances() {
-            if calc_print_volume_state(object, instance.transform(), &volume) == InstancePvs::Inside
+            if !instance.matches_cli_skip(skip_objects)
+                && calc_print_volume_state(object, instance.transform(), &volume)
+                    == InstancePvs::Inside
             {
                 count += object
                     .volumes()

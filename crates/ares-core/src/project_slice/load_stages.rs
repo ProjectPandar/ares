@@ -10,6 +10,7 @@ pub(super) fn prepare_post_closing(
     mut project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut sliced_plate = project.sliced_plate.take();
+    let skip_objects = &project.transforms.skip_objects;
     let state::ProjectSliceState {
         project,
         resolved,
@@ -34,7 +35,7 @@ pub(super) fn prepare_post_closing(
         *sliced_plate = crate::SlicedPlate {
             warnings: Vec::new(),
             upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
-            triangle_count: state::inside_triangle_count(&project)?,
+            triangle_count: state::inside_triangle_count(&project, skip_objects)?,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
             sparse_infill_density: f64::from(
