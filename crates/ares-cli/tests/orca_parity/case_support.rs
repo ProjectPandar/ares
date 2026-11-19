@@ -40,6 +40,9 @@ mod cli_assemble;
 #[path = "seam_paint.rs"]
 mod seam_paint;
 
+#[path = "seam_paint_aligned_back.rs"]
+mod seam_paint_aligned_back;
+
 #[path = "seam_paint_nearest_rear.rs"]
 mod seam_paint_nearest_rear;
 
