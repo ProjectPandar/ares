@@ -80,7 +80,7 @@ pub(super) fn project(path: &Path) {
     for (name, bytes) in [
         (
             "[Content_Types].xml",
-            r#"<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>"#,
+            r#"<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="png" ContentType="image/png"/></Types>"#,
         ),
         (
             "_rels/.rels",
@@ -96,29 +96,75 @@ pub(super) fn project(path: &Path) {
 }
 
 /// Extents of deposited outer walls, in G-code's 0.001 mm coordinate units.
-pub(super) fn outer_wall_extents(gcode: &str) -> Vec<[i32; 4]> {
+pub(super) fn outer_wall_extents(gcode: &str) -> Vec<Vec<[i32; 4]>> {
+    let (layer_marker, feature_marker) = if gcode.lines().any(|line| line == "; CHANGE_LAYER") {
+        ("; CHANGE_LAYER\n", "; FEATURE: ")
+    } else {
+        (";LAYER_CHANGE\n", ";TYPE:")
+    };
     gcode
-        .split("; CHANGE_LAYER")
+        .split(layer_marker)
         .skip(1)
-        .filter_map(|layer| {
-            let mut bounds = [i32::MAX, i32::MAX, i32::MIN, i32::MIN];
+        .map(|layer| {
+            let mut paths = Vec::new();
+            let mut points = Vec::new();
             let mut outer = false;
+            let mut xy = [0; 2];
             for line in layer.lines() {
-                if let Some(feature) = line.strip_prefix("; FEATURE: ") {
+                if let Some(feature) = line.strip_prefix(feature_marker) {
+                    add_extents(&mut paths, &mut points);
                     outer = feature == "Outer wall";
-                } else if outer && line.starts_with("G1 ") && line.contains(" E") {
-                    for term in line.split_ascii_whitespace() {
-                        for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
-                            if let Some(value) = term.strip_prefix(letter) {
-                                let coord = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
-                                bounds[axis] = bounds[axis].min(coord);
-                                bounds[axis + 2] = bounds[axis + 2].max(coord);
-                            }
+                    continue;
+                }
+                let Some(move_args) = line
+                    .strip_prefix("G1 ")
+                    .or_else(|| line.strip_prefix("G0 "))
+                else {
+                    continue;
+                };
+                let last = xy;
+                let mut extrude = false;
+                for word in move_args
+                    .split(';')
+                    .next()
+                    .unwrap()
+                    .split_ascii_whitespace()
+                {
+                    if let Some(e) = word.strip_prefix('E') {
+                        extrude = e.parse::<f64>().unwrap() > 0.0;
+                    }
+                    for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
+                        if let Some(value) = word.strip_prefix(letter) {
+                            xy[axis] = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
                         }
                     }
                 }
+                if last != xy {
+                    if outer && extrude {
+                        points.extend([last, xy]);
+                    } else {
+                        add_extents(&mut paths, &mut points);
+                    }
+                }
             }
-            (bounds[0] != i32::MAX).then_some(bounds)
+            add_extents(&mut paths, &mut points);
+            paths.sort_unstable();
+            paths
         })
         .collect()
+}
+
+fn add_extents(paths: &mut Vec<[i32; 4]>, points: &mut Vec<[i32; 2]>) {
+    if let Some([x, y]) = points.first().copied() {
+        let mut bounds = [x, y, x, y];
+        for [x, y] in points.drain(..) {
+            bounds = [
+                bounds[0].min(x),
+                bounds[1].min(y),
+                bounds[2].max(x),
+                bounds[3].max(y),
+            ];
+        }
+        paths.push(bounds);
+    }
 }
