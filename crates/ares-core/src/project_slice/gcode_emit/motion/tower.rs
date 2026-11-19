@@ -55,10 +55,10 @@ pub(in crate::project_slice::gcode_emit) fn travel_to(
 ) -> Result<(), crate::SliceError> {
     state.use_external_mp_once = true;
     for [x, y] in route(state)? {
-        path::tower_travel(output, state, (x, y), geometry, None)?;
+        path::tower_travel(output, state, (x, y), geometry, path::TowerTravelZ::Layer)?;
     }
     let point = object_point(point, state, geometry.scale);
-    path::tower_travel(output, state, point, geometry, None)?;
+    path::tower_travel(output, state, point, geometry, path::TowerTravelZ::Layer)?;
     travel::unlift(output, state);
     travel::unretract(output, state);
     Ok(())
@@ -77,14 +77,20 @@ pub(in crate::project_slice::gcode_emit) fn entry_travel(
     state.use_external_mp_once = true;
     let mut travel = Vec::new();
     for [x, y] in route(state)? {
-        path::tower_travel(&mut travel, state, (x, y), geometry, None)?;
+        path::tower_travel(
+            &mut travel,
+            state,
+            (x, y),
+            geometry,
+            path::TowerTravelZ::Type2Entry,
+        )?;
     }
     path::tower_travel(
         &mut travel,
         state,
         (destination[0], destination[1]),
         geometry,
-        None,
+        path::TowerTravelZ::Type2Entry,
     )?;
     if !travel.is_empty() && !travel.ends_with(b"\n") {
         travel.push(b'\n');
@@ -227,7 +233,7 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel(
         state,
         object_point(point, state, geometry.scale),
         geometry,
-        target_z,
+        target_z.map_or(path::TowerTravelZ::Layer, path::TowerTravelZ::Explicit),
     )
 }
 
@@ -252,7 +258,13 @@ pub(in crate::project_slice::gcode_emit) fn type1_travel_scaled(
     point: [i64; 2],
     geometry: LayerGeometry<'_>,
 ) -> Result<(), crate::SliceError> {
-    path::tower_travel(output, state, (point[0], point[1]), geometry, None)
+    path::tower_travel(
+        output,
+        state,
+        (point[0], point[1]),
+        geometry,
+        path::TowerTravelZ::Layer,
+    )
 }
 
 pub(in crate::project_slice::gcode_emit) fn type1_unretract(

@@ -32,6 +32,27 @@ pub(super) fn on_first_layer(
     }
 }
 
+/// `collect_layers_to_print` indexes the group by object, and `process_layer`
+/// takes the first physical object layer (otherwise support), not the group Z
+/// used for ordering (`GCode.cpp:2533–2547,6611–6645,6732`).
+pub(super) fn leading_print_z(
+    traversal: &PreparedPostClassicTraversal,
+    entries: &[LayerToPrint],
+    support: &[Vec<crate::project_slice::support_material::InstalledSupportLayer>],
+) -> Option<f64> {
+    let entry = entries
+        .iter()
+        .filter(|entry| entry.object_layer.is_some() || entry.support_layer.is_some())
+        .min_by_key(|entry| (entry.object_layer.is_none(), entry.object_index))?;
+    if let Some(layer) = entry.object_layer {
+        Some(traversal.objects[entry.object_index].physical_layers()[layer].print_z)
+    } else {
+        entry
+            .support_layer
+            .map(|layer| support[entry.object_index][layer].print_z)
+    }
+}
+
 pub(super) fn geometry(
     traversal: &PreparedPostClassicTraversal,
     entries: &[LayerToPrint],

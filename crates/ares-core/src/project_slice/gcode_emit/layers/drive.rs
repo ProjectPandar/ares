@@ -259,6 +259,9 @@
         // `; printing object` marker, content).
         let has_tower = layer_tools.has_wipe_tower && state.wipe_tower.is_some();
         if has_tower {
+            state.type2_entry_z = group::leading_print_z(traversal, &entries, support_layers)
+                .unwrap_or(group_z)
+                + state.options.z_offset;
             state.wipe_tower.as_mut().unwrap().next_layer();
         }
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
