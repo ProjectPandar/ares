@@ -317,7 +317,7 @@ pub(in crate::project_slice) fn emit(
     if !tags.is_bbl() {
         output.extend_from_slice(&export_config);
     }
-    finish::append_filament_stats(&mut output, traversal, &state);
+    let tower_statistics = finish::append_filament_stats(&mut output, traversal, &state);
     finish::append_compatible_stats(
         &mut output,
         traversal,
@@ -349,5 +349,11 @@ pub(in crate::project_slice) fn emit(
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
-    super::orchestration_finish::finish(output, &state, traversal, &nozzle_groups, record_moves)
+    super::orchestration_finish::finish(
+        output,
+        &state,
+        traversal,
+        &nozzle_groups,
+        (record_moves, tower_statistics),
+    )
 }

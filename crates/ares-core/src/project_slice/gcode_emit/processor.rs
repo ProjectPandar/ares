@@ -74,6 +74,7 @@ pub(super) struct ProcessorConfig<'a> {
     extruder_colors: Vec<String>,
     /// `m_writer.extruders()` ids, sorted (`GCode.cpp:1904-1940`).
     writer_extruders: Vec<usize>,
+    tower_statistics: (f64, f64),
     /// `m_enable_pre_heating` of `finalize(true)` after the export (`GCodeProcessor.cpp:4000-4005`).
     pre_heating: bool,
     /// `nozzle_group_result.get_nozzle_from_id` consumed by `GCodeProcessor.cpp:2217-2223`.
@@ -91,6 +92,7 @@ impl ProcessorLimits {
             record_moves: false,
             extruder_colors: Vec::new(),
             writer_extruders: Vec::new(),
+            tower_statistics: (0.0, 0.0),
             pre_heating: false,
             nozzle_group_result: &[],
             nozzle_counts: &[1],
@@ -116,6 +118,13 @@ impl<'a> ProcessorConfig<'a> {
     pub(super) fn writer_extruders(self, writer_extruders: Vec<usize>) -> Self {
         Self {
             writer_extruders,
+            ..self
+        }
+    }
+
+    pub(super) fn tower_statistics(self, tower_statistics: (f64, f64)) -> Self {
+        Self {
+            tower_statistics,
             ..self
         }
     }
@@ -213,7 +222,9 @@ pub(super) fn process(
     let model_time = (estimate.total - prepare_time).max(0.0);
     let deferred = stats::values(
         estimate.total,
-        estimate.print_statistics.total_used_filament,
+        &materials,
+        config.settings.printer.gcode.time_cost.0,
+        config.tower_statistics,
     );
 
     for (index, (line, original)) in lines.iter().zip(text.split_inclusive('\n')).enumerate() {

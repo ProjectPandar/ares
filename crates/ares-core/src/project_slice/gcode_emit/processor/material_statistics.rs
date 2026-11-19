@@ -4,6 +4,9 @@ use super::ProcessorConfig;
 
 pub(super) struct MaterialStatistics {
     values: [(&'static str, Vec<f64>); 6],
+    pub(super) length_mm: f64,
+    pub(super) weight_g: f64,
+    pub(super) cost: f64,
 }
 
 impl MaterialStatistics {
@@ -44,6 +47,9 @@ impl MaterialStatistics {
         let total_grams = grams.iter().sum();
         let total_cost = cost.iter().sum();
         Self {
+            length_mm: mm.iter().sum(),
+            weight_g: total_grams,
+            cost: total_cost,
             values: [
                 ("; filament used [mm] =", mm),
                 ("; filament used [g] =", grams),
