@@ -17,7 +17,7 @@ directory. Resolve the root by the applicable Native branch only:
 | --- | --- | --- |
 | Windows | `dir/resources` beside the installed executable | `OrcaSlicer.cpp:8176–8180`; `CMakeLists.txt:1290–1291` installs beside the executable. |
 | macOS | `canonical(exe).parent().parent()/Resources`; `Contents/MacOS/ares` finds `Contents/Resources` | `OrcaSlicer.cpp:8172–8175`; case-sensitive spelling is `Resources`. |
-| Linux, FHS package | The absolute resource directory fixed by that package at build time, in its architecture-independent data tree | `OrcaSlicer.cpp:8181–8184`; `CMakeLists.txt:114,1306–1309,1357` sets `${CMAKE_INSTALL_FULL_DATAROOTDIR}/OrcaSlicer` and configures `src/dev-utils/platform/unix/fhs.hpp.in:1–2`. An Ares FHS package supplies its own installed resource directory, not another application's path. This branch is not a search of `/usr/share` or a runtime prefix setting. |
+| Linux, FHS package | The absolute resource directory fixed by that package at build time, in its architecture-independent data tree | `OrcaSlicer.cpp:8181–8184`; `CMakeLists.txt:114,1306–1309,1357` sets `${CMAKE_INSTALL_FULL_DATAROOTDIR}/OrcaSlicer` and configures `src/dev-utils/platform/unix/fhs.hpp.in:1–2`. An Ares FHS package supplies its own absolute installed path through `ARES_FHS_RESOURCES` at Cargo build time. An unset variable builds the non-FHS layout. The compiled binary does not read this variable at runtime or search `/usr/share`. |
 | Linux, non-FHS package | `canonical(exe).parent().parent()/resources`; only if that path does not exist, try `canonical(exe).parent().parent().parent()/resources` for multiconfig builds | `OrcaSlicer.cpp:8185–8194`; `CMakeLists.txt:1334–1335` installs the portable `resources` tree under the prefix. |
 
 For **each** branch `OrcaSlicer.cpp:8197` publishes the selected path in
@@ -120,7 +120,10 @@ an implicit supplier.
    original machine resource. This matters because
    `UpwardMachineSource::select(FetchOriginal(None))` retains the embedded
    list. Require the no-flag subprocess to match the same staged Ares
-   binary with an explicit root and the paired Native result. On the base
+   binary with an explicit root and the Native result for the original
+   project. Stage the existing flattened H2D `machine_full` fixture, not
+   the inherited vendor machine JSON; the official AppImage does not
+   carry the corresponding flattened file. On the base
    it instead probes `<prefix>/bin/resources` and misses the installed
    bytes. Keep existing bare `cli_invalid_values_*` witnesses unchanged;
    the derived witness is additive, with move/no-move variants and checks

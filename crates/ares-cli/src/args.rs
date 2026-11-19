@@ -33,7 +33,7 @@ pub(crate) struct SliceArgs {
     /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
     #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
     pub(crate) orient: i32,
-    /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
+    /// Resource root containing profiles/BBL/machine_full (default: the platform's installation resources)
     #[arg(long)]
     pub(crate) resources_dir: Option<PathBuf>,
     /// Write the G-code processor move vertices as CSV (3MF input only)

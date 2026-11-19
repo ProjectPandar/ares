@@ -103,8 +103,8 @@ pub(super) fn run(
             None,
         )
     } else {
-        let (source, machine) =
-            crate::compatible_machine::load(input, args.resources_dir.as_deref())?;
+        let resources = crate::installed_resources::resolve(args.resources_dir.as_deref())?;
+        let (source, machine) = crate::compatible_machine::load(input, &resources)?;
         system_catalog = args
             .resources_dir
             .as_deref()
