@@ -40,17 +40,18 @@ pub(super) fn edges(vertices: &[Vec3], faces: &[[u32; 3]]) -> Vec<PaintEdge> {
         let [a, b, c] = face.map(vertex);
         let normal = cross(sub(b, a), sub(c, a));
         for (a, b) in indices(face) {
-            if uses[&key(a, b)] == 1 {
-                let (from, to) = (vertex(a), vertex(b));
-                let inward = cross(normal, sub(to, from));
-                let length = inward.iter().map(|v| v * v).sum::<f64>().sqrt();
-                if length > 0.0 {
-                    edges.push(PaintEdge {
-                        from,
-                        to,
-                        inward: [inward[0] / length, inward[1] / length],
-                    });
-                }
+            if uses[&key(a, b)] != 1 {
+                continue;
+            }
+            let (from, to) = (vertex(a), vertex(b));
+            let inward = cross(normal, sub(to, from));
+            let length = inward.iter().map(|v| v * v).sum::<f64>().sqrt();
+            if length > 0.0 {
+                edges.push(PaintEdge {
+                    from,
+                    to,
+                    inward: [inward[0] / length, inward[1] / length],
+                });
             }
         }
     }

@@ -97,7 +97,7 @@ impl<'a> ArcLoop<'a> {
     fn project(&self, point: [f64; 2], reach: f64) -> Option<(f64, [f64; 2])> {
         let count = self.xy.len();
         let mut best = f64::INFINITY;
-        let mut closest = (0.0, [0.0; 2]);
+        let mut closest = (0, 0.0);
         for i in 0..count {
             let a = self.xy[i];
             let d = sub(self.xy[(i + 1) % count], a);
@@ -110,27 +110,24 @@ impl<'a> ArcLoop<'a> {
             let distance = norm2(std::array::from_fn(|j| a[j] + t * d[j] - point[j]));
             if distance < best {
                 best = distance;
-                let along = t * (self.arc[i + 1] - self.arc[i]);
-                let position = self.arc[i] + along;
-                let vertex = if along < TOLERANCE {
-                    Some(i)
-                } else if self.arc[i + 1] - position < TOLERANCE {
-                    Some((i + 1) % count)
-                } else {
-                    None
-                };
-                let tangent = vertex.map_or_else(
-                    || self.direction(i, true),
-                    |vertex| {
-                        let before = self.direction((vertex + count - 1) % count, false);
-                        let after = self.direction(vertex, true);
-                        std::array::from_fn(|j| before[j] + after[j])
-                    },
-                );
-                closest = (position, tangent);
+                closest = (i, t);
             }
         }
-        (best <= reach * reach).then_some(closest)
+        (best <= reach * reach).then(|| {
+            let (i, t) = closest;
+            let along = t * (self.arc[i + 1] - self.arc[i]);
+            let position = self.arc[i] + along;
+            let vertex = if along < TOLERANCE {
+                i
+            } else if self.arc[i + 1] - position < TOLERANCE {
+                (i + 1) % count
+            } else {
+                return (position, self.direction(i, true));
+            };
+            let before = self.direction((vertex + count - 1) % count, false);
+            let after = self.direction(vertex, true);
+            (position, std::array::from_fn(|j| before[j] + after[j]))
+        })
     }
 
     fn direction(&self, mut i: usize, forward: bool) -> [f64; 2] {
