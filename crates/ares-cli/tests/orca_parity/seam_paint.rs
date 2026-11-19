@@ -93,7 +93,6 @@ fn deferred_seam_paint_modes_reject_without_output() {
         .build()
         .unwrap();
     for config in [
-        br#"{"seam_position":"aligned_back"}"#.as_slice(),
         br#"{"seam_position":"random"}"#,
         br#"{"seam_position":"nearest","spiral_mode":"1"}"#,
     ] {

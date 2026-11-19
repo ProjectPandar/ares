@@ -65,14 +65,14 @@ preference applies only to Aligned and AlignedBack, not to Rear or Nearest.
 ## Included and deferred
 
 - Included: neutral, enforcer and blocker leaves, with or without selector
-  subdivision, on model parts and negative volumes with Aligned, Nearest or Rear,
-  including unpainted controls and both Classic and Arachne walls. Reuse the
+  subdivision, on model parts and negative volumes with Aligned, AlignedBack,
+  Nearest or Rear, including unpainted controls and both Classic and Arachne walls. Reuse the
   transformed object coordinate frame already used by seam visibility,
   without involving machine-space offsets. Negative paint can affect the
   perimeter of the hole cut by that volume.
 - Deferred: extended palette values on participating volumes, spiral mode,
-  AlignedBack and Random seam strategies, Precise Seam modifiers, and
-  full-green normalization (`:557–595`). The existing full-coverage rejection still applies to each
+  Random seam strategies, Precise Seam modifiers, and full-green normalization
+  (`:557–595`). The existing full-coverage rejection still applies to each
   painted volume; partial paint also retains the perimeter coverage guard. These
   combinations must return a seam-specific unsupported input error before
   emitting G-code. No silent Neutral fallback for deferred input. In particular
@@ -95,6 +95,6 @@ an ordinary modifier and a helper must preserve complete output. Include
 public rejection cases for deferred paint.
 
 Reuse the box geometry and the five paint variants for each printer with
-Nearest and Rear configured in the 3MF. Verify each against both Native
-producers and compare Native wall approaches to the plain run for the same
-printer and strategy to distinguish active paint from non-changing controls.
+AlignedBack, Nearest and Rear configured in the 3MF. Verify each against both
+Native producers and compare Native wall approaches to the plain run for the
+same printer and strategy to distinguish active paint from non-changing controls.
