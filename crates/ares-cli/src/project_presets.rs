@@ -70,6 +70,7 @@ pub(super) async fn slice(
         input,
         ares_core::CliProfileSliceRequest {
             orient: args.orient == 1,
+            repetitions: args.repetitions,
             profile: request,
             record_moves: args.dump_moves.is_some(),
             sliced_plate: &mut sliced_plate,

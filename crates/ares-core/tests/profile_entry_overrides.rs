@@ -221,6 +221,7 @@ async fn typed_sparse_cli_empty_filament_gcodes_complete_slicing() {
         include_bytes!("../../../tests/profiles/filament-gcode-slots/sparse-runtime.stl").to_vec(),
         ares_core::LoadSettingsSliceRequest {
             orient: false,
+            repetitions: 1,
             filename: "cube.stl",
             catalog_json: None,
             uptodate: false,

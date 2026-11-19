@@ -166,6 +166,7 @@ pub(super) fn slice_error_to_failure(
         }))
     };
     match error {
+        SliceError::InvalidRepetitionPlate => CliFailure::invalid_repetition_plate(output),
         SliceError::InvalidPrinterTechnology => family(
             -7,
             #[cfg(target_os = "linux")]

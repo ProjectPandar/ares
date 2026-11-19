@@ -137,7 +137,9 @@ pub(super) fn prepare_profile_slice(
     if project.orient {
         crate::plater::apply_cli_orientation(&mut loaded, project.plate)?;
     }
-    state::prepare_loaded_project_slice_with_validation(
+    let (loaded, repetition_count) =
+        crate::plater::repeat_cli_plate(loaded, project.plate, project.repetitions)?;
+    let mut state = state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,
         Some(
@@ -151,7 +153,9 @@ pub(super) fn prepare_profile_slice(
         ),
         project.validate_print,
         Some((preparation, project.overrides)),
-    )
+    )?;
+    state.repetition_count = repetition_count;
+    Ok(state)
 }
 
 /// `BuildVolume::bed_center()` (`BuildVolume.hpp:83`): the printable-area

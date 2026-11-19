@@ -106,6 +106,7 @@ async fn compare_slice(case: &str) {
         &input,
         LoadSettingsSliceRequest {
             orient: false,
+            repetitions: 1,
             filename: &format!("{case}.stl"),
             catalog_json: None,
             uptodate: false,

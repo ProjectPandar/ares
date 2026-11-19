@@ -26,6 +26,7 @@ pub(super) struct ProjectSliceState {
     pub(super) config_block: Option<Vec<u8>>,
     pub(super) scale: CoordinateScale,
     pub(super) looped_objects: Vec<LoopedPrintObject>,
+    pub(super) repetition_count: Option<usize>,
 }
 
 pub(super) fn prepare_project_source(
@@ -71,13 +72,17 @@ pub(super) fn prepare_project_source(
     if source.orient {
         crate::plater::apply_cli_orientation(&mut project, source.plate)?;
     }
-    prepare_loaded_project_slice_with_validation(
+    let (project, repetition_count) =
+        crate::plater::repeat_cli_plate(project, source.plate, source.repetitions)?;
+    let mut state = prepare_loaded_project_slice_with_validation(
         project,
         source.plate,
         None,
         source.validate_print,
         Some((preparation, source.overrides)),
-    )
+    )?;
+    state.repetition_count = repetition_count;
+    Ok(state)
 }
 
 pub(super) fn prepare_loaded_project_slice_with_validation(
@@ -152,5 +157,6 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         config_block,
         scale,
         looped_objects,
+        repetition_count: None,
     })
 }

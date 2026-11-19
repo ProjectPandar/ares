@@ -27,6 +27,9 @@ pub(crate) struct SliceArgs {
     /// 1-based plate number to slice for multi-plate 3MF projects
     #[arg(long)]
     pub(crate) plate: Option<u32>,
+    /// Number of repetitions of the selected 3MF plate (1 leaves it unchanged)
+    #[arg(long, default_value_t = 1, allow_negative_numbers = true)]
+    pub(crate) repetitions: i32,
     /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
     #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
     pub(crate) orient: i32,

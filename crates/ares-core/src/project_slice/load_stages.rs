@@ -16,6 +16,7 @@ pub(super) fn prepare_post_closing(
         config_block,
         scale,
         looped_objects,
+        repetition_count,
     } = if let Some(profile) = project.profile {
         profile_entry::prepare_profile_slice(
             &project,
@@ -35,6 +36,7 @@ pub(super) fn prepare_post_closing(
             warnings: Vec::new(),
             upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
             triangle_count: state::inside_triangle_count(&project)?,
+            repetition_count,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
             sparse_infill_density: f64::from(

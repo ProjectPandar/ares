@@ -77,7 +77,7 @@ pub async fn slice_with_profiles_validated(
         input,
         request,
         metadata,
-        (false, false, None, None),
+        (false, (false, 1), None, None),
         context,
     )
     .map(|output| output.gcode)
@@ -89,13 +89,20 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
+    slice_validated_profile_source(
+        input,
+        request,
+        metadata,
+        (true, (false, 1), None, None),
+        context,
+    )
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
 pub struct CliProfileSliceRequest<'a> {
     pub profile: ProfileSliceRequest<'a>,
     pub orient: bool,
+    pub repetitions: i32,
     pub record_moves: bool,
     pub sliced_plate: &'a mut crate::SlicedPlate,
     pub upward: crate::CliUpwardMachine<'a>,
@@ -112,6 +119,7 @@ pub async fn slice_cli_with_profiles_validated(
     let CliProfileSliceRequest {
         profile,
         orient,
+        repetitions,
         record_moves,
         sliced_plate,
         upward,
@@ -121,7 +129,12 @@ pub async fn slice_cli_with_profiles_validated(
         input,
         profile,
         metadata,
-        (record_moves, orient, Some(sliced_plate), Some(upward)),
+        (
+            record_moves,
+            (orient, repetitions),
+            Some(sliced_plate),
+            Some(upward),
+        ),
         context,
     )
 }
@@ -130,9 +143,9 @@ fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    (record_moves, orient, sliced_plate, upward): (
+    (record_moves, (orient, repetitions), sliced_plate, upward): (
         bool,
-        bool,
+        (bool, i32),
         Option<&mut crate::SlicedPlate>,
         Option<crate::CliUpwardMachine<'_>>,
     ),
@@ -142,6 +155,7 @@ fn slice_validated_profile_source(
     with_profile_source(input.as_ref(), request, |source| {
         let mut source = ProjectSource {
             orient,
+            repetitions,
             sliced_plate,
             upward,
             ..source
@@ -278,6 +292,7 @@ pub(crate) fn with_edited_profile_source<T>(
             validate_print: false,
             validate_config: true,
             orient: false,
+            repetitions: 1,
             upward: None,
             sliced_plate: None,
             edits,
@@ -303,6 +318,7 @@ pub(crate) fn with_edited_profile_source<T>(
         validate_print: false,
         validate_config: true,
         orient: false,
+        repetitions: 1,
         upward: None,
         sliced_plate: None,
         edits,

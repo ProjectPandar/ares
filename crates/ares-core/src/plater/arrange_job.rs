@@ -12,6 +12,8 @@ mod params;
 pub(super) use params::shared_poly;
 mod polygon;
 mod prepare;
+mod repetitions;
+pub(crate) use repetitions::repeat_cli_plate;
 mod wipe_tower;
 
 pub(super) use prepare::plate_sequence;
@@ -122,6 +124,15 @@ impl PlaterSession {
         scope: ArrangeScope,
         settings: ArrangeSettings,
     ) -> Result<(), SliceError> {
+        self.arrange_job(scope, settings, None).map(|_| ())
+    }
+
+    fn arrange_job(
+        &mut self,
+        scope: ArrangeScope,
+        settings: ArrangeSettings,
+        additional: Option<usize>,
+    ) -> Result<Option<usize>, SliceError> {
         let current = match scope {
             ArrangeScope::All => None,
             ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => {
@@ -131,7 +142,7 @@ impl PlaterSession {
                 // nothing, a locked one warns and arranges nothing. The warning notification is
                 // returned as the error.
                 let target = &self.plates.plates[plate];
-                if !target.instances.is_empty() && target.locked {
+                if additional.is_none() && !target.instances.is_empty() && target.locked {
                     return Err(SliceError::InvalidInput(LOCKED_PLATE.to_owned()));
                 }
                 Some(plate)
@@ -145,12 +156,13 @@ impl PlaterSession {
         let project_settings = self.project.settings();
         let plate_sequence =
             current.map(|plate| prepare::real_print_sequence(&self.project, &self.plates, plate));
-        let mut params = params::arrange_params(
-            project_settings,
-            settings,
-            self.current_print_skirt_offset()?,
-            plate_sequence,
-        );
+        let skirt_offset = if additional.is_some() {
+            0.0
+        } else {
+            self.current_print_skirt_offset()?
+        };
+        let mut params =
+            params::arrange_params(project_settings, settings, skirt_offset, plate_sequence);
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
         let zones = self.plates.imex_zones(&self.project, &full);
@@ -178,10 +190,10 @@ impl PlaterSession {
         unselected.extend(exclusion_items(project_settings, &full, beds, 0));
         // check_unprintable (`ArrangeJob.cpp:697-720`)
         let printable_height = f64::from(params.printable_height);
-        let (kept, too_small_or_tall): (Vec<_>, Vec<_>) = prepared
-            .selected
-            .into_iter()
-            .partition(|(_, ap)| !(ap.poly.area() < 0.001 || ap.height > printable_height));
+        let (kept, too_small_or_tall): (Vec<_>, Vec<_>) =
+            prepared.selected.into_iter().partition(|(_, ap)| {
+                additional.is_some() || !(ap.poly.area() < 0.001 || ap.height > printable_height)
+            });
         prepared.unprintable.extend(too_small_or_tall);
         // process (`ArrangeJob.cpp:722-805`)
         let (keys, mut items): (Vec<_>, Vec<_>) = kept.into_iter().unzip();
@@ -214,6 +226,16 @@ impl PlaterSession {
         };
         arrange(&mut items, &unselected, &bed, &params);
         imex.finish(&mut items, &before, &unselected, &params);
+        let count = if let Some(additional) = additional {
+            let placed = items.iter().filter(|item| item.bed_idx == 0).count();
+            let single = items.len() == additional + 1;
+            if (single && placed <= 1) || (!single && (placed == 0 || placed != items.len())) {
+                return Ok(None);
+            }
+            if single { placed } else { additional + 1 }
+        } else {
+            0
+        };
         prepared.selected = keys.into_iter().zip(items).collect();
         fixed_gcc_sort_by(&mut prepared.selected, |a, b| a.1.itemid < b.1.itemid);
         // `finalize` would create a plate on an emptied position list: refused before it changes
@@ -234,6 +256,6 @@ impl PlaterSession {
         self.finalize(prepared, current, &uncompatible);
         self.place_new_towers(&full, &mut positions, plates_before)?;
         self.wipe_tower = Some(positions);
-        Ok(())
+        Ok(Some(count))
     }
 }

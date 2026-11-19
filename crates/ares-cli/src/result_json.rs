@@ -33,6 +33,7 @@ pub(super) struct ResultJson<'a> {
     pub(super) wall_loops: i32,
     pub(super) sparse_infill_density: f64,
     pub(super) upward_machines: &'a [String],
+    pub(super) repetition_count: Option<usize>,
     pub(super) sliced_plates: &'a [SlicedPlateEntry],
     pub(super) warnings: &'a [CliWarning],
 }
@@ -49,9 +50,13 @@ impl ResultJson<'_> {
                 pretty(&self.upward_machines)?.replace('\n', "\n\t")
             )
         };
+        // `record_key_values["sliced_count"]` (`OrcaSlicer.cpp:8129–8136`).
+        let repetitions = self.repetition_count.map_or_else(String::new, |count| {
+            format!("\t\"sliced_count\": \"{count}\",\n")
+        });
         let body = format!(
             "{{\n\t\"error_string\": {},\n\t\"export_time\": 0,\n\t\"layer_height\": {:?},\n\t\
-             \"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\"return_code\": {},\n{}\t\
+             \"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\"return_code\": {},\n{repetitions}{}\t\
              \"sparse_infill_density\": {:?},\n\t\"strict_mode\": false,\n{upward}\t\
              \"wall_loops\": {},\n\t\"warnings\": {}\n}}\n",
             serde_json::to_string(self.error_string)?,
@@ -158,6 +163,7 @@ impl Success<'_> {
             wall_loops: self.sliced_plate.wall_loops,
             sparse_infill_density: self.sliced_plate.sparse_infill_density,
             upward_machines: self.upward_machines,
+            repetition_count: self.sliced_plate.repetition_count,
             sliced_plates: &[SlicedPlateEntry {
                 id: self.plate,
                 triangle_count: self.sliced_plate.triangle_count,

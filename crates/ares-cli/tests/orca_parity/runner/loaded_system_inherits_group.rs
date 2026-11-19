@@ -121,6 +121,7 @@ fn check(case: &str, repeat: u8) -> Recorded {
             &input,
             LoadSettingsSliceRequest {
                 orient: false,
+                repetitions: 1,
                 filename: "single.3mf",
                 catalog_json: None,
                 uptodate: false,

@@ -31,6 +31,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if args.repetitions > 1 && extension.as_deref() != Some("3mf") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--repetitions requires 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() != Some("3mf") && args.dump_moves.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -130,6 +137,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                         &input,
                         ares_core::CliProjectSliceRequest {
                             orient: args.orient == 1,
+                            repetitions: args.repetitions,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: true,
@@ -181,6 +189,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                         &input,
                         ares_core::CliProjectSliceRequest {
                             orient: args.orient == 1,
+                            repetitions: args.repetitions,
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: false,

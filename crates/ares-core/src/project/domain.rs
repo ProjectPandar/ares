@@ -14,6 +14,7 @@ mod instance;
 pub(crate) use instance::InstancePvs;
 mod instance_copies;
 mod model_snapshot;
+mod repetitions;
 pub(crate) use model_snapshot::ModelSnapshot;
 pub(super) mod object_id;
 mod plate_selection;

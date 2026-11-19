@@ -53,6 +53,7 @@ pub(super) async fn slice(
         input,
         ares_core::LoadSettingsSliceRequest {
             orient: args.orient == 1,
+            repetitions: args.repetitions,
             filename,
             catalog_json: catalog.as_deref(),
             uptodate: args.uptodate,

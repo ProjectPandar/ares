@@ -28,6 +28,32 @@ impl CliFailure {
     }
 }
 
+impl CliFailure {
+    pub(super) fn invalid_repetition_plate(_output: &Path) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -2,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "Invalid parameters to the slicer.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
+            stderr: String::new(),
+            #[cfg(target_os = "linux")]
+            output: _output.to_owned(),
+        }))
+    }
+}
+
 impl FamilyFailure {
     pub(super) fn flush_and_exit(self) -> ! {
         #[cfg(target_os = "linux")]
@@ -59,6 +85,7 @@ impl FamilyFailure {
             wall_loops: self.wall_loops,
             sparse_infill_density: self.sparse_infill_density,
             upward_machines: &self.upward_machines,
+            repetition_count: None,
             sliced_plates: sliced_plates.as_slice(),
             warnings: &self.warnings,
         }

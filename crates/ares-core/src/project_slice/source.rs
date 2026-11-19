@@ -15,6 +15,7 @@ pub(crate) struct ProjectSource<'a> {
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
     pub(crate) orient: bool,
+    pub(crate) repetitions: i32,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
     /// The CLI's success report values, filled once the plate is set up.
     pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
@@ -40,6 +41,8 @@ pub struct SlicedPlate {
     /// Original upward vector committed after compatibility (OrcaSlicer.cpp:3005).
     pub upward_machines: Vec<String>,
     pub triangle_count: usize,
+    /// Number of sets actually placed; absent when no repetition occurred.
+    pub repetition_count: Option<usize>,
     /// The f32-stored value widened to f64.
     pub layer_height: f64,
     pub wall_loops: i32,
@@ -132,6 +135,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             validate_print: false,
             validate_config: true,
             orient: false,
+            repetitions: 1,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,
@@ -152,6 +156,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             validate_print: false,
             validate_config: true,
             orient: false,
+            repetitions: 1,
             upward: None,
             sliced_plate: None,
             edits: &crate::plater::NO_EDITS,

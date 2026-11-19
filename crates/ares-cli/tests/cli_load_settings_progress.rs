@@ -105,6 +105,7 @@ fn load_settings_progress_preserves_status_order_and_gcode() {
             &input,
             ares_core::LoadSettingsSliceRequest {
                 orient: false,
+                repetitions: 1,
                 filename: "input.3mf",
                 catalog_json: None,
                 uptodate: false,
