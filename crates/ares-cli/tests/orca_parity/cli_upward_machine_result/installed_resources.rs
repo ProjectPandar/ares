@@ -11,6 +11,7 @@ use serde_json::{Value, json};
 
 use crate::{
     native_wall_clock::result_comparison_bytes,
+    presets::VendorProfiles,
     runner::{self, EarlyExit, OrcaRunner},
 };
 
@@ -79,11 +80,15 @@ fn installed_resources(dump_moves: bool) {
     let resources = prefix.join("resources");
     let machine_dir = resources.join("profiles/BBL/machine_full");
     fs::create_dir_all(&machine_dir).unwrap();
-    // `machine_full` contains a flat resource, not the vendor's inherited fragment.
-    let source = repo.join("tests/parity/machine-full-resource/stock-machine-full.json");
-    let machine = fs::read(source).unwrap();
-    assert_eq!(json_value(&machine)[UPWARD], upward);
-    fs::write(machine_dir.join(ORIGINAL_MACHINE), machine).unwrap();
+    let profiles =
+        VendorProfiles::load(&repo.join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
+    let machine = profiles.machine("Bambu Lab H2D 0.4 nozzle").unwrap();
+    assert_eq!(machine[UPWARD], upward);
+    fs::write(
+        machine_dir.join(ORIGINAL_MACHINE),
+        serde_json::to_vec_pretty(&machine).unwrap(),
+    )
+    .unwrap();
 
     let (fallback, fallback_result) = slice.run(&root.join("explicit-empty"), Some(&empty));
     assert_eq!(fallback.stdout, native.stdout);
