@@ -41,6 +41,9 @@ mod preset_vector_loading;
 #[path = "../plater_archive.rs"]
 mod plater_archive;
 
+#[path = "profile_entry/tree_extra_wall_areas.rs"]
+mod tree_extra_wall_areas;
+
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]
 mod config_string_vector_quoting;
