@@ -78,8 +78,9 @@ pub(super) async fn slice(
             format!("{error}\n"),
         ),
     })?;
+    let refresh = crate::native_refresh::load(args, input, load_filaments)?;
     let mut sliced_plate = ares_core::SlicedPlate::default();
-    let gcode = match ares_core::slice_with_load_settings(
+    let gcode = match ares_core::slice_with_load_settings_and_refresh(
         input,
         ares_core::LoadSettingsSliceRequest {
             orient: args.orient == 1,
@@ -94,6 +95,7 @@ pub(super) async fn slice(
             placement: ares_core::Placement::None,
             sliced_plate: &mut sliced_plate,
         },
+        refresh.as_ref(),
         ares_core::GenerationMetadata::default(),
         context,
     )

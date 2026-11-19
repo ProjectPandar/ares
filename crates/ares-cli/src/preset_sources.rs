@@ -61,6 +61,9 @@ fn read_preset_source(path: &Path) -> io::Result<(String, ares_core::SourceIdent
     Ok((json, identity))
 }
 
+/// Reads the referenced preset files, keeping the path for upstream error
+/// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
+/// Empty labels stay empty (dropped list slots).
 pub(super) fn read_preset_files(
     labels: &[&str],
 ) -> Result<Vec<(String, String, Option<ares_core::SourceIdentity>)>, CliFailure> {

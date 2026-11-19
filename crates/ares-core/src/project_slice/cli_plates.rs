@@ -196,6 +196,7 @@ pub fn slice_cli_project_plates(
                         orient,
                         sliced_plate: &mut report,
                     },
+                    None,
                     run,
                 )
             }

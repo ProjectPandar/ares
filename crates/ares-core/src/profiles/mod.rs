@@ -41,13 +41,15 @@ pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
     CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSliceRequest,
     profile_placed_project, slice_cli_with_profiles_validated, slice_with_load_settings,
-    slice_with_profiles, slice_with_profiles_processed, slice_with_profiles_processed_validated,
-    slice_with_profiles_validated, validate_load_settings_input, validate_with_profiles,
+    slice_with_load_settings_and_refresh, slice_with_profiles, slice_with_profiles_processed,
+    slice_with_profiles_processed_validated, slice_with_profiles_validated,
+    validate_load_settings_input, validate_with_profiles,
 };
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};
 pub use inheritance::{MergedProfile, MergedProfileMetadata};
 pub use load_settings::{LoadSettingsFile, LoadSettingsRequest};
+pub use project_refresh::{NativeRefreshFile, NativeRefreshPresets};
 
 pub(crate) fn without_utf8_bom(input: &[u8]) -> &[u8] {
     input.strip_prefix(b"\xef\xbb\xbf").unwrap_or(input)

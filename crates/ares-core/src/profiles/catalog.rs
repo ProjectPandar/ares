@@ -123,6 +123,10 @@ pub struct PresetCatalogHandle {
 }
 
 impl PresetCatalogHandle {
+    pub(super) fn catalog(&self) -> &Catalog {
+        &self.catalog
+    }
+
     pub fn new() -> Self {
         Self {
             catalog: Catalog::empty(),

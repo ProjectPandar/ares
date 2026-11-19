@@ -5,7 +5,9 @@ use crate::{
 
 use super::catalog::selection;
 pub(crate) mod load_settings;
-pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
+pub use load_settings::{
+    LoadSettingsSliceRequest, slice_with_load_settings, slice_with_load_settings_and_refresh,
+};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
@@ -269,7 +271,7 @@ pub(crate) fn with_edited_profile_source<T>(
             plate,
             profile: None,
             refresh: Some(super::ProjectPresetRefresh {
-                catalog: &catalog,
+                source: super::project_refresh::RefreshSource::Catalog(&catalog),
                 policy,
                 filename,
                 placement,
