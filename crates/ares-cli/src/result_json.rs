@@ -19,6 +19,7 @@ pub(super) enum CliWarning {
 
 /// One `sliced_plates` entry (`sliced_plate_info_t`, `OrcaSlicer.cpp:245-251`). The slice times
 /// are wall-clock seconds (`:7259-7260`), written as 0.
+#[derive(Clone)]
 pub(super) struct SlicedPlateEntry {
     pub(super) id: u32,
     pub(super) triangle_count: usize,
@@ -122,6 +123,60 @@ impl ResultJson<'_> {
             .collect::<Result<Vec<_>, serde_json::Error>>()?;
         Ok(format!("[\n{}\n\t]", entries.join(",\n")))
     }
+}
+
+impl SlicedPlateEntry {
+    pub(super) fn from_plate(id: u32, plate: &ares_core::SlicedPlate) -> Self {
+        Self {
+            id,
+            triangle_count: plate.triangle_count,
+            warning_message: plate
+                .warnings
+                .last()
+                .map(|warning| warning.message.clone())
+                .unwrap_or_default(),
+        }
+    }
+}
+
+pub(super) fn write_plate_batch(
+    output: &Path,
+    selection: u32,
+    (file, substitutions): (&str, Vec<ares_core::ConfigSubstitution>),
+    upward_machines: &[String],
+    completed: &[(u32, ares_core::SlicedPlate)],
+) {
+    let Some((_, last)) = completed.last() else {
+        return;
+    };
+    let sliced_plates = completed
+        .iter()
+        .map(|(id, plate)| SlicedPlateEntry::from_plate(*id, plate))
+        .collect::<Vec<_>>();
+    let warnings = substitutions
+        .into_iter()
+        .map(|substitution| CliWarning::ConfigValueSubstituted {
+            file: file.to_owned(),
+            substitution,
+        })
+        .chain(
+            completed
+                .iter()
+                .flat_map(|(id, plate)| slicing_warnings(*id, plate.warnings.clone())),
+        )
+        .collect::<Vec<_>>();
+    let _ = ResultJson {
+        return_code: 0,
+        error_string: "Success.",
+        plate_index: selection,
+        layer_height: last.layer_height,
+        wall_loops: last.wall_loops,
+        sparse_infill_density: last.sparse_infill_density,
+        upward_machines,
+        sliced_plates: &sliced_plates,
+        warnings: &warnings,
+    }
+    .write(output);
 }
 
 /// A successful 3MF slice of one plate: `record_exit_reson(outfile_dir, 0, plate_to_slice, …)`

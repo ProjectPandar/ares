@@ -11,7 +11,17 @@ impl Project {
     /// per plate). Returns a view containing only the instances of `plate`
     /// (the first plate when `None`), selected as `Model::curr_plate_index`.
     pub fn select_plate(&self, plate: Option<u32>) -> Result<Self, SliceError> {
-        let plate_id = plate.unwrap_or_else(|| self.first_plate_id());
+        self.plate_view(
+            plate.unwrap_or_else(|| self.first_plate_id()),
+            plate.is_some(),
+        )
+    }
+
+    pub(crate) fn plate_view(
+        &self,
+        plate_id: u32,
+        selected_import: bool,
+    ) -> Result<Self, SliceError> {
         let plate_count = self.plates.len();
         let index = self
             .plates
@@ -27,9 +37,9 @@ impl Project {
         // (`bbs_3mf.cpp:2215-2221` at v2.5.0-beta `345efec64`); `Print::apply`'s `is_printable()`
         // then prints the ones inside the plate's volume. The plate-less view keeps the first
         // plate's listed instances.
-        let mut objects = match plate {
-            Some(_) => self.selected_import_objects(&self.plates[index]),
-            None => {
+        let mut objects = match selected_import {
+            true => self.selected_import_objects(&self.plates[index]),
+            false => {
                 let mut objects = self.objects.clone();
                 for object in &mut objects {
                     object
@@ -84,7 +94,11 @@ impl Project {
             plates: vec![self.plates[index].clone()],
             settings,
             documents,
-            import_scope: plate.map_or(self.import_scope, ImportScope::Plate),
+            import_scope: if selected_import {
+                ImportScope::Plate(plate_id)
+            } else {
+                self.import_scope
+            },
             plate_view: true,
             plate_origin: if self.plate_view {
                 self.plate_origin

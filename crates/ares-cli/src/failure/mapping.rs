@@ -35,6 +35,8 @@ pub(crate) fn slice_error_to_failure(
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
             critical_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),

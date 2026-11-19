@@ -46,6 +46,11 @@ pub(crate) use profile_entry::validate_profile_source;
 pub(crate) use profile_entry::{center_profile_project, load_and_place};
 
 pub use source::{CliUpwardMachine, SlicedPlate};
+mod cli_plates;
+pub use cli_plates::{
+    CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
+    slice_cli_project_plates,
+};
 pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, DirectProjectSliceRequest, slice_cli_project_plate_validated,
@@ -203,16 +208,41 @@ pub(crate) fn slice_source(
     record_moves: bool,
     mut context: crate::SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    // Fresh-process equivalence for the `~`/`^` rotate_template joints:
-    // upstream slices once per process, so `rand()` always sees the default
-    // seed (`Fill.cpp:199-200`); reset the per-thread stream per slice.
+    let sliced_plate = project.sliced_plate.take();
+    slice_plate(
+        metadata,
+        record_moves,
+        &mut context,
+        sliced_plate,
+        |report, context| {
+            perimeters::prepare_post_layer_region_perimeters(
+                ProjectSource {
+                    sliced_plate: report,
+                    ..project
+                },
+                context,
+            )
+        },
+    )
+}
+
+fn slice_plate(
+    metadata: GenerationMetadata,
+    record_moves: bool,
+    context: &mut crate::SlicerContext<'_>,
+    mut sliced_plate: Option<&mut SlicedPlate>,
+    prepare: impl FnOnce(
+        Option<&mut SlicedPlate>,
+        &mut crate::SlicerContext<'_>,
+    ) -> Result<
+        perimeters::layer_region::PreparedPostLayerRegionPerimeters,
+        SliceError,
+    >,
+) -> Result<ProcessedGCode, SliceError> {
+    // Fresh-process equivalence for the `~`/`^` rotate_template joints
+    // (`Fill.cpp:199-200`).
     group_fills::reset_rand_state();
-    let mut sliced_plate = project.sliced_plate.take();
-    let project = ProjectSource {
-        sliced_plate: sliced_plate.as_deref_mut(),
-        ..project
-    };
-    let walls = perimeters::prepare_post_layer_region_perimeters(project, &mut context)?;
+    let walls = prepare(sliced_plate.as_deref_mut(), context)?;
     // `Print.cpp:3461-3481` prepares and fills each object in turn (`PrintObject.cpp:631,819`);
     // Ares prepares the infill of every object, then fills every object.
     for _ in &walls.objects {
@@ -246,8 +276,8 @@ pub(crate) fn slice_source(
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
-    contour_z::prepare(&mut filled, &mut context);
-    let mut warnings = match support_material::check_necessity(&filled, &mut context) {
+    contour_z::prepare(&mut filled, context);
+    let mut warnings = match support_material::check_necessity(&filled, context) {
         Ok(warnings) => warnings,
         Err(error) => {
             fill_entities::dispose(filled);
@@ -258,7 +288,7 @@ pub(crate) fn slice_source(
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
-    let support_layers = match support_material::generate(&filled, &mut context) {
+    let support_layers = match support_material::generate(&filled, context) {
         Ok(layers) => layers,
         Err(error) => {
             fill_entities::dispose(filled);
@@ -270,13 +300,8 @@ pub(crate) fn slice_source(
     ordered.support_layers = support_layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
-    let output = consume_post_island_print_order(
-        ordered,
-        metadata,
-        record_moves,
-        &mut context,
-        &mut warnings,
-    );
+    let output =
+        consume_post_island_print_order(ordered, metadata, record_moves, context, &mut warnings);
     if let Some(sliced_plate) = sliced_plate {
         sliced_plate.warnings.clone_from(&warnings);
     }

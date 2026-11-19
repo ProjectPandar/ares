@@ -89,7 +89,7 @@ pub(super) async fn slice(
     ares_core::validate_load_settings_input(input).map_err(|error| {
         slice_error_to_failure(
             error,
-            &args.output,
+            args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
         )
@@ -156,7 +156,7 @@ pub(super) async fn slice(
             )?;
             let failure = slice_error_to_failure(
                 error,
-                &args.output,
+                args.output(),
                 #[cfg(target_os = "linux")]
                 args.plate.unwrap_or(1),
             )
@@ -172,13 +172,13 @@ pub(super) async fn slice(
     if let Some(path) = &args.dump_moves {
         fs::write(path, crate::moves_csv::format(&processed.result))?;
     }
-    fs::write(&args.output, processed.gcode)?;
+    fs::write(args.output(), processed.gcode)?;
     crate::report_success(
         &input_file,
         crate::substitutions(input),
         #[cfg(target_os = "linux")]
         crate::result_json::Success {
-            output: &args.output,
+            output: args.output(),
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),
             sliced_plate,

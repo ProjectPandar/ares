@@ -7,6 +7,7 @@ mod preset_sources;
 mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
+mod slice_plates;
 
 use std::fs;
 use std::io;
@@ -32,6 +33,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if args.selection.is_some() && extension.as_deref() != Some("3mf") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--slice requires 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() != Some("3mf") && args.dump_moves.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -81,7 +89,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             return Err(CliFailure::missing_input(
                 &args.input,
                 #[cfg(target_os = "linux")]
-                &args.output,
+                &slice_plates::output_directory(&args)
+                    .map_or_else(|| args.output().to_owned(), |dir| dir.join("plate_1.gcode")),
             ));
         }
         Err(error) => return Err(error.into()),
@@ -95,6 +104,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let mut context = ares_core::SlicerContext::new(0);
     if args.progress {
         context.set_status_callback(&mut print_status);
+    }
+    if let Some(selection) = args.selection {
+        return slice_plates::run(&args, selection, &input, &overrides, context);
     }
     if let Some(catalog) = &args.project_preset_catalog
         && args.load_settings.is_none()
@@ -170,7 +182,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             )?;
                             let failure = slice_error_to_failure(
                                 error,
-                                &args.output,
+                                args.output(),
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
@@ -222,7 +234,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             )?;
                             let failure = slice_error_to_failure(
                                 error,
-                                &args.output,
+                                args.output(),
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
@@ -239,13 +251,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 }
             };
             failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
-            fs::write(&args.output, gcode)?;
+            fs::write(args.output(), gcode)?;
             report_success(
                 &input_file,
                 substitutions(&input),
                 #[cfg(target_os = "linux")]
                 result_json::Success {
-                    output: &args.output,
+                    output: args.output(),
                     plate: args.plate.unwrap_or(1),
                     plate_index: args.plate.unwrap_or(0),
                     sliced_plate,
@@ -261,7 +273,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
                 ).into());
             }
-            let options = args.options.ok_or_else(|| {
+            let options = args.options.as_ref().ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidInput, "STL input requires --options")
             })?;
             let options = fs::read(options)?;
@@ -271,7 +283,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 Err(error) => {
                     return Err(slice_error_to_failure(
                         error,
-                        &args.output,
+                        args.output(),
                         #[cfg(target_os = "linux")]
                         1,
                     ));
@@ -280,7 +292,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         _ => unreachable!("input extension was validated above"),
     };
-    fs::write(&args.output, output)?;
+    fs::write(args.output(), output)?;
 
     Ok(())
 }
@@ -312,81 +324,6 @@ fn split_native_list(value: &str) -> Vec<&str> {
 /// Reads the referenced preset files, keeping the path for upstream error
 /// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
 /// Empty labels stay empty (dropped list slots).
-fn source_identity(file: &fs::File) -> io::Result<ares_core::SourceIdentity> {
-    let mut bytes = Vec::new();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::MetadataExt;
-        let metadata = file.metadata()?;
-        bytes.extend_from_slice(&metadata.dev().to_le_bytes());
-        bytes.extend_from_slice(&metadata.ino().to_le_bytes());
-    }
-    #[cfg(windows)]
-    {
-        use std::os::windows::io::AsRawHandle;
-        use windows_sys::Win32::{
-            Foundation::HANDLE,
-            Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
-        };
-        let mut information = std::mem::MaybeUninit::<BY_HANDLE_FILE_INFORMATION>::uninit();
-        // SAFETY: the open File owns a live handle and the output allocation is writable.
-        let success = unsafe {
-            GetFileInformationByHandle(file.as_raw_handle() as HANDLE, information.as_mut_ptr())
-        };
-        if success == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        // SAFETY: a successful GetFileInformationByHandle initializes the output.
-        let information = unsafe { information.assume_init() };
-        bytes.extend_from_slice(&information.dwVolumeSerialNumber.to_le_bytes());
-        let file_index =
-            (u64::from(information.nFileIndexHigh) << 32) | u64::from(information.nFileIndexLow);
-        bytes.extend_from_slice(&file_index.to_le_bytes());
-    }
-    #[cfg(not(any(unix, windows)))]
-    {
-        let _ = file;
-        return Err(io::Error::new(
-            io::ErrorKind::Unsupported,
-            "preset source identity is unsupported on this host",
-        ));
-    }
-    Ok(ares_core::SourceIdentity::from_host_bytes(
-        bytes.into_boxed_slice(),
-    ))
-}
-
-fn read_preset_source(path: &Path) -> io::Result<(String, ares_core::SourceIdentity)> {
-    use std::io::Read;
-    let mut file = fs::File::open(path)?;
-    let identity = source_identity(&file)?;
-    let mut json = String::new();
-    file.read_to_string(&mut json)?;
-    Ok((json, identity))
-}
-
-fn read_preset_files(
-    labels: &[&str],
-) -> Result<Vec<(String, String, Option<ares_core::SourceIdentity>)>, CliFailure> {
-    labels
-        .iter()
-        .map(|label| {
-            let (json, identity) = if label.is_empty() {
-                (String::new(), None)
-            } else {
-                let (json, identity) = read_preset_source(Path::new(label)).map_err(|error| {
-                    io::Error::new(
-                        io::ErrorKind::InvalidInput,
-                        format!("Loading setting file \"{label}\" failed: {error}"),
-                    )
-                })?;
-                (json, Some(identity))
-            };
-            Ok(((*label).to_owned(), json, identity))
-        })
-        .collect()
-}
-
 fn ensure_supported_input(path: &Path) -> Result<(), io::Error> {
     match path.extension().and_then(|extension| extension.to_str()) {
         Some("3mf" | "stl") => Ok(()),

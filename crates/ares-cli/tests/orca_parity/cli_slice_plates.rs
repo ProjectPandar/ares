@@ -38,6 +38,12 @@ fn cli_slice_rejects_signed_and_out_of_range_selections() {
 }
 
 #[test]
+fn cli_slice_refuses_to_export_a_plate_with_critical_empty_layers() {
+    let input = include_bytes!("../../../../tests/parity/mesh-edge-pairing/odd-rotated.3mf");
+    verify("0", input, true, 156, &[]);
+}
+
+#[test]
 fn cli_slice_all_plates_preflights_later_plates_before_export() {
     let mut source = zip::ZipArchive::new(Cursor::new(PROJECT)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
@@ -100,12 +106,44 @@ fn verify(selection: &str, input: &[u8], outputdir: bool, exit: i32, names: &[&s
         "{work:?}: {}",
         String::from_utf8_lossy(&actual.stderr),
     );
-    compare(
-        &references[0],
-        &outputs(&work, outputdir, names),
-        false,
-        &root,
-    );
+    let actual = outputs(&work, outputdir, names);
+    compare(&references[0], &actual, false, &root);
+    if !names.is_empty() {
+        compare_api(input, selection.parse().unwrap(), names, &actual.0);
+    }
+}
+
+fn compare_api(input: &[u8], selection: i32, names: &[&str], cli: &[Vec<u8>]) {
+    let mut published = Vec::new();
+    ares_core::slice_cli_project_plates(
+        input,
+        ares_core::CliPlatesRequest {
+            selection,
+            filename: "project.3mf",
+            settings: ares_core::CliPlatesSettings::Embedded {
+                system_catalog: None,
+            },
+            overrides: &ares_core::ConfigOverrides::default(),
+            orient: false,
+            upward: ares_core::CliUpwardMachine {
+                source: ares_core::UpwardMachineSource::from_project(input).unwrap(),
+                input: ares_core::UpwardMachineInput::FetchOriginal(None),
+                report: &mut Vec::new(),
+            },
+        },
+        ares_core::GenerationMetadata::default(),
+        ares_core::SlicerContext::new(0),
+        |plate, gcode, _| {
+            let index = published.len();
+            let name = format!("plate_{plate}.gcode");
+            assert_eq!(name, names[index]);
+            assert_eq!(gcode, &cli[index], "raw API/CLI G-code: {name}");
+            published.push(name);
+            Ok(())
+        },
+    )
+    .unwrap();
+    assert_eq!(published, names);
 }
 
 fn create_work(work: &Path, existing_output_dir: bool) {
