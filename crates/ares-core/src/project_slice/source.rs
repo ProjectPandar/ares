@@ -122,8 +122,12 @@ impl ProjectInput<'_> {
                     Ok((project, preparation.for_overrides(overrides)))
                 }
                 crate::project::assembly::AssemblySource::Model(model) => {
-                    let (mut project, preparation) =
-                        Self::Model(model).load(overrides, refresh, validate_print)?;
+                    let (mut project, preparation) = Self::Model(model).load(
+                        overrides,
+                        refresh,
+                        system_catalog,
+                        validate_print,
+                    )?;
                     project.place_assembly_plates();
                     Ok((project, preparation))
                 }

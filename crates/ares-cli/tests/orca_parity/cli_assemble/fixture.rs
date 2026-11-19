@@ -127,22 +127,7 @@ fn layer_outer_wall_extents(layer: &str, feature_marker: &str) -> Vec<[i32; 4]> 
             continue;
         };
         let last = xy;
-        let mut extrude = false;
-        for word in move_args
-            .split(';')
-            .next()
-            .unwrap()
-            .split_ascii_whitespace()
-        {
-            if let Some(e) = word.strip_prefix('E') {
-                extrude = e.parse::<f64>().unwrap() > 0.0;
-            }
-            for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
-                if let Some(value) = word.strip_prefix(letter) {
-                    xy[axis] = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
-                }
-            }
-        }
+        let extrude = parse_move(move_args, &mut xy);
         if last != xy {
             if outer && extrude {
                 points.extend([last, xy]);
@@ -154,6 +139,26 @@ fn layer_outer_wall_extents(layer: &str, feature_marker: &str) -> Vec<[i32; 4]> 
     add_extents(&mut paths, &mut points);
     paths.sort_unstable();
     paths
+}
+
+fn parse_move(move_args: &str, xy: &mut [i32; 2]) -> bool {
+    let mut extrude = false;
+    for word in move_args
+        .split(';')
+        .next()
+        .unwrap()
+        .split_ascii_whitespace()
+    {
+        if let Some(e) = word.strip_prefix('E') {
+            extrude = e.parse::<f64>().unwrap() > 0.0;
+        }
+        for (axis, letter) in ['X', 'Y'].into_iter().enumerate() {
+            if let Some(value) = word.strip_prefix(letter) {
+                xy[axis] = (value.parse::<f64>().unwrap() * 1000.0).round() as i32;
+            }
+        }
+    }
+    extrude
 }
 
 fn add_extents(paths: &mut Vec<[i32; 4]>, points: &mut Vec<[i32; 2]>) {

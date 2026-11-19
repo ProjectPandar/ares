@@ -71,6 +71,7 @@ pub async fn slice_assembly(
                 plate: request.plate,
                 profile: None,
                 refresh: None,
+                system_catalog: None,
                 overrides: request.overrides,
                 validate_print: true,
                 validate_config: true,

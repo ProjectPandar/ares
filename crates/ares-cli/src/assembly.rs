@@ -3,8 +3,8 @@ use std::{collections::BTreeMap, fs, path::Path};
 use ares_core::{Assembly, AssemblyError, AssemblyFile, AssemblyList, ConfigOverrides};
 
 use crate::{
-    CliFailure, SliceArgs, read_preset_files, report_success, slice_error_to_failure,
-    split_native_list,
+    CliFailure, SliceArgs, preset_sources::read_preset_files, report_success,
+    slice_error_to_failure, split_native_list,
 };
 
 pub(super) fn requested(args: &SliceArgs) -> bool {
@@ -135,10 +135,18 @@ fn read_list(path: &Path) -> Result<AssemblyList, AssemblyError> {
     AssemblyList::from_json(&bytes)
 }
 
-fn preset_files(presets: &[(String, String)]) -> Vec<ares_core::LoadSettingsFile<'_>> {
+fn preset_files(
+    presets: &[(String, String, Option<ares_core::SourceIdentity>)],
+) -> Vec<ares_core::LoadSettingsFile<'_>> {
     presets
         .iter()
-        .map(|(label, json)| ares_core::LoadSettingsFile { label, json })
+        .map(
+            |(label, json, source_identity)| ares_core::LoadSettingsFile {
+                label,
+                json,
+                source_identity: source_identity.as_ref(),
+            },
+        )
         .collect()
 }
 
@@ -151,7 +159,7 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
         CliFailure::assembly(
             error,
             #[cfg(target_os = "linux")]
-            &args.output,
+            args.output(),
         )
     };
     validate(args).map_err(failure)?;
@@ -220,6 +228,7 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
             settings: &settings,
             filaments: &filaments,
             catalog_json: None,
+            loaded_sources: None,
             uptodate: false,
             plate: args.plate,
             overrides: &ConfigOverrides::default(),
@@ -234,19 +243,19 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
     .map_err(|error| {
         slice_error_to_failure(
             error,
-            &args.output,
+            args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
         )
     })?;
-    fs::write(&args.output, output)?;
+    fs::write(args.output(), output)?;
     let input = assembly.archive();
     report_success(
         input.map_or("Assembly", |file| file.path),
         input.map_or_else(Vec::new, |file| crate::substitutions(file.bytes)),
         #[cfg(target_os = "linux")]
         crate::result_json::Success {
-            output: &args.output,
+            output: args.output(),
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),
             sliced_plate,
