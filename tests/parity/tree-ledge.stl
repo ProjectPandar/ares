@@ -1,0 +1,198 @@
+solid tree-ledge
+  facet normal -1 0 0
+    outer loop
+      vertex 0 0 5
+      vertex 0 6 5
+      vertex 0 6 0
+    endloop
+  endfacet
+  facet normal -1 0 0
+    outer loop
+      vertex 0 0 5
+      vertex 0 6 0
+      vertex 0 0 0
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 6 0 0
+      vertex 6 6 0
+      vertex 6 6 5
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 6 0 0
+      vertex 6 6 5
+      vertex 6 0 5
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 6 0 0
+      vertex 6 0 5
+      vertex 0 0 5
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 6 0 0
+      vertex 0 0 5
+      vertex 0 0 0
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 6 0
+      vertex 0 6 5
+      vertex 6 6 5
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 6 0
+      vertex 6 6 5
+      vertex 6 6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 0 6 0
+      vertex 6 6 0
+      vertex 6 0 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 0 6 0
+      vertex 6 0 0
+      vertex 0 0 0
+    endloop
+  endfacet
+  facet normal -1 0 0
+    outer loop
+      vertex 0 0 7
+      vertex 0 6 7
+      vertex 0 6 5
+    endloop
+  endfacet
+  facet normal -1 0 0
+    outer loop
+      vertex 0 0 7
+      vertex 0 6 5
+      vertex 0 0 5
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 6 0 5
+      vertex 6 0 7
+      vertex 0 0 7
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 6 0 5
+      vertex 0 0 7
+      vertex 0 0 5
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 6 5
+      vertex 0 6 7
+      vertex 6 6 7
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 6 5
+      vertex 6 6 7
+      vertex 6 6 5
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 7
+      vertex 6 0 7
+      vertex 6 6 7
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 7
+      vertex 6 6 7
+      vertex 0 6 7
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 11 0 5
+      vertex 11 6 5
+      vertex 11 6 7
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 11 0 5
+      vertex 11 6 7
+      vertex 11 0 7
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 11 0 5
+      vertex 11 0 7
+      vertex 6 0 7
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 11 0 5
+      vertex 6 0 7
+      vertex 6 0 5
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 6 6 5
+      vertex 6 6 7
+      vertex 11 6 7
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 6 6 5
+      vertex 11 6 7
+      vertex 11 6 5
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 6 6 5
+      vertex 11 6 5
+      vertex 11 0 5
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 6 6 5
+      vertex 11 0 5
+      vertex 6 0 5
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 6 0 7
+      vertex 11 0 7
+      vertex 11 6 7
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 6 0 7
+      vertex 11 6 7
+      vertex 6 6 7
+    endloop
+  endfacet
+endsolid tree-ledge

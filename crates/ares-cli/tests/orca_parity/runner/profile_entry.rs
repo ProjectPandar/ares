@@ -49,6 +49,8 @@ mod arachne_voronoi_repair;
 #[path = "profile_entry/tree_extra_wall_areas.rs"]
 mod tree_extra_wall_areas;
 
+#[path = "profile_entry/tree_interlaced.rs"]
+mod tree_interlaced;
 #[path = "profile_entry/type1_toolchange_count.rs"]
 mod type1_toolchange_count;
 

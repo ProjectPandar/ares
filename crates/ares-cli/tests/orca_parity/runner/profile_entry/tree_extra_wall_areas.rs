@@ -59,7 +59,7 @@ fn compare_half_scale_overhang(label: &str, style: &str) {
     case.compare(GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0));
 }
 
-fn half_scale_instance(model: &str) -> String {
+pub(super) fn half_scale_instance(model: &str) -> String {
     let (resources, build) = model.split_once("<build").unwrap();
     assert_eq!(build.matches("<item ").count(), 1);
     let transform = attribute(build, "transform");
