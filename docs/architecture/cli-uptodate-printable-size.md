@@ -2,7 +2,7 @@
 
 ## Source boundary
 
-This slice ports the retained-machine admission in the pinned OrcaSlicer v2.5.0 source, `OrcaSlicer.cpp:1899-1909` and `OrcaSlicer.cpp:2563-2600`. The 3MF loader records the embedded `printable_area` bounding-box width and depth and `printable_height`, truncating each value to `int`. After a retained machine file is loaded, Native computes the same three values from that file and rejects the refresh when any embedded dimension is larger than the loaded machine dimension. The diagnostic is `Printer Settings: the printable size {w, d, h} exceeds the default size.`, the CLI result code is `CLI_MODIFIED_PARAMS_TO_PRINTER` (`-19`), and the result report is written before exit. The machine model's `model_id` lookup remains part of the machine-file load boundary so model-dependent output continues to use the same identity.
+This slice ports the retained-machine admission in the pinned OrcaSlicer v2.5.0 source, `OrcaSlicer.cpp:1899-1909` and `OrcaSlicer.cpp:2563-2600`. The 3MF loader records the embedded `printable_area` bounding-box width and depth and `printable_height`, truncating each value to `int`. After a retained machine file is loaded, Native computes the same three values from that file and rejects the refresh when any embedded dimension is larger than the loaded machine dimension. The diagnostic is `Printer Settings: the printable size {w, d, h} exceeds the default size.`, the CLI result code is `CLI_MODIFIED_PARAMS_TO_PRINTER` (`-23`), and the result report is written before exit. Native also reads `model_id` from the external printer-model record, but Ares has no equivalent plate-data output or judgment seam; this slice therefore adds no new I/O for that metadata.
 
 ## Ares destination
 

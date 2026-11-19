@@ -16,7 +16,7 @@ pub(crate) fn slice_error_to_failure(
                   #[cfg(target_os = "linux")] layer_height,
                   #[cfg(target_os = "linux")] wall_loops,
                   #[cfg(target_os = "linux")] sparse,
-                  #[cfg(target_os = "linux")] error_string,
+                  #[cfg(target_os = "linux")] error_string: &'static str,
                   stderr| {
         CliFailure::Family(Box::new(FamilyFailure {
             return_code,
@@ -29,7 +29,7 @@ pub(crate) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             sparse_infill_density: sparse,
             #[cfg(target_os = "linux")]
-            error_string,
+            error_string: error_string.to_owned(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -87,6 +87,17 @@ pub(crate) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             "The selected printer is not compatible with the process preset in the 3mf.",
             String::new(),
+        ),
+        SliceError::PrintableSizeExceedsDefault {
+            width,
+            depth,
+            height,
+        } => CliFailure::modified_printable_size(
+            #[cfg(target_os = "linux")]
+            output,
+            width,
+            depth,
+            height,
         ),
         // OrcaSlicer.cpp:6522-6531 selects the active plate; :6572 passes
         // index+1 to record_exit_reson, and :552 writes that plate_id.

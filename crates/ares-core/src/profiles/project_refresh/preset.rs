@@ -128,6 +128,47 @@ pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usiz
         .unwrap_or(name)
 }
 
+/// `OrcaSlicer.cpp:1899-1909,2563-2593`: the three dimensions used by the
+/// retained-machine admission, with the same bounding-box and integer truncation.
+pub(super) fn printable_size(raw: &ProjectSettingsRaw) -> [i32; 3] {
+    let points = raw
+        .get("printable_area")
+        .map(point_pairs)
+        .unwrap_or_default();
+    let (width, depth) = if points.len() >= 4 {
+        let (min_x, max_x, min_y, max_y) = points.iter().skip(1).fold(
+            (points[0].0, points[0].0, points[0].1, points[0].1),
+            |(min_x, max_x, min_y, max_y), &(x, y)| {
+                (min_x.min(x), max_x.max(x), min_y.min(y), max_y.max(y))
+            },
+        );
+        ((max_x - min_x) as i32, (max_y - min_y) as i32)
+    } else {
+        (0, 0)
+    };
+    let height = raw
+        .get("printable_height")
+        .and_then(|value| value.token())
+        .and_then(|value| value.trim().parse::<f64>().ok())
+        .map_or(0, |value| value as i32);
+    [width, depth, height]
+}
+
+fn point_pairs(value: &RawConfigValue) -> Vec<(f64, f64)> {
+    let tokens: Vec<String> = match value {
+        RawConfigValue::List(values) => values.iter().filter_map(|value| value.token()).collect(),
+        RawConfigValue::Text(value) => value.split(';').map(str::to_owned).collect(),
+        _ => Vec::new(),
+    };
+    tokens
+        .iter()
+        .filter_map(|token| {
+            let (x, y) = token.trim().split_once('x')?;
+            Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+        })
+        .collect()
+}
+
 pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<String> {
     let Some(value) = raw.get(key) else {
         return Vec::new();

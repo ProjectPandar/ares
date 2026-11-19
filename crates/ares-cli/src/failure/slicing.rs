@@ -25,7 +25,7 @@ pub(crate) fn check(
         #[cfg(target_os = "linux")]
         sparse_infill_density: plate.sparse_infill_density,
         #[cfg(target_os = "linux")]
-        error_string: "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.",
+        error_string: "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.".to_owned(),
         upward_machines: upward.to_vec(),
         #[cfg(target_os = "linux")]
         warnings: Vec::new(),

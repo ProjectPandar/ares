@@ -10,7 +10,7 @@ pub use native::{NativeRefreshFile, NativeRefreshPresets};
 
 use std::collections::BTreeMap;
 
-use super::{Placement, catalog::Catalog, project_selection::LoadedCatalog};
+use super::{Placement, ProfileKind, catalog::Catalog, project_selection::LoadedCatalog};
 use crate::{
     ConfigOverrides, Project, ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
@@ -235,6 +235,9 @@ impl<'a> ProjectPresetRefresh<'a> {
                 project.apply_project_preset_selection(raw, selection, overrides)?;
             }
             ProjectPresetPolicy::Cli { uptodate } => {
+                if uptodate {
+                    self.reject_oversized_machine(&project)?;
+                }
                 let mut raw = preset::refresh(
                     self.lookup(),
                     &project.documents().project_settings_raw,
@@ -248,6 +251,33 @@ impl<'a> ProjectPresetRefresh<'a> {
             }
         }
         Ok((project, preparation.for_overrides(overrides)))
+    }
+
+    fn reject_oversized_machine(&self, project: &Project) -> Result<(), SliceError> {
+        let raw = &project.documents().project_settings_raw;
+        let inherited = preset::strings(raw, "inherits_group");
+        let names = preset::strings(raw, "printer_settings_id");
+        let name = names.first().map(String::as_str).unwrap_or("");
+        let slot = preset::strings(raw, "filament_settings_id").len() + 1;
+        let name = preset::system_name(name, &inherited, slot);
+        if name.is_empty() {
+            return Ok(());
+        }
+        let Some(machine) = self.lookup().system(ProfileKind::Machine, name, slot)? else {
+            return Ok(());
+        };
+        let old = preset::printable_size(raw);
+        let new = preset::printable_size(&machine);
+        if new.iter().all(|dimension| *dimension > 0)
+            && old.iter().zip(new).any(|(old, new)| old > &new)
+        {
+            return Err(SliceError::PrintableSizeExceedsDefault {
+                width: old[0],
+                depth: old[1],
+                height: old[2],
+            });
+        }
+        Ok(())
     }
 
     pub(crate) fn place(self, project: &mut Project) {
