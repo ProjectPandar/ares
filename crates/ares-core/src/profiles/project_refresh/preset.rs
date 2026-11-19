@@ -1,14 +1,14 @@
 use std::collections::BTreeSet;
 
 use super::super::{ProfileKind, catalog::Catalog};
-use super::{filament, keys};
+use super::{PresetLookup, filament, keys};
 use crate::{
     SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
 pub(super) fn refresh(
-    catalog: &Catalog,
+    lookup: PresetLookup<'_>,
     project: &ProjectSettingsRaw,
     uptodate: bool,
     selected: Option<&crate::ProjectSettings>,
@@ -44,7 +44,7 @@ pub(super) fn refresh(
             continue;
         }
         // CLI:3182-3185: a resolver miss keeps the project's values.
-        let Some(system) = system_config(catalog, kind, name)? else {
+        let Some(system) = lookup.system(kind, name, slot)? else {
             continue;
         };
         let protected = dirty_keys(&dirty, slot)?;
@@ -61,7 +61,8 @@ pub(super) fn refresh(
     }
     // CLI:2295,2793: a supplied named machine skips retained filament refresh.
     if supplied.is_some_and(|p| {
-        !p.printer_settings_id.0.is_empty() || !p.filament_settings_id.0.is_empty()
+        (!p.printer_settings_id.0.is_empty() && matches!(lookup, PresetLookup::Catalog(_)))
+            || !p.filament_settings_id.0.is_empty()
     }) {
         return Ok(result);
     }
@@ -74,7 +75,7 @@ pub(super) fn refresh(
             if name.is_empty() {
                 Ok(None)
             } else {
-                system_config(catalog, ProfileKind::Filament, name)
+                lookup.system(ProfileKind::Filament, name, slot)
             }
         })
         .collect::<Result<Vec<_>, SliceError>>()?;

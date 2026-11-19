@@ -5,6 +5,8 @@ pub(super) mod preset;
 pub(in crate::profiles) use filament::{dev_key, is_vector};
 
 pub(crate) use filament::{dev_key as is_filament_dev_key, set_filament_dev_options};
+mod native;
+pub use native::{NativeRefreshFile, NativeRefreshPresets};
 
 use std::collections::BTreeMap;
 
@@ -81,8 +83,43 @@ pub(crate) enum ProjectPresetPolicy {
 }
 
 #[derive(Clone, Copy)]
+pub(super) enum PresetLookup<'a> {
+    Catalog(&'a Catalog),
+    Native(&'a NativeRefreshPresets),
+}
+
+impl PresetLookup<'_> {
+    fn system(
+        self,
+        kind: super::ProfileKind,
+        name: &str,
+        slot: usize,
+    ) -> Result<Option<ProjectSettingsRaw>, SliceError> {
+        let catalog = match self {
+            Self::Catalog(catalog) => Some(catalog),
+            Self::Native(files) => {
+                if let Some(file) = files.file(kind, slot) {
+                    return Ok(Some(file.raw.clone()));
+                }
+                files.system_catalog.as_ref().map(|handle| handle.catalog())
+            }
+        };
+        match catalog {
+            Some(catalog) => preset::system_config(catalog, kind, name),
+            None => Ok(None),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum RefreshSource<'a> {
+    Catalog(&'a LoadedCatalog),
+    Native(&'a NativeRefreshPresets),
+}
+
+#[derive(Clone, Copy)]
 pub(crate) struct ProjectPresetRefresh<'a> {
-    pub(super) catalog: &'a LoadedCatalog,
+    pub(super) source: RefreshSource<'a>,
     pub(super) policy: ProjectPresetPolicy,
     pub(super) filename: &'a str,
     pub(super) placement: Placement,
@@ -92,7 +129,7 @@ pub(super) fn direct_refresh(
     catalog: &Catalog,
     raw: &ProjectSettingsRaw,
 ) -> Result<ProjectSettingsRaw, SliceError> {
-    preset::refresh(catalog, raw, false, None)
+    preset::refresh(PresetLookup::Catalog(catalog), raw, false, None)
 }
 
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
@@ -139,7 +176,23 @@ pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, Slic
     Ok(Some(policy))
 }
 
-impl ProjectPresetRefresh<'_> {
+impl<'a> ProjectPresetRefresh<'a> {
+    pub(crate) fn native(presets: &'a NativeRefreshPresets) -> Self {
+        Self {
+            source: RefreshSource::Native(presets),
+            policy: ProjectPresetPolicy::Cli { uptodate: true },
+            filename: "",
+            placement: Placement::None,
+        }
+    }
+
+    fn lookup(self) -> PresetLookup<'a> {
+        match self.source {
+            RefreshSource::Catalog(catalog) => PresetLookup::Catalog(&catalog.catalog),
+            RefreshSource::Native(native) => PresetLookup::Native(native),
+        }
+    }
+
     /// The plater's selection when it opens a project (`Plater.cpp:9622`), not a CLI path.
     pub(crate) fn is_plater(self) -> bool {
         matches!(self.policy, ProjectPresetPolicy::Always)
@@ -154,7 +207,7 @@ impl ProjectPresetRefresh<'_> {
             ProjectPresetPolicy::Cli { uptodate } => uptodate,
             ProjectPresetPolicy::Always => false,
         };
-        preset::refresh(&self.catalog.catalog, raw, uptodate, Some(selected))
+        preset::refresh(self.lookup(), raw, uptodate, Some(selected))
     }
 
     pub(crate) fn load(
@@ -174,13 +227,16 @@ impl ProjectPresetRefresh<'_> {
         }
         match self.policy {
             ProjectPresetPolicy::Always => {
+                let RefreshSource::Catalog(catalog) = self.source else {
+                    unreachable!("plater selection has a catalog")
+                };
                 let (raw, selection) =
-                    super::project_selection::refresh(self.catalog, &project, self.filename)?;
+                    super::project_selection::refresh(catalog, &project, self.filename)?;
                 project.apply_project_preset_selection(raw, selection, overrides)?;
             }
             ProjectPresetPolicy::Cli { uptodate } => {
                 let mut raw = preset::refresh(
-                    &self.catalog.catalog,
+                    self.lookup(),
                     &project.documents().project_settings_raw,
                     uptodate,
                     None,

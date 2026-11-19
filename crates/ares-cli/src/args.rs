@@ -22,9 +22,15 @@ pub(crate) struct SliceArgs {
     /// Complete preset catalog supplied explicitly for project-derived refresh
     #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
     pub(crate) project_preset_catalog: Option<PathBuf>,
-    /// Refresh unlisted project values from the supplied system presets
-    #[arg(long, requires = "project_preset_catalog")]
+    /// Refresh unlisted project values from the retained system presets
+    #[arg(long)]
     pub(crate) uptodate: bool,
+    /// Flattened machine/process refresh files, `;` separated
+    #[arg(long, conflicts_with = "project_preset_catalog")]
+    pub(crate) uptodate_settings: Option<String>,
+    /// Flattened refresh files in project filament slot order, `;` separated
+    #[arg(long, conflicts_with = "project_preset_catalog")]
+    pub(crate) uptodate_filaments: Option<String>,
     #[arg(long)]
     pub(crate) options: Option<PathBuf>,
     /// 1-based plate number to slice for multi-plate 3MF projects

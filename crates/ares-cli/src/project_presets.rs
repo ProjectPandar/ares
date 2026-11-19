@@ -66,9 +66,14 @@ pub(super) fn load_resources_catalog(
     Ok(catalog)
 }
 
+pub(super) enum Entry<'a> {
+    Catalog(&'a Path),
+    Native(&'a ares_core::NativeRefreshPresets),
+}
+
 pub(super) async fn slice(
     args: &SliceArgs,
-    catalog_path: &Path,
+    entry: Entry<'_>,
     input: &[u8],
     overrides: &ares_core::ConfigOverrides,
     context: ares_core::SlicerContext<'_>,
@@ -94,15 +99,7 @@ pub(super) async fn slice(
             args.plate.unwrap_or(1),
         )
     })?;
-    let catalog = fs::read_to_string(catalog_path).map_err(|error| {
-        io::Error::new(
-            error.kind(),
-            format!(
-                "cannot read project preset catalog {}: {error}",
-                catalog_path.display()
-            ),
-        )
-    })?;
+
     let filename = args
         .input
         .file_name()
@@ -113,38 +110,72 @@ pub(super) async fn slice(
     } else {
         r#"{"from_project":true,"uptodate":false}"#
     };
-    let request = ares_core::ProfileSliceRequest {
-        filename,
-        catalog_json: &catalog,
-        selection_json: selection,
-        plate: args.plate,
-        overrides,
-        placement: ares_core::Placement::None,
-    };
+
     let metadata = ares_core::GenerationMetadata::default();
     let input_file = args.input.to_string_lossy();
     let source = ares_core::UpwardMachineSource::from_project(input)
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
     let mut upward_report = Vec::new();
     let mut sliced_plate = ares_core::SlicedPlate::default();
-    let processed = match ares_core::slice_cli_with_profiles_validated(
-        input,
-        ares_core::CliProfileSliceRequest {
-            orient: args.orient == 1,
-            profile: request,
-            record_moves: args.dump_moves.is_some(),
-            sliced_plate: &mut sliced_plate,
-            upward: ares_core::CliUpwardMachine {
-                source,
-                input: ares_core::UpwardMachineInput::Embedded,
-                report: &mut upward_report,
-            },
+    let upward = ares_core::CliUpwardMachine {
+        source,
+        input: match entry {
+            Entry::Catalog(_) => ares_core::UpwardMachineInput::Embedded,
+            Entry::Native(refresh) => ares_core::UpwardMachineInput::RetainedRefresh(refresh),
         },
-        metadata,
-        context,
-    )
-    .await
-    {
+        report: &mut upward_report,
+    };
+    let result = match entry {
+        Entry::Catalog(path) => {
+            let catalog = fs::read_to_string(path).map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!(
+                        "cannot read project preset catalog {}: {error}",
+                        path.display()
+                    ),
+                )
+            })?;
+            ares_core::slice_cli_with_profiles_validated(
+                input,
+                ares_core::CliProfileSliceRequest {
+                    orient: args.orient == 1,
+                    profile: ares_core::ProfileSliceRequest {
+                        filename,
+                        catalog_json: &catalog,
+                        selection_json: selection,
+                        plate: args.plate,
+                        overrides,
+                        placement: ares_core::Placement::None,
+                    },
+                    record_moves: args.dump_moves.is_some(),
+                    sliced_plate: &mut sliced_plate,
+                    upward,
+                },
+                metadata,
+                context,
+            )
+            .await
+        }
+        Entry::Native(refresh) => {
+            ares_core::slice_cli_project_plate_with_refresh(
+                input,
+                ares_core::CliProjectSliceRequest {
+                    orient: args.orient == 1,
+                    plate: args.plate,
+                    overrides,
+                    record_moves: args.dump_moves.is_some(),
+                    sliced_plate: &mut sliced_plate,
+                    upward,
+                },
+                metadata,
+                refresh,
+                context,
+            )
+            .await
+        }
+    };
+    let processed = match result {
         Ok(processed) => processed,
         Err(error) => {
             crate::failure::slicing::check(

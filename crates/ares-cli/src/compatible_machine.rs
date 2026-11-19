@@ -5,6 +5,13 @@ use ares_core::UpwardMachineSource;
 
 use crate::failure::CliFailure;
 
+pub(super) fn default_resources() -> io::Result<std::path::PathBuf> {
+    Ok(std::env::current_exe()?
+        .parent()
+        .expect("absolute executable path has a parent")
+        .join("resources"))
+}
+
 pub(super) fn load(
     input: &[u8],
     resources: Option<&Path>,
@@ -21,11 +28,7 @@ pub(super) fn load(
         let resources = match resources {
             Some(path) => path,
             None => {
-                let executable = std::env::current_exe()?;
-                default_resources = executable
-                    .parent()
-                    .expect("absolute executable path has a parent")
-                    .join("resources");
+                default_resources = self::default_resources()?;
                 &default_resources
             }
         };

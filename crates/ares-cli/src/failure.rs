@@ -41,8 +41,38 @@ impl CliFailure {
         #[cfg(target_os = "linux")] output: &Path,
         stderr: String,
     ) -> Self {
+        Self::preset_input_error(
+            #[cfg(target_os = "linux")]
+            output,
+            stderr,
+            -5,
+            #[cfg(target_os = "linux")]
+            "The input preset file is invalid and can not be parsed.",
+        )
+    }
+
+    pub(super) fn invalid_parameters(
+        #[cfg(target_os = "linux")] output: &Path,
+        stderr: String,
+    ) -> Self {
+        Self::preset_input_error(
+            #[cfg(target_os = "linux")]
+            output,
+            stderr,
+            -2,
+            #[cfg(target_os = "linux")]
+            "Invalid parameters to the slicer.",
+        )
+    }
+
+    fn preset_input_error(
+        #[cfg(target_os = "linux")] output: &Path,
+        stderr: String,
+        return_code: i32,
+        #[cfg(target_os = "linux")] error_string: &'static str,
+    ) -> Self {
         Self::Family(Box::new(FamilyFailure {
-            return_code: -5,
+            return_code,
             #[cfg(target_os = "linux")]
             plate_index: 0,
             #[cfg(target_os = "linux")]
@@ -52,7 +82,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "The input preset file is invalid and can not be parsed.",
+            error_string,
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),

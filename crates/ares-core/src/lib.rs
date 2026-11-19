@@ -202,6 +202,7 @@ pub use profiles::{
     profile_settings, slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
     validate_load_settings_input, validate_with_profiles,
 };
+pub use profiles::{NativeRefreshFile, NativeRefreshPresets, slice_with_load_settings_and_refresh};
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
     load_preset_bundle,
@@ -219,8 +220,9 @@ pub use project::{
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
     slice_cli_project_plate_validated, slice_cli_project_plate_validated_with_catalog,
-    slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
-    slice_project_plate_validated, slice_project_plate_validated_with_catalog,
+    slice_cli_project_plate_with_refresh, slice_project_plate_processed_validated,
+    slice_project_plate_processed_validated_with_catalog, slice_project_plate_validated,
+    slice_project_plate_validated_with_catalog,
 };
 pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,

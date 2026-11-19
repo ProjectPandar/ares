@@ -53,6 +53,41 @@ pub async fn slice_cli_project_plate_validated_with_catalog(
     system_catalog: Option<&crate::PresetCatalogHandle>,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_cli_project(
+        input.as_ref(),
+        request,
+        metadata,
+        (system_catalog, None),
+        context,
+    )
+}
+
+pub async fn slice_cli_project_plate_with_refresh(
+    input: impl AsRef<[u8]>,
+    request: CliProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    refresh: &crate::NativeRefreshPresets,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
+    slice_cli_project(
+        input.as_ref(),
+        request,
+        metadata,
+        (None, Some(refresh)),
+        context,
+    )
+}
+
+fn slice_cli_project(
+    input: &[u8],
+    request: CliProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    (system_catalog, refresh): (
+        Option<&crate::PresetCatalogHandle>,
+        Option<&crate::NativeRefreshPresets>,
+    ),
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
     let CliProjectSliceRequest {
         plate,
         overrides,
@@ -65,10 +100,10 @@ pub async fn slice_cli_project_plate_validated_with_catalog(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
-            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
+            input: crate::project_slice::ProjectInput::Bytes(input),
             plate,
             profile: None,
-            refresh: None,
+            refresh: refresh.map(crate::profiles::ProjectPresetRefresh::native),
             overrides,
             validate_print: true,
             validate_config: true,

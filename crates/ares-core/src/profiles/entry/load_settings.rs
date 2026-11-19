@@ -35,7 +35,18 @@ pub async fn slice_with_load_settings(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    with_load_settings_source(input.as_ref(), request, |source| {
+    slice_with_load_settings_and_refresh(input, request, None, metadata, context).await
+}
+
+/// Native `--load-*` replacements take precedence over retained refresh.
+pub async fn slice_with_load_settings_and_refresh(
+    input: impl AsRef<[u8]>,
+    request: LoadSettingsSliceRequest<'_>,
+    refresh: Option<&crate::NativeRefreshPresets>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    with_load_settings_source(input.as_ref(), request, refresh, |source| {
         slice_source(source, metadata, false, context)
     })
     .map(|processed| processed.gcode)
@@ -44,6 +55,7 @@ pub async fn slice_with_load_settings(
 fn with_load_settings_source<T>(
     input: &[u8],
     request: LoadSettingsSliceRequest<'_>,
+    refresh: Option<&crate::NativeRefreshPresets>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
     let LoadSettingsSliceRequest {
@@ -86,14 +98,20 @@ fn with_load_settings_source<T>(
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
             load_names: Some(&load_names),
-            retained_refresh: catalog.as_ref().map(|catalog| {
-                crate::profiles::ProjectPresetRefresh {
-                    catalog,
-                    policy: ProjectPresetPolicy::Cli { uptodate },
-                    filename,
-                    placement,
-                }
-            }),
+            retained_refresh: refresh
+                .map(crate::profiles::ProjectPresetRefresh::native)
+                .or_else(|| {
+                    catalog
+                        .as_ref()
+                        .map(|catalog| crate::profiles::ProjectPresetRefresh {
+                            source: crate::profiles::project_refresh::RefreshSource::Catalog(
+                                catalog,
+                            ),
+                            policy: ProjectPresetPolicy::Cli { uptodate },
+                            filename,
+                            placement,
+                        })
+                }),
             placement,
             validate_print,
         }),

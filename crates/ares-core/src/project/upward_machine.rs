@@ -13,6 +13,8 @@ use crate::SliceError;
 /// supply optional machine_full JSON bytes; core never resolves filesystem paths.
 pub struct UpwardMachineSource {
     system_printer: String,
+    system_process: String,
+    system_filaments: Vec<String>,
     embedded: Vec<String>,
 }
 
@@ -24,6 +26,7 @@ pub enum UpwardMachineInput<'a> {
     /// not this upward-vector projection. That public controller is deferred.
     UpToDateFiles(&'a [crate::LoadSettingsFile<'a>]),
     UpToDateOriginal(Option<&'a [u8]>),
+    RetainedRefresh(&'a crate::NativeRefreshPresets),
     FetchOriginal(Option<&'a [u8]>),
 }
 
@@ -31,6 +34,8 @@ pub enum UpwardMachineInput<'a> {
 #[serde(default)]
 struct MachineFields {
     printer_settings_id: String,
+    print_settings_id: String,
+    filament_settings_id: Vec<String>,
     inherits_group: Option<Vec<String>>,
     upward_compatible_machine: Vec<String>,
 }
@@ -80,21 +85,36 @@ impl UpwardMachineSource {
             return Ok(None);
         }
         let fields = fields(&archive.read(&root.resolve("Metadata/project_settings.config")?)?)?;
-        let system_printer = match fields.inherits_group {
-            Some(mut group) => {
-                let last = group.pop().ok_or_else(|| {
-                    SliceError::InvalidInput("empty printer inherits_group".into())
-                })?;
-                if last.is_empty() {
-                    fields.printer_settings_id
-                } else {
-                    last
-                }
-            }
-            None => fields.printer_settings_id,
+        let group = fields
+            .inherits_group
+            .as_deref()
+            .filter(|group| group.len() >= 2)
+            .unwrap_or_default();
+        let system_name = |identity, inherited: Option<&String>| {
+            inherited
+                .filter(|name| !name.is_empty())
+                .cloned()
+                .unwrap_or(identity)
         };
+        let system_printer = system_name(fields.printer_settings_id, group.last());
+        let system_process = system_name(fields.print_settings_id, group.first());
+        let system_filaments = fields
+            .filament_settings_id
+            .into_iter()
+            .enumerate()
+            .map(|(slot, name)| {
+                system_name(
+                    name,
+                    group
+                        .get(1..group.len().saturating_sub(1))
+                        .and_then(|group| group.get(slot)),
+                )
+            })
+            .collect();
         Ok(Some(Self {
             system_printer,
+            system_process,
+            system_filaments,
             embedded: fields.upward_compatible_machine,
         }))
     }
@@ -103,12 +123,24 @@ impl UpwardMachineSource {
         &self.system_printer
     }
 
+    pub fn system_process(&self) -> &str {
+        &self.system_process
+    }
+
+    pub fn system_filaments(&self) -> &[String] {
+        &self.system_filaments
+    }
+
     /// CLI:1769/2301/2385/2534. Missing original-machine files keep the
     /// embedded vector; present files replace it, even with an empty vector.
     pub fn select(self, input: UpwardMachineInput<'_>) -> Result<Vec<String>, SliceError> {
         match input {
             UpwardMachineInput::Embedded => Ok(self.embedded),
             UpwardMachineInput::UpToDateFiles(files) => self.explicit_values(files),
+            UpwardMachineInput::RetainedRefresh(presets) => Ok(presets
+                .machine
+                .as_ref()
+                .map_or(self.embedded, |preset| preset.upward_machines())),
             UpwardMachineInput::UpToDateOriginal(machine_full)
             | UpwardMachineInput::FetchOriginal(machine_full) => {
                 if self.system_printer.is_empty() {
@@ -182,7 +214,11 @@ fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
             .filter(|(key, _)| {
                 matches!(
                     key.as_str(),
-                    "printer_settings_id" | "inherits_group" | "upward_compatible_machine"
+                    "printer_settings_id"
+                        | "print_settings_id"
+                        | "filament_settings_id"
+                        | "inherits_group"
+                        | "upward_compatible_machine"
                 )
             })
             .map(|(key, value)| (key.clone(), value.clone())),
