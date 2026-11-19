@@ -53,7 +53,21 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
-    #[arg(short = 'o')]
-    pub(crate) output: PathBuf,
+    #[arg(short = 'o', required_unless_present = "selection")]
+    pub(crate) output: Option<PathBuf>,
+    /// Slice all 3MF plates (0) or the given one-based plate number.
+    #[arg(long = "slice", allow_negative_numbers = true, conflicts_with_all = ["output", "plate", "dump_moves"])]
+    pub(crate) selection: Option<i32>,
+    /// Write plate_<n>.gcode in this directory for the --slice action.
+    #[arg(long, requires = "selection")]
+    pub(crate) outputdir: Option<PathBuf>,
     pub(crate) input: PathBuf,
+}
+
+impl SliceArgs {
+    pub(crate) fn output(&self) -> &std::path::Path {
+        self.output
+            .as_deref()
+            .unwrap_or_else(|| std::path::Path::new(""))
+    }
 }

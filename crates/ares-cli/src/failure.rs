@@ -32,6 +32,8 @@ pub(super) struct FamilyFailure {
     warnings: Vec<crate::result_json::CliWarning>,
     #[cfg(target_os = "linux")]
     critical_warning: Option<String>,
+    #[cfg(target_os = "linux")]
+    completed: Vec<crate::result_json::SlicedPlateEntry>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -56,6 +58,8 @@ impl CliFailure {
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
             critical_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
@@ -160,6 +164,8 @@ pub(super) fn slice_error_to_failure(
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
             critical_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),

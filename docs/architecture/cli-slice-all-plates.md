@@ -10,6 +10,8 @@ The destination is the existing `ares-core` project input/validation/processing 
 
 With a nonempty `--outputdir`, `OrcaSlicer.cpp:7181–7192` and `GCode::do_export` publish `plate_<one-based-index>.gcode` there (including a new directory); without it, the temporary G-code is not retained. The Linux result (`OrcaSlicer.cpp:535–586,8126–8136`) is in `DIR/result.json` or `./result.json`, with top-level `plate_index` equal to the requested number on success (`0` for all) and ordered `sliced_plates` records. A precheck failure carries the failing plate and no completed plate records. As elsewhere in the CLI, Ares reports zero wall-clock fields; parity compares every other result byte using `native_wall_clock::result_comparison_bytes`.
 
+The CLI also retains its existing critical empty-layer refusal before export. Native records the rejected plate's warning with zero triangles and returns `CLI_SLICING_ERROR` (`OrcaSlicer.cpp:7141–7181`). This is a CLI admission rule, not a change to the core's generated G-code or warning classification.
+
 ## Verification and exclusions
 
 Replay the committed two-plate synthetic project from a temp directory on both Native lanes. Compare both full streams, filenames, status, and full Linux result after the existing wall-clock normalization. Check `--slice 2`, negative and out-of-range selections, omitted output directory, a new output directory, and a runtime variant making just plate 2's instance unprintable. Verify that the variant leaves neither plate G-code nor a `sliced_plates` field. Keep the existing `-o`/`--plate` controls.

@@ -31,6 +31,24 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
+    let plate = source.plate;
+    let validate_print = source.validate_print;
+    let overrides = source.overrides;
+    let (project, preparation) = load_project_source(source)?;
+    prepare_loaded_project_slice_with_validation(
+        project,
+        plate,
+        None,
+        validate_print,
+        Some((&preparation, overrides)),
+    )
+}
+
+type Preparation = crate::options::flush_matrix::PreparationContext;
+
+pub(super) fn load_project_source(
+    source: super::ProjectSource<'_>,
+) -> Result<(Project, Preparation), SliceError> {
     let (mut project, preparation) =
         source
             .input
@@ -71,13 +89,7 @@ pub(super) fn prepare_project_source(
     if source.orient {
         crate::plater::apply_cli_orientation(&mut project, source.plate)?;
     }
-    prepare_loaded_project_slice_with_validation(
-        project,
-        source.plate,
-        None,
-        source.validate_print,
-        Some((preparation, source.overrides)),
-    )
+    Ok((project, preparation))
 }
 
 pub(super) fn prepare_loaded_project_slice_with_validation(
@@ -85,26 +97,39 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     plate: Option<u32>,
     selected_printer: Option<&str>,
     validate_print: bool,
-    preparation: Option<(
-        crate::options::flush_matrix::PreparationContext,
-        &crate::ConfigOverrides,
-    )>,
+    preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
 ) -> Result<ProjectSliceState, SliceError> {
     let project = crate::plater::initialize_slice_plates(project);
     let project = crate::plater::fit_slice_wipe_tower(project, plate)?;
-    let mut project = project.select_plate(plate)?;
+    apply_plate(
+        project.select_plate(plate)?,
+        selected_printer,
+        validate_print,
+        preparation,
+    )?
+    .prepare()
+}
+
+pub(super) struct AppliedPlate {
+    project: Project,
+    resolved: BoundedResolvedProjectConfig,
+}
+
+pub(super) fn apply_plate(
+    mut project: Project,
+    selected_printer: Option<&str>,
+    validate_print: bool,
+    preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
+) -> Result<AppliedPlate, SliceError> {
     let plate_id = project.first_plate_id();
     // `OrcaSlicer.cpp:6562-6573`: unconditional — if no model-part instance
     // is fully inside the plate's print volume, reject with the upstream
     // -50 text (`Model.cpp:839-852 update_print_volume_state`; text `OrcaSlicer.cpp:220`).
     if print_volume::update_print_volume_state(&mut project)? == 0 {
-        return Err(SliceError::NoSuitableObjects(
-            "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
-                .to_owned(),
-        ));
+        return Err(no_printable_objects());
     }
     let resolved = match preparation {
-        Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
+        Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
     };
     painted_fuzzy::validate(&project, &resolved)?;
@@ -116,41 +141,84 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
             selected_printer,
         )?;
     }
-    // OrcaSlicer writes the config block into every sliced G-code and uses it
-    // as the machine/layer template placeholder source (`GCode.cpp` config
-    // export), not only for Bambu Lab printers.
-    let mut config_block = Vec::new();
-    // `wipe_tower_x`/`_y` echo the sliced plate's entry: `get_at(print.get_plate_index())`
-    // (`GCode.cpp:8342-8346` at v2.5.0-beta `345efec64`).
-    write_config_block(
-        &resolved.views,
-        &project.documents().project_settings_raw,
-        project.current_plate_index(),
-        None,
-        &mut config_block,
-    )?;
-    let config_block = (!config_block.is_empty()).then_some(config_block);
-    let planned_objects = plan_project(&project, &resolved)?;
-    let projected_objects =
-        prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
-    let scale =
-        CoordinateScale::from_printable_area(&resolved.views.full.printer.remaining.printable_area);
-    let looped_objects = slice_projected_objects(
-        project.objects(),
-        &resolved.objects,
-        projected_objects,
-        scale,
-        (
-            &resolved.views.full.filament.region,
-            resolved.logical_filament_count,
-            resolved.process_variant_indices.as_slice(),
-        ),
-    )?;
-    Ok(ProjectSliceState {
-        project,
-        resolved,
-        config_block,
-        scale,
-        looped_objects,
+    // OrcaSlicer.cpp:7047–7055 checks `Print::empty()` after apply and
+    // validation, including in the all-plates precheck. Volume membership
+    // alone can count an instance whose build item is not printable.
+    if resolved
+        .objects
+        .iter()
+        .all(|object| object.print_objects.is_empty())
+    {
+        return Err(no_printable_objects());
+    }
+    Ok(AppliedPlate { project, resolved })
+}
+
+fn no_printable_objects() -> SliceError {
+    SliceError::NoSuitableObjects(
+        "The plate has nothing to slice: it is empty, or no object on it is both printable and fully inside the print volume."
+            .to_owned(),
+    )
+}
+
+impl AppliedPlate {
+    pub(super) fn report(&self) -> Result<crate::SlicedPlate, SliceError> {
+        slice_report(&self.project, &self.resolved)
+    }
+
+    pub(super) fn prepare(self) -> Result<ProjectSliceState, SliceError> {
+        let Self { project, resolved } = self;
+        // OrcaSlicer writes the config block into every sliced G-code and uses it
+        // as the machine/layer template placeholder source (`GCode.cpp` config
+        // export), not only for Bambu Lab printers.
+        let mut config_block = Vec::new();
+        // `wipe_tower_x`/`_y` echo the sliced plate's entry: `get_at(print.get_plate_index())`
+        // (`GCode.cpp:8342-8346` at v2.5.0-beta `345efec64`).
+        write_config_block(
+            &resolved.views,
+            &project.documents().project_settings_raw,
+            project.current_plate_index(),
+            None,
+            &mut config_block,
+        )?;
+        let config_block = (!config_block.is_empty()).then_some(config_block);
+        let planned_objects = plan_project(&project, &resolved)?;
+        let projected_objects =
+            prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
+        let scale = CoordinateScale::from_printable_area(
+            &resolved.views.full.printer.remaining.printable_area,
+        );
+        let looped_objects = slice_projected_objects(
+            project.objects(),
+            &resolved.objects,
+            projected_objects,
+            scale,
+            (
+                &resolved.views.full.filament.region,
+                resolved.logical_filament_count,
+                resolved.process_variant_indices.as_slice(),
+            ),
+        )?;
+        Ok(ProjectSliceState {
+            project,
+            resolved,
+            config_block,
+            scale,
+            looped_objects,
+        })
+    }
+}
+
+pub(super) fn slice_report(
+    project: &Project,
+    resolved: &BoundedResolvedProjectConfig,
+) -> Result<crate::SlicedPlate, SliceError> {
+    let settings = &resolved.views.full;
+    Ok(crate::SlicedPlate {
+        triangle_count: inside_triangle_count(project)?,
+        layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+        wall_loops: settings.process.region.wall_loops.0,
+        sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+        ..crate::SlicedPlate::default()
     })
 }

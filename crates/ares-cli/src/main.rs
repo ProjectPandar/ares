@@ -6,6 +6,7 @@ mod moves_csv;
 mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
+mod slice_plates;
 
 use std::fs;
 use std::io;
@@ -31,6 +32,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if args.selection.is_some() && extension.as_deref() != Some("3mf") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--slice requires 3MF project input",
+        )
+        .into());
+    }
     if extension.as_deref() != Some("3mf") && args.dump_moves.is_some() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -69,7 +77,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             return Err(CliFailure::missing_input(
                 &args.input,
                 #[cfg(target_os = "linux")]
-                &args.output,
+                &slice_plates::output_directory(&args)
+                    .map_or_else(|| args.output().to_owned(), |dir| dir.join("plate_1.gcode")),
             ));
         }
         Err(error) => return Err(error.into()),
@@ -83,6 +92,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let mut context = ares_core::SlicerContext::new(0);
     if args.progress {
         context.set_status_callback(&mut print_status);
+    }
+    if let Some(selection) = args.selection {
+        return slice_plates::run(&args, selection, &input, &overrides, context);
     }
     if let Some(catalog) = &args.project_preset_catalog
         && args.load_settings.is_none()
@@ -152,7 +164,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             )?;
                             let failure = slice_error_to_failure(
                                 error,
-                                &args.output,
+                                args.output(),
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
@@ -203,7 +215,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             )?;
                             let failure = slice_error_to_failure(
                                 error,
-                                &args.output,
+                                args.output(),
                                 #[cfg(target_os = "linux")]
                                 args.plate.unwrap_or(1),
                             )
@@ -220,13 +232,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 }
             };
             failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
-            fs::write(&args.output, gcode)?;
+            fs::write(args.output(), gcode)?;
             report_success(
                 &input_file,
                 substitutions(&input),
                 #[cfg(target_os = "linux")]
                 result_json::Success {
-                    output: &args.output,
+                    output: args.output(),
                     plate: args.plate.unwrap_or(1),
                     plate_index: args.plate.unwrap_or(0),
                     sliced_plate,
@@ -242,7 +254,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
                 ).into());
             }
-            let options = args.options.ok_or_else(|| {
+            let options = args.options.as_ref().ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidInput, "STL input requires --options")
             })?;
             let options = fs::read(options)?;
@@ -252,7 +264,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 Err(error) => {
                     return Err(slice_error_to_failure(
                         error,
-                        &args.output,
+                        args.output(),
                         #[cfg(target_os = "linux")]
                         1,
                     ));
@@ -261,7 +273,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         _ => unreachable!("input extension was validated above"),
     };
-    fs::write(&args.output, output)?;
+    fs::write(args.output(), output)?;
 
     Ok(())
 }
