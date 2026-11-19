@@ -148,28 +148,35 @@ pub(super) struct TriangleMesh {
     pub(super) negative_start: usize,
 }
 
+/// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
+/// `PrintObject::trafo_centered()` = instance transform with zeroed XY
+/// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)
+/// pretranslated by `-center_offset`. The group center follows
+/// `PrintObject.cpp:97-110`, including the source/group rotation difference.
+pub(super) fn centered_transform(
+    object: &ProjectObject,
+    group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
+    scale: CoordinateScale,
+) -> crate::Transform3d {
+    let instance_transform = group.transform;
+    let center = crate::project_slice::centering::center(object, group, scale)
+        .expect("resolved project object bounds must be finite");
+    instance_transform
+        .without_xy_translation()
+        .pretranslated(Point3d::new(
+            -scale.unscale(center.x()),
+            -scale.unscale(center.y()),
+            0.0,
+        ))
+}
+
 impl TriangleMesh {
-    /// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
-    /// `PrintObject::trafo_centered()` = instance transform with zeroed XY
-    /// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)
-    /// pretranslated by `-center_offset`. The group center follows
-    /// `PrintObject.cpp:97-110`, including the source/group rotation difference.
     pub(super) fn from_object(
         object: &ProjectObject,
         group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
         scale: CoordinateScale,
     ) -> Self {
-        let instance_transform = group.transform;
-        let center = crate::project_slice::centering::center(object, group, scale)
-            .expect("resolved project object bounds must be finite");
-        let object_transform =
-            instance_transform
-                .without_xy_translation()
-                .pretranslated(Point3d::new(
-                    -scale.unscale(center.x()),
-                    -scale.unscale(center.y()),
-                    0.0,
-                ));
+        let object_transform = centered_transform(object, group, scale);
         let mut mesh = super::short_edge_collapse::IndexedMesh {
             vertices: Vec::new(),
             indices: Vec::new(),

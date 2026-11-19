@@ -1,23 +1,23 @@
 mod context;
 mod contour_continuation;
 mod loop_normal;
+mod paint_rules;
 mod preparation;
 mod random;
+mod string_fit;
 
 use crate::{
     ProcessSeamPosition,
     project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter},
 };
 
-use super::{angle_penalty, mesh::Vec3, spatial::PointKdTree, spline::CubicSpline};
+use super::{mesh::Vec3, spatial::PointKdTree};
 
 pub(super) use preparation::prepare;
 
 const SCORE_TOLERANCE: f32 = 0.3;
 const SEARCH_DISTANCE_FLOW_FACTOR: f32 = 4.0;
 const MINIMUM_STRING_SEAMS: usize = 6;
-const MILLIMETERS_PER_SEGMENT: f32 = 4.0;
-const SHARP_ANGLE_THRESHOLD: f32 = 55.0 * std::f32::consts::PI / 180.0;
 
 pub(super) struct LayerPlan {
     placement: ProcessSeamPosition,
@@ -41,6 +41,12 @@ pub(super) struct PerimeterChoice {
 }
 
 fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
+    if let Some(better) = paint_rules::priority(
+        &layer.candidates.points[first],
+        &layer.candidates.points[second],
+    ) {
+        return better;
+    }
     if layer.overhangs[first] > 0.0 || layer.overhangs[second] > 0.0 {
         return layer.overhangs[first] < layer.overhangs[second];
     }
@@ -62,6 +68,12 @@ fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
 fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize, usize)) -> bool {
     let first_layer = &layers[first.0];
     let second_layer = &layers[second.0];
+    if let Some(better) = paint_rules::priority(
+        &first_layer.candidates.points[first.1],
+        &second_layer.candidates.points[second.1],
+    ) {
+        return better;
+    }
     if first_layer.overhangs[first.1] > 0.0 || second_layer.overhangs[second.1] > 0.0 {
         return first_layer.overhangs[first.1] < second_layer.overhangs[second.1];
     }
@@ -84,6 +96,14 @@ fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize
 }
 
 fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
+    let a = &layer.candidates.points[first];
+    let b = &layer.candidates.points[second];
+    if let Some(better) = paint_rules::priority(a, b) {
+        return better;
+    }
+    if paint_rules::enforced(a) {
+        return true;
+    }
     let overhang_difference = (layer.overhangs[first] - layer.overhangs[second]).abs();
     let flow_width =
         layer.candidates.perimeters[layer.candidates.points[first].perimeter_index].flow_width;
@@ -165,7 +185,7 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
         }
         seam_string.sort_by_key(|point| point.0);
         global_index -= 1;
-        finalize_string(layers, &seam_string);
+        string_fit::finalize_string(layers, &seam_string);
     }
 }
 
@@ -278,88 +298,8 @@ fn distance_squared(layer: &LayerPlan, index: usize, point: Vec3) -> f32 {
     (Vec3::new(candidate.x, candidate.y, candidate.z) - point).norm_squared()
 }
 
-fn finalize_string(layers: &mut [LayerPlan], seam_string: &[(usize, usize)]) {
-    let observations = seam_string
-        .iter()
-        .map(|&point| {
-            let position = candidate_position(layers, point);
-            (position.x, position.y)
-        })
-        .collect::<Vec<_>>();
-    let points = seam_string
-        .iter()
-        .map(|&point| candidate_position(layers, point).z)
-        .collect::<Vec<_>>();
-    let weights = seam_string
-        .iter()
-        .map(|&point| 1.0 / (0.1 + angle_penalty(candidate_angle(layers, point))))
-        .collect::<Vec<_>>();
-    let mut total_length = string_length(layers, seam_string);
-    // SeamPlacer.cpp:1364-1366 — fewer spline segments for spRear strings.
-    if layers[seam_string[0].0].placement == ProcessSeamPosition::Back {
-        total_length *= 0.3;
-    }
-    let segment_count = ((total_length.max(0.0) / MILLIMETERS_PER_SEGMENT) as usize).max(1);
-    let curve = CubicSpline::fit(&observations, &points, &weights, segment_count);
-    let finals = seam_string
-        .iter()
-        .map(|&point| {
-            let current = candidate_position(layers, point);
-            let fitted = curve.value(current.z);
-            let angle_ratio = candidate_angle(layers, point).abs() / SHARP_ANGLE_THRESHOLD;
-            // SeamPlacer.cpp:1377-1378: round the cube to float once;
-            // target-specific powf otherwise changes the blended seam.
-            let blend = (f64::from(angle_ratio).powi(3) as f32).min(1.0);
-            if blend >= 1.0 {
-                return current;
-            }
-            let target = Vec3::new(
-                blend * current.x + (1.0 - blend) * fitted.0,
-                blend * current.y + (1.0 - blend) * fitted.1,
-                current.z,
-            );
-            // v2.5.0-beta SeamPlacer.cpp:2050-2055, Neutral alignment.
-            loop_normal::place_on_loop(&layers[point.0].candidates, point.1, target)
-        })
-        .collect::<Vec<_>>();
-    for (&point, final_position) in seam_string.iter().zip(finals) {
-        let perimeter_index = layers[point.0].candidates.points[point.1].perimeter_index;
-        let choice = &mut layers[point.0].choices[perimeter_index];
-        choice.seam_index = point.1;
-        choice.final_position = Some(final_position);
-        choice.finalized = true;
-    }
-}
-
-fn string_length(layers: &[LayerPlan], seam_string: &[(usize, usize)]) -> f32 {
-    let mut total = 0.0;
-    let mut last = candidate_position(layers, seam_string[0]);
-    for (index, &point) in seam_string.iter().enumerate() {
-        let current = candidate_position(layers, point);
-        let layer_angle = if index == 0 || index + 1 == seam_string.len() {
-            0.0
-        } else {
-            let previous = current - candidate_position(layers, seam_string[index - 1]);
-            let next = candidate_position(layers, seam_string[index + 1]) - current;
-            previous.normalized().dot(next.normalized()).acos().abs()
-        };
-        let influence = if layer_angle > 2.0 * candidate_angle(layers, point).abs() {
-            -0.8
-        } else {
-            1.0
-        };
-        total += influence * (last - current).norm();
-        last = current;
-    }
-    total
-}
-
 fn candidate_position(layers: &[LayerPlan], point: (usize, usize)) -> Vec3 {
     layers[point.0].positions[point.1]
-}
-
-fn candidate_angle(layers: &[LayerPlan], point: (usize, usize)) -> f32 {
-    layers[point.0].candidates.points[point.1].local_ccw_angle
 }
 
 fn choice(layers: &[LayerPlan], point: (usize, usize)) -> &PerimeterChoice {

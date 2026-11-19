@@ -85,6 +85,13 @@ pub(super) fn prepare(
             .iter()
             .map(|triangle| &triangle.paint_fuzzy_skin),
     );
+    mesh.seam_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
+        source
+            .triangles
+            .triangles
+            .iter()
+            .map(|triangle| &triangle.paint_seam),
+    );
     PreparedMesh {
         mesh,
         transform: component_transform.translated(shift),

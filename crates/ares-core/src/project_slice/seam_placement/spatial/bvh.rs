@@ -1,5 +1,7 @@
 use super::super::mesh::{TriangleMesh, Vec3};
 
+mod radius;
+
 #[derive(Clone, Copy)]
 struct Bounds {
     min: Vec3,
