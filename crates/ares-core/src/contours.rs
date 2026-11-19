@@ -3,9 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{LayerSlice, Point2, Segment2, SliceError};
 
-mod overhang_printable;
-pub(crate) use overhang_printable::apply as make_overhang_printable_contours;
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Contour {
     points: Vec<Point2>,
@@ -130,16 +127,6 @@ pub fn stitch_layer_slices(slices: &[LayerSlice]) -> Result<Vec<LayerContours>, 
         .collect::<Result<Vec<_>, SliceError>>()?;
     layers.sort_by_key(LayerContours::layer_id);
     Ok(layers)
-}
-
-pub(crate) fn stitch_printable(
-    slices: &[LayerSlice],
-    options: &crate::SliceOptions,
-) -> Result<Vec<LayerContours>, SliceError> {
-    Ok(make_overhang_printable_contours(
-        stitch_layer_slices(slices)?,
-        options.perimeter_options()?,
-    ))
 }
 
 fn stitch_segments(segments: &[Segment2]) -> Result<Vec<Contour>, SliceError> {

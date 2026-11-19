@@ -12,11 +12,10 @@ pub(crate) use identity::project_is_bbl;
 use std::sync::OnceLock;
 
 use regex::Regex;
-use serde::Deserialize;
 
 use crate::{
-    ConfigOverrides, GCodeFlavor, OrcaFloat, OrcaFloats, ProcessPrintSequence, Project,
-    ProjectSettings, SliceError, SliceOptions,
+    ConfigOverrides, GCodeFlavor, ProcessPrintSequence, Project, ProjectSettings, SliceError,
+    SliceOptions,
     project::effective_config::{
         resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
     },
@@ -61,100 +60,15 @@ fn validate_layer_templates(
     )
 }
 
-/// Validate legacy STL request configuration without running the processing pipeline.
+/// Validate an option-only STL using its completed print configuration.
 pub fn validate_stl(input: impl AsRef<[u8]>, options: &SliceOptions) -> Result<(), SliceError> {
-    // `Print.cpp:1260`: validation follows model application, not malformed input.
-    crate::load_model(input)?;
-    options.validate_loaded_config()?;
-    validate_stl_options(options)
-}
-
-pub(crate) fn validate_stl_options(options: &SliceOptions) -> Result<(), SliceError> {
-    // SliceOptions has legacy scalar carriers for unrelated vector fields.
-    // Deserialize only the config used by the applied width/usage view.
-    let fields = options
-        .values()
-        .iter()
-        .filter(|(key, _)| {
-            matches!(
-                key.as_str(),
-                "layer_height"
-                    | "line_width"
-                    | "support_line_width"
-                    | "bridge_line_width"
-                    | "thick_bridges"
-                    | "thick_internal_bridges"
-                    | "inner_wall_line_width"
-                    | "outer_wall_line_width"
-                    | "sparse_infill_line_width"
-                    | "internal_solid_infill_line_width"
-                    | "top_surface_line_width"
-                    | "skin_infill_line_width"
-                    | "skeleton_infill_line_width"
-                    | "enable_support"
-                    | "enforce_support_layers"
-                    | "raft_layers"
-                    | "support_filament"
-                    | "support_interface_filament"
-                    | "brim_type"
-                    | "brim_width"
-                    | "wall_loops"
-                    | "sparse_infill_density"
-                    | "top_shell_layers"
-                    | "bottom_shell_layers"
-                    | "outer_wall_filament_id"
-                    | "inner_wall_filament_id"
-                    | "sparse_infill_filament_id"
-                    | "internal_solid_filament_id"
-                    | "top_surface_filament_id"
-                    | "bottom_surface_filament_id"
-                    | "filament_map"
-                    | "filament_diameter"
-                    | "enable_prime_tower"
-                    | "wipe_tower_filament"
-                    | "support_multi_bed_types"
-                    | "curr_bed_type"
-                    | "supertack_plate_temp"
-                    | "cool_plate_temp"
-                    | "textured_cool_plate_temp"
-                    | "eng_plate_temp"
-                    | "hot_plate_temp"
-                    | "textured_plate_temp"
-            )
-        })
-        .map(|(key, value)| (key.as_str(), value));
-    let mut settings = ProjectSettings::deserialize(serde::de::value::MapDeserializer::new(fields))
-        .map_err(|error| SliceError::InvalidInput(error.to_string()))?;
-    settings.process.print.initial_layer_print_height =
-        OrcaFloat(options.initial_layer_print_height()?);
-    settings.project.print.nozzle_diameter = OrcaFloats(
-        options
-            .nozzle_diameters()?
-            .into_iter()
-            .map(OrcaFloat)
-            .collect(),
-    );
-    let usage = extrusion_width::flat(&settings)?;
-    let identity = |key: &str| -> Result<&str, SliceError> {
-        match options.values().get(key) {
-            None => Ok(""),
-            Some(serde_json::Value::String(value)) => Ok(value),
-            Some(_) => Err(SliceError::InvalidInput(format!("{key} must be a string"))),
-        }
-    };
-    let bbl = is_bbl_printer(
-        identity("printer_model")?,
-        "",
-        identity("printer_settings_id")?,
-    );
-    layer_gcode(
-        options.use_relative_e_distances()?,
-        options.gcode_flavor()?,
-        bbl,
-        options.before_layer_change_gcode()?,
-        options.layer_change_gcode()?,
-    )?;
-    bed_filament::validate(&settings, bbl, &usage.supported_used_filaments, 1)
+    let (project, _) =
+        crate::project_slice::option_stl::load(input.as_ref(), "input.stl", options)?;
+    project
+        .settings()
+        .validate_loaded_config(&project.documents().project_settings_raw, true)?;
+    validate_loaded_project(project, None, None)
+        .map_err(crate::project_slice::option_stl::stl_validation_error)
 }
 
 /// Apply project configuration and validate before an independent processing call.

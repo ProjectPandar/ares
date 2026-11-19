@@ -5,14 +5,6 @@ pub(crate) struct PowerLossRecoveryState {
     emitted_second_layer_enable: bool,
 }
 
-impl PowerLossRecoveryState {
-    pub(crate) const fn new() -> Self {
-        Self {
-            emitted_second_layer_enable: false,
-        }
-    }
-}
-
 /// `GCode.cpp:4777-4779`: the first non-first layer emits the configured
 /// mode's command through the `GCodeWriter.cpp:505-522` dispatch.
 pub(crate) fn second_layer_command(

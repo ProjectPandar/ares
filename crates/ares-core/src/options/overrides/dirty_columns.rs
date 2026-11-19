@@ -86,7 +86,7 @@ fn text(value: &RawConfigValue) -> Result<String, String> {
     }
 }
 
-pub(super) fn record_changed(
+pub(crate) fn record_changed(
     raw: &mut ProjectSettingsRaw,
     changed: &[&str],
 ) -> Result<(), SliceError> {

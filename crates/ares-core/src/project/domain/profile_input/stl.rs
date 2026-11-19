@@ -26,6 +26,15 @@ impl Project {
         overrides: &crate::ConfigOverrides,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let (settings, raw, preparation) = super::stl_settings::compose(profile, overrides)?;
+        Ok((Self::from_stl(input, filename, settings, raw)?, preparation))
+    }
+
+    pub(crate) fn from_stl(
+        input: &[u8],
+        filename: &str,
+        settings: crate::ProjectSettings,
+        raw: crate::project::raw_settings::ProjectSettingsRaw,
+    ) -> Result<Self, SliceError> {
         let volume = super::super::multipart::stl_volume(input, filename, 0)?;
         // STL.cpp creates the volume before the default instance, unlike 3MF build import.
         let mut object_ids = ObjectIdCounter::model_read();
@@ -46,31 +55,28 @@ impl Project {
             vec![volume],
             vec![instance],
         );
-        Ok((
-            Self::new(
-                vec![ProjectModel::new(filename.to_owned(), vec![1])],
-                vec![object],
-                vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
-                settings,
-                ProjectDocuments {
-                    model_settings: ModelSettings {
-                        objects: Vec::new(),
-                        plates: Vec::new(),
-                        assemble: None,
-                    },
-                    project_settings_raw: raw,
-                    slice_info: SliceInfo {
-                        header: SliceInfoHeader { items: Vec::new() },
-                    },
-                    filament_sequences: FilamentSequences(Default::default()),
-                    plate_documents: Vec::new(),
-                    has_painted_layer_height_profile: false,
-                    bbl_family_3mf: false,
-                    preset_file_version: None,
-                    preset_selection: None,
+        Ok(Self::new(
+            vec![ProjectModel::new(filename.to_owned(), vec![1])],
+            vec![object],
+            vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
+            settings,
+            ProjectDocuments {
+                model_settings: ModelSettings {
+                    objects: Vec::new(),
+                    plates: Vec::new(),
+                    assemble: None,
                 },
-            ),
-            preparation,
+                project_settings_raw: raw,
+                slice_info: SliceInfo {
+                    header: SliceInfoHeader { items: Vec::new() },
+                },
+                filament_sequences: FilamentSequences(Default::default()),
+                plate_documents: Vec::new(),
+                has_painted_layer_height_profile: false,
+                bbl_family_3mf: false,
+                preset_file_version: None,
+                preset_selection: None,
+            },
         ))
     }
 }

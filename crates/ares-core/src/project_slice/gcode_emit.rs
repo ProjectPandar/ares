@@ -18,6 +18,7 @@ mod file_start;
 mod finish;
 pub(super) mod footprint;
 mod header;
+mod klipper_acceleration;
 mod layer_gcode;
 mod layers;
 pub(crate) mod lexer;

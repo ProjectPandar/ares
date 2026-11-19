@@ -1,8 +1,6 @@
-use serde_json::Value;
-
 use super::fuzzy_skin_noise::{fuzzify_closed_polyline, ripple_closed_polyline};
 use crate::{
-    Point2, ProcessFuzzySkinType, ProcessNoiseType, RegionOptions, SliceError,
+    Point2, ProcessFuzzySkinType, ProcessNoiseType, RegionOptions,
     geometry::{CoordinateScale, Point},
 };
 
@@ -100,67 +98,6 @@ impl FuzzySkinConfig {
         }
     }
 
-    pub(crate) fn parse(
-        values: &std::collections::BTreeMap<String, Value>,
-        first_layer: bool,
-    ) -> Result<Self, SliceError> {
-        Ok(Self {
-            kind: parse_kind(values.get("fuzzy_skin"))?,
-            noise_type: parse_noise_type(values.get("fuzzy_skin_noise_type"))?,
-            thickness_mm: crate::options::parsing::parse_range_f64(
-                "fuzzy_skin_thickness",
-                values.get("fuzzy_skin_thickness"),
-                0.2,
-                0.0,
-                2.0,
-            )?,
-            point_distance_mm: crate::options::parsing::parse_range_f64(
-                "fuzzy_skin_point_distance",
-                values.get("fuzzy_skin_point_distance"),
-                0.3,
-                0.0,
-                5.0,
-            )?,
-            scale_mm: crate::options::parsing::parse_range_f64(
-                "fuzzy_skin_scale",
-                values.get("fuzzy_skin_scale"),
-                1.0,
-                0.1,
-                500.0,
-            )?,
-            octaves: parse_range_usize(
-                "fuzzy_skin_octaves",
-                values.get("fuzzy_skin_octaves"),
-                4,
-                1,
-                10,
-            )?,
-            persistence: crate::options::parsing::parse_range_f64(
-                "fuzzy_skin_persistence",
-                values.get("fuzzy_skin_persistence"),
-                0.5,
-                0.01,
-                1.0,
-            )?,
-            ripples_per_layer: parse_positive_usize(
-                "fuzzy_skin_ripples_per_layer",
-                values.get("fuzzy_skin_ripples_per_layer"),
-                15,
-            )?,
-            ripple_offset_percent: parse_percent(
-                "fuzzy_skin_ripple_offset",
-                values.get("fuzzy_skin_ripple_offset"),
-                50.0,
-            )?,
-            layers_between_ripple_offset: parse_positive_usize(
-                "fuzzy_skin_layers_between_ripple_offset",
-                values.get("fuzzy_skin_layers_between_ripple_offset"),
-                1,
-            )?,
-            first_layer,
-        })
-    }
-
     pub(crate) fn fuzzified_scaled_points(
         self,
         (points, closed): (&[Point], bool),
@@ -251,104 +188,5 @@ impl FuzzySkinConfig {
             return false;
         }
         self.point_distance_mm >= 0.01 && self.thickness_mm >= 0.001
-    }
-}
-
-fn parse_noise_type(value: Option<&Value>) -> Result<FuzzySkinNoiseType, SliceError> {
-    let Some(value) = value else {
-        return Ok(FuzzySkinNoiseType::Classic);
-    };
-    let Some(text) = value.as_str() else {
-        return Err(SliceError::InvalidInput(
-            "fuzzy_skin_noise_type must be a string".to_owned(),
-        ));
-    };
-    match text {
-        "classic" => Ok(FuzzySkinNoiseType::Classic),
-        "perlin" => Ok(FuzzySkinNoiseType::Perlin),
-        "billow" => Ok(FuzzySkinNoiseType::Billow),
-        "ridgedmulti" => Ok(FuzzySkinNoiseType::RidgedMulti),
-        "voronoi" => Ok(FuzzySkinNoiseType::Voronoi),
-        "ripple" => Ok(FuzzySkinNoiseType::Ripple),
-        _ => Err(SliceError::InvalidInput(
-            "fuzzy_skin_noise_type has unknown enum value".to_owned(),
-        )),
-    }
-}
-
-fn parse_range_usize(
-    key: &str,
-    value: Option<&Value>,
-    default: usize,
-    min: usize,
-    max: usize,
-) -> Result<usize, SliceError> {
-    let parsed = parse_positive_usize(key, value, default)?;
-    if (min..=max).contains(&parsed) {
-        Ok(parsed)
-    } else {
-        Err(SliceError::InvalidInput(format!("{key} is out of range")))
-    }
-}
-
-fn parse_positive_usize(
-    key: &str,
-    value: Option<&Value>,
-    default: usize,
-) -> Result<usize, SliceError> {
-    let Some(value) = value else {
-        return Ok(default);
-    };
-    let parsed = match value {
-        Value::Number(number) => number.as_u64(),
-        Value::String(text) => text.trim().parse::<u64>().ok(),
-        _ => None,
-    }
-    .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a positive integer")))?;
-    usize::try_from(parsed)
-        .ok()
-        .filter(|value| *value > 0)
-        .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a positive integer")))
-}
-
-fn parse_percent(key: &str, value: Option<&Value>, default: f64) -> Result<f64, SliceError> {
-    let Some(value) = value else {
-        return Ok(default);
-    };
-    let parsed = match value {
-        Value::Number(number) => number.as_f64(),
-        Value::String(text) => {
-            let text = text.trim();
-            text.strip_suffix('%').unwrap_or(text).trim().parse().ok()
-        }
-        _ => None,
-    }
-    .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a percent")))?;
-    if parsed.is_finite() && (0.0..=100.0).contains(&parsed) {
-        Ok(parsed)
-    } else {
-        Err(SliceError::InvalidInput(format!("{key} is out of range")))
-    }
-}
-
-fn parse_kind(value: Option<&Value>) -> Result<FuzzySkinKind, SliceError> {
-    let Some(value) = value else {
-        return Ok(FuzzySkinKind::Disabled);
-    };
-    let Some(text) = value.as_str() else {
-        return Err(SliceError::InvalidInput(
-            "fuzzy_skin must be a string".to_owned(),
-        ));
-    };
-    match text {
-        "none" => Ok(FuzzySkinKind::None),
-        "external" => Ok(FuzzySkinKind::External),
-        "hole" => Ok(FuzzySkinKind::Hole),
-        "all" => Ok(FuzzySkinKind::All),
-        "allwalls" => Ok(FuzzySkinKind::AllWalls),
-        "disabled_fuzzy" => Ok(FuzzySkinKind::Disabled),
-        _ => Err(SliceError::InvalidInput(
-            "fuzzy_skin has unknown enum value".to_owned(),
-        )),
     }
 }

@@ -1,4 +1,4 @@
-use crate::{SliceError, SliceOptions, gcode_writer::GCodeWriter, options::GCodeFlavor};
+use crate::GCodeFlavor;
 
 /// `GCodeWriter.cpp:352-361` `set_junction_deviation`: marlin2-only,
 /// gated on a positive machine maximum and value, `M205 J` with the
@@ -23,19 +23,4 @@ pub(crate) fn junction_deviation_command(
         ""
     };
     format!("M205 J{value:.3}{suffix}\n")
-}
-
-pub(crate) fn first_layer_command(
-    writer: &GCodeWriter,
-    options: &SliceOptions,
-    layer_index: usize,
-) -> Result<String, SliceError> {
-    if layer_index != 0 {
-        return Ok(String::new());
-    }
-    Ok(writer.set_junction_deviation(
-        options.default_junction_deviation()?,
-        options.machine_limits()?.max_junction_deviation,
-        options.gcode_comments()?,
-    ))
 }

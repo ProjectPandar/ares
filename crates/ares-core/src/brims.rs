@@ -74,26 +74,6 @@ impl BrimOptions {
         self.brim_ears_detection_length_mm
     }
 
-    pub(crate) const fn with_brim_ears_max_angle_degrees(mut self, value: f64) -> Self {
-        self.brim_ears_max_angle_degrees = value;
-        self
-    }
-
-    pub(crate) const fn with_brim_ears_detection_length_mm(mut self, value: f64) -> Self {
-        self.brim_ears_detection_length_mm = value;
-        self
-    }
-
-    pub(crate) const fn with_combine_brims(mut self, value: bool) -> Self {
-        self.combine_brims = value;
-        self
-    }
-
-    pub(crate) const fn with_efc_outline_offset_mm(mut self, value: Option<f64>) -> Self {
-        self.efc_outline_offset_mm = value;
-        self
-    }
-
     const fn generates_outer_brim(&self) -> bool {
         matches!(
             self.brim_type,

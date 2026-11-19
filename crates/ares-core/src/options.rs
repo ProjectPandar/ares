@@ -1,13 +1,8 @@
-use crate::{
-    AccelerationOptions, BridgeOptions, BrimOptions, ExtrusionOptions, JerkOptions,
-    PerimeterOptions, ShellLayerOptions, SliceError, SpeedOptions,
-};
+use crate::{BridgeOptions, SliceError};
 macro_rules! option_modules { ($($vis:vis $module:ident),* $(,)?) => { $($vis mod $module;)* }; }
-mod acceleration;
 #[rustfmt::skip]
-option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
+option_modules!(defaults, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 pub mod bed_exclusion;
-mod brim;
 mod config_export;
 pub(crate) mod flush_matrix;
 mod flush_volume;
@@ -19,50 +14,26 @@ mod config_types;
 mod gcode_fields;
 mod gcode_options;
 #[rustfmt::skip]
-option_modules!(pub(crate) filament_config_export, filament_count, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
+option_modules!(filament_count, filament_type, hardware, infill);
 pub(crate) mod filament_map_recommend;
 mod filament_options;
 pub(crate) use filament_options::FilamentOptionsBuilder;
-#[rustfmt::skip]
-pub(crate) mod auxiliary_fan;
-option_modules!(
-    bed_temperature,
-    chamber_temperature,
-    custom_gcode,
-    filament_change,
-    exhaust_fan,
-    fan_speedup,
-    filament_cooling_before_tower,
-    flush_placeholders,
-    gcode_flavor,
-    gcode_output,
-    nozzle_temperature,
-    part_cooling_fan,
-    preheat,
-    timelapse_type,
-    temperature_vector,
-    temperature_vitrification
-);
-
-#[rustfmt::skip]
-option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);
+mod bed_temperature;
 mod decode;
 mod encode;
+mod gcode_flavor;
 pub(crate) mod json_deserialize;
-mod machine_limits;
 pub(crate) mod model_config_deserialize;
-#[rustfmt::skip]
-option_modules!(layer_change_retraction, pub(crate) legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
+mod part_cooling_fan;
+option_modules!(layer_change_retraction, pub(crate) legacy, initial_layer_print_height, parameter_size, skirt_type);
 mod object_fields;
 mod object_options;
 pub(crate) mod option_group;
-mod overrides;
+pub(crate) mod overrides;
 pub(crate) mod parsing;
 mod pellet;
-mod physical_extruder_map;
 pub(crate) mod power_loss_recovery;
 mod preset_metadata;
-mod pressure_advance;
 mod printer_options;
 mod process_options;
 pub(crate) use {
@@ -78,16 +49,9 @@ mod project_settings;
 mod project_variants;
 mod region_fields;
 mod region_options;
-mod relative_e;
-mod shell_layers;
-mod slow_down_layers;
-mod small_perimeter;
-mod speed;
-mod volumetric_speed;
 
 pub mod registry;
 mod support_different_extruders;
-mod support_ironing;
 #[cfg_attr(not(test), allow(dead_code, unused_imports))]
 mod typed_legacy;
 pub(crate) use typed_legacy::parse_loaded_thumbnail_definitions;
@@ -96,31 +60,24 @@ mod update_printer_extruders;
 mod update_single_to_multi;
 mod validation;
 mod vector_resize;
-pub(crate) use acceleration::AccelToDecelConfig;
-pub(crate) use bed_temperature::{FirstLayerBedTemperature, first_layer_bed_temperature_key_for};
+pub(crate) use bed_temperature::first_layer_bed_temperature_key_for;
 pub(crate) use config_types::format_number;
 mod arc_fitting;
 pub use arc_fitting::ArcFittingMode;
 pub use decode::{decode_config_value, decode_config_value_by_key};
 use defaults::*;
 pub use encode::{encode_config_value, encode_config_value_by_key};
-pub(crate) use fan_speedup::FanSpeedupControl;
-pub(crate) use gap_fill::GapFillTarget;
 
-pub(crate) use infill::{
-    ExtraSolidInfills, InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions,
-    InternalBridgeFilter,
-};
+pub(crate) use infill::ExtraSolidInfills;
 pub(crate) use legacy::handle_legacy;
-pub(crate) use machine_limits::MachineLimits;
 pub(crate) use model_config_deserialize::{
     deserialize_object_model_field, deserialize_region_model_field,
 };
 pub(crate) use object_options::ObjectOptionOverrides;
 pub use overrides::ConfigOverrides;
-use parsing::{parse_extrusion_width_text, parse_numeric_vector};
+use parsing::parse_numeric_vector;
 pub(crate) use part_cooling_fan::{
-    InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,
+    InternalBridgeFanSpeed, PartCoolingFanRamp, PartCoolingFanRampConfig,
 };
 pub(crate) use project_variants::{MaterializedProjectVariants, materialize_project_variants};
 pub(crate) use project_variants::{
@@ -151,7 +108,6 @@ pub use {
     gcode_flavor::GCodeFlavor,
     gcode_options::GCodeOptions,
     hardware::HardwareOptions,
-    infill::{InfillOptions, InfillPattern},
     layer_change_retraction::RetractLiftEnforce,
     object_options::ObjectOptions,
     power_loss_recovery::PowerLossRecoveryMode,
@@ -187,10 +143,7 @@ pub use {
     project_settings::ProjectSettings,
     region_options::RegionOptions,
 };
-pub(crate) use {chamber_temperature::ChamberTemperatureControl, exhaust_fan::ExhaustFanControl};
 pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};
-#[rustfmt::skip]
-pub(crate) use {input_shaping::InputShapingConfig, layer_change_retraction::ZHopLiftMode};
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]
 #[serde(transparent)]
 pub struct SliceOptions {
@@ -206,40 +159,12 @@ impl SliceOptions {
     #[rustfmt::skip]
     pub fn hardware_options(&self) -> Result<HardwareOptions, SliceError> { Ok(HardwareOptions { nozzle_diameters: self.nozzle_diameters()?, filament_diameters: self.filament_diameters()?, min_layer_heights: self.min_layer_heights()?, max_layer_heights: self.max_layer_heights()? }) }
     #[rustfmt::skip]
-    pub fn extrusion_options(&self) -> Result<ExtrusionOptions, SliceError> { flow_ratios::parse_extrusion_options(self) }
-    #[rustfmt::skip]
-    pub fn speed_options(&self) -> Result<SpeedOptions, SliceError> { speed::parse_speed_options(self) }
-    #[rustfmt::skip]
-    pub fn acceleration_options(&self) -> Result<AccelerationOptions, SliceError> { acceleration::parse_acceleration_options(&self.values) }
-    #[rustfmt::skip]
-    pub fn jerk_options(&self) -> Result<JerkOptions, SliceError> { acceleration::parse_jerk_options(&self.values) }
-    #[rustfmt::skip]
     pub fn skirt_options(&self) -> Result<crate::SkirtOptions, SliceError> { Ok(crate::SkirtOptions::new(self.non_negative_u32("skirt_loops", DEFAULT_SKIRT_LOOPS)?, self.range_f64("skirt_distance", 2.0, 0.0, f64::INFINITY)?, self.non_negative_u32("skirt_height", DEFAULT_SKIRT_HEIGHT)?, self.range_f64("skirt_speed", 50.0, 0.0, f64::INFINITY)?).with_draft_shield(draft_shield::parse_draft_shield(&self.values)?).with_skirt_type(skirt_type::parse_skirt_type(&self.values)?).with_min_skirt_length_mm(self.range_f64("min_skirt_length", 0.0, 0.0, f64::INFINITY)?).with_single_loop_draft_shield(self.bool_option("single_loop_draft_shield", false)?).with_skirt_start_angle_degrees(self.range_f64("skirt_start_angle", -135.0, -180.0, 180.0)?)) }
     #[rustfmt::skip]
-    pub fn brim_options(&self) -> Result<BrimOptions, SliceError> { Ok(BrimOptions::new(self.range_f64("brim_width", 0.0, 0.0, 100.0)?, self.range_f64("brim_object_gap", 0.0, 0.0, 2.0)?, brim::parse_brim_type(&self.values)?).with_combine_brims(self.bool_option("combine_brims", false)?).with_brim_ears_max_angle_degrees(brim::parse_brim_ears_max_angle(&self.values)?).with_brim_ears_detection_length_mm(brim::parse_brim_ears_detection_length(&self.values)?).with_efc_outline_offset_mm(brim::parse_efc_outline_offset(self)?)) }
-    #[rustfmt::skip]
-    pub fn perimeter_options(&self) -> Result<PerimeterOptions, SliceError> { overhang_reverse::parse_perimeter_options(self) }
-    #[rustfmt::skip]
     pub fn bridge_options(&self) -> Result<BridgeOptions, SliceError> { crate::bridges::parse_bridge_options(&self.values) }
-    #[rustfmt::skip]
-    pub fn infill_options(&self) -> Result<InfillOptions, SliceError> { infill::parse_infill_options(self) }
-    #[rustfmt::skip]
-    pub fn shell_layer_options(&self) -> Result<ShellLayerOptions, SliceError> { shell_layers::parse_shell_layer_options(self) }
-    #[rustfmt::skip]
-    pub(crate) fn filter_out_gap_fill_mm(&self) -> Result<f64, SliceError> { gap_fill::parse_filter_out_gap_fill(self) }
-    #[rustfmt::skip]
-    pub(crate) fn gap_fill_target(&self) -> Result<gap_fill::GapFillTarget, SliceError> { gap_fill::parse_gap_fill_target(self) }
-    #[rustfmt::skip]
-    pub(crate) fn support_ironing(&self) -> Result<bool, SliceError> { support_ironing::parse_support_ironing(self) }
-    #[rustfmt::skip]
-    pub(crate) fn support_type(&self) -> Result<support_type::SupportType, SliceError> { support_type::parse(self) }
-    #[rustfmt::skip]
-    pub(crate) fn support_z_distance_options(&self) -> Result<support_z_distance::SupportZDistanceOptions, SliceError> { support_z_distance::parse(self) }
     pub(crate) fn precise_z_height(&self) -> Result<bool, SliceError> {
         self.bool_option("precise_z_height", false)
     }
-    #[rustfmt::skip]
-    pub(crate) fn z_offset(&self) -> Result<f64, SliceError> { self.range_f64("z_offset", 0.0, f64::NEG_INFINITY, f64::INFINITY) }
     #[rustfmt::skip]
     pub fn is_infill_first(&self) -> Result<bool, SliceError> { let Some(value) = self.values.get("is_infill_first") else { return Ok(DEFAULT_IS_INFILL_FIRST); }; value.as_bool().ok_or_else(|| SliceError::InvalidInput("is_infill_first must be a boolean".to_owned())) }
     pub fn nozzle_diameters(&self) -> Result<Vec<f64>, SliceError> {
@@ -301,41 +226,6 @@ impl SliceOptions {
         value
             .as_bool()
             .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a boolean")))
-    }
-    pub(crate) fn sparse_infill_line_width(&self) -> Result<f64, SliceError> {
-        let nozzle_diameter = self.nozzle_diameters()?[0];
-        let configured = self.extrusion_width("sparse_infill_line_width", 0.0, nozzle_diameter)?;
-        if configured == 0.0 {
-            Ok(nozzle_diameter)
-        } else {
-            Ok(configured)
-        }
-    }
-    pub(crate) fn extrusion_width(
-        &self,
-        key: &str,
-        default: f64,
-        nozzle_diameter: f64,
-    ) -> Result<f64, SliceError> {
-        let Some(value) = self.values.get(key) else {
-            return Ok(default);
-        };
-        let value = match value {
-            serde_json::Value::Number(number) => number.as_f64(),
-            serde_json::Value::String(text) => parse_extrusion_width_text(text, nozzle_diameter),
-            _ => None,
-        }
-        .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a number")))?;
-        if value.is_finite() && value >= 0.0 {
-            Ok(value)
-        } else {
-            Err(SliceError::InvalidInput(format!(
-                "{key} contains invalid value"
-            )))
-        }
-    }
-    pub(crate) fn percent(&self, key: &str, default: f64) -> Result<f64, SliceError> {
-        self.range_f64(key, default, 0.0, 100.0)
     }
     pub(crate) fn range_f64(
         &self,
