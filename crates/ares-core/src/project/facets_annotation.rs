@@ -4,7 +4,9 @@ use serde::{Deserialize, Deserializer, de::Error};
 
 mod selector;
 
-pub(crate) use selector::{ordinary_facets, strict_annotated_facets, strict_facets};
+pub(crate) use selector::{
+    Selector as FacetSelector, ordinary_facets, strict_annotated_facets, strict_facets,
+};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(crate) struct TriangleCodes(Vec<u8>);
