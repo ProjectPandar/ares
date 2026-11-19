@@ -1,4 +1,5 @@
 mod args;
+mod assembly;
 mod compatible_machine;
 mod export_3mf;
 mod export_stl;
@@ -30,8 +31,10 @@ async fn main() {
             ..
         } => {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
+                require_single_input(&args);
                 export_stl::run(&args)
             } else if let Some(output) = args.export_3mf.as_ref() {
+                require_single_input(&args);
                 export_3mf::run(&args, output)
             } else {
                 run_slice(args).await
@@ -50,10 +53,14 @@ async fn main() {
 }
 
 async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
-    ensure_supported_input(&args.input)?;
+    if assembly::requested(&args) {
+        return assembly::slice(&args).await;
+    }
+    require_single_input(&args);
+    ensure_supported_input(args.input())?;
 
     let extension = args
-        .input
+        .input()
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
@@ -105,13 +112,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         eprintln!("Params in command line error: \n{error}\nsetup params error");
         std::process::exit(-2);
     }
-    let input = match fs::read(&args.input) {
+    let input = match fs::read(args.input()) {
         Ok(input) => input,
         // `CLI_FILE_NOTFOUND` (-3, Utils.hpp:27): the `No such file:` detail
         // goes to stderr, the generic string to result.json.
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Err(CliFailure::missing_input(
-                &args.input,
+                args.input(),
                 #[cfg(target_os = "linux")]
                 &slice_plates::output_directory(&args)
                     .map_or_else(|| args.output().to_owned(), |dir| dir.join("plate_1.gcode")),
@@ -120,7 +127,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Err(error) => return Err(error.into()),
     };
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
-    let input_file = args.input.to_string_lossy().into_owned();
+    let input_file = args.input().to_string_lossy().into_owned();
     // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).
     let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text);
@@ -199,7 +206,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     let processed = match ares_core::slice_cli_project_plate_validated_with_catalog(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            orient: args.orient == Some(1),
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: true,
@@ -251,7 +258,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     match ares_core::slice_cli_project_plate_validated_with_catalog(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            orient: args.orient == Some(1),
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: false,
@@ -308,7 +315,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             return Ok(());
         }
         Some(extension) if extension == "stl" => {
-            if args.orient == 1 {
+            if args.orient == Some(1) {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
@@ -353,6 +360,20 @@ fn report_success(
 
 /// The 3MF load's substitutions (`OrcaSlicer.cpp:1737-1758`). A project whose settings cannot be
 /// read fails its load before the report (`:1992`), so it has none to report.
+fn require_single_input(args: &SliceArgs) {
+    if args.inputs.len() != 1 {
+        clap::Error::raw(
+            if args.inputs.is_empty() {
+                clap::error::ErrorKind::MissingRequiredArgument
+            } else {
+                clap::error::ErrorKind::UnknownArgument
+            },
+            "slicing requires exactly one input model",
+        )
+        .exit();
+    }
+}
+
 fn substitutions(input: &[u8]) -> Vec<ares_core::ConfigSubstitution> {
     ares_core::project_config_substitutions(input).unwrap_or_default()
 }

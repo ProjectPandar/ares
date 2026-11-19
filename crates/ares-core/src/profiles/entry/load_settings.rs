@@ -46,14 +46,54 @@ pub async fn slice_with_load_settings_and_refresh(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    with_load_settings_source(input.as_ref(), request, refresh, |source| {
+    let input = input.as_ref();
+    with_load_settings_source(
+        (ProjectInput::Bytes(input), input),
+        request,
+        refresh,
+        |source| slice_source(source, metadata, false, context),
+    )
+    .map(|processed| processed.gcode)
+}
+
+/// Slices one plate of a fixed-placement assembly with the ordinary CLI preset overlay.
+pub async fn slice_assembly(
+    assembly: &crate::Assembly<'_>,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    let input = ProjectInput::Assembly(assembly);
+    if request.settings.is_empty() && request.filaments.is_empty() {
+        return slice_source(
+            ProjectSource {
+                input,
+                plate: request.plate,
+                profile: None,
+                refresh: None,
+                overrides: request.overrides,
+                validate_print: true,
+                validate_config: true,
+                orient: false,
+                upward: None,
+                sliced_plate: Some(request.sliced_plate),
+                edits: &crate::plater::NO_EDITS,
+            },
+            metadata,
+            false,
+            context,
+        )
+        .map(|processed| processed.gcode);
+    }
+    let bytes = assembly.archive().map_or(&[][..], |file| file.bytes);
+    with_load_settings_source((input, bytes), request, None, |source| {
         slice_source(source, metadata, false, context)
     })
     .map(|processed| processed.gcode)
 }
 
 pub(crate) fn with_load_settings_source<T>(
-    input: &[u8],
+    (input, bytes): (ProjectInput<'_>, &[u8]),
     request: LoadSettingsSliceRequest<'_>,
     refresh: Option<&crate::NativeRefreshPresets>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
@@ -81,16 +121,17 @@ pub(crate) fn with_load_settings_source<T>(
         settings,
         filaments,
     };
-    let (composed, load_names) = compose_project_load_settings(input, &request)?;
+    let (composed, load_names) = compose_project_load_settings(bytes, &request)?;
     let catalog = catalog_json
         .map(crate::profiles::project_selection::loaded_catalog)
         .transpose()?;
     // `OrcaSlicer.cpp:1682-1690`: the embedded `post_process` check lives
     // in the 3MF load block, so the composite entry validates 3MF inputs
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
-    let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
+    let validate_print = matches!(input, ProjectInput::Assembly(_))
+        || crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
-        input: ProjectInput::Bytes(input),
+        input,
         plate,
         profile: Some(ProfileInput {
             filename,

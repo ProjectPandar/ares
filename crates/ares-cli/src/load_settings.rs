@@ -16,9 +16,9 @@ pub(super) async fn slice(
     (load_settings, load_filaments): (&[&str], &[&str]),
     context: ares_core::SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
-    let input_file = args.input.to_string_lossy().into_owned();
+    let input_file = args.input().to_string_lossy().into_owned();
     let filename = args
-        .input
+        .input()
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
@@ -83,7 +83,7 @@ pub(super) async fn slice(
     let gcode = match ares_core::slice_with_load_settings_and_refresh(
         input,
         ares_core::LoadSettingsSliceRequest {
-            orient: args.orient == 1,
+            orient: args.orient == Some(1),
             filename,
             catalog_json: catalog.as_deref(),
             loaded_sources: Some(&loaded_sources),

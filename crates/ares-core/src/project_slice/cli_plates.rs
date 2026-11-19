@@ -6,8 +6,8 @@ use crate::{
 };
 
 use super::{
-    CliUpwardMachine, ProjectSource, perimeters, profile_entry, slice_plate, source::PlateInput,
-    state,
+    CliUpwardMachine, ProjectInput, ProjectSource, perimeters, profile_entry, slice_plate,
+    source::PlateInput, state,
 };
 
 pub enum CliPlatesSettings<'a> {
@@ -182,7 +182,7 @@ pub fn slice_cli_project_plates(
             } => {
                 let mut report = SlicedPlate::default();
                 with_load_settings_source(
-                    input,
+                    (ProjectInput::Bytes(input), input),
                     LoadSettingsSliceRequest {
                         filename,
                         catalog_json,

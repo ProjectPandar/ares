@@ -86,7 +86,7 @@ pub(super) async fn slice(
     context: ares_core::SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
     if args
-        .input
+        .input()
         .extension()
         .and_then(|extension| extension.to_str())
         != Some("3mf")
@@ -108,7 +108,7 @@ pub(super) async fn slice(
     })?;
 
     let filename = args
-        .input
+        .input()
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
@@ -119,7 +119,7 @@ pub(super) async fn slice(
     };
 
     let metadata = ares_core::GenerationMetadata::default();
-    let input_file = args.input.to_string_lossy();
+    let input_file = args.input().to_string_lossy();
     let source = ares_core::UpwardMachineSource::from_project(input)
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
     let mut upward_report = Vec::new();
@@ -146,7 +146,7 @@ pub(super) async fn slice(
             ares_core::slice_cli_with_profiles_validated(
                 input,
                 ares_core::CliProfileSliceRequest {
-                    orient: args.orient == 1,
+                    orient: args.orient == Some(1),
                     profile: ares_core::ProfileSliceRequest {
                         filename,
                         catalog_json: &catalog,
@@ -168,7 +168,7 @@ pub(super) async fn slice(
             ares_core::slice_cli_project_plate_with_refresh(
                 input,
                 ares_core::CliProjectSliceRequest {
-                    orient: args.orient == 1,
+                    orient: args.orient == Some(1),
                     plate: args.plate,
                     overrides,
                     record_moves: args.dump_moves.is_some(),

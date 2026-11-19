@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{ArgGroup, Parser, Subcommand};
 
@@ -56,9 +56,24 @@ pub(crate) struct SliceArgs {
     #[arg(long)]
     pub(crate) plate: Option<u32>,
     /// Orient model objects: 0 disables, 1 forces, other integers retain automatic eligibility
-    #[arg(long, default_value_t = 0, allow_hyphen_values = true)]
-    pub(crate) orient: i32,
-    /// Resource root containing profiles/BBL/machine_full (default: the platform's installation resources)
+    #[arg(long, allow_hyphen_values = true)]
+    pub(crate) orient: Option<i32>,
+    /// Collect the positional models' volumes into a single assembly
+    #[arg(long)]
+    pub(crate) assemble: bool,
+    /// Load fixed-placement assembly plates from a JSON manifest
+    #[arg(long)]
+    pub(crate) load_assemble_list: Option<PathBuf>,
+    #[arg(long, hide = true, num_args = 0..=1, default_missing_value = "")]
+    pub(crate) assemble_list: Option<String>,
+    /// Retain source placement for positional assembly (0)
+    #[arg(long, allow_hyphen_values = true)]
+    pub(crate) arrange: Option<i32>,
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
+    pub(crate) clone_objects: Vec<i32>,
+    #[arg(long, value_delimiter = ',', allow_hyphen_values = true)]
+    pub(crate) load_filament_ids: Vec<i32>,
+    /// Resource root containing profiles/BBL/machine_full (default: resources beside the executable)
     #[arg(long)]
     pub(crate) resources_dir: Option<PathBuf>,
     /// Write the G-code processor move vertices as CSV (3MF input only)
@@ -110,18 +125,21 @@ pub(crate) struct SliceArgs {
     /// Write plate_<n>.gcode in this directory for the --slice action or an export action.
     #[arg(long, requires = "action")]
     pub(crate) outputdir: Option<PathBuf>,
-    #[arg(long, requires = "export_action")]
-    pub(crate) arrange: Option<u32>,
-    #[arg(long, requires = "export_action")]
+    #[arg(long)]
     pub(crate) min_save: Option<u32>,
     #[arg(long, requires = "export_action")]
     pub(crate) load_slicedata: Option<PathBuf>,
     #[arg(long, requires = "export_action")]
     pub(crate) export_slicedata: Option<PathBuf>,
-    pub(crate) input: PathBuf,
+    #[arg(value_name = "INPUT")]
+    pub(crate) inputs: Vec<PathBuf>,
 }
 
 impl SliceArgs {
+    pub(crate) fn input(&self) -> &Path {
+        &self.inputs[0]
+    }
+
     pub(crate) fn output(&self) -> &std::path::Path {
         self.output
             .as_deref()
