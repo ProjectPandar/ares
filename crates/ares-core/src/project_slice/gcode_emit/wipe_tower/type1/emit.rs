@@ -2,7 +2,7 @@
 use super::super::super::{motion, pressure_advance, timelapse, value::Value};
 use super::super::{emit::Append, filament::at, postprocess};
 use super::{dynamic, templates, travel};
-use crate::SliceError;
+use crate::{SliceError, options::escape_scalar_string};
 
 pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     output: &mut Vec<u8>,
@@ -200,13 +200,18 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         start_filament.push_str(std::str::from_utf8(&descend).expect("writer G-code is UTF-8"));
     }
     let mut config = templates::config(state, context)?;
-    config.insert("filament_end_gcode", Value::String(end_filament));
-    config.insert(
-        "restore_layer_z_before_toolchange",
-        Value::String(String::from_utf8(restore_layer_z).expect("writer G-code is UTF-8")),
-    );
-    config.insert("change_filament_gcode", Value::String(change));
-    config.insert("filament_start_gcode", Value::String(start_filament));
+    // Legacy placeholders serialize the ConfigOptionString values before the motion scan.
+    for (key, script) in [
+        ("filament_end_gcode", end_filament.as_str()),
+        (
+            "restore_layer_z_before_toolchange",
+            std::str::from_utf8(&restore_layer_z).expect("writer G-code is UTF-8"),
+        ),
+        ("change_filament_gcode", change.as_str()),
+        ("filament_start_gcode", start_filament.as_str()),
+    ] {
+        config.insert(key, Value::String(escape_scalar_string(script)));
+    }
     let text = templates::render(state, "tcr_rotated_gcode", &code, tool, &mut config);
     let mut chars = text.chars();
     while let Some(ch) = chars.next() {
