@@ -34,7 +34,7 @@ fn project_catalog_cli_load_settings_reaches_preset_file_loading() {
         "missing-machine.json",
     ]);
     assert!(
-        error.contains(r#"Loading setting file \"missing-machine.json\" failed:"#),
+        error.contains(r#"Loading setting file "missing-machine.json" failed:"#),
         "{error}"
     );
     assert!(!error.contains("cannot be used with"), "{error}");
