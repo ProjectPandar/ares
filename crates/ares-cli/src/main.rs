@@ -6,6 +6,7 @@ mod moves_csv;
 mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
+mod settings_export;
 
 use std::fs;
 use std::io;
@@ -17,8 +18,19 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let Commands::Slice(args) = Cli::parse().command;
-    if let Err(failure) = run_slice(args).await {
+    let result = match Cli::parse() {
+        Cli {
+            command: Some(Commands::Slice(args)),
+            ..
+        } => run_slice(args).await,
+        Cli {
+            export_settings: Some(destination),
+            project: Some(project),
+            ..
+        } => settings_export::run(&project, &destination),
+        _ => unreachable!("arguments require either a slice or a settings export"),
+    };
+    if let Err(failure) = result {
         failure.report();
     }
 }

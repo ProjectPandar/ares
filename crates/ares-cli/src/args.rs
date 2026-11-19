@@ -3,10 +3,19 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "ares")]
+#[command(
+    name = "ares",
+    args_conflicts_with_subcommands = true,
+    arg_required_else_help = true
+)]
 pub(crate) struct Cli {
     #[command(subcommand)]
-    pub(crate) command: Commands,
+    pub(crate) command: Option<Commands>,
+    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'
+    #[arg(long, value_name = "FILE", requires = "project")]
+    pub(crate) export_settings: Option<PathBuf>,
+    #[arg(requires = "export_settings")]
+    pub(crate) project: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]

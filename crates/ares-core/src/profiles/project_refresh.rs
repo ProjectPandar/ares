@@ -2,6 +2,7 @@ mod filament;
 pub(in crate::profiles) mod keys;
 pub(super) mod preset;
 pub(in crate::profiles) use filament::{dev_key, is_vector};
+pub(crate) use preset::connection as is_connection_option;
 
 use std::collections::BTreeMap;
 
