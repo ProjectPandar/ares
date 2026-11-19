@@ -1,38 +1,26 @@
 //! `TreeSupport.cpp:3172-3250::smooth_nodes`.
 
 use super::nodes::{NodeArena, NodeId, NodeType};
-use crate::{
-    FloatOrPercent, ObjectOptions,
-    geometry::{CoordinateScale, Point},
-};
+use crate::geometry::Point;
 
-pub(super) fn smooth_nodes(
-    arena: &mut NodeArena,
-    layers: &[Vec<NodeId>],
-    object: &ObjectOptions,
-    scale: CoordinateScale,
-) {
+pub(super) fn smooth_nodes(arena: &mut NodeArena, layers: &[Vec<NodeId>]) {
     for &id in layers.iter().flatten() {
         arena.nodes[id].is_processed = false;
     }
-    let width = match object.support_line_width {
-        FloatOrPercent::Float(value) => value,
-        FloatOrPercent::Percent(value) => value.0,
-    };
-    let max_move = scale.scaled_delta(width / 2.0) as f32;
+
     for &id in layers.iter().flatten() {
         if arena.nodes[id].is_processed {
             continue;
         }
-        smooth_branch(arena, id, max_move);
+        smooth_branch(arena, id);
     }
 }
 
-fn smooth_branch(arena: &mut NodeArena, start: NodeId, max_move: f32) {
+fn smooth_branch(arena: &mut NodeArena, start: NodeId) {
     let mut points = Vec::new();
     let mut radii = Vec::new();
     let mut branch = Vec::new();
-    let mut total_height = 0.0_f32;
+
     if let Some(child) = arena.nodes[start].child
         && arena.nodes[child].node_type != NodeType::Polygon
     {
@@ -40,7 +28,6 @@ fn smooth_branch(arena: &mut NodeArena, start: NodeId, max_move: f32) {
         points.push(node.position);
         radii.push(node.radius);
         branch.push(child);
-        total_height = (f64::from(total_height) + node.height) as f32;
     }
     let mut current = start;
     loop {
@@ -48,7 +35,7 @@ fn smooth_branch(arena: &mut NodeArena, start: NodeId, max_move: f32) {
         points.push(node.position);
         radii.push(node.radius);
         branch.push(current);
-        total_height = (f64::from(total_height) + node.height) as f32;
+
         match node.parent {
             Some(parent) if !arena.nodes[parent].is_processed => current = parent,
             Some(_) | None => break,
@@ -74,20 +61,6 @@ fn smooth_branch(arena: &mut NodeArena, start: NodeId, max_move: f32) {
             (points[index + 1].y() - points[index - 1].y()) / 2,
         );
         node.is_processed = true;
-        if node.parents.len() > 1
-            || node.movement.x() as f32 > max_move
-            || node.movement.y() as f32 > max_move
-            || (total_height > 100.0 && node.distance_mm_to_top < 30.0)
-        {
-            node.need_extra_wall = true;
-        }
-    }
-    for index in 1..branch.len() - 1 {
-        if arena.nodes[branch[index - 1]].need_extra_wall
-            && arena.nodes[branch[index + 1]].need_extra_wall
-        {
-            arena.nodes[branch[index]].need_extra_wall = true;
-        }
     }
 }
 
