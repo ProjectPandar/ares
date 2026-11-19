@@ -9,6 +9,35 @@ fn grid_anchors_preserve_native_internal_bridge_traversal() {
     let Some(orca) = OrcaRunner::from_env().unwrap() else {
         return;
     };
+    let stock = slice(&orca, "45", "0");
+    let stock_outcome = crate::compare_case(&stock);
+    assert_eq!(stock_outcome.status, "PASS", "{}", stock_outcome.detail);
+    let native_stock = feature_moves(&stock.reference, "Internal Bridge", 5.0);
+    assert!(!native_stock.is_empty(), "missing Native stock bridge");
+
+    let rotated = slice(&orca, "90", "0");
+    let native_rotated = assert_bridge_traversal(&rotated, 5.0);
+    assert_ne!(
+        native_rotated, native_stock,
+        "Native direction did not activate"
+    );
+}
+
+#[test]
+fn odd_raft_preserves_native_grid_bridge_traversal() {
+    let Some(orca) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let raft = slice(&orca, "90", "3");
+    assert!(
+        !feature_moves(&raft.reference, "Support", 0.2).is_empty(),
+        "missing Native first-layer raft extrusion"
+    );
+    // Three raft layers flip the absolute ID's parity, but not Fill::layer_id.
+    assert_bridge_traversal(&raft, 5.9);
+}
+
+fn slice(orca: &OrcaRunner, direction: &str, raft_layers: &str) -> runner::ParityCase {
     let root = runner::repo_root();
     let profiles =
         VendorProfiles::load(&root.join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
@@ -20,48 +49,61 @@ fn grid_anchors_preserve_native_internal_bridge_traversal() {
         .or_insert_with(|| serde_json::json!(["0"]));
     let filaments = [filament];
     let mesh = root.join("tests/parity/grid-bridge-anchor-direction/plate.stl");
-    let mut native_stock = Vec::new();
-    for direction in ["45", "90"] {
-        process.insert("infill_direction".into(), Value::from(direction));
-        let exported = orca
-            .export_case(
-                &CaseInputs {
-                    label: &format!("grid-bridge-anchor-direction/{direction}"),
-                    machine: &machine,
-                    process: &process,
-                    filaments: &filaments,
-                },
-                &Map::new(),
-                &mesh,
-            )
-            .unwrap();
-        for (key, value) in [
-            ("sparse_infill_pattern", "grid"),
-            ("infill_direction", direction),
-        ] {
-            runner::application::verify_value(&exported.project, key, &Value::from(value)).unwrap();
-        }
-        let sliced = orca.slice_case(&exported).unwrap();
-        let outcome = crate::compare_case(&sliced);
-        let artifacts = outcome.artifacts.unwrap();
-        let native = bridge_moves(&sliced.reference);
-        assert!(!native.is_empty(), "missing Native bridge: {artifacts:?}");
-        if direction == "45" {
-            assert_eq!(outcome.status, "PASS", "{}; {artifacts:?}", outcome.detail);
-            native_stock = native;
-        } else {
-            assert_ne!(native, native_stock, "Native direction did not activate");
-            let actual = bridge_moves(&fs::read(artifacts.join("ares.gcode")).unwrap());
-            assert_eq!(actual, native, "directed Z5 internal bridge: {artifacts:?}");
-        }
+    let mut requested = vec![
+        ("infill_direction", direction),
+        ("raft_layers", raft_layers),
+    ];
+    if raft_layers != "0" {
+        // Isolate Grid anchoring from tree raft generation and interface arc fitting.
+        requested.extend([
+            ("support_type", "normal(auto)"),
+            ("enable_arc_fitting", "0"),
+        ]);
     }
+    for &(key, value) in &requested {
+        process.insert(key.into(), Value::from(value));
+    }
+    let exported = orca
+        .export_case(
+            &CaseInputs {
+                label: &format!("grid-bridge-anchor-direction/{direction}/raft-{raft_layers}"),
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &Map::new(),
+            &mesh,
+        )
+        .unwrap();
+    for (key, value) in requested
+        .into_iter()
+        .chain([("sparse_infill_pattern", "grid")])
+    {
+        runner::application::verify_value(&exported.project, key, &Value::from(value)).unwrap();
+    }
+    orca.slice_case(&exported).unwrap()
+}
+
+fn assert_bridge_traversal(sliced: &runner::ParityCase, height: f64) -> Vec<(Point, Point)> {
+    let outcome = crate::compare_case(sliced);
+    let artifacts = outcome.artifacts.unwrap();
+    let native = feature_moves(&sliced.reference, "Internal Bridge", height);
+    assert!(!native.is_empty(), "missing Native bridge: {artifacts:?}");
+    let actual = feature_moves(
+        &fs::read(artifacts.join("ares.gcode")).unwrap(),
+        "Internal Bridge",
+        height,
+    );
+    assert_eq!(actual, native, "directed internal bridge: {artifacts:?}");
+    assert_eq!(outcome.status, "PASS", "{}; {artifacts:?}", outcome.detail);
+    native
 }
 
 type Point = (f64, f64);
 
-fn bridge_moves(bytes: &[u8]) -> Vec<(Point, Point)> {
+fn feature_moves(bytes: &[u8], role: &str, height: f64) -> Vec<(Point, Point)> {
     let mut z = 0.0;
-    let mut internal_bridge = false;
+    let mut selected = false;
     let mut current = (0.0, 0.0);
     let mut result = Vec::new();
     for line in std::str::from_utf8(bytes).unwrap().lines() {
@@ -69,10 +111,10 @@ fn bridge_moves(bytes: &[u8]) -> Vec<(Point, Point)> {
             z = height.parse().unwrap();
         }
         if let Some(feature) = line.strip_prefix("; FEATURE: ") {
-            internal_bridge = feature == "Internal Bridge";
+            selected = feature == role;
         }
         let mut words = line.split(';').next().unwrap().split_ascii_whitespace();
-        let Some(command @ ("G0" | "G1" | "G2" | "G3")) = words.next() else {
+        let Some("G0" | "G1" | "G2" | "G3") = words.next() else {
             continue;
         };
         let mut next = current;
@@ -86,8 +128,7 @@ fn bridge_moves(bytes: &[u8]) -> Vec<(Point, Point)> {
                 extrudes = e.parse::<f64>().unwrap() > 0.0;
             }
         }
-        if z == 5.0 && internal_bridge && extrudes && next != current {
-            assert_eq!(command, "G1");
+        if z == height && selected && extrudes && next != current {
             result.push((current, next));
         }
         current = next;
