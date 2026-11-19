@@ -168,7 +168,12 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                         print_z: layer.print_z,
                         layer_id: layer.id,
                     },
-                    super::adaptive::AdaptiveObject::new(traversal, object_index, line_spacing),
+                    super::adaptive::AdaptiveObject::new(
+                        traversal,
+                        (object_index, layer_index),
+                        line_spacing,
+                        object_spacing,
+                    ),
                     traversal.scale,
                 )?;
             }
