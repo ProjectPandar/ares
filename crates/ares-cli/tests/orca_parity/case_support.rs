@@ -18,6 +18,9 @@ mod startup_fan_initial_tool;
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
+#[path = "concentric_thick_polyline_rotation.rs"]
+mod concentric_thick_polyline_rotation;
+
 #[path = "mk4_tree_support_base_connect.rs"]
 mod mk4_tree_support_base_connect;
 
