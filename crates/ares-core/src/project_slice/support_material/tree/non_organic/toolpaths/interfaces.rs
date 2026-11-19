@@ -120,9 +120,9 @@ impl InterfaceArea<'_, '_> {
                 fill.dont_sort = true;
             }
             ProcessSupportInterfacePattern::RectilinearInterlaced => {
-                filler.angle = (f64::from(input.base_angle())
-                    + (self.group.interface_id & 1) as f64 * std::f64::consts::FRAC_PI_2)
-                    as f32;
+                filler.angle = input
+                    .parameters
+                    .support_interface_angle(input.object, self.group.interface_id);
                 fill.dont_sort = true;
             }
             ProcessSupportInterfacePattern::Auto

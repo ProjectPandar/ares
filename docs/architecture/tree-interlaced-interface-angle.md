@@ -8,7 +8,7 @@ OrcaSlicer 2.5.0 `Support/TreeSupport.cpp::generate_toolpaths` resets the fill s
 
 ## Ares boundary
 
-In `project_slice/support_material/tree/non_organic/toolpaths/interfaces.rs`, replace the roof/floor interlaced-only `base_angle + (interface_id & 1) × π/2` with the existing `toolpath_parameters.rs::SupportParameters::support_interface_angle`, matching the first roof layer. Keep the current per-group ID assignment, fixed-angle rectilinear fill and path ordering. This change does not address other interface patterns, Organic or normal support, raft interfaces, tree geometry, or progress emission.
+In `project_slice/support_material/tree/non_organic/toolpaths/interfaces.rs`, replace the roof/floor interlaced-only `base_angle + (interface_id & 1) × π/2` with the existing `toolpath_parameters.rs::ToolpathParameters::support_interface_angle`, matching the first roof layer. Keep the current per-group ID assignment, fixed-angle rectilinear fill and path ordering. This change does not address other interface patterns, Organic or normal support, raft interfaces, tree geometry, or progress emission.
 
 ## Verification
 
