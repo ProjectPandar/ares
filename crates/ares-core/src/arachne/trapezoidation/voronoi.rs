@@ -1,6 +1,6 @@
-use boostvoronoi::prelude::{Builder, CellIndex, Diagram, EdgeIndex, Line as BvLine};
+use boostvoronoi::prelude::{CellIndex, EdgeIndex};
 
-use crate::geometry::{Point, Polygon};
+use crate::geometry::{Point, Polygon, voronoi::Diagram};
 
 use super::{TrapezoidationError, index::PolygonSegmentIndex};
 
@@ -21,21 +21,15 @@ pub(super) fn build(
     let lines = segments
         .iter()
         .map(|segment| segment.line(polygons))
-        .map(|line| {
-            let coordinate =
-                |value| i32::try_from(value).map_err(|_| TrapezoidationError::VoronoiConstruction);
-            Ok(BvLine::from([
-                coordinate(line.a.x())?,
-                coordinate(line.a.y())?,
-                coordinate(line.b.x())?,
-                coordinate(line.b.y())?,
-            ]))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Builder::<i32>::default()
-        .with_segments(&lines)
-        .and_then(Builder::build)
-        .map_err(|_| TrapezoidationError::VoronoiConstruction)
+        .collect::<Vec<_>>();
+    if lines.iter().any(|line| {
+        [line.a.x(), line.a.y(), line.b.x(), line.b.y()]
+            .iter()
+            .any(|&coordinate| i32::try_from(coordinate).is_err())
+    }) {
+        return Err(TrapezoidationError::VoronoiConstruction);
+    }
+    crate::geometry::voronoi::build(&lines).map_err(|_| TrapezoidationError::VoronoiConstruction)
 }
 
 pub(super) fn cell_range(
