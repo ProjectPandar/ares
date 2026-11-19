@@ -1,0 +1,12 @@
+# CLI X/Y rotation and explicit grounding for 3MF
+
+Source: OrcaSlicer v2.5.0, `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
+
+- `PrintConfig.cpp:12946–12949,12990–13002` registers `--rotate-x DEG` and `--rotate-y DEG` (float, default 0) and `--ensure-on-bed` (bool, default false). Omitted keys do not introduce an operation. `Config.cpp:1754–1785,1846–1910` accepts bare true, an attached boolean value (including `=0` / `=false`), and the last value of a repeated key.
+- `OrcaSlicer.cpp:4909,5067–5083` applies rotation in key-first argv order with scale and Z rotation. `ModelObject::rotate` changes each **volume**, recenters the object's volume bounds, and does not ground the instances (`Model.cpp:1883–1894,1958–1964,3087–3101`). Extend `project_slice/cli_transforms.rs`, using the same Euler update and recentering as Z.
+- `OrcaSlicer.cpp:6273–6281` grounds **after** optional orientation and arrangement, regardless of the flag's argv position. `ModelObject::ensure_on_bed(false)` skips objects with `auto_drop=false`; otherwise it subtracts the minimum transformed model-part Z of the **first instance** from every instance's Z offset (`Model.hpp:519`, `Model.cpp:1632–1672,1896–1927`). Apply at the CLI model-transform boundary before the final plate view. Reuse the existing `project/domain/placement.rs` first-instance grounding math, not the orientation job's drop or the non-project import default.
+- The 3MF importer owns auto-drop precedence: object `@auto_drop` in `Metadata/model_settings.config` overrides legacy build-item flags (any explicit legacy off wins if the object attribute is absent; `bbs_3mf.cpp:2263–2288,4131–4132,4486–4503`). Retain the current object attribute in the project reader for the grounding decision.
+
+The public seam is `ares slice -o FILE [--plate N] INPUT.3mf` across the same project/preset routes as the existing CLI transforms. CLI parses and dispatches; core owns geometry and placement. No new Web/WASM action or change to default 3MF grounding, direct STL, Native batch entry, face placement, or generalized argv parsing.
+
+Use duplicate Native runs on each lane, then compare status, output presence, complete ordered G-code (generator identity only), and Linux `result.json` (existing wall-clock normalization). Cover both axes, combined/repeated flags, grounding independently enabled or disabled, and the archive auto-drop override. Derive edits from committed inputs at runtime; retain Native outputs externally.
