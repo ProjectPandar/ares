@@ -155,7 +155,7 @@ impl PlaterSession {
             .objects()
             .iter()
             .flat_map(|object| object.instances())
-            .filter_map(|instance| instance.loaded_label_id())
+            .filter_map(|instance| instance.saved_identify_id())
             .max()
             .map_or(1, |id| id + 1)
     }

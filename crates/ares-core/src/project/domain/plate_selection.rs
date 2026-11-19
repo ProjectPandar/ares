@@ -34,7 +34,7 @@ impl Project {
                 for object in &mut objects {
                     object
                         .instances
-                        .retain(|instance| match instance.loaded_label_id() {
+                        .retain(|instance| match instance.saved_identify_id() {
                             Some(label) => identity.contains(&[
                                 instance.object_id(),
                                 instance.instance_id(),
