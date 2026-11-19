@@ -12,6 +12,8 @@ pub(crate) mod smoke_overrides;
 #[path = "vendor_inventory.rs"]
 pub(crate) mod vendor_inventory;
 
+#[path = "adaptive_cubic_bodies.rs"]
+mod adaptive_cubic_bodies;
 #[path = "arachne_top_wall_split.rs"]
 mod arachne_top_wall_split;
 
