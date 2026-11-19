@@ -4,7 +4,7 @@ mod scalar;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-use serde::de::DeserializeOwned;
+use serde::{Deserialize, de::DeserializeOwned};
 
 use super::{
     config_export::value::escape_scalar_string,
@@ -17,8 +17,18 @@ use crate::project::raw_settings::RawConfigValue;
 pub(crate) fn deserialize_preset_config<T: DeserializeOwned>(
     input: RawConfigValue,
 ) -> Result<T, String> {
-    T::deserialize(RawConfigValue::Object(decode_preset_values(input)?))
+    T::deserialize(RawConfigValue::Object(decode_preset_values(input, true)?))
         .map_err(|error| error.to_string())
+}
+
+// A refreshed project retains its loaded scalar strings but still runs the composite builder.
+pub(crate) fn deserialize_refreshed_config(
+    input: RawConfigValue,
+) -> Result<super::ProjectSettingsBuilder, String> {
+    super::ProjectSettingsBuilder::deserialize(RawConfigValue::Object(decode_preset_values(
+        input, false,
+    )?))
+    .map_err(|error| error.to_string())
 }
 
 // Config application does not load another JSON file or rerun its composite conversion.
@@ -26,11 +36,14 @@ pub(crate) fn deserialize_config_values(
     input: RawConfigValue,
 ) -> Result<super::ProjectSettingsBuilder, String> {
     crate::options::project_deserialize::deserialize_config_values(RawConfigValue::Object(
-        decode_preset_values(input)?,
+        decode_preset_values(input, false)?,
     ))
 }
 
-fn decode_preset_values(input: RawConfigValue) -> Result<BTreeMap<String, RawConfigValue>, String> {
+fn decode_preset_values(
+    input: RawConfigValue,
+    decode_scalar_strings: bool,
+) -> Result<BTreeMap<String, RawConfigValue>, String> {
     let RawConfigValue::Object(mut values) = input else {
         unreachable!("preset config loader receives an option object")
     };
@@ -40,7 +53,11 @@ fn decode_preset_values(input: RawConfigValue) -> Result<BTreeMap<String, RawCon
         };
         let kind = definition.kind;
         let decoded = match value {
-            RawConfigValue::Text(value) if is_vector(kind) || scalar::is_scalar(kind) => {
+            RawConfigValue::Text(value)
+                if is_vector(kind)
+                    || scalar::is_scalar(kind)
+                    || (decode_scalar_strings && kind == OptionValueKind::String) =>
+            {
                 Some(decode(kind, value))
             }
             RawConfigValue::List(values) if is_string_array(values) => Some(
