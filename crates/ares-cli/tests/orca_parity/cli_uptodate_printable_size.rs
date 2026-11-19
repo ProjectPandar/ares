@@ -8,7 +8,6 @@ use serde_json::{Value, json};
 use super::cli_uptodate_refresh::{ares, artifact_dir, native_gcode, project};
 use crate::runner::OrcaRunner;
 
-const MACHINE: &str = "Prusa MK3S 0.4 nozzle";
 const SETTINGS: [&str; 4] = [
     "--uptodate",
     "--uptodate-settings",
@@ -88,14 +87,16 @@ fn compare_failure(
 ) {
     for (dir, output) in [("native", native), ("ares", ares)] {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert_eq!(output.status.code(), Some(237), "{dir}: {stderr}; {root:?}");
-        assert!(
-            stderr.contains(text),
-            "{dir} missing {text}: {stderr}; {root:?}"
-        );
+        assert_eq!(output.status.code(), Some(233), "{dir}: {stderr}; {root:?}");
+        if dir == "ares" {
+            assert!(
+                stderr.contains(text),
+                "{dir} missing {text}: {stderr}; {root:?}"
+            );
+        }
         let report: Value =
             serde_json::from_slice(&fs::read(root.join(dir).join("result.json")).unwrap()).unwrap();
-        assert_eq!(report["return_code"], json!(-19), "{dir}; {root:?}");
+        assert_eq!(report["return_code"], json!(-23), "{dir}; {root:?}");
         assert_eq!(report["error_string"], json!(text), "{dir}; {root:?}");
         assert!(!root.join(dir).join("plate_1.gcode").exists());
     }

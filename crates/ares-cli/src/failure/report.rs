@@ -153,7 +153,7 @@ impl FamilyFailure {
             .collect::<Vec<_>>();
         crate::result_json::ResultJson {
             return_code: self.return_code,
-            error_string: self.error_string,
+            error_string: &self.error_string,
             plate_index: self.plate_index,
             layer_height: self.layer_height,
             wall_loops: self.wall_loops,
