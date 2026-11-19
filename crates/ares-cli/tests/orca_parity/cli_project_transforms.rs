@@ -8,6 +8,9 @@ use crate::{
     runner::{OrcaRunner, stages},
 };
 
+#[path = "cli_project_transforms/tilt.rs"]
+mod tilt;
+
 const PROJECT: &[u8] = include_bytes!("../../../../tests/parity/orca_cli_ender3.3mf");
 
 macro_rules! case {
@@ -54,6 +57,10 @@ case!(
 );
 
 fn verify(name: &str, plate: Option<&str>, exit: i32, flags: &[&str]) {
+    verify_project(name, PROJECT, plate, exit, flags);
+}
+
+fn verify_project(name: &str, project: &[u8], plate: Option<&str>, exit: i32, flags: &[&str]) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -63,7 +70,7 @@ fn verify(name: &str, plate: Option<&str>, exit: i32, flags: &[&str]) {
         .unwrap()
         .keep();
     let input = root.join("project.3mf");
-    fs::write(&input, PROJECT).unwrap();
+    fs::write(&input, project).unwrap();
     let input = input.to_str().unwrap();
     let mut native = Vec::new();
     for lane in ["native", "native-replay"] {

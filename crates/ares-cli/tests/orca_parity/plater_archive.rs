@@ -21,7 +21,7 @@ pub(super) fn read_entry(input: &[u8], name: &str) -> String {
 }
 
 /// `input` with the text entries `edit` returns replaced.
-pub(super) fn rewrite_archive(
+pub(crate) fn rewrite_archive(
     input: &[u8],
     edit: impl Fn(&str, &str) -> Option<String>,
 ) -> Vec<u8> {

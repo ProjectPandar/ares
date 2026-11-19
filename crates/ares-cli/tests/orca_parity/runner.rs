@@ -265,7 +265,7 @@ mod print_sequence_by_object;
 mod processor_migration;
 #[cfg(test)]
 #[path = "runner/profile_entry.rs"]
-mod profile_entry;
+pub(crate) mod profile_entry;
 pub(crate) use profile_entry::placed_cube;
 #[cfg(test)]
 #[path = "runner/native_api_cli.rs"]
