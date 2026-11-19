@@ -40,7 +40,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if extension.as_deref() != Some("3mf") && args.transforms.has_project_actions() {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
-            "--arrange, --scale and --rotate require 3MF project input",
+            "--arrange, --scale, --rotate and --ground-* require 3MF project input",
         )
         .into());
     }

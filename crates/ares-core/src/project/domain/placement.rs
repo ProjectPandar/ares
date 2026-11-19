@@ -113,7 +113,7 @@ impl Project {
 
 /// `Model.cpp:1603-1618 instance_bounding_box`: model-part volume vertices
 /// transformed by the instance × volume matrix.
-fn world_vertices(
+pub(super) fn world_vertices(
     object: &super::ProjectObject,
     instance: crate::Transform3d,
 ) -> impl Iterator<Item = Point3d> + '_ {

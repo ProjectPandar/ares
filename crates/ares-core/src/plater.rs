@@ -15,7 +15,7 @@ mod current_plate;
 mod delete_object;
 mod edits;
 mod eigen;
-pub(crate) use eigen::angle_axis_euler;
+pub(crate) use eigen::{angle_axis_euler, rotation_from_two_vectors, rotation_matrix_transform};
 mod initial_plate;
 mod instances;
 mod min_sphere;

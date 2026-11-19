@@ -116,7 +116,7 @@ impl Quaternion {
 }
 
 /// `Transform3d::Identity()` with `linear() *= rotation` (`Transform::rotate`).
-fn rotation_matrix_transform(rotation: [[f64; 3]; 3]) -> Transform3d {
+pub(crate) fn rotation_matrix_transform(rotation: [[f64; 3]; 3]) -> Transform3d {
     let identity = Transform3d::IDENTITY;
     let mut rows = [[0.0; 4]; 4];
     for (row, values) in rotation.iter().enumerate() {
@@ -137,7 +137,7 @@ pub(super) fn rotation_transform(rotation: [f64; 3]) -> Transform3d {
 
 /// `Geometry::rotation_from_two_vectors` (`Geometry.cpp:416-424`) and
 /// Eigen `Quaternion::setFromTwoVectors` / `AngleAxis::operator=`.
-pub(super) fn rotation_from_two_vectors(
+pub(crate) fn rotation_from_two_vectors(
     from: [f64; 3],
     to: [f64; 3],
 ) -> ([f64; 3], f64, [[f64; 3]; 3]) {

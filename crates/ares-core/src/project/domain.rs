@@ -1,6 +1,8 @@
 mod auto_orient;
 mod documents;
+mod lay_on_face;
 mod layer_height_profile;
+pub(crate) use lay_on_face::FaceChoice;
 mod mesh;
 mod multipart;
 mod placement;

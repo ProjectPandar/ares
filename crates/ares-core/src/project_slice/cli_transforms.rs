@@ -1,10 +1,13 @@
-use crate::{Project, SliceError};
+use crate::{Project, SliceError, project::FaceChoice};
 
-/// Volume operations in the order the CLI first encountered their keys.
-#[derive(Clone, Copy, Debug)]
+/// Model transforms in the order the CLI first encountered their keys.
+#[derive(Clone, Debug)]
 pub enum CliVolumeTransform {
     Scale(f64),
     Rotate(f64),
+    GroundLargestFace(bool),
+    GroundFaceNormal(String),
+    GroundFacePoint(String),
 }
 
 /// Model actions from `OrcaSlicer.cpp:5051–5153,5271–5288,5619–6100`.
@@ -35,14 +38,32 @@ impl CliProjectTransforms {
         if !self.volume.is_empty() {
             project.prepare_import_scope(plate);
         }
-        for &transform in &self.volume {
+        for transform in &self.volume {
             match transform {
-                CliVolumeTransform::Scale(ratio) => scale_volumes(&mut project, ratio)?,
+                CliVolumeTransform::Scale(ratio) => scale_volumes(&mut project, *ratio)?,
                 CliVolumeTransform::Rotate(degrees) if !degrees.is_finite() => {
                     return Err(SliceError::InvalidInput("rotation must be finite".into()));
                 }
                 CliVolumeTransform::Rotate(degrees) => {
                     project.rotate_cli_volumes(degrees.to_radians());
+                }
+                CliVolumeTransform::GroundLargestFace(false) => (),
+                CliVolumeTransform::GroundLargestFace(true) => {
+                    project.ground_cli_face(FaceChoice::Largest)?;
+                }
+                CliVolumeTransform::GroundFaceNormal(value) => {
+                    project.ground_cli_face(FaceChoice::parse(
+                        "ground_face_normal",
+                        value,
+                        true,
+                    )?)?;
+                }
+                CliVolumeTransform::GroundFacePoint(value) => {
+                    project.ground_cli_face(FaceChoice::parse(
+                        "ground_face_point",
+                        value,
+                        false,
+                    )?)?;
                 }
             }
         }

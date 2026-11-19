@@ -278,6 +278,7 @@ pub enum SliceError {
     NoSuitableObjects(String),
     NoSuitableObjectsAfterCliArrange,
     InvalidCliScale(f32),
+    InvalidCliGroundFace(String),
     CliArrangeFailed,
     /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
     /// embedded in the 3MF/config fail validation; the payload is the
@@ -351,6 +352,7 @@ impl fmt::Display for SliceError {
             Self::NoSuitableObjects(message) => f.write_str(message),
             Self::NoSuitableObjectsAfterCliArrange => f.write_str(CliProjectTransforms::NO_OBJECTS_AFTER_ARRANGE),
             Self::InvalidCliScale(ratio) => write!(f, "Invalid params:invalid scale ratio {ratio}"),
+            Self::InvalidCliGroundFace(message) => write!(f, "Invalid params: {message}"),
             Self::CliArrangeFailed => f.write_str("An error occurred when auto-arranging object(s)."),
             Self::InvalidValuesInProject(message) => f.write_str(message),
             Self::Validate { message, .. }

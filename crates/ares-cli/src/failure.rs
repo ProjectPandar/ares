@@ -170,10 +170,12 @@ pub(super) fn slice_error_to_failure(
         // index+1 to record_exit_reson, and :552 writes that plate_id.
         // The progress callback's m_plate_index (:305,:319) is separate.
         // The reason is cli_errors[CLI_NO_SUITABLE_OBJECTS] (:220).
-        SliceError::InvalidCliScale(_) | SliceError::CliArrangeFailed => {
-            let invalid_scale = matches!(error, SliceError::InvalidCliScale(_));
+        SliceError::InvalidCliScale(_)
+        | SliceError::InvalidCliGroundFace(_)
+        | SliceError::CliArrangeFailed => {
+            let invalid_params = !matches!(error, SliceError::CliArrangeFailed);
             family(
-                if invalid_scale { -2 } else { -21 },
+                if invalid_params { -2 } else { -21 },
                 #[cfg(target_os = "linux")]
                 0,
                 #[cfg(target_os = "linux")]
@@ -183,7 +185,7 @@ pub(super) fn slice_error_to_failure(
                 #[cfg(target_os = "linux")]
                 0.0,
                 #[cfg(target_os = "linux")]
-                if invalid_scale {
+                if invalid_params {
                     "Invalid parameters to the slicer."
                 } else {
                     "An error occurred when auto-arranging object(s)."
