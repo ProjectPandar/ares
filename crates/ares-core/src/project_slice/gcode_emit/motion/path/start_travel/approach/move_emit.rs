@@ -339,10 +339,11 @@ pub(super) fn emit_approach_move(
         }
         travel_set_layer_z = true;
     } else {
-        // Same-Z returns before the unclear-position split
-        // (`GCodeWriter.cpp:1096–1105,1123–1131`).
+        // Same-Z returns before the unclear-position split. Cancelling a lift
+        // already selected the actual-Z branch (`GCodeWriter.cpp:1096–1139`).
         let split_position = first_position
-            && (state.writer_z.is_none()
+            && (cancelled_lift
+                || state.writer_z.is_none()
                 || state.layer_change_travel_pending
                 || travel_will_move_z(state, leg_z));
         let xy_feedrate = if split_position {
