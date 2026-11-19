@@ -210,13 +210,13 @@ pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,
     slice_with_profiles_validated,
 };
-pub use project::export_3mf;
 pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
     Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
     ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
     project_config_substitutions,
 };
+pub use project::{StlExport, export_3mf, export_stl};
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
     slice_project_plate_processed_validated, slice_project_plate_validated,

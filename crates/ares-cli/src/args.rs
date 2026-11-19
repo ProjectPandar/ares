@@ -15,6 +15,7 @@ pub(crate) enum Commands {
 }
 
 #[derive(Parser)]
+#[command(group(clap::ArgGroup::new("export_action").multiple(true)))]
 pub(crate) struct SliceArgs {
     /// Complete preset catalog supplied explicitly for project-derived refresh
     #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
@@ -54,27 +55,44 @@ pub(crate) struct SliceArgs {
     #[arg(long)]
     pub(crate) progress: bool,
     /// Write an unsliced, headless FFF project instead of G-code
-    #[arg(long, value_name = "3MF")]
+    #[arg(long, value_name = "3MF", group = "export_action")]
     pub(crate) export_3mf: Option<PathBuf>,
-    #[arg(long, requires = "export_3mf")]
+    /// Write one binary STL per object under the stl output subdirectory
+    #[arg(long, group = "export_action", num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = native_bool)]
+    pub(crate) export_stl: Option<bool>,
+    /// Write one binary STL per object under the supplied directory
+    #[arg(long, value_name = "DIRECTORY", group = "export_action")]
+    pub(crate) export_stls: Option<PathBuf>,
+    /// Apply exact mesh cleanup before STL export
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = native_bool)]
+    pub(crate) repair: Option<bool>,
+    #[arg(long, requires = "export_action")]
     pub(crate) outputdir: Option<PathBuf>,
-    #[arg(long = "slice", requires = "export_3mf")]
+    #[arg(long = "slice", requires = "export_action")]
     pub(crate) slice_for_export: Option<u32>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) arrange: Option<u32>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) min_save: Option<u32>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) load_slicedata: Option<PathBuf>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) export_slicedata: Option<PathBuf>,
     #[arg(
         short = 'o',
         value_name = "OUTPUT",
-        required_unless_present = "export_3mf"
+        required_unless_present_any = ["export_3mf", "export_stl", "export_stls", "repair"]
     )]
     pub(crate) output_path: Option<PathBuf>,
     #[arg(skip)]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+}
+
+fn native_bool(value: &str) -> Result<bool, &'static str> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+        _ => Err("expected a boolean value"),
+    }
 }

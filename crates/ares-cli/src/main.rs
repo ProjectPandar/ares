@@ -1,6 +1,7 @@
 mod args;
 mod compatible_machine;
 mod export_3mf;
+mod export_stl;
 mod failure;
 mod load_settings;
 mod moves_csv;
@@ -19,6 +20,12 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let Commands::Slice(mut args) = Cli::parse().command;
+    if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
+        if let Err(failure) = export_stl::run(&args) {
+            failure.report();
+        }
+        return;
+    }
     if let Some(output) = &args.export_3mf {
         if let Err(failure) = export_3mf::run(&args, output) {
             failure.report();
