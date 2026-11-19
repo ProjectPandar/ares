@@ -1,5 +1,6 @@
 mod args;
 mod compatible_machine;
+mod export_3mf;
 mod failure;
 mod installed_resources;
 mod load_settings;
@@ -26,7 +27,13 @@ async fn main() {
         Cli {
             command: Some(Commands::Slice(args)),
             ..
-        } => run_slice(args).await,
+        } => {
+            if let Some(output) = args.export_3mf.as_ref() {
+                export_3mf::run(&args, output)
+            } else {
+                run_slice(args).await
+            }
+        }
         Cli {
             export_settings: Some(destination),
             project: Some(project),

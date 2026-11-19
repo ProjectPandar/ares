@@ -18,6 +18,35 @@ fn export_stinger_3mf_matches_native_unsliced_project_members() {
     export_matches_native("LH", "LH Stinger 0.4 nozzle", "3mf-export.3mf");
 }
 
+#[test]
+#[cfg(unix)]
+fn export_rejects_slicing_and_does_not_create_an_archive() {
+    let work = tempfile::tempdir().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
+        .current_dir(work.path())
+        .args([
+            "slice",
+            "--export-3mf",
+            "sliced.3mf",
+            "--slice",
+            "0",
+            "input.stl",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(254));
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        error.contains("Invalid parameters to the slicer."),
+        "{error}"
+    );
+    assert!(
+        error.contains("unsupported 3MF export option --slice"),
+        "{error}"
+    );
+    assert!(!work.path().join("sliced.3mf").exists());
+}
+
 fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -55,7 +84,7 @@ fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
         "filament.json",
     ];
     let native = Command::new(runner.bin())
-        .current_dir(&runner.work_dir())
+        .current_dir(runner.work_dir())
         .env_remove("DISPLAY")
         .env_remove("WAYLAND_DISPLAY")
         .args(settings)
@@ -81,7 +110,7 @@ fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
     let mut first = None;
     for output in ["first.3mf", "second.3mf"] {
         let ares = Command::new(env!("CARGO_BIN_EXE_ares"))
-            .current_dir(&runner.work_dir())
+            .current_dir(runner.work_dir())
             .arg("slice")
             .args(settings)
             .arg("--export-3mf")

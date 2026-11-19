@@ -211,6 +211,7 @@ pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,
     slice_with_profiles_validated,
 };
+pub use project::export_3mf;
 pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
     Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
