@@ -1,4 +1,4 @@
-# 3MF seam facet annotations for aligned placement
+# 3MF seam facet annotations
 
 ## Source and boundary
 
@@ -37,25 +37,46 @@ then Enforced > Neutral > Blocked, including string matching; equal blocked
 points still use ordinary geometric priorities. `place_on_loop` (`:1498–1627`)
 bounds fitting to allowed arcs, with allowed endpoints available to the solver.
 The string fit (`:2005–2083`) gives enforcers additional weight and retains the
-corner-dependent pull before projection. These rules apply to the included
-Aligned mode, not merely to initial corner selection.
+corner-dependent pull before projection.
+
+### Rear and Nearest
+
+`calculate_overhangs_and_layer_embedding` (`:1683–1726`) fills geometric
+context independently of paint; it does not overwrite the classification
+from `:850–860`. `SeamComparator` (`:1176–1222`) compares the paint state
+before overhang, embedding, Rear Y or Nearest distance. Its central-enforcer
+preference applies only to Aligned and AlignedBack, not to Rear or Nearest.
+
+- **Rear (`back`):** `pick_seam_point` (`:1339–1350,2176–2194`) scans candidates,
+  then `align_seam_points` (`:2197–2204`) uses the paint-aware comparison
+  (`:1227–1268`) and existing constrained fit, including the Rear length
+  multiplier (`:2027–2075`). In `alignment.rs` and `alignment/paint_rules.rs`,
+  limit the comparator's central preference to the aligned strategies. The
+  separate proximity shortcut for a selected central enforcer in the next
+  layer (`:1802–1818`) still applies.
+- **Nearest (`nearest`):** initialization skips picking and alignment
+  (`:2161–2204`). `pick_nearest_seam_point_index` (`:1352–1363`) is called
+  by `place_seam` using the current nozzle position (`:2371–2383`). Carry
+  the sampled paint states through `seam_placement.rs::nearest_seam_data`
+  into the existing `runtime/nearest.rs` comparison, retaining the loop
+  association, candidate order and inner-wall projection (`:2345–2423`).
+  Equal paint states use the existing geometric ranking in both strategies.
 
 ## Included and deferred
 
 - Included: neutral, enforcer and blocker leaves, with or without selector
-  subdivision, on model parts and negative volumes with the Aligned strategy,
+  subdivision, on model parts and negative volumes with Aligned, Nearest or Rear,
   including unpainted controls and both Classic and Arachne walls. Reuse the
   transformed object coordinate frame already used by seam visibility,
   without involving machine-space offsets. Negative paint can affect the
   perimeter of the hole cut by that volume.
 - Deferred: extended palette values on participating volumes, spiral mode,
-  other seam strategies, precise seam modifiers, and full-green normalization
-  (`:557–595`). The existing full-coverage rejection still applies to each
+  AlignedBack and Random seam strategies, Precise Seam modifiers, and
+  full-green normalization (`:557–595`). The existing full-coverage rejection still applies to each
   painted volume; partial paint also retains the perimeter coverage guard. These
   combinations must return a seam-specific unsupported input error before
   emitting G-code. No silent Neutral fallback for deferred input. In particular
-  Random (`:1366–1437`) restricts viable outgoing edges, and Nearest also
-  requires its emit-time comparator and projection to consume paint.
+  Random (`:1366–1437`) restricts viable outgoing edges.
 
 ## Public behavior
 
@@ -72,3 +93,8 @@ painted negative volume cutting a hole. Compare each to its unpainted Native
 control and check that changes reach the intended walls. Residual paint on
 an ordinary modifier and a helper must preserve complete output. Include
 public rejection cases for deferred paint.
+
+Reuse the box geometry and the five paint variants for each printer with
+Nearest and Rear configured in the 3MF. Verify each against both Native
+producers and compare Native wall approaches to the plain run for the same
+printer and strategy to distinguish active paint from non-changing controls.
