@@ -136,6 +136,30 @@ fn bbl_type1_framework_keeps_finish_block_inside_two_heads_heights() {
 }
 
 #[test]
+fn bbl_type1_prime_tower_preserves_filament_start_escapes() {
+    crate::runner::native_stream_case::check(
+        (
+            "bbl-type1-tower",
+            &[
+                "GCode.cpp:1593-1613,1624-1631",
+                "PlaceholderParser.cpp:1064-1067",
+                "Config.cpp:76-96,150-170",
+            ],
+        ),
+        "filament-start-escapes",
+        include_bytes!("../../../../../tests/parity/bbl-type1-tower/filament-start-escapes.3mf"),
+        "04eaea81b8553416ea0d6418a5aa5f948a365998a37197acb78451cdd6de038e",
+        (false, |native, _| {
+            assert!(
+                native.native.lines().any(|line| {
+                    line == r#"; filament start literal=\n quote="double" slash=\q"#
+                })
+            );
+        }),
+    );
+}
+
+#[test]
 fn bbl_type1_prime_tower_waypoints_width60_skip_points_slope_boundary() {
     crate::runner::native_stream_case::check(
         (
