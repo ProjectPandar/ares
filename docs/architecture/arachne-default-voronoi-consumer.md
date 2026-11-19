@@ -1,0 +1,18 @@
+# Arachne default segment Voronoi consumer
+
+Base: Ares `8b28296357e58d5f418c4540aa92c27d8b10c4df`, independent of the bridge-operand change. Upstream: OrcaSlicer v2.5.0 `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
+
+## Rewrite boundary
+
+`Arachne/SkeletalTrapezoidation.cpp:373–388` passes the prepared outline's segments in polygon-edge order to the default segment overload (`Geometry/Voronoi.hpp:93–97`). `Geometry/Voronoi.cpp:28–76,254–366` constructs, detects problems, tries ordered rotation repair, and returns the effective diagram. The Ares implementation of that wrapper already landed in `54b44dacd` for medial axis; its implementation record explicitly excludes the Arachne caller (line 378 on the older upstream revision).
+
+Replace the raw `boostvoronoi::Builder` call in `arachne/trapezoidation/voronoi.rs::build`, reached from `builder.rs::construct_from_polygons`, with `geometry::voronoi::build`. Mechanically adapt diagram access to the existing effective view. Preserve original site order/orientation, cell-range rules and endpoint associations, and vertex-to-integer rounding (`Geometry/VoronoiUtils.cpp:318–327`). Cell, edge and incident indices are those of the effective diagram. Original segment endpoints still come from the original outline, not from temporary rotated sites. Preserve Arachne's existing construction errors and graph-stage sequencing; do not add a raw-builder fallback or new validity gate.
+
+Excluded: shared detector/repair policies or precision, backend changes, cell-range/orientation predicate changes, graph/stitch/simplify/finalization changes, medial-axis behavior changes, shell/bridge prefilters, and Flow changes. Stop for review if the existing effective view cannot satisfy the caller without changing the shared algorithm.
+
+## Witness and qualification
+
+- Derive the single-wall project at runtime from the tracked `tests/parity/concentric-ironing-order/project.3mf`, replacing the original `ironing_type` and `wall_loops` with `solid` and `1`. Run Native twice and compare complete ordered G-code with both the public Ares API and CLI, ignoring only the guarded generator line; keep API/CLI byte equality, CLI exit/output channels and full timing-normalized result report. The first difference is in ordinary internal solid infill at Z=0.8: `0.46446` versus `0.464458`. The identical prepared outline produces a repaired Native diagram (`NON_PLANAR_VORONOI_DIAGRAM`, then successful `π/6`) and a different raw Ares diagram; raw junction widths already differ before stitching.
+- Qualify a tracked Arachne control with an active wall path and Native `REPAIR_NOT_NEEDED`. Assert the same public parity and retain the exact before/after bytes. No embedded Native G-code or redundant derived archive.
+- First commit and independently reproduce the failing test in official and seeded modes. Then isolate the consumer fix. Run matching named Arachne, concentric, wall, thin-wall, fuzzy and medial-axis inventories with both launchers, documenting all transitions and retained failures, no lost tests and no P→F. Include the core medial-axis tests and the existing default-repair oracle cases. Record fmt, Clippy, and platform check outcomes.
+- Measure separately from build and nextest: alternate before/after release binaries on the verified no-repair input, same CPU, arguments and configuration, fresh isolated output/runtime state per invocation, several repeats. Preserve raw wall time and Native/Ares result timing data where available. Report medians and spread; investigate a repeatable slowdown outside run-to-run variation before requesting review. No shortcut that skips source-required detection on the fast path.
