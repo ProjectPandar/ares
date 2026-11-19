@@ -65,14 +65,13 @@ fn installed_resources(dump_moves: bool) {
     let cwd = root.join("command");
     fs::create_dir(&cwd).unwrap();
 
-    let (missing, missing_result) = slice_invalid_values(
-        &binary,
-        &cwd,
-        &input,
-        &root.join("uninstalled"),
-        None,
+    let slice = InvalidSlice {
+        binary: &binary,
+        cwd: &cwd,
+        input: &input,
         dump_moves,
-    );
+    };
+    let (missing, missing_result) = slice.run(&root.join("uninstalled"), None);
     assert_eq!(missing.stdout, native.stdout);
     assert_eq!(missing.stderr, native.stderr);
     assert!(json_value(&missing_result).get(UPWARD).is_none());
@@ -86,38 +85,17 @@ fn installed_resources(dump_moves: bool) {
     assert_eq!(json_value(&machine)[UPWARD], upward);
     fs::write(machine_dir.join(ORIGINAL_MACHINE), machine).unwrap();
 
-    let (fallback, fallback_result) = slice_invalid_values(
-        &binary,
-        &cwd,
-        &input,
-        &root.join("explicit-empty"),
-        Some(&empty),
-        dump_moves,
-    );
+    let (fallback, fallback_result) = slice.run(&root.join("explicit-empty"), Some(&empty));
     assert_eq!(fallback.stdout, native.stdout);
     assert_eq!(fallback.stderr, native.stderr);
     assert_eq!(fallback_result, missing_result);
 
-    let (explicit, explicit_result) = slice_invalid_values(
-        &binary,
-        &cwd,
-        &input,
-        &root.join("explicit"),
-        Some(&resources),
-        dump_moves,
-    );
+    let (explicit, explicit_result) = slice.run(&root.join("explicit"), Some(&resources));
     assert_eq!(explicit.stdout, native.stdout);
     assert_eq!(explicit.stderr, native.stderr);
     assert_eq!(explicit_result, native_result);
 
-    let (installed, installed_result) = slice_invalid_values(
-        &binary,
-        &cwd,
-        &input,
-        &root.join("installed"),
-        None,
-        dump_moves,
-    );
+    let (installed, installed_result) = slice.run(&root.join("installed"), None);
     assert_eq!(installed.stdout, native.stdout);
     assert_eq!(installed.stderr, native.stderr);
     assert_eq!(
@@ -128,43 +106,48 @@ fn installed_resources(dump_moves: bool) {
     assert_eq!(installed_result, native_result);
 }
 
-fn slice_invalid_values(
-    binary: &Path,
-    cwd: &Path,
-    input: &Path,
-    dest: &Path,
-    resources: Option<&Path>,
+struct InvalidSlice<'a> {
+    binary: &'a Path,
+    cwd: &'a Path,
+    input: &'a Path,
     dump_moves: bool,
-) -> (Output, Vec<u8>) {
-    fs::create_dir(dest).unwrap();
-    let gcode = dest.join("plate_1.gcode");
-    let moves = dest.join("moves.csv");
-    let mut command = Command::new(binary);
-    command.current_dir(cwd).args(["slice", "-o"]).arg(&gcode);
-    if let Some(resources) = resources {
-        command.arg("--resources-dir").arg(resources);
+}
+
+impl InvalidSlice<'_> {
+    fn run(&self, dest: &Path, resources: Option<&Path>) -> (Output, Vec<u8>) {
+        fs::create_dir(dest).unwrap();
+        let gcode = dest.join("plate_1.gcode");
+        let moves = dest.join("moves.csv");
+        let mut command = Command::new(self.binary);
+        command
+            .current_dir(self.cwd)
+            .args(["slice", "-o"])
+            .arg(&gcode);
+        if let Some(resources) = resources {
+            command.arg("--resources-dir").arg(resources);
+        }
+        if self.dump_moves {
+            command.arg("--dump-moves").arg(&moves);
+        }
+        command.arg(self.input);
+        fs::write(dest.join("command.txt"), format!("{command:?}\n")).unwrap();
+        let output = command.output().unwrap();
+        fs::write(dest.join("ares.stdout"), &output.stdout).unwrap();
+        fs::write(dest.join("ares.stderr"), &output.stderr).unwrap();
+        fs::write(
+            dest.join("ares.exit"),
+            format!("{:?}\n", output.status.code()),
+        )
+        .unwrap();
+        assert_eq!(output.status.code(), Some(238), "{dest:?}");
+        assert!(!gcode.exists() && !moves.exists(), "{dest:?}");
+        let result = fs::read(dest.join("result.json")).unwrap();
+        let parsed = json_value(&result);
+        assert_eq!(parsed["return_code"], -18);
+        assert_eq!(parsed["prepare_time"], 0);
+        assert_eq!(parsed["export_time"], 0);
+        (output, result)
     }
-    if dump_moves {
-        command.arg("--dump-moves").arg(&moves);
-    }
-    command.arg(input);
-    fs::write(dest.join("command.txt"), format!("{command:?}\n")).unwrap();
-    let output = command.output().unwrap();
-    fs::write(dest.join("ares.stdout"), &output.stdout).unwrap();
-    fs::write(dest.join("ares.stderr"), &output.stderr).unwrap();
-    fs::write(
-        dest.join("ares.exit"),
-        format!("{:?}\n", output.status.code()),
-    )
-    .unwrap();
-    assert_eq!(output.status.code(), Some(238), "{dest:?}");
-    assert!(!gcode.exists() && !moves.exists(), "{dest:?}");
-    let result = fs::read(dest.join("result.json")).unwrap();
-    let parsed = json_value(&result);
-    assert_eq!(parsed["return_code"], -18);
-    assert_eq!(parsed["prepare_time"], 0);
-    assert_eq!(parsed["export_time"], 0);
-    (output, result)
 }
 
 fn write_project_without_upward(stock: &Path, input: &Path, upward: &Value) {
