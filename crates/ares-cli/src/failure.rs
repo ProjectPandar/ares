@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::{error::Error, io, path::Path};
 
 mod export;
+pub(super) use export::StlExportFailure;
 
 /// CLI failure reporting mirrors the upstream adapter: family failures run
 /// `flush_and_exit` (`OrcaSlicer.cpp:396-411` — the stdout line and the

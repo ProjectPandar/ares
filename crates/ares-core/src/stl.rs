@@ -11,16 +11,31 @@ const FORMAT_PROBE_LEN: usize = 128;
 const MIN_BINARY_LEN: usize = 284;
 
 pub fn load(input: &[u8]) -> Result<Model, SliceError> {
+    Ok(Model::new(
+        InputFormat::Stl,
+        repair::into_triangles(parse(input)?),
+    ))
+}
+
+pub(crate) fn load_closed(input: &[u8]) -> Result<Model, SliceError> {
+    let triangles = repair::into_closed_triangles(parse(input)?).ok_or_else(|| {
+        SliceError::UnsupportedProjectFeature(
+            "STL export requires exact two-use import edges".to_owned(),
+        )
+    })?;
+    Ok(Model::new(InputFormat::Stl, triangles))
+}
+
+fn parse(input: &[u8]) -> Result<Vec<Facet>, SliceError> {
     // admesh/stlinit.cpp:65–69 rejects an incomplete format probe.
     if input.len() < BINARY_PREFIX_LEN + FORMAT_PROBE_LEN {
         return Err(malformed_stl());
     }
-    let facets = if looks_like_binary(input) {
-        parse_binary(input)?
+    if looks_like_binary(input) {
+        parse_binary(input)
     } else {
-        parse_ascii(input)?
-    };
-    Ok(Model::new(InputFormat::Stl, repair::into_triangles(facets)))
+        parse_ascii(input)
+    }
 }
 
 pub fn looks_like_binary(input: &[u8]) -> bool {
