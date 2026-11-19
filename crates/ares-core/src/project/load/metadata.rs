@@ -11,8 +11,13 @@ use super::volume_metadata;
 
 pub(super) struct MetadataIndex {
     pub plates: Vec<PlateMetadata>,
-    pub loaded_labels: BTreeMap<(u32, u32), u32>,
+    pub saved_labels: BTreeMap<(u32, u32), SavedLabel>,
     pub object_settings: BTreeMap<u32, usize>,
+}
+
+pub(super) struct SavedLabel {
+    pub identify_id: u32,
+    pub loaded: bool,
 }
 
 pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceError> {
@@ -31,13 +36,14 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
 
     let mut plates = Vec::with_capacity(settings.plates.len());
     let mut plate_ids = BTreeSet::new();
-    let mut loaded_labels = BTreeMap::new();
+    let mut saved_labels = BTreeMap::new();
     for plate in &settings.plates {
         let id = parse_u32(required_value(&plate.metadata, "plater_id")?, "plate ID")?;
         if id == 0 || !plate_ids.insert(id) {
             return Err(invalid(format!("invalid or repeated plate ID {id}")));
         }
         let mut instances = Vec::with_capacity(plate.model_instances.len());
+        let mut first_objects = BTreeSet::new();
         for instance in &plate.model_instances {
             let object_id = parse_u32(
                 required_value(&instance.metadata, "object_id")?,
@@ -47,21 +53,27 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
                 required_value(&instance.metadata, "instance_id")?,
                 "plate instance ID",
             )?;
-            let loaded_label_id = parse_u32(
+            let identify_id = parse_u32(
                 required_value(&instance.metadata, "identify_id")?,
                 "loaded label ID",
             )?;
-            // The importer reads `identify_id` unchecked (`bbs_3mf.cpp:4744` at v2.5.0-beta
-            // `345efec64`); 0 sets `loaded_id` to none (`:2497-2498`), so the entry lists its object
-            // on the plate and labels no instance. The GUI writes a dangling pair so (`:8580-8600`).
-            if loaded_label_id != 0
-                && loaded_labels
-                    .insert((object_id, instance_id), loaded_label_id)
+            // `bbs_3mf.cpp:4986-5004,2466-2499`: the first entry claims the
+            // object even with ID zero; only that entry can assign a loaded label.
+            let loaded = first_objects.insert(object_id);
+            if identify_id != 0
+                && saved_labels
+                    .insert(
+                        (object_id, instance_id),
+                        SavedLabel {
+                            identify_id,
+                            loaded,
+                        },
+                    )
                     .is_some()
             {
                 return Err(invalid("repeated plate instance identity"));
             }
-            instances.push([object_id, instance_id, loaded_label_id]);
+            instances.push([object_id, instance_id, identify_id]);
         }
         plates.push(PlateMetadata::new(id, instances));
     }
@@ -71,7 +83,7 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
     plates.sort_by_key(|plate| plate.id());
     Ok(MetadataIndex {
         plates,
-        loaded_labels,
+        saved_labels,
         object_settings,
     })
 }
