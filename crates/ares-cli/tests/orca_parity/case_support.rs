@@ -12,6 +12,8 @@ pub(crate) mod smoke_overrides;
 #[path = "vendor_inventory.rs"]
 pub(crate) mod vendor_inventory;
 
+#[path = "cli_uptodate_printable_size.rs"]
+mod cli_uptodate_printable_size;
 #[path = "cli_uptodate_refresh.rs"]
 mod cli_uptodate_refresh;
 
