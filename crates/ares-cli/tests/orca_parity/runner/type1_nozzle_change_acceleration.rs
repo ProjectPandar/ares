@@ -183,11 +183,8 @@ fn compare(
         .unwrap(),
     )
     .unwrap();
-    let native = before_extrusion(
-        &case.native,
-        ("; NOZZLE_CHANGE_START ", "; NOZZLE_CHANGE_END"),
-        prefix,
-    );
+    let markers = ("; NOZZLE_CHANGE_START ", "; NOZZLE_CHANGE_END");
+    let native = before_extrusion(&case.native, markers, prefix);
     assert_eq!(native, [expected], "Native: {:?}", case.root);
     for text in [&case.native, api, &cli] {
         assert!(
@@ -197,14 +194,10 @@ fn compare(
         );
     }
     let extract = |text: &str| {
-        before_extrusion(
-            text,
-            ("; Nozzle change start\n", "; Nozzle change end"),
-            prefix,
-        )
-        .into_iter()
-        .map(str::to_owned)
-        .collect()
+        before_extrusion(text, markers, prefix)
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
     };
     (extract(api), extract(&cli))
 }

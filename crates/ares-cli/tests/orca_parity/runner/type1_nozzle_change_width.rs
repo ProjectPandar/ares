@@ -95,16 +95,17 @@ fn type1_nozzle_change_flow_uses_stock_x2d_width() {
             case.root, replay.root
         );
     }
+    let markers = ("\n; NOZZLE_CHANGE_START ", "\n; NOZZLE_CHANGE_END ");
     let (_, tail) = case
         .native
-        .split_once("\n; NOZZLE_CHANGE_START ")
+        .split_once(markers.0)
         .expect("Native nozzle change");
     let (tag, rest) = tail.split_once('\n').unwrap();
     assert!(
         tag.ends_with(" ON0 NN1") || tag.ends_with(" ON1 NN0"),
         "physical head change: {tag}"
     );
-    let expected = nozzle_flow(rest.split_once("\n; NOZZLE_CHANGE_END ").unwrap().0);
+    let expected = nozzle_flow(rest.split_once(markers.1).unwrap().0);
 
     let api = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -139,9 +140,10 @@ fn type1_nozzle_change_flow_uses_stock_x2d_width() {
     );
     let (_, tail) = std::str::from_utf8(&api)
         .unwrap()
-        .split_once("\n; Nozzle change start\n")
+        .split_once(markers.0)
         .expect("Ares nozzle change");
-    let observed = nozzle_flow(tail.split_once("\n; Nozzle change end\n").unwrap().0);
+    let (_, rest) = tail.split_once('\n').unwrap();
+    let observed = nozzle_flow(rest.split_once(markers.1).unwrap().0);
     fs::write(
         case.root.join("nozzle-flow.json"),
         serde_json::to_vec_pretty(
