@@ -36,7 +36,8 @@ pub(super) fn validate_attribute_namespace(
             | b"pid"
             | b"pindex"
             | b"color"
-    ) || (element_name == b"triangle" && local_name == b"face_property");
+    ) || (element_name == b"triangle"
+        && matches!(local_name, b"face_property" | b"paint_seam"));
     let valid = if production_attribute {
         matches!(namespace, ResolveResult::Bound(value) if value.as_ref() == PRODUCTION_NAMESPACE.as_bytes())
     } else if language_attribute {

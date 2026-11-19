@@ -43,50 +43,15 @@ not changed by this slice.
 
 ## Included and deferred behavior
 
-Included is the Neutral case of the non-Enforced `place_on_loop` alignment
-branch at2058-2062. Every candidate is Neutral in the current supported input
-path, not because painted candidates may safely use the same algorithm:
-
-- Upstream `Format/bbs_3mf.cpp:357` names the triangle seam-paint attribute
-  `paint_seam` (`CUSTOM_SEAM_ATTR`); the importer reads it at4041 and reconstructs
-  `seam_facets` at5389-5390.
-- In Rust, `project/load/graph.rs::load` sends both the root model and referenced
-  component models through `project/xml.rs::deserialize_xml` with `XmlRole::Model`.
-  Its XML validation checks attributes on both start and empty elements through
-  `validate_attributes` and `project/xml/attribute.rs::validate`, which dispatches
-  to `project/xml/model.rs::validate_attribute_namespace`. That function's model
-  attribute whitelist admits `paint_supports`, `paint_color` and `paint_fuzzy_skin`,
-  but not `paint_seam`. A model carrying that seam-paint attribute is rejected as
-  `SliceError::InvalidInput` before deserialization/slicing, not silently imported
-  as Neutral.
-- `project/model_xml.rs::Triangle` and `project/domain/mesh.rs::ProjectMesh`
-  retain support, color/MMU and fuzzy-skin annotations, but no seam-paint field.
-  Those other annotations are not converted into seam paint.
-  `project_slice/seam_candidates.rs::SeamCandidate` has no Enforced/Blocked state;
-  `project_slice/seam_placement/alignment/preparation.rs::prepare_layer` generates
-  candidates from perimeter collections, without a seam-annotation import channel.
-
-Thus actual seam-paint annotations cannot currently reach this alignment code
-through the supported project loader. Both source allowed-arc walks consequently
-traverse a complete Neutral loop and return unlimited arcs; the solution is not
-clamped to a painted boundary. Admitting/importing seam painting must first get a
-follow-up public RED and a source-cited annotation/placement slice, rather than
-silently reusing this Neutral-only assumption.
-
-Explicitly deferred:
-
-- The **Enforced alignment branch at2063-2075**, including its sharp-angle return,
-  `protect = max(flow_width, max_nozzle_diameter)` and source default, measured
-  corner protection via `enforced_corner_influence`, and the corner-weighted
-  `t = max(t, 0.4 * corner)` pull before mapping back onto the painted loop.
-  The Neutral port does not implement or claim parity for that branch.
-- **Blocked-candidate arc limits** in `place_on_loop::allowed_arc`, as well as
-  Enforced-run limits, exact paint ends and oversampling extensions. These require
-  retained Enforced/Blocked annotations; unlimited Neutral arcs do not emulate
-  their behavior.
-- `SeamContour::Resolver`, Precise Seam warnings/import, spline/numeric changes,
-  candidate fallback and geometry changes. This slice does not admit or emulate
-  those adjacent upstream behaviors.
+This slice originally covered the Neutral case of the non-Enforced
+`place_on_loop` branch at2058-2062. Unpainted candidates still have unlimited
+allowed arcs. The [facet-paint slice](seam-paint-spec.md) now imports the
+unqualified triangle `paint_seam` attribute into `ProjectMesh::seam_facets`.
+In its supported Aligned domain, `SeamCandidate` retains Enforced and Blocked
+states, the enforced corner pull precedes mapping, and `allowed_arc` clamps a
+mapping that has left both allowed directions to the closer endpoint. Inputs
+outside the facet-paint slice's supported domain are rejected, not treated as
+Neutral. Precise Seam modifiers are not enabled by admitting the attribute.
 
 ## Public witness and acceptance
 

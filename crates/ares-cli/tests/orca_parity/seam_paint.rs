@@ -35,13 +35,16 @@ fn native(printer: &str, variant: &str) -> NativeCase {
 }
 
 fn first_inner_wall_approach(gcode: &str) -> &str {
-    let (_, lines) = gcode.split_once(";TYPE:Inner wall\n").unwrap();
-    lines
-        .lines()
-        .find(|line| {
-            line.starts_with("G1 X") && !line.split_whitespace().any(|word| word.starts_with('E'))
-        })
-        .unwrap()
+    let mut approach = None;
+    for line in gcode.lines() {
+        if matches!(line, ";TYPE:Inner wall" | "; FEATURE: Inner wall") {
+            return approach.expect("Native must travel to its first inner wall");
+        }
+        if line.starts_with("G1 X") && !line.split_whitespace().any(|word| word.starts_with('E')) {
+            approach = Some(line);
+        }
+    }
+    panic!("Native must print an inner wall");
 }
 
 #[test]
@@ -80,6 +83,28 @@ fn compare(printer: &str, variant: &str) {
         &project,
         &digest,
         (false, |_, _| {}),
+    );
+}
+
+#[test]
+fn nearest_seam_paint_rejects_without_output() {
+    let (_, project, _) = input("x1c", "front");
+    let overrides =
+        ares_core::ConfigOverrides::from_json(br#"{"seam_position":"nearest"}"#).unwrap();
+    let result = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(crate::runner::application::slice_project_plate_validated(
+            &project,
+            ares_core::GenerationMetadata::default(),
+            None,
+            &overrides,
+            ares_core::SlicerContext::new(0),
+        ));
+    assert!(
+        matches!(result, Err(ares_core::SliceError::InvalidInput(ref message))
+        if message.contains("seam painting is outside the supported aligned")),
+        "{result:?}"
     );
 }
 

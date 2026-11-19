@@ -240,7 +240,7 @@ pub(crate) fn slice_source(
     ordered.support_layers = support_layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
-    seam_placement::apply(&mut ordered);
+    seam_placement::apply(&mut ordered)?;
     let output = consume_post_island_print_order(
         ordered,
         metadata,

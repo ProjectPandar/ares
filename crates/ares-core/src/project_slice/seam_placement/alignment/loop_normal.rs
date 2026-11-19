@@ -1,6 +1,6 @@
-//! Neutral `place_on_loop` (`SeamPlacer.cpp:1498-1627`, v2.5.0-beta).
+//! `place_on_loop` (`SeamPlacer.cpp:1498-1627`).
 
-use super::{LayerSeamCandidates, Vec3};
+use super::{LayerSeamCandidates, Vec3, paint_rules::allowed_arc};
 use crate::project_slice::seam_candidates::SeamCandidate;
 
 pub(super) fn place_on_loop(layer: &LayerSeamCandidates, index: usize, target: Vec3) -> Vec3 {
@@ -18,31 +18,58 @@ pub(super) fn place_on_loop(layer: &LayerSeamCandidates, index: usize, target: V
     let mut best_distance = f64::INFINITY;
     let mut arc = [0.0, 0.0];
     let mut cursor = [index, index];
+    let mut best_arc = 0.0;
+    let mut best_forward = true;
     for _ in 0..count {
         let forward = arc[1] <= arc[0];
         let direction = usize::from(forward);
         let i = cursor[direction];
         let j = step(i, count, forward);
         let (a, b) = if forward { (i, j) } else { (j, i) };
-        let length;
-        (best, best_distance, length) = consider_edge(points, (a, b), target, best, best_distance);
+        let (solution, length) = consider_edge(points, (a, b), target, best_distance);
+        if let Some((position, distance, fraction)) = solution {
+            best = Some(position);
+            best_distance = distance;
+            best_forward = forward;
+            best_arc = arc[direction] + (if forward { fraction } else { 1.0 - fraction }) * length;
+        }
         arc[direction] += length;
         cursor[direction] = j;
     }
-    // All current candidates are Neutral: both source allowed arcs are unlimited.
-    let Some([x, y]) = best else {
+    let Some(mut result) = best else {
         return Vec3::new(position.x, position.y, position.z);
     };
-    Vec3::new(x as f32, y as f32, position.z)
+    let Some(exact) = perimeter.exact_enforced_ends else {
+        return Vec3::new(result[0] as f32, result[1] as f32, position.z);
+    };
+    let length = arc[0] + arc[1];
+    let ahead = if best_forward {
+        best_arc
+    } else {
+        length - best_arc
+    };
+    let (ahead_limit, ahead_end) = allowed_arc(points, index, true, exact);
+    let (behind_limit, behind_end) = allowed_arc(points, index, false, exact);
+    if ahead > ahead_limit && length - ahead > behind_limit {
+        let to_result = |[x, y]: [f64; 2]| norm_squared([x - result[0], y - result[1]]);
+        result = if to_result(ahead_end) <= to_result(behind_end) {
+            ahead_end
+        } else {
+            behind_end
+        };
+    }
+    Vec3::new(result[0] as f32, result[1] as f32, position.z)
 }
+
+type EdgeSolution = ([f64; 2], f64, f64);
 
 fn consider_edge(
     points: &[SeamCandidate],
     (a, b): (usize, usize),
     target: [f64; 2],
-    mut best: Option<[f64; 2]>,
     mut best_distance: f64,
-) -> (Option<[f64; 2]>, f64, f64) {
+) -> (Option<EdgeSolution>, f64) {
+    let mut best = None;
     let origin = xy(&points[a]);
     let end = xy(&points[b]);
     let d = [end[0] - origin[0], end[1] - origin[1]];
@@ -71,7 +98,7 @@ fn consider_edge(
             }
             let distance = norm_squared([g[0] - u * d[0], g[1] - u * d[1]]);
             if distance < best_distance {
-                best = Some([origin[0] + u * d[0], origin[1] + u * d[1]]);
+                best = Some(([origin[0] + u * d[0], origin[1] + u * d[1]], distance, u));
                 best_distance = distance;
             }
         };
@@ -92,7 +119,7 @@ fn consider_edge(
             }
         }
     }
-    (best, best_distance, length)
+    (best, length)
 }
 
 fn vertex_normal(points: &[SeamCandidate], index: usize) -> [f64; 2] {
@@ -130,7 +157,7 @@ fn edge_normal(a: [f64; 2], b: [f64; 2]) -> [f64; 2] {
     }
 }
 
-fn xy(point: &SeamCandidate) -> [f64; 2] {
+pub(super) fn xy(point: &SeamCandidate) -> [f64; 2] {
     [f64::from(point.position.x), f64::from(point.position.y)]
 }
 
@@ -142,7 +169,7 @@ fn cross(a: [f64; 2], b: [f64; 2]) -> f64 {
     a[0] * b[1] - a[1] * b[0]
 }
 
-fn step(index: usize, count: usize, forward: bool) -> usize {
+pub(super) fn step(index: usize, count: usize, forward: bool) -> usize {
     if forward {
         if index + 1 == count { 0 } else { index + 1 }
     } else if index == 0 {

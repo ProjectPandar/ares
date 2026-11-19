@@ -108,6 +108,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         None => resolve_bounded_project_config(&project)?,
     };
     painted_fuzzy::validate(&project, &resolved)?;
+    super::seam_placement::validate_paint(&project, &resolved)?;
     if validate_print {
         crate::print::validate::validate_applied_project(
             &project,

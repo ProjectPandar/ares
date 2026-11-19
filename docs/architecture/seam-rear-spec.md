@@ -102,8 +102,9 @@ Shared code must preserve existing aligned/aligned_back/random/nearest semantics
 
 No schema/namespace relaxation or unsupported-feature guard retirement: the
 witness is already admitted and produces complete output in both engines.
-Earlier external paint_seam exploration failed Ares XML admission and is
-excluded, not a secondary proposal, fixture source or reason to bypass checks.
+Seam painting is separate from this unpainted witness. The
+[facet-paint slice](seam-paint-spec.md) admits the triangle attribute and
+supports bounded Aligned placement; painted Rear remains explicitly rejected.
 
 ## SPEC → RED → GREEN gates
 
