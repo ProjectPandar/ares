@@ -113,7 +113,8 @@ async fn compare_stl(minimal: bool) {
     )
     .await
     .unwrap();
-    compare(work, &reference, &api, "cube10.stl", &load, minimal);
+    let args = [&load[..], &["-o", "ares.gcode", "cube10.stl"]].concat();
+    compare(work, &reference, &api, &args, minimal);
 }
 
 async fn compare_saved_project() {
@@ -156,15 +157,20 @@ async fn compare_saved_project() {
     )
     .await
     .unwrap();
-    compare(work, &reference, &api, "saved.3mf", &[], false);
+    compare(
+        work,
+        &reference,
+        &api,
+        &["-o", "ares.gcode", "saved.3mf"],
+        false,
+    );
 }
 
-fn compare(work: &Path, reference: &[u8], api: &[u8], input: &str, load: &[&str], minimal: bool) {
+fn compare(work: &Path, reference: &[u8], api: &[u8], args: &[&str], minimal: bool) {
     let output = application::cli_command()
         .current_dir(work)
         .arg("slice")
-        .args(load)
-        .args(["-o", "ares.gcode", input])
+        .args(args)
         .output()
         .unwrap();
     fs::write(work.join("api.gcode"), api).unwrap();
