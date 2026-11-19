@@ -21,7 +21,7 @@ fn mesh_inspection_reports_planes_from_a_narrow_hull() {
         include_bytes!("../../../../tests/parity/qt-narrow-hull/narrow-fan.stl"),
     )
     .unwrap();
-    let args = ["--inspect-mesh"];
+    let args = ["--inspect-mesh", "--arrange", "0"];
     let native = run_native(&runner, &root.join("native"), &args, input.to_str());
     assert_eq!(native.0, Some(0), "Native: {root:?}");
     assert_eq!(
