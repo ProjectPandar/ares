@@ -36,6 +36,58 @@ fn invalid(message: String) -> SliceError {
     SliceError::InvalidInput(message)
 }
 
+pub(crate) fn export_settings(
+    request: &LoadSettingsRequest<'_>,
+) -> Result<crate::project::raw_settings::ProjectSettingsRaw, SliceError> {
+    use crate::project::raw_settings::RawConfigValue;
+
+    let mut raw = compose_load_settings(request)?.raw;
+    // CLI::run inserts selected machine/process identity and the process's
+    // compatibility list separately from update_full_config (:2304,:2344-2346,:3381).
+    for file in request.settings {
+        let (kind, document) = parse_file(file)?;
+        if document
+            .inherits
+            .as_ref()
+            .is_some_and(|value| !value.is_empty())
+        {
+            return Err(invalid("3MF export requires flattened presets".to_owned()));
+        }
+        match kind.as_str() {
+            "machine" => raw.insert(
+                "printer_settings_id".into(),
+                RawConfigValue::Text(document.name),
+            ),
+            "process" => {
+                raw.insert(
+                    "print_settings_id".into(),
+                    RawConfigValue::Text(document.name),
+                );
+                raw.insert(
+                    "print_compatible_printers".into(),
+                    document
+                        .fields
+                        .get("compatible_printers")
+                        .cloned()
+                        .unwrap_or_else(|| RawConfigValue::List(Vec::new())),
+                );
+            }
+            _ => {
+                return Err(invalid(
+                    "3MF export requires one machine and one process preset".to_owned(),
+                ));
+            }
+        }
+    }
+    let (_, filament) = parse_file(&request.filaments[0])?;
+    raw.insert_strings(
+        "filament_ids",
+        &[super::catalog::document_text(&filament, "filament_id")],
+    );
+    raw.insert_strings("filament_settings_id", &[filament.name]);
+    Ok(raw)
+}
+
 /// Parses and validates one preset file exactly like the `load_config_file`
 /// lambda (`OrcaSlicer.cpp:2205-2260`): `from` must be `system|User|user`
 /// and `type` must be a known kind.

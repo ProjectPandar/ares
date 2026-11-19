@@ -53,7 +53,28 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
-    #[arg(short = 'o')]
+    /// Write an unsliced, headless FFF project instead of G-code
+    #[arg(long, value_name = "3MF")]
+    pub(crate) export_3mf: Option<PathBuf>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) outputdir: Option<PathBuf>,
+    #[arg(long = "slice", requires = "export_3mf")]
+    pub(crate) slice_for_export: Option<u32>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) arrange: Option<u32>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) min_save: Option<u32>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) load_slicedata: Option<PathBuf>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) export_slicedata: Option<PathBuf>,
+    #[arg(
+        short = 'o',
+        value_name = "OUTPUT",
+        required_unless_present = "export_3mf"
+    )]
+    pub(crate) output_path: Option<PathBuf>,
+    #[arg(skip)]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
 }

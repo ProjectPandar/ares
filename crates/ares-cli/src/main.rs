@@ -1,5 +1,6 @@
 mod args;
 mod compatible_machine;
+mod export_3mf;
 mod failure;
 mod load_settings;
 mod moves_csv;
@@ -17,7 +18,14 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let Commands::Slice(args) = Cli::parse().command;
+    let Commands::Slice(mut args) = Cli::parse().command;
+    if let Some(output) = &args.export_3mf {
+        if let Err(failure) = export_3mf::run(&args, output) {
+            failure.report();
+        }
+        return;
+    }
+    args.output = args.output_path.take().expect("required G-code output");
     if let Err(failure) = run_slice(args).await {
         failure.report();
     }
