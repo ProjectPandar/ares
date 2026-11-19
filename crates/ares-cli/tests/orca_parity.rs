@@ -5,6 +5,8 @@
 //! Environment-gated: runs only when `ARES_ORCA_BIN` (or the repository
 //! wrapper `scripts/orca-parity.sh`) names a working OrcaSlicer CLI.
 
+#[path = "orca_parity/cli_slice_plates.rs"]
+mod cli_slice_plates;
 #[path = "orca_parity/gcode_regression_cases.rs"]
 mod gcode_regression_cases;
 #[path = "../../../tests/support/native_environment.rs"]
