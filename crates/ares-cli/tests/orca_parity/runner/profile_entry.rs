@@ -43,6 +43,9 @@ mod preset_vector_loading;
 #[path = "../plater_archive.rs"]
 pub(super) mod plater_archive;
 
+#[path = "arachne_voronoi_repair.rs"]
+mod arachne_voronoi_repair;
+
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]
 mod config_string_vector_quoting;
