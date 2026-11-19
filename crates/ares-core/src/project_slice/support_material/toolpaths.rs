@@ -54,6 +54,7 @@ pub(super) fn generate_grid_support_toolpaths(
                 object: input.object,
                 slicing: input.slicing,
                 parameters: input.parameters,
+                counts: input.counts,
                 loops: &loops,
                 interface_angle,
                 scale: input.scale,

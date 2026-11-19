@@ -5,7 +5,9 @@ use crate::project_slice::support_material::{
     extruded_layer::{ExtrudedLayer, SourceLayer},
     extrusion_path::SupportExtrusionEntity,
     grid_generation::GeneratedSupportGeometry,
+    interface_counts::InterfaceCounts,
     interface_loops::LoopInterfaceProcessor,
+    intermediate_heights::SupportLayerType,
     toolpath_parameters::ToolpathParameters,
 };
 use crate::{
@@ -18,6 +20,7 @@ pub(in crate::project_slice::support_material) struct ContactCacheInput<'a> {
     pub(in crate::project_slice::support_material) object: &'a ObjectOptions,
     pub(in crate::project_slice::support_material) slicing: &'a SlicingParameters,
     pub(in crate::project_slice::support_material) parameters: &'a ToolpathParameters,
+    pub(in crate::project_slice::support_material) counts: &'a InterfaceCounts,
     pub(in crate::project_slice::support_material) loops: &'a LoopInterfaceProcessor,
     pub(in crate::project_slice::support_material) interface_angle: f32,
     pub(in crate::project_slice::support_material) scale: CoordinateScale,
@@ -100,8 +103,10 @@ impl LayerCache<SupportExtrusionEntity> {
             }
         } else if !organic
             && (raft_contact || !merge_if_compatible(&mut self.top, &mut self.bottom, geometry)?)
+            && let (Some(bottom), Some(interface)) = (&mut self.bottom, &mut self.interface)
+            && bottom.could_merge(interface, geometry)
         {
-            merge_if_compatible(&mut self.bottom, &mut self.interface, geometry)?;
+            resolve_bottom_interface_overlap(bottom, interface, geometry, input.counts.bottom > 0)?;
         } else if organic && !raft_contact {
             merge_if_compatible(&mut self.top, &mut self.bottom, geometry)?;
         }
@@ -157,6 +162,31 @@ impl LayerCache<SupportExtrusionEntity> {
         }
         Ok(())
     }
+}
+
+fn resolve_bottom_interface_overlap<E>(
+    bottom: &mut ExtrudedLayer<E>,
+    interface: &mut ExtrudedLayer<E>,
+    geometry: &mut GeneratedSupportGeometry,
+    bottom_interfaces: bool,
+) -> Result<(), SliceError> {
+    let is_bottom_interface = matches!(interface.source, SourceLayer::Interface(index)
+        if geometry.interfaces[index].layer_type == SupportLayerType::BottomInterface);
+    // SupportCommon.cpp:1805-1812: only the merge updates the source polygons.
+    if bottom_interfaces && is_bottom_interface {
+        return bottom.merge(interface, geometry).map_err(|error| {
+            SliceError::InvalidInput(format!("support contact merge error: {error:?}"))
+        });
+    }
+    let remaining = difference_polygons_paths(
+        bottom.polygons_to_extrude(geometry),
+        interface.polygons_to_extrude(geometry),
+    )
+    .map_err(|error| {
+        SliceError::InvalidInput(format!("support contact difference error: {error:?}"))
+    })?;
+    bottom.set_polygons_to_extrude(remaining);
+    Ok(())
 }
 
 fn empty<E>(layer: &Option<ExtrudedLayer<E>>, geometry: &GeneratedSupportGeometry) -> bool {
