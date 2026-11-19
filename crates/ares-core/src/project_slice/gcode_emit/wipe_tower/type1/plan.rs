@@ -64,6 +64,7 @@ pub(super) struct Layer {
     pub(super) depth: f32,
     pub(super) spacing: f32,
     pub(super) extruder_fill: bool,
+    pub(super) combined_away: bool,
     pub(super) changes: Vec<Change>,
 }
 
@@ -168,6 +169,7 @@ impl Plan {
                 depth: 0.0,
                 spacing: 1.0,
                 extruder_fill: true,
+                combined_away: false,
                 changes: Vec::new(),
             });
         }

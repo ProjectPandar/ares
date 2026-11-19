@@ -214,6 +214,7 @@ impl<'a> Generator<'a> {
             new_tool: self.current_tool,
             print_z: self.z,
             layer_height: self.layer_height,
+            combined_away: false,
             start: writer.start,
             end,
             gcode: writer.gcode,

@@ -16,6 +16,7 @@ pub(super) struct Layer {
     pub(super) z: f32,
     pub(super) height: f32,
     pub(super) depth: f32,
+    pub(super) combined_away: bool,
     pub(super) changes: Vec<ToolChange>,
 }
 impl Layer {
@@ -74,6 +75,7 @@ impl Plan {
                 z,
                 height,
                 depth: 0.0,
+                combined_away: false,
                 changes: Vec::new(),
             });
         }
