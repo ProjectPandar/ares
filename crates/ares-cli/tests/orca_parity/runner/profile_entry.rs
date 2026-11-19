@@ -41,6 +41,9 @@ mod preset_vector_loading;
 #[path = "../plater_archive.rs"]
 mod plater_archive;
 
+#[path = "profile_entry/type1_toolchange_count.rs"]
+mod type1_toolchange_count;
+
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]
 mod config_string_vector_quoting;
