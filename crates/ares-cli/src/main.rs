@@ -327,7 +327,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let options = fs::read(options)?;
             let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
             let filename = args
-                .input
+                .input()
                 .file_name()
                 .and_then(|name| name.to_str())
                 .unwrap_or("input.stl");

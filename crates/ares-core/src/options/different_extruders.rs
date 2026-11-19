@@ -5,17 +5,6 @@ use crate::SliceError;
 use super::SliceOptions;
 
 impl SliceOptions {
-    pub(crate) fn validate_slicing_different_extruders(&self) -> Result<(), SliceError> {
-        if self.is_using_different_extruders()? {
-            let _ = self.support_different_extruders()?;
-            return Err(SliceError::InvalidInput(
-                "different extruders are not supported by this Ares slicing boundary".to_owned(),
-            ));
-        }
-
-        Ok(())
-    }
-
     pub fn is_using_different_extruders(&self) -> Result<bool, SliceError> {
         let nozzle_count = self.nozzle_diameters()?.len();
         if nozzle_count <= 1 {
