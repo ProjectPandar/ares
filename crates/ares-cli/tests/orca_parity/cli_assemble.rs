@@ -3,7 +3,11 @@
 #[path = "cli_assemble/fixture.rs"]
 mod fixture;
 
-use std::{fs, path::Path, process::Output};
+use std::{
+    fs,
+    path::Path,
+    process::{Command, Output},
+};
 
 use crate::{load_settings_cli::preset_files, runner::OrcaRunner};
 use serde_json::{Value, json};
@@ -22,7 +26,7 @@ fn native(runner: &OrcaRunner, root: &Path, args: &[&str]) -> Output {
 }
 
 fn ares(root: &Path, output: &str, args: &[&str]) -> Output {
-    let result = crate::runner::application::cli_command()
+    let result = Command::new(env!("CARGO_BIN_EXE_ares"))
         .current_dir(root)
         .args(["slice", "-o", output])
         .args(args)
