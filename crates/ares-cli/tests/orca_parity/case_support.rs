@@ -15,6 +15,9 @@ pub(crate) mod vendor_inventory;
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
+#[path = "cli_assemble.rs"]
+mod cli_assemble;
+
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
