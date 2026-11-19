@@ -93,8 +93,8 @@ fn deferred_seam_paint_modes_reject_without_output() {
         .build()
         .unwrap();
     for config in [
-        br#"{"seam_position":"random"}"#,
-        br#"{"seam_position":"nearest","spiral_mode":"1"}"#,
+        br#"{"seam_position":"random"}"#.as_slice(),
+        br#"{"seam_position":"nearest","spiral_mode":"1"}"#.as_slice(),
     ] {
         let overrides = ares_core::ConfigOverrides::from_json(config).unwrap();
         let result = runtime.block_on(crate::runner::application::slice_project_plate_validated(
