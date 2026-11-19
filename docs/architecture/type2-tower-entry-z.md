@@ -2,7 +2,7 @@
 
 Upstream: OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`).
 
-`WipeTowerIntegration::append_tcr2` (`GCode.cpp:1782–1819`) changes the tool in place, routes around the tower wall if needed, then enters the gap. Each waypoint and the terminal travel use `GCode::travel_to` (`GCode.cpp:10638–10651`). Without an explicit Z they target the layer's unrounded nominal Z. The later force-restoration of tower Z is a separate operation and must remain in the stream.
+`WipeTowerIntegration::append_tcr2` (`GCode.cpp:1782–1819`) changes the tool in place, routes around the tower wall if needed, then enters the gap. Each waypoint and the terminal travel use `GCode::travel_to` (`GCode.cpp:10638–10651`). Without an explicit Z they target the layer's unrounded nominal Z. `collect_layers_to_print` stores layers in object order separately from the averaged scheduling Z (`GCode.cpp:2533–2547`). `process_layer` selects the first physical object layer (otherwise support), and `change_layer` sets the nominal to that layer's print Z plus the configured offset (`:6611–6645,6732,8465–8484`). The later force-restoration of tower Z is a separate operation and must remain in the stream.
 
 `GCodeWriter::travel_to_xyz` (`GCodeWriter.cpp:1096–1139`) reduces the stored lift by `target_z - (position_z - lifted)` when a non-forced move falls inside the inclusive lifted band (`:1279–1292`). This is a writer state update even though the emitted move is XY-only. A subsequent waypoint tests the resulting band, not the initial hop height. Preserve the upstream calculation order and do not round the target or introduce a tolerance into the lifted-band comparison.
 

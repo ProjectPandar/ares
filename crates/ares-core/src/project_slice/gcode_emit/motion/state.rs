@@ -143,6 +143,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) last_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) last_jerk: Option<f64>,
     pub(in crate::project_slice::gcode_emit) layer_z: f64,
+    pub(in crate::project_slice::gcode_emit) type2_entry_z: f64,
     /// `m_max_layer_z` (`GCode.cpp:4630`): running float-domain max of the
     /// RAW print z (no `z_offset`), feeding the `{max_layer_z}` wrapping
     /// template — upstream supplies the float-rounded value

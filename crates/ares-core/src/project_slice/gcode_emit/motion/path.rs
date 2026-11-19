@@ -5,7 +5,7 @@ pub(super) mod contour;
 mod retraction;
 pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
-pub(super) use start_travel::tower_travel;
+pub(super) use start_travel::{TowerTravelZ, tower_travel};
 mod travel_emit;
 mod variable;
 

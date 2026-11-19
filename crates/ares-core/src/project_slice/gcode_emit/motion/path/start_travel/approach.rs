@@ -23,6 +23,7 @@ pub(super) struct Approach<'a> {
     pub(super) layer_change_travel: bool,
     pub(super) slope_start_z: Option<f64>,
     pub(super) target_z: f64,
+    pub(super) type2_entry: bool,
     pub(super) travel_distance: f64,
 }
 
@@ -44,6 +45,7 @@ pub(super) fn emit_needs_travel(
         layer_change_travel,
         slope_start_z,
         target_z,
+        type2_entry,
         travel_distance,
     } = approach;
     let mut travel_set_layer_z = false;
@@ -217,6 +219,12 @@ pub(super) fn emit_needs_travel(
     // false). A pending normal lift still raises before the XY move
     // (`NormalLift` `slop_move`), and both paths end with the separate
     // `_travel_to_z` re-statement from the unclear-position branch.
+    // A detour first leg targets nominal Z, before any explicit terminal Z.
+    let leg_z = if route.len() > 1 && !type2_entry {
+        state.layer_z
+    } else {
+        slope_start_z.unwrap_or(target_z)
+    };
     let first_travel_lift = if first_position {
         // Upstream: a first-travel lift exists via the travel's own
         // retraction (`GCode.cpp:7440` needs_retraction →
@@ -262,15 +270,7 @@ pub(super) fn emit_needs_travel(
             // `travel_to_xyz` lifts to the NOMINAL z on the first
             // detour waypoint and applies the scarf z only on the
             // route's final leg (`GCode.cpp:7488-7498`).
-            if route.len() > 1 {
-                // First DETOUR waypoint lifts to the NOMINAL layer z
-                // (`m_nominal_z`, `GCode.cpp:7489-7492`) — `target_z`
-                // already resolves to the scarf start when a seam is
-                // present (`start_travel.rs`).
-                state.layer_z
-            } else {
-                slope_start_z.unwrap_or(target_z)
-            },
+            leg_z,
             state,
             first_travel_comment,
         );
@@ -289,8 +289,8 @@ pub(super) fn emit_needs_travel(
             pending_target,
             first_travel_lift,
             slope_start_z,
-            target_z,
-            route_len: route.len(),
+            leg_z,
+            type2_entry,
         },
     );
     travel_set_layer_z |= move_outcome.travel_set_layer_z;
