@@ -42,6 +42,7 @@ pub(super) struct PerimeterChoice {
 
 fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
     if let Some(better) = paint_rules::priority(
+        layer.placement,
         &layer.candidates.points[first],
         &layer.candidates.points[second],
     ) {
@@ -69,6 +70,7 @@ fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize
     let first_layer = &layers[first.0];
     let second_layer = &layers[second.0];
     if let Some(better) = paint_rules::priority(
+        first_layer.placement,
         &first_layer.candidates.points[first.1],
         &second_layer.candidates.points[second.1],
     ) {
@@ -98,7 +100,7 @@ fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize
 fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     let a = &layer.candidates.points[first];
     let b = &layer.candidates.points[second];
-    if let Some(better) = paint_rules::priority(a, b) {
+    if let Some(better) = paint_rules::priority(layer.placement, a, b) {
         return better;
     }
     if paint_rules::enforced(a) {
@@ -287,6 +289,13 @@ fn find_next_in_layer(
         return None;
     }
     let selected = layer.choices[layer.candidates.points[nearest].perimeter_index].seam_index;
+    // SeamPlacer.cpp:1802–1818: the alignment shortcut is separate from comparator priority.
+    if layer.placement == ProcessSeamPosition::Back
+        && layer.candidates.points[selected].central_enforcer
+        && distance_squared(layer, selected, projected) < (3.0 * max_distance).powi(2)
+    {
+        return Some((layer_index, selected));
+    }
     if is_not_much_worse(layer, nearest, selected) {
         return Some((layer_index, nearest));
     }
