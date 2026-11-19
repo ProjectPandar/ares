@@ -121,9 +121,9 @@ an implicit supplier.
    `UpwardMachineSource::select(FetchOriginal(None))` retains the embedded
    list. Require the no-flag subprocess to match the same staged Ares
    binary with an explicit root and the Native result for the original
-   project. Stage the existing flattened H2D `machine_full` fixture, not
-   the inherited vendor machine JSON; the official AppImage does not
-   carry the corresponding flattened file. On the base
+   project. Flatten the H2D machine from the pinned source with the
+   existing test loader and stage it as `machine_full`; the official
+   AppImage does not carry the corresponding flattened file. On the base
    it instead probes `<prefix>/bin/resources` and misses the installed
    bytes. Keep existing bare `cli_invalid_values_*` witnesses unchanged;
    the derived witness is additive, with move/no-move variants and checks
