@@ -176,27 +176,27 @@ fn select_center(points: &mut [SeamCandidate], loop_arc: &ArcLoop<'_>, green: &[
         .clone()
         .filter(|&i| points[i].local_ccw_angle.abs() > 55.0 * std::f32::consts::PI / 180.0)
         .collect::<Vec<_>>();
-    let mut central = (start + len / 2) % count;
     if !sharp.is_empty() {
-        central = sharp[sharp.len() / 2];
-    } else {
-        let middles = green
-            .iter()
-            .map(|range| {
-                (
-                    loop_arc.point_at((0.5 * (range.begin + range.end)) % loop_arc.length()),
-                    range.end - range.begin,
-                )
-            })
-            .collect::<Vec<_>>();
-        let mut longest = -1.0;
-        for i in patch {
-            let position = as_vec(points[i].position);
-            for &(middle, length) in &middles {
-                if length > longest && f64::from((position - middle).norm()) <= TOLERANCE {
-                    central = i;
-                    longest = length;
-                }
+        points[sharp[sharp.len() / 2]].central_enforcer = true;
+        return;
+    }
+    let middles = green
+        .iter()
+        .map(|range| {
+            (
+                loop_arc.point_at((0.5 * (range.begin + range.end)) % loop_arc.length()),
+                range.end - range.begin,
+            )
+        })
+        .collect::<Vec<_>>();
+    let mut central = (start + len / 2) % count;
+    let mut longest = -1.0;
+    for i in patch {
+        let position = as_vec(points[i].position);
+        for &(middle, length) in &middles {
+            if length > longest && f64::from((position - middle).norm()) <= TOLERANCE {
+                central = i;
+                longest = length;
             }
         }
     }
