@@ -20,8 +20,8 @@ pub(crate) fn collect_config_entries(
 ) -> Result<Vec<ConfigEntry>, ConfigValueError> {
     let mut entries = Vec::with_capacity(650);
     let active_count = Some(settings.filament.gcode.filament_diameter.0.len());
-    append_group(&settings.printer, &mut entries, active_count)?;
-    append_group(&settings.process, &mut entries, active_count)?;
+    append_group(&settings.printer, &mut entries, None)?;
+    append_group(&settings.process, &mut entries, None)?;
     // OrcaSlicer.cpp:3715-3729 routes filament predicates into expression groups;
     // the applied raw config retains the process's bare condition.
     entries.extend(
@@ -36,7 +36,7 @@ pub(crate) fn collect_config_entries(
                 )
             }),
     );
-    append_group(&settings.project, &mut entries, active_count)?;
+    append_group(&settings.project, &mut entries, None)?;
     finish(entries)
 }
 
