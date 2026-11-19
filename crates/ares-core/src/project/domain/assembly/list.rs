@@ -68,24 +68,7 @@ impl AssemblyList {
             }
         }
         for plate in &list.plates {
-            if plate.need_arrange
-                || !plate.plate_params.is_empty()
-                || !plate.assembled_params.is_empty()
-            {
-                return Err(AssemblyError::Invalid("assembly list requires fixed placement and no plate or assembled parameter overrides".into()));
-            }
-            let mut ids = BTreeSet::new();
-            for object in &plate.objects {
-                ids.extend(object.filaments.iter().copied());
-                if !object.print_params.is_empty() || !object.height_ranges.is_empty() {
-                    return Err(AssemblyError::Invalid("assembly list object parameter overrides and height ranges are unsupported".into()));
-                }
-            }
-            if ids.len() > 1 {
-                return Err(AssemblyError::Invalid(
-                    "assembly list supports one filament ID per plate".into(),
-                ));
-            }
+            plate.validate_fixed_placement()?;
         }
         Ok(list)
     }
@@ -94,6 +77,30 @@ impl AssemblyList {
         self.plates
             .iter()
             .flat_map(|plate| plate.objects.iter().map(|object| object.path.as_str()))
+    }
+}
+
+impl Plate {
+    fn validate_fixed_placement(&self) -> Result<(), AssemblyError> {
+        if self.need_arrange || !self.plate_params.is_empty() || !self.assembled_params.is_empty() {
+            return Err(AssemblyError::Invalid("assembly list requires fixed placement and no plate or assembled parameter overrides".into()));
+        }
+        let mut ids = BTreeSet::new();
+        for object in &self.objects {
+            ids.extend(object.filaments.iter().copied());
+            if !object.print_params.is_empty() || !object.height_ranges.is_empty() {
+                return Err(AssemblyError::Invalid(
+                    "assembly list object parameter overrides and height ranges are unsupported"
+                        .into(),
+                ));
+            }
+        }
+        if ids.len() > 1 {
+            return Err(AssemblyError::Invalid(
+                "assembly list supports one filament ID per plate".into(),
+            ));
+        }
+        Ok(())
     }
 }
 

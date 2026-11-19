@@ -149,61 +149,7 @@ impl<'a> Assembly<'a> {
         let mut volume_id = 0;
         for (plate_index, plate) in list.plates.iter().enumerate() {
             let start = objects.len();
-            let mut groups = BTreeMap::new();
-            for (index, entry) in plate.objects.iter().enumerate() {
-                let file = *files.get(entry.path.as_str()).ok_or_else(|| {
-                    AssemblyError::Missing(format!(
-                        "construct_assemble_list: directory {} not exist in plate {}",
-                        entry.path,
-                        plate_index + 1
-                    ))
-                })?;
-                if !has_suffix(file.path, "stl") {
-                    return Err(AssemblyError::Invalid(format!(
-                        "construct_assemble_list: unsupported file {}, plate index {}, object index {}",
-                        entry.path,
-                        plate_index + 1,
-                        index + 1
-                    )));
-                }
-                let stem = basename(file.path).rsplit_once('.').unwrap().0;
-                let source = read_stl(file, stem, volume_id)?;
-                for copy in 0..entry.count as usize {
-                    let mut volume = source.clone();
-                    volume.id = volume_id;
-                    let [x, y, z] = entry.translation(copy);
-                    volume.transform = volume.transform.pretranslated(Point3d::new(x, y, z));
-                    volume.set_mesh_preparation(
-                        Point3d::new(0.0, 0.0, 0.0),
-                        volume.transform,
-                        volume_id as i32,
-                    );
-                    volume_id += 1;
-                    volume.name = format!("{stem}_{}", copy + 1);
-                    let group = repeat(&entry.assemble_index, copy).unwrap_or(0);
-                    let filament = repeat(&entry.filaments, copy).unwrap();
-                    if group > 0 {
-                        set_volume_extruder(&mut volume, filament);
-                        if let Some(&target) = groups.get(&group) {
-                            let target: &mut ProjectObject = &mut objects[target];
-                            target.volumes.push(volume);
-                            continue;
-                        }
-                        groups.insert(group, objects.len());
-                    }
-                    let name = if group > 0 {
-                        format!("assemble_{group}")
-                    } else {
-                        volume.name.clone()
-                    };
-                    objects.push(object(
-                        objects.len() as u32 + 1,
-                        name,
-                        vec![volume],
-                        Some(filament),
-                    ));
-                }
-            }
+            append_plate_objects(&mut objects, &mut volume_id, &files, plate, plate_index)?;
             membership.push(objects[start..].iter().map(ProjectObject::id).collect());
             names.push(plate.plate_name.clone());
         }
@@ -211,6 +157,73 @@ impl<'a> Assembly<'a> {
             objects, membership, names,
         )))))
     }
+}
+
+fn append_plate_objects(
+    objects: &mut Vec<ProjectObject>,
+    volume_id: &mut u32,
+    files: &HashMap<&str, AssemblyFile<'_>>,
+    plate: &list::Plate,
+    plate_index: usize,
+) -> Result<(), AssemblyError> {
+    let mut groups = BTreeMap::new();
+    for (index, entry) in plate.objects.iter().enumerate() {
+        let file = *files.get(entry.path.as_str()).ok_or_else(|| {
+            AssemblyError::Missing(format!(
+                "construct_assemble_list: directory {} not exist in plate {}",
+                entry.path,
+                plate_index + 1
+            ))
+        })?;
+        if !has_suffix(file.path, "stl") {
+            return Err(AssemblyError::Invalid(format!(
+                "construct_assemble_list: unsupported file {}, plate index {}, object index {}",
+                entry.path,
+                plate_index + 1,
+                index + 1
+            )));
+        }
+        let stem = basename(file.path).rsplit_once('.').unwrap().0;
+        let source = read_stl(file, stem, *volume_id)?;
+        for copy in 0..entry.count as usize {
+            let mut volume = source.clone();
+            volume.id = *volume_id;
+            let [x, y, z] = entry.translation(copy);
+            volume.transform = volume.transform.pretranslated(Point3d::new(x, y, z));
+            volume.set_mesh_preparation(
+                Point3d::new(0.0, 0.0, 0.0),
+                volume.transform,
+                *volume_id as i32,
+            );
+            *volume_id += 1;
+            volume.name = format!("{stem}_{}", copy + 1);
+            let group = repeat(&entry.assemble_index, copy).unwrap_or(0);
+            let filament = repeat(&entry.filaments, copy).unwrap();
+            if group > 0 {
+                set_volume_extruder(&mut volume, filament);
+            }
+            if group > 0
+                && let Some(&target) = groups.get(&group)
+            {
+                let target: &mut ProjectObject = &mut objects[target];
+                target.volumes.push(volume);
+                continue;
+            }
+            let name = if group > 0 {
+                groups.insert(group, objects.len());
+                format!("assemble_{group}")
+            } else {
+                volume.name.clone()
+            };
+            objects.push(object(
+                objects.len() as u32 + 1,
+                name,
+                vec![volume],
+                Some(filament),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn repeat(values: &[i32], copy: usize) -> Option<i32> {
