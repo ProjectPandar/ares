@@ -183,6 +183,19 @@ semantics are preserved nil sentinels and no substitution warning. The Ares
 success path must expose the same serialized values and an empty substitution
 list.
 
+### Bridge-speed runtime boundary
+
+Admission does not give `nil` a finite speed. `Config.hpp:676–682,899–904`
+returns the selected slot (or slot zero for an out-of-range index), where `nil`
+is stored as NaN. `GCode.cpp:9542–9545` reads it directly or uses it as the
+percentage base for internal bridges. The zero-speed fallback at `:9576–9577`
+does not handle NaN, and the volumetric `std::min` at `:9647–9649` preserves it.
+If that NaN reaches the feedrate formatter, `GCodeWriter.cpp:1683–1689` rounds
+and converts it to an integer, which is undefined behavior. Ares does not
+reproduce that conversion. The solid-plate witness does not exercise bridge
+extrusion, so it verifies admission and export without relying on undefined
+feedrates.
+
 Deferred: genuinely non-nullable float-wire `nil` behavior, new substitution
 classes, default-value substitution, inheritance completion, and unrelated
 nullable option runtime behavior. No fallback or warning is added for a value
