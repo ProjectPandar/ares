@@ -179,22 +179,25 @@ impl BrimPlan {
         // double millimeters and float scaled spacing from that integer.
         let spacing_units = geometry::scaled_coord(scale, f64::from(flow.spacing))?;
         let spacing_mm = scale.unscale(spacing_units);
-        let brim_width_mm = (options.brim_width.0 / spacing_mm / 2.0).floor() * spacing_mm * 2.0;
+        let brim_width_mm = geometry::even_width_mm(options.brim_width.0, spacing_mm);
         if brim_width_mm <= 0.0 && options.brim_type != ProcessBrimType::AutoBrim {
             return Ok(None);
         }
         let gap = scaled_f32(scale, options.brim_object_gap.0)?;
-        let (brim_width, spacing) = if options.brim_type == ProcessBrimType::OuterOnly {
-            // Brim.cpp:497, libslic3r.h:106: double scale_ directly to float.
-            (
-                scale.scaled_delta(brim_width_mm) as f32,
-                spacing_units as f32,
-            )
+        // Brim.cpp:497, libslic3r.h:106: double scale_ directly to float.
+        let contour_width = scale.scaled_delta(brim_width_mm) as f32;
+        let brim_width = if options.brim_type == ProcessBrimType::OuterOnly {
+            contour_width
         } else {
-            (
-                scaled_f32(scale, brim_width_mm)?,
-                scaled_f32(scale, spacing_mm)?,
-            )
+            scaled_f32(scale, brim_width_mm)?
+        };
+        let spacing = if matches!(
+            options.brim_type,
+            ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner | ProcessBrimType::AutoBrim
+        ) {
+            spacing_units as f32
+        } else {
+            scaled_f32(scale, spacing_mm)?
         };
         let mut object_islands = Vec::new();
         // Brim.cpp:590-634 via :576/:682-689: support contours join the
@@ -227,7 +230,8 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         } else if options.brim_type == ProcessBrimType::OuterAndInner {
-            let area = crate::brims::combined::area(&source, gap, brim_width, spacing, resolution)?;
+            let outer = geometry::outer_width(contour_width, spacing);
+            let area = crate::brims::combined::area(&source, gap, (outer, brim_width), resolution)?;
             object_islands = area.object_islands;
             // Both predicates are true: only objectIsland is forbidden,
             // without the no-inner/no-outer masks (Brim.cpp:560-570); the
@@ -282,7 +286,7 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area, forbidden)
         } else if options.brim_type == ProcessBrimType::AutoBrim {
-            // Brim.cpp:497-527 applies brim_width_mod independently to each
+            // Brim.cpp:565–576 applies brim_width_mod independently to each
             // ExPolygon before make_brim, so islands do not share a clamp.
             let mut area = Vec::new();
             let mut forbidden = Vec::new();
@@ -318,10 +322,7 @@ impl BrimPlan {
             }
             (area, forbidden)
         } else {
-            // Brim.cpp:569,576,592: float divisions, then double floor and
-            // products, narrowed to the float delta accepted by offset_ex.
-            let outer_width =
-                (f64::from(brim_width / spacing / 2.0).floor() * f64::from(spacing) * 2.0) as f32;
+            let outer_width = geometry::outer_width(brim_width, spacing);
             let area = crate::brims::outer::area(&source, gap, outer_width, spacing, resolution)?;
             object_islands = area.object_islands;
             let mut forbidden = area.forbidden;
