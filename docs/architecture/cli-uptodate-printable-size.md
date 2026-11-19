@@ -6,7 +6,7 @@ This slice ports the retained-machine admission in the pinned OrcaSlicer v2.5.0 
 
 ## Ares destination
 
-The I/O-free retained-refresh loader in `crates/ares-core/src/profiles/project_refresh` owns the comparison between the raw project settings and the loaded machine preset. The CLI failure mapper owns the `-19` family result and report serialization. The public CLI parity module is registered from `crates/ares-cli/tests/orca_parity/case_support.rs`; the root `orca_parity.rs` remains unchanged.
+The I/O-free retained-refresh loader in `crates/ares-core/src/profiles/project_refresh` owns the comparison between the raw project settings and the loaded machine preset. The CLI failure mapper owns the `CLI_MODIFIED_PARAMS_TO_PRINTER` (`-23`) family result and report serialization. The public CLI parity module is registered from `crates/ares-cli/tests/orca_parity/case_support.rs`; the root `orca_parity.rs` remains unchanged.
 
 ## Included
 
@@ -14,7 +14,7 @@ The I/O-free retained-refresh loader in `crates/ares-core/src/profiles/project_r
 - Compare them with the flattened retained machine file after that file has been loaded, including explicit files and resource fallback.
 - Reject only when all loaded dimensions are positive and one embedded dimension exceeds its corresponding loaded dimension, matching the cited Native branch.
 - Preserve the exact diagnostic, exit code, and `result.json` error string.
-- Preserve/read `printer_model_id` metadata needed by the existing machine identity and output path.
+- Preserve the existing boundary for Native's external `printer_model_id` metadata read without adding new Ares I/O, because Ares has no equivalent plate-data output or judgment seam.
 - Add a synthetic 3MF witness with an oversized retained bed and an exactly equal boundary witness; compare Native and Ares whole-file output where slicing succeeds and compare CLI status/result reports for rejection.
 
 ## Deferred

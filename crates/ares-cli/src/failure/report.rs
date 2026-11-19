@@ -77,7 +77,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string,
+            error_string: error_string.to_owned(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
