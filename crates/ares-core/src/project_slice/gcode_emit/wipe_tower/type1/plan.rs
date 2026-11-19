@@ -47,6 +47,7 @@ pub(super) struct Change {
     pub(super) new: usize,
     pub(super) depth: f32,
     pub(super) nozzle_depth: f32,
+    pub(super) nozzle_gap: f32,
     pub(super) volume: f32,
     pub(super) length: f32,
     pub(super) purge: f32,
@@ -177,6 +178,7 @@ impl Plan {
             new,
             depth: (length / width).ceil() * self.perimeter + nozzle_depth,
             nozzle_depth,
+            nozzle_gap: nozzle_perimeter,
             volume,
             length,
             purge,
@@ -209,6 +211,7 @@ impl Plan {
                 let change = &mut self.layers[layer_idx].changes[change_idx];
                 change.nozzle_depth = lines * nozzle_gap;
                 change.depth = (change.length / width).ceil() * wipe_gap + change.nozzle_depth;
+                change.nozzle_gap = nozzle_gap;
             }
         }
     }
