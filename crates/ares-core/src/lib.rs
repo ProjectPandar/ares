@@ -298,5 +298,17 @@ pub fn load_model(input: impl AsRef<[u8]>) -> Result<Model, SliceError> {
 }
 
 pub async fn slice(input: impl AsRef<[u8]>, options: SliceOptions) -> Result<Vec<u8>, SliceError> {
+    // The byte-only API requires a concrete bed for temperature selection.
+    // Validated entries leave Default Plate (PrintConfig.cpp:607) to Print::validate.
+    if let Some(value) = options.values().get("curr_bed_type") {
+        let bed = value
+            .as_str()
+            .ok_or_else(|| SliceError::InvalidInput("curr_bed_type must be a string".to_owned()))?;
+        if options::first_layer_bed_temperature_key_for(bed).is_none() {
+            return Err(SliceError::InvalidInput(
+                "curr_bed_type has an invalid value".to_owned(),
+            ));
+        }
+    }
     project_slice::option_stl::slice(input.as_ref(), "input.stl", &options, false)
 }
