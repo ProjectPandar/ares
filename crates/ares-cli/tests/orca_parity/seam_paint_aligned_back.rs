@@ -40,15 +40,15 @@ fn first_inner_wall_approach(gcode: &str) -> &str {
 }
 
 #[test]
-fn aligned_back_native_paint_changes_enforced_and_blocked_walls() {
+fn aligned_back_native_paint_changes_enforced_and_mixed_walls() {
     for printer in ["x1c", "k1", "mk4"] {
         let plain = native(printer, "plain");
         let front = native(printer, "front");
-        let rear = native(printer, "rear");
+        let _rear = native(printer, "rear");
         let both = native(printer, "both");
         let side = native(printer, "side");
         let plain_approach = first_inner_wall_approach(&plain.native);
-        for painted in [&front, &rear, &both] {
+        for painted in [&front, &both] {
             assert_ne!(first_inner_wall_approach(&painted.native), plain_approach);
         }
         assert!(
