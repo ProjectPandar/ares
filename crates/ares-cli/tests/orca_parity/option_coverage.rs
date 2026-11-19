@@ -22,6 +22,8 @@ mod initial_bed_temperature;
 pub(crate) mod multitool_ramming_footer;
 #[path = "option_coverage/nozzle_temperature_footer.rs"]
 mod nozzle_temperature_footer;
+#[path = "option_coverage/nullable_metadata.rs"]
+mod nullable_metadata;
 #[path = "option_coverage/nullable_vector_placeholder.rs"]
 mod nullable_vector_placeholder;
 #[path = "option_coverage/pa_variant.rs"]
