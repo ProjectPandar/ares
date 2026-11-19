@@ -21,6 +21,9 @@ mod cli_ground_face;
 #[path = "cli_model_inspection.rs"]
 mod cli_model_inspection;
 
+#[path = "cli_mesh_inspection.rs"]
+mod cli_mesh_inspection;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 

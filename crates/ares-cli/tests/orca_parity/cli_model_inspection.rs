@@ -4,7 +4,8 @@ use std::{fs, path::Path, process::Command};
 
 use crate::runner::{OrcaRunner, stages};
 
-const PROJECT: &[u8] = include_bytes!("../../../../tests/parity/orca_cli_inspection_paint.3mf");
+pub(super) const PROJECT: &[u8] =
+    include_bytes!("../../../../tests/parity/orca_cli_inspection_paint.3mf");
 
 #[test]
 fn info_reports_open_edges_without_slicing() {
@@ -50,7 +51,7 @@ fn info_succeeds_without_input() {
     compare(&["--info"], None, 0);
 }
 
-fn compare(flags: &[&str], input: Option<(&str, Vec<u8>)>, exit: i32) {
+pub(super) fn compare(flags: &[&str], input: Option<(&str, Vec<u8>)>, exit: i32) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -133,7 +134,7 @@ fn inventory(work: &Path) -> Vec<String> {
     names
 }
 
-fn open_box() -> Vec<u8> {
+pub(super) fn open_box() -> Vec<u8> {
     use std::fmt::Write;
     let vertices = [
         [0, 0, 0],
