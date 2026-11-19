@@ -9,6 +9,8 @@ mod placeholder_comparison_dispatch;
 mod placeholder_deferred_misuse;
 #[path = "placeholder_deferred_print_time.rs"]
 mod placeholder_deferred_print_time;
+#[path = "placeholder_deferred_statistics.rs"]
+mod placeholder_deferred_statistics;
 #[path = "placeholder_digits_rounding.rs"]
 mod placeholder_digits_rounding;
 #[cfg(target_os = "linux")]
