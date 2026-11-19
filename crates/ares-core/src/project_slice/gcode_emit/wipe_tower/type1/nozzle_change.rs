@@ -1,4 +1,4 @@
-//! `WipeTower.cpp:2915–3033`: old-nozzle extrusion before Type1 filament change.
+//! `WipeTower.cpp:3623–3777`: old-nozzle extrusion before Type1 filament change.
 use super::{generator::Generator, result::NozzleChange, writer::Writer};
 use crate::geometry::ClipperError;
 use std::fmt::Write;
@@ -14,13 +14,13 @@ impl Generator<'_> {
         let change = self.plan.layers[self.index]
             .changes
             .iter()
-            .find(|c| c.old == old && c.new == new);
+            .find(|c| c.new == new);
         let step = if self.first_layer() || solid {
             width
         } else {
-            self.plan.layers[self.index].spacing * change.map_or(width, |c| c.nozzle_gap)
+            self.plan.layers[self.index].spacing * self.plan.nozzle_gap(old, width)
         };
-        let count = change.map_or(0, |c| ((c.nozzle_depth + 1e-3) / step) as i32);
+        let (length, depth) = change.map_or((0.0, 0.0), |c| (c.nozzle_length, c.nozzle_depth));
         let flow_at = |height: f32| {
             height * (width - height * (1.0 - std::f32::consts::PI / 4.0)) / self.filaments[0].area
         };
@@ -49,19 +49,23 @@ impl Generator<'_> {
             .position(|b| b.category == self.filaments[old].category)
             .expect("old nozzle has a planned category block");
         self.current_block = Some(block);
-        let offset = self.plan.perimeter + (width - self.plan.perimeter) / 2.0;
-        let lower = [
-            offset,
-            self.plan.blocks[block].current + (width - self.plan.perimeter) / 2.0,
-        ];
-        let right = self.plan.width - offset;
-        let upper = lower[1] + count as f32 * step - (width - self.plan.perimeter) / 2.0;
+        let y_offset = (width - self.plan.perimeter) / 2.0;
+        let x_offset = self.plan.perimeter + y_offset;
+        let lower = [x_offset, self.plan.blocks[block].current + y_offset];
+        let opening = self.plan.width - 2.0 * x_offset;
+        let right = lower[0] + opening;
+        let upper = lower[1] + depth;
         writer.set_position(lower, [self.plan.width, self.plan.depth], 0.0);
-        let count = if solid { i32::MAX } else { count };
+        let count = (length / opening).ceil() as i32;
+        let count = if count > 0 && solid {
+            (f64::from((upper - lower[1] + y_offset) / width) + 1e-4).floor() as i32
+        } else {
+            count
+        };
         self.left_to_right = true;
         let mut real_count = 0;
         let mut thick = false;
-        loop {
+        while real_count < count {
             if self.thick_bridge(writer.position[1]) {
                 writer.flow = bridge_flow;
                 writer.gcode.push_str("; LAYER_HEIGHT: 0.200000\n");
