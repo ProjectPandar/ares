@@ -3,6 +3,9 @@
 #[path = "custom_gcode_line_endings.rs"]
 mod custom_gcode_line_endings;
 
+#[path = "option_only_stl.rs"]
+mod option_only_stl;
+
 #[path = "coints_comma_regression.rs"]
 mod coints_comma_regression;
 
