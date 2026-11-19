@@ -1,6 +1,7 @@
 mod args;
 mod compatible_machine;
 mod failure;
+mod installed_resources;
 mod load_settings;
 mod moves_csv;
 mod project_presets;
@@ -112,8 +113,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let output = match extension {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
-            let (source, machine_full) =
-                compatible_machine::load(&input, args.resources_dir.as_deref())?;
+            let resources = installed_resources::resolve(args.resources_dir.as_deref())?;
+            let (source, machine_full) = compatible_machine::load(&input, &resources)?;
             let mut upward_report = Vec::new();
             let mut sliced_plate = ares_core::SlicedPlate::default();
             let upward = ares_core::CliUpwardMachine {
