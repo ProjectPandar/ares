@@ -175,18 +175,27 @@ impl BrimPlan {
         let flow =
             build_nonbridging_flow(width, print.initial_layer_print_height.0 as f32, nozzle)?;
         let scale = traversal.scale;
-        // Upstream quantizes the flow width through the scaled lattice:
-        // `flowWidth = print.brim_flow().scaled_spacing() * SCALING_FACTOR`
-        // (Brim.cpp:463) — an integer round-trip, not the f32 spacing
-        // value directly.
-        let spacing_mm = f64::from(scaled_f32(scale, f64::from(flow.spacing))?) * scale.factor();
+        // Flow.hpp:71, Brim.cpp:496–498: truncate spacing once. Derive the
+        // double millimeters and float scaled spacing from that integer.
+        let spacing_units = geometry::scaled_coord(scale, f64::from(flow.spacing))?;
+        let spacing_mm = scale.unscale(spacing_units);
         let brim_width_mm = (options.brim_width.0 / spacing_mm / 2.0).floor() * spacing_mm * 2.0;
         if brim_width_mm <= 0.0 && options.brim_type != ProcessBrimType::AutoBrim {
             return Ok(None);
         }
         let gap = scaled_f32(scale, options.brim_object_gap.0)?;
-        let brim_width = scaled_f32(scale, brim_width_mm)?;
-        let spacing = scaled_f32(scale, spacing_mm)?;
+        let (brim_width, spacing) = if options.brim_type == ProcessBrimType::OuterOnly {
+            // Brim.cpp:497, libslic3r.h:106: double scale_ directly to float.
+            (
+                scale.scaled_delta(brim_width_mm) as f32,
+                spacing_units as f32,
+            )
+        } else {
+            (
+                scaled_f32(scale, brim_width_mm)?,
+                scaled_f32(scale, spacing_mm)?,
+            )
+        };
         let mut object_islands = Vec::new();
         // Brim.cpp:590-634 via :576/:682-689: support contours join the
         // no-brim mask for every brim type with a ring on the first layer
@@ -309,7 +318,11 @@ impl BrimPlan {
             }
             (area, forbidden)
         } else {
-            let area = crate::brims::outer::area(&source, gap, brim_width, spacing, resolution)?;
+            // Brim.cpp:569,576,592: float divisions, then double floor and
+            // products, narrowed to the float delta accepted by offset_ex.
+            let outer_width =
+                (f64::from(brim_width / spacing / 2.0).floor() * f64::from(spacing) * 2.0) as f32;
+            let area = crate::brims::outer::area(&source, gap, outer_width, spacing, resolution)?;
             object_islands = area.object_islands;
             let mut forbidden = area.forbidden;
             forbidden.extend(support_mask);

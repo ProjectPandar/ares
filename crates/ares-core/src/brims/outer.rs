@@ -1,4 +1,4 @@
-//! Brim.cpp:512-570: OuterOnly contour area and no-inner hole exclusion.
+//! Brim.cpp:581–615: outer contour area and no-inner hole exclusion.
 use super::inner;
 use crate::{
     SliceError,
@@ -14,11 +14,10 @@ pub(crate) struct OuterArea {
 pub(crate) fn area(
     source: &[ExPolygon],
     gap: f32,
-    width: f32,
+    outer_width: f32,
     spacing: f32,
     resolution: f64,
 ) -> Result<OuterArea, SliceError> {
-    let outer_width = (width / spacing / 2.0).floor() * spacing * 2.0;
     let mut area = Vec::new();
     let mut forbidden = Vec::new();
     for polygon in source {
