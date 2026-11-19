@@ -159,12 +159,13 @@ impl Selector {
         // get_facets_strict retains vertices referenced by all selector leaves,
         // not just vertices referenced by this selected state.
         let mut referenced = vec![false; self.vertices.len()];
-        for triangle in &self.triangles {
-            if triangle.splits() == 0 {
-                for vertex in triangle.vertices {
-                    referenced[vertex as usize] = true;
-                }
-            }
+        for vertex in self
+            .triangles
+            .iter()
+            .filter(|triangle| triangle.splits() == 0)
+            .flat_map(|triangle| triangle.vertices)
+        {
+            referenced[vertex as usize] = true;
         }
         let mut mapping = vec![0; self.vertices.len()];
         let mut vertices = Vec::new();
@@ -188,19 +189,20 @@ impl Selector {
         let mut mapping = vec![u32::MAX; self.vertices.len()];
         let mut vertices = Vec::new();
         let mut triangles = Vec::new();
+        let mut map_vertex = |index: u32| {
+            let index = index as usize;
+            if mapping[index] == u32::MAX {
+                mapping[index] = vertices.len() as u32;
+                vertices.push(self.vertices[index]);
+            }
+            mapping[index]
+        };
         for triangle in self
             .triangles
             .iter()
             .filter(|triangle| triangle.splits() == 0 && triangle.state == state)
         {
-            triangles.push(triangle.vertices.map(|index| {
-                let index = index as usize;
-                if mapping[index] == u32::MAX {
-                    mapping[index] = vertices.len() as u32;
-                    vertices.push(self.vertices[index]);
-                }
-                mapping[index]
-            }));
+            triangles.push(triangle.vertices.map(&mut map_vertex));
         }
         SelectedFacets {
             vertices,
