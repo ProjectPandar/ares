@@ -144,6 +144,10 @@ pub(super) fn type1_config(
             temperature_override: None,
         },
     );
+    config.insert(
+        "toolchange_count",
+        value::Value::Integer((state.toolchange_count + 1) as i64),
+    );
 }
 
 fn emit_inner(
