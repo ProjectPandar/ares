@@ -12,6 +12,9 @@ pub(crate) mod smoke_overrides;
 #[path = "vendor_inventory.rs"]
 pub(crate) mod vendor_inventory;
 
+#[path = "cli_uptodate_refresh.rs"]
+mod cli_uptodate_refresh;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
