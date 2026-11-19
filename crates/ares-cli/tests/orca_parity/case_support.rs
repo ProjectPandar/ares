@@ -73,3 +73,5 @@ mod spiral_byobject_transition;
 
 #[path = "outer_brim_width_quantization.rs"]
 mod outer_brim_width_quantization;
+#[path = "unclear_travel_lift_cancellation.rs"]
+mod unclear_travel_lift_cancellation;
