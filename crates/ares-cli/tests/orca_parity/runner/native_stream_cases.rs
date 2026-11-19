@@ -88,6 +88,8 @@ mod template_elsif;
 mod template_macro;
 #[path = "template_ternary.rs"]
 mod template_ternary;
+#[path = "type1_nozzle_row_spacing.rs"]
+mod type1_nozzle_row_spacing;
 #[path = "wall_direction_seam.rs"]
 mod wall_direction_seam;
 #[path = "zero_extrusion_comment.rs"]
