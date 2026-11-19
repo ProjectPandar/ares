@@ -2,6 +2,9 @@
 
 ## Status and scope
 
+The [unresolved-filament addendum](direct-bbl-unresolved-filament.md) supersedes
+the missing-bundle error contract below.
+
 This is the B1 specification only. It is based on Ares tip `0a2e546bcd3aaa1189b3770f7c7e039c3d39d3ae` and the pinned OrcaSlicer 2.5.0 source `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`. B1 covers the platform-neutral core seam and the native CLI adapter. It does not add implementation, tests, or resource files in this change.
 
 B2 is the later WASM/web adapter slice. Its required interface is specified here so B1 does not create a core API that cannot be supplied by a browser.

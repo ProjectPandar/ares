@@ -7,7 +7,7 @@ supersedes its missing-bundle rejection contract. Native reference:
 ## Included
 
 `OrcaSlicer.cpp:2793–2817` resolves system filament presets one slot at a
- time. At `:2803–2807` a lookup miss logs that the filament keeps its values
+time. At `:2803–2807` a lookup miss logs that the filament keeps its values
 and continues. With no catalog, none of the slots can resolve: preserve the
 embedded values and continue through ordinary project validation and slicing.
 Do not invent a fatal error, substitute a catalog, or make the native lookup

@@ -91,9 +91,11 @@ impl ProjectInput<'_> {
                     Some(refresh) => refresh.load(bytes, overrides, validate_print)?,
                     None => crate::project::load_project_with_preparation(bytes, overrides)?,
                 };
-                if project.documents().bbl_family_3mf && refresh.is_none() {
-                    let system_catalog =
-                        system_catalog.ok_or(crate::SliceError::MissingSystemPresetBundle)?;
+                // OrcaSlicer.cpp:2803–2807: a lookup miss keeps the embedded slot.
+                if project.documents().bbl_family_3mf
+                    && refresh.is_none()
+                    && let Some(system_catalog) = system_catalog
+                {
                     let raw =
                         system_catalog.refresh_direct(&project.documents().project_settings_raw)?;
                     project.apply_project_preset_refresh(raw, overrides)?;
