@@ -64,7 +64,9 @@ pub(super) fn prepare_project_source(
             source.validate_print,
         )?;
     }
-    if matches!(source.input, super::ProjectInput::Bytes(_)) {
+    if matches!(source.input, super::ProjectInput::Bytes(_))
+        || matches!(source.input, super::ProjectInput::Assembly(assembly) if assembly.archive().is_some())
+    {
         let filament_count = project.cli_filament_count();
         project.initialize_cli_loaded_project_config(filament_count);
     }

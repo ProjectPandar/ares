@@ -68,6 +68,7 @@ pub(crate) struct ProfileInput<'a> {
 pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
     Model(&'a crate::Project),
+    Assembly(&'a crate::Assembly<'a>),
 }
 
 impl ProjectInput<'_> {
@@ -87,6 +88,20 @@ impl ProjectInput<'_> {
             Self::Bytes(bytes) => match refresh {
                 Some(refresh) => refresh.load(bytes, overrides, validate_print),
                 None => crate::project::load_project_with_preparation(bytes, overrides),
+            },
+            Self::Assembly(assembly) => match &assembly.0 {
+                crate::project::assembly::AssemblySource::Archive(file) => {
+                    let (mut project, preparation) =
+                        crate::project::load_project_with_preparation(file.bytes, overrides)?;
+                    project.assemble_loaded_archive()?;
+                    Ok((project, preparation))
+                }
+                crate::project::assembly::AssemblySource::Model(model) => {
+                    let (mut project, preparation) =
+                        Self::Model(model).load(overrides, refresh, validate_print)?;
+                    project.place_assembly_plates();
+                    Ok((project, preparation))
+                }
             },
             Self::Model(model) => {
                 if refresh.is_some() {

@@ -5,7 +5,7 @@ use crate::{
 
 use super::catalog::selection;
 mod load_settings;
-pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
+pub use load_settings::{LoadSettingsSliceRequest, slice_assembly, slice_with_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the

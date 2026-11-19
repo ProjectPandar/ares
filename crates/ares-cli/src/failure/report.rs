@@ -1,5 +1,34 @@
 use super::*;
 
+impl CliFailure {
+    pub(crate) fn assembly(
+        error: ares_core::AssemblyError,
+        #[cfg(target_os = "linux")] output: &Path,
+    ) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: error.return_code(),
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: error.error_string(),
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
+            stderr: format!("{error}\n"),
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+}
+
 impl From<io::Error> for CliFailure {
     fn from(error: io::Error) -> Self {
         Self::Legacy(Box::new(error))

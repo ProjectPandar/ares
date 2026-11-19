@@ -1,4 +1,5 @@
 mod args;
+mod assembly;
 mod compatible_machine;
 mod failure;
 mod load_settings;
@@ -24,10 +25,24 @@ async fn main() {
 }
 
 async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
-    ensure_supported_input(&args.input)?;
+    if assembly::requested(&args) {
+        return assembly::slice(&args).await;
+    }
+    if args.inputs.len() != 1 {
+        clap::Error::raw(
+            if args.inputs.is_empty() {
+                clap::error::ErrorKind::MissingRequiredArgument
+            } else {
+                clap::error::ErrorKind::UnknownArgument
+            },
+            "slicing requires exactly one input model",
+        )
+        .exit();
+    }
+    ensure_supported_input(args.input())?;
 
     let extension = args
-        .input
+        .input()
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
@@ -61,13 +76,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         eprintln!("Params in command line error: \n{error}\nsetup params error");
         std::process::exit(-2);
     }
-    let input = match fs::read(&args.input) {
+    let input = match fs::read(args.input()) {
         Ok(input) => input,
         // `CLI_FILE_NOTFOUND` (-3, Utils.hpp:27): the `No such file:` detail
         // goes to stderr, the generic string to result.json.
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Err(CliFailure::missing_input(
-                &args.input,
+                args.input(),
                 #[cfg(target_os = "linux")]
                 &args.output,
             ));
@@ -75,7 +90,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         Err(error) => return Err(error.into()),
     };
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
-    let input_file = args.input.to_string_lossy().into_owned();
+    let input_file = args.input().to_string_lossy().into_owned();
     // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).
     let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text);
@@ -129,7 +144,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     let processed = match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            orient: args.orient == Some(1),
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: true,
@@ -180,7 +195,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     match ares_core::slice_cli_project_plate_validated(
                         &input,
                         ares_core::CliProjectSliceRequest {
-                            orient: args.orient == 1,
+                            orient: args.orient == Some(1),
                             plate: args.plate,
                             overrides: &overrides,
                             record_moves: false,
@@ -236,7 +251,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             return Ok(());
         }
         Some(extension) if extension == "stl" => {
-            if args.orient == 1 {
+            if args.orient == Some(1) {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "automatic orientation of STL input requires --load-settings or --project-preset-catalog",
