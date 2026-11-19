@@ -3,6 +3,7 @@
 use std::collections::VecDeque;
 
 use super::super::{
+    VerticalEnforcer,
     model_volumes::TreeModelVolumes,
     overhangs::{OverhangType, SmartOverhangs, finalize::FinalLayerInputs},
     remove_bridges::RegionBridges,
@@ -14,14 +15,17 @@ use super::{
         raft_contact,
     },
     interface_placer::{InterfacePlacer, RoofLayers},
-    interfaces,
+    interfaces, make_circle,
     mesh_settings::MeshGroupInput,
     nodes, output, pathing,
 };
 use crate::{
     ObjectOptions, OrcaFloats, RegionOptions, SliceError,
-    geometry::{ClipperError, CoordinateScale, ExPolygon, JoinType, Polygon, offset_paths},
+    geometry::{
+        ClipperError, Coord, CoordinateScale, ExPolygon, JoinType, Point, Polygon, offset_paths,
+    },
     project_slice::{
+        layers::PlannedLayer,
         parameters::SlicingParameters,
         perimeters::flow::SupportFlows,
         support_material::{
@@ -46,8 +50,10 @@ pub(in crate::project_slice::support_material) struct TreeInput<'a> {
     pub(in crate::project_slice::support_material) counts: &'a InterfaceCounts,
     pub(in crate::project_slice::support_material) slices: &'a [Vec<ExPolygon>],
     pub(in crate::project_slice::support_material) layers: &'a [LayerInput<'a>],
+    pub(in crate::project_slice::support_material) planned: &'a [PlannedLayer],
     pub(in crate::project_slice::support_material) bridges: &'a [Vec<RegionBridges<'a>>],
     pub(in crate::project_slice::support_material) enforcers: &'a [Vec<Polygon>],
+    pub(in crate::project_slice::support_material) vertical_enforcers: &'a [VerticalEnforcer],
     pub(in crate::project_slice::support_material) blockers: &'a [Vec<Polygon>],
     pub(in crate::project_slice::support_material) extrusion_width: f64,
     pub(in crate::project_slice::support_material) bed: Polygon,
@@ -212,6 +218,26 @@ fn detect(input: &TreeInput<'_>, raft_count: usize) -> Result<Vec<Vec<Polygon>>,
                 )?;
             }
             overhangs[layer + raft_count].extend(polygons);
+        }
+    }
+    // TreeSupport3D.cpp:3542–3556: the centroid supplies the center; the normal is unused.
+    if !input.vertical_enforcers.is_empty() {
+        let base_circle = make_circle(input.scale.scaled_delta(0.5));
+        for point in input.vertical_enforcers {
+            let [x, y, z] = point.position;
+            let layer_nr = input
+                .planned
+                .partition_point(|layer| (layer.slice_z as f32) < z);
+            if layer_nr > 0 && layer_nr < input.planned.len() {
+                let (x, y) = (x as Coord, y as Coord);
+                overhangs[layer_nr + raft_count].push(Polygon::new(
+                    base_circle
+                        .points()
+                        .iter()
+                        .map(|p| Point::new(p.x() + x, p.y() + y))
+                        .collect(),
+                ));
+            }
         }
     }
     Ok(overhangs)
