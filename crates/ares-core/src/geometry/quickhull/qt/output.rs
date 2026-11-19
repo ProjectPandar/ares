@@ -18,8 +18,8 @@ impl Hull {
         let mut map = vec![u32::MAX; self.vertices.len()];
         // Existing simplicial facets stay in place. The Qt pass appends each
         // polygon's children in ridge order, skipping the two null children
-        // at the apex. In dimension three the null-link pass only changes
-        // adjacency, which `its_convex_hull` does not read.
+        // at the apex. Null links affect the output only if they queue a
+        // mirror pair, whose two triangles must have the same vertices.
         for id in self.suffix(self.first()) {
             let f = &self.facets[id];
             if f.simplicial {
@@ -42,15 +42,19 @@ impl Hull {
                 self.collect_triangle([apex, a, b], f.plane.normal, (&mut mesh, &mut map), input);
             }
         }
-        // Qt deletes mirror pairs before output. Do not expose a pair of
-        // coincident triangles when that repair is required.
         let mut triangles = BTreeSet::new();
-        if mesh.facets.iter().any(|&vertices| {
+        let mut repeated = false;
+        for &vertices in &mesh.facets {
             let mut key = vertices;
             key.sort_unstable();
-            key[0] == key[1] || key[1] == key[2] || !triangles.insert(key)
-        }) {
-            return Err(HullError::Topology);
+            if key[0] == key[1] || key[1] == key[2] {
+                return Err(HullError::Topology);
+            }
+            repeated |= !triangles.insert(key);
+        }
+        // Equal index sets alone do not schedule Qt mirror deletion.
+        if repeated {
+            self.check_qt_mirror()?;
         }
         Ok(mesh)
     }

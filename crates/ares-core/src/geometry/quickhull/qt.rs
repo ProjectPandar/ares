@@ -17,6 +17,7 @@ mod partition;
 mod precision_check;
 mod queue;
 mod repair;
+mod triangulation_links;
 
 type Id = usize;
 const TAIL: Id = 0;
