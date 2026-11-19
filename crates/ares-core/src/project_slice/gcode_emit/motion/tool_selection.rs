@@ -120,8 +120,12 @@ pub(in crate::project_slice::gcode_emit) fn nozzle(
 }
 
 /// Source scanner keeps the last parseable, line-leading prefix result
-/// (`GCode.cpp:241–264`); parsing begins one byte after the prefix's start.
-fn custom_changes_tool(source: &str, prefix: &str, filament: usize) -> bool {
+/// (`GCode.cpp:455–481`); parsing begins one byte after the prefix's start.
+pub(in crate::project_slice::gcode_emit) fn custom_changes_tool(
+    source: &str,
+    prefix: &str,
+    filament: usize,
+) -> bool {
     let mut selected = false;
     for line in source.lines() {
         let line = line.trim_start_matches(|c: char| c.is_ascii_whitespace());
