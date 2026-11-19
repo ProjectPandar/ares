@@ -307,9 +307,10 @@ pub(super) fn dispatch(
             let anchored = crate::project_slice::fill_entities::adaptive::anchoring_lines(
                 crate::project_slice::fill_entities::adaptive::AdaptiveObject::new(
                     traversal,
-                    object_index,
+                    (object_index, layer_index),
                     // Fill.cpp:1619 uses the same region selection for anchoring.
                     object_spacing.for_pattern(pattern, fill.region_id),
+                    object_spacing,
                 ),
                 &fill,
                 z,
