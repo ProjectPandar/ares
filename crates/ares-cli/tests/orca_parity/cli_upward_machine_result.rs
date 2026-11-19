@@ -3,6 +3,8 @@
 //! incomplete channel comparison and a frozen Native result masking admission.
 #![cfg(target_os = "linux")]
 
+#[path = "cli_upward_machine_result/installed_resources.rs"]
+mod installed_resources;
 #[path = "cli_upward_machine_result/invalid_values.rs"]
 mod invalid_values;
 #[path = "cli_upward_machine_result/machine_full.rs"]
