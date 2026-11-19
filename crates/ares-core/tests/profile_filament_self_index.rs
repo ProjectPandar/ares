@@ -2,7 +2,7 @@
 mod fixture;
 
 #[tokio::test]
-async fn direct_bbl_project_without_catalog_returns_missing_bundle_error() {
+async fn direct_bbl_project_without_catalog_keeps_embedded_filament_values() {
     let input = include_bytes!("../../../tests/parity/orca_cli_ender3.3mf");
     let result = ares_core::slice_project_plate(
         input,
@@ -11,17 +11,16 @@ async fn direct_bbl_project_without_catalog_returns_missing_bundle_error() {
         &ares_core::ConfigOverrides::default(),
         ares_core::SlicerContext::new(0),
     )
-    .await;
-    assert!(
-        result.is_err(),
-        "direct BBL projects require a system preset bundle"
-    );
-    assert!(
-        result
-            .unwrap_err()
-            .to_string()
-            .contains("system preset bundle")
-    );
+    .await
+    .expect("unresolved system filaments keep their embedded values");
+    let gcode = std::str::from_utf8(&result).unwrap();
+    for setting in [
+        "filament_density = 1.24",
+        "filament_flow_ratio = 0.98",
+        "filament_diameter = 1.75",
+    ] {
+        assert!(gcode.contains(&format!("\n; {setting}\n")));
+    }
 }
 
 #[tokio::test]
