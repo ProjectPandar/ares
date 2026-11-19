@@ -57,5 +57,8 @@ mod spiral_vase_object_start_z;
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
 
+#[path = "type2_tower_entry_z.rs"]
+mod type2_tower_entry_z;
+
 #[path = "unclear_travel_lift_cancellation.rs"]
 mod unclear_travel_lift_cancellation;
