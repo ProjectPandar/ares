@@ -185,20 +185,8 @@ impl BrimPlan {
         }
         let gap = scaled_f32(scale, options.brim_object_gap.0)?;
         // Brim.cpp:497, libslic3r.h:106: double scale_ directly to float.
-        let contour_width = scale.scaled_delta(brim_width_mm) as f32;
-        let brim_width = if options.brim_type == ProcessBrimType::OuterOnly {
-            contour_width
-        } else {
-            scaled_f32(scale, brim_width_mm)?
-        };
-        let spacing = if matches!(
-            options.brim_type,
-            ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner | ProcessBrimType::AutoBrim
-        ) {
-            spacing_units as f32
-        } else {
-            scaled_f32(scale, spacing_mm)?
-        };
+        let brim_width = scale.scaled_delta(brim_width_mm) as f32;
+        let spacing = spacing_units as f32;
         let mut object_islands = Vec::new();
         // Brim.cpp:590-634 via :576/:682-689: support contours join the
         // no-brim mask for every brim type with a ring on the first layer
@@ -230,7 +218,7 @@ impl BrimPlan {
             forbidden.extend(support_mask);
             (area.area, forbidden)
         } else if options.brim_type == ProcessBrimType::OuterAndInner {
-            let outer = geometry::outer_width(contour_width, spacing);
+            let outer = geometry::outer_width(brim_width, spacing);
             let area = crate::brims::combined::area(&source, gap, (outer, brim_width), resolution)?;
             object_islands = area.object_islands;
             // Both predicates are true: only objectIsland is forbidden,
