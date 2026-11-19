@@ -184,7 +184,7 @@ fn refresh_filament_rejects_process_type() {
     );
 }
 
-fn artifact_dir() -> std::path::PathBuf {
+pub(crate) fn artifact_dir() -> std::path::PathBuf {
     tempfile::Builder::new()
         .prefix("cli-refresh-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -192,7 +192,7 @@ fn artifact_dir() -> std::path::PathBuf {
         .keep()
 }
 
-fn project(root: &Path) {
+pub(crate) fn project(root: &Path) {
     let input = fs::read(load_settings_3mf_fixture("compatible-input.3mf")).unwrap();
     let mut saved = settings(&input).unwrap();
     for (key, value) in KEYS
@@ -286,7 +286,11 @@ fn project(root: &Path) {
     }
 }
 
-fn native_gcode((runner, root): (&OrcaRunner, &Path), dir: &str, argv: &[&str]) -> Vec<u8> {
+pub(crate) fn native_gcode(
+    (runner, root): (&OrcaRunner, &Path),
+    dir: &str,
+    argv: &[&str],
+) -> Vec<u8> {
     let args = [
         ["--slice", "0", "--arrange", "0", "--outputdir", dir].as_slice(),
         argv,
@@ -312,7 +316,7 @@ fn values(gcode: &[u8], expected: [&str; 3]) {
     }
 }
 
-fn ares((root, dir): (&Path, &str), argv: &[&str]) -> Output {
+pub(crate) fn ares((root, dir): (&Path, &str), argv: &[&str]) -> Output {
     fs::create_dir(root.join(dir)).unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .current_dir(root)

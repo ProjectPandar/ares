@@ -14,6 +14,8 @@ pub(crate) mod vendor_inventory;
 
 #[path = "cli_slice_plates.rs"]
 mod cli_slice_plates;
+#[path = "cli_uptodate_printable_size.rs"]
+mod cli_uptodate_printable_size;
 #[path = "cli_uptodate_refresh.rs"]
 mod cli_uptodate_refresh;
 
