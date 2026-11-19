@@ -5,6 +5,37 @@ Every future milestone must be a source-cited Rust rewrite slice of `OrcaSlicer/
 
 This applies to every later milestone: the default design target is an upstream `libslic3r` or `libvgcode` rewrite slice, not an Ares-authored pipeline. Any milestone that cannot point to the upstream source boundary and the Rust destination boundary must be rejected or rewritten before work begins.
 
+## Milestone: option-only STL on the OrcaSlicer print lifecycle
+
+[Architecture decision and scope](architecture/ard-option-only-stl-project-slice.md).
+Port the raw STL entry to the existing `ares-core::project_slice` rewrite of
+`libslic3r::Print`. Complete `FullPrintConfig` before apply (CLI
+`OrcaSlicer.cpp:4248–4259`); use `ModelObject::ensure_on_bed`
+(`libslic3r/Model.cpp:1896–1926`, CLI `:1978`) and default single-model
+placement. Explicit CLI `--arrange`, `--scale`, `--rotate`, and `--slice 0`
+are separate work. Prove the default and
+placement gaps with public failing tests before switching the entry, then
+remove the standalone scanline pipeline and its public stage types.
+
+Exit criteria:
+
+- The default `monotonicline` control, an explicit option override, and
+  above-bed and below-bed STL controls match Native/API/CLI whole G-code
+  in the official and seeded lanes. Rejection without a required layer
+  reset preserves the validation diagnostic and writes no G-code.
+- Option-only STL uses the common apply/process path; standalone dispatch,
+  stage exports, and debug G-code output are gone without a compatibility
+  route. WASM still returns bytes and Web `sliceStl` still returns
+  `toolpaths: null`; no viewer changes.
+- Profile-backed STL and 3MF controls keep their behavior. Matched test
+  inventories show no pass-to-fail transitions or required Native skips;
+  retained failures and retired scaffold assertions are accounted for.
+  The project Spiral Inset port is reused, not duplicated, and its
+  STL witness is verified once that port is present on the combined history.
+- Formatting, strict workspace Clippy, WASM checks, and diff checks pass;
+  each new Native witness has two runtime replays per lane and reproducible
+  evidence without committed Native exports.
+
 ## Active baseline migration: OrcaSlicer v2.5.0-beta
 
 The user selected upstream `345efec64c7b95a05ce5cf96df0dde66a158835c`
