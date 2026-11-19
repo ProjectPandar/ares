@@ -112,12 +112,13 @@ gdb.events.exited.connect(on_exit)
 try:
  gdb.execute('set pagination off');gdb.execute('set confirm off');gdb.execute('set debuginfod enabled off');gdb.execute('set print thread-events off');gdb.execute('set debug-file-directory '+DEBUG);gdb.execute('set disable-randomization on')
  gdb.execute('file '+json.dumps(NATIVE));gdb.execute('starti');pid=gdb.selected_inferior().pid;actual=os.readlink(f'/proc/{pid}/exe');assert actual==NATIVE,actual;assert hashlib.sha256(Path(actual).read_bytes()).hexdigest()==os.environ['ARES_VD_NATIVE_SHA']
- maps=Path(f'/proc/{pid}/maps').read_text();(OUT/'maps.txt').write_text(maps);base=int(next(l.split('-')[0] for l in maps.splitlines() if l.endswith(NATIVE) and l.split()[2]=='00000000'),16);relative=0x9a7590 if KIND=='mmu' else 0x9a63f0;entry=base+relative
+ # Release seed-replay symbols, bound to the ELF/DWARF pair in native.py.
+ maps=Path(f'/proc/{pid}/maps').read_text();(OUT/'maps.txt').write_text(maps);base=int(next(l.split('-')[0] for l in maps.splitlines() if l.endswith(NATIVE) and l.split()[2]=='00000000'),16);relative=0xb79b50 if KIND=='mmu' else 0xb789d0;entry=base+relative
  (OUT/'observer.json').write_text(json.dumps({'actual_ELF':actual,'pid':pid,'base':base,'entry':entry,'entry_relative':relative,'constructor':KIND,'ELF_SHA256':hashlib.sha256(Path(actual).read_bytes()).hexdigest(),'debug_directory':DEBUG,'CPU':[int(CPU)],'vd_size':gdb.lookup_type('Slic3r::Geometry::VoronoiDiagram').sizeof,'coloredline_size':gdb.lookup_type('Slic3r::ColoredLine').sizeof,'initial_affinity':sample(),'mode':'read-only types/arguments/effective VD memory; no inferior calls/writes'},indent=2))
  Enter('*'+hex(entry),internal=True)
- EventEnter(base+(0x9a8560 if KIND=='mmu' else 0x9a73c0),'detect_original')
- EventEnter(base+0x9d0fe0,'detect_rotated')
- EventEnter(base+(0x9d14b0 if KIND=='mmu' else 0x9d06f0),'rotation')
+ EventEnter(base+(0xb7ab00 if KIND=='mmu' else 0xb79980),'detect_original')
+ EventEnter(base+0xba3570,'detect_rotated')
+ EventEnter(base+(0xba3a40 if KIND=='mmu' else 0xba2c70),'rotation')
  gdb.execute('continue');assert not errors and not active and not owners and exits==[0],(errors,len(active),exits);assert entry_count==len(records) and (entry_count>0 or SEARCH)
  (OUT/'outcome.json').write_text(json.dumps({'status':'COMPLETE_NATIVE_VD_CAPTURE','actual_ELF':actual,'entries':entry_count,'finishes':len(records),'capture_limit':LIMIT,'limit_reached':limit_reached,'exit_codes':exits,'errors':errors,'note':'Complete effective diagrams at actual calls; bounded search is not exhaustive absence.'},indent=2));gdb.execute('quit 0')
 except Exception:
