@@ -7,6 +7,8 @@ use std::collections::BTreeMap;
 
 use super::{Hull, HullError, Id, TAIL};
 
+type Spoke = (Id, usize, bool);
+
 #[derive(Default)]
 struct TriangulationLinks {
     neighbors: Vec<[Id; 3]>,
@@ -22,21 +24,24 @@ impl Hull {
             ..Default::default()
         };
         for parent in self.suffix(self.first()) {
-            let facet = &self.facets[parent];
-            if facet.simplicial {
-                for (slot, &peer) in facet.neighbors.iter().enumerate() {
-                    if self.facets[peer].simplicial {
-                        links.neighbors[parent][slot] = peer;
-                    }
-                }
-            } else {
+            if !self.facets[parent].simplicial {
                 self.link_qt_children(parent, &mut links)?;
+                continue;
             }
+            self.link_simplicial_neighbors(parent, &mut links);
         }
         for null in std::mem::take(&mut links.nulls) {
             links.splice_null(null)?;
         }
         Ok(())
+    }
+
+    fn link_simplicial_neighbors(&self, parent: Id, links: &mut TriangulationLinks) {
+        for (slot, &peer) in self.facets[parent].neighbors.iter().enumerate() {
+            if self.facets[peer].simplicial {
+                links.neighbors[parent][slot] = peer;
+            }
+        }
     }
 
     fn link_qt_children(
@@ -56,15 +61,7 @@ impl Hull {
             }
             for (slot, endpoint) in [(1, b), (2, a)] {
                 let orientation = (edge.top == parent) != (slot == 1);
-                let Some(&(other, skip, other_orientation)) = spokes.get(&endpoint) else {
-                    spokes.insert(endpoint, (node, slot, orientation));
-                    continue;
-                };
-                if orientation == other_orientation || links.neighbors[other][skip] != TAIL {
-                    return Err(HullError::DuplicateRidge);
-                }
-                links.neighbors[node][slot] = other;
-                links.neighbors[other][skip] = node;
+                links.link_spoke(&mut spokes, endpoint, (node, slot, orientation))?;
             }
         }
         Ok(())
@@ -72,6 +69,25 @@ impl Hull {
 }
 
 impl TriangulationLinks {
+    fn link_spoke(
+        &mut self,
+        spokes: &mut BTreeMap<Id, Spoke>,
+        endpoint: Id,
+        spoke: Spoke,
+    ) -> Result<(), HullError> {
+        let Some(&(other, skip, other_orientation)) = spokes.get(&endpoint) else {
+            spokes.insert(endpoint, spoke);
+            return Ok(());
+        };
+        let (node, slot, orientation) = spoke;
+        if orientation == other_orientation || self.neighbors[other][skip] != TAIL {
+            return Err(HullError::DuplicateRidge);
+        }
+        self.neighbors[node][slot] = other;
+        self.neighbors[other][skip] = node;
+        Ok(())
+    }
+
     fn append(&mut self, hull: &Hull, parent: Id, ridge: Id) -> Result<Id, HullError> {
         let node = self.neighbors.len();
         let other = hull.ridges[ridge].other(parent);
