@@ -10,6 +10,19 @@ use crate::{
 
 // An 8 × 12 × 16 mm box with its local origin at its center, initially resting on Z.
 const PROJECT: &[u8] = include_bytes!("../../../../tests/parity/orca_cli_ground_box.3mf");
+// Two touching parts share the bottom and both X planes. One upper corner is
+// clipped by a triangular hull face with a 0.90 mm edge and area over 5 mm².
+const MULTIPART: &[u8] = include_bytes!("../../../../tests/parity/orca_cli_ground_multipart.3mf");
+
+#[test]
+fn largest_face_lays_coplanar_parts_on_their_wide_side() {
+    verify_project(MULTIPART, &["--ground-largest-face"], Some(&[]), 0);
+}
+
+#[test]
+fn normal_near_a_short_edged_facet_lays_coplanar_parts_on_a_side() {
+    verify_project(MULTIPART, &["--ground-face-normal", "2,-3,0"], Some(&[]), 0);
+}
 
 #[test]
 fn largest_face_lays_the_box_on_its_wide_side() {
@@ -64,6 +77,10 @@ fn last_largest_face_boolean_can_disable_grounding() {
 }
 
 fn verify(flags: &[&str], control: Option<&[&str]>, exit: i32) {
+    verify_project(PROJECT, flags, control, exit);
+}
+
+fn verify_project(project: &[u8], flags: &[&str], control: Option<&[&str]>, exit: i32) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -73,7 +90,7 @@ fn verify(flags: &[&str], control: Option<&[&str]>, exit: i32) {
         .unwrap()
         .keep();
     let input = root.join("project.3mf");
-    fs::write(&input, PROJECT).unwrap();
+    fs::write(&input, project).unwrap();
     let input = input.to_str().unwrap();
     let (native, report) = run_native(&runner, &root.join("native"), input, flags, exit);
     let (replay, replay_report) =
