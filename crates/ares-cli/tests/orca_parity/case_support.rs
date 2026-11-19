@@ -59,3 +59,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "cli_arrange_modifiers.rs"]
+mod cli_arrange_modifiers;
