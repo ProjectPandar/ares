@@ -18,6 +18,8 @@ mod cli_slice_plates;
 mod cli_uptodate_printable_size;
 #[path = "cli_uptodate_refresh.rs"]
 mod cli_uptodate_refresh;
+#[path = "export_3mf.rs"]
+mod export_3mf;
 
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
