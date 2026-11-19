@@ -86,6 +86,8 @@ mod print_paths;
 mod printable_height;
 mod profiles;
 mod project;
+pub use project::inspection;
+
 pub(crate) mod project_slice;
 mod segments;
 mod skirts;

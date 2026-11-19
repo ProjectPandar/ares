@@ -30,7 +30,7 @@ impl CliProjectTransforms {
         self.arrange.is_some() || !self.volume.is_empty()
     }
 
-    pub(super) fn apply(
+    pub(crate) fn apply(
         &self,
         mut project: Project,
         plate: Option<u32>,

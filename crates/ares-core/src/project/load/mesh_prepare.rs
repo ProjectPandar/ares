@@ -70,6 +70,13 @@ pub(super) fn prepare(
             .iter()
             .map(|triangle| &triangle.paint_supports),
     );
+    mesh.seam_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
+        source
+            .triangles
+            .triangles
+            .iter()
+            .map(|triangle| &triangle.paint_seam),
+    );
     mesh.mmu_segmentation_facets =
         crate::project::facets_annotation::FacetsAnnotation::from_triangles(
             source

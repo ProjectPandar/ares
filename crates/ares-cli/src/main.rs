@@ -1,6 +1,7 @@
 mod args;
 mod compatible_machine;
 mod failure;
+mod inspect;
 mod load_settings;
 mod moves_csv;
 mod project_presets;
@@ -12,7 +13,7 @@ use std::io;
 use std::path::Path;
 
 use args::{Cli, Commands, SliceArgs};
-use clap::{CommandFactory, FromArgMatches};
+use clap::{CommandFactory, FromArgMatches, parser::ValueSource};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
@@ -21,8 +22,29 @@ async fn main() {
     let Cli {
         command: Commands::Slice(mut args),
     } = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
-    if let Some((_, slice)) = matches.subcommand() {
-        args.parse_transforms(slice);
+    let slice = matches
+        .subcommand_matches("slice")
+        .expect("required subcommand");
+    args.parse_transforms(slice);
+    if args.inspect_paint || args.info {
+        if let Err(failure) = inspect::run(&args, slice) {
+            failure.report();
+        }
+        if args.inspect_paint || args.slice_plate.is_none() {
+            return;
+        }
+        args.plate = args.slice_plate.filter(|&plate| plate != 0);
+    }
+    if ["input", "output"]
+        .into_iter()
+        .any(|id| slice.value_source(id) != Some(ValueSource::CommandLine))
+    {
+        Cli::command()
+            .error(
+                clap::error::ErrorKind::MissingRequiredArgument,
+                "slicing requires an input file and -o <OUTPUT>",
+            )
+            .exit();
     }
     if let Err(failure) = run_slice(args).await {
         failure.report();

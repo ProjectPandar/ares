@@ -16,6 +16,7 @@ pub(crate) enum Commands {
 }
 
 #[derive(Parser)]
+#[command(group(clap::ArgGroup::new("inspection").args(["inspect_paint", "info"]).multiple(true)))]
 pub(crate) struct SliceArgs {
     /// Complete preset catalog supplied explicitly for project-derived refresh
     #[arg(long, conflicts_with_all = ["load_filaments", "resources_dir"])]
@@ -74,8 +75,25 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
-    #[arg(short = 'o')]
+
+    /// Print per-volume facet paint statistics as JSON without slicing
+    #[arg(long)]
+    pub(crate) inspect_paint: bool,
+    /// Print model geometry and mesh statistics
+    #[arg(long)]
+    pub(crate) info: bool,
+    /// Directory for the inspection result report
+    #[arg(long, requires = "inspection")]
+    pub(crate) outputdir: Option<PathBuf>,
+    #[arg(long = "slice", requires = "inspection")]
+    pub(crate) slice_plate: Option<u32>,
+    #[arg(long, requires = "inspection", hide = true)]
+    pub(crate) export_stl: bool,
+    #[arg(long, requires = "inspection", hide = true)]
+    pub(crate) export_3mf: Option<PathBuf>,
+    #[arg(short = 'o', default_value = ".")]
     pub(crate) output: PathBuf,
+    #[arg(default_value = ".")]
     pub(crate) input: PathBuf,
 }
 

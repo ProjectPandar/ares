@@ -19,6 +19,7 @@ impl super::ProjectObject {
                         && left.mesh.geometry_identity() == right.mesh.geometry_identity()
                         && left.transform == right.transform
                         && left.mesh.supported_facets == right.mesh.supported_facets
+                        && left.mesh.seam_facets == right.mesh.seam_facets
                         && left.mesh.mmu_segmentation_facets == right.mesh.mmu_segmentation_facets
                         && left.mesh.fuzzy_skin_facets == right.mesh.fuzzy_skin_facets
                         && left.region_overrides == right.region_overrides

@@ -70,10 +70,14 @@ impl Project {
                 Vec::new(),
             ));
         }
-        Ok(Self::new(
+        Ok(Self::from_stl_objects(files[0].name, objects))
+    }
+
+    pub(super) fn from_stl_objects(source: &str, objects: Vec<ProjectObject>) -> Self {
+        Self::new(
             vec![ProjectModel::new(
-                files[0].name.to_owned(),
-                (1..=files.len() as u32).collect(),
+                source.to_owned(),
+                objects.iter().map(ProjectObject::id).collect(),
             )],
             objects,
             vec![PlateMetadata::new(1, Vec::new())],
@@ -97,7 +101,7 @@ impl Project {
                 preset_file_version: None,
                 preset_selection: None,
             },
-        ))
+        )
     }
 
     pub(crate) fn copy_stl_model(&self) -> Self {
