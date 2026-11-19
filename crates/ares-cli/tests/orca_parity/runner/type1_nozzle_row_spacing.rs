@@ -30,11 +30,16 @@ fn project(runner: &OrcaRunner) -> Vec<u8> {
         filaments: &filaments,
     };
     let mut stl = include_bytes!("../../../../../tests/parity/cube10.stl").to_vec();
-    for triangle in stl[84..].chunks_exact_mut(50) {
-        for vertex in triangle[12..48].chunks_exact_mut(12) {
-            for (axis, scale) in vertex.chunks_exact_mut(4).zip([0.2, 0.2, 0.04]) {
-                let value = f32::from_le_bytes(axis.try_into().unwrap()) * scale;
-                axis.copy_from_slice(&value.to_le_bytes());
+    for triangle in stl[84..].as_chunks_mut::<50>().0 {
+        for vertex in triangle[12..48].as_chunks_mut::<12>().0 {
+            for (axis, scale) in vertex
+                .as_chunks_mut::<4>()
+                .0
+                .iter_mut()
+                .zip([0.2, 0.2, 0.04])
+            {
+                let value = f32::from_le_bytes(*axis) * scale;
+                *axis = value.to_le_bytes();
             }
         }
     }
