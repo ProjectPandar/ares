@@ -16,6 +16,17 @@ use crate::{
 
 use super::{GRID_SWEEPS, TRIANGLE_SWEEPS};
 
+fn orient_grid_anchors(mut lines: Vec<Polyline>, layer_index: usize) -> Vec<Polyline> {
+    // Fill.cpp:1611 assigns the object-relative layer ID, excluding raft layers.
+    // FillRectilinear.cpp:3543–3545 reverses only ordinary Grid.
+    if layer_index % 2 == 1 {
+        for line in &mut lines {
+            line.reverse();
+        }
+    }
+    lines
+}
+
 /// `match fill.params.pattern` dispatch — first half of the sparse-anchoring
 /// pattern arms. Extracted verbatim from
 /// `generate_sparse_infill_polylines_for_anchoring`.
@@ -84,6 +95,7 @@ pub(super) fn dispatch(
                     }
                     (false, _) => {
                         fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                            .map(|lines| orient_grid_anchors(lines, layer_index))
                     }
                 };
                 result.extend(lines.map_err(super::super::transaction::geometry_error)?);
