@@ -234,11 +234,6 @@ impl PerimeterOptions {
         self
     }
 
-    pub(crate) const fn with_fuzzy_skin(mut self, fuzzy_skin: FuzzySkinConfig) -> Self {
-        self.fuzzy_skin = fuzzy_skin;
-        self
-    }
-
     pub const fn with_detect_thin_wall(mut self, detect_thin_wall: bool) -> Self {
         self.detect_thin_wall = detect_thin_wall;
         self

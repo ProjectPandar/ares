@@ -21,59 +21,11 @@ pub(crate) enum ExtraBridgeLayer {
     ApplyToAll,
 }
 
-impl ExtraBridgeLayer {
-    pub(crate) const fn applies_to_external_bridge(self) -> bool {
-        matches!(self, Self::ExternalBridgeOnly | Self::ApplyToAll)
-    }
-}
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum CounterboreHoleBridging {
     None,
     PartiallyBridge,
     SacrificialLayer,
-}
-
-impl CounterboreHoleBridging {
-    pub(crate) const fn preserves_bridge_surfaces_for_solid_detection(self) -> bool {
-        matches!(self, Self::SacrificialLayer)
-    }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct BridgeLayerPolicy {
-    bridge_no_support: bool,
-    extra_bridge_layer: ExtraBridgeLayer,
-    counterbore_hole_bridging: CounterboreHoleBridging,
-}
-
-impl BridgeLayerPolicy {
-    pub(crate) const fn new(
-        bridge_no_support: bool,
-        extra_bridge_layer: ExtraBridgeLayer,
-        counterbore_hole_bridging: CounterboreHoleBridging,
-    ) -> Self {
-        Self {
-            bridge_no_support,
-            extra_bridge_layer,
-            counterbore_hole_bridging,
-        }
-    }
-
-    pub(crate) const fn bridge_no_support(self) -> bool {
-        self.bridge_no_support
-    }
-
-    pub(crate) const fn extra_bridge_layer(self) -> ExtraBridgeLayer {
-        self.extra_bridge_layer
-    }
-
-    pub(crate) const fn unsupported_bottom_bridge_enabled(self) -> bool {
-        self.bridge_no_support
-            && !self
-                .counterbore_hole_bridging
-                .preserves_bridge_surfaces_for_solid_detection()
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -116,14 +68,6 @@ impl BridgeOptions {
 
     pub const fn thick_internal_bridges(&self) -> bool {
         self.thick_internal_bridges
-    }
-
-    pub(crate) const fn extra_bridge_layer(&self) -> ExtraBridgeLayer {
-        self.extra_bridge_layer
-    }
-
-    pub(crate) const fn counterbore_hole_bridging(&self) -> CounterboreHoleBridging {
-        self.counterbore_hole_bridging
     }
 }
 

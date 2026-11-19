@@ -110,7 +110,7 @@ fn translated_cube(min_z: f32) -> Vec<u8> {
     let mut bytes = CUBE.to_vec();
     let triangles = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
     assert_eq!(bytes.len(), 84 + triangles * 50);
-    for triangle in bytes[84..].chunks_exact_mut(50) {
+    for triangle in bytes[84..].as_chunks_mut::<50>().0 {
         for offset in [20, 32, 44] {
             let z = &mut triangle[offset..offset + 4];
             let old = f32::from_le_bytes(z.try_into().unwrap());

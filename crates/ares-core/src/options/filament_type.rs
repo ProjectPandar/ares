@@ -16,18 +16,8 @@ impl SliceOptions {
         first_string_entry(self.values().get("filament_vendor"), "filament_vendor")
     }
 
-    pub(crate) fn is_all_bbl_filament(&self) -> Result<bool, SliceError> {
-        Ok(non_empty_string_entries(self.values().get("filament_vendor"), "filament_vendor")?
-            .is_some_and(|values| values.iter().all(|vendor| *vendor == "Bambu Lab")))
-    }
-
     pub fn filament_type(&self) -> Result<String, SliceError> {
         first_string_entry(self.values().get("filament_type"), "filament_type")
-    }
-
-    pub(crate) fn has_tpu_in_first_layer(&self) -> Result<bool, SliceError> {
-        Ok(non_empty_string_entries(self.values().get("filament_type"), "filament_type")?
-            .is_some_and(|values| values.contains(&"TPU")))
     }
 
     pub fn filament_type_display(&self, id: usize) -> Result<FilamentTypeDisplay, SliceError> {
@@ -81,28 +71,6 @@ fn first_string_entry(value: Option<&Value>, key: &str) -> Result<String, SliceE
         .as_str()
         .map(ToOwned::to_owned)
         .ok_or_else(|| SliceError::InvalidInput(format!("{key} must contain strings")))
-}
-
-fn non_empty_string_entries<'a>(
-    value: Option<&'a Value>,
-    key: &str,
-) -> Result<Option<Vec<&'a str>>, SliceError> {
-    let Some(value) = value else { return Ok(None) };
-    let values = value
-        .as_array()
-        .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a string vector")))?;
-    if values.is_empty() {
-        return Err(SliceError::InvalidInput(format!("{key} must not be empty")));
-    }
-    values
-        .iter()
-        .map(|value| {
-            value
-                .as_str()
-                .ok_or_else(|| SliceError::InvalidInput(format!("{key} must contain strings")))
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map(Some)
 }
 
 fn display(value: &str, displayed: &str) -> FilamentTypeDisplay {

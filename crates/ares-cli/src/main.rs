@@ -326,7 +326,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             })?;
             let options = fs::read(options)?;
             let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
-            match ares_core::slice_stl_validated(input, options).await {
+            let filename = args
+                .input
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("input.stl");
+            match ares_core::slice_stl_named_validated(input, filename, options).await {
                 Ok(gcode) => gcode,
                 Err(error) => {
                     return Err(slice_error_to_failure(

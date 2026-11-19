@@ -1,23 +1,6 @@
 //! Spiral-vase geometry helpers — polyline length, point projection.
 
-use crate::{LayerExtrusionMoves, ToolpathMoveKind};
-
-pub(super) type Point2 = crate::Point2;
-
-pub(super) fn total_print_xy(layer: &LayerExtrusionMoves) -> f64 {
-    let mut previous = None;
-    let mut total = 0.0;
-    for move_ in layer.moves() {
-        let point = move_.point();
-        if move_.kind() == ToolpathMoveKind::Print
-            && let Some(start) = previous
-        {
-            total += distance(start, point);
-        }
-        previous = Some(point);
-    }
-    total
-}
+use crate::Point2;
 
 pub(super) fn distance(start: Point2, end: Point2) -> f64 {
     ((end.x() - start.x()).powi(2) + (end.y() - start.y()).powi(2)).sqrt()

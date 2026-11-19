@@ -1,5 +1,3 @@
-use serde_json::Value;
-
 use crate::SliceError;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -14,15 +12,6 @@ enum ExtraSolidEntry {
 }
 
 impl ExtraSolidInfills {
-    pub(super) fn parse(value: Option<&Value>) -> Result<Self, SliceError> {
-        let Some(value) = value else {
-            return Ok(Self::default());
-        };
-        let Some(raw) = value.as_str() else {
-            return Err(invalid());
-        };
-        Self::parse_raw(raw)
-    }
 
     pub(crate) fn parse_raw(raw: &str) -> Result<Self, SliceError> {
         let pattern = normalize_pattern(raw);

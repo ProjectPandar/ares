@@ -8,7 +8,7 @@
 //! token, out-of-range numeric value) and then applied as last-write-wins
 //! on the project-settings layer.
 
-mod dirty_columns;
+pub(crate) mod dirty_columns;
 
 use std::collections::BTreeMap;
 

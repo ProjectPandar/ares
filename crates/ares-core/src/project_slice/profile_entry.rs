@@ -73,6 +73,7 @@ fn load_with_profile_preparation(
                 Ok((loaded, preparation))
             }
         },
+        super::ProjectInput::OptionStl { .. } => unreachable!("option-only STL has no profiles"),
         super::ProjectInput::Model(model) => model
             .with_stl_profiles(selected, project.overrides)
             .map(|(mut loaded, preparation)| {
@@ -182,7 +183,7 @@ pub(crate) fn center_profile_project(project: &mut Project) {
     project.drop_instances_to_ground();
 }
 
-fn bed_center(printable_area: &crate::Point2dList) -> [f64; 2] {
+pub(super) fn bed_center(printable_area: &crate::Point2dList) -> [f64; 2] {
     let Some(first) = printable_area.0.first() else {
         return [0.0, 0.0];
     };

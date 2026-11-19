@@ -41,7 +41,7 @@ pub(super) const LATE_TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("printer_settings_id", String, ""; false, false, ""),
     definition!("printer_structure", Enum, "undefine"; true, false, "undefine"),
     definition!("printer_technology", Enum, "FFF"; true, false, "FFF"),
-    definition!("printer_variant", String, ""; true, false, ""),
+    definition!("printer_variant", String, ""; false, false, ""),
     definition!("printhost_apikey", String, ""; true, false, ""),
     definition!("printhost_authorization_type", Enum, "key"; false, false, "key"),
     definition!("printhost_cafile", String, ""; true, false, ""),
