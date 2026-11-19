@@ -13,8 +13,9 @@ mod preset_normalization;
 mod project_refresh;
 mod project_selection;
 pub(crate) use project_refresh::{
-    ProjectPresetPolicy, ProjectPresetRefresh, apply_retained_preset_defaults, is_filament_dev_key,
-    loaded_filament_ordinary_values, preset_owns_option, set_filament_dev_options,
+    ProjectPresetPolicy, ProjectPresetRefresh, apply_retained_preset_defaults,
+    is_connection_option, is_filament_dev_key, loaded_filament_ordinary_values, preset_owns_option,
+    set_filament_dev_options,
 };
 pub use project_selection::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,

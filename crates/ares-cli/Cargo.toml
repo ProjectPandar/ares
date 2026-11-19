@@ -9,6 +9,7 @@ ares-core = { path = "../ares-core" }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tempfile = { workspace = true }
 tokio = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
@@ -24,7 +25,6 @@ assert_cmd = { workspace = true }
 predicates = { workspace = true }
 regex = { workspace = true }
 sha2 = { workspace = true }
-tempfile = { workspace = true }
 zip = { workspace = true }
 
 [[bin]]

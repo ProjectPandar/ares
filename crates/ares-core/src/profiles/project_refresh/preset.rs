@@ -179,7 +179,7 @@ pub(super) fn bookkeeping(key: &str) -> bool {
     )
 }
 
-pub(in crate::profiles) fn connection(key: &str) -> bool {
+pub(crate) fn connection(key: &str) -> bool {
     matches!(
         key,
         "print_host"

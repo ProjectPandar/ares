@@ -213,8 +213,8 @@ pub use profiles::{
 pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
     Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
-    ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
-    project_config_substitutions,
+    ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource,
+    export_project_settings, load_project, project_config_substitutions,
 };
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
