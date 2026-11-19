@@ -113,13 +113,10 @@ impl<'a> Generator<'a> {
     }
 
     pub(super) fn finish_result(&mut self, writer: Writer, tool: usize) -> Result {
-        if !super::super::sparse_layers_skipped(self.settings)
-            || self.plan.layers[self.index]
-                .changes
-                .iter()
-                .map(|c| c.depth)
-                .sum::<f32>()
-                > 1e-3
+        let layer = &self.plan.layers[self.index];
+        if !layer.combined_away
+            && (!super::super::sparse_layers_skipped(self.settings)
+                || layer.changes.iter().map(|c| c.depth).sum::<f32>() > 1e-3)
         {
             self.used[tool] += writer.used;
         }

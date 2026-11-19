@@ -69,6 +69,29 @@ impl Generator<'_> {
         if self.plan.layers.is_empty() {
             return Ok(Vec::new());
         }
+        if super::super::sparse_combination::enabled(self.settings) {
+            let combined = super::super::sparse_combination::combine(
+                self.settings,
+                self.plan.layers.iter().map(|layer| {
+                    (
+                        layer.height,
+                        layer
+                            .changes
+                            .first()
+                            .zip(layer.changes.last())
+                            .map(|(first, last)| (first.old, last.new)),
+                    )
+                }),
+                self.plan
+                    .first_layer
+                    .expect("nonempty tower plan has a first layer"),
+                self.current,
+            );
+            for (layer, (height, away)) in self.plan.layers.iter_mut().zip(combined) {
+                layer.height = height;
+                layer.combined_away = away;
+            }
+        }
         self.plan.plan_tower_new();
         if let Some(change) = self
             .plan
@@ -202,6 +225,11 @@ impl Generator<'_> {
             && !wall.common.gcode.is_empty()
         {
             results.insert(0, wall);
+        }
+        if self.plan.layers[index].combined_away {
+            for result in &mut results {
+                result.common.combined_away = true;
+            }
         }
         Ok(Some(results))
     }

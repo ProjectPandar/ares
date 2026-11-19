@@ -117,7 +117,7 @@ impl Integration {
         self.first_print = true;
     }
 
-    /// `GCode.cpp:2142–2166`, without the deferred combined-away marker.
+    /// `GCode.cpp:2142–2166`.
     pub(in crate::project_slice::gcode_emit) fn has_gcode(
         &self,
         needs_change: bool,
@@ -137,7 +137,11 @@ impl Integration {
             self.change < changes.len(),
             "tower result missing for scheduled pass"
         );
-        !(self.no_sparse && layer_is_sparse(changes))
+        if self.no_sparse {
+            !layer_is_sparse(changes)
+        } else {
+            !layer_combined_away(changes)
+        }
     }
 
     pub(super) fn first_wall(&mut self) -> Option<(usize, Option<f64>)> {
@@ -170,7 +174,12 @@ impl Integration {
         if !needs_change && !finish_layer {
             return None;
         }
-        if self.no_sparse && (self.data.type1 || layer != 0) && layer_is_sparse(changes) {
+        let ignore = if self.no_sparse {
+            (self.data.type1 || layer != 0) && layer_is_sparse(changes)
+        } else {
+            layer_combined_away(changes)
+        };
+        if ignore {
             return None;
         }
         let z = self.no_sparse.then(|| {
@@ -186,6 +195,10 @@ impl Integration {
         self.last_z = z.unwrap_or(-1.0);
         Some((layer, change, z))
     }
+}
+
+fn layer_combined_away(changes: &[super::result::ToolChangeResult]) -> bool {
+    changes.first().is_some_and(|result| result.combined_away)
 }
 
 fn layer_is_sparse(changes: &[super::result::ToolChangeResult]) -> bool {
