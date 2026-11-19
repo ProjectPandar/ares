@@ -44,6 +44,9 @@ mod plater_archive;
 #[path = "profile_entry/tree_extra_wall_areas.rs"]
 mod tree_extra_wall_areas;
 
+#[path = "profile_entry/tree_interlaced.rs"]
+mod tree_interlaced;
+
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]
 mod config_string_vector_quoting;
