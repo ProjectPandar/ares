@@ -43,21 +43,7 @@ impl<'a, 'v, 's> RichInterfacePlacer<'a, 'v, 's> {
         scale: CoordinateScale,
     ) -> Self {
         let base_radius = scale.scaled_delta(0.01) as Coord;
-        // Polygon::make_circle receives error25, not a vertex count.
-        let angle = 2.0 * (1.0 - 25.0 / base_radius as f64).acos();
-        let segments = (2.0 * std::f64::consts::PI / angle).ceil() as usize;
-        let increment = 2.0 * std::f64::consts::PI / segments as f64;
-        let base_circle = Polygon::new(
-            (0..segments)
-                .map(|index| {
-                    let angle = increment * index as f64;
-                    Point::new(
-                        (angle.cos() * base_radius as f64) as Coord,
-                        (angle.sin() * base_radius as f64) as Coord,
-                    )
-                })
-                .collect(),
-        );
+        let base_circle = super::make_circle(base_radius as f64);
         let already_inserted = (0..move_bounds.len()).map(|_| HashSet::new()).collect();
         Self {
             interface,
