@@ -24,6 +24,9 @@ mod cli_model_inspection;
 #[path = "cli_mesh_inspection.rs"]
 mod cli_mesh_inspection;
 
+#[path = "cli_narrow_hull_inspection.rs"]
+mod cli_narrow_hull_inspection;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 

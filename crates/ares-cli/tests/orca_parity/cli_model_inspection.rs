@@ -95,7 +95,7 @@ pub(super) fn compare(flags: &[&str], input: Option<(&str, Vec<u8>)>, exit: i32)
     assert_eq!(inventory(&work), native.3, "outputs: {root:?}");
 }
 
-fn run_native(
+pub(super) fn run_native(
     runner: &OrcaRunner,
     work: &Path,
     flags: &[&str],
@@ -125,7 +125,7 @@ fn run_native(
     )
 }
 
-fn inventory(work: &Path) -> Vec<String> {
+pub(super) fn inventory(work: &Path) -> Vec<String> {
     let mut names: Vec<_> = fs::read_dir(work)
         .unwrap()
         .map(|entry| entry.unwrap().file_name().into_string().unwrap())
