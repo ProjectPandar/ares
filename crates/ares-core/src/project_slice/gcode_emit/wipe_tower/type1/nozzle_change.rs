@@ -38,6 +38,7 @@ impl Generator<'_> {
         writer.flow = flow;
         writer.max_e_speed = self.filaments[self.current].max_e_speed;
         writer.set_y_shift(self.y_shift);
+        writer.configure_accelerations(self.settings, self.index == 0);
         writer.gcode.push_str("; Nozzle change start\n");
         let block = self
             .plan
