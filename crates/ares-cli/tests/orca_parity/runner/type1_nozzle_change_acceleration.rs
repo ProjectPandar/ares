@@ -141,8 +141,7 @@ fn compare(
     runner: &OrcaRunner,
     project: &[u8],
     label: &str,
-    map: &str,
-    prefix: &str,
+    (map, prefix): (&str, &str),
     expected: &str,
 ) -> (Vec<String>, Vec<String>) {
     let case = NativeCase::slice(runner, project, label);
@@ -225,8 +224,7 @@ fn type1_nozzle_change_acceleration_u1() {
             &runner,
             project,
             label,
-            "; filament_nozzle_map = 0,1",
-            "SET_VELOCITY_LIMIT ACCEL=",
+            ("; filament_nozzle_map = 0,1", "SET_VELOCITY_LIMIT ACCEL="),
             expected,
         )
     };
@@ -256,8 +254,7 @@ fn type1_nozzle_change_acceleration_h2d() {
         &runner,
         &project(&runner, true),
         "type1-nozzle-h2d-",
-        "; filament_nozzle_map = 1,0",
-        "M204 ",
+        ("; filament_nozzle_map = 1,0", "M204 "),
         expected,
     );
     assert_eq!(
