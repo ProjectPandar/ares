@@ -63,7 +63,7 @@ fn relationship(path: &str, media_type: &str) -> String {
     )
 }
 
-pub(super) fn main_model(mesh: &Mesh, part: &str) -> String {
+pub(super) fn main_model(mesh: &Mesh, part: &str, loaded_orca_version: Option<&str>) -> String {
     let mut out = format!(
         "{DECL}{MODEL_OPEN} <metadata name=\"Application\">BambuStudio-{BAMBU_VERSION}</metadata>\n <metadata name=\"OrcaSlicer\">{ORCA_VERSION}</metadata>\n{VERSION_METADATA}"
     );
@@ -79,6 +79,12 @@ pub(super) fn main_model(mesh: &Mesh, part: &str) -> String {
         "Origin",
         "Title",
     ] {
+        if name == "Origin"
+            && let Some(version) = loaded_orca_version
+        {
+            let version = quick_xml::escape::escape(version);
+            writeln!(out, " <metadata name=\"OrcaSlicer\">{version}</metadata>").unwrap();
+        }
         writeln!(out, " <metadata name=\"{name}\"></metadata>").unwrap();
     }
     let part = quick_xml::escape::escape(part);
@@ -129,7 +135,7 @@ pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
         area: f32,
         bbox: [f64; 4],
         id: u32,
-        layer_height: f32,
+        layer_height: f64,
         name: String,
     }
     #[derive(Serialize)]
@@ -142,7 +148,7 @@ pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
         first_extruder: u32,
         first_layer_time: f32,
         is_seq_print: bool,
-        nozzle_diameter: f32,
+        nozzle_diameter: f64,
         version: u32,
     }
     serde_json::to_vec(&Plate {
@@ -151,7 +157,7 @@ pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
             area: archive.area,
             bbox: archive.bounds,
             id: archive.plate_id,
-            layer_height: archive.layer_height,
+            layer_height: f64::from(archive.layer_height),
             name: archive.object_name.clone(),
         }],
         bed_type: "cool_plate",
@@ -160,7 +166,7 @@ pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
         first_extruder: 0,
         first_layer_time: 0.0,
         is_seq_print: false,
-        nozzle_diameter: archive.nozzle_diameter,
+        nozzle_diameter: f64::from(archive.nozzle_diameter),
         version: 2,
     })
     .expect("plate metadata is serializable")

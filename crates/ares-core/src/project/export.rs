@@ -28,6 +28,7 @@ struct SlicedMembers {
     slice_info: Vec<u8>,
     filament_sequence: Vec<u8>,
     identify_id: u32,
+    orca_version: Option<String>,
 }
 
 /// Export one ordinary mesh as a headless unsliced FFF project. The model and
@@ -61,13 +62,16 @@ pub fn export_sliced_3mf(
         .archive
         .as_ref()
         .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    let mesh = geometry::load(input, filename)?;
+    if !filename.to_ascii_lowercase().ends_with(".3mf") {
+        return Err(deferred("sliced export requires a saved 3MF project"));
+    }
+    let saved = geometry::load_saved(input)?;
     let plate_json = xml::plate_json(archive);
     let slice_info = xml::slice_info(archive, &processed).into_bytes();
     let filament_sequence = xml::filament_sequence();
     write_package(
-        &mesh,
-        filename,
+        &saved.mesh,
+        &saved.source_file,
         archive.project_settings.clone(),
         Some(SlicedMembers {
             plate_json,
@@ -75,6 +79,7 @@ pub fn export_sliced_3mf(
             slice_info,
             filament_sequence,
             identify_id: archive.identify_id,
+            orca_version: saved.orca_version,
         }),
     )
 }
@@ -95,7 +100,15 @@ fn write_package(
         entries.push(("Metadata/plate_1.json", sliced.plate_json.clone()));
     }
     entries.extend([
-        (MODEL, xml::main_model(mesh, &object_path).into_bytes()),
+        (
+            MODEL,
+            xml::main_model(
+                mesh,
+                &object_path,
+                sliced.as_ref().and_then(|s| s.orca_version.as_deref()),
+            )
+            .into_bytes(),
+        ),
         (
             "3D/_rels/3dmodel.model.rels",
             xml::relationships(&object_path).into_bytes(),

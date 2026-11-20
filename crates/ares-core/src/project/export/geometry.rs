@@ -14,6 +14,88 @@ pub(super) struct Mesh {
     pub source_offset: [f32; 3],
 }
 
+pub(super) struct SavedMesh {
+    pub mesh: Mesh,
+    pub source_file: String,
+    pub orca_version: Option<String>,
+}
+
+pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
+    let project = crate::load_project(input)?;
+    let [object] = project.objects() else {
+        return Err(deferred("expected one saved object"));
+    };
+    let ([volume], [instance]) = (object.volumes(), object.instances()) else {
+        return Err(deferred("expected one saved volume and instance"));
+    };
+    let [settings] = project.documents().model_settings.objects.as_slice() else {
+        return Err(deferred("expected saved model settings"));
+    };
+    let [part] = settings.parts.as_slice() else {
+        return Err(deferred("expected saved part settings"));
+    };
+    let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+    if archive.paths().any(|path| {
+        path.as_str() != volume.source_model_path()
+            && !matches!(
+                path.as_str(),
+                MODEL
+                    | "3D/_rels/3dmodel.model.rels"
+                    | "_rels/.rels"
+                    | "[Content_Types].xml"
+                    | "Metadata/project_settings.config"
+                    | "Metadata/model_settings.config"
+                    | "Metadata/slice_info.config"
+                    | "Metadata/filament_sequence.json"
+            )
+    }) {
+        return Err(deferred("additional saved archive members"));
+    }
+    if part.subtype != "normal_part"
+        || volume.transform() != Transform3d::default()
+        || instance.transform().without_translation() != Transform3d::default()
+        || object.name().contains(['/', '\\', '\0'])
+    {
+        return Err(deferred("saved model metadata or transforms"));
+    }
+    let model_bytes = archive.read(&PackagePath::entry(MODEL.as_bytes())?)?;
+    let doc: ModelDocument = quick_xml::de::from_reader(model_bytes.as_slice())
+        .map_err(|err| invalid(err.to_string()))?;
+    let metadata = |key| {
+        part.retained_metadata
+            .iter()
+            .find(|entry| entry.key == key)
+            .map_or("", |entry| entry.value.as_str())
+    };
+    let offset = instance.transform().to_column_major();
+    Ok(SavedMesh {
+        mesh: Mesh {
+            name: object.name().to_owned(),
+            vertices: volume
+                .mesh()
+                .vertices()
+                .iter()
+                .map(|p| [p.x as f32, p.y as f32, p.z as f32])
+                .collect(),
+            triangles: volume
+                .mesh()
+                .triangles()
+                .iter()
+                .map(|tri| tri.map(|i| i as usize))
+                .collect(),
+            placement: [offset[12], offset[13], offset[14]],
+            source_offset: ["source_offset_x", "source_offset_y", "source_offset_z"]
+                .map(|key| metadata(key).parse().unwrap_or(0.0)),
+        },
+        source_file: metadata("source_file").to_owned(),
+        orca_version: doc
+            .metadata
+            .into_iter()
+            .find(|m| m.name == "OrcaSlicer")
+            .map(|m| m.value),
+    })
+}
+
 pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     if filename.to_ascii_lowercase().ends_with(".stl") {
         return stl(input, filename);
@@ -51,19 +133,10 @@ fn stl(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
 
 fn plain(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-    if let Some(part) = archive.paths().find(|path| {
-        !matches!(
-            path.as_str(),
-            MODEL
-                | "3D/_rels/3dmodel.model.rels"
-                | "_rels/.rels"
-                | "[Content_Types].xml"
-                | "Metadata/project_settings.config"
-                | "Metadata/model_settings.config"
-                | "Metadata/slice_info.config"
-                | "Metadata/filament_sequence.json"
-        ) && !path.as_str().starts_with("3D/Objects/")
-    }) {
+    if let Some(part) = archive
+        .paths()
+        .find(|path| !matches!(path.as_str(), MODEL | "_rels/.rels" | "[Content_Types].xml"))
+    {
         return Err(deferred(&format!("archive member {}", part.as_str())));
     }
     let relationships = archive.read(&PackagePath::entry(b"_rels/.rels")?)?;
