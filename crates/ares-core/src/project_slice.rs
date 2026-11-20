@@ -60,6 +60,7 @@ pub use validated::{
     slice_cli_project_plate_validated_with_catalog, slice_cli_project_plate_with_refresh,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
     slice_project_plate_validated, slice_project_plate_validated_with_catalog,
+    slice_project_plate_with_archive,
 };
 
 /// Loads the project for a selected-profile request without slicing it —

@@ -51,10 +51,19 @@ fn stl(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
 
 fn plain(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-    if let Some(part) = archive
-        .paths()
-        .find(|path| !matches!(path.as_str(), MODEL | "_rels/.rels" | "[Content_Types].xml"))
-    {
+    if let Some(part) = archive.paths().find(|path| {
+        !matches!(
+            path.as_str(),
+            MODEL
+                | "3D/_rels/3dmodel.model.rels"
+                | "_rels/.rels"
+                | "[Content_Types].xml"
+                | "Metadata/project_settings.config"
+                | "Metadata/model_settings.config"
+                | "Metadata/slice_info.config"
+                | "Metadata/filament_sequence.json"
+        ) && !path.as_str().starts_with("3D/Objects/")
+    }) {
         return Err(deferred(&format!("archive member {}", part.as_str())));
     }
     let relationships = archive.read(&PackagePath::entry(b"_rels/.rels")?)?;

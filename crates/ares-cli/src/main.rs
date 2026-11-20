@@ -38,7 +38,7 @@ async fn main() {
                 export_stl::run(&args)
             } else if let Some(output) = args.export_3mf.as_ref() {
                 require_single_input(&args.inputs);
-                export_3mf::run(&args, output)
+                export_3mf::run(&args, output).await
             } else {
                 run_slice(args).await
             }

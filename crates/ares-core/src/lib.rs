@@ -49,6 +49,7 @@ pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRo
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
+    SlicedArchive,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,
@@ -135,9 +136,9 @@ pub use profiles::{
     export_stl_settings, filter_compatible_presets, guide_models, merge_profile_fragments,
     parse_preset_bundle, profile_placed_project, profile_settings,
     slice_imported_stl_with_load_settings_processed, slice_stl_models_with_load_settings,
-    slice_with_load_settings, slice_with_load_settings_processed, slice_with_profiles,
-    slice_with_profiles_processed, validate_load_settings_input, validate_stl_export_presets,
-    validate_with_profiles,
+    slice_with_load_settings, slice_with_load_settings_archive, slice_with_load_settings_processed,
+    slice_with_profiles, slice_with_profiles_processed, validate_load_settings_input,
+    validate_stl_export_presets, validate_with_profiles,
 };
 pub use profiles::{NativeRefreshFile, NativeRefreshPresets, slice_with_load_settings_and_refresh};
 pub use profiles::{
@@ -154,7 +155,7 @@ pub use project::{
     ProjectVolume, ProjectVolumeType, StlUnit, Transform3d, UpwardMachineInput,
     UpwardMachineSource, export_project_settings, load_project, project_config_substitutions,
 };
-pub use project::{StlExport, export_3mf, export_stl, export_stls};
+pub use project::{StlExport, export_3mf, export_sliced_3mf, export_stl, export_stls};
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
@@ -163,6 +164,7 @@ pub use project_slice::{
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
     slice_project_plate_validated, slice_project_plate_validated_with_catalog,
 };
+
 pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,
     slice_project_plate_processed_with_catalog, slice_project_plate_with_catalog,

@@ -4,7 +4,7 @@ mod content_types;
 mod domain;
 pub(crate) use domain::assembly;
 pub(crate) mod effective_config;
-mod export;
+pub(crate) mod export;
 mod export_stl;
 pub(crate) mod facets_annotation;
 mod filament_sequence;
@@ -38,7 +38,7 @@ pub use domain::{
 };
 pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile};
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
-pub use export::export_3mf;
+pub use export::{export_3mf, export_sliced_3mf};
 pub use export_stl::{StlExport, export_stl, export_stls};
 pub use layer_config_ranges::LayerConfigRange;
 pub use load::{ConfigSubstitution, load_project, load_project_with, project_config_substitutions};

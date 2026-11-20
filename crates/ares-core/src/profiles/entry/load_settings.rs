@@ -5,7 +5,9 @@ use crate::{
         ProjectPresetPolicy,
         load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings},
     },
-    project_slice::{ProfileInput, ProjectInput, ProjectSource, slice_source},
+    project_slice::{
+        ProfileInput, ProjectInput, ProjectSource, slice_source, slice_source_with_archive,
+    },
 };
 
 /// Model identity and preset files supplied by the native
@@ -132,6 +134,24 @@ pub async fn slice_assembly(
         slice_source(source, metadata, false, context)
     })
     .map(|processed| processed.gcode)
+}
+
+pub async fn slice_with_load_settings_archive(
+    input: impl AsRef<[u8]>,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<crate::ProcessedGCode, SliceError> {
+    let input = input.as_ref();
+    with_load_settings_source(
+        (ProjectInput::Bytes(input), input),
+        request,
+        None,
+        |source| {
+            let mut archive = None;
+            slice_source_with_archive(source, metadata, false, context, Some(&mut archive))
+        },
+    )
 }
 
 pub async fn slice_with_load_settings_processed(
