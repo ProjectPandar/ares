@@ -4,7 +4,7 @@
 
 OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`):
 
-- `OrcaSlicer.cpp:2118–2469` loads the machine, process, and filament files. The export consumes the resulting `DynamicPrintConfig`, with `FullPrintConfig` defaults and per-filament normalization (`:4250–4259`), not the settings of a sliced plate.
+- `OrcaSlicer.cpp:2118–2469` loads the machine, process, and filament files. The export consumes the resulting `DynamicPrintConfig`, after preparing the filament palette and flush matrix (`:3857–4023`), applying `FullPrintConfig` defaults, and normalizing per-filament values (`:4250–4259`). It does not use the settings of a sliced plate.
 - `OrcaSlicer.cpp:6326–6334` exports that config under the `project_settings` name with `from=project` and the compatibility version. `ConfigBase::save_to_json` (`libslic3r/Config.cpp:1546–1602`) emits ordered keys, string scalars, and arrays of strings, with tab indentation and a terminating newline.
 - For `--export-settings FILE`, the action can run alone or with `--slice 0|1 --outputdir DIR`. The relative order of the actions is preserved. Standalone export does not slice and does not require `--outputdir`.
 - For `--export-settings -`, the JSON is written to stdout. The early compatibility check (`OrcaSlicer.cpp:1453–1467`) rejects `--slice` and incompatible transforms such as `--arrange` before importing or exporting; the rejected invocation uses the Native invalid-parameters diagnostic and exit/report path.

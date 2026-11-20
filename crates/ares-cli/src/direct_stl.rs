@@ -1,29 +1,69 @@
 use std::{fs, io, path::Path};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsSliceRequest,
-    SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
+    LoadSettingsSliceRequest, SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
 };
 
 use crate::{
     args::DirectSliceArgs,
     failure::{CliFailure, slice_error_to_failure},
     preset_sources::read_preset_files,
-    split_native_list,
+    settings_export, split_native_list,
 };
 
 pub(crate) mod arrange;
 
-pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
+pub(super) async fn run(
+    args: DirectSliceArgs,
+    export_before_slice: bool,
+) -> Result<(), CliFailure> {
+    let dir = args.outputdir.as_deref().unwrap_or_else(|| Path::new(""));
+    let output = dir.join("plate_1.gcode");
+    if let Some(destination) = args.export_settings.as_deref() {
+        if let [input] = args.inputs.as_slice()
+            && args.selection.is_none()
+            && input
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
+        {
+            return settings_export::run(input, destination);
+        }
+        // OrcaSlicer.cpp:1453–1467 checks actions before transforms, before any input is read.
+        if destination == Path::new("-")
+            && let Some((_, flag)) = [
+                (args.selection.is_some(), "slice"),
+                (args.strict, "strict"),
+                (args.convert_unit, "convert-unit"),
+                (args.arrange.requested(), "arrange"),
+            ]
+            .into_iter()
+            .find(|(present, _)| *present)
+        {
+            return Err(CliFailure::invalid_parameters(
+                #[cfg(target_os = "linux")]
+                &output,
+                format!("--export-settings - cannot be combined with --{flag}\n"),
+            ));
+        }
+        if args.inputs.len() != 1
+            || args.inputs[0].extension().is_none_or(|ext| ext != "stl")
+            || args.load_settings.is_none()
+            || args.load_filaments.is_none()
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "--export-settings requires a saved 3MF project or one STL with loaded presets",
+            )
+            .into());
+        }
+    }
     if args.no_check {
         if args.strict {
             return Err(CliFailure::strict_no_check(
                 #[cfg(target_os = "linux")]
-                &args
-                    .outputdir
-                    .as_ref()
-                    .expect("required output dir")
-                    .join("plate_1.gcode"),
+                &output,
             ));
         }
         return Err(
@@ -47,21 +87,12 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         return crate::direct_project::run(args).await;
     }
-    let selection = u32::try_from(
-        args.selection
-            .expect("--slice is required without a subcommand"),
-    )
-    .map_err(|_| {
+    let selection = u32::try_from(args.selection.unwrap_or_default()).map_err(|_| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
             "expected a nonnegative --slice",
         )
     })?;
-    let dir = args
-        .outputdir
-        .as_ref()
-        .expect("--outputdir is required without a subcommand");
-    let output = dir.join("plate_1.gcode");
     let multiple = args.inputs.len() > 1;
     let mut models = Vec::new();
     let mut single_input = Vec::new();
@@ -87,7 +118,8 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 )
             })?;
             models.push((name, model));
-        } else {
+        }
+        if !multiple {
             single_input = bytes;
         }
     }
@@ -108,6 +140,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         None
     };
     let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
+    let mut export_after = None;
     let failure = |error| match error {
         SliceError::OptionStlModelRead(_) => CliFailure::invalid_stl_input(
             &args.inputs[0],
@@ -191,6 +224,35 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 *file = first;
             }
         }
+        if let Some(destination) = args.export_settings.as_deref() {
+            let json = ares_core::export_stl_settings(
+                &single_input,
+                filename,
+                LoadSettingsRequest {
+                    loaded_sources: None,
+                    settings: &settings,
+                    filaments: &filaments,
+                },
+            )
+            .map_err(io::Error::other);
+            if args.selection.is_none() {
+                settings_export::write(destination, &json?)?;
+                #[cfg(target_os = "linux")]
+                crate::result_json::write_plate_batch(
+                    &output,
+                    (0, args.strict),
+                    (filename, Vec::new()),
+                    &[],
+                    &[],
+                );
+                return Ok(());
+            }
+            if export_before_slice {
+                settings_export::write(destination, &json?)?;
+            } else {
+                export_after = Some((destination, json));
+            }
+        }
         let request = LoadSettingsSliceRequest {
             filename,
             catalog_json: None,
@@ -266,6 +328,9 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             id,
         )?;
         completed.push((id, report));
+    }
+    if let Some((destination, json)) = export_after {
+        settings_export::write(destination, &json?)?;
     }
     #[cfg(target_os = "linux")]
     crate::result_json::write_plate_batch(

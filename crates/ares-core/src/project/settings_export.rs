@@ -1,9 +1,12 @@
 use std::collections::BTreeMap;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize, de::value::StrDeserializer};
 use serde_json::{Serializer, ser::PrettyFormatter};
 
-use super::{load_project, raw_settings::RawConfigValue};
+use super::{
+    load_project,
+    raw_settings::{ProjectSettingsRaw, RawConfigValue},
+};
 use crate::{
     ORCA_SLICER_COMPATIBILITY_VERSION, OptionValueKind as Kind, SliceError, option_definitions,
     options::{escape_scalar_string, format_number, json_deserialize},
@@ -17,7 +20,16 @@ pub fn export_project_settings(input: impl AsRef<[u8]>) -> Result<Vec<u8>, Slice
     let mut project = load_project(input)?;
     let filament_count = project.cli_filament_count();
     project.initialize_cli_loaded_project_config(filament_count);
-    let mut raw = project.documents().project_settings_raw.clone();
+    export_loaded_settings(
+        project.documents().project_settings_raw.clone(),
+        filament_count,
+    )
+}
+
+pub(crate) fn export_loaded_settings(
+    mut raw: ProjectSettingsRaw,
+    filament_count: usize,
+) -> Result<Vec<u8>, SliceError> {
     // OrcaSlicer.cpp:4250–4259: apply FullPrintConfig before the final layout of
     // per-variant vectors. The retained preset values already loaded take precedence.
     for definition in option_definitions() {
@@ -165,9 +177,18 @@ fn element(kind: Kind, value: &RawConfigValue) -> Result<String, String> {
         Kind::Bool | Kind::Bools | Kind::BoolsNullable => {
             json_deserialize::scalar_token(Kind::Bool, &text).map(|text| text.into_owned())
         }
+        Kind::Point => {
+            let point =
+                crate::Point2d::deserialize(StrDeserializer::<serde::de::value::Error>::new(&text))
+                    .map_err(|error| error.to_string())?;
+            Ok(format!(
+                "{},{}",
+                format_number(point.x),
+                format_number(point.y)
+            ))
+        }
         Kind::String
         | Kind::Strings
-        | Kind::Point
         | Kind::Points
         | Kind::PointsGroups
         | Kind::Enum

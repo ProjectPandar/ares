@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{ArgGroup, CommandFactory, FromArgMatches, Parser, Subcommand};
 
-pub(crate) fn parse() -> Cli {
+pub(crate) fn parse() -> (Cli, bool) {
     let matches = Cli::command().get_matches();
     let mut cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
     // OrcaSlicer.cpp:6297,6394–6395: actions take effect in argument order.
@@ -13,7 +13,12 @@ pub(crate) fn parse() -> Cli {
     {
         cli.direct.mtcpp = None;
     }
-    cli
+    // OrcaSlicer.cpp:6297,8220–8226: actions run in argument order.
+    let export_before_slice = matches
+        .index_of("export_settings")
+        .zip(matches.index_of("selection"))
+        .is_some_and(|(export, slice)| export < slice);
+    (cli, export_before_slice)
 }
 
 pub(crate) fn require_single_input(inputs: &[PathBuf]) {
@@ -60,7 +65,7 @@ pub(crate) struct DirectSliceArgs {
     )]
     pub(crate) selection: Option<i32>,
 
-    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'
+    /// Export effective settings to FILE, or to stdout with '-'.
     #[arg(long, value_name = "FILE")]
     pub(crate) export_settings: Option<PathBuf>,
 
