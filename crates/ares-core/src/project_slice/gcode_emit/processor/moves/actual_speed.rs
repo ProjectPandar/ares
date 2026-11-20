@@ -76,37 +76,21 @@ impl Pass {
         &mut self,
         moves: &mut Vec<MoveVertex>,
     ) -> (Vec<(usize, usize)>, usize) {
-        let Some(first) = self.detected.first() else {
-            return (Vec::new(), 0);
-        };
-        let mut tail = moves.split_off(first.move_id);
-        let lo = first.move_id;
-        let inserted = self.splits.len();
-        let mut splits = self.splits.drain(..);
-        let mut map = Vec::with_capacity(self.detected.len());
-        let mut cursor = 0;
-        for Detected {
-            move_id,
-            splits: count,
-            speed,
-        } in self.detected.drain(..)
-        {
-            let at = move_id - lo;
-            moves.extend_from_slice(&tail[cursor..at]);
-            cursor = at;
-            moves.extend(splits.by_ref().take(count));
-            map.push((move_id, moves.len()));
-            tail[at].actual_feedrate = speed;
-            // The seam sync reads the element after the vertex before any
-            // later insertion (`:5990-5995`).
-            if let Some(next) = tail.get_mut(at + 1)
+        for detected in &self.detected {
+            moves[detected.move_id].actual_feedrate = detected.speed;
+            if let Some(next) = moves.get_mut(detected.move_id + 1)
                 && next.move_type == EMoveType::Seam
             {
-                next.actual_feedrate = speed;
+                next.actual_feedrate = detected.speed;
             }
         }
-        moves.extend_from_slice(&tail[cursor..]);
-        (map, inserted)
+        super::insert::insert(
+            moves,
+            self.detected
+                .drain(..)
+                .map(|item| (item.move_id, item.splits)),
+            &mut self.splits,
+        )
     }
 }
 
@@ -124,7 +108,9 @@ fn has_deceleration(trapezoid: &Trapezoid) -> bool {
 }
 
 /// The acceleration end and deceleration start, as fractions of the block.
-fn split_fractions(trapezoid: &Trapezoid) -> impl Iterator<Item = f32> {
+pub(in crate::project_slice::gcode_emit::processor) fn split_fractions(
+    trapezoid: &Trapezoid,
+) -> impl Iterator<Item = f32> {
     let Trapezoid {
         distance,
         accelerate_until,
@@ -142,7 +128,11 @@ fn split_fractions(trapezoid: &Trapezoid) -> impl Iterator<Item = f32> {
 
 /// The point at fraction `t` of `prev → curr`, unless it coincides with
 /// either end.
-fn split_position(prev: [f32; 3], curr: [f32; 3], t: f32) -> Option<[f32; 3]> {
+pub(in crate::project_slice::gcode_emit::processor) fn split_position(
+    prev: [f32; 3],
+    curr: [f32; 3],
+    t: f32,
+) -> Option<[f32; 3]> {
     let position = std::array::from_fn(|i| lerp(prev[i], curr[i], t));
     (norm(position, prev) > EPSILON && norm(position, curr) > EPSILON).then_some(position)
 }
