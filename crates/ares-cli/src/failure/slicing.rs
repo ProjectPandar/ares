@@ -3,7 +3,7 @@
 use std::path::Path;
 
 use super::{CliFailure, FamilyFailure};
-use ares_core::{PrintWarning, SlicedPlate, SlicingNotificationType, WarningLevel};
+use ares_core::{PrintWarning, SlicedPlate, WarningLevel};
 
 pub(crate) fn check(
     args: &crate::SliceArgs,
@@ -55,10 +55,11 @@ pub(crate) fn check_strict(
     upward: &[String],
     project: Option<(&str, &[u8])>,
 ) -> Result<(), CliFailure> {
-    let Some(warning) = plate.warnings.iter().find(|warning| {
-        warning.level == WarningLevel::NonCritical
-            && warning.message_type == SlicingNotificationType::NeedSupportOn
-    }) else {
+    let Some(warning) = plate
+        .warnings
+        .iter()
+        .find(|warning| warning.level == WarningLevel::NonCritical)
+    else {
         return Ok(());
     };
     let mut failure = warning_failure(

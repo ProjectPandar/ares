@@ -174,6 +174,7 @@ pub(super) fn write_plate_batch(
         layer_height: last.layer_height,
         wall_loops: last.wall_loops,
         sparse_infill_density: last.sparse_infill_density,
+        strict_mode: false,
         upward_machines,
         sliced_plates: &sliced_plates,
         warnings: &warnings,

@@ -255,6 +255,7 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
         input.map_or_else(Vec::new, |file| crate::substitutions(file.bytes)),
         #[cfg(target_os = "linux")]
         crate::result_json::Success {
+            strict_mode: false,
             output: args.output(),
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),
