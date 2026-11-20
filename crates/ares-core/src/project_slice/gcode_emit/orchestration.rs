@@ -1,7 +1,7 @@
-mod archive;
 mod tower;
 
 use super::*;
+use crate::project_slice::ArchivePlate;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(

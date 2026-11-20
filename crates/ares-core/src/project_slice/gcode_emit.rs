@@ -5,6 +5,7 @@ use crate::project_slice::{
 use crate::{GenerationMetadata, SliceError};
 
 mod adaptive_pa;
+mod archive;
 mod brim;
 mod chamber;
 mod conflict;

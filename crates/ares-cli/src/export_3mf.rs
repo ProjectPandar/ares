@@ -16,11 +16,12 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
             path.into()
         },
     );
-    if args.slice_for_export == Some(1) {
-        return run_sliced(args, &output).await;
-    }
+    let sliced = args.slice_for_export == Some(1);
     let unsupported = [
-        (args.slice_for_export.is_some(), "--slice"),
+        (args.slice_for_export.is_some() && !sliced, "--slice"),
+        (sliced && args.outputdir.is_some(), "--outputdir"),
+        (sliced && args.load_settings.is_some(), "--load-settings"),
+        (sliced && args.load_filaments.is_some(), "--load-filaments"),
         (args.min_save.is_some_and(|value| value != 0), "--min-save"),
         (args.load_slicedata.is_some(), "--load-slicedata"),
         (args.export_slicedata.is_some(), "--export-slicedata"),
@@ -62,6 +63,27 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| failed("invalid source filename".to_owned()))?;
+    if sliced {
+        if !filename.to_ascii_lowercase().ends_with(".3mf") {
+            return Err(CliFailure::project_export(
+                &output,
+                true,
+                "sliced export requires a saved 3MF project".to_owned(),
+            ));
+        }
+        let processed = ares_core::slice_project_plate_with_archive(
+            &input,
+            ares_core::GenerationMetadata::default(),
+            Some(1),
+            &ares_core::ConfigOverrides::default(),
+            ares_core::SlicerContext::new(0),
+        )
+        .await
+        .map_err(|err| failed(err.to_string()))?;
+        let bytes = ares_core::export_sliced_3mf(&input, filename, processed)
+            .map_err(|err| failed(err.to_string()))?;
+        return fs::write(&output, bytes).map_err(|err| failed(err.to_string()));
+    }
     let settings = read_preset_files(
         &args
             .load_settings
@@ -84,107 +106,6 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
     )
     .map_err(|err| failed(err.to_string()))?;
     fs::write(&output, bytes).map_err(|err| failed(err.to_string()))
-}
-
-async fn run_sliced(args: &SliceArgs, output: &Path) -> Result<(), CliFailure> {
-    if args.outputdir.is_some() {
-        return Err(CliFailure::project_export(
-            output,
-            true,
-            "unsupported 3MF export option --outputdir".to_owned(),
-        ));
-    }
-    let input = fs::read(&args.input).map_err(|err| {
-        if err.kind() == std::io::ErrorKind::NotFound {
-            CliFailure::missing_input(
-                &args.input,
-                #[cfg(target_os = "linux")]
-                output,
-            )
-        } else {
-            CliFailure::project_export(output, false, err.to_string())
-        }
-    })?;
-    let filename = args
-        .input
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| {
-            CliFailure::project_export(output, true, "invalid source filename".to_owned())
-        })?;
-    let overrides = ares_core::ConfigOverrides::default();
-    let processed = if args
-        .input
-        .extension()
-        .and_then(|extension| extension.to_str())
-        == Some("stl")
-    {
-        let settings = read_preset_files(
-            &args
-                .load_settings
-                .as_deref()
-                .map_or_else(Vec::new, split_native_list),
-        )?;
-        let filaments = read_preset_files(
-            &args
-                .load_filaments
-                .as_deref()
-                .map_or_else(Vec::new, split_native_list),
-        )?;
-        let settings = settings
-            .iter()
-            .map(|(label, json)| LoadSettingsFile { label, json })
-            .collect::<Vec<_>>();
-        let filaments = filaments
-            .iter()
-            .map(|(label, json)| LoadSettingsFile { label, json })
-            .collect::<Vec<_>>();
-        let mut sliced_plate = ares_core::SlicedPlate::default();
-        ares_core::slice_with_load_settings_archive(
-            &input,
-            ares_core::LoadSettingsSliceRequest {
-                filename,
-                catalog_json: None,
-                uptodate: false,
-                settings: &settings,
-                filaments: &filaments,
-                plate: None,
-                overrides: &overrides,
-                placement: ares_core::Placement::Center,
-                orient: false,
-                sliced_plate: &mut sliced_plate,
-            },
-            ares_core::GenerationMetadata::default(),
-            ares_core::SlicerContext::new(0),
-        )
-        .await
-        .map_err(|err| CliFailure::project_export(output, false, err.to_string()))?
-    } else if args
-        .input
-        .extension()
-        .and_then(|extension| extension.to_str())
-        == Some("3mf")
-    {
-        ares_core::slice_project_plate_with_archive(
-            &input,
-            ares_core::GenerationMetadata::default(),
-            Some(1),
-            &overrides,
-            ares_core::SlicerContext::new(0),
-        )
-        .await
-        .map_err(|err| CliFailure::project_export(output, false, err.to_string()))?
-    } else {
-        return Err(CliFailure::project_export(
-            output,
-            true,
-            "sliced export requires STL or 3MF input".to_owned(),
-        ));
-    };
-    let bytes = ares_core::export_sliced_3mf(&input, filename, processed)
-        .map_err(|err| CliFailure::project_export(output, false, err.to_string()))?;
-    fs::write(output, bytes)
-        .map_err(|err| CliFailure::project_export(output, false, err.to_string()))
 }
 
 fn sources(files: &[(String, String)]) -> Vec<LoadSettingsFile<'_>> {
