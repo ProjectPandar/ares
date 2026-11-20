@@ -14,6 +14,8 @@ pub(crate) mod vendor_inventory;
 
 #[path = "grid_bridge_anchor_direction.rs"]
 mod grid_bridge_anchor_direction;
+#[path = "trapezoidal_grid_raft.rs"]
+mod trapezoidal_grid_raft;
 
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
