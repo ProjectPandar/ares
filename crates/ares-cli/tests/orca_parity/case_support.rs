@@ -46,6 +46,8 @@ mod cli_saved_load_settings_remap;
 mod cli_sparse_filament_slots;
 #[path = "cli_strict.rs"]
 mod cli_strict;
+#[path = "preset_scalar_string_vectors.rs"]
+mod preset_scalar_string_vectors;
 
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
