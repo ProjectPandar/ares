@@ -73,17 +73,19 @@ impl MoveRecorder<'_> {
                 0.5 * (start[axis] + end[axis])
                     + f64::from([offset[0], offset[1], -self.z_offset][axis])
             });
-            let density = crate::gcode_processor::density(
-                self.filament_densities
-                    .iter()
-                    .map(|density| density.0 as f32),
-                self.filament,
-            );
+            let density = self
+                .filament_densities
+                .get(self.filament)
+                .unwrap_or(&self.filament_densities[0])
+                .0 as f32;
             locator.add(
                 &mut self.masses,
                 self.role,
                 midpoint,
-                (f64::from(volume), density),
+                (
+                    f64::from(volume),
+                    crate::gcode_processor::density(&[density], 0),
+                ),
             );
         }
     }

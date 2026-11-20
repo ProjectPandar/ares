@@ -102,8 +102,14 @@ fn rounded(value: f64, scale: f64) -> f64 {
     (value * scale).round() / scale
 }
 
-pub(crate) fn density(mut densities: impl Iterator<Item = f32>, id: usize) -> f64 {
-    f64::from(densities.nth(id).filter(|&d| d > 0.0).unwrap_or(1.245))
+pub(crate) fn density(densities: &[f32], id: usize) -> f64 {
+    f64::from(
+        densities
+            .get(id)
+            .copied()
+            .filter(|&d| d > 0.0)
+            .unwrap_or(1.245),
+    )
 }
 
 impl Usage {
@@ -126,8 +132,7 @@ impl GCodeProcessorResult {
     /// Statistics from the recorded Normal-mode vertices and processor totals.
     pub fn statistics(&self) -> GCodeStatistics<'_> {
         let area = |id: usize| PI * (0.5 * f64::from(self.filament_diameters[id])).powi(2);
-        let weight =
-            |id, volume| 0.001 * volume * density(self.filament_densities.iter().copied(), id);
+        let weight = |id, volume| 0.001 * volume * density(&self.filament_densities, id);
         let mut layers = Vec::<Layer>::new();
         let mut features = Features::new();
         let mut travel_time = 0.0;
