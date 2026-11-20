@@ -54,7 +54,9 @@ fn load_with_profile_preparation(
         retained_refresh: profile.retained_refresh,
     };
     match project.input {
-        super::ProjectInput::OptionStl { .. } => unreachable!("option-only STL has no profiles"),
+        super::ProjectInput::OptionStl { .. } | super::ProjectInput::ArrangedStl(..) => {
+            unreachable!("not a selected-profile input")
+        }
         super::ProjectInput::Model(model) => model
             .with_stl_profiles(selected, project.overrides)
             .map(|(mut loaded, preparation)| {
@@ -113,6 +115,29 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
+    let (loaded, preparation) = load_profile_slice(project, profile, upward_report)?;
+    state::prepare_loaded_project_slice_with_validation(
+        loaded,
+        project.plate,
+        Some(
+            &profile
+                .composed
+                .settings()
+                .project
+                .preset
+                .printer_settings_id
+                .0,
+        ),
+        project.validate_print,
+        Some((&preparation, project.overrides)),
+    )
+}
+
+pub(crate) fn load_profile_slice(
+    project: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+    upward_report: Option<&mut Vec<String>>,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let (mut loaded, preparation) =
         load_and_place_with_preparation(project, profile, upward_report)?;
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
@@ -143,21 +168,7 @@ pub(super) fn prepare_profile_slice(
     {
         loaded = crate::plater::arrange_cli_stl(loaded)?;
     }
-    state::prepare_loaded_project_slice_with_validation(
-        loaded,
-        project.plate,
-        Some(
-            &profile
-                .composed
-                .settings()
-                .project
-                .preset
-                .printer_settings_id
-                .0,
-        ),
-        project.validate_print,
-        Some((preparation, project.overrides)),
-    )
+    Ok((loaded, preparation))
 }
 
 /// `BuildVolume::bed_center()` (`BuildVolume.hpp:83`): the printable-area

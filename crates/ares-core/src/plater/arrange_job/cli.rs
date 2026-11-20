@@ -8,7 +8,11 @@ pub(crate) fn arrange_cli_stl(project: Project) -> Result<Project, SliceError> {
         ..session.default_arrange_settings()
     };
     session.arrange_job(ArrangeScope::All, settings, ArrangeOrigin::Cli)?;
-    let edits = session.edits();
+    let mut edits = session.edits();
+    // The CLI rebuilds plate membership without assigning GUI defaults to new
+    // tower positions. Its actual tower fit happens at slice time.
+    // OrcaSlicer.cpp:6037–6048,6089–6093,6483–6507.
+    edits.wipe_tower = None;
     session.project.apply_plater_edits(&edits);
     Ok(session.project)
 }

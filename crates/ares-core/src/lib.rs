@@ -127,10 +127,11 @@ pub use profiles::{
     LoadSettingsSliceRequest, MergedProfile, MergedProfileMetadata, MissingParent,
     ParsedPresetBundle, PresetCatalogHandle, PresetValues, PrinterModelInfo, ProfileFragment,
     ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
-    SelectablePrinter, compose_profile_fragments, filter_compatible_presets, guide_models,
-    merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
-    slice_stl_files_with_load_settings, slice_with_load_settings, slice_with_profiles,
-    slice_with_profiles_processed, validate_load_settings_input, validate_with_profiles,
+    SelectablePrinter, SlicedStlPlate, compose_profile_fragments, filter_compatible_presets,
+    guide_models, merge_profile_fragments, parse_preset_bundle, profile_placed_project,
+    profile_settings, slice_stl_models_with_load_settings, slice_with_load_settings,
+    slice_with_profiles, slice_with_profiles_processed, validate_load_settings_input,
+    validate_with_profiles,
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,

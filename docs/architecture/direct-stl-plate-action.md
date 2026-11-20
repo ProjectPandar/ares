@@ -31,10 +31,13 @@ zero-valued slice settings. This differs from the early invalid-ID rejection
 for a retained project.
 
 Reuse the loaded-profile model preparation and CLI arrangement, then select
-from the resulting project plates and run each through the existing
-`Print` lifecycle. Retain one `plate_<id>.gcode` per sliced plate
+instances from the resulting project plates without running the selected-3MF
+importer. The CLI rebuilds plate membership without publishing GUI default
+tower positions for new plates (`:6037–6048,6089–6093`); the slice-time fit
+may update the positions for a real tower (`:6483–6507`). Run each selected
+plate through the existing `Print` lifecycle. Retain one `plate_<id>.gcode` per sliced plate
 (`OrcaSlicer.cpp:7183–7193`). Collect each completed plate's ID, triangle
-count and warnings (`:6528–6531,7056–7063,7258–7273`) and write one Linux
+count and warnings (`:6528–6531,6927–6932,7180,7258–7273`) and write one Linux
 report (`:535–583,8133–8136`). The direct STL CLI owns filesystem reads and
 output naming; model assembly, placement and slicing stay in core.
 

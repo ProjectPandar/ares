@@ -11,6 +11,19 @@ impl Project {
     /// per plate). Returns a view containing only the instances of `plate`
     /// (the first plate when `None`), selected as `Model::curr_plate_index`.
     pub fn select_plate(&self, plate: Option<u32>) -> Result<Self, SliceError> {
+        self.select_plate_view(plate, plate.is_some())
+    }
+
+    /// Select after arrangement, without replaying the saved-project importer.
+    pub(crate) fn select_plate_instances(&self, plate: u32) -> Result<Self, SliceError> {
+        self.select_plate_view(Some(plate), false)
+    }
+
+    fn select_plate_view(
+        &self,
+        plate: Option<u32>,
+        selected_import: bool,
+    ) -> Result<Self, SliceError> {
         let plate_id = plate.unwrap_or_else(|| self.first_plate_id());
         let plate_count = self.plates.len();
         let index = self
@@ -27,25 +40,24 @@ impl Project {
         // (`bbs_3mf.cpp:2215-2221` at v2.5.0-beta `345efec64`); `Print::apply`'s `is_printable()`
         // then prints the ones inside the plate's volume. The plate-less view keeps the first
         // plate's listed instances.
-        let mut objects = match plate {
-            Some(_) => self.selected_import_objects(&self.plates[index]),
-            None => {
-                let mut objects = self.objects.clone();
-                for object in &mut objects {
-                    object
-                        .instances
-                        .retain(|instance| match instance.loaded_label_id() {
-                            Some(label) => identity.contains(&[
-                                instance.object_id(),
-                                instance.instance_id(),
-                                label,
-                            ]),
-                            // All-import views retain unassigned instances for the volume gate.
-                            None => true,
-                        });
-                }
-                objects
+        let mut objects = if selected_import {
+            self.selected_import_objects(&self.plates[index])
+        } else {
+            let mut objects = self.objects.clone();
+            for object in &mut objects {
+                object
+                    .instances
+                    .retain(|instance| match instance.loaded_label_id() {
+                        Some(label) => identity.contains(&[
+                            instance.object_id(),
+                            instance.instance_id(),
+                            label,
+                        ]),
+                        // All-import views retain unassigned instances for the volume gate.
+                        None => true,
+                    });
             }
+            objects
         };
         objects.retain(|object| !object.instances.is_empty());
         if objects.is_empty() {
@@ -84,7 +96,11 @@ impl Project {
             plates: vec![self.plates[index].clone()],
             settings,
             documents,
-            import_scope: plate.map_or(self.import_scope, ImportScope::Plate),
+            import_scope: if selected_import {
+                ImportScope::Plate(plate_id)
+            } else {
+                self.import_scope
+            },
             plate_view: true,
             plate_origin: if self.plate_view {
                 self.plate_origin

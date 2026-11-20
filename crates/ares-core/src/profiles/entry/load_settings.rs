@@ -41,26 +41,63 @@ pub async fn slice_with_load_settings(
     .map(|processed| processed.gcode)
 }
 
-/// Slice separately loaded STL objects with the requested placement.
-pub async fn slice_stl_files_with_load_settings(
-    files: &[crate::StlFile<'_>],
+/// The output and report of one plate from the direct STL slice action.
+pub struct SlicedStlPlate {
+    pub id: u32,
+    pub gcode: Vec<u8>,
+    pub report: crate::SlicedPlate,
+}
+
+/// Place the decoded STL models once, then apply the one-based slice action
+/// (`OrcaSlicer.cpp:2042–2045,6441–6445,6522–6531`). `0` slices every plate.
+pub async fn slice_stl_models_with_load_settings(
+    models: &[(&str, crate::Model)],
     request: LoadSettingsSliceRequest<'_>,
-    metadata: GenerationMetadata,
-    context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
-    let model = crate::Project::from_cli_stl_files(files)?;
-    with_load_settings_source(files[0].bytes, request, |source| {
-        slice_source(
-            ProjectSource {
-                input: ProjectInput::Model(&model),
-                ..source
-            },
-            metadata,
-            false,
-            context,
-        )
+    selection: u32,
+) -> Result<Vec<SlicedStlPlate>, SliceError> {
+    if models.is_empty() {
+        return Err(SliceError::EmptyInput);
+    }
+    let model = crate::Project::from_cli_stl_models(models);
+    with_load_settings_source(&[], request, |source| {
+        let source = ProjectSource {
+            input: ProjectInput::Model(&model),
+            plate: None,
+            ..source
+        };
+        let (project, preparation) = crate::project_slice::load_profile_slice(
+            &source,
+            source.profile.expect("loaded settings supply a profile"),
+            None,
+        )?;
+        let mut plates = Vec::new();
+        for plate in project.plates() {
+            let id = plate.id();
+            if selection != 0 && selection != id {
+                continue;
+            }
+            let mut report = crate::SlicedPlate::default();
+            let output = slice_source(
+                ProjectSource {
+                    input: ProjectInput::ArrangedStl(&project, &preparation),
+                    plate: Some(id),
+                    profile: None,
+                    upward: None,
+                    sliced_plate: Some(&mut report),
+                    ..source
+                },
+                GenerationMetadata::default(),
+                false,
+                SlicerContext::new(0),
+            )?;
+            plates.push(SlicedStlPlate {
+                id,
+                gcode: output.gcode,
+                report,
+            });
+        }
+        Ok(plates)
     })
-    .map(|processed| processed.gcode)
 }
 
 fn with_load_settings_source<T>(

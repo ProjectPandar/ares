@@ -136,37 +136,62 @@ pub(super) struct Success<'a> {
 
 impl Success<'_> {
     pub(super) fn write(self, file: &str, substitutions: Vec<ares_core::ConfigSubstitution>) {
-        let warning_message = self
-            .sliced_plate
-            .warnings
-            .last()
-            .map(|warning| warning.message.clone())
-            .unwrap_or_default();
         let warnings = substitutions
             .into_iter()
             .map(|substitution| CliWarning::ConfigValueSubstituted {
                 file: file.to_owned(),
                 substitution,
             })
-            .chain(slicing_warnings(self.plate, self.sliced_plate.warnings))
-            .collect::<Vec<_>>();
-        let _ = ResultJson {
-            return_code: 0,
-            error_string: "Success.",
-            plate_index: self.plate_index,
-            layer_height: self.sliced_plate.layer_height,
-            wall_loops: self.sliced_plate.wall_loops,
-            sparse_infill_density: self.sliced_plate.sparse_infill_density,
-            upward_machines: self.upward_machines,
-            sliced_plates: &[SlicedPlateEntry {
-                id: self.plate,
-                triangle_count: self.sliced_plate.triangle_count,
-                warning_message,
-            }],
-            warnings: &warnings,
-        }
-        .write(self.output);
+            .collect();
+        write_success(
+            self.output,
+            self.plate_index,
+            self.upward_machines,
+            [(self.plate, self.sliced_plate)],
+            warnings,
+        );
     }
+}
+
+pub(super) fn write_success(
+    output: &Path,
+    plate_index: u32,
+    upward_machines: &[String],
+    plates: impl IntoIterator<Item = (u32, ares_core::SlicedPlate)>,
+    mut warnings: Vec<CliWarning>,
+) {
+    let (mut layer_height, mut wall_loops, mut sparse_infill_density) = (0.0, 0, 0.0);
+    let sliced_plates = plates
+        .into_iter()
+        .map(|(id, plate)| {
+            layer_height = plate.layer_height;
+            wall_loops = plate.wall_loops;
+            sparse_infill_density = plate.sparse_infill_density;
+            let warning_message = plate
+                .warnings
+                .last()
+                .map(|warning| warning.message.clone())
+                .unwrap_or_default();
+            warnings.extend(slicing_warnings(id, plate.warnings));
+            SlicedPlateEntry {
+                id,
+                triangle_count: plate.triangle_count,
+                warning_message,
+            }
+        })
+        .collect::<Vec<_>>();
+    let _ = ResultJson {
+        return_code: 0,
+        error_string: "Success.",
+        plate_index,
+        layer_height,
+        wall_loops,
+        sparse_infill_density,
+        upward_machines,
+        sliced_plates: &sliced_plates,
+        warnings: &warnings,
+    }
+    .write(output);
 }
 
 pub(super) fn slicing_warnings(

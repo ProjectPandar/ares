@@ -31,6 +31,16 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
+    if let super::ProjectInput::ArrangedStl(project, preparation) = source.input {
+        let plate = source.plate.expect("the slice action selects a plate");
+        let project = crate::plater::fit_slice_wipe_tower(project.copy_stl_model(), Some(plate))?;
+        return prepare_selected_plate(
+            project.select_plate_instances(plate)?,
+            None,
+            source.validate_print,
+            Some((preparation, source.overrides)),
+        );
+    }
     let (mut project, preparation) =
         source
             .input
@@ -78,7 +88,7 @@ pub(super) fn prepare_project_source(
         source.plate,
         None,
         source.validate_print,
-        Some((preparation, source.overrides)),
+        Some((&preparation, source.overrides)),
     )
 }
 
@@ -88,13 +98,29 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     selected_printer: Option<&str>,
     validate_print: bool,
     preparation: Option<(
-        crate::options::flush_matrix::PreparationContext,
+        &crate::options::flush_matrix::PreparationContext,
         &crate::ConfigOverrides,
     )>,
 ) -> Result<ProjectSliceState, SliceError> {
     let project = crate::plater::initialize_slice_plates(project);
     let project = crate::plater::fit_slice_wipe_tower(project, plate)?;
-    let mut project = project.select_plate(plate)?;
+    prepare_selected_plate(
+        project.select_plate(plate)?,
+        selected_printer,
+        validate_print,
+        preparation,
+    )
+}
+
+fn prepare_selected_plate(
+    mut project: Project,
+    selected_printer: Option<&str>,
+    validate_print: bool,
+    preparation: Option<(
+        &crate::options::flush_matrix::PreparationContext,
+        &crate::ConfigOverrides,
+    )>,
+) -> Result<ProjectSliceState, SliceError> {
     let plate_id = project.first_plate_id();
     // `OrcaSlicer.cpp:6562-6573`: unconditional — if no model-part instance
     // is fully inside the plate's print volume, reject with the upstream
@@ -106,7 +132,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         ));
     }
     let resolved = match preparation {
-        Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
+        Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
     };
     painted_fuzzy::validate(&project, &resolved)?;

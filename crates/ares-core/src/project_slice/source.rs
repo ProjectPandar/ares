@@ -68,6 +68,10 @@ pub(crate) struct ProfileInput<'a> {
 pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
     Model(&'a crate::Project),
+    ArrangedStl(
+        &'a crate::Project,
+        &'a crate::options::flush_matrix::PreparationContext,
+    ),
     OptionStl {
         bytes: &'a [u8],
         filename: &'a str,
@@ -98,6 +102,7 @@ impl ProjectInput<'_> {
                 filename,
                 options,
             } => super::option_stl::load(bytes, filename, options),
+            Self::ArrangedStl(..) => unreachable!("already loaded and arranged"),
             Self::Model(model) => {
                 if refresh.is_some() {
                     return Err(crate::SliceError::InvalidInput(
