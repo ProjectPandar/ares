@@ -44,19 +44,22 @@ With other bundlers, start `@ares-slicer/wasm/worker` as a module worker
 
 ## API
 
-### `new AresSlicer({ worker, wasmUrl })`
+### `new AresSlicer({ worker, wasmUrl, onCrash })`
 
 | Option | Type | Description |
 | --- | --- | --- |
 | `worker` | `Worker` | A module worker running `@ares-slicer/wasm/worker`. The client takes it over: it sets the worker's `onmessage` and `onerror` handlers. |
 | `wasmUrl` | `string \| URL` | URL of `ares_wasm_bg.wasm`. |
+| `onCrash` | `(message: string) => void` | Optional. Called once when the module traps, with the text `A fatal error occurred: "<panic message and location>"` and `Please save your project and restart the application.` on the next line. |
 
 The constructor starts loading the module right away. Each method waits for
 it to finish loading, so you don't need to call `ready()` first.
 
 Calls copy their `input` before sending it to the worker, so the caller keeps
 its buffer. Errors from the slicer reject the returned promise with an `Error`.
-If the worker crashes, every pending call is rejected.
+If the worker crashes, every open call is rejected. If the module traps, every
+open call and every later call rejects with the `onCrash` text; create a new
+worker and `AresSlicer` to slice again.
 
 | Method | Returns | Description |
 | --- | --- | --- |

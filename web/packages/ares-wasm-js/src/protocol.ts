@@ -92,4 +92,6 @@ export type RequestBody = WorkerRequest extends infer R ? (R extends unknown ? O
 export type WorkerResponse =
   | { id: number; status: SlicingStatus }
   | { id: number; ok: true; value: unknown }
-  | { id: number; ok: false; error: string };
+  | { id: number; ok: false; error: string }
+  // The module trapped: every open and later request fails with this text.
+  | { crash: string };

@@ -20,3 +20,8 @@ wasm-bindgen-futures = { workspace = true }
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 tokio = { workspace = true }
 tempfile = { workspace = true }
+
+[features]
+# Exports panicProbe(), which the plater session's sliceWithProfilesProcessed calls first: the
+# deterministic panic of the web E2E probe wasm. The shipped wasm is built without it.
+panic-probe = []

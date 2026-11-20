@@ -308,6 +308,8 @@ impl PlaterSession {
         options_json: String,
         on_status: Option<js_sys::Function>,
     ) -> Result<SliceOutput, JsValue> {
+        #[cfg(feature = "panic-probe")]
+        crate::panic_probe::panic_probe();
         let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
         let mut report = on_status.as_ref().map(crate::status::report_to);
         let overrides = options.overrides();

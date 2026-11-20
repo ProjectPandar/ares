@@ -8,11 +8,12 @@ function formatBytes(bytes: number) {
 }
 
 export function StatusBar() {
-  const { engine, engineError, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, arranging, arrangeError } = useApp();
+  const { engine, engineError, engineCrash, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, arranging, arrangeError } = useApp();
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   const progress = slice.status === "slicing" ? slice.progress : undefined;
   let message: string;
-  if (engine === "loading") message = "Loading slicing engine…";
+  if (engineCrash) message = engineCrash;
+  else if (engine === "loading") message = "Loading slicing engine…";
   else if (engine === "error") message = `Engine failed: ${engineError}`;
   else if (loadingFile) message = "Loading model…";
   else if (loadError) message = `Import failed: ${loadError}`;
