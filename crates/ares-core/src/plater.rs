@@ -32,6 +32,7 @@ mod stl_files;
 pub use stl_files::{StlFile, StlImportOptions};
 pub(crate) mod transformation;
 
+pub(crate) use arrange_job::arrange_cli_stl;
 pub use arrange_job::{ArrangeScope, ArrangeSettings};
 pub use edits::PlaterEdits;
 pub(crate) use initial_plate::initialize_slice_plates;

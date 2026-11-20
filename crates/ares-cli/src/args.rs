@@ -32,9 +32,8 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) load_settings: Option<String>,
     #[arg(long)]
     pub(crate) load_filaments: Option<String>,
-    /// Preserve the input model positions (0).
-    #[arg(long, value_parser = clap::value_parser!(u8).range(0..=0))]
-    pub(crate) arrange: Option<u8>,
+    #[command(flatten)]
+    pub(crate) arrange: crate::direct_stl::arrange::DirectArrangeArgs,
     #[arg(required = true)]
     pub(crate) inputs: Vec<PathBuf>,
 }

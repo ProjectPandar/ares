@@ -11,13 +11,13 @@ pub use load_settings::{
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
-/// Z ground drop. The default keeps the model's own coordinates; upstream
-/// CLI STL inputs default to full libnest2d arrange (`:1438,:1797,:4890`),
-/// a known deviation deferred to the arrange slice.
+/// Z ground drop. `None` keeps the model's own coordinates.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Placement {
     None,
     Center,
+    /// Arrange separate direct STL inputs with the loaded print configuration.
+    Arrange,
 }
 
 impl Placement {

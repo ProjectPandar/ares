@@ -1,8 +1,8 @@
 use std::{fs, io};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement,
-    SliceError, SlicedPlate, SlicerContext, StlFile,
+    ConfigOverrides, GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, SliceError,
+    SlicedPlate, SlicerContext, StlFile,
 };
 
 use crate::{
@@ -11,6 +11,8 @@ use crate::{
     read_preset_files, split_native_list,
 };
 
+pub(crate) mod arrange;
+
 pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     let selection = args
         .selection
@@ -18,13 +20,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     if !matches!(selection, 0 | 1) {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "expected --slice 0 or 1").into());
     }
-    if args.inputs.len() > 1 && args.arrange.is_none() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "multiple STL files require --arrange 0",
-        )
-        .into());
-    }
+
     let output = args
         .outputdir
         .expect("--outputdir is required without a subcommand")
@@ -89,11 +85,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 // OrcaSlicer.cpp:2042–2045 resets the import selection for non-project files.
                 plate: None,
                 overrides: &ConfigOverrides::default(),
-                placement: if args.arrange.is_none() {
-                    Placement::Center
-                } else {
-                    Placement::None
-                },
+                placement: args.arrange.placement(inputs.len()),
                 orient: false,
                 sliced_plate: &mut sliced_plate,
             };

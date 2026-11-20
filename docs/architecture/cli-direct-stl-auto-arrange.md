@@ -28,10 +28,11 @@ applies the placement before the final optional grounding (`:6058–6098`,
   clearance or extrusion-calibration region). Feed the resulting instances
   to the normal project slice lifecycle. Do not derive placement from
   the requested output plate number or change object identity and order.
-- Cover single-plate results with one material. Deferred: changing
-  single-STL placement, other integer modes, explicit rotation/alignment
-  and calibration flags, multicolor and wipe tower policy, multi-plate
-  overflow, foreign formats, and import geometry transforms.
+- Cover single-plate results with one material and valid loaded presets.
+  Deferred: preset-free multi-STL error parity, changing single-STL
+  placement, other integer modes, explicit rotation/alignment and
+  calibration flags, multicolor and wipe tower policy, multi-plate overflow,
+  foreign formats, and import geometry transforms.
 
 ## Verification
 
