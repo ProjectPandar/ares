@@ -161,3 +161,6 @@ mod unclear_travel_lift_cancellation;
 
 #[path = "arachne_disconnected_loop.rs"]
 mod arachne_disconnected_loop;
+
+#[path = "arachne_ioi_proximity.rs"]
+mod arachne_ioi_proximity;
