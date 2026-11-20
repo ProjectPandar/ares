@@ -49,7 +49,7 @@ impl<'a> Generator<'a> {
             settings,
             scale,
             plan: planned.plan,
-            filaments: (0..count).map(|i| Filament::new(settings, i)).collect(),
+            filaments: planned.filaments,
             current: planned.first_tool,
             travel_speed: settings.process.gcode.travel_speed.get_at(slot) as f32,
             first_layer_speed: settings.process.print.initial_layer_speed.get_at(slot) as f32,
