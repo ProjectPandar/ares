@@ -23,15 +23,27 @@ const MD5: &str = "Metadata/plate_1.gcode.md5";
 #[test]
 #[ignore = "deferred until direct STL placement and slicing are available"]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
-    sliced_archive_matches_native(false);
+    sliced_archive_matches_native(None);
 }
 
 #[test]
 fn cli_sliced_3mf_from_saved_project_matches_native_archive() {
-    sliced_archive_matches_native(true);
+    sliced_archive_matches_native(Some(SavedShape::Single));
 }
 
-fn sliced_archive_matches_native(saved: bool) {
+#[test]
+fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
+    sliced_archive_matches_native(Some(SavedShape::TwoObjects));
+}
+
+#[derive(Clone, Copy)]
+enum SavedShape {
+    Single,
+    TwoObjects,
+}
+
+fn sliced_archive_matches_native(shape: Option<SavedShape>) {
+    let saved = shape.is_some();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -41,12 +53,16 @@ fn sliced_archive_matches_native(saved: bool) {
     for dir in [&native_cwd, &ares_cwd] {
         fs::create_dir_all(dir.join("out")).unwrap();
     }
-    if saved {
+    if let Some(shape) = shape {
         let source = root.join("source/cwd");
         fs::create_dir_all(source.join("out")).unwrap();
         write_saved_input(&runner, &source);
+        let mut input = fs::read(source.join("saved.3mf")).unwrap();
+        if matches!(shape, SavedShape::TwoObjects) {
+            input = super::export_3mf_sliced_rejection::multiobject_project(&input, false);
+        }
         for dir in [&native_cwd, &ares_cwd] {
-            fs::copy(source.join("saved.3mf"), dir.join("saved.3mf")).unwrap();
+            fs::write(dir.join("saved.3mf"), &input).unwrap();
         }
     } else {
         write_inputs(&native_cwd);
@@ -67,7 +83,8 @@ fn sliced_archive_matches_native(saved: bool) {
     ]);
     assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
-    assert_eq!(native.len(), 13);
+    let split_files = 1 + usize::from(matches!(shape, Some(SavedShape::TwoObjects)));
+    assert_eq!(native.len(), 12 + split_files);
     check_md5(&native);
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(

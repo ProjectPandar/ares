@@ -18,7 +18,7 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
     fs::create_dir_all(&source).unwrap();
     fs::create_dir_all(cwd.join("out")).unwrap();
     write_saved_input(&runner, &source);
-    let input = multiobject_project(&fs::read(source.join("saved.3mf")).unwrap());
+    let input = multiobject_project(&fs::read(source.join("saved.3mf")).unwrap(), true);
     let project = ares_core::load_project(&input).unwrap();
     assert_eq!(
         project
@@ -60,7 +60,7 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
     assert_eq!(fs::read_dir(cwd.join("out")).unwrap().count(), 0);
 }
 
-fn multiobject_project(input: &[u8]) -> Vec<u8> {
+pub(super) fn multiobject_project(input: &[u8], additional_part: bool) -> Vec<u8> {
     let mut archive = ZipArchive::new(Cursor::new(input)).unwrap();
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..archive.len() {
@@ -93,19 +93,18 @@ fn multiobject_project(input: &[u8]) -> Vec<u8> {
                     .replace("objectid=\"2\"", "objectid=\"3\"")
                     .replace("00000002-", "00000003-")
                     .replace(" 128 128 5\"", " 176 128 5\"");
-                xml.replace(
-                    object,
-                    &format!(
-                        "{}\n{second}",
-                        object.replace(component, &format!("{component}\n{part}"))
-                    ),
-                )
-                .replace(item, &format!("{item}\n{second_item}"))
+                let first = if additional_part {
+                    object.replace(component, &format!("{component}\n{part}"))
+                } else {
+                    object.to_owned()
+                };
+                xml.replace(object, &format!("{first}\n{second}"))
+                    .replace(item, &format!("{item}\n{second_item}"))
             }
             "3D/Objects/3mf-export.stl_1.model" => {
                 let mesh = xml_element(xml, "object", " ");
                 let mut meshes = mesh.to_owned();
-                for id in [4, 5] {
+                for id in [4, 5].into_iter().skip(usize::from(!additional_part)) {
                     meshes.push_str(
                         &mesh
                             .replace("id=\"1\"", &format!("id=\"{id}\""))
@@ -129,14 +128,13 @@ fn multiobject_project(input: &[u8]) -> Vec<u8> {
                     "key=\"object_id\" value=\"2\"",
                     "key=\"object_id\" value=\"3\"",
                 );
-                xml.replace(
-                    object,
-                    &format!(
-                        "{}\n{second_object}",
-                        object.replace(part, &format!("{part}\n{second_part}"))
-                    ),
-                )
-                .replace(instance, &format!("{instance}\n{second_instance}"))
+                let first = if additional_part {
+                    object.replace(part, &format!("{part}\n{second_part}"))
+                } else {
+                    object.to_owned()
+                };
+                xml.replace(object, &format!("{first}\n{second_object}"))
+                    .replace(instance, &format!("{instance}\n{second_instance}"))
             }
             _ => xml.to_owned(),
         };
