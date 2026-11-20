@@ -165,7 +165,6 @@ pub(super) fn apply_plate(
     };
     super::capabilities::validate_settings(&resolved.views.full)?;
     painted_fuzzy::validate(&project, &resolved)?;
-    super::seam_placement::validate_paint(&project, &resolved)?;
     if validate_print {
         crate::print::validate::validate_applied_project(
             &project,
