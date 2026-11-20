@@ -42,7 +42,7 @@ pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};
 pub use inheritance::{MergedProfile, MergedProfileMetadata};
 pub(crate) use load_settings::export_settings;
-pub use load_settings::{LoadSettingsFile, LoadSettingsRequest};
+pub use load_settings::{LoadSettingsFile, LoadSettingsRequest, validate_stl_export_presets};
 
 pub(crate) fn without_utf8_bom(input: &[u8]) -> &[u8] {
     input.strip_prefix(b"\xef\xbb\xbf").unwrap_or(input)

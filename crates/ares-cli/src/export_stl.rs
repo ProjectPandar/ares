@@ -1,12 +1,11 @@
 use std::{fs, path::Path};
 
-use ares_core::SliceError;
+use ares_core::{LoadSettingsFile, LoadSettingsRequest, SliceError};
 
 use crate::{CliFailure, SliceArgs, failure::StlExportFailure};
 
 pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
     let outputdir = args.outputdir.as_deref().unwrap_or_else(|| Path::new("."));
-    #[cfg(target_os = "linux")]
     let report_path = outputdir.join("result.stl");
     let failure = |kind, detail| {
         CliFailure::stl_export(
@@ -42,8 +41,6 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
             "--project-preset-catalog",
         ),
         (args.resources_dir.is_some(), "--resources-dir"),
-        (args.load_settings.is_some(), "--load-settings"),
-        (args.load_filaments.is_some(), "--load-filaments"),
         (args.progress, "--progress"),
     ];
     if let Some((_, option)) = unsupported.into_iter().find(|(present, _)| *present) {
@@ -52,35 +49,43 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
             format!("unsupported STL export option {option}"),
         ));
     }
-    let bytes = match fs::read(&args.input) {
-        Ok(bytes) => bytes,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            return Err(CliFailure::missing_input(
-                &args.input,
-                #[cfg(target_os = "linux")]
-                &report_path,
-            ));
-        }
-        Err(err) => return Err(failure(StlExportFailure::Input, err.to_string())),
-    };
-    let filename = args
-        .input
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| {
-            failure(
-                StlExportFailure::Unsupported,
-                "invalid source filename".to_owned(),
-            )
-        })?;
-    let artifacts = ares_core::export_stl(&bytes, filename, args.repair.unwrap_or_default())
-        .map_err(|err| match err {
-            SliceError::UnsupportedProjectFeature(reason) => failure(
-                StlExportFailure::Unsupported,
-                format!("unsupported {reason}"),
-            ),
-            _ => failure(StlExportFailure::Input, err.to_string()),
-        })?;
+    let files = std::iter::once(&args.input)
+        .chain(&args.additional_inputs)
+        .map(|path| {
+            let bytes = fs::read(path).map_err(|err| match err.kind() {
+                std::io::ErrorKind::NotFound => CliFailure::missing_input(
+                    path,
+                    #[cfg(target_os = "linux")]
+                    &report_path,
+                ),
+                _ => failure(StlExportFailure::Input, err.to_string()),
+            })?;
+            let filename = path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .ok_or_else(|| {
+                    failure(
+                        StlExportFailure::Unsupported,
+                        "invalid source filename".to_owned(),
+                    )
+                })?;
+            Ok((bytes, filename))
+        })
+        .collect::<Result<Vec<_>, CliFailure>>()?;
+    let artifacts = ares_core::export_stls(
+        files
+            .iter()
+            .map(|(bytes, filename)| (bytes.as_slice(), *filename)),
+        args.repair.unwrap_or_default(),
+    )
+    .map_err(|err| match err {
+        SliceError::UnsupportedProjectFeature(reason) => failure(
+            StlExportFailure::Unsupported,
+            format!("unsupported {reason}"),
+        ),
+        _ => failure(StlExportFailure::Input, err.to_string()),
+    })?;
+    validate_presets(args, &report_path)?;
     let dir = args
         .export_stls
         .as_deref()
@@ -97,5 +102,83 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
         let path = dir.join(artifact.filename);
         fs::write(&path, artifact.bytes).map_err(|err| write_failed(&path, err))?;
     }
+    #[cfg(target_os = "linux")]
+    let _ = crate::result_json::ResultJson {
+        return_code: 0,
+        error_string: "Success.",
+        plate_index: 0,
+        layer_height: 0.0,
+        wall_loops: 0,
+        sparse_infill_density: 0.0,
+        upward_machines: &[],
+        sliced_plates: &[],
+        warnings: &[],
+    }
+    .write(&report_path);
     Ok(())
+}
+
+fn validate_presets(args: &SliceArgs, report: &Path) -> Result<(), CliFailure> {
+    let preset_error = |code, message, stderr| {
+        CliFailure::export_failure(
+            #[cfg(target_os = "linux")]
+            report,
+            (code, message),
+            stderr,
+        )
+    };
+    #[cfg(not(target_os = "linux"))]
+    let _ = report;
+    let invalid = |stderr| {
+        preset_error(
+            -5,
+            "The input preset file is invalid and can not be parsed.",
+            stderr,
+        )
+    };
+    let read = |label: &str| {
+        fs::read_to_string(label).map_err(|err| match err.kind() {
+            std::io::ErrorKind::NotFound => preset_error(
+                -3,
+                "The input files to the slicer are not found.",
+                format!("operator(): can not find setting file: {label}\n"),
+            ),
+            _ => invalid(String::new()),
+        })
+    };
+    let settings = args
+        .load_settings
+        .as_deref()
+        .into_iter()
+        .flat_map(crate::split_native_list);
+    let filaments = args
+        .load_filaments
+        .as_deref()
+        .into_iter()
+        .flat_map(crate::split_native_list)
+        .filter(|label| !label.is_empty());
+    let settings = settings
+        .map(|label| read(label).map(|json| (label, json)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let filaments = filaments
+        .map(|label| read(label).map(|json| (label, json)))
+        .collect::<Result<Vec<_>, _>>()?;
+    fn preset_files<'a>(files: &'a [(&str, String)]) -> Vec<LoadSettingsFile<'a>> {
+        files
+            .iter()
+            .map(|(label, json)| LoadSettingsFile { label, json })
+            .collect()
+    }
+    ares_core::validate_stl_export_presets(&LoadSettingsRequest {
+        settings: &preset_files(&settings),
+        filaments: &preset_files(&filaments),
+    })
+    .map_err(|err| {
+        invalid(match err {
+            SliceError::InvalidInput(detail) if detail.starts_with("duplicate ") => {
+                format!("{detail}\n")
+            }
+            _ => String::new(),
+        })
+    })
 }

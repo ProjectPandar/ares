@@ -14,7 +14,7 @@ use std::io;
 use std::path::Path;
 
 use args::{Cli, Commands, SliceArgs};
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
@@ -25,6 +25,14 @@ async fn main() {
             failure.report();
         }
         return;
+    }
+    if let Some(input) = args.additional_inputs.first() {
+        Cli::command()
+            .error(
+                clap::error::ErrorKind::UnknownArgument,
+                format!("unexpected argument '{}' found", input.display()),
+            )
+            .exit();
     }
     if let Some(output) = &args.export_3mf {
         if let Err(failure) = export_3mf::run(&args, output) {

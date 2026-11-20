@@ -123,7 +123,8 @@ fn write_inputs(dir: &Path) {
     let mut stl = synthetic_stl();
     fs::write(dir.join("Zed.stl"), &stl).unwrap();
     // Give the second mesh different geometry despite sharing the first mesh's topology.
-    for facet in stl[84..].chunks_exact_mut(50) {
+    let (facets, _) = stl[84..].as_chunks_mut::<50>();
+    for facet in facets {
         for x in [12, 24, 36] {
             let value = f32::from_le_bytes(facet[x..x + 4].try_into().unwrap());
             facet[x..x + 4].copy_from_slice(&(value * 2.0 + 24.0).to_le_bytes());
@@ -144,24 +145,15 @@ fn compare(
     let root = runner.work_dir();
     let run = |side: &str, mut command: Command| {
         let dir = root.join(format!("{case}-{side}"));
-        fs::create_dir_all(dir.join("report")).unwrap();
-        let Output {
-            status,
-            stdout,
-            stderr,
-        } = command
+        command
             .current_dir(&dir)
             .env_remove("DISPLAY")
             .env_remove("WAYLAND_DISPLAY")
             .args(["--arrange", "0", "--orient", "0", "--outputdir", "report"])
-            .args(args)
-            .output()
-            .unwrap();
-        fs::write(dir.with_extension("stdout"), stdout).unwrap();
-        fs::write(dir.with_extension("stderr"), &stderr).unwrap();
-        fs::write(dir.with_extension("exit"), format!("{:?}\n", status.code())).unwrap();
+            .args(args);
+        let (status, stderr) = run_process(&mut command, &dir, side == "native");
         assert_eq!(
-            status.code(),
+            status,
             code,
             "{side} {args:?}: {}",
             String::from_utf8_lossy(&stderr)
@@ -169,8 +161,7 @@ fn compare(
         let files = inventory(&dir);
         (dir, files, stderr)
     };
-    // Native prunes the shared model-backup tree at exit. Give each invocation
-    // its own temp root and route diagnostic logging outside the artifact tree.
+    // Keep temporary files and diagnostics outside the artifact tree.
     let temp = root.join(format!("{case}-native-tmp"));
     fs::create_dir(&temp).unwrap();
     let mut orca = Command::new(runner.bin());
@@ -206,6 +197,43 @@ fn compare(
                 "first differing byte in {path:?}"
             );
         }
+    }
+}
+
+fn run_process(command: &mut Command, dir: &Path, native: bool) -> (Option<i32>, Vec<u8>) {
+    let mut attempt = 1;
+    loop {
+        fs::create_dir_all(dir.join("report")).unwrap();
+        let Output {
+            status,
+            stdout,
+            stderr,
+        } = command.output().unwrap();
+        fs::write(dir.with_extension("stdout"), stdout).unwrap();
+        fs::write(dir.with_extension("stderr"), &stderr).unwrap();
+        fs::write(dir.with_extension("exit"), format!("{:?}\n", status.code())).unwrap();
+        // The merged model shares the first input's backup path (OrcaSlicer.cpp:4044).
+        // The backup worker can recreate 3D/Objects while :8122 removes 3D.
+        // Repeat only that Native teardown abort, never an artifact or status mismatch.
+        let cleanup_abort = status.code().is_none()
+            && String::from_utf8_lossy(&stderr)
+                .ends_with("boost::filesystem::remove: Directory not empty [system:39]: \"3D\"\n");
+        if !native || !cleanup_abort || attempt == 5 {
+            return (status.code(), stderr);
+        }
+        let saved = dir.with_file_name(format!(
+            "{}-cleanup-abort-{attempt}",
+            dir.file_name().unwrap().to_string_lossy()
+        ));
+        fs::rename(dir, &saved).unwrap();
+        for extension in ["stdout", "stderr", "exit"] {
+            fs::rename(
+                dir.with_extension(extension),
+                saved.with_extension(extension),
+            )
+            .unwrap();
+        }
+        attempt += 1;
     }
 }
 

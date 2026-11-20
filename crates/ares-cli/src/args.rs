@@ -87,6 +87,8 @@ pub(crate) struct SliceArgs {
     #[arg(skip)]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+    /// Additional positional models for binary STL export
+    pub(crate) additional_inputs: Vec<PathBuf>,
 }
 
 fn native_bool(value: &str) -> Result<bool, &'static str> {
