@@ -21,16 +21,25 @@ struct Filament {
 /// The filament of each slot after `update_compatible(Always)` for `printer` and `process`;
 /// the initialized default where no compatible visible ordinary preset exists. System filaments are visible when
 /// `installed` names them (`PresetBundle::load_installed_filaments`), user filaments always.
+/// The slots are first padded as `update_selections` and `load_selections` do before
+/// `update_compatible` (`PresetBundle.cpp:3939, 4101`).
 pub(in crate::profiles) fn select_compatible_filaments(
     catalog: &Catalog,
     (printer, process): (&str, Option<&str>),
     filaments: &[String],
     installed: &[String],
 ) -> Result<Vec<String>, SliceError> {
-    let compatible = filter_with_catalog(catalog, printer, process)?.filaments;
-    // PresetBundle.cpp:5419-5436: hardware minimum, padded before compatibility selection.
+    // `update_filament_count` (`PresetBundle.cpp:5426-5436`): up to `min_filament_count()` with
+    // the last slot, or the first visible filament when there is none. SLA needs no filament.
     let (_, minimum) = catalog.filament_slot_counts(printer)?;
     let mut filaments = filaments.to_vec();
+    if filaments.len() < minimum {
+        let last = filaments
+            .last()
+            .map_or_else(|| catalog.first_visible_filament().to_owned(), Clone::clone);
+        filaments.resize(minimum, last);
+    }
+    let compatible = filter_with_catalog(catalog, printer, process)?.filaments;
     let installed: BTreeSet<&str> = installed.iter().map(String::as_str).collect();
     let mut candidates = Vec::new();
     for name in &compatible {
@@ -43,15 +52,6 @@ pub(in crate::profiles) fn select_compatible_filaments(
     }
     // PresetCollection keeps its presets sorted by name.
     candidates.sort_by(|a, b| a.name.cmp(&b.name));
-    if filaments.len() < minimum {
-        let last = filaments.last().cloned().unwrap_or_else(|| {
-            candidates
-                .first()
-                .map(|preset| preset.name.clone())
-                .unwrap_or_default()
-        });
-        filaments.resize(minimum, last);
-    }
     let printer = catalog
         .selectable_position(ProfileKind::Machine, printer)
         .expect("filter_with_catalog found the printer");

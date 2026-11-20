@@ -1,5 +1,8 @@
 # `filament_multi_colour` in a selected-preset slice
 
+Reversed by `2026-11-15-loaded-project-filament-multi-colour.md`: the reference is the plater,
+whose project config always holds the key after a project opens (Plater.cpp:8905-8959, 9755).
+
 A browser slice with selected system presets writes `; filament_multi_colour = ` into the
 G-code config block. The OrcaSlicer CLI `--load-settings` slice of the same project omits
 that line. Citations refer to OrcaSlicer 2.5.0 (`40ecc66f7`), `src/libslic3r` unless noted.
@@ -57,8 +60,8 @@ the scene settings, which hold the resolved project options with defaults filled
   copies `filament_colour` into `filament_multi_colour`) is a GUI preset-bundle step; the
   CLI (`src/OrcaSlicer.cpp`) never calls it. A one-slot 3MF sliced on the four-slot
   Snapmaker U1 with four `--load-filaments` ends Native with SIGSEGV, with or without the
-  key, and the core rejects the selection ("selection has 4 filaments but the project
-  embeds 1"). With no Native output, this case is not tested.
+  key, so the `--load-settings` route keeps rejecting it. The plater route is tested against
+  the plater's saved project instead (`2026-11-16-printer-switch-update-selections.md`).
 
 ## Verification
 

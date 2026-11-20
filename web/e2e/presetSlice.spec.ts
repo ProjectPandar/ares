@@ -6,9 +6,13 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { withPlaterBedType } from "./platerExport";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
+const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-slice/", import.meta.url));
 // A sidebar process edit that differs from the selected process preset's value.
 const EDIT = { key: "layer_height", value: "0.3" };
@@ -63,6 +67,27 @@ function multiColour(gcode: string) {
   return gcode.split("\n").filter((line) => line.startsWith("; filament_multi_colour ="));
 }
 
+/**
+ * The GuideFrame "All LH models" check: every LH model with each nozzle variant, the model's `nozzle_diameter`
+ * entries (PresetBundle.cpp:8319-8327).
+ */
+function lhModels() {
+  const vendor = JSON.parse(readFileSync(`${profiles}LH.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
+  return Object.fromEntries(vendor.machine_model_list.map(({ name, sub_path }) =>
+    [name, (JSON.parse(readFileSync(`${profiles}LH/${sub_path}`, "utf8")) as { nozzle_diameter: string }).nozzle_diameter.split(";")]));
+}
+
+/**
+ * The STL reference with the plater's `filament_multi_colour`: with no project open, load_selections copies the
+ * filament colours into it (PresetBundle.cpp:4116-4117).
+ */
+function withLoadedMultiColour(gcode: string) {
+  const lines = gcode.split("\n");
+  const colour = lines.find((line) => line.startsWith("; filament_colour = "))!.slice("; filament_colour = ".length);
+  setConfigLine(lines, "filament_multi_colour", colour);
+  return lines.join("\n");
+}
+
 async function exportGcode(page: Page, directory: string) {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -80,6 +105,8 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const seeded = process.env.ARES_PARITY_SEEDED_REFERENCE === "1";
   const launcher = seeded ? process.env.ARES_ORCA_SEEDED_BIN : `${repositoryRoot}scripts/orca-parity.sh`;
   if (!launcher) throw new Error("Explicit seeded mode requires ARES_ORCA_SEEDED_BIN");
+  const probe = presetSelectProbe();
+  if (!probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is required for the plater session's selected-preset lines");
   test.setTimeout(600_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -114,20 +141,30 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   cpSync(centerWork, `${artifacts}native-center/`, { recursive: true });
   expect(JSON.parse(readFileSync(`${work}result.json`, "utf8"))).toMatchObject({ native_repeat: "PASS" });
   const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8")) as { machine: string; process: string; filaments: string[] };
+  // The plater session the browser replays: the first-run app opens the 3MF, the GuideFrame wizard installs every
+  // LH model and the sidebar picks the selected LH system presets. The browser slices it on the explicit preset
+  // route, the --load-settings model, so each reference is the CLI slice with this session's selected-preset lines.
+  const session = nativeSelection(probe, `${artifacts}native/plater-session/`, `${work}profile-entry.3mf`, [], {
+    wizard: { LH: lhModels() },
+    select: { printer: selection.machine, process: selection.process, filaments: selection.filaments },
+  });
   const inputs = JSON.parse(readFileSync(`${work}native-profile-inputs.json`, "utf8")) as { datadir: string; settings: string[]; filaments: string[] };
   const loadPresets = ["--datadir", inputs.datadir, "--load-settings", inputs.settings.join(";"), "--load-filaments", inputs.filaments.join(";")];
+  // The session's picks run load_selections, which replaces the 3MF's curr_bed_type with the selected printer's
+  // (PresetBundle.cpp:4046-4055, Preset.cpp:1140-1171); the 3MF references slice with the session's.
+  const platerBed = withPlaterBedType(session, `${work}profile-entry.3mf`, `${work}profile-entry-plater-bed.3mf`);
   mkdirSync(`${work}selected-system-reference`);
   execFileSync(launcher, [
-    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, `${work}profile-entry.3mf`,
+    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
-  const native = normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  const native = withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
   mkdirSync(`${centerWork}selected-system-reference`);
   execFileSync(launcher, [
     ...loadPresets, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
   ], { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, { recursive: true });
-  const nativeCenter = normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  const nativeCenter = withLoadedMultiColour(normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"));
   const centerNames = ["machine", "process", "filament"].map((kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name);
   expect(centerNames, "both native runs use the same presets").toEqual([selection.machine, selection.process, ...selection.filaments]);
 
@@ -138,10 +175,10 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   mkdirSync(`${work}override-reference`);
   execFileSync(launcher, [
     ...loadPresets, "--layer-height", String(EDIT.value),
-    "--slice", "0", "--outputdir", `${work}override-reference`, `${work}profile-entry.3mf`,
+    "--slice", "0", "--outputdir", `${work}override-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
-  const nativeEdited = normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  const nativeEdited = withSelectedPresets(normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
   expect(nativeEdited === native, "the edit changes the native output").toBe(false);
 
   await page.goto("/");
@@ -149,7 +186,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await page.getByTestId("import-input").setInputFiles(`${work}profile-entry.3mf`);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
 
-  // ConfigWizard: install the LH vendor; its printers join the "System presets" group.
+  // GuideFrame (GUI_App.cpp:9997): install the LH vendor; its printers join the "System presets" group.
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
   const wizard = page.getByRole("dialog", { name: "Printer Selection" });

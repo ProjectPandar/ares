@@ -87,8 +87,28 @@ test("the setup wizard installs printer models with every nozzle and their defau
   await expect(filaments).toHaveCount(0, { timeout: 60_000 });
   await settled(page);
 
-  // The stored result is the first-run app config every other spec starts from.
-  expect(await storedConfig(page)).toEqual(FIRST_RUN_CONFIG);
+  const printer = "MyKlipper 0.4 nozzle";
+  expect(await storedConfig(page)).toEqual({
+    ...FIRST_RUN_CONFIG,
+    printers: {
+      ...FIRST_RUN_CONFIG.printers,
+      [printer]: {
+        ...FIRST_RUN_CONFIG.printers[printer],
+        // PresetBundle.cpp:4091-4110, 4264-4265: one slot with the default colour.
+        filamentColours: ["#26A69A"],
+        // PresetBundle.cpp:4112-4117, 4268-4269: the same colour when no multi-colour is saved.
+        filamentMultiColours: ["#26A69A"],
+        // PresetBundle.cpp:4119-4124, 4272-4273: default colour type for the slot.
+        filamentColourTypes: ["1"],
+        // PrintConfig.cpp:8277-8285; PresetBundle.cpp:8633-8669, 4279-4282: keep the diagonal for one slot.
+        flushVolumesMatrix: [0],
+        // PrintConfig.cpp:8267-8275; PresetBundle.cpp:8633-8642, 4283-4286: two volumes per slot.
+        flushVolumesVector: [140, 140],
+        // PrintConfig.cpp:8287-8291; PresetBundle.cpp:4152-4156, 8624-8630, 4289-4292: retain the one-nozzle default.
+        flushMultiplier: [0.3],
+      },
+    },
+  });
   const klipperVariants = modelVariants("Custom", "Generic Klipper Printer");
   expect(await systemModels(page)).toEqual(["Generic Klipper Printer"]);
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "MyKlipper 0.4 nozzle");

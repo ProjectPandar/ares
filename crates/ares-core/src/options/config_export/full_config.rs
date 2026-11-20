@@ -211,7 +211,7 @@ pub(super) fn write_entries(
     }
     applied_filament_maps(settings, raw_settings, &mut lines);
     // The resize itself is `initialize_cli_loaded_project_config`
-    // (OrcaSlicer.cpp:2815-2818) on the loaded raw; this loop only
+    // (OrcaSlicer.cpp:3202-3205) on the loaded raw; this loop only
     // creates an absent key at filament_count + 2 before
     // GCode::append_full_config serializes it.
     for key in ["different_settings_to_system", "inherits_group"] {

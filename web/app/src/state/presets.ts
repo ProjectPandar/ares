@@ -1,7 +1,7 @@
 import type { CurrentPrinter, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, PresetCatalog, ProjectSettings, Scene } from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
-import { firstString, presetFilamentSlots } from "../sidebar/options";
-import { deleteImport, loadImports, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
+import { firstString } from "../sidebar/options";
+import { deleteImport, loadImports, type PrinterSettings, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
 import { selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { catalogJson } from "./projectPresets";
@@ -129,9 +129,10 @@ function filtered({ printer, process }: PresetSelection) {
 /**
  * PresetBundle::update_compatible(Always) for the selected printer and process: the compatible
  * lists, and each missing or incompatible filament slot replaced by the best compatible visible
- * preset (PresetBundle.cpp:8650-8673). The slots are the selection's, or the project's when more.
+ * preset (PresetBundle.cpp:8650-8673), then the slots padded to the printer's minimum
+ * (update_multi_material_filament_presets, 8611-8617). `project` replaces the selection's palette and flush data.
  */
-export async function updateCompatible() {
+export async function updateCompatible(project?: Partial<FilamentSlotState>) {
   const selection = useApp.getState().presetSelection;
   if (!selection) {
     useApp.setState({ compatible: null });
@@ -151,12 +152,11 @@ export async function updateCompatible() {
       vendor: firstString(values[index], "filament_vendor") ?? "",
     }]));
     const { scene, installedFilaments } = useApp.getState();
-    const slots = Math.max(selection.filaments.length, presetFilamentSlots(scene?.settings ?? null));
-    const selected = await catalog.selectCompatibleFilaments(selection.printer, selection.process,
-      Array.from({ length: slots }, (_, slot) => selection.filaments[slot] ?? ""), [...installedFilaments]);
-    // GCode.cpp:8272 writes filament_multi_colour only when the loaded project carries it; the core keeps it.
-    const { filaments, filament_multi_colour: _projectOwned, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
-      { ...(selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
+    const selected = await catalog.selectCompatibleFilaments(selection.printer, selection.process, selection.filaments, [...installedFilaments]);
+    const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
+      { ...(project ?? selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
+    // No project open: load_selections copies the filament colours into filament_multi_colour (PresetBundle.cpp:4116-4117).
+    if (!project && !selection.filamentProject && !scene?.settings) filamentProject.filament_multi_colour = filamentProject.filament_colour;
     if (filtered(selection)) {
       const current = useApp.getState().presetSelection!;
       useApp.setState({ presetSelection: { ...current, filaments, filamentProject }, compatible: { status: "done", presets, filamentInfo } });
@@ -169,7 +169,7 @@ export async function updateCompatible() {
 }
 
 /** The loaded project's arrays; omitted fields use the core's PrintConfig defaults. */
-function projectFilamentState(settings: ProjectSettings | null): Partial<FilamentSlotState> {
+export function projectFilamentState(settings: ProjectSettings | null): Partial<FilamentSlotState> {
   const values = { ...settings?.project, ...settings?.filament };
   const state: Partial<FilamentSlotState> = {};
   const entries = (key: string) => {
@@ -231,40 +231,89 @@ export function setInstalledFilaments(installed: string[]) {
   useApp.setState({ installedFilaments: new Set(installed) });
 }
 
-/** PresetBundle::export_selections (PresetBundle.cpp:2917-2945): the selection, also under its printer. */
+/**
+ * PresetBundle::export_selections (PresetBundle.cpp:4232-4292): the selection, also under its printer with the
+ * project palette and flush data.
+ */
 export function saveSelection() {
-  const selection = useApp.getState().presetSelection;
+  const { presetSelection: selection, scene } = useApp.getState();
   if (!selection) {
     saveConfig({ printer: null });
     return;
   }
   const { printer, process, filaments, bedType } = selection;
-  const settings = { ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? ""), bedType };
+  const project = selection.filamentProject ?? projectFilamentState(scene?.settings ?? null);
+  const settings = {
+    ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? ""), bedType, ...exportedProject(project),
+  };
   saveConfig({ printer, printers: { ...storedConfig.printers, [printer]: settings } });
 }
 
+/** The palette and flush data export_selections stores (PresetBundle.cpp:4264-4292). */
+export function exportedProject(project: Partial<FilamentSlotState>) {
+  // std::to_string writes six decimals (4279-4292).
+  const toString = (values?: number[]) => values?.map((value) => Number(value.toFixed(6)));
+  return {
+    filamentColours: project.filament_colour,
+    filamentMultiColours: project.filament_multi_colour,
+    filamentColourTypes: project.filament_colour_type,
+    flushVolumesMatrix: toString(project.flush_volumes_matrix),
+    flushVolumesVector: toString(project.flush_volumes_vector),
+    flushMultiplier: toString(project.flush_multiplier),
+  };
+}
+
 /**
- * Selects a user or system printer; `null` returns to the project's presets. The printer's
- * last process and filaments come back (`remember_printer_config`, Tab.cpp:6229-6233,
- * PresetBundle::update_selections, PresetBundle.cpp:2625-2650), each only while it is still
- * loaded and compatible (select_preset_by_name_strict, then update_compatible); without such a
- * process the core picks the compatible one update_compatible prefers.
+ * PresetBundle::update_selections from the selection `saved` stored for a printer (PresetBundle.cpp:3914-4003), which Tab::select_preset runs with
+ * the default `remember_printer_config` (Tab.cpp:7740-7742) and load_selections repeats at startup (4082-4164):
+ * the print, slots and palette export_selections stored for the printer (4251-4292). A printer without them gets
+ * an empty print and slot 1, which update_compatible fills with the printer's preferred presets, and one "#26A69A"
+ * colour; the flush data stays the current project's.
  */
-export async function selectPrinter(printer: string | null) {
+function rememberedSelection(saved: PrinterSettings | undefined) {
+  const { presetSelection: current, scene } = useApp.getState();
+  const project = current?.filamentProject ?? projectFilamentState(scene?.settings ?? null);
+  // 3929-3937: slot 1, then filament_01, filament_02, ...
+  const filaments = [saved?.filaments[0] ?? "", ...(saved?.filaments.slice(1) ?? [])];
+  const resized = (values: string[], fill: string) => Array.from({ length: filaments.length }, (_, index) => values[index] ?? fill);
+  const colours = resized(saved?.filamentColours ?? [], "#26A69A");
+  return {
+    // 3918-3923: the stored print, strictly selected; "" leaves none (Preset.cpp:4335-4357).
+    process: saved?.process ?? "",
+    filaments,
+    project: {
+      flush_volumes_matrix: saved?.flushVolumesMatrix ?? project.flush_volumes_matrix,
+      flush_volumes_vector: saved?.flushVolumesVector ?? project.flush_volumes_vector,
+      flush_multiplier: saved?.flushMultiplier ?? project.flush_multiplier,
+      filament_colour: colours,
+      filament_multi_colour: saved?.filamentMultiColours?.length ? saved.filamentMultiColours : colours,
+      filament_colour_type: resized(saved?.filamentColourTypes ?? [], "1"),
+      // 3963-3970: one filament_map, filament_nozzle_map and filament_volume_map entry per colour.
+      filament_map: colours.map(() => 1),
+      filament_nozzle_map: colours.map(() => 0),
+      filament_volume_map: colours.map(() => 0),
+    } satisfies Partial<FilamentSlotState>,
+  };
+}
+
+/**
+ * Selects a user or system printer with the selection `remembered` for it (`rememberedSelection`), by default its
+ * own; `null` returns to the project's presets. update_compatible(Always) keeps the remembered print while compatible, else picks the one
+ * PreferedPrintProfileMatch prefers against the printer's default_print_profile (PresetBundle.cpp:8837-8838).
+ */
+export async function selectPrinter(printer: string | null, stored = printer === null ? undefined : storedConfig.printers[printer]) {
   const saved = printer === null ? undefined : storedConfig.printers[printer];
-  // update_compatible(Always) for the print (PresetBundle.cpp:8635-8639): the remembered print, else
-  // the previous one, while compatible; otherwise the preferred compatible print.
-  const current = saved?.process ?? useApp.getState().presetSelection?.process;
-  if (printer === null) useApp.setState({ presetSelection: null });
+  const remembered = printer === null ? null : rememberedSelection(stored);
+  if (printer === null || remembered === null) useApp.setState({ presetSelection: null });
   else {
     // The combo shows the printer and the filtering state while the print is chosen.
-    useApp.setState({ presetSelection: { printer, filaments: saved?.filaments ?? [] }, compatible: { status: "filtering" } });
+    useApp.setState({ presetSelection: { printer, filaments: remembered.filaments }, compatible: { status: "filtering" } });
     // A printer the catalog cannot resolve has no print; updateCompatible shows the engine's error.
-    const process = await (await presetCatalog()).compatiblePrint(printer, current).catch(() => null);
+    const process = await (await presetCatalog()).compatiblePrint(printer, remembered.process).catch(() => null);
     const chosen = useApp.getState().presetSelection;
     if (process && chosen?.printer === printer) useApp.setState({ presetSelection: { ...chosen, process } });
   }
-  await updateCompatible();
+  await updateCompatible(remembered?.project);
   await updatePrinterPanel();
   const selection = useApp.getState().presetSelection;
   if (selection && selection.printer === printer) {
@@ -322,7 +371,7 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
     return "Placing more than one STL object on the plate needs arrange, which is not ported yet";
   }
   if (!selection.process) return "Select a process preset to slice";
-  if (Array.from({ length: presetFilamentSlots(scene.settings) }).some((_, slot) => !selection.filaments[slot])) {
+  if (selection.filaments.some((name) => !name)) {
     return "Select a filament preset for every filament to slice";
   }
   return null;

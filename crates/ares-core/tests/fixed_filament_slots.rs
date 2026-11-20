@@ -41,9 +41,26 @@ fn catalog() -> PresetCatalogHandle {
 fn u1_selection_pads_the_last_preset_to_four_slots() {
     let catalog = catalog();
     let selected = vec!["First PLA".to_owned(), "Last PETG".to_owned()];
-    let actual = catalog
+    // update_selections and load_selections pad with the last slot before update_compatible
+    // (PresetBundle.cpp:3939, 4101, 5426-5436); update_multi_material_filament_presets then has
+    // nothing to pad (8611-8617).
+    let compatible = catalog
         .select_compatible_filaments(("U1 fixed-slot witness", None), &selected, &[])
         .unwrap();
+    assert_eq!(
+        compatible,
+        ["First PLA", "Last PETG", "Last PETG", "Last PETG"]
+    );
+    let actual = catalog
+        .normalize_filament_slots(
+            "U1 fixed-slot witness",
+            ares_core::FilamentSlotState {
+                filaments: compatible,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+        .filaments;
     assert_eq!(actual, ["First PLA", "Last PETG", "Last PETG", "Last PETG"]);
     let root = std::env::var_os("ARES_FIXED_FILAMENT_ARTIFACT_ROOT")
         .map(std::path::PathBuf::from)

@@ -14,7 +14,8 @@ impl Project {
     /// overlay. Upstream indexes `different_settings_to_system` and
     /// `inherits_group` by `filament_count` (`:2817-2818`). A zero embedded
     /// count takes the loaded count (`:2528-2529`); a nonzero embedded count
-    /// still bounds the number of selected filaments.
+    /// still bounds the number of `--load-settings` filaments. A plater
+    /// selection's count is its own.
     pub(crate) fn from_3mf_with_profiles(
         input: &[u8],
         profile: SelectedProfile<'_>,
@@ -69,8 +70,10 @@ impl Project {
             .filament_settings_id
             .0
             .len();
-        // OrcaSlicer.cpp:2528-2529 uses the loaded count only for zero.
-        let filament_count = if embedded_count == 0 {
+        // OrcaSlicer.cpp:2528-2529 uses the loaded count only for zero. The plater's selection (no
+        // `--load-settings` names) saves full_fff_config, one filament per selected preset
+        // (PresetBundle.cpp:5651-5660, Plater.cpp:19779), so its count is the selection's.
+        let filament_count = if embedded_count == 0 || load_names.is_none() {
             selected
         } else {
             embedded_count
