@@ -127,7 +127,7 @@ async fn original_profile(nozzle: &str) {
     let loaded = loaded.unwrap();
     assert_eq!(
         serde_json::to_value(loaded).unwrap()["default_filament_profile"],
-        FILAMENT
+        json!([FILAMENT])
     );
     assert!(
         matches!(validated, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),

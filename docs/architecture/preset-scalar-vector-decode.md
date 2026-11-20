@@ -24,7 +24,7 @@ into project slots, taking member zero for an ordinary filament option.
 
 | Input | Decoder at the existing boundary | Effect of this change |
 | --- | --- | --- |
-| Preset JSON | `options/json_deserialize.rs` routes typed `ProfileFragment` values through `model_config_deserialize::wire::decode`. The catalog's authored raw view handles empty wire text but otherwise retains scalar `coStrings` as `Text`. | Decode scalar `coStrings` in the core authored-option view after `handle_legacy` and before inheritance/slot selection. Store logical members as a `List`, using the same decoder as the typed fragment. Authored JSON arrays already supply logical members and are unchanged. |
+| Preset JSON | `options/json_deserialize.rs` routes typed `ProfileFragment` values through `model_config_deserialize::wire::decode`. The catalog's authored raw view handles empty wire text but otherwise retains scalar `coStrings` as `Text`. | Decode scalar `coStrings` in the core authored-option view after `handle_legacy` and before inheritance/slot selection, for all preset kinds. Store logical members as a `List`, using the same decoder as the typed fragment. Authored JSON arrays already supply logical members and are unchanged. |
 | 3MF `Metadata/project_settings.config` | `project/load.rs` calls `normalize_wire_vector_shapes`, which uses `json_deserialize` and the same `wire::decode` for string-vector scalars and arrays. Arrays are quoted/encoded from their logical members before decoding. | No change to embedded settings. A saved project that also loads replacement presets only changes on its preset side. |
 | STL `--options` JSON | `SliceOptions` accepts JSON values, then `project_slice/option_stl.rs` handles legacy keys and calls `normalize_wire_vector_shapes` before the STL config is built. | No change; it already reaches the same decoder. |
 | JSON overrides | `ConfigOverrides::validate_entry` calls `decode_wire` for a single input token, including a single-item array; other array lengths supply tokens directly. `apply` stores decoded vector elements as a list. | No change to override parsing, shape or precedence. |
@@ -38,7 +38,10 @@ parallel catalog view skipped it: when a scalar was wrapped as a single slot
 by the project overlay, the wire quotes became data. Keep both views typed
 before composition instead of adding any special case to CLI dispatch, slot
 selection, or the footer. Other vector kinds and serializer rules are out of
-scope.
+scope. The `profile_settings` effective config also exposes the decoded list
+for machine `default_filament_profile`, which is `coStrings`
+(`PrintConfig.cpp:2350–2354`). Native selection reads its vector of values
+(`PresetBundle.cpp:4070–4076,8835–8836,8854–8858`), not the authored JSON shape.
 
 ## Verification
 
