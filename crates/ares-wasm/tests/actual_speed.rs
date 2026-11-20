@@ -60,7 +60,8 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
                 at(EMoveType::Extrude, 1.0, 20.0),
                 at(EMoveType::Extrude, 2.0, 40.0),
                 at(EMoveType::Travel, 3.0, 150.0),
-            ],
+            ]
+            .into(),
             extruder_colors: vec!["#FF0000".into()],
             ..Default::default()
         },

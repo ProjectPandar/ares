@@ -7,7 +7,6 @@ mod injector;
 use std::collections::BTreeMap;
 
 use crate::ProjectSettings;
-use crate::gcode_processor::MoveVertex;
 use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 
 /// `(unsigned)-1`: a machine G-code tag that was not seen.
@@ -41,7 +40,7 @@ pub(super) fn inject(
     line_map: &[u32],
     settings: &ProjectSettings,
     (nozzle_group_result, nozzle_counts): (&[NozzleGroup], &[i64]),
-    (gcode, moves): (&mut Vec<u8>, &mut [MoveVertex]),
+    (gcode, moves): (&mut Vec<u8>, &mut crate::gcode_processor::ChunkedMoves),
 ) {
     let blocks = UsageBlocks::build(lines, settings, nozzle_group_result).remap(line_map);
     // `:2005-2014`: the injector reads a float prefix sum of the per-move times.

@@ -41,7 +41,7 @@ pub(super) struct RecordedMotion {
 }
 
 pub(super) struct MoveRecorder {
-    moves: Vec<MoveVertex>,
+    moves: crate::gcode_processor::ChunkedMoves,
     custom_gcode_per_print_z: Vec<CustomGCodeItem>,
     last_default_color: usize,
     color_change_volume: f64,
@@ -111,7 +111,7 @@ impl MoveRecorder {
             })
             .collect();
         Self {
-            moves: vec![MoveVertex::default()],
+            moves: [MoveVertex::default()].into_iter().collect(),
             custom_gcode_per_print_z: Vec::new(),
             last_default_color: 0,
             color_change_volume: 0.0,

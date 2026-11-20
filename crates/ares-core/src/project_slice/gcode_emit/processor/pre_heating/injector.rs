@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use std::iter::once;
 
 use super::{FilamentUsage, InsertedLines, UsageBlocks, extruder_of};
-use crate::gcode_processor::MoveVertex;
+
 use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 use crate::{Nullable, NullableFloats, OrcaInts, ProjectSettings};
 
@@ -37,7 +37,7 @@ pub(super) struct Injector<'a> {
     settings: &'a ProjectSettings,
     nozzle_group_result: &'a [NozzleGroup],
     nozzle_counts: &'a [i64],
-    moves: &'a [MoveVertex],
+    moves: &'a crate::gcode_processor::ChunkedMoves,
     times: &'a [f32],
     skippable: &'a [(u32, u32)],
     free_blocks: Vec<FreeBlock>,
@@ -49,7 +49,7 @@ impl<'a> Injector<'a> {
     pub(super) fn new(
         settings: &'a ProjectSettings,
         (nozzle_group_result, nozzle_counts): (&'a [NozzleGroup], &'a [i64]),
-        moves: &'a [MoveVertex],
+        moves: &'a crate::gcode_processor::ChunkedMoves,
         times: &'a [f32],
         blocks: &'a UsageBlocks,
     ) -> Self {
@@ -248,8 +248,10 @@ impl<'a> Injector<'a> {
             if id > end || start == 0 {
                 break;
             }
-            let first =
-                lower + self.moves[lower..heat].partition_point(|vertex| vertex.gcode_id < start);
+            let first = lower
+                + self
+                    .moves
+                    .partition_range(lower..heat, |vertex| vertex.gcode_id < start);
             if first == lower {
                 break;
             }
