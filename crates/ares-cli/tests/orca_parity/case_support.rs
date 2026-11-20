@@ -28,6 +28,8 @@ mod export_3mf;
 
 #[path = "export_stl.rs"]
 mod export_stl;
+#[path = "export_stls_multi_input.rs"]
+mod export_stls_multi_input;
 #[path = "grid_bridge_anchor_direction.rs"]
 mod grid_bridge_anchor_direction;
 #[path = "sparse_anchor_object_layer.rs"]
