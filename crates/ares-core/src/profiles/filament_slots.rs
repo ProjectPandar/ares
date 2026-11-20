@@ -21,7 +21,8 @@ impl Default for FilamentSlotState {
     fn default() -> Self {
         Self {
             filaments: Vec::new(),
-            flush_multiplier: vec![1.0],
+            // PrintConfig.cpp:8291: the initial nozzle starts with the project default.
+            flush_multiplier: vec![0.3],
             flush_volumes_vector: vec![140.0, 140.0],
             flush_volumes_matrix: vec![0.0],
             filament_colour: vec!["#F2754E".to_owned()],
