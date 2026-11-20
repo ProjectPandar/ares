@@ -4,6 +4,8 @@ pub(in crate::profiles) mod keys;
 pub(super) mod preset;
 pub(in crate::profiles) use filament::{dev_key, is_vector};
 
+pub(crate) use filament::{dev_key as is_filament_dev_key, set_filament_dev_options};
+
 use std::collections::BTreeMap;
 
 use super::{Placement, project_selection::LoadedCatalog};
