@@ -20,6 +20,12 @@ pub(super) async fn run(
         .as_deref()
         .unwrap_or_else(|| Path::new(""))
         .join("plate_1.gcode");
+    if args.no_check && args.strict {
+        return Err(CliFailure::strict_no_check(
+            #[cfg(target_os = "linux")]
+            &output,
+        ));
+    }
     if let Some(destination) = args.export_settings.as_deref() {
         if let [input] = args.inputs.as_slice()
             && args.selection.is_none()
@@ -58,17 +64,6 @@ pub(super) async fn run(
             )
             .into());
         }
-    }
-    if args.no_check {
-        if args.strict {
-            return Err(CliFailure::strict_no_check(
-                #[cfg(target_os = "linux")]
-                &output,
-            ));
-        }
-        return Err(
-            io::Error::new(io::ErrorKind::InvalidInput, "--no-check is not supported").into(),
-        );
     }
     if args.convert_unit
         && (args.inputs.len() != 1 || args.inputs[0].extension().is_none_or(|ext| ext != "stl"))

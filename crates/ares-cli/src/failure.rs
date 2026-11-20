@@ -1,5 +1,5 @@
 #[cfg(target_os = "linux")]
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 use std::{error::Error, fs, io, path::Path};
 
 use ares_core::SliceError;
@@ -26,7 +26,7 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     sparse_infill_density: f64,
     #[cfg(target_os = "linux")]
-    error_string: &'static str,
+    error_string: Cow<'static, str>,
     upward_machines: Vec<String>,
     #[cfg(target_os = "linux")]
     warnings: Vec<crate::result_json::CliWarning>,
@@ -50,7 +50,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "The input files to the slicer are not found.",
+            error_string: "The input files to the slicer are not found.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -156,7 +156,7 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             sparse_infill_density: sparse,
             #[cfg(target_os = "linux")]
-            error_string,
+            error_string: Cow::Borrowed(error_string),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),

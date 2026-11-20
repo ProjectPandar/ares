@@ -25,7 +25,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "Triangle count of single plate exceeds the limit. Please simplify the model and try to upload again.",
+            error_string: "Triangle count of single plate exceeds the limit. Please simplify the model and try to upload again.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -49,7 +49,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "The input preset file is invalid and can not be parsed.",
+            error_string: "The input preset file is invalid and can not be parsed.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -84,7 +84,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "Invalid parameters to the slicer.",
+            error_string: "Invalid parameters to the slicer.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -112,7 +112,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "Failed exporting the G-code statistics.",
+            error_string: "Failed exporting the G-code statistics.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -144,7 +144,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "The input model file to the slicer can not be parsed.",
+            error_string: "The input model file to the slicer can not be parsed.".into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -168,6 +168,17 @@ impl CliFailure {
             family
                 .warnings
                 .extend(crate::result_json::slicing_warnings(plate, warnings));
+        }
+        self
+    }
+}
+
+impl CliFailure {
+    /// `OrcaSlicer.cpp:7036–7039`: the report uses the validator's text, not the exit-code text.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn with_validation_detail(mut self, detail: Option<String>) -> Self {
+        if let (Self::Family(family), Some(detail)) = (&mut self, detail) {
+            family.error_string = Cow::Owned(detail);
         }
         self
     }
@@ -198,7 +209,7 @@ impl FamilyFailure {
                 });
         crate::result_json::ResultJson {
             return_code: self.return_code,
-            error_string: self.error_string,
+            error_string: &self.error_string,
             plate_index: self.plate_index,
             layer_height: self.layer_height,
             wall_loops: self.wall_loops,

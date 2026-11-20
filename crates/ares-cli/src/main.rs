@@ -32,6 +32,15 @@ async fn main() {
     {
         cli.direct.mtcpp = None;
     }
+    // OrcaSlicer.cpp:1393,6426–6427: the strict pair is global; slicing is ordered.
+    if !cli.direct.strict
+        && matches
+            .index_of("no_check")
+            .zip(matches.index_of("selection"))
+            .is_some_and(|(check, slice)| check > slice)
+    {
+        cli.direct.no_check = false;
+    }
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
     let export_before_slice = matches
