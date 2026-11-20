@@ -56,3 +56,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "pressure_equalizer_fractional_feedrate.rs"]
+mod pressure_equalizer_fractional_feedrate;
