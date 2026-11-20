@@ -2,8 +2,8 @@ use ares_core::ProcessedGCode;
 
 /// Inputs of the legend estimation footer (`GCodeViewer.cpp:4547-4644`):
 /// `Print::print_statistics()` (`Print.hpp:789-816`) and the Normal-mode
-/// `PrintEstimatedStatistics::Mode` times. The f32 times widen to f64 so
-/// the JSON carries their exact values.
+/// `PrintEstimatedStatistics::Mode` times. Preparation time widens from
+/// f32 to f64; normal time already retains its upstream double precision.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Estimation {
@@ -21,7 +21,7 @@ impl From<&ProcessedGCode> for Estimation {
             total_used_filament: output.print_statistics.total_used_filament,
             total_weight: output.print_statistics.total_weight,
             total_cost: output.print_statistics.total_cost,
-            time: f64::from(stats.normal_time),
+            time: stats.normal_time,
             prepare_time: f64::from(stats.normal_prepare_time),
         }
     }

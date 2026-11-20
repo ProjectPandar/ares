@@ -32,6 +32,26 @@ fn assert_native(fixture: &str) {
     };
     let output = processed(&std::fs::read(&input).unwrap());
     let statistics = &output.result.print_statistics;
+    let artifacts = tempfile::Builder::new()
+        .prefix(&format!("print-statistics-{fixture}-"))
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    std::fs::write(
+        artifacts.join("statistics.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "fixture": fixture,
+            "input_sha256": runner::native_api_cli::sha(&std::fs::read(&input).unwrap()),
+            "native_entry": entry,
+            "actual_totals": output.print_statistics,
+            "actual_normal_time": statistics.normal_time,
+            "actual_prepare_time": statistics.normal_prepare_time,
+            "native": native,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    eprintln!("{fixture}: statistics artifact {artifacts:?}");
     // The shared sources must already agree before the totals can.
     // Native's std::map holds only extruders that extruded.
     let volumes = statistics
@@ -51,8 +71,10 @@ fn assert_native(fixture: &str) {
         volumes, native_volumes,
         "{fixture}: total_volumes_per_extruder; {entry:?}"
     );
+    // The existing Native probe prints this source with %.9g, so keep its
+    // f32 projection; the double totals below are compared without rounding.
     assert_eq!(
-        statistics.normal_time.to_bits(),
+        (statistics.normal_time as f32).to_bits(),
         (native["normal_time"].as_f64().unwrap() as f32).to_bits(),
         "{fixture}: modes[Normal].time {}; {entry:?}",
         statistics.normal_time

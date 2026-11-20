@@ -314,8 +314,8 @@ pub(super) fn process(
         .filter(|_| config.record_moves)
         .unwrap_or_default();
     let mut statistics = estimate.print_statistics;
-    // `GCodeProcessor::get_time` returns the float machine time.
-    statistics.normal_time = estimate.total as f32;
+    // `GCodeProcessor::get_time` preserves the double machine time.
+    statistics.normal_time = estimate.total;
     // `estimate.prepare` is the f32 prepare-stage sum widened to f64.
     statistics.normal_prepare_time = estimate.prepare as f32;
     let print_statistics = estimated_stats::update_print_estimated_stats(
