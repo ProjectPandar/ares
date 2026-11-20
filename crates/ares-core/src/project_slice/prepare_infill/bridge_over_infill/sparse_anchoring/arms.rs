@@ -84,7 +84,8 @@ pub(super) fn dispatch(
                         &expolygon,
                         params,
                         crate::fill::grid_trapezoidal::SurfaceGeometry {
-                            layer_id,
+                            // Fill.cpp:1611 subtracts the first object's layer ID for anchors.
+                            layer_id: layer_index,
                             thickness_layers: fill.representative.thickness_layers,
                             bounds,
                         },
