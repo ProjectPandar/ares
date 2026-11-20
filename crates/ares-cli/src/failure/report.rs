@@ -62,6 +62,17 @@ impl CliFailure {
     }
 
     pub(crate) fn strict_no_check(#[cfg(target_os = "linux")] output: &Path) -> Self {
+        Self::invalid_parameters(
+            "--strict cannot be combined with --no-check\n".to_owned(),
+            #[cfg(target_os = "linux")]
+            output,
+        )
+    }
+
+    pub(crate) fn invalid_parameters(
+        stderr: String,
+        #[cfg(target_os = "linux")] output: &Path,
+    ) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -2,
             #[cfg(target_os = "linux")]
@@ -79,7 +90,7 @@ impl CliFailure {
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
             plate_warning: None,
-            stderr: "--strict cannot be combined with --no-check\n".to_owned(),
+            stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
         }))

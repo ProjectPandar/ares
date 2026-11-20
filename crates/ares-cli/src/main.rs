@@ -33,17 +33,13 @@ async fn main() {
     }
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
+    let export_before_slice = matches
+        .index_of("export_settings")
+        .zip(matches.index_of("selection"))
+        .is_some_and(|(export, slice)| export < slice);
     let result = match cli.command {
         Some(Commands::Slice(args)) => run_slice(args).await,
-        None => match (&cli.direct.export_settings, cli.direct.inputs.as_slice()) {
-            (Some(destination), [project]) => settings_export::run(project, destination),
-            (Some(_), _) => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "--export-settings requires a saved 3MF project",
-            )
-            .into()),
-            (None, _) => direct_stl::run(cli.direct).await,
-        },
+        None => direct_stl::run(cli.direct, export_before_slice).await,
     };
     if let Err(failure) = result {
         failure.report(

@@ -17,6 +17,41 @@ struct LoadedPalette {
     filament_colour: OrcaStrings,
 }
 
+pub(crate) fn prepare_stl_settings_export(
+    settings: &mut ProjectSettings,
+    raw: &mut ProjectSettingsRaw,
+    overrides: &crate::ConfigOverrides,
+) -> Result<(), SliceError> {
+    let context = PreparationContext::capture(&ProjectSettingsRaw::default(), overrides)?;
+    prepare(settings, raw, &context, overrides)?;
+    raw.insert_strings(
+        "filament_colour",
+        &settings.filament.gcode.filament_colour.0,
+    );
+    let print = &settings.project.print;
+    for (key, values) in [
+        ("flush_volumes_matrix", print.flush_volumes_matrix.0.clone()),
+        (
+            "flush_multiplier",
+            print
+                .flush_multiplier
+                .0
+                .iter()
+                .map(|value| value.0)
+                .collect(),
+        ),
+    ] {
+        raw.insert_strings(
+            key,
+            &values
+                .into_iter()
+                .map(super::format_number)
+                .collect::<Vec<_>>(),
+        );
+    }
+    Ok(())
+}
+
 pub(crate) fn prepare(
     settings: &mut ProjectSettings,
     raw: &ProjectSettingsRaw,

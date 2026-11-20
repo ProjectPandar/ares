@@ -6,7 +6,7 @@ use crate::{
 use super::catalog::selection;
 mod load_settings;
 pub use load_settings::{
-    LoadSettingsSliceRequest, slice_imported_stl_with_load_settings_processed,
+    LoadSettingsSliceRequest, export_stl_settings, slice_imported_stl_with_load_settings_processed,
     slice_stl_files_with_load_settings, slice_stl_files_with_load_settings_processed,
     slice_with_load_settings, slice_with_load_settings_processed,
 };

@@ -39,6 +39,22 @@ pub(super) struct ResultJson<'a> {
 }
 
 impl ResultJson<'_> {
+    pub(super) fn write_without_slice(output: &Path, strict_mode: bool) {
+        let _ = Self {
+            return_code: 0,
+            error_string: "Success.",
+            plate_index: 0,
+            layer_height: 0.0,
+            wall_loops: 0,
+            sparse_infill_density: 0.0,
+            strict_mode,
+            upward_machines: &[],
+            sliced_plates: &[],
+            warnings: &[],
+        }
+        .write(output);
+    }
+
     /// Writes result.json beside `output`. `warnings` and `strict_mode` are always written
     /// (`:573-574`).
     pub(super) fn write(&self, output: &Path) -> Result<(), serde_json::Error> {

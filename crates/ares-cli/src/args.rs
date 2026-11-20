@@ -31,8 +31,8 @@ pub(crate) struct DirectSliceArgs {
         allow_negative_numbers = true
     )]
     pub(crate) selection: Option<i32>,
-    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'.
-    #[arg(long, value_name = "FILE", conflicts_with = "selection")]
+    /// Export effective settings to FILE, or to stdout with '-'.
+    #[arg(long, value_name = "FILE")]
     pub(crate) export_settings: Option<PathBuf>,
     /// Maximum triangle count per plate for direct STL slicing (0 means unlimited).
     #[arg(long, allow_negative_numbers = true)]

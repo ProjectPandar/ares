@@ -19,6 +19,7 @@ pub(crate) mod raw_settings;
 pub(crate) mod region_graph;
 mod relationships;
 mod settings_export;
+pub(crate) use settings_export::export_loaded_settings;
 pub use settings_export::export_project_settings;
 mod slice_info;
 mod transform;

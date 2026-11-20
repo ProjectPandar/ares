@@ -1,26 +1,69 @@
-use std::{fs, io};
+use std::{fs, io, path::Path};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsSliceRequest,
-    Placement, SliceError, SlicedPlate, SlicerContext, StlFile,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
+    LoadSettingsSliceRequest, Placement, SliceError, SlicedPlate, SlicerContext, StlFile,
 };
 
 use crate::{
     args::DirectSliceArgs,
     failure::{CliFailure, slice_error_to_failure},
-    read_preset_files, split_native_list,
+    read_preset_files, settings_export, split_native_list,
 };
 
-pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
+pub(super) async fn run(
+    args: DirectSliceArgs,
+    export_before_slice: bool,
+) -> Result<(), CliFailure> {
+    let output = args
+        .outputdir
+        .as_deref()
+        .unwrap_or_else(|| Path::new(""))
+        .join("plate_1.gcode");
+    if let Some(destination) = args.export_settings.as_deref() {
+        if let [input] = args.inputs.as_slice()
+            && args.selection.is_none()
+            && input
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
+        {
+            return settings_export::run(input, destination);
+        }
+        // OrcaSlicer.cpp:1453–1467 checks actions before transforms, before any input is read.
+        if destination == Path::new("-")
+            && let Some((_, flag)) = [
+                (args.selection.is_some(), "slice"),
+                (args.strict, "strict"),
+                (args.convert_unit, "convert-unit"),
+                (args.arrange.is_some(), "arrange"),
+            ]
+            .into_iter()
+            .find(|(present, _)| *present)
+        {
+            return Err(CliFailure::invalid_parameters(
+                format!("--export-settings - cannot be combined with --{flag}\n"),
+                #[cfg(target_os = "linux")]
+                &output,
+            ));
+        }
+        if args.inputs.len() != 1
+            || args.inputs[0].extension().is_none_or(|ext| ext != "stl")
+            || args.load_settings.is_none()
+            || args.load_filaments.is_none()
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "--export-settings requires a saved 3MF project or one STL with loaded presets",
+            )
+            .into());
+        }
+    }
     if args.no_check {
         if args.strict {
             return Err(CliFailure::strict_no_check(
                 #[cfg(target_os = "linux")]
-                &args
-                    .outputdir
-                    .as_ref()
-                    .expect("required output dir")
-                    .join("plate_1.gcode"),
+                &output,
             ));
         }
         return Err(
@@ -44,9 +87,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         return crate::direct_project::run(args).await;
     }
-    let selection = args
-        .selection
-        .expect("--slice is required without a subcommand");
+    let selection = args.selection.unwrap_or_default();
     if !matches!(selection, 0 | 1) {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "expected --slice 0 or 1").into());
     }
@@ -57,10 +98,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         )
         .into());
     }
-    let output = args
-        .outputdir
-        .expect("--outputdir is required without a subcommand")
-        .join("plate_1.gcode");
+
     let mut inputs = Vec::with_capacity(args.inputs.len());
     for path in &args.inputs {
         if path.extension().is_none_or(|ext| ext != "stl") {
@@ -101,6 +139,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         None
     };
     let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
+    let mut export_after = None;
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {
             if let Some(imported) = &imported {
@@ -153,6 +192,27 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     .ok_or_else(|| CliFailure::invalid_preset_file(&output))?;
                 for file in filaments.iter_mut().filter(|file| file.label.is_empty()) {
                     *file = first;
+                }
+            }
+            if let Some(destination) = args.export_settings.as_deref() {
+                let json = ares_core::export_stl_settings(
+                    bytes,
+                    filename,
+                    LoadSettingsRequest {
+                        settings: &settings,
+                        filaments: &filaments,
+                    },
+                )
+                .map_err(io::Error::other);
+                if args.selection.is_none() || export_before_slice {
+                    settings_export::write(destination, &json?)?;
+                    if args.selection.is_none() {
+                        #[cfg(target_os = "linux")]
+                        crate::result_json::ResultJson::write_without_slice(&output, args.strict);
+                        return Ok(());
+                    }
+                } else {
+                    export_after = Some((destination, json));
                 }
             }
             let request = LoadSettingsSliceRequest {
@@ -231,6 +291,9 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         )?;
     }
     crate::statistics::write(&output, gcode, args.export_statistics, 1)?;
+    if let Some((destination, json)) = export_after {
+        settings_export::write(destination, &json?)?;
+    }
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
         strict_mode: args.strict,

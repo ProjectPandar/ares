@@ -21,8 +21,12 @@ pub(super) fn run(input: &Path, destination: &Path) -> Result<(), CliFailure> {
         "{}",
         substitution_warnings(&input.to_string_lossy(), &substitutions)
     );
+    write(destination, &json)
+}
+
+pub(super) fn write(destination: &Path, json: &[u8]) -> Result<(), CliFailure> {
     if destination == Path::new("-") {
-        io::stdout().lock().write_all(&json)?;
+        io::stdout().lock().write_all(json)?;
     } else {
         // ConfigBase::save_to_json serializes before replacing the destination.
         let parent = destination
@@ -30,7 +34,7 @@ pub(super) fn run(input: &Path, destination: &Path) -> Result<(), CliFailure> {
             .filter(|parent| !parent.as_os_str().is_empty())
             .unwrap_or_else(|| Path::new("."));
         let mut file = tempfile::NamedTempFile::new_in(parent)?;
-        file.write_all(&json)?;
+        file.write_all(json)?;
         file.persist(destination).map_err(|error| error.error)?;
     }
     Ok(())
