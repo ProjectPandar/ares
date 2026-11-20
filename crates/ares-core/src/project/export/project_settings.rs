@@ -37,16 +37,20 @@ pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceE
     }
     // `CLI::run` overlays the dynamic config on `FullPrintConfig` and
     // applies it back (`OrcaSlicer.cpp:4252–4256`) before persisting JSON.
-    write_raw(&raw)
+    write_raw(&raw, false)
 }
 
 pub(super) fn write_raw(
     raw: &crate::project::raw_settings::ProjectSettingsRaw,
+    sliced: bool,
 ) -> Result<Vec<u8>, SliceError> {
     let mut output = BTreeMap::new();
     for def in option_definitions() {
         let value = match raw.get(def.key) {
             Some(value) => applied(def.key, def.kind, value.clone())?,
+            None if sliced && saved_unset_retraction(def.key) => {
+                Value::Array(vec![Value::String("nil".into())])
+            }
             None if def.full_config_default && full_print_config_default(def.key) => {
                 from_token(def.kind, def.default_wire_value)?
             }
@@ -79,6 +83,20 @@ fn full_print_config_default(key: &str) -> bool {
             key,
             "print_host" | "print_host_webui" | "deretract_speed_extruder_change"
         )
+}
+
+fn saved_unset_retraction(key: &str) -> bool {
+    // PrintConfig.cpp:100–120 and Preset.cpp:1542–1555: per-filament
+    // retraction overrides serialized as a nullable slot when not supplied.
+    matches!(
+        key,
+        "filament_retract_after_wipe"
+            | "filament_retract_length_toolchange"
+            | "filament_retract_lift_above"
+            | "filament_retract_lift_below"
+            | "filament_retract_lift_enforce"
+            | "filament_retract_restart_extra_toolchange"
+    )
 }
 
 fn applied(key: &str, kind: OptionValueKind, value: RawConfigValue) -> Result<Value, SliceError> {

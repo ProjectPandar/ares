@@ -156,7 +156,8 @@ impl MoveRecorder {
     }
 
     pub(super) fn is_first_layer(&self) -> bool {
-        self.layer_id == 1
+        // GCodeProcessor.cpp:5459,5879: startup moves also belong to layer one.
+        self.layer_id <= 1
     }
 
     /// Tag comments and the non-motion state commands of one input line.

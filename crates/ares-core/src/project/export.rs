@@ -19,7 +19,7 @@ const PLATE_GCODE: &str = "Metadata/plate_1.gcode";
 pub(crate) fn write_project_settings_raw(
     raw: &crate::project::raw_settings::ProjectSettingsRaw,
 ) -> Result<Vec<u8>, SliceError> {
-    project_settings::write_raw(raw)
+    project_settings::write_raw(raw, true)
 }
 
 struct SlicedMembers {

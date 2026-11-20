@@ -7,13 +7,12 @@ pub(super) fn append(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     schedule: &Schedule,
-    export_config: &[u8],
-    images: &[ThumbnailData],
+    (export_config, images, generator): (&[u8], &[ThumbnailData], &str),
 ) -> Result<Tags, SliceError> {
     let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
     let tags = Tags::of(traversal);
     if header::enabled(traversal) {
-        header::append_header(output, traversal, schedule, max_print_z);
+        header::append_header(output, traversal, schedule, (max_print_z, generator));
     }
     // GCode.cpp:4285-4300/4882-4935: BBL keeps config up front;
     // non-BBL writes it after executable output and before statistics.

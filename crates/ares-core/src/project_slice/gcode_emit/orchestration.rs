@@ -103,7 +103,10 @@ pub(in crate::project_slice) fn emit(
     let mut export_config = Vec::new();
     crate::options::write_config_block(
         &traversal.resolved.views,
-        &traversal.project.documents().project_settings_raw,
+        archive_facts.as_ref().map_or(
+            &traversal.project.documents().project_settings_raw,
+            |facts| &facts.project_settings,
+        ),
         traversal.project.current_plate_index(),
         Some(initial_filaments.compat_temperatures(traversal)),
         &mut export_config,
@@ -120,8 +123,11 @@ pub(in crate::project_slice) fn emit(
         &mut output,
         traversal,
         &schedule,
-        &export_config,
-        context.thumbnail_images(),
+        (
+            &export_config,
+            context.thumbnail_images(),
+            &archive::generator(archive_facts.is_some()),
+        ),
     )?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
