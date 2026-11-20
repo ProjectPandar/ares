@@ -48,6 +48,9 @@ mod sparse_pattern_solid_anchor;
 #[path = "turning_bridge_boundary_sampling.rs"]
 mod turning_bridge_boundary_sampling;
 
+#[path = "export_3mf_sliced_rejection.rs"]
+mod export_3mf_sliced_rejection;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
