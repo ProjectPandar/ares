@@ -57,6 +57,9 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) load_settings: Option<String>,
     #[arg(long)]
     pub(crate) load_filaments: Option<String>,
+    /// Replace saved layer G-code events with those from a JSON file for the selected plate.
+    #[arg(long, value_name = "FILE", requires = "selection")]
+    pub(crate) load_custom_gcodes: Option<PathBuf>,
     /// Fill empty --load-filaments entries with the first specified preset for STL slicing.
     #[arg(long)]
     pub(crate) load_defaultfila: bool,

@@ -42,6 +42,7 @@ pub async fn slice_plater_plate(
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &edits,
         },
         metadata,

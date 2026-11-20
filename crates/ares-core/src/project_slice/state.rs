@@ -36,6 +36,9 @@ pub(super) fn prepare_project_source(
         source
             .input
             .load(source.overrides, source.refresh, source.validate_print)?;
+    if let Some(custom_gcodes) = source.custom_gcodes {
+        project.replace_plate_custom_gcodes(custom_gcodes);
+    }
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);

@@ -13,6 +13,13 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
+    pub(crate) fn with_stderr(mut self, stderr: String) -> Self {
+        if let Self::Family(family) = &mut self {
+            family.stderr = stderr;
+        }
+        self
+    }
+
     pub(super) fn triangle_count_exceeds_limit(_output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -59,

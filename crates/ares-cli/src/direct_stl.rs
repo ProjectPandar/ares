@@ -133,9 +133,14 @@ pub(super) async fn run(
     } else {
         None
     };
-    let context = SlicerContext::new(0)
-        .with_max_triangle_count(args.mtcpp.unwrap_or_default())
-        .with_no_check(args.no_check);
+    let context = crate::custom_gcodes::load(
+        SlicerContext::new(0)
+            .with_max_triangle_count(args.mtcpp.unwrap_or_default())
+            .with_no_check(args.no_check),
+        args.load_custom_gcodes.as_deref(),
+        &output,
+        0,
+    )?;
     let mut export_after = None;
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {

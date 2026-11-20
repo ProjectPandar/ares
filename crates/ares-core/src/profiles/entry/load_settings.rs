@@ -204,6 +204,7 @@ fn with_load_settings_source<T>(
         upward: None,
         sliced_plate: Some(sliced_plate),
         max_triangle_count: 0,
+        custom_gcodes: None,
         edits: &crate::plater::NO_EDITS,
     })
 }

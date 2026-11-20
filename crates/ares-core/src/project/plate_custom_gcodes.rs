@@ -304,6 +304,13 @@ fn invalid(reason: impl Display) -> SliceError {
 }
 
 impl Project {
+    pub(crate) fn replace_plate_custom_gcodes(
+        &mut self,
+        (plate_index, info): (i32, CustomGCodeInfo),
+    ) {
+        self.plates_custom_gcodes = BTreeMap::from([(plate_index, info)]);
+    }
+
     /// `Model::plates_custom_gcodes`, keyed by the zero-based plate index.
     pub fn plates_custom_gcodes(&self) -> &BTreeMap<i32, CustomGCodeInfo> {
         &self.plates_custom_gcodes

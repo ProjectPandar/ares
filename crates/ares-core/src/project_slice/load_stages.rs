@@ -21,7 +21,7 @@ pub(super) fn prepare_post_closing(
         triangle_count,
     } = if let Some(profile) = project.profile {
         profile_entry::prepare_profile_slice(
-            &project,
+            &mut project,
             profile,
             sliced_plate
                 .as_deref_mut()

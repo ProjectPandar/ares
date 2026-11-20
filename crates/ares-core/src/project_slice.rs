@@ -130,6 +130,7 @@ pub async fn slice_project_plate(
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -161,6 +162,7 @@ pub async fn slice_project_plate_processed(
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -184,6 +186,7 @@ pub(crate) fn slice_source(
     let project = ProjectSource {
         sliced_plate: sliced_plate.as_deref_mut(),
         max_triangle_count: context.max_triangle_count,
+        custom_gcodes: context.custom_gcodes.take(),
         ..project
     };
     let walls = perimeters::prepare_post_layer_region_perimeters(project, &mut context)?;

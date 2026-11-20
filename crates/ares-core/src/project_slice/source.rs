@@ -19,6 +19,7 @@ pub(crate) struct ProjectSource<'a> {
     /// The CLI's success report values, filled once the plate is set up.
     pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
     pub(crate) max_triangle_count: i32,
+    pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
     /// Plater edits applied to the loaded model (empty for a plain slice).
     pub(crate) edits: &'a crate::plater::PlaterEdits,
 }
@@ -143,6 +144,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         }
     }
@@ -164,6 +166,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         }
     }

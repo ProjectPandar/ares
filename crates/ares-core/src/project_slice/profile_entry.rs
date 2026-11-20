@@ -117,13 +117,16 @@ fn load_and_place_with_preparation(
 /// project enters the ordinary plate-selection lifecycle, with the
 /// requested placement applied first.
 pub(super) fn prepare_profile_slice(
-    project: &ProjectSource<'_>,
+    project: &mut ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
     triangle_count_limit: Option<i32>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut loaded, preparation) =
         load_and_place_with_preparation(project, profile, upward_report)?;
+    if let Some(custom_gcodes) = project.custom_gcodes.take() {
+        loaded.replace_plate_custom_gcodes(custom_gcodes);
+    }
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
     // gate fires after load and before parameter validation —
     // loaded-names adjudication for the `--load-settings` composite
