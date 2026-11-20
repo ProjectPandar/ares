@@ -77,13 +77,8 @@ fn decode_step(
         pending.push(DecodeWork::Child(index, neighbors, triangle.splits()));
         return;
     }
-    selector.triangles[index].state = if code >> 2 == 3 {
-        let state = codes[*cursor] + 3;
-        *cursor += 1;
-        state
-    } else {
-        code >> 2
-    };
+    selector.triangles[index].state =
+        super::leaf_state(code, codes, cursor).expect("validated facet state");
 }
 
 fn export_step(
