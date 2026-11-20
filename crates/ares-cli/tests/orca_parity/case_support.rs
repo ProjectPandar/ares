@@ -64,6 +64,8 @@ mod seam_paint_volumes;
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
+#[path = "cli_strict.rs"]
+mod cli_strict;
 #[path = "concentric_thick_polyline_rotation.rs"]
 mod concentric_thick_polyline_rotation;
 #[path = "direct_stl_slice.rs"]
