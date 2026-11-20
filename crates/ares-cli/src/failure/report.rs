@@ -13,6 +13,31 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
+    pub(crate) fn missing_default_filament(#[cfg(target_os = "linux")] output: &Path) -> Self {
+        // OrcaSlicer.cpp:2411–2415 reports CLI_CONFIG_FILE_ERROR before slicing.
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -5,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "The input preset file is invalid and can not be parsed.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            plate_warning: None,
+            stderr: String::new(),
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+
     pub(crate) fn strict_no_check(#[cfg(target_os = "linux")] output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -2,
