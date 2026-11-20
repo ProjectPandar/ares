@@ -50,6 +50,8 @@ pub(super) fn records() -> Vec<Record> {
                 includes: Vec::new(),
                 fields,
             },
+            source_identity: None,
+            direct: false,
         }
     })
     .collect()
