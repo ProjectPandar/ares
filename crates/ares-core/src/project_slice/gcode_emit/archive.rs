@@ -49,6 +49,25 @@ pub(super) fn facts(
     })
 }
 
+pub(super) fn sliced_archive(facts: ArchivePlate) -> Result<crate::SlicedArchive, SliceError> {
+    Ok(crate::SlicedArchive {
+        object_name: facts.object_name,
+        plate_id: facts.plate_id,
+        identify_id: facts.identify_id,
+        bounds: facts.bounds,
+        area: facts.area,
+        layer_height: facts.layer_height,
+        layer_count: facts.layer_count,
+        filament_color: facts.filament_color,
+        filament_type: facts.filament_type,
+        filament_id: facts.filament_id,
+        nozzle_diameter: facts.nozzle_diameter,
+        project_settings: crate::project::export::write_project_settings_raw(
+            &facts.project_settings,
+        )?,
+    })
+}
+
 fn saved_settings(
     settings: &crate::project::raw_settings::ProjectSettingsRaw,
 ) -> crate::project::raw_settings::ProjectSettingsRaw {

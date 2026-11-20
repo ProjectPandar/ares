@@ -129,7 +129,7 @@ pub(super) fn model_settings(
     )
 }
 
-pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
+pub(super) fn plate_json(archive: &SlicedArchive, print_object_id: u32) -> Vec<u8> {
     #[derive(Serialize)]
     struct Object {
         area: f32,
@@ -156,7 +156,7 @@ pub(super) fn plate_json(archive: &SlicedArchive) -> Vec<u8> {
         bbox_objects: [Object {
             area: archive.area,
             bbox: archive.bounds,
-            id: archive.plate_id,
+            id: print_object_id,
             layer_height: f64::from(archive.layer_height),
             name: archive.object_name.clone(),
         }],

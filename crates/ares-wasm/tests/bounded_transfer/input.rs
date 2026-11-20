@@ -51,6 +51,7 @@ pub fn input(large: bool) -> ProcessedGCode {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     }
 }
 

@@ -391,26 +391,6 @@ pub(in crate::project_slice) fn emit(
         &nozzle_groups,
         (record_moves, tower_statistics),
     )?;
-    let sliced_archive = archive_facts
-        .map(|facts| {
-            Ok(crate::SlicedArchive {
-                object_name: facts.object_name,
-                plate_id: facts.plate_id,
-                identify_id: facts.identify_id,
-                bounds: facts.bounds,
-                area: facts.area,
-                layer_height: facts.layer_height,
-                layer_count: facts.layer_count,
-                filament_color: facts.filament_color,
-                filament_type: facts.filament_type,
-                filament_id: facts.filament_id,
-                nozzle_diameter: facts.nozzle_diameter,
-                project_settings: crate::project::export::write_project_settings_raw(
-                    &facts.project_settings,
-                )?,
-            })
-        })
-        .transpose()?;
-    result.archive = sliced_archive;
+    result.archive = archive_facts.map(archive::sliced_archive).transpose()?;
     Ok(result)
 }
