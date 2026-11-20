@@ -21,6 +21,9 @@ mod absolute_e_reset_comment;
 #[path = "direct_stl_slice.rs"]
 mod direct_stl_slice;
 
+#[path = "export_statistics.rs"]
+mod export_statistics;
+
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
 
