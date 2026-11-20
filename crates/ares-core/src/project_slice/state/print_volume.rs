@@ -256,22 +256,25 @@ pub(crate) fn update_print_volume_state(project: &mut Project) -> Result<usize, 
     Ok(count)
 }
 
-/// The plate's `triangle_count` for the CLI success report (`OrcaSlicer.cpp:6576-6640` at v2.5.0-beta
-/// `345efec64`): the facets of every model-part volume of each instance whose print-volume state is
-/// inside. The Ares CLI skips no object, so no instance is excluded as skipped.
-pub(crate) fn inside_triangle_count(project: &Project) -> Result<usize, SliceError> {
-    let volume = PrintVolume::new(project)?;
+/// `OrcaSlicer.cpp:6576–6641`: count model-part facets for each inside instance.
+pub(crate) fn inside_triangle_count(project: &Project, limit: i32) -> Result<usize, SliceError> {
     let mut count = 0;
-    for object in project.objects() {
-        for instance in object.instances() {
-            if calc_print_volume_state(object, instance.transform(), &volume) == InstancePvs::Inside
-            {
-                count += object
-                    .volumes()
-                    .iter()
-                    .filter(|volume| volume.volume_type() == crate::ProjectVolumeType::ModelPart)
-                    .map(|volume| volume.mesh().triangles().len())
-                    .sum::<usize>();
+    let inside_objects = project.objects().iter().flat_map(|object| {
+        object
+            .instances()
+            .iter()
+            .filter(|instance| instance.is_inside_print_volume())
+            .map(move |_| object)
+    });
+    for object in inside_objects {
+        let parts = object
+            .volumes()
+            .iter()
+            .filter(|volume| volume.volume_type() == crate::ProjectVolumeType::ModelPart);
+        for volume in parts {
+            count += volume.mesh().triangles().len();
+            if limit != 0 && (limit < 0 || count > limit as usize) {
+                return Err(SliceError::TriangleCountExceedsLimit);
             }
         }
     }

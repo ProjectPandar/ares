@@ -120,6 +120,7 @@ pub(super) fn prepare_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
+    triangle_count_limit: Option<i32>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut loaded, preparation) =
         load_and_place_with_preparation(project, profile, upward_report)?;
@@ -158,7 +159,7 @@ pub(super) fn prepare_profile_slice(
                 .printer_settings_id
                 .0,
         ),
-        project.validate_print,
+        (project.validate_print, triangle_count_limit),
         Some((preparation, project.overrides)),
     )
 }

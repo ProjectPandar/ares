@@ -200,6 +200,8 @@ pub enum SliceError {
     /// empty or has no object fully inside it. The payload keeps the
     /// model-read detail for the stderr channel.
     NoSuitableObjects(String),
+    /// `CLI_TRIANGLE_COUNT_EXCEEDS_LIMIT` (`OrcaSlicer.cpp:6637–6641`).
+    TriangleCountExceedsLimit,
     /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
     /// embedded in the 3MF/config fail validation; the payload is the
     /// `key: detail` block for the stderr channel.
@@ -272,6 +274,7 @@ impl fmt::Display for SliceError {
                 "The selected printer is not compatible with the process preset in the 3mf.",
             ),
             Self::NoSuitableObjects(message) => f.write_str(message),
+            Self::TriangleCountExceedsLimit => f.write_str("plate triangle count exceeds the limit"),
             Self::InvalidValuesInProject(message) => f.write_str(message),
             Self::Validate { message, .. }
             | Self::SequentialPrintCollision { message, .. }

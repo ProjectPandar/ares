@@ -37,6 +37,11 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         .into());
     }
     if args.inputs.len() == 1 && args.inputs[0].extension().is_some_and(|ext| ext == "3mf") {
+        if args.mtcpp.is_some() {
+            return Err(
+                io::Error::new(io::ErrorKind::InvalidInput, "--mtcpp requires STL input").into(),
+            );
+        }
         return crate::direct_project::run(args).await;
     }
     let selection = args
@@ -95,6 +100,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     } else {
         None
     };
+    let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {
             if let Some(imported) = &imported {
@@ -102,6 +108,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     imported,
                     &mut sliced_plate,
                     args.export_statistics,
+                    context,
                 )
                 .await
             } else {
@@ -110,6 +117,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     filename,
                     &mut sliced_plate,
                     args.export_statistics,
+                    context,
                 )
                 .await
             }
@@ -166,7 +174,6 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 sliced_plate: &mut sliced_plate,
             };
             let metadata = GenerationMetadata::default();
-            let context = SlicerContext::new(0);
             if let Some(imported) = &imported {
                 ares_core::slice_imported_stl_with_load_settings_processed(
                     imported,

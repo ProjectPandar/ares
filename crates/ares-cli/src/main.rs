@@ -15,12 +15,21 @@ use std::io;
 use std::path::Path;
 
 use args::{Cli, Commands, SliceArgs};
-use clap::Parser;
+use clap::{CommandFactory, FromArgMatches};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let cli = Cli::parse();
+    let matches = Cli::command().get_matches();
+    let mut cli = Cli::from_arg_matches(&matches).unwrap_or_else(|error| error.exit());
+    // OrcaSlicer.cpp:6297,6394–6395: actions take effect in argument order.
+    if matches
+        .index_of("mtcpp")
+        .zip(matches.index_of("selection"))
+        .is_some_and(|(limit, slice)| limit > slice)
+    {
+        cli.direct.mtcpp = None;
+    }
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
     let result = match cli.command {

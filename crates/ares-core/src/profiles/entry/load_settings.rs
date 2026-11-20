@@ -167,6 +167,7 @@ fn with_load_settings_source<T>(
         orient,
         upward: None,
         sliced_plate: Some(sliced_plate),
+        max_triangle_count: 0,
         edits: &crate::plater::NO_EDITS,
     })
 }

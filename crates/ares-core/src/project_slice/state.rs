@@ -10,8 +10,7 @@ use crate::{
 mod painted_fuzzy;
 mod print_volume;
 pub(crate) use print_volume::{
-    BedShape, Circle, PrintVolume, global_bed_points, inside_triangle_count,
-    instance_partly_outside,
+    BedShape, Circle, PrintVolume, global_bed_points, instance_partly_outside,
 };
 
 use super::{
@@ -26,10 +25,12 @@ pub(super) struct ProjectSliceState {
     pub(super) config_block: Option<Vec<u8>>,
     pub(super) scale: CoordinateScale,
     pub(super) looped_objects: Vec<LoopedPrintObject>,
+    pub(super) triangle_count: usize,
 }
 
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
+    triangle_count_limit: Option<i32>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut project, preparation) =
         source
@@ -77,7 +78,7 @@ pub(super) fn prepare_project_source(
         project,
         source.plate,
         None,
-        source.validate_print,
+        (source.validate_print, triangle_count_limit),
         Some((preparation, source.overrides)),
     )
 }
@@ -86,7 +87,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     project: Project,
     plate: Option<u32>,
     selected_printer: Option<&str>,
-    validate_print: bool,
+    (validate_print, triangle_count_limit): (bool, Option<i32>),
     preparation: Option<(
         crate::options::flush_matrix::PreparationContext,
         &crate::ConfigOverrides,
@@ -105,6 +106,10 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
                 .to_owned(),
         ));
     }
+    let triangle_count = match triangle_count_limit {
+        Some(limit) => print_volume::inside_triangle_count(&project, limit)?,
+        None => 0,
+    };
     let resolved = match preparation {
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, &context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
@@ -154,5 +159,6 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         config_block,
         scale,
         looped_objects,
+        triangle_count,
     })
 }

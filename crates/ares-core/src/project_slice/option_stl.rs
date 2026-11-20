@@ -117,7 +117,7 @@ pub async fn slice_cli_stl_with_defaults(
     filename: &str,
     report: &mut crate::SlicedPlate,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_cli_stl_with_defaults_processed(input, filename, report, false)
+    slice_cli_stl_with_defaults_processed(input, filename, report, false, SlicerContext::new(0))
         .await
         .map(|processed| processed.gcode)
 }
@@ -127,12 +127,14 @@ pub async fn slice_cli_stl_with_defaults_processed(
     filename: &str,
     report: &mut crate::SlicedPlate,
     record_moves: bool,
+    context: SlicerContext<'_>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     slice_with_report(
         Input::Bytes(input, filename),
         &SliceOptions::default(),
         (true, record_moves),
         Some(report),
+        context,
     )
 }
 
@@ -141,12 +143,14 @@ pub async fn slice_imported_stl_with_defaults_processed(
     input: &crate::ImportedStl,
     report: &mut crate::SlicedPlate,
     record_moves: bool,
+    context: SlicerContext<'_>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     slice_with_report(
         Input::Imported(input),
         &SliceOptions::default(),
         (true, record_moves),
         Some(report),
+        context,
     )
 }
 
@@ -161,6 +165,7 @@ pub(crate) fn slice(
         options,
         (validate_print, false),
         None,
+        SlicerContext::new(0),
     )
     .map(|processed| processed.gcode)
 }
@@ -170,6 +175,7 @@ fn slice_with_report(
     options: &SliceOptions,
     (validate_print, record_moves): (bool, bool),
     sliced_plate: Option<&mut crate::SlicedPlate>,
+    context: SlicerContext<'_>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     super::slice_source(
         ProjectSource {
@@ -180,7 +186,7 @@ fn slice_with_report(
         },
         GenerationMetadata::default(),
         record_moves,
-        SlicerContext::new(0),
+        context,
     )
 }
 

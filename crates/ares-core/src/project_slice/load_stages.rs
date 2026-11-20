@@ -10,12 +10,15 @@ pub(super) fn prepare_post_closing(
     mut project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut sliced_plate = project.sliced_plate.take();
+    let triangle_count_limit = (sliced_plate.is_some() || project.max_triangle_count != 0)
+        .then_some(project.max_triangle_count);
     let state::ProjectSliceState {
         project,
         resolved,
         config_block,
         scale,
         looped_objects,
+        triangle_count,
     } = if let Some(profile) = project.profile {
         profile_entry::prepare_profile_slice(
             &project,
@@ -23,9 +26,10 @@ pub(super) fn prepare_post_closing(
             sliced_plate
                 .as_deref_mut()
                 .map(|report| &mut report.upward_machines),
+            triangle_count_limit,
         )?
     } else {
-        state::prepare_project_source(project)?
+        state::prepare_project_source(project, triangle_count_limit)?
     };
     if let Some(sliced_plate) = sliced_plate {
         // `OrcaSlicer.cpp:6576-6640, 6926-6931`: the plate's facets and `m_print_config` values, read
@@ -34,7 +38,7 @@ pub(super) fn prepare_post_closing(
         *sliced_plate = crate::SlicedPlate {
             warnings: Vec::new(),
             upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
-            triangle_count: state::inside_triangle_count(&project)?,
+            triangle_count,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),
             wall_loops: settings.process.region.wall_loops.0,
             sparse_infill_density: f64::from(

@@ -13,6 +13,30 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
+    pub(super) fn triangle_count_exceeds_limit(_output: &Path) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -59,
+            #[cfg(target_os = "linux")]
+            plate_index: 1,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "Triangle count of single plate exceeds the limit. Please simplify the model and try to upload again.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            plate_warning: None,
+            stderr: String::new(),
+            #[cfg(target_os = "linux")]
+            output: _output.to_owned(),
+        }))
+    }
+
     pub(crate) fn invalid_preset_file(_output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -5,

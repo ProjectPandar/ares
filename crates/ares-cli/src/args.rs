@@ -25,6 +25,9 @@ pub(crate) struct DirectSliceArgs {
     /// Slice all plates (0) or the given one-based plate number.
     #[arg(long = "slice", required = true, allow_negative_numbers = true)]
     pub(crate) selection: Option<i32>,
+    /// Maximum triangle count per plate for direct STL slicing (0 means unlimited).
+    #[arg(long, allow_negative_numbers = true)]
+    pub(crate) mtcpp: Option<i32>,
     /// Directory for plate_<n>.gcode and the slice result.
     #[arg(long, required = true)]
     pub(crate) outputdir: Option<PathBuf>,

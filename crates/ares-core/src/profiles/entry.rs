@@ -284,6 +284,7 @@ pub(crate) fn with_edited_profile_source<T>(
             orient: false,
             upward: None,
             sliced_plate: None,
+            max_triangle_count: 0,
             edits,
         });
     }
@@ -309,6 +310,7 @@ pub(crate) fn with_edited_profile_source<T>(
         orient: false,
         upward: None,
         sliced_plate: None,
+        max_triangle_count: 0,
         edits,
     })
 }
