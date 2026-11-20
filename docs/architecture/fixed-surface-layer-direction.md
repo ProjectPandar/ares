@@ -29,8 +29,10 @@ surfaces to sparse anchoring or change anchor lengths.
 
 ## Rust destination
 
-Read the already parsed region options in
-`crates/ares-core/src/options/process_options/region_source.rs` from
+Move the already parsed settings from the source-only declarations in
+`crates/ares-core/src/options/process_options/region_source.rs` to the shared
+`options/region_fields.rs` so resolved regions carry them, as in upstream
+`PrintConfig.hpp:1480–1481`. Consume them in
 `project_slice/group_fills/params/projection/rotation.rs`. Pass the surface kind
 from `projection.rs`; the emitted extrusion role alone cannot distinguish
 external bottom bridges from internal bridges. Keep the shared angle conversion,

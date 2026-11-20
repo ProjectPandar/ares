@@ -124,7 +124,7 @@ pub(super) fn project_surface(
         params.pattern,
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid)
     ) && context.region.gyroid_optimized.0;
-    let (angle, fixed_angle) = projected_angle(context, params.extrusion_role)?;
+    let (angle, fixed_angle) = projected_angle(context, kind, params.extrusion_role)?;
     params.angle = angle;
     params.fixed_angle = fixed_angle;
     params.bridge_angle = bridge_angle as f32;
