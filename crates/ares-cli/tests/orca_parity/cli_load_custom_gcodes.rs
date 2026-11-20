@@ -1,9 +1,14 @@
 #![cfg(target_os = "linux")]
 
-use std::{ffi::OsString, fs, io::Write, path::Path};
+use std::{
+    ffi::OsString,
+    fs,
+    io::{self, Cursor, Write},
+    path::Path,
+};
 
 use serde_json::{Value, json};
-use zip::{ZipWriter, write::SimpleFileOptions};
+use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 use super::{
     cli_no_check::{gcode, inventory, run},
@@ -170,12 +175,18 @@ fn compare(saved: bool, status: Option<i32>) {
 }
 
 fn seed_archived_event(project: &Path) {
-    let file = fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(project)
-        .unwrap();
-    let mut archive = ZipWriter::new_append(file).unwrap();
+    let mut source = ZipArchive::new(Cursor::new(fs::read(project).unwrap())).unwrap();
+    let mut archive = ZipWriter::new(Cursor::new(Vec::new()));
+    let options = SimpleFileOptions::default();
+    for index in 0..source.len() {
+        let mut entry = source.by_index(index).unwrap();
+        if entry.is_dir() {
+            archive.add_directory(entry.name(), options).unwrap();
+        } else {
+            archive.start_file(entry.name(), options).unwrap();
+            io::copy(&mut entry, &mut archive).unwrap();
+        }
+    }
     archive
         .start_file(
             "Metadata/custom_gcode_per_layer.xml",
@@ -190,5 +201,5 @@ fn seed_archived_event(project: &Path) {
 <mode value="SingleExtruder"/></plate></custom_gcodes_per_layer>"#
     )
     .unwrap();
-    archive.finish().unwrap();
+    fs::write(project, archive.finish().unwrap().into_inner()).unwrap();
 }
