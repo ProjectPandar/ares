@@ -53,14 +53,13 @@ impl Mesh {
                 }));
             let flipped =
                 (transform.linear_determinant() < 0.0) != (object.linear_determinant() < 0.0);
-            mesh.faces
-                .extend(volume.mesh().triangles().iter().map(|triangle| {
-                    let mut face = triangle.map(|v| v + base);
-                    if flipped {
-                        face.swap(1, 2);
-                    }
-                    face
-                }));
+            mesh.faces.extend(
+                volume
+                    .mesh()
+                    .triangles()
+                    .iter()
+                    .map(|triangle| transformed_face(triangle, base, flipped)),
+            );
         }
         mesh
     }
@@ -82,26 +81,13 @@ impl Mesh {
         let matrix = octree::octree_rotation_to_octree();
         let to_object = std::array::from_fn(|row| std::array::from_fn(|col| matrix[col][row]));
         for component in components {
-            let mut votes = vec![0; layout.count];
-            for &face in component.iter().step_by((component.len() / 8).max(1)) {
-                let [a, b, c] = self.faces[face].map(|v| self.vertices[v as usize]);
-                let center = octree::rotate_point(to_object, interior_sample(a, b, c, inset));
-                let mut layer = layers.partition_point(|layer| layer.slice_z < center[2]);
-                if layer == layers.len()
-                    || (layer > 0
-                        && center[2] - layers[layer - 1].slice_z
-                            < layers[layer].slice_z - center[2])
-                {
-                    layer -= 1;
-                }
-                let point = Point::new(
-                    scale.checked_scale(center[0]).unwrap(),
-                    scale.checked_scale(center[1]).unwrap(),
-                );
-                if let Some(body) = layout.body_at(layer, &islands[layer], point, scale) {
-                    votes[body] += 1;
-                }
-            }
+            let votes = component_votes(
+                &component,
+                (&self.faces, &self.vertices),
+                layout,
+                (layers, islands, inset, scale),
+                to_object,
+            );
             let (best, count) = votes
                 .into_iter()
                 .enumerate()
@@ -109,20 +95,71 @@ impl Mesh {
                 .max_by_key(|&(_, count)| count)
                 .unwrap();
             if count > 0 {
-                let mesh = &mut bodies[best];
-                let mut mapped = HashMap::new();
-                for face in component {
-                    mesh.faces.push(self.faces[face].map(|v| {
-                        *mapped.entry(v).or_insert_with(|| {
-                            let ix = mesh.vertices.len() as u32;
-                            mesh.vertices.push(self.vertices[v as usize]);
-                            ix
-                        })
-                    }));
-                }
+                append_component(&mut bodies[best], self, &component);
             }
         }
         Some(bodies)
+    }
+}
+
+fn transformed_face(triangle: &[u32; 3], base: u32, flipped: bool) -> [u32; 3] {
+    let mut face = triangle.map(|v| v + base);
+    if flipped {
+        face.swap(1, 2);
+    }
+    face
+}
+
+fn component_votes(
+    component: &[usize],
+    source: (&[[u32; 3]], &[[f64; 3]]),
+    layout: &BodyLayout,
+    context: (&[PlannedLayer], &[Vec<ExPolygon>], f64, CoordinateScale),
+    to_object: [[f64; 3]; 3],
+) -> Vec<usize> {
+    let (faces, vertices) = source;
+    let mut votes = vec![0; layout.count];
+    for &face in component.iter().step_by((component.len() / 8).max(1)) {
+        if let Some(body) = sample_body(faces[face], vertices, layout, context, to_object) {
+            votes[body] += 1;
+        }
+    }
+    votes
+}
+
+fn sample_body(
+    face: [u32; 3],
+    vertices: &[[f64; 3]],
+    layout: &BodyLayout,
+    context: (&[PlannedLayer], &[Vec<ExPolygon>], f64, CoordinateScale),
+    to_object: [[f64; 3]; 3],
+) -> Option<usize> {
+    let (layers, islands, inset, scale) = context;
+    let [a, b, c] = face.map(|v| vertices[v as usize]);
+    let center = octree::rotate_point(to_object, interior_sample(a, b, c, inset));
+    let mut layer = layers.partition_point(|layer| layer.slice_z < center[2]);
+    if layer == layers.len()
+        || (layer > 0 && center[2] - layers[layer - 1].slice_z < layers[layer].slice_z - center[2])
+    {
+        layer -= 1;
+    }
+    let point = Point::new(
+        scale.checked_scale(center[0]).unwrap(),
+        scale.checked_scale(center[1]).unwrap(),
+    );
+    layout.body_at(layer, &islands[layer], point, scale)
+}
+
+fn append_component(mesh: &mut Mesh, source: &Mesh, component: &[usize]) {
+    let mut mapped = HashMap::new();
+    for &face in component {
+        mesh.faces.push(source.faces[face].map(|v| {
+            *mapped.entry(v).or_insert_with(|| {
+                let ix = mesh.vertices.len() as u32;
+                mesh.vertices.push(source.vertices[v as usize]);
+                ix
+            })
+        }));
     }
 }
 
@@ -169,12 +206,15 @@ fn components(faces: &[[u32; 3]]) -> Vec<Vec<usize>> {
         let mut component = vec![seed];
         stack.push(seed);
         while let Some(face) = stack.pop() {
-            for neighbor in neighbors[face].into_iter().flatten() {
-                if !visited[neighbor] {
-                    visited[neighbor] = true;
-                    component.push(neighbor);
-                    stack.push(neighbor);
-                }
+            let next: Vec<_> = neighbors[face]
+                .into_iter()
+                .flatten()
+                .filter(|&neighbor| !visited[neighbor])
+                .collect();
+            for neighbor in next {
+                visited[neighbor] = true;
+                component.push(neighbor);
+                stack.push(neighbor);
             }
         }
         result.push(component);
