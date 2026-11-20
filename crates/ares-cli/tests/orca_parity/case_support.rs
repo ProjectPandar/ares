@@ -21,6 +21,9 @@ mod support_cubic_bodies;
 #[path = "sparse_pattern_solid_anchor.rs"]
 mod sparse_pattern_solid_anchor;
 
+#[path = "turning_bridge_boundary_sampling.rs"]
+mod turning_bridge_boundary_sampling;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
