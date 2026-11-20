@@ -18,6 +18,8 @@ mod startup_fan_initial_tool;
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
+#[path = "direct_stl_auto_arrange.rs"]
+mod direct_stl_auto_arrange;
 #[path = "direct_stl_slice.rs"]
 mod direct_stl_slice;
 
