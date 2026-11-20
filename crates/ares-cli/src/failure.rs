@@ -169,7 +169,9 @@ pub(super) fn slice_error_to_failure(
         }))
     };
     match error {
-        SliceError::TriangleCountExceedsLimit => CliFailure::triangle_count_exceeds_limit(output),
+        SliceError::TriangleCountExceedsLimit { count, limit } => {
+            CliFailure::triangle_count_exceeds_limit(output, count, limit)
+        }
         SliceError::InvalidPrinterTechnology => family(
             -7,
             #[cfg(target_os = "linux")]
