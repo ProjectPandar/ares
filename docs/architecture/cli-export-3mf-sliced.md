@@ -30,7 +30,45 @@ All ranges in the table are in `src/libslic3r/Format/bbs_3mf.cpp` unless otherwi
 | 12 | `Metadata/filament_sequence.json` | `6859,8662–8697`: compact per-plate JSON; filament sequence indices are converted to one-based, nozzle sequence and assignment are preserved. The unsliced empty arrays must not be reused for the sliced result. |
 | 13 | `_rels/.rels` | `6888,7062–7138`: package root relationship to the main model, no thumbnails in this path. |
 
-The saved-project output preserves a loaded Orca metadata entry in the main model, writes effective settings, and uses a repeatable bounding-box object ID. Native diagnostics for direct STL showed different values for these fields; those are input-route differences, not volatile fields to normalize. Neither route writes PNG, `Metadata/*.statistics.json`, or a separate result report inside the archive.
+The saved-project output preserves a loaded Orca metadata entry in the main model and writes effective settings. Neither route writes PNG, `Metadata/*.statistics.json`, or a separate result report inside the archive.
+
+### Bounding-box object identity
+
+After `PartPlateList::load_from_3mf_structure` reconstructs the saved plate (`src/slic3r/GUI/PartPlate.cpp:8537–8552`), the CLI applies the model to the plate's `Print` (`src/OrcaSlicer.cpp:6986`). `Print::apply` constructs a `PrintObject` for a new transform-and-instance group (`src/libslic3r/PrintApply.cpp:1953–1979,1985–1996`). The `PrintObject` derives from `PrintObjectBaseWithState` (`src/libslic3r/Print.hpp:364`), whose `PrintObjectBase` parent derives from `ObjectBase` (`src/libslic3r/PrintBase.hpp:343–350,638–652`). The CLI reads the ID from `print->objects()`, not from a `ModelObject` or a 3MF resource (`OrcaSlicer.cpp:8011–8024`). `BBoxData::to_json` preserves it (`src/libslic3r/GCode/ThumbnailData.cpp:8–18,28–44`), then the 3MF writer emits the plate JSON (`src/libslic3r/Format/bbs_3mf.cpp:6658–6667,7045–7059`).
+
+`ObjectBase::s_last_id` starts at zero for each process (`src/libslic3r/ObjectID.cpp:6`). Default construction and explicit reassignment increment it; construction with an invalid or existing ID, or copying the ID, does not (`ObjectID.hpp:76–101`). The same saved input and argument vector produce the same `PrintObject` ID in three fresh processes in each Native mode. The direct STL route has different construction steps; its ID is not a reason to normalize either route.
+
+The one-plate, one-volume saved path consumes IDs as follows. The CLI replays just this sequence for the exported ID; it does not add process-global allocation state to the model or change the package's own resource and identify IDs.
+
+| Step | Allocations | Upstream |
+|---|---:|---|
+| Create CLI input and reader models | 4 | `OrcaSlicer.cpp:1730,1758`; `src/libslic3r/Model.cpp:318–331`. Each `Model` has its own ID and default-constructed `ModelWipeTower` (`Model.hpp:1593–1612,1695–1704,1753`). |
+| Import object and its first instance | 4 | `bbs_3mf.cpp:4378–4399`; `Model.cpp:607–611,1554–1562`; `Model.hpp:381–400,582–588,1562–1567`. `ModelObject`, `ModelConfigObject`, `LayerHeightProfile` and `ModelInstance` consume one each (`Model.hpp:86–104,218–243`; `ObjectID.hpp:112–120`). `CutObjectBase` starts invalid (`ObjectID.hpp:147–161`). |
+| Import mesh volume | 14 | `bbs_3mf.cpp:5343–5348`; `Model.cpp:1402–1412`; `Model.hpp:831,904–935,1205–1219`. The volume itself, its config, four ordinary facet annotations and eight texture-displacement facet annotations allocate separately, even when the facet annotations are empty (`Model.hpp:758,802–805`). |
+| Move reader result, then move input model into the CLI vector | 2 | `Model.cpp:489–490,516`; `OrcaSlicer.cpp:1758,2008`. The reader's other named return prevents elision of the successful return's move in the reference builds. Both moves preserve the base ID and move the existing objects but still default-construct a `ModelWipeTower` each (`Model.hpp:1704,1756–1762`; `Model.cpp:164–179`). Assignment into the existing CLI input model does not construct another tower. |
+| Construct initial plate list and FFF print | 6 | `OrcaSlicer.cpp:4348`; `PartPlate.hpp:107,771`; `PartPlate.cpp:234–238,5966–5971,5979–5995`. The list, unprintable plate and first printable plate allocate one each. The `Print` allocates an ID and embeds a model and its tower (`Print.hpp:1053–1066`; `PrintBase.hpp:390–393,561,591–599`). |
+| Replace first plate and print from the saved structure | 4 | `OrcaSlicer.cpp:4699–4701`; `PartPlate.cpp:8537–8552,6589–6605`. One new `PartPlate` and one new `Print` with its embedded model and tower. The existing list and unprintable plate are reused. |
+| Prepare slice model and first `PrintObject` | 3 | `OrcaSlicer.cpp:6464–6471,6986`; `PrintApply.cpp:1707–1718,1953–1979`; `src/libslic3r/PrintObject.cpp:134–139`. The default-constructed slice model and tower consume two, then the `PrintObject` consumes one. |
+
+Assigning the slice model and the print's private model from existing models does not allocate replacement IDs: `Model::assign_copy` copies IDs and uses the ID-preserving copies of `ModelObject`, `ModelVolume`, and `ModelInstance` (`Model.cpp:109–129,1267–1303`; `Model.hpp:142–150,599–606,1173–1175,1548`). `new_clone` instead calls recursive ID reassignment (`Model.hpp:151–171`; `Model.cpp:209–216,1346–1354,3072–3085`); this saved path does not clone any model objects.
+
+For one saved plate and ordinary parts with one printable instance per object, the counter immediately before the first `PrintObject` is `4 + 3 × objects + instances + 14 × volumes + 2 + 6 + 4 + 2`, in the phase order above. One further increment occurs per `PrintObject`. This predicts ID 37 for one object and one volume, and IDs 69 and 70 for the synthetic two-object, three-volume control. Both predictions matched the JSON from three fresh Native processes in each reference mode. The control tests the allocation sequence, not multi-object slicing or writing in Ares.
+
+The same two inputs were also run with `printf` tracing at `ObjectBase::generate_new_id` and the CLI phase boundaries, compiled into the pinned Native build. The traced counter starts at zero at process entry and remains contiguous through plate JSON generation:
+
+| End of phase | Single object, one volume | Two objects, three volumes |
+|---|---:|---:|
+| Process entry | 0 | 0 |
+| Input models, object/instance/volume import and reader return | 23 | 55 |
+| Move input model into CLI vector | 24 | 56 |
+| Construct initial plate list | 30 | 62 |
+| Recreate saved plate | 34 | 66 |
+| Construct slice model | 36 | 68 |
+| Apply print and assign `PrintObject` IDs | 37 | 70 |
+
+The import phase traces showed respectively 1 and 2 `ModelObject`s, 1 and 2 `ModelInstance`s, 2 and 5 `ModelConfigObject`s, 1 and 2 `LayerHeightProfile`s, and 1 and 3 `ModelVolume`s with 12 and 36 `FacetsAnnotation`s. Its two `Model`s each construct a tower, and the reader return constructs a third tower without allocating another `Model` ID. The vector insertion likewise constructs only a tower. No ID was allocated after `Print::apply` and before the CLI serialized the bounding boxes.
+
+The CLI evaluates the allocation formula for the supported single-plate, single-object, single-volume, single-instance shape only. It rejects larger shapes and non-model parts before slicing. The writer additionally rejects painted mesh triangles (attribute definitions in `bbs_3mf.cpp:355–363`) and the other unsupported saved metadata and transforms, rather than publishing an archive without those properties. Unsupported saved input reports an export failure (−13) with no G-code or 3MF file; Linux writes the failure report next to the requested output.
 
 ## Exact comparison
 
