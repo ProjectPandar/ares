@@ -83,18 +83,41 @@ The first candidate still supplies the seed for one draw before the scan;
 paint can change viable lengths, not the draw order. Random is finalized by
 its picker and does not enter string alignment (`:2181–2200`).
 
+### Extended selector palette
+
+`Format/bbs_3mf.cpp:4041,5389–5390,5586–5587,5917` and
+`Format/3mf.cpp:1793,2221–2222` populate `ModelVolume::seam_facets`.
+`FacetsAnnotation::set_triangle_from_string` (`Model.cpp:4138–4164`) reads
+hexadecimal nibbles in reverse order. With the default `ExtruderMax = 32`
+(`TriangleSelector.hpp:24–66,410–414`), `TriangleSelector::deserialize`
+(`TriangleSelector.cpp:1855–1886`) preserves states 3–17 via one extension
+nibble, and 18–32 via the escape nibble `F` followed by `state - 18`.
+`project/facets_annotation.rs` and `project/facets_annotation/selector.rs`
+validate and decode this shared leaf encoding without changing the mesh.
+
+`SeamPlacer.cpp:1114–1133` exports ordinary and strict facets only for exact
+states 1 (enforcer) and 2 (blocker); the selector tests equality, not a state
+range (`TriangleSelector.cpp:1492–1510`). At seam candidates, the default is
+Neutral unless a green or red query hits (`SeamPlacer.cpp:829–859`). Thus
+3–32 are inert paint, even on a model part or negative volume containing
+active paint. They are not rewritten to state 0: Native's separate full-green
+coverage check uses exact `NONE` plus blockers (`:1135–1153`). In
+`seam_placement/paint.rs`, admit the extended states without changing those
+exact-state queries or lifting the full-green guard for active enforcers.
+An annotation without enforcers or blockers needs no seam paint surfaces.
+
 ## Included and deferred
 
-- Included: neutral, enforcer and blocker leaves, with or without selector
-  subdivision, on model parts and negative volumes with Aligned, AlignedBack,
+- Included: neutral, enforcer, blocker and extended-palette leaves, with or
+  without selector subdivision, on model parts and negative volumes with Aligned, AlignedBack,
   Nearest, Rear or Random, including unpainted controls and both Classic and Arachne walls. Reuse the
   transformed object coordinate frame already used by seam visibility,
   without involving machine-space offsets. Negative paint can affect the
   perimeter of the hole cut by that volume.
-- Deferred: extended palette values on participating volumes, spiral mode,
-  Precise Seam modifiers, and full-green normalization (`:557–595`). The
-  existing full-coverage rejection still applies to each painted volume;
-  partial paint also retains the perimeter coverage guard. These combinations
+- Deferred: spiral mode, Precise Seam modifiers, and full-green normalization
+  (`:557–595`). The existing full-green rejection still applies to each volume
+  with enforcers and no exact NONE or blocker surface; partial paint also retains
+  the perimeter coverage guard. These combinations
   must return a seam-specific unsupported input error before emitting G-code.
   No silent Neutral fallback for deferred input.
 
@@ -118,3 +141,11 @@ Reuse the box geometry and the five paint variants for each printer with
 AlignedBack, Nearest, Rear and Random configured in the 3MF. Verify each against both
 Native producers and compare Native wall approaches to the plain run for the
 same printer and strategy to distinguish active paint from non-changing controls.
+
+For AlignedBack, Nearest and Random, replace front or rear paint with states
+3, 4, 15, 17, 18 and 32. On each printer compare complete Native output with
+the corresponding plain control; all six states, including a subdivided face
+and a box entirely annotated with state 32, must leave output unchanged.
+A real front enforcer must change an inner-wall approach, and adding
+state 32 on the rear must leave the front-enforced output unchanged. Check
+strict Native/API/CLI parity for these variants in both replay modes.
