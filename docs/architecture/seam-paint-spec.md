@@ -62,21 +62,41 @@ preference applies only to Aligned and AlignedBack, not to Rear or Nearest.
   association, candidate order and inner-wall projection (`:2345–2423`).
   Equal paint states use the existing geometric ranking in both strategies.
 
+### Random
+
+`GCode/SeamPlacer.cpp::pick_random_seam_point` (`:1366–1444`) uses
+`SeamComparator::is_first_not_much_worse` (`:1227–1257`) in both directions
+for viability: Enforced outranks Neutral, which outranks Blocked. Enforced
+points are equivalent without checking overhang or embedding; the other
+states retain those checks. Random does not prefer the central enforcer.
+
+In `project_slice/seam_placement/alignment/random.rs`, replace the
+unpainted eligibility rules with the paint-aware comparator and outgoing
+edge rules. Use the candidate types and independent exact enforced/blocked
+end flags produced by `seam_candidates.rs` and `paint/samples.rs` from the
+same perimeter's paint intervals (`:739–860`). With exact enforced ends,
+an Enforced candidate cannot sample the edge to a non-Enforced successor.
+With exact blocked ends, a non-Blocked candidate cannot sample the edge to
+a Blocked successor. Keep such edges at zero length, including at the loop
+wrap, and retain the source's bounded residual and zero-length placement.
+The first candidate still supplies the seed for one draw before the scan;
+paint can change viable lengths, not the draw order. Random is finalized by
+its picker and does not enter string alignment (`:2181–2200`).
+
 ## Included and deferred
 
 - Included: neutral, enforcer and blocker leaves, with or without selector
   subdivision, on model parts and negative volumes with Aligned, AlignedBack,
-  Nearest or Rear, including unpainted controls and both Classic and Arachne walls. Reuse the
+  Nearest, Rear or Random, including unpainted controls and both Classic and Arachne walls. Reuse the
   transformed object coordinate frame already used by seam visibility,
   without involving machine-space offsets. Negative paint can affect the
   perimeter of the hole cut by that volume.
 - Deferred: extended palette values on participating volumes, spiral mode,
-  Random seam strategies, Precise Seam modifiers, and full-green normalization
-  (`:557–595`). The existing full-coverage rejection still applies to each
-  painted volume; partial paint also retains the perimeter coverage guard. These
-  combinations must return a seam-specific unsupported input error before
-  emitting G-code. No silent Neutral fallback for deferred input. In particular
-  Random (`:1366–1437`) restricts viable outgoing edges.
+  Precise Seam modifiers, and full-green normalization (`:557–595`). The
+  existing full-coverage rejection still applies to each painted volume;
+  partial paint also retains the perimeter coverage guard. These combinations
+  must return a seam-specific unsupported input error before emitting G-code.
+  No silent Neutral fallback for deferred input.
 
 ## Public behavior
 
@@ -95,6 +115,6 @@ an ordinary modifier and a helper must preserve complete output. Include
 public rejection cases for deferred paint.
 
 Reuse the box geometry and the five paint variants for each printer with
-AlignedBack, Nearest and Rear configured in the 3MF. Verify each against both
+AlignedBack, Nearest, Rear and Random configured in the 3MF. Verify each against both
 Native producers and compare Native wall approaches to the plain run for the
 same printer and strategy to distinguish active paint from non-changing controls.
