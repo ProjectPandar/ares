@@ -2,7 +2,7 @@
 
 use std::{ffi::OsString, fs, path::Path, process::Command};
 
-use crate::{artifacts, runner::OrcaRunner};
+use crate::{artifacts, native_wall_clock::result_comparison_bytes, runner::OrcaRunner};
 
 enum Destination<'a> {
     Default,
@@ -87,6 +87,97 @@ fn cli_logfile_is_not_created_without_a_diagnostic() {
     );
 }
 
+#[test]
+fn cli_startup_version_warning_respects_debug_threshold() {
+    for debug in [None, Some("0"), Some("1"), Some("2")] {
+        compare_startup(debug, None, false);
+    }
+}
+
+#[test]
+fn cli_startup_version_warning_uses_explicit_logfile() {
+    compare_startup(Some("2"), Some("logs/diagnostics.log"), false);
+}
+
+#[test]
+fn cli_startup_version_warning_precedes_triangle_error() {
+    compare_startup(Some("2"), Some("diagnostics.log"), true);
+}
+
+fn compare_startup(debug: Option<&str>, logfile: Option<&str>, triangle: bool) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = tempfile::Builder::new()
+        .prefix("cli-startup-version-warning-")
+        .tempdir_in(artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    super::cli_mtcpp::write_fixture(&root, true);
+    let mut argv = Vec::new();
+    if let Some(debug) = debug {
+        argv.extend(["--debug".into(), debug.into()]);
+    }
+    if let Some(logfile) = logfile {
+        argv.extend(["--logfile".into(), logfile.into()]);
+    }
+    let (action, exit, report): (&[&str], _, _) = if triangle {
+        (
+            &["--mtcpp", "11", "--slice", "0", "--outputdir", "out"],
+            197,
+            "out/result.json",
+        )
+    } else {
+        (
+            &["--export-settings", "out/settings.json"],
+            0,
+            "result.json",
+        )
+    };
+    argv.extend(action.iter().copied().map(OsString::from));
+    argv.extend(preset_argv(&root));
+    let native = run(runner.bin(), &root, "native", &argv, None);
+    let ares = run(
+        Path::new(env!("CARGO_BIN_EXE_ares")),
+        &root,
+        "ares",
+        &argv,
+        None,
+    );
+    let native_cwd = root.join("native/cwd");
+    let ares_cwd = root.join("ares/cwd");
+    assert_eq!(native.status.code(), Some(exit), "{root:?}");
+    assert_eq!(ares.status.code(), native.status.code(), "{root:?}");
+    assert_eq!(ares.stdout, native.stdout, "{root:?}");
+    assert_eq!(ares.stderr, native.stderr, "{root:?}");
+    assert_eq!(
+        result_comparison_bytes(&fs::read(ares_cwd.join(report)).unwrap()),
+        result_comparison_bytes(&fs::read(native_cwd.join(report)).unwrap()),
+        "{root:?}"
+    );
+    let path = logfile.unwrap_or("00000.log");
+    if debug == Some("2") {
+        let expected = if triangle {
+            concat!(
+                "cli mode, Current OrcaSlicer Version 2.5.0\n",
+                "plate 1: triangle count 12 exceeds the limit:11\n"
+            )
+        } else {
+            "cli mode, Current OrcaSlicer Version 2.5.0\n"
+        };
+        let native_log = fs::read(native_cwd.join(path)).unwrap();
+        assert_eq!(native_log, expected.as_bytes(), "{root:?}");
+        assert_eq!(
+            fs::read(ares_cwd.join(path)).ok(),
+            Some(native_log),
+            "{root:?}"
+        );
+    } else {
+        assert!(!native_cwd.join(path).exists(), "{root:?}");
+    }
+    assert_eq!(inventory(&ares_cwd), inventory(&native_cwd), "{root:?}");
+}
+
 fn compare(debug: Option<&str>, destination: Destination<'_>, exit: i32, expected: &[&str]) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -123,18 +214,7 @@ fn compare(debug: Option<&str>, destination: Destination<'_>, exit: i32, expecte
         &["--mtcpp", "11", "--slice", "1", "--outputdir", "out"]
     };
     argv.extend(action.iter().copied().map(OsString::from));
-    argv.extend([
-        "--load-settings".into(),
-        format!(
-            "{};{}",
-            root.join("machine.json").display(),
-            root.join("process.json").display()
-        )
-        .into(),
-        "--load-filaments".into(),
-        root.join("filament.json").into(),
-        root.join("first.stl").into(),
-    ]);
+    argv.extend(preset_argv(&root));
 
     let existing = matches!(destination, Destination::ExistingAbsolute(_)).then_some(log);
     let native = run(runner.bin(), &root, "native", &argv, existing);
@@ -169,6 +249,21 @@ fn compare(debug: Option<&str>, destination: Destination<'_>, exit: i32, expecte
             "log bytes differ: {root:?}"
         );
     }
+}
+
+fn preset_argv(root: &Path) -> [OsString; 5] {
+    [
+        "--load-settings".into(),
+        format!(
+            "{};{}",
+            root.join("machine.json").display(),
+            root.join("process.json").display()
+        )
+        .into(),
+        "--load-filaments".into(),
+        root.join("filament.json").into(),
+        root.join("first.stl").into(),
+    ]
 }
 
 fn run(
