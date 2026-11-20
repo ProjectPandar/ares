@@ -157,13 +157,21 @@ pub(super) fn prepare_post_top_empty_layers(
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_regions(project)?;
     top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
-    // PrintObjectSlice.cpp:866-867 rejects an empty sliced object before perimeters.
+    // PrintObjectSlice.cpp:958–960 rejects an empty sliced object before perimeters.
     if prepared
         .objects
         .iter()
         .any(|object| object.plan.layers.is_empty())
     {
-        return Err(SliceError::InvalidInput("no layers were detected".into()));
+        let settings = &prepared.resolved.views.full;
+        return Err(SliceError::Slicing {
+            message: "No layers were detected. You might want to repair the model or check its size or thickness and retry.
+".into(),
+            plate_index: prepared.project.first_plate_id(),
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
+        });
     }
     Ok(prepared)
 }

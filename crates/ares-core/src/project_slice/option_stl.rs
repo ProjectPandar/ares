@@ -6,9 +6,22 @@ use crate::{
 
 use super::{ProjectInput, ProjectSource};
 
+#[derive(Clone, Copy)]
+pub(crate) enum Input<'a> {
+    Bytes(&'a [u8], &'a str),
+    Imported(&'a crate::ImportedStl),
+}
+
 pub(crate) fn load(
     input: &[u8],
     filename: &str,
+    options: &SliceOptions,
+) -> Result<(Project, PreparationContext), SliceError> {
+    load_input(Input::Bytes(input, filename), options)
+}
+
+pub(crate) fn load_input(
+    input: Input<'_>,
     options: &SliceOptions,
 ) -> Result<(Project, PreparationContext), SliceError> {
     let mut raw = ProjectSettingsRaw::default();
@@ -68,8 +81,12 @@ pub(crate) fn load(
         .map_err(SliceError::InvalidInput)?
         .resolve();
     let preparation = PreparationContext::capture(&raw, &ConfigOverrides::default())?;
-    let mut project = Project::from_stl(input, filename, settings, raw)
-        .map_err(|error| SliceError::OptionStlModelRead(Box::new(error)))?;
+    let imported = match input {
+        Input::Bytes(bytes, filename) => crate::ImportedStl::read(bytes, filename)
+            .map_err(|error| SliceError::OptionStlModelRead(Box::new(error)))?,
+        Input::Imported(imported) => imported.clone(),
+    };
+    let mut project = Project::from_imported_stl(imported, settings, raw);
     // The single non-project instance is dropped before default placement.
     // OrcaSlicer.cpp:1978 and :5619–6064.
     project.drop_instances_to_ground();
@@ -112,8 +129,21 @@ pub async fn slice_cli_stl_with_defaults_processed(
     record_moves: bool,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     slice_with_report(
-        input,
-        filename,
+        Input::Bytes(input, filename),
+        &SliceOptions::default(),
+        (true, record_moves),
+        Some(report),
+    )
+}
+
+/// Slice a previously imported STL using the direct action's default configuration.
+pub async fn slice_imported_stl_with_defaults_processed(
+    input: &crate::ImportedStl,
+    report: &mut crate::SlicedPlate,
+    record_moves: bool,
+) -> Result<crate::ProcessedGCode, SliceError> {
+    slice_with_report(
+        Input::Imported(input),
         &SliceOptions::default(),
         (true, record_moves),
         Some(report),
@@ -126,27 +156,27 @@ pub(crate) fn slice(
     options: &SliceOptions,
     validate_print: bool,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_with_report(bytes, filename, options, (validate_print, false), None)
-        .map(|processed| processed.gcode)
+    slice_with_report(
+        Input::Bytes(bytes, filename),
+        options,
+        (validate_print, false),
+        None,
+    )
+    .map(|processed| processed.gcode)
 }
 
 fn slice_with_report(
-    bytes: &[u8],
-    filename: &str,
+    input: Input<'_>,
     options: &SliceOptions,
     (validate_print, record_moves): (bool, bool),
     sliced_plate: Option<&mut crate::SlicedPlate>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     super::slice_source(
         ProjectSource {
-            input: ProjectInput::OptionStl {
-                bytes,
-                filename,
-                options,
-            },
+            input: ProjectInput::OptionStl { input, options },
             validate_print,
             sliced_plate,
-            ..ProjectSource::from(bytes)
+            ..ProjectSource::from(&[][..])
         },
         GenerationMetadata::default(),
         record_moves,

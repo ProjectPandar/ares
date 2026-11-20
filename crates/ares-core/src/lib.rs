@@ -117,8 +117,8 @@ pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};
 pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 pub use project_slice::option_stl::{
-    slice_cli_stl_with_defaults, slice_cli_stl_with_defaults_processed, slice_stl_named_validated,
-    slice_stl_validated,
+    slice_cli_stl_with_defaults, slice_cli_stl_with_defaults_processed,
+    slice_imported_stl_with_defaults_processed, slice_stl_named_validated, slice_stl_validated,
 };
 
 pub use profiles::Placement;
@@ -130,9 +130,10 @@ pub use profiles::{
     ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
     SelectablePrinter, compose_profile_fragments, filter_compatible_presets, guide_models,
     merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
-    slice_stl_files_with_load_settings, slice_stl_files_with_load_settings_processed,
-    slice_with_load_settings, slice_with_load_settings_processed, slice_with_profiles,
-    slice_with_profiles_processed, validate_load_settings_input, validate_with_profiles,
+    slice_imported_stl_with_load_settings_processed, slice_stl_files_with_load_settings,
+    slice_stl_files_with_load_settings_processed, slice_with_load_settings,
+    slice_with_load_settings_processed, slice_with_profiles, slice_with_profiles_processed,
+    validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
@@ -143,10 +144,10 @@ pub use profiles::{
     slice_with_profiles_validated,
 };
 pub use project::{
-    ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
-    Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
-    ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
-    project_config_substitutions,
+    ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, ImportedStl, LayerConfigRange,
+    PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
+    ProjectVolume, ProjectVolumeType, StlUnit, Transform3d, UpwardMachineInput,
+    UpwardMachineSource, load_project, project_config_substitutions,
 };
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
@@ -287,7 +288,10 @@ impl fmt::Display for SliceError {
 impl std::error::Error for SliceError {}
 
 pub fn load_model(input: impl AsRef<[u8]>) -> Result<Model, SliceError> {
-    let input = input.as_ref();
+    load_stl_model(input.as_ref()).map(|(model, _)| model)
+}
+
+fn load_stl_model(input: &[u8]) -> Result<(Model, Option<f32>), SliceError> {
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
     }

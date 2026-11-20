@@ -7,13 +7,14 @@ const BINARY_HEADER_LEN: usize = 80;
 const TRIANGLE_COUNT_LEN: usize = 4;
 const BINARY_TRIANGLE_LEN: usize = 50;
 
-pub fn load(input: &[u8]) -> Result<Model, SliceError> {
+pub(crate) fn load(input: &[u8]) -> Result<(Model, Option<f32>), SliceError> {
     let facets = if looks_like_binary(input) {
         parse_binary(input)?
     } else {
         parse_ascii(input)?
     };
-    Ok(Model::new(InputFormat::Stl, repair::into_triangles(facets)))
+    let (triangles, volume) = repair::into_triangles(facets);
+    Ok((Model::new(InputFormat::Stl, triangles), volume))
 }
 
 pub fn looks_like_binary(input: &[u8]) -> bool {

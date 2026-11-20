@@ -29,13 +29,35 @@ impl Project {
         Ok((Self::from_stl(input, filename, settings, raw)?, preparation))
     }
 
+    pub(crate) fn from_imported_stl_with_profiles(
+        imported: &crate::ImportedStl,
+        profile: SelectedProfile<'_>,
+        overrides: &crate::ConfigOverrides,
+    ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
+        let (settings, raw, preparation) = super::stl_settings::compose(profile, overrides)?;
+        Ok((
+            Self::from_imported_stl(imported.clone(), settings, raw),
+            preparation,
+        ))
+    }
+
     pub(crate) fn from_stl(
         input: &[u8],
         filename: &str,
         settings: crate::ProjectSettings,
         raw: crate::project::raw_settings::ProjectSettingsRaw,
     ) -> Result<Self, SliceError> {
-        let volume = super::super::multipart::stl_volume(input, filename, 0)?;
+        let imported = crate::ImportedStl::read(input, filename)?;
+        Ok(Self::from_imported_stl(imported, settings, raw))
+    }
+
+    pub(crate) fn from_imported_stl(
+        imported: crate::ImportedStl,
+        settings: crate::ProjectSettings,
+        raw: crate::project::raw_settings::ProjectSettingsRaw,
+    ) -> Self {
+        let volume = imported.0;
+        let filename = volume.source_model_path().to_owned();
         // STL.cpp creates the volume before the default instance, unlike 3MF build import.
         let mut object_ids = ObjectIdCounter::model_read();
         object_ids.add_object();
@@ -55,8 +77,8 @@ impl Project {
             vec![volume],
             vec![instance],
         );
-        Ok(Self::new(
-            vec![ProjectModel::new(filename.to_owned(), vec![1])],
+        Self::new(
+            vec![ProjectModel::new(filename, vec![1])],
             vec![object],
             vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
             settings,
@@ -77,6 +99,6 @@ impl Project {
                 preset_file_version: None,
                 preset_selection: None,
             },
-        ))
+        )
     }
 }

@@ -8,8 +8,12 @@ use super::{
 };
 use crate::{SliceError, StlFile, StlImportOptions};
 
-pub(super) fn stl_volume(input: &[u8], name: &str, id: u32) -> Result<ProjectVolume, SliceError> {
-    let model = crate::load_model(input)?;
+pub(super) fn stl_volume(
+    input: &[u8],
+    name: &str,
+    id: u32,
+) -> Result<(ProjectVolume, Option<f32>), SliceError> {
+    let (model, solid_volume) = crate::load_stl_model(input)?;
     let (vertices, triangles) = super::profile_input::index_stl_vertices(&model);
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
@@ -28,7 +32,7 @@ pub(super) fn stl_volume(input: &[u8], name: &str, id: u32) -> Result<ProjectVol
             Point3d::new(point[0], point[1], point[2])
         })
         .collect();
-    Ok(ProjectVolume::new(
+    let volume = ProjectVolume::new(
         name.to_owned(),
         id,
         ProjectMesh::new(vertices, triangles, Vec::new()),
@@ -39,7 +43,8 @@ pub(super) fn stl_volume(input: &[u8], name: &str, id: u32) -> Result<ProjectVol
             Default::default(),
             Transform3d::IDENTITY,
         ),
-    ))
+    );
+    Ok((volume, solid_volume))
 }
 
 impl Project {
@@ -75,7 +80,7 @@ impl Project {
                     "multiple inputs must all be STL files".to_owned(),
                 ));
             }
-            let volume = stl_volume(file.bytes, file.name, index as u32)?;
+            let (volume, _) = stl_volume(file.bytes, file.name, index as u32)?;
             objects.push(ProjectObject::new(
                 file.name.to_owned(),
                 index as u32 + 1,

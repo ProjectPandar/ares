@@ -61,6 +61,14 @@ fn load_with_profile_preparation(
                 loaded.apply_plater_edits(project.edits);
                 (loaded, preparation)
             }),
+        super::ProjectInput::ImportedStl(imported) => {
+            Project::from_imported_stl_with_profiles(imported, selected, project.overrides).map(
+                |(mut loaded, preparation)| {
+                    loaded.apply_plater_edits(project.edits);
+                    (loaded, preparation)
+                },
+            )
+        }
         super::ProjectInput::Bytes(bytes)
             if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf =>
         {

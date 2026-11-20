@@ -31,6 +31,9 @@ pub(crate) struct DirectSliceArgs {
     /// Write a statistics JSON sidecar for each sliced plate.
     #[arg(long)]
     pub(crate) export_statistics: bool,
+    /// Infer meters or inches for a single STL and convert to millimeters.
+    #[arg(long)]
+    pub(crate) convert_unit: bool,
     /// Refuse to export a slice with a noncritical slicing warning.
     #[arg(long)]
     pub(crate) strict: bool,
