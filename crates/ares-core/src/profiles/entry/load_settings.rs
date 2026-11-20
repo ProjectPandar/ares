@@ -109,6 +109,22 @@ pub async fn slice_with_load_settings_processed(
     )
 }
 
+/// Apply loaded presets to a previously imported STL and slice it.
+pub async fn slice_imported_stl_with_load_settings_processed(
+    model: &crate::ImportedStl,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    record_moves: bool,
+) -> Result<crate::ProcessedGCode, SliceError> {
+    with_load_settings_source(
+        (ProjectInput::ImportedStl(model), &[]),
+        request,
+        None,
+        |source| slice_source(source, metadata, record_moves, context),
+    )
+}
+
 /// Slice separately loaded STL objects at their supplied positions.
 pub async fn slice_stl_files_with_load_settings(
     files: &[crate::StlFile<'_>],

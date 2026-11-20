@@ -1,12 +1,12 @@
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PresetAdmissionReason {
     NotFound,
     Ambiguous,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PresetAdmissionError {
     pub kind: String,
     pub source: String,
@@ -24,7 +24,7 @@ impl fmt::Display for PresetAdmissionError {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
     MissingProjectPlate(u32),

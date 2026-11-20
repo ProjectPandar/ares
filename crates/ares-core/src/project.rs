@@ -31,11 +31,11 @@ mod xml;
 mod xml_characters;
 
 pub(crate) use archive::{ArchiveLimits, PackagePath, ProjectArchive};
-pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile};
 pub use domain::{
-    PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
-    ProjectVolume, ProjectVolumeType,
+    ImportedStl, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
+    ProjectObject, ProjectVolume, ProjectVolumeType, StlUnit,
 };
+pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile};
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use export::export_3mf;
 pub use export_stl::{StlExport, export_stl, export_stls};

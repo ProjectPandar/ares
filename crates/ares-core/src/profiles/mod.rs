@@ -40,7 +40,8 @@ pub use composition::{
 pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
     CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSliceRequest,
-    profile_placed_project, slice_cli_with_profiles_validated, slice_stl_files_with_load_settings,
+    profile_placed_project, slice_cli_with_profiles_validated,
+    slice_imported_stl_with_load_settings_processed, slice_stl_files_with_load_settings,
     slice_stl_files_with_load_settings_processed, slice_with_load_settings,
     slice_with_load_settings_and_refresh, slice_with_load_settings_processed, slice_with_profiles,
     slice_with_profiles_processed, slice_with_profiles_processed_validated,

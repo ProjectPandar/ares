@@ -1,8 +1,8 @@
 use std::{fs, io};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement,
-    SliceError, SlicedPlate, SlicerContext, StlFile,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsSliceRequest,
+    Placement, SliceError, SlicedPlate, SlicerContext, StlFile,
 };
 
 use crate::{
@@ -27,6 +27,15 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         return Err(
             io::Error::new(io::ErrorKind::InvalidInput, "--no-check is not supported").into(),
         );
+    }
+    if args.convert_unit
+        && (args.inputs.len() != 1 || args.inputs[0].extension().is_none_or(|ext| ext != "stl"))
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--convert-unit requires one STL input",
+        )
+        .into());
     }
     if args.inputs.len() == 1 && args.inputs[0].extension().is_some_and(|ext| ext == "3mf") {
         return crate::direct_project::run(args).await;
@@ -72,15 +81,39 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     }
     let mut sliced_plate = SlicedPlate::default();
     let (filename, bytes) = &inputs[0];
+    let imported = if args.convert_unit {
+        let mut model = ImportedStl::read(bytes, filename).map_err(|_| {
+            CliFailure::invalid_stl_input(
+                &args.inputs[0],
+                #[cfg(target_os = "linux")]
+                &output,
+            )
+        })?;
+        if let Some(unit) = model.infer_unit() {
+            model.convert_to_millimeters(unit);
+        }
+        Some(model)
+    } else {
+        None
+    };
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {
-            ares_core::slice_cli_stl_with_defaults_processed(
-                bytes,
-                filename,
-                &mut sliced_plate,
-                args.export_statistics,
-            )
-            .await
+            if let Some(imported) = &imported {
+                ares_core::slice_imported_stl_with_defaults_processed(
+                    imported,
+                    &mut sliced_plate,
+                    args.export_statistics,
+                )
+                .await
+            } else {
+                ares_core::slice_cli_stl_with_defaults_processed(
+                    bytes,
+                    filename,
+                    &mut sliced_plate,
+                    args.export_statistics,
+                )
+                .await
+            }
         } else {
             let settings = read_preset_files(
                 &args
@@ -133,7 +166,16 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             };
             let metadata = GenerationMetadata::default();
             let context = SlicerContext::new(0);
-            if inputs.len() == 1 {
+            if let Some(imported) = &imported {
+                ares_core::slice_imported_stl_with_load_settings_processed(
+                    imported,
+                    request,
+                    metadata,
+                    context,
+                    args.export_statistics,
+                )
+                .await
+            } else if inputs.len() == 1 {
                 ares_core::slice_with_load_settings_processed(
                     bytes,
                     request,
