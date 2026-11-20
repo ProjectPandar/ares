@@ -40,7 +40,7 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
     assert!(
         stderr.starts_with("Project export to export.3mf failed\nFailed exporting 3mf files. ")
     );
-    assert!(stderr.ends_with("sliced export requires one saved object\n"));
+    assert!(stderr.ends_with("sliced export requires one saved volume and instance per object\n"));
     let mut expected = vec!["out", "saved.3mf"];
     if cfg!(target_os = "linux") {
         let report: Value =

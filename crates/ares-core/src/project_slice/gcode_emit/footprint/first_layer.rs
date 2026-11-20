@@ -21,14 +21,10 @@ pub(in crate::project_slice::gcode_emit) fn export_object_footprint(
     traversal: &PreparedPostClassicTraversal,
     schedule: &Schedule,
     brim: Option<&BrimPlan>,
+    index: usize,
 ) -> Option<ObjectFootprint> {
-    let [prepared] = traversal.objects.as_slice() else {
-        return None;
-    };
-    let [copies] = schedule.instances.as_slice() else {
-        return None;
-    };
-    let [copy] = copies.as_slice() else {
+    let prepared = &traversal.objects[index];
+    let [copy] = schedule.instances[index].as_slice() else {
         return None;
     };
     let object = &prepared

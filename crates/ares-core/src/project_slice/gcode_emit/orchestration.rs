@@ -367,12 +367,7 @@ pub(in crate::project_slice) fn emit(
     let sliced_archive = archive_facts
         .map(|facts| {
             Ok(crate::SlicedArchive {
-                object_name: facts.object_name,
-                plate_id: facts.plate_id,
-                identify_id: facts.identify_id,
-                bounds: facts.bounds,
-                area: facts.area,
-                layer_height: facts.layer_height,
+                objects: facts.objects,
                 layer_count: facts.layer_count,
                 filament_color: facts.filament_color,
                 filament_type: facts.filament_type,

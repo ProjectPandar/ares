@@ -7,14 +7,39 @@ pub(super) fn facts(
     schedule: &layers::Schedule,
     brim: &[Option<brim::BrimPlan>],
 ) -> Result<ArchivePlate, SliceError> {
-    let footprint = footprint::export_object_footprint(
-        traversal,
-        schedule,
-        brim.first().and_then(Option::as_ref),
-    )
-    .ok_or_else(|| {
-        SliceError::InvalidInput("sliced 3MF requires one printable object instance".into())
-    })?;
+    let objects = traversal
+        .objects
+        .iter()
+        .enumerate()
+        .map(|(index, prepared)| {
+            let (model_index, _) = prepared
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .identity();
+            let footprint = footprint::export_object_footprint(
+                traversal,
+                schedule,
+                brim[index].as_ref(),
+                index,
+            )
+            .ok_or_else(|| {
+                SliceError::InvalidInput(
+                    "sliced 3MF requires one printable instance per object".into(),
+                )
+            })?;
+            Ok(crate::SlicedArchiveObject {
+                model_index,
+                name: traversal.project.objects()[model_index].name().to_owned(),
+                identify_id: schedule.instances[index][0].label_id,
+                bounds: footprint.bounds,
+                area: footprint.area,
+                layer_height: footprint.layer_height,
+            })
+        })
+        .collect::<Result<_, SliceError>>()?;
     let settings = &traversal.project.documents().project_settings_raw;
     let setting = |key: &str| {
         settings
@@ -25,12 +50,7 @@ pub(super) fn facts(
     };
     let nozzle_diameter = setting("nozzle_diameter").parse().unwrap_or(0.0);
     Ok(ArchivePlate {
-        object_name: traversal.project.objects()[0].name().to_owned(),
-        plate_id: traversal.project.objects()[0].id(),
-        identify_id: schedule.instances[0][0].label_id,
-        bounds: footprint.bounds,
-        area: footprint.area,
-        layer_height: footprint.layer_height,
+        objects,
         layer_count: schedule.layer_count(),
         filament_color: setting("filament_colour"),
         filament_type: setting("filament_type"),

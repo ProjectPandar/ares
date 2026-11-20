@@ -217,15 +217,19 @@ pub struct PrintStatistics {
     pub total_cost: f64,
 }
 
-/// Exported G-code together with the processor result of the same pass.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SlicedArchive {
-    pub object_name: String,
-    pub plate_id: u32,
+pub struct SlicedArchiveObject {
+    pub model_index: usize,
+    pub name: String,
     pub identify_id: u32,
     pub bounds: [f64; 4],
     pub area: f32,
     pub layer_height: f32,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SlicedArchive {
+    pub objects: Vec<SlicedArchiveObject>,
     pub layer_count: usize,
     pub filament_color: String,
     pub filament_type: String,

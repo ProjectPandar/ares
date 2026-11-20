@@ -115,14 +115,17 @@ fn saved_print_object_id(project: &ares_core::Project) -> Result<u32, &'static s
     if project.plates().len() != 1 {
         return Err("sliced export requires one saved plate");
     }
-    let [object] = project.objects() else {
-        return Err("sliced export requires one saved object");
-    };
-    let ([volume], [_]) = (object.volumes(), object.instances()) else {
-        return Err("sliced export requires one saved volume and instance");
-    };
-    if volume.volume_type() != ares_core::ProjectVolumeType::ModelPart {
-        return Err("sliced export requires an ordinary model part");
+    let objects = project.objects();
+    let mut volumes = 0;
+    for object in objects {
+        let ([volume], [instance]) = (object.volumes(), object.instances()) else {
+            return Err("sliced export requires one saved volume and instance per object");
+        };
+        if !instance.printable() || volume.volume_type() != ares_core::ProjectVolumeType::ModelPart
+        {
+            return Err("sliced export requires printable instances of ordinary model parts");
+        }
+        volumes += 1;
     }
 
     // The saved-plate path starts with a fresh ObjectBase counter.
@@ -131,7 +134,7 @@ fn saved_print_object_id(project: &ares_core::Project) -> Result<u32, &'static s
     let object = 1 + config + 1; // ModelObject + config + LayerHeightProfile (582–588).
     let instance = 1; // ModelInstance (1562–1567).
     let volume = 1 + config + 4 + 8; // ModelVolume, config and FacetsAnnotations (904–935).
-    let input = 2 * model + object + instance + volume;
+    let input = 2 * model + (object + instance) * objects.len() as u32 + volume * volumes;
     // The reader's return and the CLI vector insertion each construct a tower
     // but preserve the existing model ID (Model.cpp:489–516; OrcaSlicer.cpp:2008).
     let model_moves = 2;
