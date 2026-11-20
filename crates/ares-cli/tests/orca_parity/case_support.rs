@@ -37,6 +37,9 @@ mod sparse_anchor_object_layer;
 #[path = "trapezoidal_grid_raft.rs"]
 mod trapezoidal_grid_raft;
 
+#[path = "support_cubic_bodies.rs"]
+mod support_cubic_bodies;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
