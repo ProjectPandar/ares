@@ -46,6 +46,9 @@ pub(super) fn write_raw(
 ) -> Result<Vec<u8>, SliceError> {
     let mut output = BTreeMap::new();
     for def in option_definitions() {
+        if sliced && def.full_config_default && device_connection_field(def.key) {
+            continue;
+        }
         let value = match raw.get(def.key) {
             Some(value) => applied(def.key, def.kind, value.clone())?,
             None if sliced && saved_unset_retraction(def.key) => {
@@ -78,11 +81,11 @@ pub(super) fn write_raw(
 fn full_print_config_default(key: &str) -> bool {
     // Host access lives in the device configuration; the deretract option
     // is registered as dynamic only (PrintConfig.cpp:6480–6483).
-    !key.starts_with("printhost_")
-        && !matches!(
-            key,
-            "print_host" | "print_host_webui" | "deretract_speed_extruder_change"
-        )
+    !device_connection_field(key) && key != "deretract_speed_extruder_change"
+}
+
+fn device_connection_field(key: &str) -> bool {
+    key.starts_with("printhost_") || matches!(key, "print_host" | "print_host_webui")
 }
 
 fn saved_unset_retraction(key: &str) -> bool {
