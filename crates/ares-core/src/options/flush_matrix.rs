@@ -73,6 +73,10 @@ pub(crate) fn prepare(
         return Ok(());
     }
     let support = &settings.filament.gcode.filament_is_support.0;
+    // OrcaSlicer.cpp:3925–3934 checks before completing the FFF defaults.
+    if context.sparse_filament_slots && support.len() != colors.len() {
+        return Err(SliceError::FilamentSupportCount);
+    }
     let requires_dataset = support.first().is_some_and(|first| {
         (0..colors.len()).any(|from| {
             (0..colors.len()).any(|to| from != to && !support.get(to).unwrap_or(first).0)
@@ -109,6 +113,11 @@ pub(crate) fn prepare(
         )));
     }
     let minima = minimum_volumes(settings, raw);
+    if context.sparse_filament_slots && datasets.is_some() && minima.len() < colors.len() {
+        return Err(SliceError::InvalidInput(
+            "filament diameter count is shorter than the flush palette".to_owned(),
+        ));
+    }
     let colors: Vec<_> = colors.iter().map(|color| rgba(color)).collect();
     let count = colors.len();
     let matrix = &mut settings.project.print.flush_volumes_matrix.0;

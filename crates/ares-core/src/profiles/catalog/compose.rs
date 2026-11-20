@@ -41,6 +41,14 @@ impl Catalog {
         &self,
         selection: &ProfileSelection,
     ) -> Result<ComposedSelection, SliceError> {
+        self.compose_with_slots(selection, None)
+    }
+
+    pub(in crate::profiles) fn compose_with_slots(
+        &self,
+        selection: &ProfileSelection,
+        sparse_slots: Option<(usize, &[usize])>,
+    ) -> Result<ComposedSelection, SliceError> {
         let mut raw = ProjectSettingsRaw::default();
         let mut runtime = ProjectRuntimeOptionsBuilder::default();
         // OrcaSlicer.cpp:2849-2867,2993-3011 applies machine, then process.
@@ -87,12 +95,14 @@ impl Catalog {
                     // OrcaSlicer.cpp:3625-3635.
                     insert_default_options(&mut filament_raw, &["filament_extruder_variant"]);
                 }
-                raw.extend_raw(&filament_raw);
+                if sparse_slots.is_none() {
+                    raw.extend_raw(&filament_raw);
+                }
                 filament_raws.push(filament_raw);
                 Ok(merged)
             })
             .collect::<Result<Vec<_>, SliceError>>()?;
-        super::cli_metadata::filament_conditions(&mut raw, &filaments);
+        super::cli_metadata::filament_conditions(&mut raw, &filaments, sparse_slots);
         // File-slot lookup keys are not exported preset names.
         let source_selection = if self.direct_imports && !selection.filaments().is_empty() {
             Cow::Owned(ProfileSelection::new_partial(
@@ -106,7 +116,7 @@ impl Catalog {
         } else {
             Cow::Borrowed(selection)
         };
-        let composed = compose_resolved_profiles(
+        let mut composed = compose_resolved_profiles(
             &source_selection,
             machine,
             process,
@@ -125,6 +135,9 @@ impl Catalog {
         raw.handle_legacy();
         for filament_raw in &mut filament_raws {
             filament_raw.handle_legacy();
+        }
+        if let Some(slots) = sparse_slots {
+            super::sparse_slots::merge(&mut composed, &mut raw, &filament_raws, slots)?;
         }
         Ok(ComposedSelection {
             profile: composed,

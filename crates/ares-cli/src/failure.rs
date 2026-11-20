@@ -388,6 +388,7 @@ pub(super) fn slice_error_to_failure(
                 String::new(),
             )
         }
+        SliceError::FilamentSupportCount => CliFailure::invalid_preset_file(output),
         SliceError::EmptyInput
         | SliceError::InvalidInput(_)
         | SliceError::OptionStlModelRead(_)

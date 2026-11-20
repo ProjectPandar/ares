@@ -13,8 +13,7 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
-    pub(crate) fn missing_default_filament(#[cfg(target_os = "linux")] output: &Path) -> Self {
-        // OrcaSlicer.cpp:2411–2415 reports CLI_CONFIG_FILE_ERROR before slicing.
+    pub(crate) fn invalid_preset_file(_output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -5,
             #[cfg(target_os = "linux")]
@@ -34,7 +33,7 @@ impl CliFailure {
             plate_warning: None,
             stderr: String::new(),
             #[cfg(target_os = "linux")]
-            output: output.to_owned(),
+            output: _output.to_owned(),
         }))
     }
 

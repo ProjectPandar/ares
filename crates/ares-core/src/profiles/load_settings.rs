@@ -66,13 +66,11 @@ fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), 
 /// raws (`OrcaSlicer.cpp:2849-2867,2993-3011,3150`).
 ///
 /// Duplicate machine/process files are rejected like
-/// `OrcaSlicer.cpp:2036-2040,2073-2077`. Empty filament slots are
-/// dropped (`:2202-2215` with `use_first_fila_as_default` false, the
-/// CLI default at `:1438,:1474-1476`).
+/// `OrcaSlicer.cpp:2036-2040,2073-2077`.
 pub fn compose_load_settings(
     request: &LoadSettingsRequest<'_>,
 ) -> Result<ComposedSelection, SliceError> {
-    compose_with_project(request, None)
+    compose_with_project(request, None, false)
 }
 
 pub(crate) fn compose_project_load_settings(
@@ -88,7 +86,12 @@ pub(crate) fn compose_project_load_settings(
     let mut names = load_settings_preset_names(request)?;
     names.embedded = project::retained_config(input, request, &names)?;
     let composed = match names.embedded.as_ref() {
-        Some(embedded) => compose_with_project(request, Some(embedded))?,
+        Some(embedded) => compose_with_project(request, Some(embedded), false)?,
+        None if crate::InputFormat::detect(input) != crate::InputFormat::ThreeMf
+            && request.filaments.iter().any(|file| file.label.is_empty()) =>
+        {
+            compose_with_project(request, None, true)?
+        }
         None => compose_load_settings(request)?,
     };
     Ok((composed, names))
@@ -97,6 +100,7 @@ pub(crate) fn compose_project_load_settings(
 fn compose_with_project(
     request: &LoadSettingsRequest<'_>,
     embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
+    stl: bool,
 ) -> Result<ComposedSelection, SliceError> {
     let mut catalog = Catalog::empty();
     catalog.enable_direct_imports();
@@ -132,6 +136,7 @@ fn compose_with_project(
         }
     }
     let mut filament_slots = Vec::new();
+    let mut loaded_indices = Vec::new();
     for (slot, file) in request.filaments.iter().enumerate() {
         if file.json.is_empty() {
             continue;
@@ -144,12 +149,17 @@ fn compose_with_project(
             )));
         }
         filament_slots.push(catalog.push_filament_slot(document, slot)?);
+        loaded_indices.push(slot);
     }
     let selection = match embedded {
         Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
         None => ProfileSelection::new_partial(process, machine, filament_slots)?,
     };
-    catalog.compose(&selection)
+    if stl && loaded_indices.len() < request.filaments.len() {
+        catalog.compose_with_slots(&selection, Some((request.filaments.len(), &loaded_indices)))
+    } else {
+        catalog.compose(&selection)
+    }
 }
 
 /// Extracts the adjudication inputs of the `--load-settings` file loop

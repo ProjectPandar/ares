@@ -182,6 +182,8 @@ impl InputFormat {
 pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
+    /// The CLI flush calculation cannot index the support flags for each slot.
+    FilamentSupportCount,
     /// `Model::read_from_file` rejected the model in the option-only STL entry.
     OptionStlModelRead(Box<SliceError>),
     /// Resolved non-FFF technology (`OrcaSlicer.cpp:3619,3627-3633`).
@@ -260,6 +262,7 @@ impl fmt::Display for SliceError {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::FilamentSupportCount => f.write_str("filament support and colour counts differ"),
             Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::InvalidPrinterTechnology => f.write_str("invalid printer_technology"),
             Self::PostProcessNotSupported => {

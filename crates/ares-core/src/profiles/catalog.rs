@@ -12,6 +12,7 @@ mod preset_values;
 mod printer_models;
 #[allow(unused_imports)]
 mod raw;
+mod sparse_slots;
 mod store;
 mod vendor_models;
 

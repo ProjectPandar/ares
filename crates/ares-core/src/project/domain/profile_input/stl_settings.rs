@@ -11,7 +11,7 @@ pub(super) fn compose(
     ),
     SliceError,
 > {
-    let preparation = crate::options::flush_matrix::PreparationContext::capture(
+    let mut preparation = crate::options::flush_matrix::PreparationContext::capture(
         &ProjectSettingsRaw::default(),
         overrides,
     )?;
@@ -23,6 +23,13 @@ pub(super) fn compose(
     // command-line overrides (:3613–3615). Use the same composed data
     // for both STL paths (profiles/composition.rs:186–211).
     let project = &profile.settings.project;
+    preparation.sparse_filament_slots = profile.load_names.is_some()
+        && project
+            .preset
+            .filament_settings_id
+            .0
+            .iter()
+            .any(String::is_empty);
     for (key, value) in [
         ("print_settings_id", &project.preset.print_settings_id.0),
         ("printer_settings_id", &project.preset.printer_settings_id.0),
