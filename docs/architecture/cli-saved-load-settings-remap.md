@@ -46,6 +46,22 @@ same saved project without replacement. Compare identical Native and Ares
 argv, complete G-code, exit, stderr, complete result JSON, and recursive
 working-directory inventory with the usual volatile metadata normalization.
 
+## Deferred behavior
+
 Automatic rearrangement, machine or bed changes, multi-plate projects,
 partial preset lists, catalog refresh, mixed filaments, and the CLI timelapse
 switch itself are outside this slice.
+
+The synthetic replacement filament uses JSON arrays for its string vectors.
+Native also accepts scalar-string representations: `OrcaSlicer.cpp:2205–2217`
+loads preset JSON; `Config.cpp:984–987` forwards a string to `set_deserialize`.
+`PrintConfig.cpp:3053,3069,3468` define `default_filament_colour`,
+`filament_notes`, and `filament_ramming_parameters` as `coStrings`.
+`Config.hpp:1225–1229` and `Config.cpp:173–235` decode semicolon-separated
+members, recognize double-quoted members, and remove the quotes and expand
+escapes inside them. `GCode.cpp:8370–8378` writes the typed value using
+`opt_serialize`, which calls the vector serializer (`Config.hpp:1207–1210`,
+`Config.cpp:99–148`) to escape the decoded members. Ares currently retains the
+input quote characters in these three scalar-encoded vector members and then
+escapes them again in the G-code configuration footer. That decoder difference
+is separate from saved-project preset dispatch.

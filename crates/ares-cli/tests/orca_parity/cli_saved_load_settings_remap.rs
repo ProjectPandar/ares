@@ -57,20 +57,31 @@ fn cli_saved_load_settings_remaps_one_filament_and_disables_prime_tower() {
     );
     let project = root.join("saved.3mf");
     repack_project(&root.join("export/cwd/out/saved.3mf"), &project);
-    edit_preset(&presets[0], |config| {
+    let machine = replacement_preset(&presets[0], |config| {
         config["machine_start_gcode"] = json!(format!(
             "{}\n{MACHINE}",
             config["machine_start_gcode"].as_str().unwrap()
         ));
     });
-    edit_preset(&presets[1], |config| {
+    let process = replacement_preset(&presets[1], |config| {
         config["wall_loops"] = json!("3");
         config["timelapse_type"] = json!("1");
         config["enable_prime_tower"] = json!("1");
     });
-    edit_preset(filament, |config| {
+    let filament = replacement_preset(filament, |config| {
         config["filament_start_gcode"] = json!([FILAMENT]);
+        // Use JSON arrays for string vectors in the synthetic preset.
+        for key in [
+            "default_filament_colour",
+            "filament_notes",
+            "filament_ramming_parameters",
+        ] {
+            let token: String = serde_json::from_str(config[key].as_str().unwrap()).unwrap();
+            config[key] = json!([token]);
+        }
     });
+    let settings = format!("{machine};{process}");
+    let load = ["--load-settings", &settings, "--load-filaments", &filament];
     let slice = [
         "--debug",
         "0",
@@ -142,10 +153,16 @@ fn cli_saved_load_settings_remaps_one_filament_and_disables_prime_tower() {
     );
 }
 
-fn edit_preset(path: &str, edit: impl FnOnce(&mut Value)) {
+fn replacement_preset(path: &str, edit: impl FnOnce(&mut Value)) -> String {
     let mut config: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
     edit(&mut config);
-    fs::write(path, serde_json::to_vec(&config).unwrap()).unwrap();
+    let path = Path::new(path);
+    let replacement = path.with_file_name(format!(
+        "replacement-{}",
+        path.file_name().unwrap().to_string_lossy()
+    ));
+    fs::write(&replacement, serde_json::to_vec(&config).unwrap()).unwrap();
+    replacement.into_os_string().into_string().unwrap()
 }
 
 fn repack_project(exported: &Path, project: &Path) {
