@@ -29,6 +29,8 @@ pub enum SliceError {
     EmptyInput,
     MissingProjectPlate(u32),
     InvalidInput(String),
+    /// The CLI flush calculation cannot index the support flags for each slot.
+    FilamentSupportCount,
     /// `Model::read_from_file` rejected the model in the option-only STL entry.
     OptionStlModelRead(Box<SliceError>),
     PresetAdmission(PresetAdmissionError),
@@ -122,6 +124,7 @@ impl fmt::Display for SliceError {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::MissingProjectPlate(plate) => write!(f, "project has no plate {plate}"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::FilamentSupportCount => f.write_str("filament support and colour counts differ"),
             Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::PresetAdmission(error) => error.fmt(f),
             Self::FilamentSupportPaletteMismatch {

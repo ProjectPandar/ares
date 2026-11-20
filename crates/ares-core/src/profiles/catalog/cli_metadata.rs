@@ -8,25 +8,30 @@ use crate::{
 // writes the loaded filament's scalar value with set_at. `filament_index` is
 // the upstream one-based slot: machine uses it directly and process uses
 // `filament_index - 1`.
-pub(super) fn filament_conditions(raw: &mut ProjectSettingsRaw, filaments: &[MergedProfile]) {
+pub(super) fn filament_conditions(
+    raw: &mut ProjectSettingsRaw,
+    filaments: &[MergedProfile],
+    slots: Option<(usize, &[usize])>,
+) {
     let mut machine = existing_strings(raw, "compatible_machine_expression_group");
     let mut process = existing_strings(raw, "compatible_process_expression_group");
+    let count = slots.map_or(filaments.len(), |(count, _)| count);
     for (index, profile) in filaments.iter().enumerate() {
         let metadata = match profile {
             MergedProfile::Machine { metadata, .. }
             | MergedProfile::Process { metadata, .. }
             | MergedProfile::Filament { metadata, .. } => metadata,
         };
-        let filament_index = index + 1;
+        let filament_index = slots.map_or(index, |(_, loaded)| loaded[index]) + 1;
         if let Some(value) = metadata.compatible_printers_condition() {
             if machine.is_empty() {
-                machine.resize(filaments.len() + 2, String::new());
+                machine.resize(count + 2, String::new());
             }
             set_at(&mut machine, filament_index, value);
         }
         if let Some(value) = metadata.compatible_prints_condition() {
             if process.is_empty() {
-                process.resize(filaments.len(), String::new());
+                process.resize(count, String::new());
             }
             set_at(&mut process, filament_index - 1, value);
         }

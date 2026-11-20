@@ -58,6 +58,7 @@ pub(crate) fn slice_error_to_failure(
             "Invalid parameters to the slicer.",
             String::new(),
         ),
+        SliceError::FilamentSupportCount => CliFailure::invalid_preset_file(output),
         SliceError::FilamentSupportPaletteMismatch { .. } => CliFailure::config_file_error(
             #[cfg(target_os = "linux")]
             output,

@@ -13,6 +13,7 @@ mod printer_models;
 #[allow(unused_imports)]
 mod raw;
 mod source_records;
+mod sparse_slots;
 mod store;
 pub use source_records::LoadedPresetSources;
 mod vendor_models;

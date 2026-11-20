@@ -131,6 +131,39 @@ impl ComposedProfile {
     pub fn filament_names(&self) -> &[String] {
         &self.filaments
     }
+
+    pub(super) fn apply_sparse_filaments(
+        &mut self,
+        filament: crate::FilamentOptions,
+        slots: &[usize],
+        cardinality: &[usize],
+    ) {
+        self.settings.filament = filament;
+        let count = cardinality.len();
+        let mut names = vec![String::new(); count];
+        for (&slot, name) in slots.iter().zip(std::mem::take(&mut self.filaments)) {
+            names[slot] = name;
+        }
+        let project = &mut self.settings.project;
+        self.filaments = names.clone();
+        project.preset.filament_settings_id = OrcaStrings(names);
+        project.gcode.filament_map.0.resize(count, OrcaInt(1));
+        let dense_ids = std::mem::take(&mut project.gcode.filament_ids.0);
+        let mut ids = vec![dense_ids[0].clone(); count];
+        for (&slot, id) in slots.iter().zip(dense_ids) {
+            ids[slot] = id;
+        }
+        project.gcode.filament_ids = OrcaStrings(ids);
+        project.preset.filament_self_index = OrcaInts(
+            cardinality
+                .iter()
+                .enumerate()
+                .flat_map(|(index, &variants)| {
+                    std::iter::repeat_n(OrcaInt((index + 1) as i32), variants)
+                })
+                .collect(),
+        );
+    }
 }
 
 pub fn compose_profile_fragments(

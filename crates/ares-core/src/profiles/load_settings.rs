@@ -47,7 +47,7 @@ pub(crate) fn export_settings(
 ) -> Result<crate::project::raw_settings::ProjectSettingsRaw, SliceError> {
     use crate::project::raw_settings::RawConfigValue;
 
-    let mut raw = compose_with_project(request, None, loaded_catalog(request)?)?.raw;
+    let mut raw = compose_with_project(request, None, loaded_catalog(request)?, false)?.raw;
     // CLI::run inserts selected machine/process identity and the process's
     // compatibility list separately from update_full_config (:2304,:2344-2346,:3381).
     for file in request.settings {
@@ -155,7 +155,10 @@ pub(crate) fn compose_project_load_settings(
     let direct_stl = InputFormat::detect(input) != InputFormat::ThreeMf;
     let mut names = load_settings_preset_names(request, &catalog, direct_stl)?;
     names.embedded = project::retained_config(input, request, &names)?;
-    let composed = compose_with_project(request, names.embedded.as_ref(), catalog)?;
+    let stl = names.embedded.is_none()
+        && direct_stl
+        && request.filaments.iter().any(|file| file.label.is_empty());
+    let composed = compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
     Ok((composed, names))
 }
 
@@ -172,6 +175,7 @@ fn compose_with_project(
     request: &LoadSettingsRequest<'_>,
     embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
     mut catalog: Catalog,
+    stl: bool,
 ) -> Result<ComposedSelection, SliceError> {
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
@@ -209,6 +213,7 @@ fn compose_with_project(
     }
     let mut filament_slots = Vec::new();
     let mut authored_user_ids = Vec::new();
+    let mut loaded_indices = Vec::new();
     for (slot, file) in request.filaments.iter().enumerate() {
         if file.json.is_empty() {
             continue;
@@ -235,24 +240,22 @@ fn compose_with_project(
             file.source_identity,
         )?;
         filament_slots.push(catalog.push_filament_slot(document, slot, file.source_identity)?);
+        loaded_indices.push(slot);
     }
     let selection = match embedded {
         Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
         None => ProfileSelection::new_partial(process, machine, filament_slots)?,
     };
-    let mut composed = catalog.compose(&selection)?;
-    for (id, authored) in composed
-        .profile
-        .settings
-        .project
-        .gcode
-        .filament_ids
-        .0
-        .iter_mut()
-        .zip(authored_user_ids)
-    {
+    let sparse = stl && loaded_indices.len() < request.filaments.len();
+    let mut composed = if sparse {
+        catalog.compose_with_slots(&selection, Some((request.filaments.len(), &loaded_indices)))?
+    } else {
+        catalog.compose(&selection)?
+    };
+    let ids = &mut composed.profile.settings.project.gcode.filament_ids.0;
+    for (index, (slot, authored)) in loaded_indices.iter().zip(authored_user_ids).enumerate() {
         if let Some(authored) = authored {
-            *id = authored;
+            ids[if sparse { *slot } else { index }] = authored;
         }
     }
     Ok(composed)

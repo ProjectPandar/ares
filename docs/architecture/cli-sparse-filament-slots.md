@@ -23,7 +23,10 @@ between those files gets 205. Names remain empty at skipped positions;
 A trailing gap does not itself write a value: `Preset::normalize`
 (`Preset.cpp:575–589`) and variant normalization can grow individual
 vectors, while the flush calculation can reject an undersized support
-vector first (`OrcaSlicer.cpp:3850–3867,3925–3934`).
+vector first (`OrcaSlicer.cpp:3850–3867,3925–3934`). For a successful
+trailing-gap flush rebuild the input must also cover the flush minima:
+`src/slic3r/GUI/Plater.cpp:1252–1305` sizes the minima from the diameter
+vector and `OrcaSlicer.cpp:4011` indexes them by palette slot.
 
 The Rust destination is the direct-file composition boundary in
 `ares-core/src/profiles/load_settings.rs` and `profiles/catalog/compose.rs`,
