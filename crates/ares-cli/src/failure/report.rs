@@ -12,6 +12,37 @@ impl From<serde_json::Error> for CliFailure {
     }
 }
 
+impl CliFailure {
+    pub(crate) fn invalid_stl_input(
+        input: &Path,
+        #[cfg(target_os = "linux")] output: &Path,
+    ) -> Self {
+        // Model::read_from_file throws the model-load detail (Model.cpp:493–498);
+        // the CLI adds the input path and returns CLI_DATA_FILE_ERROR (OrcaSlicer.cpp:1999–2002).
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -6,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "The input model file to the slicer can not be parsed.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
+            stderr: format!("{}: Loading of a model file failed.\n", input.display()),
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+}
+
 #[cfg(target_os = "linux")]
 impl CliFailure {
     pub(crate) fn with_slicing_warnings(

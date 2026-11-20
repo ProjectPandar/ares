@@ -68,7 +68,8 @@ pub(crate) fn load(
         .map_err(SliceError::InvalidInput)?
         .resolve();
     let preparation = PreparationContext::capture(&raw, &ConfigOverrides::default())?;
-    let mut project = Project::from_stl(input, filename, settings, raw)?;
+    let mut project = Project::from_stl(input, filename, settings, raw)
+        .map_err(|error| SliceError::OptionStlModelRead(Box::new(error)))?;
     // The single non-project instance is dropped before default placement.
     // OrcaSlicer.cpp:1978 and :5619–6064.
     project.drop_instances_to_ground();
@@ -82,7 +83,7 @@ pub async fn slice_stl_validated(
     input: impl AsRef<[u8]>,
     options: SliceOptions,
 ) -> Result<Vec<u8>, SliceError> {
-    slice(input.as_ref(), "input.stl", &options, true)
+    slice(input.as_ref(), "input.stl", &options, true).map_err(byte_api_error)
 }
 
 pub async fn slice_stl_named_validated(
@@ -114,11 +115,11 @@ pub(crate) fn slice(
         SlicerContext::new(0),
     )
     .map(|processed| processed.gcode)
-    .map_err(stl_validation_error)
 }
 
-pub(crate) fn stl_validation_error(error: SliceError) -> SliceError {
+pub(crate) fn byte_api_error(error: SliceError) -> SliceError {
     match error {
+        SliceError::OptionStlModelRead(error) => *error,
         SliceError::Validate { message, .. } => SliceError::InvalidInput(message),
         other => other,
     }

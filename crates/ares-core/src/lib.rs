@@ -177,6 +177,8 @@ impl InputFormat {
 pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
+    /// `Model::read_from_file` rejected the model in the option-only STL entry.
+    OptionStlModelRead(Box<SliceError>),
     /// Resolved non-FFF technology (`OrcaSlicer.cpp:3619,3627-3633`).
     InvalidPrinterTechnology,
     /// `CLI_POSTPROCESS_NOT_SUPPORTED` (`Utils.hpp:44`): a 3MF whose
@@ -253,6 +255,7 @@ impl fmt::Display for SliceError {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::InvalidPrinterTechnology => f.write_str("invalid printer_technology"),
             Self::PostProcessNotSupported => {
                 f.write_str("post_process is not supported under CLI.")
@@ -311,4 +314,5 @@ pub async fn slice(input: impl AsRef<[u8]>, options: SliceOptions) -> Result<Vec
         }
     }
     project_slice::option_stl::slice(input.as_ref(), "input.stl", &options, false)
+        .map_err(project_slice::option_stl::byte_api_error)
 }
