@@ -13,6 +13,9 @@ pub(super) mod native_user_presets;
 #[path = "profile_entry/nozzle_diameter_system.rs"]
 mod nozzle_diameter_system;
 
+#[path = "profile_entry/saved_export_flush.rs"]
+mod saved_export_flush;
+
 #[path = "loaded_config_acceptance.rs"]
 mod loaded_config_acceptance;
 
