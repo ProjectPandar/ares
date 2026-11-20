@@ -31,7 +31,7 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     warnings: Vec<crate::result_json::CliWarning>,
     #[cfg(target_os = "linux")]
-    critical_warning: Option<String>,
+    plate_warning: Option<String>,
     stderr: String,
     #[cfg(target_os = "linux")]
     output: PathBuf,
@@ -55,7 +55,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
-            critical_warning: None,
+            plate_warning: None,
             stderr: format!("No such file: {}\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
@@ -97,9 +97,12 @@ impl CliFailure {
         self
     }
 
-    pub(super) fn report(self) -> ! {
+    pub(super) fn report(self, #[cfg(target_os = "linux")] strict_mode: bool) -> ! {
         match self {
-            Self::Family(failure) => failure.flush_and_exit(),
+            Self::Family(failure) => failure.flush_and_exit(
+                #[cfg(target_os = "linux")]
+                strict_mode,
+            ),
             Self::Legacy(error) => {
                 eprintln!("Error: {error:?}");
                 std::process::exit(1);
@@ -159,7 +162,7 @@ pub(super) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
-            critical_warning: None,
+            plate_warning: None,
             stderr,
             #[cfg(target_os = "linux")]
             output: output.to_owned(),

@@ -76,9 +76,20 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         )
         .with_upward_report(upward_machines.clone())
     })?;
+    if args.strict {
+        crate::failure::slicing::check_strict(
+            #[cfg(target_os = "linux")]
+            &output,
+            plate,
+            &sliced_plate,
+            &upward_machines,
+            Some((&input.to_string_lossy(), &bytes)),
+        )?;
+    }
     crate::statistics::write(&output, processed, args.export_statistics, plate)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
+        strict_mode: args.strict,
         output: &output,
         plate,
         plate_index: plate,

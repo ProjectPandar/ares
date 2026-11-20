@@ -13,6 +13,30 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
+    pub(crate) fn strict_no_check(#[cfg(target_os = "linux")] output: &Path) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -2,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "Invalid parameters to the slicer.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            plate_warning: None,
+            stderr: "--strict cannot be combined with --no-check\n".to_owned(),
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+
     pub(crate) fn statistics_write(
         path: &Path,
         plate: u32,
@@ -34,7 +58,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
-            critical_warning: None,
+            plate_warning: None,
             stderr: format!(
                 "plate {plate}: Failed to write the G-code statistics to {}.\n",
                 path.display()
@@ -66,7 +90,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
-            critical_warning: None,
+            plate_warning: None,
             stderr: format!("{}: Loading of a model file failed.\n", input.display()),
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
@@ -91,22 +115,22 @@ impl CliFailure {
 }
 
 impl FamilyFailure {
-    pub(super) fn flush_and_exit(self) -> ! {
+    pub(super) fn flush_and_exit(self, #[cfg(target_os = "linux")] strict_mode: bool) -> ! {
         #[cfg(target_os = "linux")]
         println!("run found error, return {}, exit...", self.return_code);
         #[cfg(not(target_os = "linux"))]
         println!("run found error, exit");
         eprint!("{}", self.stderr);
         #[cfg(target_os = "linux")]
-        let _ = self.record_exit_reason();
+        let _ = self.record_exit_reason(strict_mode);
         std::process::exit(self.return_code);
     }
 
     /// `record_exit_reson` with the family's fields (`OrcaSlicer.cpp:535-586`).
     #[cfg(target_os = "linux")]
-    fn record_exit_reason(&self) -> Result<(), serde_json::Error> {
+    fn record_exit_reason(&self, strict_mode: bool) -> Result<(), serde_json::Error> {
         let sliced_plates =
-            self.critical_warning
+            self.plate_warning
                 .as_ref()
                 .map(|message| crate::result_json::SlicedPlateEntry {
                     id: self.plate_index,
@@ -120,6 +144,7 @@ impl FamilyFailure {
             layer_height: self.layer_height,
             wall_loops: self.wall_loops,
             sparse_infill_density: self.sparse_infill_density,
+            strict_mode,
             upward_machines: &self.upward_machines,
             sliced_plates: sliced_plates.as_slice(),
             warnings: &self.warnings,

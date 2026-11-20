@@ -32,6 +32,7 @@ pub(super) struct ResultJson<'a> {
     pub(super) layer_height: f64,
     pub(super) wall_loops: i32,
     pub(super) sparse_infill_density: f64,
+    pub(super) strict_mode: bool,
     pub(super) upward_machines: &'a [String],
     pub(super) sliced_plates: &'a [SlicedPlateEntry],
     pub(super) warnings: &'a [CliWarning],
@@ -39,7 +40,7 @@ pub(super) struct ResultJson<'a> {
 
 impl ResultJson<'_> {
     /// Writes result.json beside `output`. `warnings` and `strict_mode` are always written
-    /// (`:573-574`); `--strict` is not ported, so `strict_mode` is false.
+    /// (`:573-574`).
     pub(super) fn write(&self, output: &Path) -> Result<(), serde_json::Error> {
         let upward = if self.upward_machines.is_empty() {
             String::new()
@@ -52,7 +53,7 @@ impl ResultJson<'_> {
         let body = format!(
             "{{\n\t\"error_string\": {},\n\t\"export_time\": 0,\n\t\"layer_height\": {:?},\n\t\
              \"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\"return_code\": {},\n{}\t\
-             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": false,\n{upward}\t\
+             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": {},\n{upward}\t\
              \"wall_loops\": {},\n\t\"warnings\": {}\n}}\n",
             serde_json::to_string(self.error_string)?,
             self.layer_height,
@@ -60,6 +61,7 @@ impl ResultJson<'_> {
             self.return_code,
             self.sliced_plates_entry()?,
             self.sparse_infill_density,
+            self.strict_mode,
             self.wall_loops,
             self.warnings_array()?,
         );
@@ -127,6 +129,7 @@ impl ResultJson<'_> {
 /// A successful 3MF slice of one plate: `record_exit_reson(outfile_dir, 0, plate_to_slice, …)`
 /// at the end of the run (`OrcaSlicer.cpp:8126-8136`). `plate_to_slice` is the selected plate.
 pub(super) struct Success<'a> {
+    pub(super) strict_mode: bool,
     pub(super) output: &'a Path,
     pub(super) plate: u32,
     pub(super) plate_index: u32,
@@ -157,6 +160,7 @@ impl Success<'_> {
             layer_height: self.sliced_plate.layer_height,
             wall_loops: self.sliced_plate.wall_loops,
             sparse_infill_density: self.sliced_plate.sparse_infill_density,
+            strict_mode: self.strict_mode,
             upward_machines: self.upward_machines,
             sliced_plates: &[SlicedPlateEntry {
                 id: self.plate,

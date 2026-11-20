@@ -21,12 +21,17 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let cli = Cli::parse();
+    #[cfg(target_os = "linux")]
+    let strict_mode = cli.direct.strict;
     let result = match cli.command {
         Some(Commands::Slice(args)) => run_slice(args).await,
         None => direct_stl::run(cli.direct).await,
     };
     if let Err(failure) = result {
-        failure.report();
+        failure.report(
+            #[cfg(target_os = "linux")]
+            strict_mode,
+        );
     }
 }
 
@@ -233,6 +238,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 substitutions(&input),
                 #[cfg(target_os = "linux")]
                 result_json::Success {
+                    strict_mode: false,
                     output: &args.output,
                     plate: args.plate.unwrap_or(1),
                     plate_index: args.plate.unwrap_or(0),
