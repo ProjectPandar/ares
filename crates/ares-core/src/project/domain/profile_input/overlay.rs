@@ -3,6 +3,7 @@
 
 mod cli_bookkeeping;
 mod identity_slots;
+mod variant;
 
 use crate::{
     ProjectSettings, SliceError,
@@ -11,6 +12,7 @@ use crate::{
 
 use cli_bookkeeping::{DifferentSettingsContext, expression_group_slot};
 use identity_slots::{inherits_slot, name_slot};
+use variant::{filament_self_index, variant_values};
 
 /// The selected profile's composed pieces shared by the STL and 3MF
 /// entries: resolved typed settings, the chain-expanded presence view, and
@@ -137,13 +139,18 @@ pub(super) fn merged_profile_raw(
     // so that case is bounded to synthetic inputs.
     let mut inserts: Vec<(String, RawConfigValue)> = Vec::new();
     for key in &filament_keys {
-        let embedded_len = embedded_raw
-            .get(key.as_str())
-            .map_or(0, RawConfigValue::len);
-        let len = embedded_len.max(selected);
-        let values = (0..len)
-            .map(|index| filament_slot(embedded_raw, filament_raws, key, index, selected))
-            .collect::<Result<Vec<_>, _>>()?;
+        let values =
+            if crate::options::registry::filament_options_with_variant().contains(&key.as_str()) {
+                variant_values(embedded_raw, filament_raws, key, selected)
+            } else {
+                let embedded_len = embedded_raw
+                    .get(key.as_str())
+                    .map_or(0, RawConfigValue::len);
+                let len = embedded_len.max(selected);
+                (0..len)
+                    .map(|index| filament_slot(embedded_raw, filament_raws, key, index, selected))
+                    .collect::<Result<Vec<_>, _>>()?
+            };
         inserts.push(((*key).clone(), RawConfigValue::List(values)));
     }
 
@@ -240,16 +247,17 @@ pub(super) fn merged_profile_raw(
             RawConfigValue::List(values),
         ));
     }
-    // Without loaded filament configs the embedded filament state is retained
-    // (OrcaSlicer.cpp:2280–2374); only selected slots rebuild this index.
+    // The selected CLI filament path rebuilds this index after variant replacement
+    // (`OrcaSlicer.cpp:3510–3545`, final reconstruction at `3823–3845`).
     if selected > 0 {
         inserts.push((
             "filament_self_index".to_owned(),
-            RawConfigValue::List(
-                (1..=embedded_count)
-                    .map(|index| RawConfigValue::Text(index.to_string()))
-                    .collect(),
-            ),
+            RawConfigValue::List(filament_self_index(
+                embedded_raw,
+                filament_raws,
+                embedded_count,
+                selected,
+            )),
         ));
     }
 
@@ -351,7 +359,7 @@ const SKIPPED_BY_SET_AT: [&str; 5] = [
     "filament_settings_id",
 ];
 
-/// One slot of a filament-vector overlay (`OrcaSlicer.cpp:3301` `set_at`).
+/// One slot of a non-variant filament-vector overlay (`OrcaSlicer.cpp:3293–3301` `set_at`).
 fn filament_slot(
     embedded_raw: &ProjectSettingsRaw,
     filament_raws: &[ProjectSettingsRaw],
