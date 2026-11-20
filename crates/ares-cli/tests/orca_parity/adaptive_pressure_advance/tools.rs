@@ -1,4 +1,10 @@
 //! Logical-filament activation and PA resets at `GCode::set_extruder`.
+//!
+//! At 0% density the assigned sparse feature did not exist: the v2.5.0
+//! Native reference emitted 0 T1 sparse extrusion lines. At 15% it emits
+//! 717 such lines for both adaptive settings in both Native modes.
+//! `Fill.cpp:947-985` skips zero-density sparse infill; the generated
+//! feature uses its assigned filament (`GCode/ToolOrdering.cpp:129-150`).
 
 use crate::{CaseInputs, OrcaRunner, VendorProfiles, runner};
 use serde_json::json;
@@ -24,7 +30,7 @@ fn adaptive_pa_tool_changes() {
         for (key, value) in [
             ("enable_support", "0"),
             ("enable_prime_tower", "0"),
-            ("sparse_infill_density", "0%"),
+            ("sparse_infill_density", "15%"),
             ("sparse_infill_pattern", "rectilinear"),
             ("sparse_infill_filament_id", "2"),
             ("gcode_comments", "1"),
@@ -81,6 +87,30 @@ fn adaptive_pa_tool_changes() {
                 .filter(|line| *line == "T0" || *line == "T1")
                 .count()
                 > 3
+        );
+        let mut tool = 0;
+        let mut sparse = false;
+        assert!(
+            reference.lines().any(|line| {
+                match line {
+                    "T0" => tool = 0,
+                    "T1" => tool = 1,
+                    _ => {}
+                }
+                if let Some(role) = line.strip_prefix(";TYPE:") {
+                    sparse = role == "Sparse infill";
+                }
+                let code = line.split(';').next().unwrap();
+                tool == 1
+                    && sparse
+                    && code.starts_with("G1 ")
+                    && (code.contains(" X") || code.contains(" Y"))
+                    && code
+                        .split_whitespace()
+                        .find_map(|word| word.strip_prefix('E'))
+                        .is_some_and(|amount| amount.parse::<f64>().unwrap() > 0.0)
+            }),
+            "filament 2 must perform a positive-E sparse infill move"
         );
         assert!(reference.contains("; PA_CHANGE:T0 "));
         assert_eq!(reference.contains("; PA_CHANGE:T1 "), adaptive[1] == "1");
