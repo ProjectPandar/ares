@@ -153,6 +153,10 @@ impl ViewerImpl {
     /// below the top layer of a top-layer-only view while the visible range ends
     /// before the full range.
     pub fn texture_colors(&mut self) -> Vec<Color> {
+        self.texture_colors_range(0..self.vertices.len())
+    }
+
+    pub fn texture_colors_range(&mut self, range: std::ops::Range<usize>) -> Vec<Color> {
         if self.settings.update_colors {
             self.update_colors();
         }
@@ -165,8 +169,13 @@ impl ViewerImpl {
             self.view_range.get_full()[1] != self.view_range.get_visible()[1];
         let enabled_first = self.view_range.get_enabled()[0];
         let spiral_vase_mode = self.settings.spiral_vase_mode;
-        (0..)
-            .zip(self.vertices.iter().zip(&self.vertices_colors))
+        range
+            .clone()
+            .zip(
+                self.vertices[range.clone()]
+                    .iter()
+                    .zip(&self.vertices_colors[range]),
+            )
             .map(|(i, (v, &color))| {
                 if color_top_layer_only
                     && (v.layer_id as usize) < top_layer_id

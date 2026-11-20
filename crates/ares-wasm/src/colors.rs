@@ -45,27 +45,32 @@ struct ColorRangeView {
 
 #[wasm_bindgen]
 impl VertexBuffers {
-    /// Uint8Array RGB triples: libvgcode `ViewerImpl::get_vertex_color` of each
-    /// vertex under `view_type` (`ViewerImpl::update_colors`), after the
-    /// `set_visibility` the color ranges depend on, grayed as
-    /// `update_colors_texture` does for the moves slider range.
-    #[wasm_bindgen(js_name = vertexColors)]
-    pub fn vertex_colors(
+    /// Prepare the retained `ViewerImpl::update_colors` cache once after setting
+    /// visibility and view type. Range reads apply `update_colors_texture` graying.
+    #[wasm_bindgen(js_name = prepareVertexColors)]
+    pub fn prepare_vertex_colors(
         &mut self,
         view_type_name: &str,
         visible_roles: u32,
         visible_options: u16,
-    ) -> Result<Vec<u8>, JsError> {
+    ) -> Result<(), JsError> {
         let view_type = view_type(view_type_name)?;
         self.set_visibility(visible_roles, visible_options);
         if self.viewer.get_view_type() != view_type {
             self.viewer.set_view_type(view_type);
         }
-        Ok(self.viewer.texture_colors().as_flattened().to_vec())
+        self.viewer.colors();
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = vertexColorsRange)]
+    pub fn vertex_colors_range(&mut self, first: u32, count: u32) -> Result<Vec<u8>, JsError> {
+        let range = self.vertex_range(first, count)?;
+        Ok(self.viewer.texture_colors_range(range).into_flattened())
     }
 
     /// JSON `{rangeType, range, values, palette}` of libvgcode
-    /// `ViewerImpl::get_color_range(view_type)` after `vertexColors`, or `null`
+    /// `ViewerImpl::get_color_range(view_type)` after `prepareVertexColors`, or `null`
     /// for a view type without a range.
     #[wasm_bindgen(js_name = colorRange)]
     pub fn color_range(&self, view_type_name: &str) -> Result<String, JsError> {
@@ -85,7 +90,7 @@ impl VertexBuffers {
     }
 }
 
-/// libvgcode `EViewType` names `vertexColors` and `colorRange` accept, in index order.
+/// libvgcode `EViewType` names `prepareVertexColors` and `colorRange` accept, in index order.
 #[wasm_bindgen(js_name = viewTypes)]
 pub fn view_types() -> Vec<String> {
     VIEW_TYPES
