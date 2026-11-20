@@ -4,12 +4,13 @@ use serde::{Deserialize, Serialize, de::value::StrDeserializer};
 use serde_json::{Serializer, ser::PrettyFormatter};
 
 use super::{
-    load_project,
+    load::load_project_with_preparation,
     raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 use crate::{
-    ORCA_SLICER_COMPATIBILITY_VERSION, OptionValueKind as Kind, SliceError, option_definitions,
-    options::{escape_scalar_string, format_number, json_deserialize},
+    ConfigOverrides, ORCA_SLICER_COMPATIBILITY_VERSION, OptionValueKind as Kind, SliceError,
+    option_definitions,
+    options::{escape_scalar_string, flush_matrix, format_number, json_deserialize},
     profiles::is_connection_option,
 };
 
@@ -17,13 +18,54 @@ use crate::{
 ///
 /// The project bytes are loaded and composed without selecting a plate or slicing.
 pub fn export_project_settings(input: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
-    let mut project = load_project(input)?;
+    let overrides = ConfigOverrides::default();
+    let (mut project, preparation) = load_project_with_preparation(input, &overrides)?;
     let filament_count = project.cli_filament_count();
     project.initialize_cli_loaded_project_config(filament_count);
-    export_loaded_settings(
-        project.documents().project_settings_raw.clone(),
-        filament_count,
-    )
+    let mut raw = project.documents().project_settings_raw.clone();
+    // OrcaSlicer.cpp:3849–4023 prepares the missing matrix before default completion.
+    if !raw.contains_key("flush_volumes_matrix") {
+        let source = project.settings();
+        let mut settings = source.clone();
+        // The typed default contains an empty name, not a loaded filament slot.
+        settings
+            .project
+            .preset
+            .filament_settings_id
+            .0
+            .truncate(filament_count);
+        flush_matrix::prepare(&mut settings, &raw, &preparation, &overrides)?;
+        let colours = &settings.filament.gcode.filament_colour;
+        if *colours != source.filament.gcode.filament_colour {
+            raw.insert_strings("filament_colour", &colours.0);
+        }
+        let print = &settings.project.print;
+        let original = &source.project.print;
+        if print.flush_volumes_matrix != original.flush_volumes_matrix {
+            raw.insert_strings(
+                "flush_volumes_matrix",
+                &print
+                    .flush_volumes_matrix
+                    .0
+                    .iter()
+                    .copied()
+                    .map(format_number)
+                    .collect::<Vec<_>>(),
+            );
+        }
+        if print.flush_multiplier != original.flush_multiplier {
+            raw.insert_strings(
+                "flush_multiplier",
+                &print
+                    .flush_multiplier
+                    .0
+                    .iter()
+                    .map(|value| format_number(value.0))
+                    .collect::<Vec<_>>(),
+            );
+        }
+    }
+    export_loaded_settings(raw, filament_count)
 }
 
 pub(crate) fn export_loaded_settings(
