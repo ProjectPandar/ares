@@ -220,6 +220,9 @@ pub(crate) fn slice_source(
         &mut context,
         sliced_plate,
         |report, context| {
+            if let Some(profile) = project.profile.as_mut() {
+                profile.enable_timelapse = context.enable_timelapse;
+            }
             perimeters::prepare_post_layer_region_perimeters(
                 ProjectSource {
                     sliced_plate: report,

@@ -27,6 +27,7 @@ pub struct SlicerContext<'a> {
     thumbnail_images: Vec<ThumbnailData>,
     pub(crate) max_triangle_count: i32,
     pub(crate) no_check: bool,
+    pub(crate) enable_timelapse: bool,
     pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
 }
 
@@ -39,6 +40,7 @@ impl<'a> SlicerContext<'a> {
             thumbnail_images: Vec::new(),
             max_triangle_count: 0,
             no_check: false,
+            enable_timelapse: false,
             custom_gcodes: None,
         }
     }
@@ -48,6 +50,14 @@ impl<'a> SlicerContext<'a> {
     #[must_use]
     pub fn with_no_check(mut self, no_check: bool) -> Self {
         self.no_check = no_check;
+        self
+    }
+
+    /// Sets the CLI's runtime timelapse flag for the saved-project preset overlay
+    /// (`OrcaSlicer.cpp:1593-1595,4303-4320`). This does not select a timelapse mode.
+    #[must_use]
+    pub fn with_enable_timelapse(mut self, enable_timelapse: bool) -> Self {
+        self.enable_timelapse = enable_timelapse;
         self
     }
 
