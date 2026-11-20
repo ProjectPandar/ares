@@ -26,6 +26,7 @@ fn processed_buffers_preserve_ids_and_owned_data() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     assert_eq!(output.take_gcode(), b"G1 X1\n");
     assert!(output.take_gcode().is_empty());
@@ -80,6 +81,7 @@ fn vertex_buffers_carry_libvgcode_layer_zs() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let mut vertices = output.take_vertices();
     assert_eq!(
@@ -117,6 +119,7 @@ fn vertex_buffers_view_range_follows_the_layer_range() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let mut vertices = output.take_vertices();
     let tags = vertices.take_tags();

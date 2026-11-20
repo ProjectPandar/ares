@@ -102,6 +102,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let mut vertices = output.take_vertices();
     vertices.take_values();

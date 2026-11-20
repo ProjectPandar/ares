@@ -62,6 +62,7 @@ fn motion_view_types_expose_processor_values_and_ranges() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let mut vertices = output.take_vertices();
     let values = vertices.take_values();

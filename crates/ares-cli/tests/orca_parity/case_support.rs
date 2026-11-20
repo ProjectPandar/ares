@@ -18,6 +18,9 @@ mod export_3mf;
 #[path = "export_3mf_sliced.rs"]
 mod export_3mf_sliced;
 
+#[path = "export_3mf_sliced_rejection.rs"]
+mod export_3mf_sliced_rejection;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
