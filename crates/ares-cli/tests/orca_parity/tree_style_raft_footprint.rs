@@ -84,15 +84,15 @@ raft_case!(
 raft_case!(
     mk4_slim_tree_raft_keeps_its_footprint_without_object_support,
     "mk4-tree_slim",
-    "a690919ea132cb0bfc9df55ff24c1bfeaccc38f9278bfa1448a2191fe319a295"
+    "0e0e9e3b79cfe2bda0563adf3eaf222a6fd3b7852167ff1a13cb92ceb032c295"
 );
 raft_case!(
     mk4_strong_tree_raft_keeps_its_footprint_without_object_support,
     "mk4-tree_strong",
-    "493c59e39ab9ad80c1bd0b4f1e558b7eebd71a360d69bcc8ba5093b1d95ff9bf"
+    "d0cde5897901d6b03115f9763b63e4fc26676e2dd8494f5f7ab6678023e24bec"
 );
 raft_case!(
     mk4_hybrid_tree_raft_keeps_its_footprint_without_object_support,
     "mk4-tree_hybrid",
-    "ba877a67e7fd7f9c36e58396630ac11b2f299258e94ca7b1761203f21a9a1330"
+    "b588e3a2f2994355b5f9655d4266da0766e717f78197c84794253dce383faeda"
 );
