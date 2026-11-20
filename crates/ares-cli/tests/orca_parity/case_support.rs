@@ -59,3 +59,6 @@ mod spiral_byobject_transition;
 
 #[path = "arachne_disconnected_loop.rs"]
 mod arachne_disconnected_loop;
+
+#[path = "overhang_wall_retract_wipe.rs"]
+mod overhang_wall_retract_wipe;
