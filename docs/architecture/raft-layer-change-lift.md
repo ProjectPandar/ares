@@ -8,7 +8,7 @@ Upstream: OrcaSlicer v2.5.0, `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`, `src/li
 
 ## Rewrite boundary
 
-Keep the Ares `project_slice::gcode_emit` layer-boundary and first-path travel code as the destination of the corresponding upstream writer-state transition. Port only the decision that changes the emitted approach from raft interface to the first object path; do not special-case a model, an XY point, a configured hop distance, or a printer profile. Determine which upstream branch owns that decision by tracing the layer retract, lazy reservation, first travel and unlift at the transition.
+Keep the Ares layer boundary and first-path travel scaffold. Port the known-position predicate in `GCodeWriter.cpp:1006–1011` to `project_slice::gcode_emit::motion::travel::lift::emit_pending`: if live XYZ exactly equals the destination, consume the pending lift without raising the target. The layer change has already set the writer's logical Z, so the first path can have identical writer XYZ even though a new physical Z move must be emitted. Leave the forced XYZ travel intact. Do not suppress lifts for unknown position, equal XY at a different Z, or merely equal formatted coordinates.
 
 This is separate from the existing Auto-to-Spiral layer-change reservation in `change-layer-spiral-lift-reservation.md`. Leave support geometry, interface extrusion, lift type selection, tower motion and progress command placement unchanged.
 

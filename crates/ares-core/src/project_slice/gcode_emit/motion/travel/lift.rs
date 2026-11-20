@@ -199,6 +199,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // `slope_start_z` or the plain layer z), otherwise `m_lifted` stays
     // 0 and the travel happens at `dest_z`.
     let live_z = state.writer_z.unwrap_or(state.layer_z);
+    // A known, identical XYZ destination consumes the pending lift without
+    // raising it; the writer still emits the travel (GCodeWriter.cpp:1001–1011).
+    if state.positioned && (state.x, state.y, live_z) == (target.x, target.y, dest_z) {
+        return Some(dest_z);
+    }
     let raised_z = if live_z + state.options.z_hop > dest_z {
         live_z + state.options.z_hop
     } else {
