@@ -26,6 +26,8 @@ mod export_statistics;
 
 #[path = "cli_convert_unit.rs"]
 mod cli_convert_unit;
+#[path = "cli_load_defaultfila.rs"]
+mod cli_load_defaultfila;
 #[path = "cli_strict.rs"]
 mod cli_strict;
 
