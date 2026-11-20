@@ -24,6 +24,8 @@ mod direct_stl_slice;
 #[path = "export_statistics.rs"]
 mod export_statistics;
 
+#[path = "cli_convert_unit.rs"]
+mod cli_convert_unit;
 #[path = "cli_strict.rs"]
 mod cli_strict;
 
