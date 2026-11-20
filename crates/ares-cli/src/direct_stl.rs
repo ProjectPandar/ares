@@ -134,7 +134,9 @@ pub(super) async fn run(
     } else {
         None
     };
-    let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
+    let context = SlicerContext::new(0)
+        .with_max_triangle_count(args.mtcpp.unwrap_or_default())
+        .with_no_check(args.no_check);
     let mut export_after = None;
     let failure = |error: SliceError| {
         if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {

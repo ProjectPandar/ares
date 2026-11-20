@@ -26,6 +26,7 @@ pub struct SlicerContext<'a> {
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
     pub(crate) max_triangle_count: i32,
+    pub(crate) no_check: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -36,7 +37,16 @@ impl<'a> SlicerContext<'a> {
             status: None,
             thumbnail_images: Vec::new(),
             max_triangle_count: 0,
+            no_check: false,
         }
+    }
+
+    /// Sets the print's action-local `no_check` flag (OrcaSlicer.cpp:6988).
+    /// Only the support-necessity check currently reads this flag in the core.
+    #[must_use]
+    pub fn with_no_check(mut self, no_check: bool) -> Self {
+        self.no_check = no_check;
+        self
     }
 
     /// Supplies the direct STL plate limit (`OrcaSlicer.cpp:6637`); zero is unlimited.
