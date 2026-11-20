@@ -40,7 +40,7 @@ fn compare_slice(selection: &str, count: usize, missing: bool) {
         .tempdir_in(artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    let presets = preset_files(&root, "BBL", "Bambu Lab X1 Carbon 0.4 nozzle");
+    let presets = preset_files(&root, "Creality", "Creality Ender-3 0.4 nozzle");
     let settings = presets[..2].join(";");
     let filaments = presets[2..].join(";");
     let inputs = (0..count)
@@ -56,14 +56,15 @@ fn compare_slice(selection: &str, count: usize, missing: bool) {
         let cwd = root.join(name);
         let dir = cwd.join("out");
         fs::create_dir_all(&dir).unwrap();
-        let output = Command::new(bin)
+        let mut command = Command::new(bin);
+        command
             .current_dir(&cwd)
             .args(["--slice", selection, "--outputdir", "out"])
-            .args(["--load-settings", &settings, "--load-filaments", &filaments])
-            .args(["--arrange", "0"])
-            .args(&inputs)
-            .output()
-            .unwrap();
+            .args(["--load-settings", &settings, "--load-filaments", &filaments]);
+        if count > 1 {
+            command.args(["--arrange", "0"]);
+        }
+        let output = command.args(&inputs).output().unwrap();
         fs::write(cwd.join("exit"), format!("{:?}\n", output.status.code())).unwrap();
         fs::write(cwd.join("stderr"), &output.stderr).unwrap();
         (dir, output)

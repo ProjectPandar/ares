@@ -15,14 +15,16 @@ One STL file creates one object, even when its mesh has disconnected shells.
 `:8125–8142`); there is no report on other platforms.
 
 The Rust adapter accepts `--slice 0|1 --outputdir DIR` with direct STL
-input and explicit `--load-settings` / `--load-filaments`. It selects the
-one available plate via the same zero-to-all / positive-to-one mapping as
-3MF plate selection. It calls the loaded-preset `project_slice` lifecycle
-(shared with the option-only STL entry) and publishes `plate_1.gcode` and
-`result.json` using the existing CLI report writer. A successful report's
-`plate_index` is the action argument, while its sliced plate entry ID is 1.
-A missing input fails before slicing (`OrcaSlicer.cpp:1727–1733`) and
-uses the existing input rejection report; it does not leave G-code.
+input and explicit `--load-settings` / `--load-filaments`. Both action
+selections reach the sole available plate. The fresh model does not enter
+the 3MF selected-plate importer (`OrcaSlicer.cpp:2042–2045`). The action
+uses the loaded-preset `project_slice` lifecycle and publishes
+`plate_1.gcode` and `result.json` using the existing CLI report writer.
+A successful report's `plate_index` is the action argument, while its
+sliced plate entry ID is 1. A single STL with no preset arguments uses
+the option-only STL entry with its existing print validation. A missing
+input fails before slicing (`:1725–1728`), uses the existing input
+rejection report, and does not leave G-code.
 
 ## Scope and parity
 
@@ -33,9 +35,11 @@ of `prepare_time`, `export_time`, and the per-plate `sliced_time` and
 `sliced_time_with_cache`; require these fields to exist as unsigned
 integers. All other values, field presence, and array order are significant.
 
-Use synthesized STL geometry and resolved stock FFF presets. Exercise
-both selections with a single object and a two-object case. Preserve the
-existing `slice` subcommand semantics. Other actions, saved 3MF routing,
-projection of an arbitrary number of arranged plates, and combinations
-with transforms other than preserving supplied placement are separate
-from the direct-STL action.
+Use synthesized STL geometry and resolved stock single-variant FFF
+presets. Exercise both selections with a single object using default
+placement, and two separate STL objects using `--arrange 0`. The latter
+ports the model merge (`OrcaSlicer.cpp:4040–4055`, `Model.cpp:649–665,
+1346–1354`) so both objects retain their placement and have independent
+instance labels. Preserve the `slice` subcommand semantics. Other
+actions, saved 3MF routing, automatic arrangement of several objects,
+and multi-plate output are separate from the direct-STL action.
