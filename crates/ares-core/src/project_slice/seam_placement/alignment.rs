@@ -120,6 +120,10 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
         return false;
     }
+    // SeamPlacer.cpp:1253-1260 — Random uses no further tie-breaker.
+    if layer.placement == ProcessSeamPosition::Random {
+        return true;
+    }
     // SeamPlacer.cpp:839-841 — strict rear-Y similarity, not score tolerance.
     if layer.placement == ProcessSeamPosition::Back {
         return layer.positions[first].y + SCORE_TOLERANCE * 5.0 > layer.positions[second].y;

@@ -1,4 +1,6 @@
-use super::{LayerPlan, SeamPerimeter, Vec3};
+use crate::project_slice::seam_candidates::PaintState;
+
+use super::{LayerPlan, SeamPerimeter, Vec3, is_not_much_worse};
 
 #[derive(Clone, Copy)]
 struct Edge {
@@ -26,10 +28,12 @@ fn select(layer: &LayerPlan, perimeter_index: usize) -> (usize, Vec3) {
     let mut picked = viable.iter().map(|edge| edge.length).sum::<f32>() * random;
     for (viable_index, edge) in viable.iter().enumerate() {
         if picked - edge.length <= 0.0 || viable_index + 1 == viable.len() {
-            return (
-                edge.index,
-                layer.positions[edge.index] + edge.vector.normalized() * picked,
-            );
+            let offset = if edge.length > 0.0 {
+                edge.vector.normalized() * picked.clamp(0.0, edge.length)
+            } else {
+                Vec3::default()
+            };
+            return (edge.index, layer.positions[edge.index] + offset);
         }
         picked -= edge.length;
     }
@@ -40,9 +44,9 @@ fn viable_edges(layer: &LayerPlan, perimeter: &SeamPerimeter) -> Vec<Edge> {
     let mut example = perimeter.start_index;
     let mut viable = Vec::new();
     for index in perimeter.start_index..perimeter.end_index {
-        if not_much_worse(layer, index, example) && not_much_worse(layer, example, index) {
+        if is_not_much_worse(layer, index, example) && is_not_much_worse(layer, example, index) {
             viable.push(edge(layer, perimeter, index));
-        } else if !not_much_worse(layer, example, index) {
+        } else if !is_not_much_worse(layer, example, index) {
             example = index;
             viable.clear();
             viable.push(edge(layer, perimeter, index));
@@ -57,28 +61,21 @@ fn edge(layer: &LayerPlan, perimeter: &SeamPerimeter, index: usize) -> Edge {
     } else {
         index + 1
     };
-    let vector = layer.positions[next] - layer.positions[index];
+    let from = layer.candidates.points[index].paint;
+    let to = layer.candidates.points[next].paint;
+    // SeamPlacer.cpp:1385-1397 keeps the candidate but zeros a forbidden outgoing edge.
+    let forbidden = perimeter.exact_paint_ends.as_ref().is_some_and(|ends| {
+        (ends.enforced && from == PaintState::Enforced && to != PaintState::Enforced)
+            || (ends.blocked && from != PaintState::Blocked && to == PaintState::Blocked)
+    });
+    let vector = if forbidden {
+        Vec3::default()
+    } else {
+        layer.positions[next] - layer.positions[index]
+    };
     Edge {
         index,
         vector,
         length: vector.norm(),
     }
-}
-
-fn not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
-    let overhang_difference = (layer.overhangs[first] - layer.overhangs[second]).abs();
-    let flow_width =
-        layer.candidates.perimeters[layer.candidates.points[first].perimeter_index].flow_width;
-    if (layer.overhangs[first] > 0.0 || layer.overhangs[second] > 0.0)
-        && overhang_difference > 0.1 * flow_width
-    {
-        return layer.overhangs[first] < layer.overhangs[second];
-    }
-    if layer.embedded_distances[first] < -0.5 && layer.embedded_distances[second] > -0.5 {
-        return true;
-    }
-    if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
-        return false;
-    }
-    true
 }
