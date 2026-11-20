@@ -14,10 +14,41 @@ pub(super) struct Mesh {
     pub source_offset: [f32; 3],
 }
 
-pub(super) struct SavedMesh {
+pub(super) struct Object {
+    pub name: String,
+    pub placement: [f64; 3],
+    pub parts: Vec<Part>,
+}
+
+pub(super) struct Part {
     pub mesh: Mesh,
+    pub transform: Transform3d,
+    pub matrix: Transform3d,
     pub source_file: String,
+    pub source_object: i32,
+    pub source_volume: i32,
+}
+
+pub(super) struct SavedModel {
+    pub objects: Vec<Object>,
     pub orca_version: Option<String>,
+}
+
+impl Object {
+    pub(super) fn unsliced(mesh: Mesh, filename: &str) -> Self {
+        Self {
+            name: mesh.name.clone(),
+            placement: mesh.placement,
+            parts: vec![Part {
+                mesh,
+                transform: Transform3d::IDENTITY,
+                matrix: Transform3d::IDENTITY,
+                source_file: filename.to_owned(),
+                source_object: 0,
+                source_volume: 0,
+            }],
+        }
+    }
 }
 
 fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
@@ -48,23 +79,16 @@ fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
     }
 }
 
-pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
+pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
     let project = crate::load_project(input)?;
-    let [object] = project.objects() else {
-        return Err(deferred("expected one saved object"));
-    };
-    let ([volume], [instance]) = (object.volumes(), object.instances()) else {
-        return Err(deferred("expected one saved volume and instance"));
-    };
-    let [settings] = project.documents().model_settings.objects.as_slice() else {
-        return Err(deferred("expected saved model settings"));
-    };
-    let [part] = settings.parts.as_slice() else {
-        return Err(deferred("expected saved part settings"));
-    };
+    let paths: std::collections::BTreeSet<_> = project
+        .objects()
+        .iter()
+        .flat_map(|object| object.volumes().iter().map(|part| part.source_model_path()))
+        .collect();
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
     if archive.paths().any(|path| {
-        path.as_str() != volume.source_model_path()
+        !paths.contains(path.as_str())
             && !matches!(
                 path.as_str(),
                 MODEL
@@ -79,30 +103,73 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
     }) {
         return Err(deferred("additional saved archive members"));
     }
-    if part.subtype != "normal_part"
-        || volume.transform() != Transform3d::default()
-        || instance.transform().without_translation() != Transform3d::default()
-        || object.name().contains(['/', '\\', '\0'])
-    {
-        return Err(deferred("saved model metadata or transforms"));
-    }
-    let volume_bytes = archive.read(&PackagePath::entry(volume.source_model_path().as_bytes())?)?;
-    if has_painted_triangles(&volume_bytes)? {
-        return Err(deferred("painted saved mesh"));
+    for path in paths {
+        let bytes = archive.read(&PackagePath::entry(path.as_bytes())?)?;
+        if has_painted_triangles(&bytes)? {
+            return Err(deferred("painted saved mesh"));
+        }
     }
     let model_bytes = archive.read(&PackagePath::entry(MODEL.as_bytes())?)?;
     let doc: ModelDocument = quick_xml::de::from_reader(model_bytes.as_slice())
         .map_err(|err| invalid(err.to_string()))?;
+    let settings = &project.documents().model_settings.objects;
+    let objects = project
+        .objects()
+        .iter()
+        .map(|object| {
+            let ([volume], [instance]) = (object.volumes(), object.instances()) else {
+                return Err(deferred(
+                    "expected one saved volume and instance per object",
+                ));
+            };
+            if !instance.printable()
+                || instance.transform().without_translation() != Transform3d::IDENTITY
+                || object.name().contains(['/', '\\', '\0'])
+            {
+                return Err(deferred("saved model metadata or transforms"));
+            }
+            let settings = settings
+                .iter()
+                .find(|entry| entry.id == object.id())
+                .ok_or_else(|| deferred("expected saved object settings"))?;
+            let offset = instance.transform().to_column_major();
+            Ok(Object {
+                name: object.name().to_owned(),
+                placement: [offset[12], offset[13], offset[14]],
+                parts: vec![saved_part(volume, &settings.parts)?],
+            })
+        })
+        .collect::<Result<_, SliceError>>()?;
+    Ok(SavedModel {
+        objects,
+        orca_version: doc
+            .metadata
+            .into_iter()
+            .find(|m| m.name == "OrcaSlicer")
+            .map(|m| m.value),
+    })
+}
+
+fn saved_part(
+    volume: &crate::ProjectVolume,
+    settings: &[super::super::model_settings::PartSettings],
+) -> Result<Part, SliceError> {
+    let part = settings
+        .iter()
+        .find(|entry| entry.id == volume.id())
+        .ok_or_else(|| deferred("expected saved part settings"))?;
+    if part.subtype != "normal_part" || volume.transform() != Transform3d::IDENTITY {
+        return Err(deferred("saved part type or transform"));
+    }
     let metadata = |key| {
         part.retained_metadata
             .iter()
             .find(|entry| entry.key == key)
             .map_or("", |entry| entry.value.as_str())
     };
-    let offset = instance.transform().to_column_major();
-    Ok(SavedMesh {
+    Ok(Part {
         mesh: Mesh {
-            name: object.name().to_owned(),
+            name: volume.name().to_owned(),
             vertices: volume
                 .mesh()
                 .vertices()
@@ -115,16 +182,15 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
                 .iter()
                 .map(|tri| tri.map(|i| i as usize))
                 .collect(),
-            placement: [offset[12], offset[13], offset[14]],
+            placement: [0.0; 3],
             source_offset: ["source_offset_x", "source_offset_y", "source_offset_z"]
                 .map(|key| metadata(key).parse().unwrap_or(0.0)),
         },
+        transform: volume.transform(),
+        matrix: volume.transform().then(volume.source_transform()),
         source_file: metadata("source_file").to_owned(),
-        orca_version: doc
-            .metadata
-            .into_iter()
-            .find(|m| m.name == "OrcaSlicer")
-            .map(|m| m.value),
+        source_object: metadata("source_object_id").parse().unwrap_or(-1),
+        source_volume: metadata("source_volume_id").parse().unwrap_or(-1),
     })
 }
 
