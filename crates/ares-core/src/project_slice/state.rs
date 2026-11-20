@@ -31,10 +31,12 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (mut project, preparation) =
-        source
-            .input
-            .load(source.overrides, source.refresh, source.validate_print)?;
+    let (mut project, preparation) = source.input.load(
+        source.overrides,
+        source.refresh,
+        source.system_catalog,
+        source.validate_print,
+    )?;
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);

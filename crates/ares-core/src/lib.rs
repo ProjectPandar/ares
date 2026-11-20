@@ -217,10 +217,15 @@ pub use project::{
     project_config_substitutions,
 };
 pub use project_slice::{
-    CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
-    slice_project_plate_processed_validated, slice_project_plate_validated,
+    CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
+    slice_cli_project_plate_validated, slice_cli_project_plate_validated_with_catalog,
+    slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
+    slice_project_plate_validated, slice_project_plate_validated_with_catalog,
 };
-pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
+pub use project_slice::{
+    slice_project, slice_project_plate, slice_project_plate_processed,
+    slice_project_plate_processed_with_catalog, slice_project_plate_with_catalog,
+};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use slicer_context::{SlicerContext, SlicingStatus};
@@ -341,6 +346,7 @@ impl fmt::Display for SliceError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
+
             Self::InvalidInput(message) => f.write_str(message),
             Self::FilamentSupportPaletteMismatch {
                 support_count,

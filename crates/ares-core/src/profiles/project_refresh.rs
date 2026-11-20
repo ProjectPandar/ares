@@ -8,7 +8,7 @@ pub(crate) use filament::{dev_key as is_filament_dev_key, set_filament_dev_optio
 
 use std::collections::BTreeMap;
 
-use super::{Placement, project_selection::LoadedCatalog};
+use super::{Placement, catalog::Catalog, project_selection::LoadedCatalog};
 use crate::{
     ConfigOverrides, Project, ProjectSettings, SliceError,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
@@ -86,6 +86,13 @@ pub(crate) struct ProjectPresetRefresh<'a> {
     pub(super) policy: ProjectPresetPolicy,
     pub(super) filename: &'a str,
     pub(super) placement: Placement,
+}
+
+pub(super) fn direct_refresh(
+    catalog: &Catalog,
+    raw: &ProjectSettingsRaw,
+) -> Result<ProjectSettingsRaw, SliceError> {
+    preset::refresh(catalog, raw, false, None)
 }
 
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {

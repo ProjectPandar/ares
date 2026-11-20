@@ -44,7 +44,7 @@ fn assert_export_like_native(label: &str, session: &PlaterSession, plate: u32) {
     let actual = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
-        .block_on(ares_core::slice_project_plate(
+        .block_on(crate::runner::application::slice_direct_project_plate(
             exported.as_slice(),
             GenerationMetadata::default(),
             Some(plate),

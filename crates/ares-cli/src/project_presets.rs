@@ -1,9 +1,70 @@
-use std::{fs, io, path::Path};
+use std::{collections::BTreeMap, fs, io, path::Path};
+
+use serde_json::{Value, json};
 
 use crate::{
     SliceArgs,
     failure::{CliFailure, slice_error_to_failure},
 };
+
+fn resource_json(path: &Path) -> Result<Value, io::Error> {
+    let bytes = fs::read(path)?;
+    serde_json::from_slice(bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(&bytes))
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+}
+
+pub(super) fn load_resources_catalog(
+    resources_dir: &Path,
+) -> Result<ares_core::PresetCatalogHandle, CliFailure> {
+    let profiles_dir = resources_dir.join("profiles");
+    let mut vendor_paths = fs::read_dir(&profiles_dir)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("json"))
+        .collect::<Vec<_>>();
+    vendor_paths.sort();
+    let mut catalog = ares_core::PresetCatalogHandle::new();
+    for index_path in vendor_paths {
+        let id = index_path
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid vendor filename"))?;
+        let index = resource_json(&index_path)?;
+        if index.get("name").and_then(Value::as_str).is_none() {
+            continue;
+        }
+        let mut files = BTreeMap::new();
+        let entries = [
+            "machine_model_list",
+            "machine_list",
+            "process_list",
+            "filament_list",
+        ]
+        .into_iter()
+        .flat_map(|kind| index[kind].as_array().into_iter().flatten());
+        for entry in entries {
+            let Some(sub_path) = entry["sub_path"].as_str() else {
+                continue;
+            };
+            let path = profiles_dir.join(id).join(sub_path);
+            let value = resource_json(&path)?;
+            files.insert(sub_path.to_owned(), value);
+        }
+        let vendor = json!({"id": id, "index": index, "files": files});
+        catalog
+            .add_vendor(
+                &serde_json::to_vec(&vendor)
+                    .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?,
+            )
+            .map_err(|error| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("invalid vendor {id} profile JSON: {error}"),
+                )
+            })?;
+    }
+    Ok(catalog)
+}
 
 pub(super) async fn slice(
     args: &SliceArgs,

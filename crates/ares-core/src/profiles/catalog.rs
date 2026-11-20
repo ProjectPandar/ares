@@ -122,12 +122,27 @@ impl PresetCatalogHandle {
         }
     }
 
+    /// Parses the same `{vendors, imports}` transport used by profile slicing.
+    pub fn from_json(input: &str) -> Result<Self, SliceError> {
+        Ok(Self {
+            catalog: Catalog::from_json(input)?,
+        })
+    }
+
     /// One vendor envelope `{id, index, files}` as JSON bytes, exactly the
     /// one-shot transport's `vendors[]` element.
     pub fn add_vendor(&mut self, vendor_json: &[u8]) -> Result<(), SliceError> {
         let vendor: VendorInput = serde_json::from_slice(super::without_utf8_bom(vendor_json))
             .map_err(|error| invalid(format!("invalid vendor profile JSON: {error}")))?;
         self.catalog.push_vendor(vendor)
+    }
+
+    /// CLI:2793–2817 refreshes resolvable system filaments without compacting slots.
+    pub(crate) fn refresh_direct(
+        &self,
+        raw: &ProjectSettingsRaw,
+    ) -> Result<ProjectSettingsRaw, SliceError> {
+        super::project_refresh::direct_refresh(&self.catalog, raw)
     }
 
     /// An Orca preset JSON or `.orca_*`/`.zip` import, reusing the bundle

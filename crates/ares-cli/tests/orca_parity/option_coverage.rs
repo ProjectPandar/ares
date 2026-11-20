@@ -154,6 +154,8 @@ mod support_ironing_pattern_domain;
 #[path = "option_coverage/support_ironing_unknown_wire.rs"]
 mod support_ironing_unknown_wire;
 
+#[path = "option_coverage/direct_bbl_missing_system_preset.rs"]
+mod direct_bbl_missing_system_preset;
 #[path = "option_coverage/print_extruder_identity.rs"]
 mod print_extruder_identity;
 

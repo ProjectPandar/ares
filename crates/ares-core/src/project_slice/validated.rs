@@ -43,6 +43,16 @@ pub async fn slice_cli_project_plate_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_cli_project_plate_validated_with_catalog(input, request, metadata, None, context).await
+}
+
+pub async fn slice_cli_project_plate_validated_with_catalog(
+    input: impl AsRef<[u8]>,
+    request: CliProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    system_catalog: Option<&crate::PresetCatalogHandle>,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
     let CliProjectSliceRequest {
         plate,
         overrides,
@@ -65,12 +75,19 @@ pub async fn slice_cli_project_plate_validated(
             orient,
             upward: Some(upward),
             sliced_plate: Some(sliced_plate),
+            system_catalog,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
         record_moves,
         context,
     )
+}
+
+pub struct DirectProjectSliceRequest<'a> {
+    pub plate: Option<u32>,
+    pub overrides: &'a ConfigOverrides,
+    pub system_catalog: Option<&'a crate::PresetCatalogHandle>,
 }
 
 pub async fn slice_project_plate_validated(
@@ -80,6 +97,30 @@ pub async fn slice_project_plate_validated(
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_project_plate_validated_with_catalog(
+        input,
+        DirectProjectSliceRequest {
+            plate,
+            overrides,
+            system_catalog: None,
+        },
+        metadata,
+        context,
+    )
+    .await
+}
+
+pub async fn slice_project_plate_validated_with_catalog(
+    input: impl AsRef<[u8]>,
+    request: DirectProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    let DirectProjectSliceRequest {
+        plate,
+        overrides,
+        system_catalog,
+    } = request;
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
@@ -87,6 +128,7 @@ pub async fn slice_project_plate_validated(
             plate,
             profile: None,
             refresh: None,
+            system_catalog,
             overrides,
             validate_print: true,
             validate_config: true,
@@ -109,6 +151,30 @@ pub async fn slice_project_plate_processed_validated(
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_project_plate_processed_validated_with_catalog(
+        input,
+        DirectProjectSliceRequest {
+            plate,
+            overrides,
+            system_catalog: None,
+        },
+        metadata,
+        context,
+    )
+    .await
+}
+
+pub async fn slice_project_plate_processed_validated_with_catalog(
+    input: impl AsRef<[u8]>,
+    request: DirectProjectSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
+    let DirectProjectSliceRequest {
+        plate,
+        overrides,
+        system_catalog,
+    } = request;
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
@@ -116,6 +182,7 @@ pub async fn slice_project_plate_processed_validated(
             plate,
             profile: None,
             refresh: None,
+            system_catalog,
             overrides,
             validate_print: true,
             validate_config: true,

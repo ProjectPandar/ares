@@ -3,6 +3,26 @@ use ares_core::{ConfigOverrides, GenerationMetadata, ProcessedGCode, SliceError,
 use super::project_preset_catalog::request;
 pub(crate) use super::project_preset_catalog::{project_supply, slice_project_plate_validated};
 
+pub(crate) async fn slice_direct_project_plate(
+    input: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+    overrides: &ConfigOverrides,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    let catalog = project_supply()?
+        .map(|supply| ares_core::PresetCatalogHandle::from_json(&supply.catalog))
+        .transpose()?;
+    ares_core::slice_project_plate_with_catalog(
+        input,
+        metadata,
+        (plate, overrides),
+        catalog.as_ref(),
+        context,
+    )
+    .await
+}
+
 pub(crate) async fn slice_project(
     input: impl AsRef<[u8]>,
     metadata: GenerationMetadata,

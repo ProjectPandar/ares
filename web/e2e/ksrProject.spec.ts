@@ -7,6 +7,7 @@ import { build, preview } from "vite";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { aresGeneratorLine } from "./orcaGcode";
+import { systemPresetCatalog } from "./systemPresetCatalog";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -28,10 +29,12 @@ test("a project sliced twice through the worker API is complete, repeatable and 
 
   const root = `${web}e2e/ksr-project-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 } });
-  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4179, strictPort: true } });
+  const catalogPath = process.env.ARES_PARITY_PROJECT_PRESET_CATALOG;
+  writeFileSync(`${artifacts}page/system-presets.json`, catalogPath ? readFileSync(catalogPath, "utf8") : await systemPresetCatalog());
+  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4245, strictPort: true } });
   let result: Slice;
   try {
-    await page.goto("http://127.0.0.1:4179/");
+    await page.goto("http://127.0.0.1:4245/");
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
     result = await page.evaluate(
       (bytes) => (window as unknown as { aresKsrSlice: (bytes: number[]) => Promise<Slice> }).aresKsrSlice(bytes),
