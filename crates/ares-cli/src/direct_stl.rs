@@ -134,9 +134,14 @@ pub(super) async fn run(
     } else {
         None
     };
-    let context = SlicerContext::new(0)
-        .with_max_triangle_count(args.mtcpp.unwrap_or_default())
-        .with_no_check(args.no_check);
+    let context = crate::custom_gcodes::load(
+        SlicerContext::new(0)
+            .with_max_triangle_count(args.mtcpp.unwrap_or_default())
+            .with_no_check(args.no_check),
+        args.load_custom_gcodes.as_deref(),
+        &output,
+        0,
+    )?;
     let mut export_after = None;
     let failure = |error: SliceError| {
         if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {
@@ -301,7 +306,7 @@ pub(super) async fn run(
                 &models,
                 request,
                 selection,
-                args.mtcpp.unwrap_or_default(),
+                context,
                 args.export_statistics,
             )
             .await
