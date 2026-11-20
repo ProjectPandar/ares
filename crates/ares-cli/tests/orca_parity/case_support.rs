@@ -18,6 +18,9 @@ mod adaptive_cubic_bodies;
 #[path = "support_cubic_bodies.rs"]
 mod support_cubic_bodies;
 
+#[path = "sparse_pattern_solid_anchor.rs"]
+mod sparse_pattern_solid_anchor;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
