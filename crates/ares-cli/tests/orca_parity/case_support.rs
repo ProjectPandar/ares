@@ -56,3 +56,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "fixed_surface_layer_direction.rs"]
+mod fixed_surface_layer_direction;
