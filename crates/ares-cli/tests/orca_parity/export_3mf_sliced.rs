@@ -1,0 +1,259 @@
+use std::fs;
+use std::io::{Cursor, Read};
+use std::path::Path;
+use std::process::Command;
+
+use md5::{Digest, Md5};
+use regex::bytes::Regex;
+use serde_json::{Value, json};
+use zip::{CompressionMethod, ZipArchive};
+
+use crate::{OrcaRunner, presets::VendorProfiles, runner::repo_root};
+
+const SETTINGS: [&str; 4] = [
+    "--load-settings",
+    "machine.json;process.json",
+    "--load-filaments",
+    "filament.json",
+];
+const STL: &str = "3mf-export.stl";
+const GCODE: &str = "Metadata/plate_1.gcode";
+const MD5: &str = "Metadata/plate_1.gcode.md5";
+
+#[test]
+fn cli_sliced_3mf_from_stl_matches_native_archive() {
+    sliced_archive_matches_native(false);
+}
+
+#[test]
+fn cli_sliced_3mf_from_saved_project_matches_native_archive() {
+    sliced_archive_matches_native(true);
+}
+
+fn sliced_archive_matches_native(saved: bool) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = runner.work_dir();
+    let native_cwd = root.join("native/cwd");
+    let ares_cwd = root.join("ares/cwd");
+    for dir in [&native_cwd, &ares_cwd] {
+        fs::create_dir_all(dir.join("out")).unwrap();
+    }
+    if saved {
+        let source = root.join("source/cwd");
+        fs::create_dir_all(source.join("out")).unwrap();
+        write_inputs(&source);
+        let argv = [SETTINGS.as_slice(), &["--export-3mf", "saved.3mf", STL]].concat();
+        assert_eq!(invoke(runner.bin(), &source, &argv, true), Some(0));
+        for dir in [&native_cwd, &ares_cwd] {
+            fs::copy(source.join("saved.3mf"), dir.join("saved.3mf")).unwrap();
+        }
+    } else {
+        write_inputs(&native_cwd);
+        for file in [STL, "machine.json", "process.json", "filament.json"] {
+            fs::copy(native_cwd.join(file), ares_cwd.join(file)).unwrap();
+        }
+    }
+    let mut argv = Vec::new();
+    if !saved {
+        argv.extend(SETTINGS);
+    }
+    argv.extend([
+        "--slice",
+        "1",
+        "--export-3mf",
+        "export.3mf",
+        if saved { "saved.3mf" } else { STL },
+    ]);
+    assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
+    let native = read_members(&native_cwd.join("export.3mf"));
+    assert_eq!(native.len(), 13);
+    check_md5(&native);
+    let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
+    assert_eq!(
+        invoke(ares, &ares_cwd, &argv, false),
+        Some(0),
+        "slice and export failed in {}",
+        ares_cwd.display()
+    );
+    let actual = read_members(&ares_cwd.join("export.3mf"));
+    check_md5(&actual);
+    compare_members(native, actual);
+    for cwd in [&native_cwd, &ares_cwd] {
+        assert!(!cwd.join("plate_1.gcode").exists());
+        assert_eq!(fs::read_dir(cwd.join("out")).unwrap().count(), 0);
+    }
+}
+
+fn write_inputs(dir: &Path) {
+    let printer = "Bambu Lab X1 Carbon 0.4 nozzle";
+    let profiles =
+        VendorProfiles::load(&repo_root().join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
+    let process = profiles.compatible_process(printer).unwrap();
+    let filament = profiles.compatible_filament(printer).unwrap();
+    for (kind, mut fields) in [
+        ("machine", profiles.machine(printer).unwrap()),
+        ("process", profiles.process(&process).unwrap()),
+        ("filament", profiles.filament(&filament).unwrap()),
+    ] {
+        fields.extend([
+            ("type".into(), json!(kind)),
+            ("from".into(), json!("system")),
+            ("instantiation".into(), json!("true")),
+        ]);
+        fs::write(
+            dir.join(format!("{kind}.json")),
+            serde_json::to_vec(&Value::Object(fields)).unwrap(),
+        )
+        .unwrap();
+    }
+    fs::copy(repo_root().join("tests/parity/cube10.stl"), dir.join(STL)).unwrap();
+}
+
+fn invoke(bin: &Path, cwd: &Path, argv: &[&str], native: bool) -> Option<i32> {
+    let artifacts = cwd.parent().unwrap();
+    let tmp = artifacts.join("tmp");
+    fs::create_dir(&tmp).unwrap();
+    fs::write(artifacts.join("argv.nul"), argv.join("\0") + "\0").unwrap();
+    fs::write(artifacts.join("cwd.txt"), cwd.display().to_string()).unwrap();
+    fs::write(artifacts.join("tmpdir.txt"), tmp.display().to_string()).unwrap();
+    let mut command = Command::new(bin);
+    if !native {
+        command.arg("slice");
+    }
+    let output = command
+        .current_dir(cwd)
+        .env("TMPDIR", &tmp)
+        .env_remove("DISPLAY")
+        .env_remove("WAYLAND_DISPLAY")
+        .args(argv)
+        .output()
+        .unwrap();
+    let code = output.status.code();
+    fs::write(artifacts.join("exit"), format!("{code:?}\n")).unwrap();
+    fs::write(artifacts.join("stdout.log"), output.stdout).unwrap();
+    fs::write(artifacts.join("stderr.log"), output.stderr).unwrap();
+    let mut paths = Vec::new();
+    inventory(cwd, artifacts, &mut paths);
+    inventory(&tmp, artifacts, &mut paths);
+    paths.sort_unstable();
+    fs::write(artifacts.join("inventory.txt"), paths.join("\n") + "\n").unwrap();
+    code
+}
+
+fn inventory(dir: &Path, root: &Path, paths: &mut Vec<String>) {
+    for item in fs::read_dir(dir).unwrap() {
+        let item = item.unwrap();
+        let path = item.path();
+        let name = path.strip_prefix(root).unwrap().display();
+        if item.file_type().unwrap().is_dir() {
+            paths.push(format!("{name}/"));
+            inventory(&path, root, paths);
+        } else {
+            paths.push(format!("{name}\t{}", item.metadata().unwrap().len()));
+        }
+    }
+}
+
+struct Member {
+    name: String,
+    compression: CompressionMethod,
+    central_header: [u8; 8],
+    local_header: [u8; 6],
+    attributes: [u8; 8],
+    extra: Vec<u8>,
+    comment: String,
+    bytes: Vec<u8>,
+}
+
+fn read_members(path: &Path) -> Vec<Member> {
+    let archive = fs::read(path).unwrap();
+    let mut zip = ZipArchive::new(Cursor::new(&archive)).unwrap();
+    (0..zip.len())
+        .map(|index| {
+            let mut entry = zip.by_index(index).unwrap();
+            let mut bytes = Vec::new();
+            entry.read_to_end(&mut bytes).unwrap();
+            let central = entry.central_header_start() as usize;
+            let local = entry.header_start() as usize;
+            Member {
+                name: entry.name().to_owned(),
+                compression: entry.compression(),
+                central_header: archive[central + 4..central + 12].try_into().unwrap(),
+                local_header: archive[local + 4..local + 10].try_into().unwrap(),
+                attributes: archive[central + 34..central + 42].try_into().unwrap(),
+                extra: entry.extra_data().unwrap_or_default().to_vec(),
+                comment: entry.comment().to_owned(),
+                bytes,
+            }
+        })
+        .collect()
+}
+
+fn check_md5(members: &[Member]) {
+    let bytes = |name| {
+        members
+            .iter()
+            .find(|entry| entry.name == name)
+            .unwrap()
+            .bytes
+            .as_slice()
+    };
+    assert_eq!(
+        bytes(MD5),
+        format!("{:X}", Md5::digest(bytes(GCODE))).as_bytes()
+    );
+}
+
+fn compare_members(native: Vec<Member>, ares: Vec<Member>) {
+    assert_eq!(native.len(), ares.len());
+    for (mut native, mut ares) in native.into_iter().zip(ares) {
+        assert_eq!(native.name, ares.name);
+        assert_eq!(native.compression, ares.compression, "{}", native.name);
+        assert_eq!(
+            native.central_header, ares.central_header,
+            "{} central version, flags and method",
+            native.name
+        );
+        assert_eq!(
+            native.local_header, ares.local_header,
+            "{} local version, flags and method",
+            native.name
+        );
+        assert_eq!(
+            native.attributes, ares.attributes,
+            "{} attributes",
+            native.name
+        );
+        assert_eq!(native.extra, ares.extra, "{} extra fields", native.name);
+        assert_eq!(native.comment, ares.comment, "{} comment", native.name);
+        if native.name == MD5 {
+            continue;
+        }
+        if native.name == GCODE {
+            let stamp = Regex::new(
+                r"(?m)^(; generated by [^\r\n]+ on )[0-9]{4}-[0-9]{2}-[0-9]{2} at [0-9]{2}:[0-9]{2}:[0-9]{2}$",
+            )
+            .unwrap();
+            for member in [&mut native, &mut ares] {
+                assert_eq!(stamp.find_iter(&member.bytes).count(), 1);
+                member.bytes = stamp
+                    .replace(&member.bytes, b"$1<timestamp>".as_slice())
+                    .into_owned();
+            }
+        }
+        let mismatch = native
+            .bytes
+            .iter()
+            .zip(&ares.bytes)
+            .position(|(n, a)| n != a);
+        assert!(
+            mismatch.is_none() && native.bytes.len() == ares.bytes.len(),
+            "{} differs at byte {mismatch:?}: lengths Native {}, Ares {}",
+            native.name,
+            native.bytes.len(),
+            ares.bytes.len(),
+        );
+    }
+}
