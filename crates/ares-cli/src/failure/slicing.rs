@@ -1,8 +1,9 @@
-//! `OrcaSlicer.cpp:7141–7172`: non-strict critical empty-layer refusal.
+//! `OrcaSlicer.cpp:7141–7172`: gate export on typed slicing warnings.
 #[cfg(target_os = "linux")]
 use std::path::Path;
 
 use super::{CliFailure, FamilyFailure};
+use ares_core::{PrintWarning, SlicedPlate, SlicingNotificationType, WarningLevel};
 
 pub(crate) fn check(
     args: &crate::SliceArgs,
@@ -37,10 +38,56 @@ pub(crate) fn critical_failure(
         warning.level == ares_core::WarningLevel::Critical
             && warning.message_type == ares_core::SlicingNotificationType::EmptyGcodeLayers
     })?;
-    Some(CliFailure::Family(Box::new(FamilyFailure {
+    Some(warning_failure(
+        #[cfg(target_os = "linux")]
+        output,
+        id,
+        #[cfg(target_os = "linux")]
+        plate,
+        warning,
+    ))
+}
+
+pub(crate) fn check_strict(
+    #[cfg(target_os = "linux")] output: &std::path::Path,
+    plate_index: u32,
+    plate: &SlicedPlate,
+    upward: &[String],
+    project: Option<(&str, &[u8])>,
+) -> Result<(), CliFailure> {
+    let Some(warning) = plate.warnings.iter().find(|warning| {
+        warning.level == WarningLevel::NonCritical
+            && warning.message_type == SlicingNotificationType::NeedSupportOn
+    }) else {
+        return Ok(());
+    };
+    let mut failure = warning_failure(
+        #[cfg(target_os = "linux")]
+        output,
+        plate_index,
+        #[cfg(target_os = "linux")]
+        plate,
+        warning,
+    )
+    .with_upward_report(upward.to_vec());
+    if let Some((file, bytes)) = project {
+        failure = failure.with_config_substitutions(file, crate::substitutions(bytes));
+    }
+    #[cfg(target_os = "linux")]
+    let failure = failure.with_slicing_warnings(plate_index, vec![warning.clone()]);
+    Err(failure)
+}
+
+fn warning_failure(
+    #[cfg(target_os = "linux")] output: &Path,
+    plate_index: u32,
+    #[cfg(target_os = "linux")] plate: &SlicedPlate,
+    warning: &PrintWarning,
+) -> CliFailure {
+    CliFailure::Family(Box::new(FamilyFailure {
         return_code: -100,
         #[cfg(target_os = "linux")]
-        plate_index: id,
+        plate_index,
         #[cfg(target_os = "linux")]
         layer_height: plate.layer_height,
         #[cfg(target_os = "linux")]
@@ -53,11 +100,18 @@ pub(crate) fn critical_failure(
         #[cfg(target_os = "linux")]
         warnings: Vec::new(),
         #[cfg(target_os = "linux")]
-        critical_warning: Some(warning.message.clone()),
+        plate_warning: Some(warning.message.clone()),
         #[cfg(target_os = "linux")]
         completed: Vec::new(),
-        stderr: format!("plate {id}: found slicing warnings: {}\n", warning.message),
+        stderr: if warning.level == WarningLevel::Critical {
+            format!(
+                "plate {plate_index}: found slicing warnings: {}\n",
+                warning.message
+            )
+        } else {
+            String::new()
+        },
         #[cfg(target_os = "linux")]
         output: output.to_owned(),
-    })))
+    }))
 }
