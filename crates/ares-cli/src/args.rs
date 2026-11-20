@@ -23,6 +23,8 @@ pub(crate) enum Commands {
 
 #[derive(clap::Args)]
 pub(crate) struct DirectSliceArgs {
+    #[command(flatten)]
+    pub(crate) diagnostics: crate::diagnostics::DiagnosticLog,
     /// Slice all plates (0) or the given one-based plate number.
     #[arg(
         long = "slice",
