@@ -20,6 +20,34 @@ pub(super) struct SavedMesh {
     pub orca_version: Option<String>,
 }
 
+fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
+    use quick_xml::events::Event;
+
+    let mut reader = quick_xml::Reader::from_reader(model);
+    loop {
+        let element = match reader
+            .read_event()
+            .map_err(|err| invalid(err.to_string()))?
+        {
+            Event::Start(element) | Event::Empty(element) => element,
+            Event::Eof => return Ok(false),
+            _ => continue,
+        };
+        if element.local_name().as_ref() != b"triangle" {
+            continue;
+        }
+        // bbs_3mf.cpp:355–363: the writer does not preserve paint attributes.
+        for attribute in element.attributes() {
+            let attribute = attribute.map_err(|err| invalid(err.to_string()))?;
+            if attribute.key.local_name().as_ref().starts_with(b"paint_")
+                && !attribute.value.is_empty()
+            {
+                return Ok(true);
+            }
+        }
+    }
+}
+
 pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
     let project = crate::load_project(input)?;
     let [object] = project.objects() else {
@@ -57,6 +85,10 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedMesh, SliceError> {
         || object.name().contains(['/', '\\', '\0'])
     {
         return Err(deferred("saved model metadata or transforms"));
+    }
+    let volume_bytes = archive.read(&PackagePath::entry(volume.source_model_path().as_bytes())?)?;
+    if has_painted_triangles(&volume_bytes)? {
+        return Err(deferred("painted saved mesh"));
     }
     let model_bytes = archive.read(&PackagePath::entry(MODEL.as_bytes())?)?;
     let doc: ModelDocument = quick_xml::de::from_reader(model_bytes.as_slice())

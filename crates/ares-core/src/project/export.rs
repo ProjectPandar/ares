@@ -52,6 +52,7 @@ pub fn export_sliced_3mf(
     input: &[u8],
     filename: &str,
     processed: ProcessedGCode,
+    print_object_id: u32,
 ) -> Result<Vec<u8>, SliceError> {
     if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
         return Err(invalid(
@@ -66,7 +67,7 @@ pub fn export_sliced_3mf(
         return Err(deferred("sliced export requires a saved 3MF project"));
     }
     let saved = geometry::load_saved(input)?;
-    let plate_json = xml::plate_json(archive);
+    let plate_json = xml::plate_json(archive, print_object_id);
     let slice_info = xml::slice_info(archive, &processed).into_bytes();
     let filament_sequence = xml::filament_sequence();
     write_package(

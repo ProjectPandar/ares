@@ -71,6 +71,9 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
                 "sliced export requires a saved 3MF project".to_owned(),
             ));
         }
+        let project = ares_core::load_project(&input).map_err(|err| failed(err.to_string()))?;
+        let print_object_id =
+            saved_print_object_id(&project).map_err(|detail| failed(detail.into()))?;
         let processed = ares_core::slice_project_plate_with_archive(
             &input,
             ares_core::GenerationMetadata::default(),
@@ -80,7 +83,7 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
         )
         .await
         .map_err(|err| failed(err.to_string()))?;
-        let bytes = ares_core::export_sliced_3mf(&input, filename, processed)
+        let bytes = ares_core::export_sliced_3mf(&input, filename, processed, print_object_id)
             .map_err(|err| failed(err.to_string()))?;
         return fs::write(&output, bytes).map_err(|err| failed(err.to_string()));
     }
@@ -106,6 +109,38 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
     )
     .map_err(|err| failed(err.to_string()))?;
     fs::write(&output, bytes).map_err(|err| failed(err.to_string()))
+}
+
+fn saved_print_object_id(project: &ares_core::Project) -> Result<u32, &'static str> {
+    if project.plates().len() != 1 {
+        return Err("sliced export requires one saved plate");
+    }
+    let [object] = project.objects() else {
+        return Err("sliced export requires one saved object");
+    };
+    let ([volume], [_]) = (object.volumes(), object.instances()) else {
+        return Err("sliced export requires one saved volume and instance");
+    };
+    if volume.volume_type() != ares_core::ProjectVolumeType::ModelPart {
+        return Err("sliced export requires an ordinary model part");
+    }
+
+    // The saved-plate path starts with a fresh ObjectBase counter.
+    let model = 2; // Model + ModelWipeTower (Model.hpp:1704,1753).
+    let config = 1; // ModelConfigObject (Model.hpp:86–104).
+    let object = 1 + config + 1; // ModelObject + config + LayerHeightProfile (582–588).
+    let instance = 1; // ModelInstance (1562–1567).
+    let volume = 1 + config + 4 + 8; // ModelVolume, config and FacetsAnnotations (904–935).
+    let input = 2 * model + object + instance + volume;
+    // The reader's return and the CLI vector insertion each construct a tower
+    // but preserve the existing model ID (Model.cpp:489–516; OrcaSlicer.cpp:2008).
+    let model_moves = 2;
+    let print = 1 + model; // PrintBase and its private model (PrintBase.hpp:390,561).
+    let initial_list = 3 + print; // PartPlateList and two PartPlates (PartPlate.cpp:5966–5995).
+    let saved_plate = 1 + print; // Replacement plate + Print (PartPlate.cpp:6589–6605).
+    let slice_copy = model; // Default construct before copying IDs (OrcaSlicer.cpp:6466–6470).
+    let print_object = 1; // Print::apply (PrintApply.cpp:1977).
+    Ok(input + model_moves + initial_list + saved_plate + slice_copy + print_object)
 }
 
 fn sources(files: &[(String, String)]) -> Vec<LoadSettingsFile<'_>> {
