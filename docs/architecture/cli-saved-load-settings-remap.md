@@ -4,14 +4,15 @@ Native reference: OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`)
 
 ## Upstream behavior
 
-- `src/OrcaSlicer.cpp:1624–1640,1682–1690` loads the saved 3MF and its
+- `src/OrcaSlicer.cpp:1741–1758,1800–1810` loads the saved 3MF and its
   configuration and checks embedded post-process scripts before reading
   replacement preset files. `:2280–2358` classifies loaded machine and
   process presets, and `:2420–2457` reads the loaded filament config and
   remembers its preset name and slot. `:2925–2953` checks process/machine
-  compatibility. `:3099–3193,3227–3256,3376–3406` overlays supplied machine
-  and process settings onto the saved configuration, while `:3518–3615`
-  handles the selected filament names, variants, and per-slot settings.
+  compatibility. `:3099–3160,3227–3256,3376–3406` overlays supplied machine
+  and process settings onto the saved configuration. `:3590–3603` sets
+  each loaded filament name; `:3624–3653,3688–3773` matches variants and
+  overlays per-slot settings.
 - `:2528–2535` keeps the number of saved filament slots unless it was zero
   and enables the post-mapping tower disable on a BBL-format project when
   the nonempty loaded filament list contains only one distinct preset
