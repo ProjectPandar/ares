@@ -45,7 +45,7 @@ pub(super) fn emit(
         append_wipe_before_external(output, loop_, geometry, state, region_perimeters)?;
         begin_adaptive_loop(state, paths, 0.0, geometry);
         for path in &scarf.paths {
-            super::materialized::emit_with_speed(
+            let _ = super::materialized::emit_subpath(
                 output,
                 state,
                 super::materialized::Emission {
@@ -112,7 +112,7 @@ pub(super) fn emit(
         } else {
             0.0
         };
-        super::materialized::emit_with_speed(
+        let Some(wipe_path) = super::materialized::emit_subpath(
             output,
             state,
             super::materialized::Emission {
@@ -122,15 +122,18 @@ pub(super) fn emit(
                 geometry,
             },
             speed_for_path(path),
-        )?;
+        )?
+        else {
+            continue;
+        };
         // `GCode.cpp:5979-5990`: upstream appends each emitted path's
         // polyline to `m_wipe.path`, dropping the join point ONLY when
         // it duplicates the previous last point — adjacent sub-paths
         // whose endpoints differ by a scaled unit keep both vertices.
-        let reversed = state.wipe_path.iter().rev().copied();
+        let reversed = wipe_path.iter().rev().copied();
         let skip_first = emitted_loop_path
             .last()
-            .zip(state.wipe_path.last())
+            .zip(wipe_path.last())
             .is_some_and(|(tail, next)| *tail == *next);
         emitted_loop_path.extend(reversed.skip(usize::from(skip_first)));
     }

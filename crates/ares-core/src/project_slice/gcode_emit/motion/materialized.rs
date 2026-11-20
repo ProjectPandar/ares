@@ -1,4 +1,4 @@
-use super::{EmitState, LayerGeometry, features::PathProperties, path, scarf};
+use super::{EmitState, LayerGeometry, arc, features::PathProperties, path, scarf};
 use crate::project_slice::perimeters::classic::materialize::{ExtrusionPath, ExtrusionRole};
 
 pub(super) struct Emission<'a> {
@@ -13,15 +13,19 @@ pub(super) fn emit(
     state: &mut EmitState,
     emission: Emission<'_>,
 ) -> Result<(), crate::SliceError> {
-    emit_with_speed(output, state, emission, None)
+    if let Some(wipe_path) = emit_subpath(output, state, emission, None)? {
+        state.wipe_path = wipe_path;
+    }
+    Ok(())
 }
 
-pub(super) fn emit_with_speed(
+// GCode.cpp:8733–8768: the completed loop publishes its wipe path, not _extrude.
+pub(super) fn emit_subpath(
     output: &mut Vec<u8>,
     state: &mut EmitState,
     emission: Emission<'_>,
     requested_speed: Option<f64>,
-) -> Result<(), crate::SliceError> {
+) -> Result<Option<Vec<arc::Point>>, crate::SliceError> {
     let Emission {
         path,
         end_clip,
@@ -37,7 +41,7 @@ pub(super) fn emit_with_speed(
         ExtrusionRole::TopSolidInfill => "Top surface",
         ExtrusionRole::BottomSurface => "Bottom surface",
     };
-    path::emit_with_speed(
+    path::emit_subpath(
         output,
         path.polyline.points.iter().map(|point| (point.x, point.y)),
         (
