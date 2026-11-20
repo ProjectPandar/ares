@@ -18,6 +18,9 @@ mod startup_fan_initial_tool;
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
+#[path = "direct_stl_slice.rs"]
+mod direct_stl_slice;
+
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
 
