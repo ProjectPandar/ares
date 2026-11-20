@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use serde::Serialize;
+use serde_json::{Serializer, ser::PrettyFormatter};
 
 use super::{load_project, raw_settings::RawConfigValue};
 use crate::{
@@ -53,7 +54,12 @@ pub fn export_project_settings(input: impl AsRef<[u8]>) -> Result<Vec<u8>, Slice
             document.insert(definition.key, value);
         }
     }
-    let mut output = serde_json::to_vec_pretty(&document)
+    let mut output = Vec::new();
+    document
+        .serialize(&mut Serializer::with_formatter(
+            &mut output,
+            PrettyFormatter::with_indent(b"\t"),
+        ))
         .map_err(|error| SliceError::InvalidInput(error.to_string()))?;
     output.push(b'\n');
     Ok(output)
