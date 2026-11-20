@@ -44,28 +44,35 @@ fn aligned_back_native_paint_changes_enforced_and_mixed_walls() {
     for printer in ["x1c", "k1", "mk4"] {
         let plain = native(printer, "plain");
         let front = native(printer, "front");
-        let _rear = native(printer, "rear");
+        let rear = native(printer, "rear");
         let both = native(printer, "both");
         let side = native(printer, "side");
         let plain_approach = first_inner_wall_approach(&plain.native);
         for painted in [&front, &both] {
             assert_ne!(first_inner_wall_approach(&painted.native), plain_approach);
         }
-        assert!(
-            golden::first_difference(
-                &golden::normalize_one_generator_line(
-                    plain.native.as_bytes(),
-                    golden::GeneratorKind::Orca,
-                )
-                .unwrap(),
-                &golden::normalize_one_generator_line(
-                    side.native.as_bytes(),
-                    golden::GeneratorKind::Orca,
-                )
-                .unwrap(),
-            )
-            .is_none()
-        );
+
+        let normalize = |gcode: &str| {
+            golden::normalize_one_generator_line(gcode.as_bytes(), golden::GeneratorKind::Orca)
+                .unwrap()
+        };
+        let plain_output = normalize(&plain.native);
+        let assert_unchanged = |variant: &str, painted: &NativeCase| {
+            assert!(
+                golden::first_difference(&plain_output, &normalize(&painted.native)).is_none(),
+                "{printer} {variant} must match unpainted Native output"
+            );
+        };
+        assert_unchanged("side", &side);
+        if printer == "mk4" {
+            assert_unchanged("rear", &rear);
+        } else {
+            assert_ne!(
+                first_inner_wall_approach(&rear.native),
+                plain_approach,
+                "{printer} rear paint must change the first inner wall approach"
+            );
+        }
     }
 }
 
