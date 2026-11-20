@@ -2,6 +2,15 @@ use super::{brim, footprint, layers};
 use crate::SliceError;
 use crate::project_slice::ArchivePlate;
 
+pub(super) fn generator(sliced_export: bool) -> std::borrow::Cow<'static, str> {
+    if sliced_export {
+        // GCode.cpp:4242: the package embeds the compatibility G-code header.
+        format!("OrcaSlicer {}", crate::ORCA_SLICER_COMPATIBILITY_VERSION).into()
+    } else {
+        concat!("Ares ", env!("CARGO_PKG_VERSION")).into()
+    }
+}
+
 pub(super) fn facts(
     traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     schedule: &layers::Schedule,
@@ -36,6 +45,25 @@ pub(super) fn facts(
         filament_type: setting("filament_type"),
         filament_id: setting("filament_ids"),
         nozzle_diameter,
-        project_settings: settings.clone(),
+        project_settings: saved_settings(settings),
     })
+}
+
+fn saved_settings(
+    settings: &crate::project::raw_settings::ProjectSettingsRaw,
+) -> crate::project::raw_settings::ProjectSettingsRaw {
+    let mut settings = settings.clone();
+    // OrcaSlicer.cpp:3723–3728 fills the per-filament compatibility vector
+    // from the loaded filament preset; its unset condition is an empty string.
+    if !settings.contains_key("compatible_process_expression_group") {
+        settings.insert_strings("compatible_process_expression_group", &[String::new()]);
+    }
+    // PrintConfig.cpp:3275–3281, OrcaSlicer.cpp:4250–4256: the default
+    // material-flow vector is present even for an ordinary filament printer.
+    if !settings.contains_key("pellet_flow_coefficient") {
+        let key = "pellet_flow_coefficient";
+        let default = crate::option_definition(key).unwrap();
+        settings.insert_strings(key, &[default.default_wire_value.to_owned()]);
+    }
+    settings
 }
