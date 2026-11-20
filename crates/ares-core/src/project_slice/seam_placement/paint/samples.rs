@@ -2,7 +2,9 @@
 
 use crate::{
     SliceError,
-    project_slice::seam_candidates::{PaintState, SeamCandidate, SeamCandidatePosition},
+    project_slice::seam_candidates::{
+        ExactPaintEnds, PaintState, SeamCandidate, SeamCandidatePosition,
+    },
 };
 
 use super::{
@@ -17,7 +19,7 @@ pub(in crate::project_slice) fn paint_candidates(
     vertices: Vec<SeamCandidate>,
     xy: &[[f64; 2]],
     width: f32,
-) -> Result<(Vec<SeamCandidate>, bool), SliceError> {
+) -> Result<(Vec<SeamCandidate>, ExactPaintEnds), SliceError> {
     let loop_arc = ArcLoop::new(xy, vertices[0].position.z);
     let length = loop_arc.length();
     let green = loop_arc.intervals(width, &paint.enforcers.contour);
@@ -32,7 +34,10 @@ pub(in crate::project_slice) fn paint_candidates(
     {
         return Err(deferred());
     }
-    let exact = !green.is_empty() || !red.is_empty();
+    let ends = ExactPaintEnds {
+        enforced: !green.is_empty(),
+        blocked: !red.is_empty(),
+    };
     let mut marks = interval_marks(&green, &red, length);
     if !red.is_empty() && green.is_empty() {
         for i in 0..vertices.len() {
@@ -88,7 +93,7 @@ pub(in crate::project_slice) fn paint_candidates(
             paint: classify(start, at),
             ..*vertex
         });
-        if exact {
+        if ends.enforced || ends.blocked {
             let first = marks.partition_point(|&value| value <= at + TOLERANCE);
             points.extend(
                 marks[first..]
@@ -106,7 +111,7 @@ pub(in crate::project_slice) fn paint_candidates(
         }
     }
     select_center(&mut points, &loop_arc, &green);
-    Ok((points, !green.is_empty()))
+    Ok((points, ends))
 }
 
 fn interval_marks(green: &[Interval], red: &[Interval], length: f64) -> Vec<f64> {

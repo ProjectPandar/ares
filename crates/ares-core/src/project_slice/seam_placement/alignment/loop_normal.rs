@@ -39,7 +39,7 @@ pub(super) fn place_on_loop(layer: &LayerSeamCandidates, index: usize, target: V
     let Some(mut result) = best else {
         return Vec3::new(position.x, position.y, position.z);
     };
-    let Some(exact) = perimeter.exact_enforced_ends else {
+    let Some(ends) = &perimeter.exact_paint_ends else {
         return Vec3::new(result[0] as f32, result[1] as f32, position.z);
     };
     let length = arc[0] + arc[1];
@@ -48,8 +48,8 @@ pub(super) fn place_on_loop(layer: &LayerSeamCandidates, index: usize, target: V
     } else {
         length - best_arc
     };
-    let (ahead_limit, ahead_end) = allowed_arc(points, index, true, exact);
-    let (behind_limit, behind_end) = allowed_arc(points, index, false, exact);
+    let (ahead_limit, ahead_end) = allowed_arc(points, index, true, ends.enforced);
+    let (behind_limit, behind_end) = allowed_arc(points, index, false, ends.enforced);
     if ahead > ahead_limit && length - ahead > behind_limit {
         let to_result = |[x, y]: [f64; 2]| norm_squared([x - result[0], y - result[1]]);
         result = if to_result(ahead_end) <= to_result(behind_end) {
