@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub(super) async fn run(
-    args: DirectSliceArgs,
+    mut args: DirectSliceArgs,
     export_before_slice: bool,
 ) -> Result<(), CliFailure> {
     let output = args
@@ -34,6 +34,7 @@ pub(super) async fn run(
                 .and_then(|ext| ext.to_str())
                 .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
         {
+            args.diagnostics.startup_version();
             return settings_export::run(input, destination);
         }
         // OrcaSlicer.cpp:1453–1467 checks actions before transforms, before any input is read.
@@ -53,17 +54,19 @@ pub(super) async fn run(
                 &output,
             ));
         }
-        if args.inputs.len() != 1
+    }
+    args.diagnostics.startup_version();
+    if args.export_settings.is_some()
+        && (args.inputs.len() != 1
             || args.inputs[0].extension().is_none_or(|ext| ext != "stl")
             || args.load_settings.is_none()
-            || args.load_filaments.is_none()
-        {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "--export-settings requires a saved 3MF project or one STL with loaded presets",
-            )
-            .into());
-        }
+            || args.load_filaments.is_none())
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--export-settings requires a saved 3MF project or one STL with loaded presets",
+        )
+        .into());
     }
     if args.convert_unit
         && (args.inputs.len() != 1 || args.inputs[0].extension().is_none_or(|ext| ext != "stl"))

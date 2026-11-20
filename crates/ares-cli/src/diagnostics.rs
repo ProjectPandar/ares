@@ -1,4 +1,4 @@
-use std::{ffi::OsString, fmt, fs, path::Path};
+use std::{ffi::OsString, fmt, fs, io::Write, path::Path};
 
 #[derive(clap::Args)]
 pub(crate) struct DiagnosticLog {
@@ -13,14 +13,38 @@ pub(crate) struct DiagnosticLog {
     /// Write diagnostics to FILE instead of 00000.log in the working directory.
     #[arg(long, value_name = "FILE")]
     logfile: Option<OsString>,
+    #[arg(skip)]
+    file: Option<fs::File>,
 }
 
 impl DiagnosticLog {
-    pub(crate) fn error(&self, message: fmt::Arguments<'_>) {
-        // utils.cpp:160–200: level zero accepts fatal messages, but not errors.
-        if self.debug == 0 {
-            return;
+    pub(crate) fn startup_version(&mut self) {
+        // OrcaSlicer.cpp:1524–1538: a warning after CLI log setup, before input loading.
+        if self.debug >= 2 {
+            self.record(format_args!(
+                "cli mode, Current OrcaSlicer Version {}",
+                ares_core::ORCA_SLICER_COMPATIBILITY_VERSION
+            ));
         }
+    }
+
+    pub(crate) fn error(&mut self, message: fmt::Arguments<'_>) {
+        // utils.cpp:160–200: level zero accepts fatal messages, but not errors.
+        if self.debug != 0 {
+            self.record(message);
+        }
+    }
+
+    fn record(&mut self, message: fmt::Arguments<'_>) {
+        if self.file.is_none() {
+            self.file = self.open_file();
+        }
+        if let Some(file) = &mut self.file {
+            let _ = writeln!(file, "{message}");
+        }
+    }
+
+    fn open_file(&self) -> Option<fs::File> {
         let path = self
             .logfile
             .as_deref()
@@ -30,10 +54,9 @@ impl DiagnosticLog {
         if let Some(parent) = path
             .parent()
             .filter(|parent| !parent.as_os_str().is_empty())
-            && fs::create_dir_all(parent).is_err()
         {
-            return;
+            fs::create_dir_all(parent).ok()?;
         }
-        let _ = fs::write(path, format!("{message}\n"));
+        fs::File::create(path).ok()
     }
 }
