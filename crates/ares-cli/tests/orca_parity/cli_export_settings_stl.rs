@@ -61,7 +61,7 @@ fn cli_export_settings_stl_file_survives_a_later_slice_error() {
             "out",
         ],
         197,
-        &["out/result.json", "out/settings.json"],
+        &["00000.log", "out/result.json", "out/settings.json"],
     );
 }
 
@@ -79,7 +79,7 @@ fn cli_export_settings_stl_file_not_written_after_a_slice_error() {
             "out/settings.json",
         ],
         197,
-        &["out/result.json"],
+        &["00000.log", "out/result.json"],
     );
 }
 
@@ -153,6 +153,10 @@ fn compare(args: &[&str], exit: i32, inventory: &[&str]) {
         "settings bytes differ: {root:?}"
     );
     assert!(ares.stdout == native.stdout, "stdout differs: {root:?}");
+    assert!(
+        ares.diagnostic == native.diagnostic,
+        "00000.log differs: {root:?}"
+    );
 }
 
 struct Artifacts {
@@ -162,6 +166,7 @@ struct Artifacts {
     inventory: Vec<String>,
     report: Vec<u8>,
     settings: Option<Vec<u8>>,
+    diagnostic: Option<Vec<u8>>,
 }
 
 fn run(bin: &Path, root: &Path, engine: &str, args: &[&str]) -> Artifacts {
@@ -222,5 +227,6 @@ fn run(bin: &Path, root: &Path, engine: &str, args: &[&str]) -> Artifacts {
         inventory,
         report,
         settings,
+        diagnostic: fs::read(cwd.join("00000.log")).ok(),
     }
 }
