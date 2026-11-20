@@ -183,8 +183,17 @@ fn seed_archived_event(project: &Path) {
         if entry.is_dir() {
             archive.add_directory(entry.name(), options).unwrap();
         } else {
+            let project_settings = entry.name() == "Metadata/project_settings.config";
             archive.start_file(entry.name(), options).unwrap();
-            io::copy(&mut entry, &mut archive).unwrap();
+            if project_settings {
+                // Materialize the non-pellet, unrestricted filament defaults in the saved fixture.
+                let mut config: Value = serde_json::from_reader(entry).unwrap();
+                config["compatible_process_expression_group"] = json!([""]);
+                config["pellet_flow_coefficient"] = json!(["0.4157"]);
+                serde_json::to_writer(&mut archive, &config).unwrap();
+            } else {
+                io::copy(&mut entry, &mut archive).unwrap();
+            }
         }
     }
     archive
