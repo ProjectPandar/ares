@@ -40,7 +40,7 @@ pub(super) fn dispatch(
     object_reference: Point,
     object_bounding_box: crate::geometry::BoundingBox,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    (grid_bounds, layer_id): (Option<crate::geometry::BoundingBox>, usize),
+    grid_bounds: Option<crate::geometry::BoundingBox>,
     object_spacing: &crate::project_slice::fill_entities::adaptive::ObjectSpacing,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
@@ -120,7 +120,7 @@ pub(super) fn dispatch(
                         &expolygon,
                         params,
                         crate::fill::triangles_trapezoidal::SurfaceGeometry {
-                            layer_id,
+                            layer_id: layer_index,
                             thickness_layers: fill.representative.thickness_layers,
                         },
                         traversal.scale,
@@ -364,7 +364,6 @@ pub(super) fn dispatch(
                 z,
                 object_reference,
                 lightning_generator,
-                layer_id,
                 result,
             );
         }
