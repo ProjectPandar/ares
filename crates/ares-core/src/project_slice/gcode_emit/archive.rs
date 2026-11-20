@@ -2,15 +2,6 @@ use super::{brim, footprint, layers};
 use crate::SliceError;
 use crate::project_slice::ArchivePlate;
 
-pub(super) fn generator(sliced_export: bool) -> std::borrow::Cow<'static, str> {
-    if sliced_export {
-        // GCode.cpp:4242: the package embeds the compatibility G-code header.
-        format!("OrcaSlicer {}", crate::ORCA_SLICER_COMPATIBILITY_VERSION).into()
-    } else {
-        concat!("Ares ", env!("CARGO_PKG_VERSION")).into()
-    }
-}
-
 pub(super) fn facts(
     traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     schedule: &layers::Schedule,

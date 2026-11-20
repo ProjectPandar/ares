@@ -123,11 +123,8 @@ pub(in crate::project_slice) fn emit(
         &mut output,
         traversal,
         &schedule,
-        (
-            &export_config,
-            context.thumbnail_images(),
-            &archive::generator(archive_facts.is_some()),
-        ),
+        &export_config,
+        context.thumbnail_images(),
     )?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
