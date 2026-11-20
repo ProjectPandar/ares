@@ -136,7 +136,7 @@ pub use profiles::{
     profile_settings, slice_stl_files_with_load_settings,
     slice_stl_files_with_load_settings_processed, slice_with_load_settings,
     slice_with_load_settings_processed, slice_with_profiles, slice_with_profiles_processed,
-    validate_load_settings_input, validate_with_profiles,
+    validate_load_settings_input, validate_stl_export_presets, validate_with_profiles,
 };
 pub use profiles::{NativeRefreshFile, NativeRefreshPresets, slice_with_load_settings_and_refresh};
 pub use profiles::{
@@ -153,7 +153,7 @@ pub use project::{
     ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource,
     export_project_settings, load_project, project_config_substitutions,
 };
-pub use project::{StlExport, export_3mf, export_stl};
+pub use project::{StlExport, export_3mf, export_stl, export_stls};
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,

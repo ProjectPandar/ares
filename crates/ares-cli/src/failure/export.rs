@@ -51,7 +51,7 @@ impl CliFailure {
         )
     }
 
-    fn export_failure(
+    pub(crate) fn export_failure(
         #[cfg(target_os = "linux")] output: &Path,
         (return_code, message): (i32, &'static str),
         stderr: String,

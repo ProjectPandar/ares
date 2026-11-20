@@ -118,6 +118,27 @@ fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), 
     Ok((document.kind.clone(), document))
 }
 
+/// Admit resolved presets for STL export without requiring a slicing selection.
+pub fn validate_stl_export_presets(request: &LoadSettingsRequest<'_>) -> Result<(), SliceError> {
+    let names = load_settings_preset_names(request, &loaded_catalog(request)?, false)?;
+    let unresolved = || invalid("STL export requires resolved presets".to_owned());
+    for preset in names.machine.into_iter().chain(names.process) {
+        if preset.inherits.is_some_and(|parent| !parent.is_empty()) {
+            return Err(unresolved());
+        }
+    }
+    for file in request.filaments {
+        let (kind, document) = parse_file(file)?;
+        if kind != "filament" {
+            return Err(invalid("expected a filament preset".to_owned()));
+        }
+        if document.inherits.is_some_and(|parent| !parent.is_empty()) {
+            return Err(unresolved());
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn compose_project_load_settings(
     input: &[u8],
     request: &LoadSettingsRequest<'_>,
