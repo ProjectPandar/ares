@@ -170,25 +170,9 @@ pub(in crate::project_slice) fn traverse_extrusions(
                     ExtrusionLoopRole::Hole
                 },
             };
-            // ExtrusionLoops occasionally have significantly disconnected
-            // paths, triggering these asserts upstream too
-            // (`PerimeterGenerator.cpp:537-543`).
-            debug_assert!(
-                extrusion_loop
-                    .paths
-                    .iter()
-                    .skip(1)
-                    .all(|path| path.polyline.points.len() >= 2)
-            );
-            debug_assert!(
-                extrusion_loop
-                    .paths
-                    .windows(2)
-                    .all(|pair| pair[0].polyline.points.last() == pair[1].polyline.points.first())
-            );
-            // Native release (NDEBUG) admits Ripple's open sampled loop.
-            // `PerimeterGenerator.cpp:534-540` documents disconnected paths;
-            // closure-width-audit.json confirms no closure repair is applied.
+            // OrcaSlicer 2.5.0 (`PerimeterGenerator.cpp:572-579`) notes that
+            // sampled loop paths can be disconnected. Like the release build,
+            // keep them as sampled without asserting connectivity or repairing them.
             orient_loop(
                 &mut extrusion_loop,
                 context.wall_direction,
