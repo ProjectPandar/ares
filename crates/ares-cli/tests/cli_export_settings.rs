@@ -47,10 +47,13 @@ fn compare(destination: &str, spiral: bool) {
     };
     let native_dir = root.join("native");
     let ares_dir = root.join("ares");
+    let temp = root.join("tmp");
+    fs::create_dir(&temp).unwrap();
     fs::create_dir(&native_dir).unwrap();
     fs::create_dir(&ares_dir).unwrap();
     let native = Command::new(binary)
         .current_dir(&native_dir)
+        .env("TMPDIR", temp)
         .env("ORCA_250_JOB_APPDIR", native_dir.join("app"))
         .env("ORCA_JOB_APPDIR", native_dir.join("app"))
         .arg("--datadir")
@@ -61,7 +64,7 @@ fn compare(destination: &str, spiral: bool) {
         .unwrap();
     record(&native_dir, &native);
     assert!(native.status.success(), "Native did not export settings");
-    let expected = document(destination, &native_dir, &native);
+    let expected_bytes = settings_bytes(destination, &native_dir, &native);
     let actual = Command::new(env!("CARGO_BIN_EXE_ares"))
         .current_dir(&ares_dir)
         .args(["--export-settings", destination])
@@ -75,7 +78,9 @@ fn compare(destination: &str, spiral: bool) {
     if destination != "-" {
         assert_eq!(actual.stdout, native.stdout, "stdout");
     }
-    let actual = document(destination, &ares_dir, &actual);
+    let actual_bytes = settings_bytes(destination, &ares_dir, &actual);
+    let expected: serde_json::Map<String, Value> = serde_json::from_slice(&expected_bytes).unwrap();
+    let actual: serde_json::Map<String, Value> = serde_json::from_slice(&actual_bytes).unwrap();
     let diff = expected
         .keys()
         .chain(actual.keys())
@@ -87,6 +92,7 @@ fn compare(destination: &str, spiral: bool) {
         diff.len(),
         diff.iter().take(25).collect::<Vec<_>>()
     );
+    assert!(actual_bytes == expected_bytes, "settings bytes differ");
     assert_eq!(
         fs::read_dir(ares_dir).unwrap().count(),
         if destination == "-" { 3 } else { 4 }
@@ -122,13 +128,12 @@ fn enable_spiral_vase(input: &Path, output: &Path) {
     project.finish().unwrap();
 }
 
-fn document(destination: &str, dir: &Path, output: &Output) -> serde_json::Map<String, Value> {
-    let bytes = if destination == "-" {
+fn settings_bytes(destination: &str, dir: &Path, output: &Output) -> Vec<u8> {
+    if destination == "-" {
         output.stdout.clone()
     } else {
         fs::read(dir.join(destination)).unwrap()
-    };
-    serde_json::from_slice(&bytes).expect("expected one complete settings JSON object")
+    }
 }
 
 fn record(dir: &Path, output: &Output) {

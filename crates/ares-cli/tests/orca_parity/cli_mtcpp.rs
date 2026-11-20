@@ -84,7 +84,7 @@ fn compare(options: (i32, u32, bool), presets: bool, exit: i32) {
     );
 }
 
-fn write_fixture(root: &Path, presets: bool) {
+pub(super) fn write_fixture(root: &Path, presets: bool) {
     fs::write(root.join("first.stl"), block_stl(70.0)).unwrap();
     if !presets {
         return;
