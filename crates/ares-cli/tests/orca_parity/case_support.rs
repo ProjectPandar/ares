@@ -200,5 +200,7 @@ mod overhang_wall_retract_wipe;
 #[path = "fixed_surface_layer_direction.rs"]
 mod fixed_surface_layer_direction;
 
+#[path = "ironing_layer_direction.rs"]
+mod ironing_layer_direction;
 #[path = "pressure_equalizer_fractional_feedrate.rs"]
 mod pressure_equalizer_fractional_feedrate;
