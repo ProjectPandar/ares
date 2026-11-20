@@ -39,6 +39,9 @@ mod sparse_anchor_object_layer;
 #[path = "trapezoidal_grid_raft.rs"]
 mod trapezoidal_grid_raft;
 
+#[path = "cubic_single_polyline_anchors.rs"]
+mod cubic_single_polyline_anchors;
+
 #[path = "support_cubic_bodies.rs"]
 mod support_cubic_bodies;
 
