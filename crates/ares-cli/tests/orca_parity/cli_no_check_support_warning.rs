@@ -118,43 +118,52 @@ fn cantilever_stl() -> Vec<u8> {
         [0.0, 0.4, 0.8],
     ];
     let cells = [[0, 0, 0], [0, 0, 1], [1, 0, 1]];
+    let faces = [(0, -1), (0, 1), (1, -1), (1, 1), (2, -1), (2, 1)];
     let mut bytes = vec![0; 84];
     let mut triangle_count = 0_u32;
     for cell in cells {
-        for axis in 0..3 {
-            let (u, v) = ((axis + 1) % 3, (axis + 2) % 3);
-            for sign in [-1, 1] {
-                let mut neighbor = cell;
-                neighbor[axis] += sign;
-                if cells.contains(&neighbor) {
-                    continue;
-                }
-                let corners = [(0, 0), (1, 0), (1, 1), (0, 1)].map(|(a, b)| {
-                    let mut p = cell;
-                    p[axis] += i32::from(sign > 0);
-                    p[u] += a;
-                    p[v] += b;
-                    std::array::from_fn::<_, 3, _>(|i| coords[i][p[i] as usize])
-                });
-                let mut normal = [0.0_f32; 3];
-                normal[axis] = sign as f32;
-                for face in if sign > 0 {
-                    [[0, 1, 2], [0, 2, 3]]
-                } else {
-                    [[0, 2, 1], [0, 3, 2]]
-                } {
-                    for value in normal
-                        .into_iter()
-                        .chain(face.into_iter().flat_map(|i| corners[i]))
-                    {
-                        bytes.extend(value.to_le_bytes());
-                    }
-                    bytes.extend([0; 2]);
-                    triangle_count += 1;
-                }
+        for (axis, sign) in faces {
+            let mut neighbor = cell;
+            neighbor[axis] += sign;
+            if cells.contains(&neighbor) {
+                continue;
             }
+            append_cell_face(&mut bytes, &coords, cell, axis, sign);
+            triangle_count += 2;
         }
     }
     bytes[80..84].copy_from_slice(&triangle_count.to_le_bytes());
     bytes
+}
+
+fn append_cell_face(
+    bytes: &mut Vec<u8>,
+    coords: &[[f32; 3]; 3],
+    cell: [i32; 3],
+    axis: usize,
+    sign: i32,
+) {
+    let (u, v) = ((axis + 1) % 3, (axis + 2) % 3);
+    let corners = [(0, 0), (1, 0), (1, 1), (0, 1)].map(|(a, b)| {
+        let mut p = cell;
+        p[axis] += i32::from(sign > 0);
+        p[u] += a;
+        p[v] += b;
+        std::array::from_fn::<_, 3, _>(|i| coords[i][p[i] as usize])
+    });
+    let mut normal = [0.0_f32; 3];
+    normal[axis] = sign as f32;
+    for triangle in if sign > 0 {
+        [[0, 1, 2], [0, 2, 3]]
+    } else {
+        [[0, 2, 1], [0, 3, 2]]
+    } {
+        for value in normal
+            .into_iter()
+            .chain(triangle.into_iter().flat_map(|i| corners[i]))
+        {
+            bytes.extend(value.to_le_bytes());
+        }
+        bytes.extend([0; 2]);
+    }
 }
