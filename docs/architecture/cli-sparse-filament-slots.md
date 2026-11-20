@@ -35,8 +35,8 @@ constructor. The compact list of loaded documents is a compatibility shell;
 its ordinal is not the logical filament index. Preserve sparse positions
 and per-option growth without synthesizing a loaded preset for a hole.
 Compare fresh direct STL artifacts against live Native for leading,
-interior and trailing gaps. Dense lists, the accepted first-file flag
-behavior, normal catalog selections and saved 3MF refresh are unchanged.
+interior and trailing gaps. Dense lists, the `--load-defaultfila` first-file
+fallback, normal catalog selections and saved 3MF refresh are unchanged.
 An entirely empty list with the flag off is outside this slice; do not
 reproduce a Native crash. Authored filament ID parsing and unlisted-parent
 admission are separate from preserving the destination index.
