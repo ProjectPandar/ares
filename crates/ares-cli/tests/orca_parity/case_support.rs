@@ -34,6 +34,8 @@ mod cli_export_settings_stl;
 mod cli_load_defaultfila;
 #[path = "cli_mtcpp.rs"]
 mod cli_mtcpp;
+#[path = "cli_no_check.rs"]
+mod cli_no_check;
 #[path = "cli_sparse_filament_slots.rs"]
 mod cli_sparse_filament_slots;
 #[path = "cli_strict.rs"]
