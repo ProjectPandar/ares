@@ -121,7 +121,10 @@ async fn rh3d_original_scalar_vector_profile_loads_then_rejects_double_reset() {
         &json!({"native": native, "load": load, "slice": slice}),
     );
     assert!(loaded.is_ok(), "{load}; evidence {directory:?}");
-    assert_eq!(load["settings"]["default_filament_profile"], filament);
+    assert_eq!(
+        load["settings"]["default_filament_profile"],
+        json!([filament])
+    );
     assert!(
         matches!(sliced, Err(SliceError::InvalidValuesInProject(text)) if text == ERROR),
         "{slice}; evidence {directory:?}",
