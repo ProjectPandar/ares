@@ -46,7 +46,8 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
-    let (source, machine) = crate::compatible_machine::load(&bytes, None)?;
+    let resources = crate::installed_resources::resolve(None)?;
+    let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
     let mut sliced_plate = SlicedPlate::default();
     let mut upward_machines = Vec::new();
     let processed = ares_core::slice_cli_project_plate_validated(

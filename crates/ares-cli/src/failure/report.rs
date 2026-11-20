@@ -60,12 +60,14 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "Failed exporting the G-code statistics.",
+            error_string: "Failed exporting the G-code statistics.".to_owned(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
             critical_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
             stderr: format!(
                 "plate {plate}: Failed to write the G-code statistics to {}.\n",
                 path.display()
