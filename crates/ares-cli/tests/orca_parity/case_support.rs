@@ -28,6 +28,8 @@ mod export_statistics;
 mod cli_convert_unit;
 #[path = "cli_debug_logfile.rs"]
 mod cli_debug_logfile;
+#[path = "cli_empty_layer_warning.rs"]
+mod cli_empty_layer_warning;
 #[path = "cli_enable_timelapse.rs"]
 mod cli_enable_timelapse;
 #[path = "cli_export_settings_stl.rs"]
