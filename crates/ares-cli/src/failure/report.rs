@@ -204,6 +204,15 @@ impl CliFailure {
 }
 
 impl CliFailure {
+    /// `OrcaSlicer.cpp:7036–7039`: the report uses the validator's text, not the exit-code text.
+    #[cfg(target_os = "linux")]
+    pub(crate) fn with_validation_detail(mut self, detail: Option<String>) -> Self {
+        if let (Self::Family(family), Some(detail)) = (&mut self, detail) {
+            family.error_string = detail;
+        }
+        self
+    }
+
     pub(crate) fn invalid_slice_selection(#[cfg(target_os = "linux")] output: &Path) -> Self {
         Self::slice_action_failure(
             #[cfg(target_os = "linux")]

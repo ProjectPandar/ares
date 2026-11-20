@@ -69,13 +69,23 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     )
     .await
     .map_err(|error| {
-        slice_error_to_failure(
+        #[cfg(target_os = "linux")]
+        let detail = match &error {
+            ares_core::SliceError::Validate { message, .. } if args.no_check => {
+                Some(message.clone())
+            }
+            _ => None,
+        };
+        let failure = slice_error_to_failure(
             error,
             &output,
             #[cfg(target_os = "linux")]
             plate,
         )
-        .with_upward_report(upward_machines.clone())
+        .with_upward_report(upward_machines.clone());
+        #[cfg(target_os = "linux")]
+        let failure = failure.with_validation_detail(detail);
+        failure
     })?;
     if args.strict {
         crate::failure::slicing::check_strict(
