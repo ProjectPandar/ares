@@ -30,6 +30,9 @@ mod tree_raft_without_support;
 #[path = "tree_style_raft_footprint.rs"]
 mod tree_style_raft_footprint;
 
+#[path = "raft_layer_change_lift.rs"]
+mod raft_layer_change_lift;
+
 #[path = "spiral_hole_projected_split.rs"]
 mod spiral_hole_projected_split;
 
