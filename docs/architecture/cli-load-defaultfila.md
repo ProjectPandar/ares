@@ -14,8 +14,8 @@ The seam is `ares --slice 1 --outputdir …` with one STL. `args.rs` declares `-
 
 Authored IDs for admitted inherited user files use the adjacent rule in `docs/architecture/cli-user-filament-authored-id.md` (`OrcaSlicer.cpp:2449–2453,3616–3622`). That rule is about explicitly loaded metadata, not how empty slots select a file. User-file admission itself (`OrcaSlicer.cpp:2113–2161`, `PresetBundle.cpp:556–650`) is also separate. Neither admission nor ID extraction changes here.
 
-Defer saved 3MF, including its trailing project slots and system refresh (`OrcaSlicer.cpp:2781–2817`), the `slice` subcommand, other model formats, STL batches, and GUI tool-count normalization. A short list is not treated as though it contained explicit trailing blanks.
+Defer saved 3MF, including its trailing project slots and system refresh (`OrcaSlicer.cpp:2781–2817`), the `slice` subcommand, other model formats, STL batches, and GUI tool-count normalization. Without the flag, the existing adapter compacts skipped slots; matching Native's option-vector layout for skipped slots without a selected preset is separate. A short list is not treated as though it contained explicit trailing blanks.
 
 ## Verification
 
-Use a synthetic STL and standalone typed filament files. Compare a sparse list to its explicit expansion with the flag on, and verify that the flag does not affect a dense list. Compare exit status, stderr, the result report (excluding wall-clock fields), and complete G-code (excluding its generator banner) against live Native. Include a nonempty list with only empty entries to check the configuration-file failure and its report without G-code.
+Use a synthetic STL and standalone typed filament files. Compare a sparse list to its explicit expansion with the flag on, and verify that one listed filament remains one slot with two configured nozzles. Compare exit status, stderr, the result report (excluding wall-clock fields), and complete G-code (excluding its generator banner) against live Native. Include a nonempty list with only empty entries to check the configuration-file failure and its report without G-code.
