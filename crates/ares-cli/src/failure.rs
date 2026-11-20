@@ -113,7 +113,6 @@ impl CliFailure {
 
 mod report;
 pub(crate) mod slicing;
-
 /// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).
 pub(super) fn substitution_warnings(
     file: &str,
