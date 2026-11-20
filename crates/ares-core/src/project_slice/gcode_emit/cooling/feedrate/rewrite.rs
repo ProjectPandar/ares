@@ -48,19 +48,12 @@ pub(super) fn append(
             source_feedrate
         };
 
-        if new_feedrate == current_feedrate
-            && line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0
-        {
-            if keep_markers {
-                append_speed_marker(output, new_feedrate, line.kind);
-            }
-            position = line.end;
-            continue;
-        }
         if new_feedrate == current_feedrate {
-            if line.length == 0.0 {
-                // Upstream drops the complete line including its newline
-                // (`CoolingBuffer.cpp:911-913`: `end = line_end`).
+            if line.length == 0.0
+                || line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0
+            {
+                // CoolingBuffer.cpp:995–1003 skips the whole line based on
+                // the integer modal value, even when the last F was fractional.
                 position = line.end;
                 continue;
             }
@@ -100,16 +93,6 @@ pub(super) fn append(
     if position < gcode.len() {
         output.extend_from_slice(&gcode[position..]);
     }
-}
-
-fn append_speed_marker(output: &mut Vec<u8>, new_feedrate: i32, kind: u32) {
-    output.extend_from_slice(b"G1 F");
-    output.extend_from_slice(new_feedrate.to_string().as_bytes());
-    output.extend_from_slice(b";_EXTRUDE_SET_SPEED");
-    if kind & TYPE_EXTERNAL_PERIMETER != 0 {
-        output.extend_from_slice(b";_EXTERNAL_PERIMETER");
-    }
-    output.extend_from_slice(b"\n");
 }
 
 fn feedrate_word(command: &[u8]) -> Option<(usize, usize, usize)> {
