@@ -154,3 +154,6 @@ mod type2_tower_entry_z;
 
 #[path = "unclear_travel_lift_cancellation.rs"]
 mod unclear_travel_lift_cancellation;
+
+#[path = "arachne_disconnected_loop.rs"]
+mod arachne_disconnected_loop;
