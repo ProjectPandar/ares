@@ -43,7 +43,9 @@ or wizard path left before.
 
 ## References
 
-- Preset-select probe (`tools/chain-probe/preset-select.patch`, test-only):
+- Set `ARES_ORCA_PRESET_SELECT_BIN` to the executable built from
+  `tools/chain-probe/preset-select.patch` at the pinned upstream revision. An open-only export
+  probe can return valid JSON without running the post-load sync or replaying session steps.
   - `sync_loaded_project_filament_config` loses `static`, and the probe calls it after
     `load_config_model`, as Plater.cpp:9755 does.
   - Optional per-project steps after the load: `wizard` (the GuideFrame path above, with
