@@ -33,6 +33,9 @@ mod avoid_once_ankermake5;
 #[path = "velocity_limit_comments.rs"]
 mod velocity_limit_comments;
 
+#[path = "first_layer_travel_jerk.rs"]
+mod first_layer_travel_jerk;
+
 #[path = "merged_jerk_tolerance.rs"]
 mod merged_jerk_tolerance;
 
