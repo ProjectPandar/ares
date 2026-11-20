@@ -1,11 +1,13 @@
 use crate::geometry::{Line, Point, Polygon};
 
+use super::BridgeSampling;
+
 struct TracedPolygon {
     lows: Vec<Point>,
     highs: Vec<Point>,
 }
 
-pub(super) fn trace_sections(sections: &[Vec<Line>], spacing: i64) -> Vec<Polygon> {
+pub(super) fn trace_sections(sections: &[Vec<Line>], sampling: BridgeSampling) -> Vec<Polygon> {
     let mut output = Vec::new();
     let mut current = Vec::<TracedPolygon>::new();
     for slice in sections {
@@ -19,17 +21,17 @@ pub(super) fn trace_sections(sections: &[Vec<Line>], spacing: i64) -> Vec<Polygo
             let candidate = (begin..end).find(|&index| !used[index]);
             if let Some(index) = candidate {
                 let segment = slice[index];
-                append_connected(&mut trace.lows, segment.a, spacing);
-                append_connected(&mut trace.highs, segment.b, spacing);
+                append_connected(&mut trace.lows, segment.a, sampling);
+                append_connected(&mut trace.highs, segment.b, sampling);
                 used[index] = true;
             } else {
-                close_trace(trace, spacing, &mut output);
+                close_trace(trace, sampling.step, &mut output);
             }
         }
         current.retain(|trace| !trace.lows.is_empty());
         for (index, &segment) in slice.iter().enumerate() {
             if !used[index] {
-                let half_spacing = spacing / 2;
+                let half_spacing = sampling.step / 2;
                 current.push(TracedPolygon {
                     lows: vec![
                         Point::new(segment.a.x() - half_spacing, segment.a.y()),
@@ -61,14 +63,14 @@ fn candidate_range(slice: &[Line], low: Point, high: Point) -> (usize, usize) {
     (begin, end)
 }
 
-fn append_connected(points: &mut Vec<Point>, candidate: Point, spacing: i64) {
+fn append_connected(points: &mut Vec<Point>, candidate: Point, sampling: BridgeSampling) {
     let previous = *points.last().expect("active trace has an endpoint");
     let distance_squared = distance_squared(previous, candidate);
-    let threshold = 36.0 * spacing as f64 * spacing as f64;
+    let threshold = 36.0 * sampling.spacing as f64 * sampling.spacing as f64;
     if distance_squared < threshold {
         points.push(candidate);
     } else {
-        let half_spacing = spacing / 2;
+        let half_spacing = sampling.step / 2;
         points.push(Point::new(previous.x() + half_spacing, previous.y()));
         points.push(Point::new(candidate.x() - half_spacing, candidate.y()));
         points.push(candidate);
@@ -81,8 +83,8 @@ fn distance_squared(left: Point, right: Point) -> f64 {
     dx * dx + dy * dy
 }
 
-fn close_trace(trace: &mut TracedPolygon, spacing: i64, output: &mut Vec<Polygon>) {
-    let half_spacing = spacing / 2;
+fn close_trace(trace: &mut TracedPolygon, step: i64, output: &mut Vec<Polygon>) {
+    let half_spacing = step / 2;
     let low = *trace.lows.last().expect("active trace has a low point");
     let high = *trace.highs.last().expect("active trace has a high point");
     trace.lows.push(Point::new(low.x() + half_spacing, low.y()));

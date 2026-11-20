@@ -1,15 +1,21 @@
 use crate::geometry::{Line, LineDistanceTree, Point, Polygon, fixed_msvc_sort_by};
 
+use super::BridgeSampling;
+
 pub(super) fn build_sections(
     bridged_area: &[Polygon],
     anchors: &[Line],
-    spacing: i64,
-    width: i64,
+    sampling: BridgeSampling,
+    anchor_overlap: i64,
 ) -> Vec<Vec<Line>> {
     let area_bounds = polygon_bounds(bridged_area);
     let anchor_bounds = line_bounds(anchors);
-    let vertical_lines =
-        vertical_lines(area_bounds.0.x(), area_bounds.1.x(), anchor_bounds, spacing);
+    let vertical_lines = vertical_lines(
+        area_bounds.0.x(),
+        area_bounds.1.x(),
+        anchor_bounds,
+        sampling,
+    );
     let area_lines = bridged_area
         .iter()
         .flat_map(Polygon::lines)
@@ -19,7 +25,15 @@ pub(super) fn build_sections(
 
     vertical_lines
         .into_iter()
-        .map(|vertical| prepare_sections(&area_tree, &anchor_tree, vertical, width))
+        .map(|vertical| {
+            prepare_sections(
+                &area_tree,
+                &anchor_tree,
+                vertical,
+                sampling.width,
+                anchor_overlap,
+            )
+        })
         .collect()
 }
 
@@ -28,12 +42,13 @@ fn prepare_sections(
     anchor_tree: &LineDistanceTree<'_>,
     vertical: Line,
     width: i64,
+    anchor_overlap: i64,
 ) -> Vec<Line> {
     let area_hits = area_tree.intersections_sorted(vertical);
     let mut sections = adjacent_sections(&area_hits, |point| area_tree.outside(point) < 0);
     let anchor_hits = anchor_tree.intersections_sorted(vertical);
     for section in &mut sections {
-        extend_to_anchors(section, &anchor_hits, width);
+        extend_to_anchors(section, &anchor_hits, width, anchor_overlap);
     }
     order_sections(&mut sections);
     sections
@@ -65,11 +80,11 @@ fn midpoint(left: Point, right: Point) -> Point {
     Point::new((left.x() + right.x()) / 2, (left.y() + right.y()) / 2)
 }
 
-fn extend_to_anchors(section: &mut Line, anchors: &[(Point, usize)], width: i64) {
+fn extend_to_anchors(section: &mut Line, anchors: &[(Point, usize)], width: i64, overlap: i64) {
     if let Some((anchor, _)) = anchors
         .iter()
         .rev()
-        .find(|(anchor, _)| section.a.y() > anchor.y())
+        .find(|(anchor, _)| section.a.y() + overlap > anchor.y())
     {
         section.a = Point::new(
             anchor.x(),
@@ -78,7 +93,7 @@ fn extend_to_anchors(section: &mut Line, anchors: &[(Point, usize)], width: i64)
     }
     if let Some((anchor, _)) = anchors
         .iter()
-        .find(|(anchor, _)| section.b.y() < anchor.y())
+        .find(|(anchor, _)| section.b.y() - overlap < anchor.y())
     {
         section.b = Point::new(
             anchor.x(),
@@ -119,15 +134,15 @@ fn vertical_lines(
     min_x: i64,
     max_x: i64,
     anchor_bounds: (Point, Point),
-    spacing: i64,
+    sampling: BridgeSampling,
 ) -> Vec<Line> {
-    let count = ((max_x - min_x + spacing - 1) / spacing) as usize;
+    let count = ((max_x - min_x + sampling.step - 1) / sampling.step) as usize;
     (0..count)
         .map(|index| {
-            let x = (min_x as f64 + (index as f64 + 0.5) * spacing as f64) as i64;
+            let x = (min_x as f64 + (index as f64 + 0.5) * sampling.step as f64) as i64;
             Line::new(
-                Point::new(x, anchor_bounds.0.y() - spacing),
-                Point::new(x, anchor_bounds.1.y() + spacing),
+                Point::new(x, anchor_bounds.0.y() - sampling.spacing),
+                Point::new(x, anchor_bounds.1.y() + sampling.spacing),
             )
         })
         .collect()
