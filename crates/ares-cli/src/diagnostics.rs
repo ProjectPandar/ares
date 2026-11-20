@@ -20,11 +20,15 @@ pub(crate) struct DiagnosticLog {
 impl DiagnosticLog {
     pub(crate) fn startup_version(&mut self) {
         // OrcaSlicer.cpp:1524–1538: a warning after CLI log setup, before input loading.
+        self.warning(format_args!(
+            "cli mode, Current OrcaSlicer Version {}",
+            ares_core::ORCA_SLICER_COMPATIBILITY_VERSION
+        ));
+    }
+
+    pub(crate) fn warning(&mut self, message: fmt::Arguments<'_>) {
         if self.debug >= 2 {
-            self.record(format_args!(
-                "cli mode, Current OrcaSlicer Version {}",
-                ares_core::ORCA_SLICER_COMPATIBILITY_VERSION
-            ));
+            self.record(message);
         }
     }
 

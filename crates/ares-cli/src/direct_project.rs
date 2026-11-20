@@ -12,7 +12,7 @@ use crate::{
     read_preset_files, split_native_list,
 };
 
-pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
+pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     let plate = u32::try_from(
         args.selection
             .expect("--slice is required without a subcommand"),
@@ -141,6 +141,8 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         let failure = failure.with_validation_detail(detail);
         failure
     })?;
+    let input_file = input.to_string_lossy();
+    let project = Some((input_file.as_ref(), bytes.as_slice()));
     if args.strict {
         crate::failure::slicing::check_strict(
             #[cfg(target_os = "linux")]
@@ -148,9 +150,17 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             plate,
             &sliced_plate,
             &upward_machines,
-            Some((&input.to_string_lossy(), &bytes)),
+            project,
         )?;
     }
+    crate::failure::slicing::check_direct(
+        (&mut args.diagnostics, args.no_check),
+        #[cfg(target_os = "linux")]
+        &output,
+        (plate, &sliced_plate),
+        &upward_machines,
+        project,
+    )?;
     crate::statistics::write(&output, processed, args.export_statistics, plate)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
@@ -161,6 +171,6 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         sliced_plate,
         upward_machines: &upward_machines,
     }
-    .write(&input.to_string_lossy(), crate::substitutions(&bytes));
+    .write(&input_file, crate::substitutions(&bytes));
     Ok(())
 }

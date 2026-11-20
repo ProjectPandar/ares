@@ -303,6 +303,14 @@ pub(super) async fn run(
             None,
         )?;
     }
+    crate::failure::slicing::check_direct(
+        (&mut args.diagnostics, args.no_check),
+        #[cfg(target_os = "linux")]
+        &output,
+        (1, &sliced_plate),
+        &[],
+        None,
+    )?;
     crate::statistics::write(&output, gcode, args.export_statistics, 1)?;
     if let Some((destination, json)) = export_after {
         settings_export::write(destination, &json?)?;

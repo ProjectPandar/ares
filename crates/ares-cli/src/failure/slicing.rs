@@ -1,6 +1,11 @@
 //! `OrcaSlicer.cpp:7141–7172`: gate export on typed slicing warnings.
 use super::{CliFailure, FamilyFailure};
-use ares_core::{PrintWarning, SlicedPlate, WarningLevel};
+use ares_core::{PrintWarning, SlicedPlate, SlicingNotificationType, WarningLevel};
+
+fn is_empty_layer_warning(warning: &PrintWarning) -> bool {
+    warning.level == WarningLevel::Critical
+        && warning.message_type == SlicingNotificationType::EmptyGcodeLayers
+}
 
 pub(crate) fn check(
     args: &crate::SliceArgs,
@@ -9,10 +14,11 @@ pub(crate) fn check(
     input: &[u8],
     upward: &[String],
 ) -> Result<(), CliFailure> {
-    let Some(warning) = plate.warnings.iter().find(|warning| {
-        warning.level == ares_core::WarningLevel::Critical
-            && warning.message_type == ares_core::SlicingNotificationType::EmptyGcodeLayers
-    }) else {
+    let Some(warning) = plate
+        .warnings
+        .iter()
+        .find(|warning| is_empty_layer_warning(warning))
+    else {
         return Ok(());
     };
     let plate_index = args.plate.unwrap_or(1);
@@ -23,12 +29,59 @@ pub(crate) fn check(
         #[cfg(target_os = "linux")]
         plate,
         upward,
-        warning,
+        (warning, true),
     )
     .with_config_substitutions(input_file, crate::substitutions(input));
     #[cfg(target_os = "linux")]
     let failure = failure.with_slicing_warnings(plate_index, plate.warnings.clone());
     Err(failure)
+}
+
+pub(crate) fn check_direct(
+    (diagnostics, no_check): (&mut crate::diagnostics::DiagnosticLog, bool),
+    #[cfg(target_os = "linux")] output: &std::path::Path,
+    (plate_index, plate): (u32, &SlicedPlate),
+    upward: &[String],
+    project: Option<(&str, &[u8])>,
+) -> Result<(), CliFailure> {
+    for warning in plate
+        .warnings
+        .iter()
+        .filter(|warning| is_empty_layer_warning(warning))
+    {
+        diagnostics.warning(format_args!(
+            "plate {plate_index}: found slicing warnings: {}, no_check={}",
+            warning.message,
+            u8::from(no_check),
+        ));
+        if no_check {
+            continue;
+        }
+        let mut failure = warning_failure(
+            #[cfg(target_os = "linux")]
+            output,
+            plate_index,
+            #[cfg(target_os = "linux")]
+            plate,
+            upward,
+            (warning, false),
+        );
+        if let Some((file, bytes)) = project {
+            failure = failure.with_config_substitutions(file, crate::substitutions(bytes));
+        }
+        #[cfg(target_os = "linux")]
+        let failure = failure.with_slicing_warnings(
+            plate_index,
+            plate
+                .warnings
+                .iter()
+                .take_while(|warning| !is_empty_layer_warning(warning))
+                .cloned()
+                .collect(),
+        );
+        return Err(failure);
+    }
+    Ok(())
 }
 
 pub(crate) fn check_strict(
@@ -52,7 +105,7 @@ pub(crate) fn check_strict(
         #[cfg(target_os = "linux")]
         plate,
         upward,
-        warning,
+        (warning, false),
     );
     if let Some((file, bytes)) = project {
         failure = failure.with_config_substitutions(file, crate::substitutions(bytes));
@@ -67,7 +120,7 @@ fn warning_failure(
     plate_index: u32,
     #[cfg(target_os = "linux")] plate: &SlicedPlate,
     upward: &[String],
-    warning: &PrintWarning,
+    (warning, emit_stderr): (&PrintWarning, bool),
 ) -> CliFailure {
     CliFailure::Family(Box::new(FamilyFailure {
         return_code: -100,
@@ -86,7 +139,7 @@ fn warning_failure(
         warnings: Vec::new(),
         #[cfg(target_os = "linux")]
         plate_warning: Some(warning.message.clone()),
-        stderr: if warning.level == WarningLevel::Critical {
+        stderr: if emit_stderr {
             format!(
                 "plate {plate_index}: found slicing warnings: {}\n",
                 warning.message
