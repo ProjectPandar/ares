@@ -71,6 +71,8 @@ export class Viewport {
     this.#renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.#renderer.domElement);
     this.#renderTask.port1.onmessage = () => {
+      // A resize drew the requested frame (#fitCanvas).
+      if (!this.#dirty) return;
       this.#dirty = false;
       this.#renderer.render(this.#scene, this.#camera);
       delete this.container.dataset.drawing;
@@ -335,6 +337,9 @@ export class Viewport {
     // setSize clears the drawing buffer and resize observers run right before the frame is
     // painted: a render posted to the next task would leave that frame blank.
     this.#renderer.render(this.#scene, this.#camera);
+    // This frame draws the scene a waiting render task would draw: that render is done.
+    this.#dirty = false;
+    delete this.container.dataset.drawing;
   }
 
   #pick(event: PointerEvent): number | null {
