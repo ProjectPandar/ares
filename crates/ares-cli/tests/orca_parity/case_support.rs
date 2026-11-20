@@ -15,6 +15,9 @@ pub(crate) mod vendor_inventory;
 #[path = "adaptive_cubic_bodies.rs"]
 mod adaptive_cubic_bodies;
 
+#[path = "cubic_single_polyline_anchors.rs"]
+mod cubic_single_polyline_anchors;
+
 #[path = "support_cubic_bodies.rs"]
 mod support_cubic_bodies;
 
