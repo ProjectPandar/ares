@@ -326,6 +326,7 @@ pub(super) fn process(
     statistics.volumes_per_color_change =
         std::mem::take(&mut processor_result.print_statistics.volumes_per_color_change);
     processor_result.print_statistics = statistics;
+    processor_result.initial_layer_time = estimate.initial_layer_time;
     processor_result.extruder_colors = config.extruder_colors;
     processor_result.custom_gcode_times = estimate.custom_gcode_times;
     (

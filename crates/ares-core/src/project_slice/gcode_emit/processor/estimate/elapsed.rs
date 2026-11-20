@@ -94,3 +94,19 @@ pub(super) fn elapsed_snapshots(
     }
     elapsed
 }
+/// Widen each sum for the addition (`GCodeProcessor.cpp:649–655`).
+pub(super) fn stage_times(times: &[f64], stages: Vec<(bool, bool)>) -> (f32, f32) {
+    times.iter().zip(stages).fold(
+        (0.0_f32, 0.0_f32),
+        |(prepare, first), (&time, (is_prepare, is_first))| {
+            let add = |sum, enabled| {
+                if enabled {
+                    (f64::from(sum) + time) as f32
+                } else {
+                    sum
+                }
+            };
+            (add(prepare, is_prepare), add(first, is_first))
+        },
+    )
+}

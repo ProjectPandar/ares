@@ -26,6 +26,7 @@ use crate::gcode_processor::printable_area::PrintableAreaTracker;
 pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
+    pub(super) initial_layer_time: f32,
     pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
     pub(super) stop_times: StopTimes,
     pub(super) print_statistics: crate::PrintEstimatedStatistics,
@@ -51,7 +52,7 @@ impl Estimate {
         let limits = config.limits;
         let mut blocks = Vec::new();
         let mut state = MotionState::with_limits(limits);
-        let mut prepare_stages = Vec::new();
+        let mut block_stages = Vec::new();
         let mut events = Vec::new();
         let mut custom_events = Vec::new();
         let mut stop_events = Vec::new();
@@ -98,6 +99,7 @@ impl Estimate {
             recorder.machine(&state);
             recorder.options_z.tick(events.len());
             recorder.line(index + 1, parsed, g1_line_id, line_start);
+            let stage = (prepare_stage, recorder.is_first_layer());
             if let Some(kind) = parsed
                 .custom
                 .and_then(|tag| tag.time_kind(filaments.current_filament()))
@@ -155,7 +157,7 @@ impl Estimate {
                 block_line_ids.push(g1_line_id);
                 remaining_internal.push(0);
                 cache_eligible.push(false);
-                prepare_stages.push(prepare_stage);
+                block_stages.push(stage);
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     klipper: state.klipper,
@@ -186,7 +188,7 @@ impl Estimate {
                 blocks.push(block);
                 recorder.options_z.virtual_block();
                 block_line_ids.push(g1_line_id);
-                prepare_stages.push(prepare_stage);
+                block_stages.push(stage);
                 cache_eligible.push(false);
                 remaining_internal.push(0);
                 continue;
@@ -286,7 +288,7 @@ impl Estimate {
                     let count = motion_blocks.len();
                     blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    block_stages.extend(std::iter::repeat_n(stage, count));
                 }
                 // `GCodeProcessor::process_G10/G11` decrements the fake
                 // G1's line id (`GCodeProcessor.cpp:4873-4893`), so a
@@ -296,7 +298,7 @@ impl Estimate {
                     let count = motion_blocks.len();
                     blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    block_stages.extend(std::iter::repeat_n(stage, count));
                     // `cache_eligible` was already pushed by the shared
                     // G1-branch above: `e_only && !wiping` keeps the fake
                     // Retract/Unretract out of `g1_times_cache`.
@@ -314,7 +316,7 @@ impl Estimate {
                     block_line_ids
                         .extend(motion_blocks.iter().map(|motion| g1_line_id + motion.index));
                     blocks.extend(motion_blocks.into_iter().map(|motion| motion.block));
-                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    block_stages.extend(std::iter::repeat_n(stage, count));
                     g1_line_id += arc_internal.unwrap_or(0);
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
@@ -372,13 +374,7 @@ impl Estimate {
             .collect::<Vec<_>>();
         let export_elapsed = export_cache::snapshots(lines, &cache);
         let elapsed = elapsed_snapshots(lines, &cache);
-        // `prepare_time += block_time` adds the double block time to the float
-        // total and narrows once (`GCodeProcessor.cpp:649-650`).
-        let prepare = times
-            .iter()
-            .zip(prepare_stages)
-            .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
-            .fold(0.0_f32, |sum, time| (f64::from(sum) + time) as f32) as f64;
+        let (prepare, initial_layer_time) = elapsed::stage_times(&times, block_stages);
         let total = cumulative + trailing_delay;
         let custom_gcode_times =
             custom_time::custom_times(&custom_events, &flush_ends, &times, trailing_delay, total);
@@ -386,7 +382,8 @@ impl Estimate {
             total,
             custom_gcode_times,
             stop_times,
-            prepare,
+            prepare: f64::from(prepare),
+            initial_layer_time,
             print_statistics: used_filaments.finish(filaments.selection().1),
             printable_area,
             elapsed,

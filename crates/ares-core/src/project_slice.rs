@@ -6,11 +6,13 @@ use crate::{
 #[cfg(all(test, windows))]
 pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 1024;
 
+mod archive_plate;
 mod bounds;
 mod capabilities;
 mod closing;
 pub(crate) mod compatibility;
 mod compensation;
+pub(crate) use archive_plate::ArchivePlate;
 mod conical_overhang;
 mod contour_z;
 mod curl_estimation;
@@ -168,10 +170,20 @@ pub async fn slice_project_plate_processed(
 
 #[inline(never)]
 pub(crate) fn slice_source(
+    project: ProjectSource<'_>,
+    metadata: GenerationMetadata,
+    record_moves: bool,
+    context: crate::SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
+    slice_source_with_archive(project, metadata, record_moves, context, None)
+}
+
+pub(crate) fn slice_source_with_archive(
     mut project: ProjectSource<'_>,
     metadata: GenerationMetadata,
     record_moves: bool,
     mut context: crate::SlicerContext<'_>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
     // Fresh-process equivalence for the `~`/`^` rotate_template joints:
     // upstream slices once per process, so `rand()` always sees the default
@@ -243,10 +255,10 @@ pub(crate) fn slice_source(
     seam_placement::apply(&mut ordered);
     let output = consume_post_island_print_order(
         ordered,
-        metadata,
-        record_moves,
+        (metadata, record_moves),
         &mut context,
         &mut warnings,
+        archive,
     );
     if let Some(sliced_plate) = sliced_plate {
         sliced_plate.warnings.clone_from(&warnings);
@@ -298,10 +310,10 @@ fn extract_top_surfaces(
 #[inline(never)]
 fn consume_post_island_print_order(
     mut prepared: island_print_order::PreparedPostIslandPrintOrder,
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
     // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
     // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
@@ -309,7 +321,7 @@ fn consume_post_island_print_order(
         context.set_status(71, format_args!("Detect overhangs for auto-lift"), 0);
     }
     context.set_status(70, format_args!("Generating skirt & brim"), 0);
-    let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context, warnings)?;
+    let mut output = gcode_emit::emit(&mut prepared, generation, context, warnings, archive)?;
     output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);
     Ok(output)

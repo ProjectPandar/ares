@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use super::{BAMBU_VERSION, geometry::Mesh};
+use super::{BAMBU_VERSION, PLATE_GCODE, geometry::Mesh};
 use crate::ORCA_SLICER_COMPATIBILITY_VERSION as ORCA_VERSION;
 
 const DECL: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -43,10 +43,20 @@ pub(super) fn content_types() -> String {
 }
 
 pub(super) fn relationships(path: &str) -> String {
+    relationship(path, super::super::relationships::MODEL_RELATIONSHIP_TYPE)
+}
+
+pub(super) fn gcode_relationship() -> String {
+    relationship(
+        PLATE_GCODE,
+        "http://schemas.bambulab.com/package/2021/gcode",
+    )
+}
+
+fn relationship(path: &str, media_type: &str) -> String {
     let path = quick_xml::escape::escape(path);
     format!(
-        "{DECL}<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">\n <Relationship Target=\"/{path}\" Id=\"rel-1\" Type=\"{}\"/>\n</Relationships>",
-        super::super::relationships::MODEL_RELATIONSHIP_TYPE
+        "{DECL}<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">\n <Relationship Target=\"/{path}\" Id=\"rel-1\" Type=\"{media_type}\"/>\n</Relationships>",
     )
 }
 
@@ -90,12 +100,13 @@ pub(super) fn mesh_model(mesh: &Mesh) -> String {
     out
 }
 
-pub(super) fn model_settings(mesh: &Mesh, filename: &str) -> String {
+pub(super) fn model_settings(mesh: &Mesh, filename: &str, sliced: bool) -> String {
     let name = quick_xml::escape::escape(&mesh.name);
     let filename = quick_xml::escape::escape(filename);
     let [x, y, z] = mesh.source_offset.map(f64::from).map(number);
+    let gcode_file = if sliced { PLATE_GCODE } else { "" };
     format!(
-        "{DECL}<config>\n  <object id=\"2\" auto_drop=\"1\">\n    <metadata key=\"name\" value=\"{name}\"/>\n    <metadata key=\"extruder\" value=\"1\"/>\n    <part id=\"1\" subtype=\"normal_part\">\n      <metadata key=\"name\" value=\"{name}\"/>\n      <metadata key=\"matrix\" value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n      <metadata key=\"source_file\" value=\"{filename}\"/>\n      <metadata key=\"source_object_id\" value=\"0\"/>\n      <metadata key=\"source_volume_id\" value=\"0\"/>\n      <metadata key=\"source_offset_x\" value=\"{x}\"/>\n      <metadata key=\"source_offset_y\" value=\"{y}\"/>\n      <metadata key=\"source_offset_z\" value=\"{z}\"/>\n      <mesh_stat edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n    </part>\n  </object>\n  <plate>\n    <metadata key=\"plater_id\" value=\"1\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"\"/>\n  </plate>\n  <assemble>\n  </assemble>\n</config>\n"
+        "{DECL}<config>\n  <object id=\"2\" auto_drop=\"1\">\n    <metadata key=\"name\" value=\"{name}\"/>\n    <metadata key=\"extruder\" value=\"1\"/>\n    <part id=\"1\" subtype=\"normal_part\">\n      <metadata key=\"name\" value=\"{name}\"/>\n      <metadata key=\"matrix\" value=\"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1\"/>\n      <metadata key=\"source_file\" value=\"{filename}\"/>\n      <metadata key=\"source_object_id\" value=\"0\"/>\n      <metadata key=\"source_volume_id\" value=\"0\"/>\n      <metadata key=\"source_offset_x\" value=\"{x}\"/>\n      <metadata key=\"source_offset_y\" value=\"{y}\"/>\n      <metadata key=\"source_offset_z\" value=\"{z}\"/>\n      <mesh_stat edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n    </part>\n  </object>\n  <plate>\n    <metadata key=\"plater_id\" value=\"1\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"{gcode_file}\"/>\n  </plate>\n  <assemble>\n  </assemble>\n</config>\n"
     )
 }
 

@@ -17,7 +17,7 @@ ares-wasm = { path = "../ares-wasm" }
 ares-vgcode = { path = "../ares-vgcode" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 jiff = { workspace = true }
-md-5 = "0.10.6"
+md-5 = { workspace = true }
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 regex = { workspace = true }

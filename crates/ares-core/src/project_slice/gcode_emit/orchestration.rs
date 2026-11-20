@@ -1,14 +1,14 @@
 mod tower;
 
 use super::*;
-use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
+use crate::project_slice::{ArchivePlate, island_print_order::PreparedPostIslandPrintOrder};
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    (metadata, record_moves): (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
     let mut schedule = layers::build_schedule(prepared)?;
     warnings.append(&mut schedule.warnings);
@@ -349,5 +349,39 @@ pub(in crate::project_slice) fn emit(
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
-    super::orchestration_finish::finish(output, &state, traversal, &nozzle_groups, record_moves)
+    let result = super::orchestration_finish::finish(
+        output,
+        &state,
+        traversal,
+        &nozzle_groups,
+        record_moves,
+    )?;
+    if let Some(archive) = archive {
+        *archive = Some(archive_facts(traversal, &schedule, &brim)?);
+    }
+    Ok(result)
+}
+
+fn archive_facts(
+    traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    schedule: &layers::Schedule,
+    brim: &[Option<brim::BrimPlan>],
+) -> Result<ArchivePlate, SliceError> {
+    let footprint = footprint::export_object_footprint(
+        traversal,
+        schedule,
+        brim.first().and_then(Option::as_ref),
+    )
+    .ok_or_else(|| {
+        SliceError::InvalidInput("sliced 3MF requires one printable object instance".into())
+    })?;
+    Ok(ArchivePlate {
+        object_name: traversal.project.objects()[0].name().to_owned(),
+        identify_id: schedule.instances[0][0].label_id,
+        bounds: footprint.bounds,
+        area: footprint.area,
+        layer_height: footprint.layer_height,
+        layer_count: schedule.layer_count(),
+        project_settings: traversal.project.documents().project_settings_raw.clone(),
+    })
 }

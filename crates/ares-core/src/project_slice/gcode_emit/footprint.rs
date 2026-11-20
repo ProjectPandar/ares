@@ -15,7 +15,7 @@ pub(super) use islands::FirstLayerIslands;
 pub(super) use islands::support_no_brim;
 mod first_layer;
 pub(super) use first_layer::{
-    first_layer_bounds, first_layer_convex_hull, first_layer_object_center,
+    export_object_footprint, first_layer_bounds, first_layer_convex_hull, first_layer_object_center,
 };
 
 pub(super) fn model_bounds(

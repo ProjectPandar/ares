@@ -165,6 +165,8 @@ pub struct GCodeProcessorResult {
     pub custom_gcode_times: Vec<CustomGCodeTime>,
     /// `GCodeProcessorResult::print_statistics` (`GCodeProcessor.hpp:118`).
     pub print_statistics: PrintEstimatedStatistics,
+    /// Normal-mode estimate of blocks on layer 1 (`GCodeProcessor.cpp:654–655,4016`).
+    pub initial_layer_time: f32,
     /// `GCodeProcessorResult::extruder_colors` — `filament_colour`
     /// config values, padded to `filaments_count` and defaulted to
     /// `#FF8000` (`GCodeProcessor::apply_config`,
