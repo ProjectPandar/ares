@@ -3,9 +3,13 @@ use std::{collections::BTreeMap, sync::Arc};
 use crate::{
     SliceError,
     fill::adaptive::octree::{self, Octree},
-    geometry::{ClipperError, ExPolygon, triangulate_expolygon_3d},
-    project_slice::perimeters::{
-        classic::traversal::types::PreparedPostClassicTraversal, types::RegionLayerIndex,
+    geometry::{ClipperError, CoordinateScale, ExPolygon, triangulate_expolygon_3d},
+    project_slice::{
+        perimeters::{
+            classic::traversal::types::PreparedPostClassicTraversal,
+            types::{PostPerimeterInputPrintObject, RegionLayerIndex},
+        },
+        prepare_infill::surface_type_detection::types::PreparedSurfaceTypeObject,
     },
 };
 
@@ -104,20 +108,13 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
             .entry(distance.to_bits())
             .or_insert_with(|| vec![false; layout.count + 1]);
         for (layer_index, islands) in islands.iter().enumerate() {
-            let slot = prelude.region_layer_record_index(RegionLayerIndex {
+            mark_layer_trees(
+                trees,
                 region_index,
                 layer_index,
-            });
-            if let Some(record) = &horizontal.records[slot] {
-                for fill in &record.fill_surfaces {
-                    let p = fill.as_parts().1.contour().points()[0];
-                    let body = layout
-                        .body_at(layer_index, islands, p, scale)
-                        .filter(|&id| !bodies[id].is_empty())
-                        .unwrap_or(layout.count);
-                    trees[body] = true;
-                }
-            }
+                islands,
+                (prelude, horizontal, &layout, &bodies, scale),
+            );
         }
     }
     let sets = to_build
@@ -128,18 +125,12 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
                 .enumerate()
                 .map(|(body, build)| {
                     build.then(|| {
-                        let mesh = if body == layout.count {
-                            &mesh
-                        } else {
-                            &bodies[body]
-                        };
-                        Arc::new(octree::build_octree(
-                            mesh.input(),
-                            &overhangs[body],
+                        build_tree(
+                            body,
+                            layout.count,
+                            (&mesh, &bodies, &overhangs),
                             f64::from_bits(distance),
-                            false,
-                            [0.0; 3],
-                        ))
+                        )
                     })
                 })
                 .collect();
@@ -148,6 +139,58 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
         .collect();
     assert!(spacing.body_trees.set(BodyTrees { layout, sets }).is_ok());
     Ok(())
+}
+
+fn mark_layer_trees(
+    trees: &mut [bool],
+    region_index: usize,
+    layer_index: usize,
+    islands: &[ExPolygon],
+    context: (
+        &PostPerimeterInputPrintObject,
+        &PreparedSurfaceTypeObject,
+        &BodyLayout,
+        &[Mesh],
+        CoordinateScale,
+    ),
+) {
+    let (prelude, horizontal, layout, bodies, scale) = context;
+    let slot = prelude.region_layer_record_index(RegionLayerIndex {
+        region_index,
+        layer_index,
+    });
+    let Some(record) = &horizontal.records[slot] else {
+        return;
+    };
+    for fill in &record.fill_surfaces {
+        let p = fill.as_parts().1.contour().points()[0];
+        let body = layout
+            .body_at(layer_index, islands, p, scale)
+            .filter(|&id| !bodies[id].is_empty())
+            .unwrap_or(layout.count);
+        trees[body] = true;
+    }
+}
+
+fn build_tree(
+    body: usize,
+    object_body: usize,
+    meshes: (&Mesh, &[Mesh], &[Vec<[f64; 3]>]),
+    spacing: f64,
+) -> Arc<Octree> {
+    let (mesh, bodies, overhangs) = meshes;
+    let mesh = if body == object_body {
+        mesh
+    } else {
+        &bodies[body]
+    };
+    Arc::new(octree::build_octree(
+        mesh.input(),
+        &overhangs[body],
+        spacing,
+        false,
+        [0.0; 3],
+    ))
 }
 
 pub(super) fn layer_islands(
