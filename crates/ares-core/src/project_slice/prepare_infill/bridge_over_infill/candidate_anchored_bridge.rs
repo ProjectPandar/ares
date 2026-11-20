@@ -1,12 +1,9 @@
-use crate::{
-    geometry::{
-        ClipperError, CoordinateScale, Line, Polygon, Polyline, intersection_open_polylines,
-        intersection_polygons_paths,
-    },
-    project_slice::perimeters::types::Flow,
+use crate::geometry::{
+    ClipperError, CoordinateScale, Line, Polygon, Polyline, intersection_open_polylines,
+    intersection_polygons_paths,
 };
 
-use super::anchored_polygon::construct_anchored_polygon;
+use super::anchored_polygon::{BridgeSampling, construct_anchored_polygon};
 
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct CandidateAnchoredBridge {
@@ -19,23 +16,17 @@ struct CandidateAnchoredBridgeInput<'a> {
     boundary_polylines: Vec<Polyline>,
     anchors: &'a [Polyline],
     lightning_area: &'a [Polygon],
-    bridging_flow: Flow,
+    sampling: BridgeSampling,
     bridging_angle: f64,
     scale: CoordinateScale,
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "mirrors the source candidate construction inputs without inventing ownership"
-)]
 pub(in crate::project_slice) fn construct_candidate_anchored_bridge(
     area_to_be_bridge: &[Polygon],
     boundary_polylines: Vec<Polyline>,
     anchors: &[Polyline],
     lightning_area: &[Polygon],
-    bridging_flow: Flow,
-    bridging_angle: f64,
-    scale: CoordinateScale,
+    (sampling, bridging_angle, scale): (BridgeSampling, f64, CoordinateScale),
 ) -> Result<CandidateAnchoredBridge, ClipperError> {
     construct_candidate_anchored_bridge_using(
         CandidateAnchoredBridgeInput {
@@ -43,7 +34,7 @@ pub(in crate::project_slice) fn construct_candidate_anchored_bridge(
             boundary_polylines,
             anchors,
             lightning_area,
-            bridging_flow,
+            sampling,
             bridging_angle,
             scale,
         },
@@ -67,20 +58,15 @@ where
     Closed: FnOnce(&[Polygon], &[Polygon]) -> Result<Vec<Polygon>, ClipperError>,
     Expand: FnOnce(&[Polygon], f32) -> Result<Vec<Polygon>, ClipperError>,
     Open: FnOnce(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>,
-    Construct: FnOnce(
-        &[Polygon],
-        &[Line],
-        Flow,
-        f64,
-        CoordinateScale,
-    ) -> Result<Vec<Polygon>, ClipperError>,
+    Construct:
+        FnOnce(&[Polygon], &[Line], f64, BridgeSampling, i64) -> Result<Vec<Polygon>, ClipperError>,
 {
     let CandidateAnchoredBridgeInput {
         area_to_be_bridge,
         mut boundary_polylines,
         anchors,
         lightning_area,
-        bridging_flow,
+        sampling,
         bridging_angle,
         scale,
     } = input;
@@ -96,13 +82,7 @@ where
     }
 
     let lines = to_lines(&boundary_polylines);
-    let bridging_area = construct(
-        area_to_be_bridge,
-        &lines,
-        bridging_flow,
-        bridging_angle,
-        scale,
-    )?;
+    let bridging_area = construct(area_to_be_bridge, &lines, bridging_angle, sampling, 0)?;
     Ok(CandidateAnchoredBridge {
         boundary_polylines,
         bridging_area,

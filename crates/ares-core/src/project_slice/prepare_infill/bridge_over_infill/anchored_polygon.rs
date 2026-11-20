@@ -9,15 +9,43 @@ use crate::{
 use sections::build_sections;
 use tracing::trace_sections;
 
+#[derive(Clone, Copy)]
+pub(in crate::project_slice) struct BridgeSampling {
+    pub(super) spacing: i64,
+    step: i64,
+    width: i64,
+    pub(super) restore_overlap: Option<i64>,
+}
+
+impl BridgeSampling {
+    pub(super) fn new(flow: Flow, scale: CoordinateScale, turning: bool) -> Self {
+        let spacing = scaled_flow_value(flow.spacing, scale);
+        let width = scaled_flow_value(flow.width, scale);
+        let (step, restore_overlap) = if turning {
+            // PrintObject.cpp:3624,3970: only turning patterns sample more finely.
+            (
+                (spacing / 4).max(1),
+                Some(width + scale.scaled_delta(1.0e-4) as i64),
+            )
+        } else {
+            (spacing, None)
+        };
+        Self {
+            spacing,
+            step,
+            width,
+            restore_overlap,
+        }
+    }
+}
+
 pub(in crate::project_slice) fn construct_anchored_polygon(
     bridged_area: &[Polygon],
     anchors: &[Line],
-    bridging_flow: Flow,
     bridging_angle: f64,
-    scale: CoordinateScale,
+    sampling: BridgeSampling,
+    anchor_overlap: i64,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let spacing = scaled_flow_value(bridging_flow.spacing, scale);
-    let width = scaled_flow_value(bridging_flow.width, scale);
     let aligning_angle = -bridging_angle + std::f64::consts::PI * 0.5;
     let cosine = aligning_angle.cos();
     let sine = aligning_angle.sin();
@@ -31,8 +59,8 @@ pub(in crate::project_slice) fn construct_anchored_polygon(
         .map(|line| rotate_line(line, cosine, sine))
         .collect::<Vec<_>>();
 
-    let sections = build_sections(&rotated_area, &rotated_anchors, spacing, width);
-    let traced = trace_sections(&sections, spacing);
+    let sections = build_sections(&rotated_area, &rotated_anchors, sampling, anchor_overlap);
+    let traced = trace_sections(&sections, sampling);
     let mut expanded = union_safety_offset_polygons(&traced)?;
     let inverse_cosine = (-aligning_angle).cos();
     let inverse_sine = (-aligning_angle).sin();

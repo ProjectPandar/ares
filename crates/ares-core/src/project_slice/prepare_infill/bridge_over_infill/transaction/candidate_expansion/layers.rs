@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    OrcaFloats, SliceError,
+    OrcaFloats, ProcessInfillPattern, SliceError,
     geometry::{CoordinateScale, Polyline},
     project_slice::{
         perimeters::{
@@ -21,7 +21,7 @@ use crate::{
 };
 
 use super::super::super::{
-    anchored_polygon::scaled_flow_value,
+    anchored_polygon::{BridgeSampling, scaled_flow_value},
     candidate_anchored_bridge::construct_candidate_anchored_bridge,
     candidate_boundary_polylines::prepare_candidate_boundary_polylines,
     candidate_bridge_angle::{CandidateBridgeAngleInput, determine_candidate_bridge_angle},
@@ -265,7 +265,12 @@ pub(super) fn prepare_candidates(
         .expect("candidate retains its source input");
         let region = prelude.region_options(input);
         let flow = resolve_thick_solid_infill_bridge_flow(region, nozzles)?;
-        let scaled_spacing = scaled_flow_value(flow.spacing, scale);
+        let turning = matches!(
+            region.sparse_infill_pattern,
+            ProcessInfillPattern::HilbertCurve | ProcessInfillPattern::OctagramSpiral
+        );
+        let sampling = BridgeSampling::new(flow, scale, turning);
+        let scaled_spacing = sampling.spacing;
         let area = prepare_candidate_bridge_area(CandidateBridgeAreaInput {
             candidate_polygons: &candidate.new_polygons,
             deep_infill_area: &deep_infill_area,
@@ -302,28 +307,21 @@ pub(super) fn prepare_candidates(
             boundaries,
             &anchors,
             &lightning_area,
-            flow,
-            angle,
-            scale,
+            (sampling, angle, scale),
         )
         .map_err(geometry_error)?;
         let collision = reconstruct_candidate_bridge_collision(
             &area.area_to_be_bridge,
             initial,
-            flow,
-            angle,
+            (sampling, angle),
             &completed,
-            scale,
         )
         .map_err(geometry_error)?;
         let postprocessed = postprocess_candidate_bridge(
             collision,
             expansion_area,
-            &area.limiting_area,
-            &total_fill_area,
-            &total_top_area,
-            flow,
-            scale,
+            (&area.limiting_area, &total_fill_area, &total_top_area),
+            sampling,
         )
         .map_err(geometry_error)?;
         expansion_area =
