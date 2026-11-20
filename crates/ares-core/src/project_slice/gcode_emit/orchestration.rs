@@ -1,14 +1,15 @@
+mod archive;
 mod tower;
 
 use super::*;
-use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
+use crate::project_slice::{ArchivePlate, island_print_order::PreparedPostIslandPrintOrder};
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    (metadata, record_moves): (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
     let traversal = &prepared
         .predecessor
@@ -373,11 +374,15 @@ pub(in crate::project_slice) fn emit(
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
-    super::orchestration_finish::finish(
+    let result = super::orchestration_finish::finish(
         output,
         &state,
         traversal,
         &nozzle_groups,
         (record_moves, tower_statistics),
-    )
+    )?;
+    if let Some(archive) = archive {
+        *archive = Some(archive::archive_facts(traversal, &schedule, &brim)?);
+    }
+    Ok(result)
 }

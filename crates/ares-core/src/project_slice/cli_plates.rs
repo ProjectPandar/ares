@@ -134,10 +134,10 @@ pub fn slice_cli_project_plates(
         for (plate, state, mut plate_report) in applied {
             current = plate;
             let result = slice_plate(
-                metadata,
-                false,
+                (metadata, false),
                 &mut context,
                 Some(&mut plate_report),
+                None,
                 |_, context| {
                     perimeters::prepare_post_layer_region_perimeters(
                         PlateInput::Applied(Box::new(state)),

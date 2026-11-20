@@ -4,10 +4,59 @@ use super::FirstLayerBounds;
 use crate::{
     geometry::{CoordinateScale, Point},
     project_slice::{
-        gcode_emit::{brim::BrimPlan, skirt::SkirtPlan},
+        gcode_emit::{brim::BrimPlan, layers::Schedule, skirt::SkirtPlan},
         perimeters::classic::traversal::PreparedPostClassicTraversal,
     },
 };
+
+pub(in crate::project_slice::gcode_emit) struct ObjectFootprint {
+    pub bounds: [f64; 4],
+    pub area: f32,
+    pub layer_height: f32,
+}
+
+/// `Print.cpp:3197–3218`: merge the first layer's slice boxes in plate
+/// coordinates, unless make_brim recorded a defined object box.
+pub(in crate::project_slice::gcode_emit) fn export_object_footprint(
+    traversal: &PreparedPostClassicTraversal,
+    schedule: &Schedule,
+    brim: Option<&BrimPlan>,
+) -> Option<ObjectFootprint> {
+    let [prepared] = traversal.objects.as_slice() else {
+        return None;
+    };
+    let [copies] = schedule.instances.as_slice() else {
+        return None;
+    };
+    let [copy] = copies.as_slice() else {
+        return None;
+    };
+    let object = &prepared
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let first_slice = object.object.as_parts().1.first()?;
+    let first_record = prepared.records.iter().flatten().next()?;
+    let (plate_x, plate_y) = traversal.project.plate_origin();
+    let scale = traversal.scale;
+    let mut bounds = None;
+    for polygon in first_slice {
+        include_points(polygon.contour().points(), copy.shift, scale, &mut bounds);
+    }
+    let (x0, y0, x1, y1) = brim
+        .and_then(|brim| brim.covered_bounds(scale))
+        .or(bounds)?;
+    let scaled_area = first_slice.iter().fold(0_f32, |area, polygon| {
+        (f64::from(area) + polygon.area()) as f32
+    });
+    Some(ObjectFootprint {
+        bounds: [x0 - plate_x, y0 - plate_y, x1 - plate_x, y1 - plate_y],
+        area: (f64::from(scaled_area) * scale.factor().powi(2)) as f32,
+        layer_height: first_record.layer_height as f32,
+    })
+}
 
 pub(in crate::project_slice::gcode_emit) fn first_layer_bounds(
     traversal: &PreparedPostClassicTraversal,
