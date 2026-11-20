@@ -44,6 +44,8 @@ mod cli_mtcpp;
 mod cli_no_check;
 #[path = "cli_no_check_support_warning.rs"]
 mod cli_no_check_support_warning;
+#[path = "cli_path_conflict.rs"]
+mod cli_path_conflict;
 #[path = "cli_saved_load_settings_remap.rs"]
 mod cli_saved_load_settings_remap;
 #[path = "cli_sparse_filament_slots.rs"]
