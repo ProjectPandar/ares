@@ -93,6 +93,9 @@ mod mk4_tree_support_default_seam_anchor;
 #[path = "tree_raft_without_support.rs"]
 mod tree_raft_without_support;
 
+#[path = "organic_support_first_layer.rs"]
+mod organic_support_first_layer;
+
 #[path = "spiral_hole_projected_split.rs"]
 mod spiral_hole_projected_split;
 
