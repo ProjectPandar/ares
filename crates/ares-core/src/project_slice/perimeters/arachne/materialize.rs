@@ -193,11 +193,11 @@ fn materialize_record(
         // (`PerimeterGenerator.cpp:2466`).
         let loop_number = generated.toolpaths.len() as i32 - 1;
         let ordered = order_walls(&generated.toolpaths, config.outer_wall_first);
-        // Inner-outer-inner sandwich reordering (`PerimeterGenerator.cpp:2374-2464`):
+        // Inner-outer-inner sandwich reordering (`PerimeterGenerator.cpp:2999-3094`):
         // after the topological sort, gated on layer (skipped on layer 0) and
         // wall count (3 minimum). The proximity thresholds derive from the
         // flow spacings — precise-outer-wall is forced off for this sequence
-        // (`PerimeterGenerator.cpp:2409-2417`), so the external threshold is
+        // (`PerimeterGenerator.cpp:2718,3015-3023`), so the external threshold is
         // the half-spacing sum.
         let ordered = if region.wall_sequence == crate::ProcessWallSequence::InnerOuterInner
             && input.layer_id > 0
