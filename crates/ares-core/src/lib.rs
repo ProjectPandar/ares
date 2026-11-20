@@ -116,7 +116,9 @@ pub use plater::{
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};
 pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
-pub use project_slice::option_stl::{slice_stl_named_validated, slice_stl_validated};
+pub use project_slice::option_stl::{
+    slice_cli_stl_with_defaults, slice_stl_named_validated, slice_stl_validated,
+};
 
 pub use profiles::Placement;
 pub use profiles::{
@@ -127,8 +129,8 @@ pub use profiles::{
     ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
     SelectablePrinter, compose_profile_fragments, filter_compatible_presets, guide_models,
     merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
-    slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
-    validate_load_settings_input, validate_with_profiles,
+    slice_stl_files_with_load_settings, slice_with_load_settings, slice_with_profiles,
+    slice_with_profiles_processed, validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,

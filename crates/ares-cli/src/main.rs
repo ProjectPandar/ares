@@ -1,5 +1,6 @@
 mod args;
 mod compatible_machine;
+mod direct_stl;
 mod failure;
 mod load_settings;
 mod moves_csv;
@@ -17,8 +18,12 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let Commands::Slice(args) = Cli::parse().command;
-    if let Err(failure) = run_slice(args).await {
+    let cli = Cli::parse();
+    let result = match cli.command {
+        Some(Commands::Slice(args)) => run_slice(args).await,
+        None => direct_stl::run(cli.direct).await,
+    };
+    if let Err(failure) = result {
         failure.report();
     }
 }

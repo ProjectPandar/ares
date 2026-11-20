@@ -3,15 +3,40 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "ares")]
+#[command(
+    name = "ares",
+    args_conflicts_with_subcommands = true,
+    subcommand_negates_reqs = true
+)]
 pub(crate) struct Cli {
     #[command(subcommand)]
-    pub(crate) command: Commands,
+    pub(crate) command: Option<Commands>,
+    #[command(flatten)]
+    pub(crate) direct: DirectSliceArgs,
 }
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     Slice(SliceArgs),
+}
+
+#[derive(clap::Args)]
+pub(crate) struct DirectSliceArgs {
+    /// Slice all plates (0) or the given one-based plate number.
+    #[arg(long = "slice", required = true, allow_negative_numbers = true)]
+    pub(crate) selection: Option<i32>,
+    /// Directory for plate_<n>.gcode and the slice result.
+    #[arg(long, required = true)]
+    pub(crate) outputdir: Option<PathBuf>,
+    #[arg(long)]
+    pub(crate) load_settings: Option<String>,
+    #[arg(long)]
+    pub(crate) load_filaments: Option<String>,
+    /// Preserve the input model positions (0).
+    #[arg(long, value_parser = clap::value_parser!(u8).range(0..=0))]
+    pub(crate) arrange: Option<u8>,
+    #[arg(required = true)]
+    pub(crate) inputs: Vec<PathBuf>,
 }
 
 #[derive(Parser)]
