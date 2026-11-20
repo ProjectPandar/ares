@@ -167,9 +167,12 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
   }
 
-  // Preview opens fitted to the objects.
+  // Preview opens fitted to the objects. Viewport.setToolpaths sets data-segment-sizes in the task that requests the
+  // frame drawing the fitted toolpaths (data-drawing, Viewport.render): with both, the canvas holds that frame.
   await page.getByRole("link", { name: "Preview" }).click();
-  await expect.poll(() => modelCoverage(page)).toBeGreaterThan(plateCoverage * 4);
+  await expect(viewport).toHaveAttribute("data-segment-sizes", { timeout: 60_000 });
+  await expect(viewport).not.toHaveAttribute("data-drawing", { timeout: 60_000 });
+  expect(await modelCoverage(page)).toBeGreaterThan(plateCoverage * 4);
   await page.screenshot({ path: `${artifacts}preview-fit.png` });
 
   writeFileSync(
