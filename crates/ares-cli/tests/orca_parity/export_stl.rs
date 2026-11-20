@@ -211,7 +211,7 @@ fn export(
     entries
 }
 
-fn write_native_presets(dir: &Path) {
+pub(super) fn write_native_presets(dir: &Path) {
     let printer = "Bambu Lab X1 Carbon 0.4 nozzle";
     let profiles =
         VendorProfiles::load(&repo_root().join("OrcaSlicer/resources/profiles"), "BBL").unwrap();
@@ -243,7 +243,7 @@ fn write_native_presets(dir: &Path) {
     }
 }
 
-fn synthetic_stl() -> Vec<u8> {
+pub(super) fn synthetic_stl() -> Vec<u8> {
     let mut model = vec![b'X'; 80];
     model.extend(4_u32.to_le_bytes());
     for face in FACE {
@@ -256,7 +256,7 @@ fn synthetic_stl() -> Vec<u8> {
     model
 }
 
-fn synthetic_3mf(dirty: bool, open: bool) -> Vec<u8> {
+pub(super) fn synthetic_3mf(dirty: bool, open: bool) -> Vec<u8> {
     let mut xml = String::from(
         r#"<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources>"#,
     );

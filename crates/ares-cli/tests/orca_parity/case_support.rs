@@ -17,6 +17,8 @@ mod export_3mf;
 
 #[path = "export_stl.rs"]
 mod export_stl;
+#[path = "export_stls_multi_input.rs"]
+mod export_stls_multi_input;
 
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
