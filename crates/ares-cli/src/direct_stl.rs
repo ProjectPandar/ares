@@ -133,7 +133,9 @@ pub(super) async fn run(
     } else {
         None
     };
-    let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
+    let context = SlicerContext::new(0)
+        .with_max_triangle_count(args.mtcpp.unwrap_or_default())
+        .with_no_check(args.no_check);
     let mut export_after = None;
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {

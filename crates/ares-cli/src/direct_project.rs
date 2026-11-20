@@ -64,7 +64,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             sliced_plate: &mut sliced_plate,
         },
         GenerationMetadata::default(),
-        SlicerContext::new(0),
+        SlicerContext::new(0).with_no_check(args.no_check),
     )
     .await
     .map_err(|error| {
