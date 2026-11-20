@@ -113,6 +113,9 @@ fn extruder_variant_string(
     let nozzle_volume_type = match nozzle_volume_type {
         "Standard" => "Standard",
         "High Flow" => "High Flow",
+        "TPU High Flow" => "TPU High Flow",
+        "E3D High Flow" => "E3D High Flow",
+        "Extra High Flow" => "Extra High Flow",
         _ => {
             return Err(SliceError::InvalidInput(
                 "nozzle_volume_type has unknown enum value".to_owned(),
