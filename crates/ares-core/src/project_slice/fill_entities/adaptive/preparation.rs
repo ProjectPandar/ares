@@ -1,4 +1,4 @@
-//! PrintObject.cpp:972-1007/2728-2735: original bridge input and shared tree.
+//! PrintObject.cpp:1169-1256,3357-3364: octree sets and original bridge input.
 use crate::{
     ProcessInfillPattern,
     fill::adaptive::OctreeKind,
@@ -16,8 +16,8 @@ use crate::{
 };
 
 pub(in crate::project_slice) struct ObjectSpacing {
-    pub(in crate::project_slice) adaptive: Vec<f64>,
-    pub(in crate::project_slice) support: f64,
+    adaptive: Vec<f64>,
+    support: Vec<f64>,
     pub(super) body_trees: std::sync::OnceLock<super::body_trees::BodyTrees>,
 }
 
@@ -29,9 +29,22 @@ impl ObjectSpacing {
     ) -> f64 {
         match pattern {
             ProcessInfillPattern::AdaptiveCubic => self.adaptive[region_id],
-            ProcessInfillPattern::SupportCubic => self.support,
+            ProcessInfillPattern::SupportCubic => self.support[region_id],
             _ => unreachable!("spacing is only defined for adaptive patterns"),
         }
+    }
+
+    pub(super) fn active_sets(&self) -> impl Iterator<Item = (usize, (u64, bool))> + '_ {
+        [(&self.adaptive, false), (&self.support, true)]
+            .into_iter()
+            .flat_map(|(regions, support)| {
+                regions
+                    .iter()
+                    .enumerate()
+                    .filter_map(move |(region, &spacing)| {
+                        (spacing > 0.0).then_some((region, (spacing.to_bits(), support)))
+                    })
+            })
     }
 }
 
@@ -48,14 +61,14 @@ pub(in crate::project_slice) fn object_spacings(
         .map(|region| region.as_parts().1)
         .collect::<Vec<_>>();
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
-    ObjectSpacing {
-        // FillAdaptive.cpp:304-323 / PrintObject.cpp:1169-1190.
-        adaptive: region_options
+    // FillAdaptive.cpp:304-323 / PrintObject.cpp:1169-1189.
+    let spacings = |pattern| {
+        region_options
             .iter()
             .enumerate()
             .map(|(region_id, region)| {
                 if active.contains(&region_id)
-                    && region.sparse_infill_pattern == ProcessInfillPattern::AdaptiveCubic
+                    && region.sparse_infill_pattern == pattern
                     && region.sparse_infill_density.0 > 0.0
                 {
                     super::line_spacing::configured(region, nozzles, region.fill_multiline.0)
@@ -63,14 +76,12 @@ pub(in crate::project_slice) fn object_spacings(
                     0.0
                 }
             })
-            .collect(),
+            .collect()
+    };
+    ObjectSpacing {
+        adaptive: spacings(ProcessInfillPattern::AdaptiveCubic),
+        support: spacings(ProcessInfillPattern::SupportCubic),
         body_trees: std::sync::OnceLock::new(),
-        support: super::line_spacing::object_configured(
-            &region_options,
-            nozzles,
-            ProcessInfillPattern::SupportCubic,
-            &active,
-        ),
     }
 }
 
@@ -112,7 +123,9 @@ pub(in crate::project_slice) fn prepare_octrees(
     context: SupportPreparation<'_>,
 ) -> Result<(), crate::SliceError> {
     super::body_trees::prepare(&context)?;
-    prepare_support(context);
+    if context.spacing.body_trees.get().is_none() {
+        prepare_support(context);
+    }
     Ok(())
 }
 
@@ -126,8 +139,14 @@ fn prepare_support(context: SupportPreparation<'_>) {
         spacing,
     } = context;
     let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
-    let spacing = spacing.support;
-    if spacing == 0.0 {
+    let spacings = spacing
+        .support
+        .iter()
+        .copied()
+        .filter(|&spacing| spacing > 0.0)
+        .map(f64::to_bits)
+        .collect::<std::collections::BTreeSet<_>>();
+    if spacings.is_empty() {
         return;
     }
     let mut triangles = Vec::new();
@@ -152,16 +171,17 @@ fn prepare_support(context: SupportPreparation<'_>) {
             traversal.scale,
         ));
     }
-    traversal.adaptive_octrees.get_or_build(
-        (object_index, spacing.to_bits(), OctreeKind::Support),
-        || {
-            super::build_object_octree(
-                traversal,
-                object_index,
-                spacing,
-                OctreeKind::Support,
-                &triangles,
-            )
-        },
-    );
+    for bits in spacings {
+        traversal
+            .adaptive_octrees
+            .get_or_build((object_index, bits, OctreeKind::Support), || {
+                super::build_object_octree(
+                    traversal,
+                    object_index,
+                    f64::from_bits(bits),
+                    OctreeKind::Support,
+                    &triangles,
+                )
+            });
+    }
 }
