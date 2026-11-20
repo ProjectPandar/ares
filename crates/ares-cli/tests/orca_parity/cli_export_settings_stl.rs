@@ -171,7 +171,12 @@ fn run(bin: &Path, root: &Path, engine: &str, args: &[&str]) -> Artifacts {
     let tmp = work.join("tmp");
     fs::create_dir_all(&out).unwrap();
     fs::create_dir(&tmp).unwrap();
-    let result = Command::new(bin)
+    let mut command = Command::new(bin);
+    if engine == "native" {
+        // Keep the Native diagnostic sink outside the directory under inventory.
+        command.arg("--logfile").arg(work.join("native.log"));
+    }
+    let result = command
         .current_dir(&cwd)
         .env("TMPDIR", tmp)
         .env("ORCA_250_JOB_APPDIR", work.join("app"))
