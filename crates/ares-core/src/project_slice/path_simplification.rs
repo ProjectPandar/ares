@@ -40,13 +40,20 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     }
 }
 
+// OrcaSlicer libslic3r.h:91–92, in millimeters.
+pub(super) const SUPPORT_RESOLUTION: f64 = 0.0375;
+
 pub(in crate::project_slice) fn simplify_support_layers(
     layers: &mut [Vec<super::support_material::InstalledSupportLayer>],
     scale: CoordinateScale,
     tolerance: f64,
     arc_fitting: bool,
 ) {
-    let support_tolerance = if arc_fitting { 0.0375 } else { tolerance };
+    let support_tolerance = if arc_fitting {
+        SUPPORT_RESOLUTION
+    } else {
+        tolerance
+    };
     for entity in layers
         .iter_mut()
         .flat_map(|layers| layers.iter_mut())
