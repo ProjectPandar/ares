@@ -1,6 +1,7 @@
 mod args;
 mod assembly;
 mod compatible_machine;
+mod direct_project;
 mod direct_stl;
 mod export_3mf;
 mod export_stl;
@@ -15,6 +16,7 @@ mod project_presets;
 mod result_json;
 mod settings_export;
 mod slice_plates;
+mod statistics;
 
 use std::fs;
 use std::io;

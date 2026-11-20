@@ -51,6 +51,9 @@ pub(crate) struct DirectSliceArgs {
     /// Directory for plate_<n>.gcode and the slice result.
     #[arg(long)]
     pub(crate) outputdir: Option<PathBuf>,
+    /// Write a statistics JSON sidecar for each sliced plate.
+    #[arg(long)]
+    pub(crate) export_statistics: bool,
     #[arg(long)]
     pub(crate) load_settings: Option<String>,
     #[arg(long)]

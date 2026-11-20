@@ -119,7 +119,8 @@ pub use profiles::entry::slice_assembly;
 pub use project::assembly::{Assembly, AssemblyError, AssemblyFile, AssemblyList};
 pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
 pub use project_slice::option_stl::{
-    slice_cli_stl_with_defaults, slice_stl_named_validated, slice_stl_validated,
+    slice_cli_stl_with_defaults, slice_cli_stl_with_defaults_processed, slice_stl_named_validated,
+    slice_stl_validated,
 };
 
 pub use profiles::LoadedPresetSources;
@@ -132,9 +133,10 @@ pub use profiles::{
     ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
     SelectablePrinter, SourceIdentity, compose_profile_fragments, filter_compatible_presets,
     guide_models, merge_profile_fragments, parse_preset_bundle, profile_placed_project,
-    profile_settings, slice_stl_files_with_load_settings, slice_with_load_settings,
-    slice_with_profiles, slice_with_profiles_processed, validate_load_settings_input,
-    validate_with_profiles,
+    profile_settings, slice_stl_files_with_load_settings,
+    slice_stl_files_with_load_settings_processed, slice_with_load_settings,
+    slice_with_load_settings_processed, slice_with_profiles, slice_with_profiles_processed,
+    validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{NativeRefreshFile, NativeRefreshPresets, slice_with_load_settings_and_refresh};
 pub use profiles::{
