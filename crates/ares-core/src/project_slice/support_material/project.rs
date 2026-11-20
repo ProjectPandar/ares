@@ -206,7 +206,7 @@ pub(in crate::project_slice) fn generate(
             slicing.layer_height,
         )?;
         let mut parameters =
-            ToolpathParameters::new(object, slicing, &flows, &original_extruders[resolved_index]);
+            ToolpathParameters::new(object, slicing, &flows, &original_extruders[resolved_index])?;
         if organic {
             parameters.with_sheath = true;
         }

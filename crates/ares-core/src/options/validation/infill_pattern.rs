@@ -65,6 +65,7 @@ fn is_active_surface_infill_pattern(pattern: &str) -> bool {
             | "rectilinear"
             | "alignedrectilinear"
             | "concentric"
+            | "spiralinset"
             | "hilbertcurve"
             | "archimedeanchords"
             | "octagramspiral"

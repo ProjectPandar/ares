@@ -55,6 +55,7 @@ fn line_based(pattern: SurfaceFillPattern) -> bool {
             | ProcessInfillPattern::TpmsFk
             | ProcessInfillPattern::Gyroid
             | ProcessInfillPattern::Concentric
+            | ProcessInfillPattern::SpiralInset
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords
             | ProcessInfillPattern::OctagramSpiral,
