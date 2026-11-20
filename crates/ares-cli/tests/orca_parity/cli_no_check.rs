@@ -128,7 +128,12 @@ fn compare(name: &str, actions: &[&str], invalid: bool, detailed: bool) {
     }
 }
 
-fn run(bin: &Path, root: &Path, engine: &str, argv: &[OsString]) -> std::process::Output {
+pub(super) fn run(
+    bin: &Path,
+    root: &Path,
+    engine: &str,
+    argv: &[OsString],
+) -> std::process::Output {
     let run = root.join(engine);
     let cwd = root.join("cwd");
     let tmp = run.join("tmp");
@@ -149,7 +154,7 @@ fn run(bin: &Path, root: &Path, engine: &str, argv: &[OsString]) -> std::process
     output
 }
 
-fn inventory(cwd: &Path) -> Vec<String> {
+pub(super) fn inventory(cwd: &Path) -> Vec<String> {
     fn visit(cwd: &Path, dir: &Path, paths: &mut Vec<String>) {
         for entry in fs::read_dir(dir).unwrap() {
             let entry = entry.unwrap();
@@ -169,7 +174,7 @@ fn inventory(cwd: &Path) -> Vec<String> {
     paths
 }
 
-fn gcode(cwd: &Path) -> Vec<u8> {
+pub(super) fn gcode(cwd: &Path) -> Vec<u8> {
     fs::read(cwd.join("out/plate_1.gcode"))
         .unwrap()
         .split_inclusive(|byte| *byte == b'\n')
