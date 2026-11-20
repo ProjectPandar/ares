@@ -71,6 +71,8 @@ mod absolute_e_reset_comment;
 
 #[path = "cli_convert_unit.rs"]
 mod cli_convert_unit;
+#[path = "cli_load_defaultfila.rs"]
+mod cli_load_defaultfila;
 #[path = "cli_strict.rs"]
 mod cli_strict;
 #[path = "concentric_thick_polyline_rotation.rs"]
