@@ -152,6 +152,7 @@ pub async fn slice_project_plate_with_catalog(
             orient: false,
             upward: None,
             sliced_plate: None,
+            max_triangle_count: 0,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -194,6 +195,7 @@ pub async fn slice_project_plate_processed_with_catalog(
             orient: false,
             upward: None,
             sliced_plate: None,
+            max_triangle_count: 0,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -219,6 +221,7 @@ pub(crate) fn slice_source(
             perimeters::prepare_post_layer_region_perimeters(
                 ProjectSource {
                     sliced_plate: report,
+                    max_triangle_count: context.max_triangle_count,
                     ..project
                 },
                 context,

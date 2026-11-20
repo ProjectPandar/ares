@@ -78,6 +78,7 @@ pub fn slice_cli_project_plates(
     let mut loaded_report = SlicedPlate::default();
     let run = |source_input: ProjectSource<'_>| {
         let source_input = ProjectSource {
+            max_triangle_count: 0,
             orient,
             validate_print: true,
             ..source_input
@@ -89,6 +90,7 @@ pub fn slice_cli_project_plates(
             profile_entry::load_profile_slice(&source_input, profile, Some(upward_report))?
         } else {
             state::load_project_source(ProjectSource {
+                max_triangle_count: 0,
                 upward: Some(CliUpwardMachine {
                     source,
                     input: upward_input,
@@ -121,7 +123,7 @@ pub fn slice_cli_project_plates(
             let state = state::apply_plate(
                 view,
                 selected_printer,
-                true,
+                (true, 0),
                 Some((&preparation, overrides)),
             )?;
             let mut report = SlicedPlate::default();
@@ -152,6 +154,7 @@ pub fn slice_cli_project_plates(
         .validate_cli_config()
         .and_then(|()| match settings {
             CliPlatesSettings::Embedded { system_catalog } => run(ProjectSource {
+                max_triangle_count: 0,
                 plate: selected,
                 overrides,
                 system_catalog,

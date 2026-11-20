@@ -19,6 +19,7 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
     /// The CLI's success report values, filled once the plate is set up.
     pub(crate) sliced_plate: Option<&'a mut SlicedPlate>,
+    pub(crate) max_triangle_count: i32,
     /// Plater edits applied to the loaded model (empty for a plain slice).
     pub(crate) edits: &'a crate::plater::PlaterEdits,
 }
@@ -219,6 +220,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             orient: false,
             upward: None,
             sliced_plate: None,
+            max_triangle_count: 0,
             edits: &crate::plater::NO_EDITS,
         }
     }
