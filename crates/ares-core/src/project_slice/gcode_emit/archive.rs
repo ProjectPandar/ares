@@ -34,7 +34,7 @@ pub(super) fn facts(
         layer_count: schedule.layer_count(),
         filament_color: setting("filament_colour"),
         filament_type: setting("filament_type"),
-        filament_id: setting("filament_id"),
+        filament_id: setting("filament_ids"),
         nozzle_diameter,
         project_settings: settings.clone(),
     })
