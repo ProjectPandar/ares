@@ -1,6 +1,6 @@
 //! Adapter orchestration of `Print.hpp:911,935`: apply once, validate, process.
 use super::source::CliUpwardMachine;
-use super::{ProjectSource, slice_source};
+use super::{ProjectSource, slice_source, slice_source_with_archive};
 use crate::{
     ConfigOverrides, GenerationMetadata, Project, SliceError, SlicerContext,
     gcode_processor::ProcessedGCode,
@@ -128,4 +128,35 @@ pub async fn slice_project_plate_processed_validated(
         true,
         context,
     )
+}
+
+pub async fn slice_project_plate_with_archive(
+    input: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+    overrides: &ConfigOverrides,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
+    overrides.validate_cli_config()?;
+    let mut archive = None;
+    let processed = slice_source_with_archive(
+        ProjectSource {
+            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
+            plate,
+            profile: None,
+            refresh: None,
+            overrides,
+            validate_print: true,
+            validate_config: true,
+            orient: false,
+            upward: None,
+            sliced_plate: None,
+            edits: &crate::plater::NO_EDITS,
+        },
+        metadata,
+        false,
+        context,
+        Some(&mut archive),
+    )?;
+    Ok(processed)
 }

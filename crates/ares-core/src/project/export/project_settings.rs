@@ -37,6 +37,12 @@ pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceE
     }
     // `CLI::run` overlays the dynamic config on `FullPrintConfig` and
     // applies it back (`OrcaSlicer.cpp:4252–4256`) before persisting JSON.
+    write_raw(&raw)
+}
+
+pub(super) fn write_raw(
+    raw: &crate::project::raw_settings::ProjectSettingsRaw,
+) -> Result<Vec<u8>, SliceError> {
     let mut output = BTreeMap::new();
     for def in option_definitions() {
         let value = match raw.get(def.key) {

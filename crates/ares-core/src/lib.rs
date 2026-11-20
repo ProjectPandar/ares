@@ -110,6 +110,7 @@ pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub(crate) use gap_fills::{SolidSurfaceGapFillInput, append_solid_surface_gap_fills};
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
+    SlicedArchive,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,
@@ -199,8 +200,8 @@ pub use profiles::{
     ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
     SelectablePrinter, compose_profile_fragments, filter_compatible_presets, guide_models,
     merge_profile_fragments, parse_preset_bundle, profile_placed_project, profile_settings,
-    slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
-    validate_load_settings_input, validate_with_profiles,
+    slice_with_load_settings, slice_with_load_settings_archive, slice_with_profiles,
+    slice_with_profiles_processed, validate_load_settings_input, validate_with_profiles,
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
@@ -210,16 +211,17 @@ pub use profiles::{
     slice_cli_with_profiles_validated, slice_with_profiles_processed_validated,
     slice_with_profiles_validated,
 };
-pub use project::export_3mf;
 pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, LayerConfigRange, PlateMetadata, Point3d,
     Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
     ProjectVolumeType, Transform3d, UpwardMachineInput, UpwardMachineSource, load_project,
     project_config_substitutions,
 };
+pub use project::{export_3mf, export_sliced_3mf};
 pub use project_slice::{
     CliProjectSliceRequest, CliUpwardMachine, SlicedPlate, slice_cli_project_plate_validated,
     slice_project_plate_processed_validated, slice_project_plate_validated,
+    slice_project_plate_with_archive,
 };
 pub use project_slice::{slice_project, slice_project_plate, slice_project_plate_processed};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};

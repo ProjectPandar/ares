@@ -20,7 +20,7 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 async fn main() {
     let Commands::Slice(mut args) = Cli::parse().command;
     if let Some(output) = &args.export_3mf {
-        if let Err(failure) = export_3mf::run(&args, output) {
+        if let Err(failure) = export_3mf::run(&args, output).await {
             failure.report();
         }
         return;

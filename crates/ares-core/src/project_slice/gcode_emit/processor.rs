@@ -335,6 +335,7 @@ pub(super) fn process(
             gcode,
             result: processor_result,
             print_statistics,
+            archive: None,
         },
         estimate.printable_area,
     )

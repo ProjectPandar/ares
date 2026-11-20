@@ -1,7 +1,8 @@
+mod archive;
 mod tower;
 
 use super::*;
-use crate::project_slice::{ArchivePlate, island_print_order::PreparedPostIslandPrintOrder};
+use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
@@ -29,6 +30,10 @@ pub(in crate::project_slice) fn emit(
         &tower_exclusions,
         |index| &prepared.objects[index][0].tool_regions,
     )?;
+    let archive_facts = archive
+        .is_some()
+        .then(|| archive::facts(traversal, &schedule, &brim))
+        .transpose()?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         let [x, y] = wipe_tower::plate_position(traversal);
         let origin = traversal.project.plate_origin();
@@ -349,39 +354,33 @@ pub(in crate::project_slice) fn emit(
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
-    let result = super::orchestration_finish::finish(
+    let mut result = super::orchestration_finish::finish(
         output,
         &state,
         traversal,
         &nozzle_groups,
         record_moves,
     )?;
-    if let Some(archive) = archive {
-        *archive = Some(archive_facts(traversal, &schedule, &brim)?);
-    }
+    let sliced_archive = archive_facts
+        .map(|facts| {
+            Ok(crate::SlicedArchive {
+                object_name: facts.object_name,
+                plate_id: facts.plate_id,
+                identify_id: facts.identify_id,
+                bounds: facts.bounds,
+                area: facts.area,
+                layer_height: facts.layer_height,
+                layer_count: facts.layer_count,
+                filament_color: facts.filament_color,
+                filament_type: facts.filament_type,
+                filament_id: facts.filament_id,
+                nozzle_diameter: facts.nozzle_diameter,
+                project_settings: crate::project::export::write_project_settings_raw(
+                    &facts.project_settings,
+                )?,
+            })
+        })
+        .transpose()?;
+    result.archive = sliced_archive;
     Ok(result)
-}
-
-fn archive_facts(
-    traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
-    schedule: &layers::Schedule,
-    brim: &[Option<brim::BrimPlan>],
-) -> Result<ArchivePlate, SliceError> {
-    let footprint = footprint::export_object_footprint(
-        traversal,
-        schedule,
-        brim.first().and_then(Option::as_ref),
-    )
-    .ok_or_else(|| {
-        SliceError::InvalidInput("sliced 3MF requires one printable object instance".into())
-    })?;
-    Ok(ArchivePlate {
-        object_name: traversal.project.objects()[0].name().to_owned(),
-        identify_id: schedule.instances[0][0].label_id,
-        bounds: footprint.bounds,
-        area: footprint.area,
-        layer_height: footprint.layer_height,
-        layer_count: schedule.layer_count(),
-        project_settings: traversal.project.documents().project_settings_raw.clone(),
-    })
 }

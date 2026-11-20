@@ -52,6 +52,7 @@ pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, slice_cli_project_plate_validated,
     slice_project_plate_processed_validated, slice_project_plate_validated,
+    slice_project_plate_with_archive,
 };
 
 /// Loads the project for a selected-profile request without slicing it —
