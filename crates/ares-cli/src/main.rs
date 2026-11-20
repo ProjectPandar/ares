@@ -1,6 +1,7 @@
 mod args;
 mod assembly;
 mod compatible_machine;
+mod direct_stl;
 mod export_3mf;
 mod export_stl;
 mod failure;
@@ -19,33 +20,33 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use args::{Cli, Commands, SliceArgs};
+use args::{Cli, Commands, SliceArgs, require_single_input};
 use clap::Parser;
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let result = match Cli::parse() {
-        Cli {
-            command: Some(Commands::Slice(args)),
-            ..
-        } => {
+    let cli = Cli::parse();
+    let result = match cli.command {
+        Some(Commands::Slice(args)) => {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
-                require_single_input(&args);
+                require_single_input(&args.inputs);
                 export_stl::run(&args)
             } else if let Some(output) = args.export_3mf.as_ref() {
-                require_single_input(&args);
+                require_single_input(&args.inputs);
                 export_3mf::run(&args, output)
             } else {
                 run_slice(args).await
             }
         }
-        Cli {
-            export_settings: Some(destination),
-            project: Some(project),
-            ..
-        } => settings_export::run(&project, &destination),
-        _ => unreachable!("arguments require either a slice or a settings export"),
+        None => {
+            if let Some(destination) = cli.direct.export_settings {
+                require_single_input(&cli.direct.inputs);
+                settings_export::run(&cli.direct.inputs[0], &destination)
+            } else {
+                direct_stl::run(cli.direct).await
+            }
+        }
     };
     if let Err(failure) = result {
         failure.report();
@@ -56,7 +57,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if assembly::requested(&args) {
         return assembly::slice(&args).await;
     }
-    require_single_input(&args);
+    require_single_input(&args.inputs);
     ensure_supported_input(args.input())?;
 
     let extension = args
@@ -372,20 +373,6 @@ fn report_success(
 
 /// The 3MF load's substitutions (`OrcaSlicer.cpp:1737-1758`). A project whose settings cannot be
 /// read fails its load before the report (`:1992`), so it has none to report.
-fn require_single_input(args: &SliceArgs) {
-    if args.inputs.len() != 1 {
-        clap::Error::raw(
-            if args.inputs.is_empty() {
-                clap::error::ErrorKind::MissingRequiredArgument
-            } else {
-                clap::error::ErrorKind::UnknownArgument
-            },
-            "slicing requires exactly one input model",
-        )
-        .exit();
-    }
-}
-
 fn substitutions(input: &[u8]) -> Vec<ares_core::ConfigSubstitution> {
     ares_core::project_config_substitutions(input).unwrap_or_default()
 }
