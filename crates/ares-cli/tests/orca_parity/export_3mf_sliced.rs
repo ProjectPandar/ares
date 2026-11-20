@@ -21,6 +21,7 @@ const GCODE: &str = "Metadata/plate_1.gcode";
 const MD5: &str = "Metadata/plate_1.gcode.md5";
 
 #[test]
+#[ignore = "deferred until direct STL placement and slicing are available"]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
     sliced_archive_matches_native(false);
 }

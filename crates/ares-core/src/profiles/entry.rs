@@ -9,7 +9,7 @@ pub use load_settings::{
     LoadSettingsSliceRequest, SlicedStlPlate, export_stl_settings, slice_assembly,
     slice_imported_stl_with_load_settings_processed, slice_stl_models_with_load_settings,
     slice_with_load_settings, slice_with_load_settings_and_refresh,
-    slice_with_load_settings_archive, slice_with_load_settings_processed,
+    slice_with_load_settings_processed,
 };
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
