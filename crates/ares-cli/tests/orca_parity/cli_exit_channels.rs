@@ -6,6 +6,8 @@ use std::{fs, path::Path, process::Command};
 
 use crate::{native_wall_clock::result_comparison_bytes, runner::EarlyExit};
 
+#[path = "cli_filament_palette.rs"]
+mod filament_palette;
 #[path = "cli_success_result.rs"]
 mod success_result;
 

@@ -102,11 +102,10 @@ pub(crate) fn prepare(
         None
     };
     if support.len() != colors.len() {
-        return Err(SliceError::InvalidInput(format!(
-            "filament_is_support's count {} not equal to filament_colour's size {}",
-            support.len(),
-            colors.len()
-        )));
+        return Err(SliceError::FilamentSupportPaletteMismatch {
+            support_count: support.len(),
+            palette_count: colors.len(),
+        });
     }
     let minima = minimum_volumes(settings, raw);
     let colors: Vec<_> = colors.iter().map(|color| rgba(color)).collect();

@@ -23,6 +23,7 @@ pub(crate) enum EarlyExit {
     Validation,
     NotFound,
     ProcessNotCompatible,
+    FilamentSupportPaletteMismatch,
     /// Absent `--load-settings` entry: the 3MF admission gate
     /// (`OrcaSlicer.cpp:1682-1690`) fires before the file reads
     /// (`:1953-2024`), so the native outcome stays `-19`.
@@ -72,6 +73,7 @@ impl EarlyExit {
             Self::Validation => -51,
             Self::NotFound => -3,
             Self::ProcessNotCompatible => -17,
+            Self::FilamentSupportPaletteMismatch => -5,
             Self::MissingSettingsFile => -19,
         }
     }

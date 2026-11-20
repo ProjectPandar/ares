@@ -30,6 +30,21 @@ impl OrcaRunner {
             argv.push("--load-filaments".to_owned());
             argv.push(lists.filaments.join(";"));
         }
+        if matches!(
+            kind,
+            ResultKind::Early(EarlyExit::FilamentSupportPaletteMismatch)
+        ) {
+            argv.extend(
+                [
+                    "--arrange",
+                    "0",
+                    "--filament-colour",
+                    "#FFFFFF;#000000",
+                    "--filament-is-support=0",
+                ]
+                .map(str::to_owned),
+            );
+        }
         argv.push("--outputdir".to_owned());
         argv.push(output.to_string_lossy().into_owned());
         argv.push(project.to_string_lossy().into_owned());
