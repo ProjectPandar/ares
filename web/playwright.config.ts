@@ -4,6 +4,7 @@ import { chromiumLaunch as chromium } from "./e2e/chromiumLaunch";
 // Touch-emulated phones and tablets run only the mobile flow.
 const webkit = { executablePath: process.env.ARES_E2E_WEBKIT || undefined };
 const mobileSpecs = /mobile\.spec\.ts$/;
+const streamingSpec = /\/gcodeProcessorStreaming\.spec\.ts$/;
 // Specs that pack a workspace package (`npm pack` runs `prepack`, which empties its dist) or build
 // a page that imports one from its dist: one at a time, so no pack empties a dist another spec is
 // reading. A new spec that packs a package or builds a page from one belongs here.
@@ -21,8 +22,14 @@ export default defineConfig({
   },
   projects: [
     {
+      // The large Preview can leave GPU work in flight after its context closes.
+      name: "desktop-streaming",
+      testMatch: streamingSpec,
+      use: desktop,
+    },
+    {
       name: "desktop",
-      testIgnore: [mobileSpecs, packageSpecs],
+      testIgnore: [mobileSpecs, packageSpecs, streamingSpec],
       use: desktop,
     },
     {
