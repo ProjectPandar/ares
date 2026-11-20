@@ -195,6 +195,9 @@ impl Catalog {
             // Config.cpp:600-615 normalizes each source before PresetBundle.cpp:7839
             // applies it over the parent/default config, not over a joined raw map.
             authored.handle_legacy();
+            authored
+                .normalize_preset_string_vectors()
+                .map_err(SliceError::InvalidInput)?;
             if completed_vendor {
                 super::super::preset_normalization::replace_nil_from_defaults(&mut authored, raw)?;
             }

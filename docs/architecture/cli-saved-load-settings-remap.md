@@ -62,7 +62,6 @@ loads preset JSON; `Config.cpp:984–987` forwards a string to `set_deserialize`
 members, recognize double-quoted members, and remove the quotes and expand
 escapes inside them. `GCode.cpp:8370–8378` writes the typed value using
 `opt_serialize`, which calls the vector serializer (`Config.hpp:1207–1210`,
-`Config.cpp:99–148`) to escape the decoded members. Ares currently retains the
-input quote characters in these three scalar-encoded vector members and then
-escapes them again in the G-code configuration footer. That decoder difference
-is separate from saved-project preset dispatch.
+`Config.cpp:99–148`) to escape the decoded members. Retaining the input quotes
+and escaping them again was a separate decoder bug, fixed in
+[preset scalar-vector decoding](preset-scalar-vector-decode.md).

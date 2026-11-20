@@ -94,6 +94,22 @@ pub(crate) fn normalize_empty_vector_strings(values: &mut BTreeMap<String, RawCo
     }
 }
 
+/// Decode the catalog's authored wire scalars before consumers select vector slots.
+/// JSON arrays already supply logical members and must not be split again.
+pub(crate) fn normalize_preset_string_vectors(
+    values: &mut BTreeMap<String, RawConfigValue>,
+) -> Result<(), String> {
+    for (key, value) in values {
+        if let RawConfigValue::Text(text) = value
+            && option_definition(key).is_some_and(|def| def.kind == OptionValueKind::Strings)
+        {
+            *value = decode(OptionValueKind::Strings, text)
+                .map_err(|error| format!("invalid Orca option {key}: {error}"))?;
+        }
+    }
+    Ok(())
+}
+
 /// `ConfigBase::load_from_json` routes every JSON string through
 /// `set_deserialize` (`Config.cpp:927-929`) without checking the target
 /// option's JSON shape first, so a bare scalar reaches
