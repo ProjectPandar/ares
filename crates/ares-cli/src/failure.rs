@@ -129,10 +129,7 @@ pub(super) fn substitution_warnings(
         .collect()
 }
 
-/// Exhaustive variant → CLI code mapping (`Utils.hpp:24-59`). The four
-/// family variants carry the result.json payload; everything else keeps
-/// the legacy `Error:` channel — those surfaces have no native family
-/// emulation in this slice (recorded in clusters.md).
+/// Variant → CLI code mapping for slicing errors not handled by the direct action.
 pub(super) fn slice_error_to_failure(
     error: SliceError,
     output: &Path,
@@ -393,6 +390,7 @@ pub(super) fn slice_error_to_failure(
         SliceError::FilamentSupportCount => CliFailure::invalid_preset_file(output),
         SliceError::EmptyInput
         | SliceError::InvalidInput(_)
+        | SliceError::GcodePathConflict(_)
         | SliceError::OptionStlModelRead(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),

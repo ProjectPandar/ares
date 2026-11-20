@@ -139,7 +139,8 @@ pub(super) async fn run(
     let context = crate::custom_gcodes::load(
         SlicerContext::new(0)
             .with_max_triangle_count(args.mtcpp.unwrap_or_default())
-            .with_no_check(args.no_check),
+            .with_no_check(args.no_check)
+            .with_cli_path_conflict_check(),
         args.load_custom_gcodes.as_deref(),
         &output,
         0,
@@ -273,6 +274,17 @@ pub(super) async fn run(
             }
         };
     let gcode = gcode.map_err(|error| {
+        if let Some(failure) = crate::failure::slicing::path_conflict(
+            &error,
+            &mut args.diagnostics,
+            #[cfg(target_os = "linux")]
+            &output,
+            1,
+            #[cfg(target_os = "linux")]
+            &sliced_plate,
+        ) {
+            return failure;
+        }
         if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {
             // OrcaSlicer.cpp:6639 writes to the file sink, not to stderr.
             args.diagnostics.error(format_args!(

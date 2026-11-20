@@ -251,6 +251,7 @@ pub enum SliceError {
         sparse_infill_density: f64,
     },
     ProjectSlicingIncomplete,
+    GcodePathConflict([String; 2]),
     UnsupportedProjectFeature(String),
     ToolpathOutsidePrintableArea {
         error_code: u8,
@@ -288,6 +289,9 @@ impl fmt::Display for SliceError {
             // OrcaSlicer.cpp:6286-6291 forwards ex.what() without decoration.
             | Self::Slicing { message, .. } => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
+            Self::GcodePathConflict([first, second]) => {
+                write!(f, "Found gcode path conflicts between object {first} and {second}")
+            }
             Self::UnsupportedProjectFeature(feature) => {
                 write!(f, "unsupported project feature: {feature}")
             }

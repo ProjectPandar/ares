@@ -4,7 +4,6 @@ mod intersect;
 
 use super::layers::Schedule;
 use crate::{
-    SliceError,
     geometry::{Line, Point},
     project_slice::{
         island_print_order::OrderedExtrusionLayer,
@@ -70,22 +69,28 @@ impl Bucket {
     }
 }
 
-pub(super) fn check(
-    traversal: &PreparedPostClassicTraversal,
+pub(super) fn check<'a>(
+    traversal: &'a PreparedPostClassicTraversal,
     objects: &[Vec<OrderedExtrusionLayer>],
     support: &[Vec<InstalledSupportLayer>],
     schedule: &Schedule,
-) -> Result<(), SliceError> {
-    let Some(tower) = &schedule.tower else {
-        return Ok(());
-    };
-    let mut sources = vec![tower.fake_layers(
-        &traversal.resolved.views.full,
-        traversal.scale,
-        super::wipe_tower::plate_position(traversal),
-    )];
-    let mut buckets = vec![Bucket::new(0, 0, Point::new(0, 0))];
-    let mut names = vec!["WipeTower"];
+    check_without_tower: bool,
+) -> Option<[&'a str; 2]> {
+    let mut sources = Vec::new();
+    let mut buckets = Vec::new();
+    let mut names = Vec::new();
+    if let Some(tower) = &schedule.tower {
+        sources.push(tower.fake_layers(
+            &traversal.resolved.views.full,
+            traversal.scale,
+            super::wipe_tower::plate_position(traversal),
+        ));
+        buckets.push(Bucket::new(0, 0, Point::new(0, 0)));
+        names.push("WipeTower");
+    } else if !check_without_tower || schedule.instances.iter().map(Vec::len).sum::<usize>() <= 1 {
+        // ConflictChecker.cpp:241–246: no pair can conflict with fewer than two owners.
+        return None;
+    }
     for (index, copies) in schedule.instances.iter().enumerate() {
         let source = sources.len();
         sources.push(collect::object(&objects[index], &traversal.objects[index]));
@@ -127,13 +132,10 @@ pub(super) fn check(
             break;
         }
         if let Some((mut first, mut second)) = intersect::find(&lines, traversal.scale) {
-            if second == 0 {
+            if schedule.tower.is_some() && second == 0 {
                 std::mem::swap(&mut first, &mut second);
             }
-            return Err(SliceError::InvalidInput(format!(
-                "Found gcode path conflicts between object {} and {}",
-                names[first], names[second]
-            )));
+            return Some([names[first], names[second]]);
         }
         for bucket in &mut buckets {
             if bucket.queued && f64::from((bucket.bottom - minimum).abs()) < 1e-4 {
@@ -141,7 +143,7 @@ pub(super) fn check(
             }
         }
     }
-    Ok(())
+    None
 }
 
 fn append_current(output: &mut Vec<intersect::OwnedLine>, bucket: &Bucket, layers: &[Layer]) {

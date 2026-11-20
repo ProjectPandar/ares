@@ -60,12 +60,22 @@ pub(in crate::project_slice) fn emit(
             && !process.print.spiral_mode.0,
     );
     schedule.simplify_raft(traversal);
-    conflict::check(
-        traversal,
-        &prepared.objects,
-        &prepared.support_layers,
-        &schedule,
-    )?;
+    if !context.no_check
+        && let Some(names) = conflict::check(
+            traversal,
+            &prepared.objects,
+            &prepared.support_layers,
+            &schedule,
+            context.cli_path_conflict_check,
+        )
+    {
+        let error = SliceError::GcodePathConflict(names.map(str::to_owned));
+        return Err(if context.cli_path_conflict_check {
+            error
+        } else {
+            SliceError::InvalidInput(error.to_string())
+        });
+    }
     context.set_status(80, format_args!("Generating G-code"), 0);
     let sliced_layer_count = schedule.layer_count();
     // Under sequential by-object printing `m_layer_count` accumulates the

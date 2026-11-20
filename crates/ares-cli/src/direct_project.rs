@@ -58,6 +58,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     let context = crate::custom_gcodes::load(
         SlicerContext::new(0)
             .with_no_check(args.no_check)
+            .with_cli_path_conflict_check()
             .with_enable_timelapse(args.enable_timelapse),
         args.load_custom_gcodes.as_deref(),
         &output,
@@ -123,6 +124,19 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         .await
     }
     .map_err(|error| {
+        if let Some(failure) = crate::failure::slicing::path_conflict(
+            &error,
+            &mut args.diagnostics,
+            #[cfg(target_os = "linux")]
+            &output,
+            plate,
+            #[cfg(target_os = "linux")]
+            &sliced_plate,
+        ) {
+            return failure
+                .with_config_substitutions(&input.to_string_lossy(), crate::substitutions(&bytes))
+                .with_upward_report(upward_machines.clone());
+        }
         #[cfg(target_os = "linux")]
         let detail = match &error {
             ares_core::SliceError::Validate { message, .. } if args.no_check => {

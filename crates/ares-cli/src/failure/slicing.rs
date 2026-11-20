@@ -1,10 +1,18 @@
 //! `OrcaSlicer.cpp:7141–7172`: gate export on typed slicing warnings.
 use super::{CliFailure, FamilyFailure};
-use ares_core::{PrintWarning, SlicedPlate, SlicingNotificationType, WarningLevel};
+use ares_core::{PrintWarning, SliceError, SlicedPlate, SlicingNotificationType, WarningLevel};
 
 fn is_empty_layer_warning(warning: &PrintWarning) -> bool {
     warning.level == WarningLevel::Critical
         && warning.message_type == SlicingNotificationType::EmptyGcodeLayers
+}
+
+fn rejects_checked_slice(warning: &PrintWarning) -> bool {
+    warning.level == WarningLevel::Critical
+        && matches!(
+            warning.message_type,
+            SlicingNotificationType::EmptyGcodeLayers | SlicingNotificationType::GcodeOverlap
+        )
 }
 
 pub(crate) fn check(
@@ -47,14 +55,14 @@ pub(crate) fn check_direct(
     for warning in plate
         .warnings
         .iter()
-        .filter(|warning| is_empty_layer_warning(warning))
+        .filter(|warning| warning.level == WarningLevel::Critical)
     {
         diagnostics.warning(format_args!(
             "plate {plate_index}: found slicing warnings: {}, no_check={}",
             warning.message,
             u8::from(no_check),
         ));
-        if no_check {
+        if no_check || !rejects_checked_slice(warning) {
             continue;
         }
         let mut failure = warning_failure(
@@ -75,13 +83,53 @@ pub(crate) fn check_direct(
             plate
                 .warnings
                 .iter()
-                .take_while(|warning| !is_empty_layer_warning(warning))
+                .take_while(|warning| !rejects_checked_slice(warning))
                 .cloned()
                 .collect(),
         );
         return Err(failure);
     }
     Ok(())
+}
+
+pub(crate) fn path_conflict(
+    error: &SliceError,
+    diagnostics: &mut crate::diagnostics::DiagnosticLog,
+    #[cfg(target_os = "linux")] output: &std::path::Path,
+    plate_index: u32,
+    #[cfg(target_os = "linux")] plate: &SlicedPlate,
+) -> Option<CliFailure> {
+    let SliceError::GcodePathConflict([first, second]) = error else {
+        return None;
+    };
+    // Print.cpp:3963 and OrcaSlicer.cpp:7136 write to the error log, not stderr.
+    diagnostics.error(format_args!(
+        "gcode path conflicts found between {first} and {second}"
+    ));
+    diagnostics.error(format_args!(
+        "plate {plate_index}: found slicing result conflict!"
+    ));
+    Some(CliFailure::Family(Box::new(FamilyFailure {
+        return_code: -101,
+        #[cfg(target_os = "linux")]
+        plate_index,
+        #[cfg(target_os = "linux")]
+        layer_height: plate.layer_height,
+        #[cfg(target_os = "linux")]
+        wall_loops: plate.wall_loops,
+        #[cfg(target_os = "linux")]
+        sparse_infill_density: plate.sparse_infill_density,
+        #[cfg(target_os = "linux")]
+        error_string: " G-code conflicts detected after slicing. Please make sure the 3mf file can be successfully sliced in the latest Orca Slicer. If the file slices normally in Orca Slicer, try moving the wipe tower further from other models, as we use more conservative parameters for it during upload.".into(),
+        upward_machines: Vec::new(),
+        #[cfg(target_os = "linux")]
+        warnings: Vec::new(),
+        #[cfg(target_os = "linux")]
+        plate_warning: None,
+        stderr: String::new(),
+        #[cfg(target_os = "linux")]
+        output: output.to_owned(),
+    })))
 }
 
 pub(crate) fn check_strict(
