@@ -204,13 +204,13 @@ pub(super) async fn run(
                     },
                 )
                 .map_err(io::Error::other);
-                if args.selection.is_none() || export_before_slice {
+                if args.selection.is_none() {
                     settings_export::write(destination, &json?)?;
-                    if args.selection.is_none() {
-                        #[cfg(target_os = "linux")]
-                        crate::result_json::ResultJson::write_without_slice(&output, args.strict);
-                        return Ok(());
-                    }
+                    #[cfg(target_os = "linux")]
+                    crate::result_json::ResultJson::write_without_slice(&output, args.strict);
+                    return Ok(());
+                } else if export_before_slice {
+                    settings_export::write(destination, &json?)?;
                 } else {
                     export_after = Some((destination, json));
                 }
