@@ -307,6 +307,7 @@ pub(crate) fn slice_error_to_failure(
         }
         SliceError::EmptyInput
         | SliceError::InvalidInput(_)
+        | SliceError::GcodePathConflict(_)
         | SliceError::OptionStlModelRead(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),

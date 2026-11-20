@@ -83,11 +83,12 @@ pub(in crate::project_slice) fn emit(
             && !process.print.spiral_mode.0,
     );
     schedule.simplify_raft(traversal);
-    conflict::check(
+    conflict::check_print(
         traversal,
         &prepared.objects,
         &prepared.support_layers,
         &schedule,
+        context,
     )?;
     context.set_status(80, format_args!("Generating G-code"), 0);
     let sliced_layer_count = schedule.layer_count();

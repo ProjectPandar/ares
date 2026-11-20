@@ -146,7 +146,20 @@ pub(super) async fn run(
         0,
     )?;
     let mut export_after = None;
-    let failure = |error: SliceError| {
+    let mut failure = |error: SliceError, report: Option<&SlicedPlate>| {
+        if let Some(_report) = report
+            && let Some(failure) = crate::failure::slicing::path_conflict(
+                &error,
+                &mut args.diagnostics,
+                #[cfg(target_os = "linux")]
+                &output,
+                1,
+                #[cfg(target_os = "linux")]
+                _report,
+            )
+        {
+            return failure;
+        }
         if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {
             // OrcaSlicer.cpp:6639 writes to the file sink, not to stderr.
             args.diagnostics.error(format_args!(
@@ -171,6 +184,7 @@ pub(super) async fn run(
         if selection > 1 {
             Vec::new()
         } else {
+            let context = context.with_cli_path_conflict_check();
             let processed = if let Some(imported) = &imported {
                 ares_core::slice_imported_stl_with_defaults_processed(
                     imported,
@@ -189,7 +203,7 @@ pub(super) async fn run(
                 )
                 .await
             }
-            .map_err(failure)?;
+            .map_err(|error| failure(error, Some(&sliced_plate)))?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
@@ -279,6 +293,7 @@ pub(super) async fn run(
             sliced_plate: &mut sliced_plate,
         };
         if models.is_empty() {
+            let context = context.with_cli_path_conflict_check();
             let processed = if let Some(imported) = &imported {
                 ares_core::slice_imported_stl_with_load_settings_processed(
                     imported,
@@ -298,7 +313,7 @@ pub(super) async fn run(
                 )
                 .await
             }
-            .map_err(failure)?;
+            .map_err(|error| failure(error, Some(&sliced_plate)))?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
@@ -313,7 +328,7 @@ pub(super) async fn run(
                 args.export_statistics,
             )
             .await
-            .map_err(failure)?
+            .map_err(|error| failure(error, None))?
         }
     };
     let mut completed = Vec::with_capacity(plates.len());

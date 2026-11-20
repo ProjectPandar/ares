@@ -10,6 +10,7 @@ pub enum WarningLevel {
 pub enum SlicingNotificationType {
     NeedSupportOn = 2,
     EmptyGcodeLayers = 3,
+    GcodeOverlap = 4,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
