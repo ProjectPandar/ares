@@ -194,6 +194,7 @@ fn with_load_settings_source<T>(
                 }
             }),
             placement,
+            enable_timelapse: false,
             validate_print,
         }),
         refresh: None,

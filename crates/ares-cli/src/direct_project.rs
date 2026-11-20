@@ -56,7 +56,9 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         Err(error) => return Err(error.into()),
     };
     let context = crate::custom_gcodes::load(
-        SlicerContext::new(0).with_no_check(args.no_check),
+        SlicerContext::new(0)
+            .with_no_check(args.no_check)
+            .with_enable_timelapse(args.enable_timelapse),
         args.load_custom_gcodes.as_deref(),
         &output,
         plate as i32 - 1,

@@ -183,6 +183,9 @@ pub(crate) fn slice_source(
     // seed (`Fill.cpp:199-200`); reset the per-thread stream per slice.
     group_fills::reset_rand_state();
     let mut sliced_plate = project.sliced_plate.take();
+    if let Some(profile) = project.profile.as_mut() {
+        profile.enable_timelapse = context.enable_timelapse;
+    }
     let project = ProjectSource {
         sliced_plate: sliced_plate.as_deref_mut(),
         max_triangle_count: context.max_triangle_count,

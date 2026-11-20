@@ -53,6 +53,18 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) strict: bool,
     #[arg(long, hide = true)]
     pub(crate) no_check: bool,
+    /// Preserve an enabled prime tower after single-preset remapping in Smooth mode.
+    #[arg(
+        long,
+        action = clap::ArgAction::Set,
+        num_args = 0..=1,
+        require_equals = true,
+        default_value = "0",
+        default_missing_value = "1",
+        overrides_with = "enable_timelapse",
+        value_parser = parse_enable_timelapse
+    )]
+    pub(crate) enable_timelapse: bool,
     #[arg(long)]
     pub(crate) load_settings: Option<String>,
     #[arg(long)]
@@ -68,6 +80,25 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) arrange: Option<u8>,
     #[arg(required = true)]
     pub(crate) inputs: Vec<PathBuf>,
+}
+
+fn parse_enable_timelapse(value: &str) -> Result<bool, &'static str> {
+    // Config.cpp:1757-1782,1900-1906 and Config.hpp:1927-1945.
+    if value.is_empty() {
+        return Ok(true);
+    }
+    match value
+        .split(',')
+        .map(str::trim)
+        .find(|item| !item.is_empty())
+        .unwrap_or_default()
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+        _ => Err("expected a boolean value"),
+    }
 }
 
 #[derive(Parser)]

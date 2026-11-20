@@ -61,6 +61,7 @@ pub(crate) struct ProfileInput<'a> {
     pub(crate) load_names: Option<&'a super::compatibility::LoadedPresetNames>,
     pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
     pub(crate) placement: crate::profiles::Placement,
+    pub(crate) enable_timelapse: bool,
     /// CLI composite entries set this; the profile path checks the
     /// embedded `post_process` on it before overlay (O5).
     pub(crate) validate_print: bool,

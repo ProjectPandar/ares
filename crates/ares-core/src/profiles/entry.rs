@@ -302,6 +302,7 @@ pub(crate) fn with_edited_profile_source<T>(
             load_names: None,
             retained_refresh: None,
             placement,
+            enable_timelapse: false,
             validate_print: false,
         }),
         refresh: None,

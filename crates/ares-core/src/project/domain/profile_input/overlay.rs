@@ -22,6 +22,7 @@ pub(crate) struct SelectedProfile<'a> {
     /// CLI composite entries set this; the 3MF overlay checks the embedded
     /// `post_process` before applying profiles (O5).
     pub(crate) validate_print: bool,
+    pub(crate) enable_timelapse: bool,
     pub(crate) load_names: Option<&'a crate::project_slice::compatibility::LoadedPresetNames>,
     pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
 }
