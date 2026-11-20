@@ -246,8 +246,7 @@ pub(super) async fn run(
                     &[],
                 );
                 return Ok(());
-            }
-            if export_before_slice {
+            } else if export_before_slice {
                 settings_export::write(destination, &json?)?;
             } else {
                 export_after = Some((destination, json));
