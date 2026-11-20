@@ -42,8 +42,6 @@ pub(in crate::project_slice) use runtime::{
     place_nearest, place_nearest_penalized, place_nearest_projection,
 };
 
-pub(super) use paint::validate_paint;
-
 pub(in crate::project_slice) fn apply(
     prepared: &mut PreparedPostIslandPrintOrder,
 ) -> Result<(), SliceError> {

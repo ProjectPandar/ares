@@ -14,7 +14,7 @@ pub(super) fn placement_modes(
     objects: &[&ResolvedProjectObject],
     spiral_mode: bool,
 ) -> Vec<Option<ProcessSeamPosition>> {
-    // GCode.cpp:5769-5775 bypasses perimeter SeamPlacer for configured spiral mode.
+    // GCode.cpp:8542-8549 bypasses SeamPlacer even below the spiral start layer.
     if spiral_mode {
         return vec![None; objects.len()];
     }

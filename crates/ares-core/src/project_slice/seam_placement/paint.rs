@@ -5,11 +5,10 @@ mod intervals;
 mod samples;
 
 use crate::{
-    Point3d, Project, ProjectObject, ProjectVolume, ProjectVolumeType, SliceError, Transform3d,
+    Point3d, ProjectObject, ProjectVolume, ProjectVolumeType, SliceError, Transform3d,
     geometry::CoordinateScale,
     project::{
-        effective_config::types::{BoundedResolvedProjectConfig, ResolvedPrintObjectConfig},
-        facets_annotation::FacetSelector,
+        effective_config::types::ResolvedPrintObjectConfig, facets_annotation::FacetSelector,
     },
 };
 
@@ -20,22 +19,6 @@ use super::{
 
 pub(super) use samples::OVERSAMPLING;
 pub(in crate::project_slice) use samples::paint_candidates;
-
-pub(in crate::project_slice) fn validate_paint(
-    project: &Project,
-    resolved: &BoundedResolvedProjectConfig,
-) -> Result<(), SliceError> {
-    if resolved.views.full.process.print.spiral_mode.0
-        && resolved.objects.iter().any(|object| {
-            painted_volumes(&project.objects()[object.source_object_index])
-                .next()
-                .is_some()
-        })
-    {
-        return Err(deferred());
-    }
-    Ok(())
-}
 
 fn painted_volumes(object: &ProjectObject) -> impl Iterator<Item = &ProjectVolume> {
     object.volumes().iter().filter(|volume| {
