@@ -24,6 +24,9 @@ mod mk4_tree_support_base_connect;
 #[path = "mk4_tree_support_default_seam_anchor.rs"]
 mod mk4_tree_support_default_seam_anchor;
 
+#[path = "tree_raft_without_support.rs"]
+mod tree_raft_without_support;
+
 #[path = "spiral_hole_projected_split.rs"]
 mod spiral_hole_projected_split;
 
