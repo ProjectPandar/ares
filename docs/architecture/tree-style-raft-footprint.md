@@ -34,4 +34,6 @@ Organic path, normal raft, support collision volumes, and arc fitting outside
 its scope. Compare the entire G-code stream, normalizing only the generator
 line, against Native for synthetic X1C and MK4 prisms. Each has three raft
 layers, object support and arcs disabled, with Slim, Strong and Hybrid
-selected separately.
+selected separately. The MK4 fixtures also disable M73 progress reports and
+Z-hop (`PrintConfig.cpp:6193,6504`) so progress placement and travel lifting
+at the raft transition stay outside the footprint comparison.
