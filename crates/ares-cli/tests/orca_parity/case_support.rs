@@ -56,3 +56,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "arachne_disconnected_loop.rs"]
+mod arachne_disconnected_loop;
