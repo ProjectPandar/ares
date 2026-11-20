@@ -15,6 +15,9 @@ pub(crate) mod vendor_inventory;
 #[path = "adaptive_cubic_bodies.rs"]
 mod adaptive_cubic_bodies;
 
+#[path = "support_cubic_bodies.rs"]
+mod support_cubic_bodies;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 

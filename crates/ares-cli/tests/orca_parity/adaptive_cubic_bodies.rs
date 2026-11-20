@@ -9,7 +9,7 @@ const UPSTREAM: (&str, &[&str]) = (
     ],
 );
 
-fn sparse_moves(gcode: &str) -> Vec<(&str, &str)> {
+pub(super) fn sparse_moves(gcode: &str) -> Vec<(&str, &str)> {
     let mut sparse = false;
     let mut moves = Vec::new();
     for line in gcode.lines() {
