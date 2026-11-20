@@ -10,7 +10,8 @@ mod preset_normalization;
 mod project_refresh;
 mod project_selection;
 pub(crate) use project_refresh::{
-    ProjectPresetPolicy, ProjectPresetRefresh, apply_retained_preset_defaults, preset_owns_option,
+    ProjectPresetPolicy, ProjectPresetRefresh, apply_retained_preset_defaults,
+    loaded_filament_ordinary_values, preset_owns_option,
 };
 pub use project_selection::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,

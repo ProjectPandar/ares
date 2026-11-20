@@ -130,6 +130,18 @@ pub(crate) struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
+    pub(crate) fn apply_present(self, target: &mut FilamentOptions) {
+        self.gcode.apply_present(&mut target.gcode);
+        self.print.apply_present(&mut target.print);
+        self.region.apply_present(&mut target.region);
+        self.retract_overrides
+            .apply_present(&mut target.retract_overrides);
+        self.preset.apply_present(&mut target.preset);
+        if let Some(value) = self.pellet_flow_coefficient {
+            target.pellet_flow_coefficient = value;
+        }
+    }
+
     pub(crate) fn overlay(&mut self, child: Self) {
         self.gcode.overlay(child.gcode);
         self.print.overlay(child.print);
