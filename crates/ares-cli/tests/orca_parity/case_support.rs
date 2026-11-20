@@ -24,6 +24,9 @@ mod direct_stl_slice;
 #[path = "export_statistics.rs"]
 mod export_statistics;
 
+#[path = "cli_strict.rs"]
+mod cli_strict;
+
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
 
