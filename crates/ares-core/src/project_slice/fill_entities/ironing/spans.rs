@@ -55,15 +55,12 @@ pub(crate) fn append_spans(input: SpanGeneration<'_>) -> Result<(), SliceError> 
                 region,
                 dont_alternate_fill_direction: false,
                 object: input.object,
-                default_region: input.default_region,
                 nozzles: input.nozzles,
                 filament_map: input.filament_map,
                 is_bbl: input.is_bbl,
                 layer: input.layer,
-                layers: input.layers,
                 last_layer,
                 spiral_mode: record_input.spiral_mode,
-                model_rotation_offset: model_rotation_offset as f32,
                 scale: input.scale,
             };
             if record.slices.is_empty()
@@ -102,10 +99,15 @@ pub(crate) fn append_spans(input: SpanGeneration<'_>) -> Result<(), SliceError> 
         for (_, member, _) in &spans[i..j] {
             areas::collect(member, &mut polygons, &mut infills);
         }
-        let primary = &spans[i].1;
+        let (key, primary, _) = &spans[i];
         let collection_start = input.output.collections.len();
         if let Some(ironing_areas) = areas::ironing_areas(primary, polygons, infills, j > i + 1)? {
-            append_areas(input.output, primary, ironing_areas)?;
+            append_areas(
+                input.output,
+                primary,
+                ironing_areas,
+                (key.angle, key.fixed_angle),
+            )?;
         }
         input
             .output

@@ -107,56 +107,36 @@ pub(super) fn ironing_areas(
     Ok((!clipped.is_empty()).then_some(clipped))
 }
 
-pub(super) fn ironing_angle(input: &Input<'_>) -> (f32, bool) {
-    let context = SpanContext {
-        object: input.object,
-        default_region: input.default_region,
-        layer: input.layer,
-        layers: input.layers,
-        model_rotation_offset: f64::from(input.model_rotation_offset),
-    };
-    ironing_angle_for(input.region, &context)
-}
+// Fill.cpp:1796-1806: the span key retains the angle before the filler narrows it.
+pub(super) fn ironing_angle(region: &RegionOptions, context: &SpanContext<'_>) -> (f64, bool) {
+    use std::f64::consts::PI;
 
-pub(super) fn ironing_angle_for(region: &RegionOptions, context: &SpanContext<'_>) -> (f32, bool) {
-    let base = base_angle(region, context);
-    let angle = ((base + region.ironing_angle.0).to_radians() as f32)
-        + context.model_rotation_offset as f32;
-    (
-        angle,
-        region.ironing_angle_fixed.0 || !region.solid_infill_rotate_template.0.is_empty(),
-    )
-}
-
-pub(super) fn ironing_span_angle(region: &RegionOptions, context: &SpanContext<'_>) -> (f64, bool) {
-    let base = base_angle(region, context);
-    let angle = base * std::f64::consts::PI / 180.0
-        + region.ironing_angle.0 * std::f64::consts::PI / 180.0
-        + context.model_rotation_offset;
-    (
-        angle,
-        region.ironing_angle_fixed.0 || !region.solid_infill_rotate_template.0.is_empty(),
-    )
-}
-
-fn base_angle(region: &RegionOptions, context: &SpanContext<'_>) -> f64 {
     let template = &region.solid_infill_rotate_template.0;
-    // Upstream runs `calculate_infill_rotation_angle` for ironing too
-    // (`Fill.cpp:1605-1611`), including the meta path.
-    let template_angle = (!template.is_empty()).then(|| {
-        crate::project_slice::group_fills::template_rotation_angle(
+    let top_direction = region.top_layer_direction.0;
+    let top_direction_set = top_direction >= 0.0;
+    let top_base_angle = if top_direction_set {
+        PI * top_direction / 180.0
+    } else if template.is_empty() {
+        PI * region.solid_infill_direction.0 / 180.0
+    } else {
+        let degrees = crate::project_slice::group_fills::template_rotation_angle(
             template,
             context.layers,
             context.object,
             context.default_region,
             context.layer.id,
-        )
-    });
-    if region.ironing_angle_fixed.0 {
+        );
+        PI * degrees / 180.0
+    };
+    let base = if region.ironing_angle_fixed.0 {
         0.0
     } else {
-        template_angle.unwrap_or(region.solid_infill_direction.0)
-    }
+        top_base_angle
+    };
+    (
+        base + region.ironing_angle.0 * PI / 180.0 + context.model_rotation_offset,
+        region.ironing_angle_fixed.0 || top_direction_set || !template.is_empty(),
+    )
 }
 
 pub(super) fn selected_nozzle(input: &Input<'_>) -> f64 {
