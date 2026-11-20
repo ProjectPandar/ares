@@ -13,6 +13,37 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
+    pub(crate) fn statistics_write(
+        path: &Path,
+        plate: u32,
+        #[cfg(target_os = "linux")] output: &Path,
+    ) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -25,
+            #[cfg(target_os = "linux")]
+            plate_index: plate,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "Failed exporting the G-code statistics.",
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
+            stderr: format!(
+                "plate {plate}: Failed to write the G-code statistics to {}.\n",
+                path.display()
+            ),
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+
     pub(crate) fn invalid_stl_input(
         input: &Path,
         #[cfg(target_os = "linux")] output: &Path,

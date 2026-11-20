@@ -128,7 +128,7 @@ fn parse_custom_tag(line: &str, bbl: bool) -> Option<CustomTag<'_>> {
     }
 }
 
-impl MoveRecorder {
+impl MoveRecorder<'_> {
     pub(super) fn tag(
         &mut self,
         source: usize,

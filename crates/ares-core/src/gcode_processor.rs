@@ -3,6 +3,9 @@
 //! that also stamps the exported G-code.
 
 pub(crate) mod printable_area;
+mod statistics;
+pub(crate) use statistics::density;
+pub use statistics::{GCodeStatistics, ObjectMass};
 
 use crate::ExtrusionRole;
 pub use crate::project_slice::gcode_emit::processor::process_gcode;
@@ -123,6 +126,8 @@ pub struct PrintEstimatedStatistics {
     /// block times (`GCodeProcessor.cpp:475-476`), copied by
     /// `update_estimated_times_stats` (`:6016-6022`).
     pub normal_prepare_time: f32,
+    pub total_travel_distance: f32,
+    pub total_filament_changes: usize,
 }
 
 /// `CustomGCode::Type` (`CustomGCode.hpp:14-22`).
@@ -174,6 +179,8 @@ pub struct GCodeProcessorResult {
     pub filament_diameters: Vec<f32>,
     /// `GCodeProcessorResult::filament_densities` (`GCodeProcessor.hpp:254`).
     pub filament_densities: Vec<f32>,
+    pub filament_costs: Vec<f32>,
+    pub object_masses: Vec<ObjectMass>,
 }
 
 impl GCodeProcessorResult {
@@ -196,6 +203,9 @@ impl GCodeProcessorResult {
             .collect();
         self.filament_densities = (0..diameters.len())
             .map(|id| get_at(densities, id))
+            .collect();
+        self.filament_costs = (0..diameters.len())
+            .map(|id| get_at(&filament.filament_cost.0, id))
             .collect();
     }
 }

@@ -37,11 +37,11 @@ impl Estimate {
     /// Runs the time estimate and, with a `recorder`, records the
     /// `GCodeProcessorResult::moves` of the same pass. The progress lines
     /// read the vertex types, so a pass without one records them unused.
-    pub(super) fn record(
+    pub(super) fn record<'a>(
         lines: &[String],
         machine_load_filament_time: f64,
-        config: &ProcessorConfig<'_>,
-        recorder: Option<&mut MoveRecorder>,
+        config: &'a ProcessorConfig<'_>,
+        recorder: Option<&mut MoveRecorder<'a>>,
     ) -> Self {
         let mut owned = None;
         let recorder = match recorder {
@@ -387,7 +387,11 @@ impl Estimate {
             custom_gcode_times,
             stop_times,
             prepare,
-            print_statistics: used_filaments.finish(filaments.selection().1),
+            print_statistics: crate::PrintEstimatedStatistics {
+                total_filament_changes: filaments.changes,
+                total_travel_distance: recorder.travel_distance(),
+                ..used_filaments.finish(filaments.selection().1)
+            },
             printable_area,
             elapsed,
             export_elapsed,

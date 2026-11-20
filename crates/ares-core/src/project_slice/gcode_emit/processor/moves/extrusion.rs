@@ -2,7 +2,7 @@ use super::{DEFAULT_TOOLPATH_HEIGHT, DEFAULT_TOOLPATH_WIDTH, MoveRecorder};
 use crate::ExtrusionRole;
 use crate::gcode_processor::EMoveType;
 
-impl MoveRecorder {
+impl MoveRecorder<'_> {
     /// Width, height and `mm3_per_mm` of an extrusion (`:3880-3947`).
     pub(super) fn extrusion_geometry(
         &mut self,
@@ -10,7 +10,7 @@ impl MoveRecorder {
         delta_xyz: f32,
         z: f64,
         linear: bool,
-    ) {
+    ) -> f32 {
         let diameter = self
             .filament_diameters
             .get(self.filament)
@@ -63,6 +63,35 @@ impl MoveRecorder {
             self.width = DEFAULT_TOOLPATH_WIDTH;
         }
         self.width = self.width.min(2.0_f32.max(4.0 * self.height));
+        volume
+    }
+
+    pub(super) fn add_mass(&mut self, start: [f64; 4], end: [f64; 4], volume: f32) {
+        if let Some(locator) = self.mass_locator {
+            let offset = self.extruder_offsets[self.filament];
+            let midpoint = std::array::from_fn(|axis| {
+                0.5 * (start[axis] + end[axis])
+                    + f64::from([offset[0], offset[1], -self.z_offset][axis])
+            });
+            let density = self
+                .filament_densities
+                .get(self.filament)
+                .unwrap_or(&self.filament_densities[0])
+                .0 as f32;
+            locator.add(
+                &mut self.masses,
+                self.role,
+                midpoint,
+                (
+                    f64::from(volume),
+                    crate::gcode_processor::density(&[density], 0),
+                ),
+            );
+        }
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn travel_distance(&self) -> f32 {
+        self.total_travel_distance
     }
 
     /// UsedFilaments::process_color_change_cache (GCodeProcessor.cpp:1549-1555).

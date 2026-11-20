@@ -64,7 +64,7 @@ pub(super) fn arc_seams(
 /// Records one command's `process_G1` vertices; each arc segment starts
 /// where the previous one ended.
 pub(super) fn record_motions(
-    recorder: &mut MoveRecorder,
+    recorder: &mut MoveRecorder<'_>,
     mut motion: RecordedMotion,
     motions: &[IndexedMotion],
     seams: &[Option<[f32; 3]>],

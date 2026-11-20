@@ -38,7 +38,11 @@ pub(super) struct RecordedMotion {
     pub(super) seam: Option<[f32; 3]>,
 }
 
-pub(super) struct MoveRecorder {
+pub(super) struct MoveRecorder<'a> {
+    mass_locator: Option<&'a super::super::object_mass::Locator<'a>>,
+    masses: Vec<crate::gcode_processor::ObjectMass>,
+    filament_densities: &'a [crate::OrcaFloat],
+    total_travel_distance: f32,
     moves: Vec<MoveVertex>,
     custom_gcode_per_print_z: Vec<CustomGCodeItem>,
     last_default_color: usize,
@@ -79,8 +83,8 @@ pub(super) struct MoveRecorder {
     pressure_advance: f32,
 }
 
-impl MoveRecorder {
-    pub(super) fn new(config: &ProcessorConfig<'_>) -> Self {
+impl<'a> MoveRecorder<'a> {
+    pub(super) fn new(config: &'a ProcessorConfig<'_>) -> Self {
         let settings = config.settings;
         let filament_diameters = settings
             .filament
@@ -109,6 +113,13 @@ impl MoveRecorder {
             })
             .collect();
         Self {
+            mass_locator: config.mass_locator.as_ref(),
+            masses: config
+                .mass_locator
+                .as_ref()
+                .map_or_else(Vec::new, |locator| locator.masses()),
+            filament_densities: &settings.filament.gcode.filament_density.0,
+            total_travel_distance: 0.0,
             moves: vec![MoveVertex::default()],
             custom_gcode_per_print_z: Vec::new(),
             last_default_color: 0,
@@ -250,8 +261,11 @@ impl MoveRecorder {
             (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt() as f32;
         self.travel_dist = delta_xyz;
         if move_type == EMoveType::Extrude {
-            self.extrusion_geometry(delta, delta_xyz, end[2], linear);
+            let volume = self.extrusion_geometry(delta, delta_xyz, end[2], linear);
+            self.add_mass(start, end, volume);
             self.correct_options_z();
+        } else if move_type == EMoveType::Travel {
+            self.total_travel_distance += delta_xyz;
         }
         let mut end = end;
         if let Some(seam) = seam {
@@ -371,6 +385,7 @@ impl MoveRecorder {
         }
         GCodeProcessorResult {
             moves: self.moves,
+            object_masses: self.masses,
             custom_gcode_per_print_z: self.custom_gcode_per_print_z,
             print_statistics: crate::PrintEstimatedStatistics {
                 volumes_per_color_change: self.color_change_volumes,

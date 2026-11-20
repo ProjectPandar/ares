@@ -12,6 +12,9 @@ use crate::{
 };
 
 pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
+    if args.inputs.len() == 1 && args.inputs[0].extension().is_some_and(|ext| ext == "3mf") {
+        return crate::direct_project::run(args).await;
+    }
     let selection = args
         .selection
         .expect("--slice is required without a subcommand");
@@ -55,7 +58,13 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     let (filename, bytes) = &inputs[0];
     let gcode =
         if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {
-            ares_core::slice_cli_stl_with_defaults(bytes, filename, &mut sliced_plate).await
+            ares_core::slice_cli_stl_with_defaults_processed(
+                bytes,
+                filename,
+                &mut sliced_plate,
+                args.export_statistics,
+            )
+            .await
         } else {
             let settings = read_preset_files(
                 &args
@@ -100,14 +109,27 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             let metadata = GenerationMetadata::default();
             let context = SlicerContext::new(0);
             if inputs.len() == 1 {
-                ares_core::slice_with_load_settings(bytes, request, metadata, context).await
+                ares_core::slice_with_load_settings_processed(
+                    bytes,
+                    request,
+                    metadata,
+                    context,
+                    args.export_statistics,
+                )
+                .await
             } else {
                 let files = inputs
                     .iter()
                     .map(|(name, bytes)| StlFile { name, bytes })
                     .collect::<Vec<_>>();
-                ares_core::slice_stl_files_with_load_settings(&files, request, metadata, context)
-                    .await
+                ares_core::slice_stl_files_with_load_settings_processed(
+                    &files,
+                    request,
+                    metadata,
+                    context,
+                    args.export_statistics,
+                )
+                .await
             }
         };
     let gcode = gcode.map_err(|error| match error {
@@ -123,7 +145,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             1,
         ),
     })?;
-    fs::write(&output, gcode)?;
+    crate::statistics::write(&output, gcode, args.export_statistics, 1)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
         output: &output,

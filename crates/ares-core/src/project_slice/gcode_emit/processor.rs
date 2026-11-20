@@ -69,6 +69,7 @@ pub(super) struct ProcessorConfig<'a> {
     detect_layer_based_on_tag: bool,
     /// Also record `GCodeProcessorResult::moves` (`GCodeProcessor::process_file`).
     record_moves: bool,
+    mass_locator: Option<super::object_mass::Locator<'a>>,
     /// `GCodeProcessorResult::extruder_colors`
     /// (`GCodeProcessor.cpp:2321-2343`).
     extruder_colors: Vec<String>,
@@ -89,6 +90,7 @@ impl ProcessorLimits {
             detect_layer_based_on_tag: settings.process.print.spiral_mode.0
                 || settings.project.gcode.has_scarf_joint_seam.0,
             record_moves: false,
+            mass_locator: None,
             extruder_colors: Vec::new(),
             writer_extruders: Vec::new(),
             pre_heating: false,
@@ -99,6 +101,11 @@ impl ProcessorLimits {
 }
 
 impl<'a> ProcessorConfig<'a> {
+    pub(super) fn mass_locator(mut self, locator: Option<super::object_mass::Locator<'a>>) -> Self {
+        self.mass_locator = locator;
+        self
+    }
+
     pub(super) fn recording_moves(self, record_moves: bool) -> Self {
         Self {
             record_moves,
@@ -159,7 +166,7 @@ pub fn process_gcode(
         settings.printer.gcode.gcode_flavor,
         bbl_printer,
     );
-    let (mut output, _) = process(
+    let (output, _) = process(
         gcode.as_bytes().to_vec(),
         post_process,
         // `GCodeProcessor::apply_config` sets load time independently of
@@ -167,9 +174,6 @@ pub fn process_gcode(
         settings.printer.gcode.machine_load_filament_time.0,
         limits.with_settings(settings).recording_moves(true),
     );
-    output
-        .result
-        .apply_filament_config(&settings.filament.gcode);
     output
 }
 
@@ -313,6 +317,9 @@ pub(super) fn process(
         })
         .filter(|_| config.record_moves)
         .unwrap_or_default();
+    if config.record_moves {
+        processor_result.apply_filament_config(&config.settings.filament.gcode);
+    }
     let mut statistics = estimate.print_statistics;
     // `GCodeProcessor::get_time` returns the float machine time.
     statistics.normal_time = estimate.total as f32;

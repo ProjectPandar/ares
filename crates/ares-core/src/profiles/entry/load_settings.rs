@@ -35,10 +35,21 @@ pub async fn slice_with_load_settings(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_with_load_settings_processed(input, request, metadata, context, false)
+        .await
+        .map(|processed| processed.gcode)
+}
+
+pub async fn slice_with_load_settings_processed(
+    input: impl AsRef<[u8]>,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    record_moves: bool,
+) -> Result<crate::ProcessedGCode, SliceError> {
     with_load_settings_source(input.as_ref(), request, |source| {
-        slice_source(source, metadata, false, context)
+        slice_source(source, metadata, record_moves, context)
     })
-    .map(|processed| processed.gcode)
 }
 
 /// Slice separately loaded STL objects at their supplied positions.
@@ -48,6 +59,18 @@ pub async fn slice_stl_files_with_load_settings(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_stl_files_with_load_settings_processed(files, request, metadata, context, false)
+        .await
+        .map(|processed| processed.gcode)
+}
+
+pub async fn slice_stl_files_with_load_settings_processed(
+    files: &[crate::StlFile<'_>],
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    record_moves: bool,
+) -> Result<crate::ProcessedGCode, SliceError> {
     let model = crate::Project::from_cli_stl_files(files)?;
     with_load_settings_source(files[0].bytes, request, |source| {
         slice_source(
@@ -56,11 +79,10 @@ pub async fn slice_stl_files_with_load_settings(
                 ..source
             },
             metadata,
-            false,
+            record_moves,
             context,
         )
     })
-    .map(|processed| processed.gcode)
 }
 
 fn with_load_settings_source<T>(

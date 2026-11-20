@@ -100,11 +100,22 @@ pub async fn slice_cli_stl_with_defaults(
     filename: &str,
     report: &mut crate::SlicedPlate,
 ) -> Result<Vec<u8>, SliceError> {
+    slice_cli_stl_with_defaults_processed(input, filename, report, false)
+        .await
+        .map(|processed| processed.gcode)
+}
+
+pub async fn slice_cli_stl_with_defaults_processed(
+    input: &[u8],
+    filename: &str,
+    report: &mut crate::SlicedPlate,
+    record_moves: bool,
+) -> Result<crate::ProcessedGCode, SliceError> {
     slice_with_report(
         input,
         filename,
         &SliceOptions::default(),
-        true,
+        (true, record_moves),
         Some(report),
     )
 }
@@ -115,16 +126,17 @@ pub(crate) fn slice(
     options: &SliceOptions,
     validate_print: bool,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_with_report(bytes, filename, options, validate_print, None)
+    slice_with_report(bytes, filename, options, (validate_print, false), None)
+        .map(|processed| processed.gcode)
 }
 
 fn slice_with_report(
     bytes: &[u8],
     filename: &str,
     options: &SliceOptions,
-    validate_print: bool,
+    (validate_print, record_moves): (bool, bool),
     sliced_plate: Option<&mut crate::SlicedPlate>,
-) -> Result<Vec<u8>, SliceError> {
+) -> Result<crate::ProcessedGCode, SliceError> {
     super::slice_source(
         ProjectSource {
             input: ProjectInput::OptionStl {
@@ -137,10 +149,9 @@ fn slice_with_report(
             ..ProjectSource::from(bytes)
         },
         GenerationMetadata::default(),
-        false,
+        record_moves,
         SlicerContext::new(0),
     )
-    .map(|processed| processed.gcode)
 }
 
 pub(crate) fn byte_api_error(error: SliceError) -> SliceError {

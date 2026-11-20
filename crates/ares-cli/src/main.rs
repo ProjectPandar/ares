@@ -1,5 +1,6 @@
 mod args;
 mod compatible_machine;
+mod direct_project;
 mod direct_stl;
 mod failure;
 mod load_settings;
@@ -7,6 +8,7 @@ mod moves_csv;
 mod project_presets;
 #[cfg(target_os = "linux")]
 mod result_json;
+mod statistics;
 
 use std::fs;
 use std::io;
