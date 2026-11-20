@@ -36,10 +36,16 @@ fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
     sliced_archive_matches_native(Some(SavedShape::TwoObjects));
 }
 
+#[test]
+fn cli_sliced_3mf_with_translated_model_part_matches_native_archive() {
+    sliced_archive_matches_native(Some(SavedShape::TwoObjectsWithParts));
+}
+
 #[derive(Clone, Copy)]
 enum SavedShape {
     Single,
     TwoObjects,
+    TwoObjectsWithParts,
 }
 
 fn sliced_archive_matches_native(shape: Option<SavedShape>) {
@@ -58,8 +64,11 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
         fs::create_dir_all(source.join("out")).unwrap();
         write_saved_input(&runner, &source);
         let mut input = fs::read(source.join("saved.3mf")).unwrap();
-        if matches!(shape, SavedShape::TwoObjects) {
-            input = super::export_3mf_sliced_rejection::multiobject_project(&input, false);
+        if !matches!(shape, SavedShape::Single) {
+            input = super::export_3mf_sliced_rejection::multiobject_project(
+                &input,
+                matches!(shape, SavedShape::TwoObjectsWithParts),
+            );
         }
         for dir in [&native_cwd, &ares_cwd] {
             fs::write(dir.join("saved.3mf"), &input).unwrap();
@@ -83,7 +92,7 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
     ]);
     assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
-    let split_files = 1 + usize::from(matches!(shape, Some(SavedShape::TwoObjects)));
+    let split_files = 1 + usize::from(saved && !matches!(shape, Some(SavedShape::Single)));
     assert_eq!(native.len(), 12 + split_files);
     check_md5(&native);
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
