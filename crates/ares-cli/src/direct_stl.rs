@@ -141,18 +141,26 @@ pub(super) async fn run(
     };
     let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
     let mut export_after = None;
-    let failure = |error| match error {
-        SliceError::OptionStlModelRead(_) => CliFailure::invalid_stl_input(
-            &args.inputs[0],
-            #[cfg(target_os = "linux")]
-            &output,
-        ),
-        error => slice_error_to_failure(
-            error,
-            &output,
-            #[cfg(target_os = "linux")]
-            1,
-        ),
+    let failure = |error: SliceError| {
+        if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {
+            // OrcaSlicer.cpp:6639 writes to the file sink, not to stderr.
+            args.diagnostics.error(format_args!(
+                "plate 1: triangle count {count} exceeds the limit:{limit}"
+            ));
+        }
+        match error {
+            SliceError::OptionStlModelRead(_) => CliFailure::invalid_stl_input(
+                &args.inputs[0],
+                #[cfg(target_os = "linux")]
+                &output,
+            ),
+            error => slice_error_to_failure(
+                error,
+                &output,
+                #[cfg(target_os = "linux")]
+                1,
+            ),
+        }
     };
     let plates = if args.load_settings.is_none() && args.load_filaments.is_none() && !multiple {
         if selection > 1 {

@@ -1,6 +1,7 @@
 mod args;
 mod assembly;
 mod compatible_machine;
+mod diagnostics;
 mod direct_project;
 mod direct_stl;
 mod export_3mf;
