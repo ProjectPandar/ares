@@ -204,7 +204,8 @@ pub(crate) struct Triangle {
     #[serde(rename = "@paint_fuzzy_skin", default)]
     pub paint_fuzzy_skin: super::facets_annotation::TriangleCodes,
     #[serde(rename = "@paint_seam", default)]
-    pub paint_seam: super::facets_annotation::TriangleCodes,
+    pub paint_seam:
+        super::facets_annotation::TriangleCodes<{ super::facets_annotation::SELECTOR_MAX_STATE }>,
     #[serde(rename = "@face_property", default)]
     pub face_property: Box<str>,
 }
