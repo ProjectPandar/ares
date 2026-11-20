@@ -6,8 +6,15 @@ use repair::Facet;
 const BINARY_HEADER_LEN: usize = 80;
 const TRIANGLE_COUNT_LEN: usize = 4;
 const BINARY_TRIANGLE_LEN: usize = 50;
+const BINARY_PREFIX_LEN: usize = BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN;
+const FORMAT_PROBE_LEN: usize = 128;
+const MIN_BINARY_LEN: usize = 284;
 
 pub fn load(input: &[u8]) -> Result<Model, SliceError> {
+    // admesh/stlinit.cpp:65–69 rejects an incomplete format probe.
+    if input.len() < BINARY_PREFIX_LEN + FORMAT_PROBE_LEN {
+        return Err(malformed_stl());
+    }
     let facets = if looks_like_binary(input) {
         parse_binary(input)?
     } else {
@@ -17,31 +24,31 @@ pub fn load(input: &[u8]) -> Result<Model, SliceError> {
 }
 
 pub fn looks_like_binary(input: &[u8]) -> bool {
-    if input.len() < BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN {
+    let Some(probe) = input.get(BINARY_PREFIX_LEN..BINARY_PREFIX_LEN + FORMAT_PROBE_LEN) else {
         return false;
+    };
+    if probe.iter().any(|&byte| byte > 127) {
+        return true;
     }
 
     let count = u32::from_le_bytes(
-        input[BINARY_HEADER_LEN..BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN]
+        input[BINARY_HEADER_LEN..BINARY_PREFIX_LEN]
             .try_into()
             .unwrap(),
-    ) as usize;
-    BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN + count.saturating_mul(BINARY_TRIANGLE_LEN)
-        == input.len()
+    );
+    BINARY_PREFIX_LEN as u64 + u64::from(count) * BINARY_TRIANGLE_LEN as u64 == input.len() as u64
 }
 
 fn parse_binary(input: &[u8]) -> Result<Vec<Facet>, SliceError> {
-    let count = u32::from_le_bytes(
-        input[BINARY_HEADER_LEN..BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN]
-            .try_into()
-            .unwrap(),
-    ) as usize;
-    if count == 0 {
+    // admesh/stlinit.cpp:99–104 sizes records independently of the declared count.
+    if input.len() < MIN_BINARY_LEN
+        || !(input.len() - BINARY_PREFIX_LEN).is_multiple_of(BINARY_TRIANGLE_LEN)
+    {
         return Err(malformed_stl());
     }
-
+    let count = (input.len() - BINARY_PREFIX_LEN) / BINARY_TRIANGLE_LEN;
     let mut triangles = Vec::with_capacity(count);
-    let mut offset = BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN;
+    let mut offset = BINARY_PREFIX_LEN;
 
     for _ in 0..count {
         let vertex_offset = offset + 12;
