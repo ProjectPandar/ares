@@ -24,16 +24,21 @@ pub fn load(
     let project = if name.to_ascii_lowercase().ends_with(".stl") {
         let volume = super::multipart::stl_volume(bytes, name, 1)?;
         let bounds = volume_bounds(&volume, Transform3d::IDENTITY);
-        let center = Point3d::new(
-            100. - (bounds.min[0] + bounds.max[0]) * 0.5,
-            100. - (bounds.min[1] + bounds.max[1]) * 0.5,
-            -bounds.min[2],
-        );
+        // OrcaSlicer.cpp:5051–5066 skips automatic arrangement, not the STL Z drop at 1978.
+        let (x, y) = if transforms.arrange == Some(0) {
+            (0., 0.)
+        } else {
+            (
+                100. - (bounds.min[0] + bounds.max[0]) * 0.5,
+                100. - (bounds.min[1] + bounds.max[1]) * 0.5,
+            )
+        };
+        let offset = Point3d::new(x, y, -bounds.min[2]);
         let instance = ProjectInstance::new(
             [1, 1, 1],
             true,
             true,
-            Transform3d::IDENTITY.pretranslated(center),
+            Transform3d::IDENTITY.pretranslated(offset),
         );
         let object = ProjectObject::new(
             name.to_owned(),
