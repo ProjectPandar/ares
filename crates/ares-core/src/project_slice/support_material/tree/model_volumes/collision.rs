@@ -3,7 +3,8 @@
 use super::TreeModelVolumes;
 use crate::geometry::{
     ClipperError, Coord, FillRule, JoinType, Polygon, difference_polygons_paths,
-    offset_expolygons_paths, offset_paths, union_ex, union_polygons_paths,
+    offset_expolygons_paths, offset_paths, simplification::polygons_simplify, union_ex,
+    union_polygons_paths,
 };
 
 type LayerPolygons = Vec<Vec<Polygon>>;
@@ -70,8 +71,11 @@ impl TreeModelVolumes<'_> {
                     (xy as f64 - (distance as f64 - half_layer) * xy as f64 / top as f64) as Coord;
                 accumulated.extend(offset_union(&self.outlines[above], radius + required_xy)?);
             }
-            // Source outline_idx == outline_count is false for the enabled single outline.
-            *output = union_polygons_paths(&accumulated)?;
+            // TreeModelVolumes.cpp simplifies collisions after the last mesh outline.
+            *output = polygons_simplify(
+                union_polygons_paths(&accumulated)?,
+                self.settings.mesh.resolution as f64,
+            )?;
         }
         if calculate_placeable {
             for layer in (bottom + 1).max(begin)..end {
