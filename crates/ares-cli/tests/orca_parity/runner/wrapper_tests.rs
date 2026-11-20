@@ -9,6 +9,7 @@ fn wrapper_requires_explicit_reference_before_library_discovery() {
         .arg(super::repo_root().join("scripts/orca-parity.sh"))
         .arg("--help")
         .env_remove("ORCA_APPDIR")
+        .env_remove("ARES_PARITY_ENV")
         .env("ORCA_LIB_CACHE", &cache)
         .output()
         .unwrap();
