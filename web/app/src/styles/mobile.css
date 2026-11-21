@@ -28,6 +28,9 @@
   .titlebar { grid-template-columns: 1fr auto; padding: env(safe-area-inset-top) 4px 0; }
   .titlebar-title { display: none; }
   .brand { font-size: 0; margin: 0 6px 0 2px; }
+  /* The File menu scrolls within the screen; submenus open in place under their item. */
+  .file-menu > .context-menu { max-height: calc(100dvh - 60px); overflow-y: auto; }
+  .file-submenu > .context-menu { position: static; min-width: 0; padding: 0 0 0 12px; border: 0; box-shadow: none; }
 
   /* The notebook row keeps the tabs; its SideButtons become the bottom bar. */
   .tabbar { display: contents; }

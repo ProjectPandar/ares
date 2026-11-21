@@ -24,22 +24,24 @@ export function Shell() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const importInput = useRef<HTMLInputElement>(null);
+  const projectInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
   // Layout effect: CSS theme variables must be live before the viewport reads them.
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  // MainFrame key handler (Ctrl+I/R/G) and plater keys: ? list, Esc deselect, Tab switches tabs.
+  // MainFrame key handler (Ctrl+O/I/R/G) and plater keys: ? list, Esc deselect, Tab switches tabs.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!isShortcut(event) || event.altKey) return;
-      const { engine: status, loadingFile, scene } = useApp.getState();
+      const { engine: status, loadingFile, scene, slice } = useApp.getState();
       if (cmdDown(event)) {
         const key = event.key.toLowerCase();
-        if (event.shiftKey || !["i", "r", "g"].includes(key)) return;
+        if (event.shiftKey || !["o", "i", "r", "g"].includes(key)) return;
         event.preventDefault();
-        if (key === "i" && status === "ready" && !loadingFile) importInput.current!.click();
+        if (key === "o" && status === "ready" && !loadingFile && slice.status !== "slicing") projectInput.current!.click();
+        else if (key === "i" && status === "ready" && !loadingFile) importInput.current!.click();
         else if (key === "r" && status === "ready" && scene) {
           void slicePlate();
           void router.navigate({ to: "/preview" });
@@ -60,7 +62,7 @@ export function Shell() {
 
   return (
     <div className="shell">
-      <TitleBar importInput={importInput} onShortcuts={() => setShortcutsOpen(true)} onAbout={() => setAboutOpen(true)} />
+      <TitleBar importInput={importInput} projectInput={projectInput} onShortcuts={() => setShortcutsOpen(true)} onAbout={() => setAboutOpen(true)} />
       <TabBar />
       <main className="workspace" data-testid="workspace"
         onDragOver={(event) => {

@@ -106,6 +106,32 @@ export async function importFile(file: File) {
   }
 }
 
+/**
+ * Plater::new_project (Plater.cpp:16064) with the Keep answer: the model, its plates and slices go, the
+ * selected presets and their edits stay. An opened 3MF's own presets go with its scene.
+ */
+export async function newProject() {
+  const { plater, presetSelection: selection } = useApp.getState();
+  useApp.setState({
+    ...(selection ? { presetSelection: { ...selection, filamentProject: undefined } } : { compatible: null, printerPanel: null }),
+    file: null,
+    scene: null,
+    plater: null,
+    currentPlate: 0,
+    arrange: null,
+    arrangeError: undefined,
+    plateSlices: {},
+    typedSettings: null,
+    selectedObject: null,
+    selectedInstance: null,
+    slice: { status: "idle" },
+    loadError: undefined,
+    loadWarning: undefined,
+  });
+  void plater?.free();
+  if (selection) await updateCompatible();
+}
+
 /** Plater.cpp:9474-9479: the warning text of a project's invalid values, if any. */
 function invalidValuesWarning(values: Record<string, string>) {
   const entries = Object.entries(values);

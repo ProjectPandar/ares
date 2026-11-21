@@ -145,7 +145,7 @@ for (const page of Object.values(tabs).flat()) {
 
 // Plater sidebar titles (printer/filament/process) and preset edit buttons, MainFrame tabs and topbar.
 const SHELL_ICONS = [
-  "printer", "filament", "process", "edit", "settings", "tab_3d_active", "tab_preview_active", "topbar_open",
+  "printer", "filament", "process", "edit", "settings", "tab_3d_active", "tab_preview_active", "topbar_file",
   // MenuFactory ADD_VOLUME_MENU_ITEMS: ObjectList volume icons.
   "menu_add_part", "menu_add_negative", "menu_add_modifier", "menu_support_blocker", "menu_support_enforcer",
   // GLCanvas3D::_init_main_toolbar, GLGizmosManager::init and _init_assemble_view_toolbar icons.
