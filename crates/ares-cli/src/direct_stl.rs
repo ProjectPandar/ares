@@ -2,17 +2,16 @@ use std::{fs, io, path::Path};
 
 use ares_core::{
     ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
-    LoadSettingsSliceRequest, SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
+    LoadSettingsSliceRequest, SlicedPlate, SlicedStlPlate, SlicerContext,
 };
 
 use crate::{
-    args::DirectSliceArgs,
-    failure::{CliFailure, slice_error_to_failure},
-    preset_sources::read_preset_files,
-    settings_export, split_native_list,
+    args::DirectSliceArgs, failure::CliFailure, preset_sources::read_preset_files, settings_export,
+    split_native_list,
 };
 
 pub(crate) mod arrange;
+mod plates;
 
 pub(super) async fn run(
     mut args: DirectSliceArgs,
@@ -146,45 +145,12 @@ pub(super) async fn run(
         0,
     )?;
     let mut export_after = None;
-    let mut failure = |error: SliceError, report: Option<&SlicedPlate>| {
-        if let Some(_report) = report
-            && let Some(failure) = crate::failure::slicing::path_conflict(
-                &error,
-                &mut args.diagnostics,
-                #[cfg(target_os = "linux")]
-                &output,
-                1,
-                #[cfg(target_os = "linux")]
-                _report,
-            )
-        {
-            return failure;
-        }
-        if let SliceError::TriangleCountExceedsLimit { count, limit } = &error {
-            // OrcaSlicer.cpp:6639 writes to the file sink, not to stderr.
-            args.diagnostics.error(format_args!(
-                "plate 1: triangle count {count} exceeds the limit:{limit}"
-            ));
-        }
-        match error {
-            SliceError::OptionStlModelRead(_) => CliFailure::invalid_stl_input(
-                &args.inputs[0],
-                #[cfg(target_os = "linux")]
-                &output,
-            ),
-            error => slice_error_to_failure(
-                error,
-                &output,
-                #[cfg(target_os = "linux")]
-                1,
-            ),
-        }
-    };
+    let mut completed = Vec::new();
+    let context = context.with_cli_path_conflict_check();
     let plates = if args.load_settings.is_none() && args.load_filaments.is_none() && !multiple {
         if selection > 1 {
             Vec::new()
         } else {
-            let context = context.with_cli_path_conflict_check();
             let processed = if let Some(imported) = &imported {
                 ares_core::slice_imported_stl_with_defaults_processed(
                     imported,
@@ -203,7 +169,14 @@ pub(super) async fn run(
                 )
                 .await
             }
-            .map_err(|error| failure(error, Some(&sliced_plate)))?;
+            .map_err(|error| {
+                plates::slice_failure(
+                    (&args.inputs[0], &output),
+                    &mut args.diagnostics,
+                    error,
+                    (1, Some(&sliced_plate)),
+                )
+            })?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
@@ -293,7 +266,6 @@ pub(super) async fn run(
             sliced_plate: &mut sliced_plate,
         };
         if models.is_empty() {
-            let context = context.with_cli_path_conflict_check();
             let processed = if let Some(imported) = &imported {
                 ares_core::slice_imported_stl_with_load_settings_processed(
                     imported,
@@ -313,46 +285,41 @@ pub(super) async fn run(
                 )
                 .await
             }
-            .map_err(|error| failure(error, Some(&sliced_plate)))?;
+            .map_err(|error| {
+                plates::slice_failure(
+                    (&args.inputs[0], &output),
+                    &mut args.diagnostics,
+                    error,
+                    (1, Some(&sliced_plate)),
+                )
+            })?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
                 report: sliced_plate,
             }]
         } else {
-            ares_core::slice_stl_models_with_load_settings(
-                &models,
-                request,
-                selection,
-                context,
-                args.export_statistics,
-            )
-            .await
-            .map_err(|error| failure(error, None))?
+            plates::slice_arranged(
+                (&args.inputs[0], &output),
+                (
+                    &mut args.diagnostics,
+                    args.no_check,
+                    args.strict,
+                    args.export_statistics,
+                ),
+                (&models, request, selection, context),
+                &mut completed,
+            )?;
+            Vec::new()
         }
     };
-    let mut completed = Vec::with_capacity(plates.len());
-    for SlicedStlPlate {
-        id,
-        processed,
-        report,
-    } in plates
-    {
-        crate::failure::slicing::check_direct(
-            (&mut args.diagnostics, args.no_check, args.strict),
-            #[cfg(target_os = "linux")]
+    for plate in plates {
+        completed.push(plates::publish(
             &output,
-            (id, &report),
-            &[],
-            None,
-        )?;
-        crate::statistics::write(
-            &dir.join(format!("plate_{id}.gcode")),
-            processed,
+            (&mut args.diagnostics, args.no_check, args.strict),
+            plate,
             args.export_statistics,
-            id,
-        )?;
-        completed.push((id, report));
+        )?);
     }
 
     if let Some((destination, json)) = export_after {

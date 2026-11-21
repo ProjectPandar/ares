@@ -134,6 +134,7 @@ pub fn slice_cli_project_plates(
                 selected_printer,
                 (true, 0, false),
                 Some((&preparation, overrides)),
+                |_| {},
             )?;
             let mut report = SlicedPlate::default();
             state.report(&mut report)?;

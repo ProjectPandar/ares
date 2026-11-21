@@ -31,27 +31,6 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
-    if let super::ProjectInput::ArrangedStl(project, preparation) = source.input {
-        let plate = source.plate.expect("the slice action selects a plate");
-        super::capabilities::validate_settings(project.settings())?;
-        // Install the plate events before the wipe-tower fit reads its extruders.
-        let mut copy = project.copy_stl_model();
-        if let Some(custom_gcodes) = source.custom_gcodes {
-            copy.replace_plate_custom_gcodes(custom_gcodes);
-        }
-        let project = crate::plater::fit_slice_wipe_tower(copy, Some(plate))?;
-        return apply_plate(
-            project.plate_view(plate, false)?,
-            None,
-            (
-                source.validate_print,
-                source.max_triangle_count,
-                source.allow_mix_temp,
-            ),
-            Some((preparation, source.overrides)),
-        )?
-        .prepare();
-    }
     let plate = source.plate;
     let validation = (
         source.validate_print,
@@ -147,6 +126,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         selected_printer,
         validation,
         preparation,
+        |_| {},
     )?
     .prepare()
 }
@@ -161,6 +141,7 @@ pub(super) fn apply_plate(
     selected_printer: Option<&str>,
     (validate_print, max_triangle_count, allow_mix_temp): (bool, i32, bool),
     preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
+    after_volume_checks: impl FnOnce(&Project),
 ) -> Result<AppliedPlate, SliceError> {
     let plate_id = project.first_plate_id();
     // `OrcaSlicer.cpp:6562-6573`: unconditional — if no model-part instance
@@ -172,6 +153,7 @@ pub(super) fn apply_plate(
     if max_triangle_count != 0 {
         inside_triangle_count(&project, max_triangle_count)?;
     }
+    after_volume_checks(&project);
     let resolved = match preparation {
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, context, overrides)?,
         None => resolve_bounded_project_config(&project)?,

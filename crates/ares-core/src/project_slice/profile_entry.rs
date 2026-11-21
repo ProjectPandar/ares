@@ -75,7 +75,7 @@ fn load_with_profile_preparation(
                 Ok((loaded, preparation))
             }
         },
-        super::ProjectInput::OptionStl { .. } | super::ProjectInput::ArrangedStl(..) => {
+        super::ProjectInput::OptionStl { .. } => {
             unreachable!("not a selected-profile input")
         }
         super::ProjectInput::Model(model) => model
