@@ -1,5 +1,6 @@
 mod arc_accounting;
 mod delays;
+mod elegoo;
 mod envelope;
 mod estimate;
 mod estimated_stats;

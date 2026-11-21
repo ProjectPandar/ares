@@ -216,6 +216,14 @@ impl MoveRecorder {
         }
     }
 
+    pub(super) fn elegoo_purge_temperature(&mut self, physical: usize, temperature: Option<f32>) {
+        if let Some(temperature) = temperature
+            && let Some(slot) = self.extruder_temps.get_mut(physical)
+        {
+            *slot = temperature;
+        }
+    }
+
     /// `process_filament_change` (`:5540-5605`) tool-change vertex.
     pub(super) fn tool_change(&mut self, source: usize, filament: usize, position: [f64; 4]) {
         self.filament = filament;

@@ -46,11 +46,25 @@ impl<'a> FilamentChange<'a> {
             // filament-change accounting as T (`:5444-5466`).
             None => m1020_filament(command, code, self.count)?,
         };
+        self.select(filament)
+    }
+
+    pub(super) fn elegoo_purge(&mut self, filament: usize, seconds: f32) -> Option<(usize, f32)> {
+        self.unload = 0.0;
+        self.load = seconds;
+        self.select(filament)
+    }
+
+    pub(super) fn physical_for(&self, filament: usize) -> usize {
+        (self.map[filament].0 - 1) as usize
+    }
+
+    fn select(&mut self, filament: usize) -> Option<(usize, f32)> {
         let previous = self.physical.and_then(|id| self.current[id]);
         if previous == Some(filament) {
             return None;
         }
-        let next_physical = (self.map[filament].0 - 1) as usize;
+        let next_physical = self.physical_for(filament);
         if let Some(physical) = self.physical {
             self.last[physical] = previous;
         }
