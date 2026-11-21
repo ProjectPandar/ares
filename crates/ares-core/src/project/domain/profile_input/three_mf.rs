@@ -105,6 +105,15 @@ impl Project {
                 machine_switch: switch,
             },
         )?;
+        // `CLI::run:1820` only records the imported printer name for BBL-family 3MF.
+        let original_printer = if project.documents.bbl_family_3mf
+            && let Some(super::RawConfigValue::Text(name)) = embedded_raw.get("printer_settings_id")
+        {
+            name.as_str()
+        } else {
+            ""
+        };
+        super::cli_machine_limits::apply(&mut merged, load_names, original_printer);
         // User overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged)?;
         mapped_prime_tower::disable_after_mapping(&mut merged, settings, overrides);
