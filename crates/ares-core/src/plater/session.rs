@@ -88,9 +88,9 @@ impl PlaterSession {
     /// Loads a model with selected presets onto an empty plate, centered on the bed and dropped
     /// when `request.placement` asks (`Plater::priv::load_model_objects`); the composed
     /// `printable_area` sizes the plates.
-    pub async fn load_with_profiles(
+    pub async fn load_with_profiles<'a>(
         input: Vec<u8>,
-        request: crate::ProfileSliceRequest<'_>,
+        request: impl crate::ProfileRequest<'a>,
     ) -> Result<Self, SliceError> {
         let project = crate::profile_placed_project(&input, request).await?;
         Ok(Self::with_project(input, project))

@@ -98,14 +98,14 @@ pub async fn create_plater_session_with_profiles(
 ) -> Result<PlaterSession, JsValue> {
     let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
     let overrides = options.overrides();
-    let request = ProfileSliceRequest {
+    let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
         filename: &filename,
         catalog_json: &catalog_json,
         selection_json: &selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
-    };
+    });
     let session = ares_core::PlaterSession::load_with_profiles(input, request)
         .await
         .map_err(js_error)?;
@@ -313,14 +313,14 @@ impl PlaterSession {
         let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
         let mut report = on_status.as_ref().map(crate::status::report_to);
         let overrides = options.overrides();
-        let request = ProfileSliceRequest {
+        let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
             filename: &self.filename,
             catalog_json: &catalog_json,
             selection_json: &selection_json,
             plate: options.plate,
             overrides: &overrides,
             placement: options.placement(),
-        };
+        });
         let output = ares_core::slice_plater_with_profiles(
             &self.session,
             request,

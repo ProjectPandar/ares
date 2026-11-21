@@ -14,7 +14,13 @@ impl Project {
     ) -> Result<(), SliceError> {
         self.apply_project_preset_refresh(raw, overrides)?;
         self.documents.preset_selection = Some(std::sync::Arc::new(selection));
+        self.documents.config_composer = super::documents::ConfigComposer::FullFffConfig;
         Ok(())
+    }
+
+    /// The explicit plater selection's config is full_fff_config's.
+    pub(crate) fn compose_as_full_fff_config(&mut self) {
+        self.documents.config_composer = super::documents::ConfigComposer::FullFffConfig;
     }
 
     pub(crate) fn apply_project_preset_refresh(

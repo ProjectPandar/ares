@@ -1,6 +1,8 @@
 mod collection;
 mod config;
+mod explicit;
 mod external;
+mod groups;
 mod loaded;
 mod typed;
 mod variants;
@@ -12,6 +14,11 @@ use crate::{
 };
 pub use collection::{PresetCollectionState, PresetOutcome, PresetRecord};
 pub use config::PresetConfig;
+pub(in crate::profiles) use explicit::compose as explicit;
+pub(crate) use groups::FullFffGroups;
+pub(in crate::profiles) use groups::{
+    Selected, dirty_options, filament_diff, filament_parent, selected_parent,
+};
 pub use loaded::load_preset_bundle;
 pub(crate) use loaded::{LoadedCatalog, loaded_catalog};
 use serde::Serialize;
@@ -145,7 +152,7 @@ pub(super) fn refresh(
         &selection.process,
         &selection.printer,
         &filament_states,
-    );
+    )?;
     for (kind, state) in [
         (ProfileKind::Process, &selection.process),
         (ProfileKind::Machine, &selection.printer),
