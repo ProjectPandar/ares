@@ -170,3 +170,6 @@ mod arachne_disconnected_loop;
 
 #[path = "arachne_ioi_proximity.rs"]
 mod arachne_ioi_proximity;
+
+#[path = "overhang_wall_retract_wipe.rs"]
+mod overhang_wall_retract_wipe;

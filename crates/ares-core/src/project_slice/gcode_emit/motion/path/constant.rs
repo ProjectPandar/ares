@@ -11,10 +11,6 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) points: &'a [(f64, f64)],
     pub(super) local_points: &'a [(f64, f64)],
     pub(super) timelapse_context: crate::project_slice::gcode_emit::timelapse::Context<'b>,
-    // The RAW pre-arc-fit path points (upstream `path.polyline`,
-    // `GCode.cpp:6111`) used to build the wipe path — not the post
-    // `clip_fitting_end` `local_points`.
-    pub(super) wipe_points: &'a [(f64, f64)],
     pub(super) segment_lengths: &'a [f64],
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
@@ -30,7 +26,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
         points,
         local_points,
         timelapse_context,
-        wipe_points,
+
         segment_lengths,
         fitting,
         last_scaled,
@@ -39,10 +35,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
         properties,
         state,
     } = emission;
-    let wipe_points = wipe_points
-        .iter()
-        .map(|&(x, y)| arc::Point { x, y })
-        .collect::<Vec<_>>();
+
     fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
     let arc_points = points
         .iter()
@@ -151,7 +144,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
         }
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
-    state.wipe_path = wipe_points.into_iter().rev().collect();
+
     state.last_scaled_position = last_scaled;
     state.last_position_defined = true;
     state.scarf_z = Some(state.layer_z);

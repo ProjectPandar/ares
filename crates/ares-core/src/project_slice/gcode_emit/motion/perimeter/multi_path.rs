@@ -16,7 +16,7 @@ pub(super) fn emit(
         state.adaptive_pa_emitted = false;
     }
     for path in paths {
-        super::super::materialized::emit(
+        let _ = super::super::materialized::emit_subpath(
             output,
             state,
             super::super::materialized::Emission {
@@ -25,6 +25,7 @@ pub(super) fn emit(
                 slope: None,
                 geometry,
             },
+            None,
         )?;
         state.adaptive_pa_emitted = true;
     }

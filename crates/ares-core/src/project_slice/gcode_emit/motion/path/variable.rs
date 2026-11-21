@@ -151,10 +151,5 @@ pub(super) fn emit(command: Emission<'_>) -> Result<(), crate::SliceError> {
         x: x + state.origin.0 - state.extruder_offset.0,
         y: y + state.origin.1 - state.extruder_offset.1,
     });
-    state.wipe_path = wipe_points
-        .iter()
-        .rev()
-        .map(|&(x, y)| arc::Point { x, y })
-        .collect();
     Ok(())
 }

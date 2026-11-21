@@ -132,6 +132,9 @@ pub(super) fn decide(
         if defer_lift_for_retracted_travel {
             travel::schedule_retract_tail(output, state);
         }
+    } else {
+        // GCode.cpp:10621–10623: a non-retracting travel discards the old wipe path.
+        state.wipe_path.clear();
     }
     Ok(())
 }

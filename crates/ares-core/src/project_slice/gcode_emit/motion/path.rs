@@ -35,10 +35,23 @@ pub(super) fn emit(
 pub(super) fn emit_with_speed(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
-    (properties, speed): (PathProperties<'_>, Option<f64>),
+    properties_and_speed: (PathProperties<'_>, Option<f64>),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
+    if let Some(wipe_path) = emit_subpath(output, points, properties_and_speed, geometry, state)? {
+        state.wipe_path = wipe_path;
+    }
+    Ok(())
+}
+
+pub(super) fn emit_subpath(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    (properties, speed): (PathProperties<'_>, Option<f64>),
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<Option<Vec<arc::Point>>, crate::SliceError> {
     if let Some(points) = properties.contour {
         let points = contour::clipped(points, properties.end_clip / geometry.scale.factor());
         let properties = PathProperties {
@@ -65,7 +78,11 @@ pub(super) fn emit_force_no_extrusion(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), crate::SliceError> {
-    emit_inner(output, points, (properties, None, true), geometry, state)
+    if let Some(wipe_path) = emit_inner(output, points, (properties, None, true), geometry, state)?
+    {
+        state.wipe_path = wipe_path;
+    }
+    Ok(())
 }
 
 fn emit_inner(
@@ -74,7 +91,7 @@ fn emit_inner(
     (properties, requested_speed, force_no_extrusion): (PathProperties<'_>, Option<f64>, bool),
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) -> Result<(), crate::SliceError> {
+) -> Result<Option<Vec<arc::Point>>, crate::SliceError> {
     let role = role_id(properties.feature);
     let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
@@ -87,7 +104,7 @@ fn emit_inner(
     );
     let Some((&first_scaled, &last_scaled)) = scaled_points.first().zip(scaled_points.last())
     else {
-        return Ok(());
+        return Ok(None);
     };
     // Upstream computes segment lengths from scaled integer coordinates
     // (`Line::length() * SCALING_FACTOR`, `GCode.cpp:6997-6998`), not from
@@ -125,7 +142,7 @@ fn emit_inner(
             );
         }
     }
-    let wipe_points_source = local_points.clone();
+
     let (acceleration, configured_speed) = properties.kinematics(
         &state.options,
         state.layer_index,
@@ -187,7 +204,7 @@ fn emit_inner(
     );
     // Source travels to the raw path start before overhang processing quantizes its points.
     let Some(&(first_local_x, first_local_y)) = local_points.first() else {
-        return Ok(());
+        return Ok(None);
     };
     let (first_x, first_y) = (
         first_local_x + state.origin.0 - state.extruder_offset.0,
@@ -301,7 +318,7 @@ fn emit_inner(
         variable::emit(variable::Emission {
             output,
             points: &points,
-            wipe_points: &wipe_points_source,
+            wipe_points: &local_points,
             processed: &processed,
             original_speed,
             acceleration,
@@ -316,9 +333,7 @@ fn emit_inner(
             state.scarf_z = Some(state.layer_z);
         }
         output.extend_from_slice(b";_EXTRUDE_END\n");
-        return Ok(());
-    }
-    if properties.contour.is_some() {
+    } else if properties.contour.is_some() {
         contour::emit(
             output,
             &points,
@@ -328,16 +343,9 @@ fn emit_inner(
         )?;
         state.last_scaled_position = last_scaled;
         state.last_position_defined = true;
-        return Ok(());
-    }
-    // Non-processed sloped path (`GCode.cpp:6992` non-`new_points`
-    // branch, `sloped != nullptr`): constant speed F, Z-interpolated
-    // segments — no per-segment speed tracking needed.
-    if properties.slope.is_some() {
-        let wipe_points = wipe_points_source
-            .iter()
-            .map(|&(x, y)| arc::Point { x, y })
-            .collect::<Vec<_>>();
+    } else if properties.slope.is_some() {
+        // Non-processed sloped path (`GCode.cpp:6992`): constant speed F
+        // with Z-interpolated segments.
         fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
         super::scarf::emit_segments(
             output,
@@ -347,23 +355,29 @@ fn emit_inner(
             geometry.timelapse_context,
         )?;
         output.extend_from_slice(b";_EXTRUDE_END\n");
-        state.wipe_path = wipe_points.into_iter().rev().collect();
+
         state.last_scaled_position = last_scaled;
         state.last_position_defined = true;
-        return Ok(());
+    } else {
+        constant::emit(constant::Emission {
+            output,
+            points: &points,
+            local_points: &local_points,
+            timelapse_context: geometry.timelapse_context,
+            segment_lengths: &segment_lengths,
+            fitting: &fitting,
+            last_scaled,
+            path_overhang_fan_active,
+            force_no_extrusion,
+            properties,
+            state,
+        })?;
     }
-    constant::emit(constant::Emission {
-        output,
-        points: &points,
-        local_points: &local_points,
-        timelapse_context: geometry.timelapse_context,
-        wipe_points: &wipe_points_source,
-        segment_lengths: &segment_lengths,
-        fitting: &fitting,
-        last_scaled,
-        path_overhang_fan_active,
-        force_no_extrusion,
-        properties,
-        state,
-    })
+    Ok(Some(
+        local_points
+            .into_iter()
+            .rev()
+            .map(|(x, y)| arc::Point { x, y })
+            .collect(),
+    ))
 }

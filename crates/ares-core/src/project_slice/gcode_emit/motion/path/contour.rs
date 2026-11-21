@@ -72,14 +72,6 @@ pub(super) fn emit(
         )?;
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
-    state.wipe_path = points
-        .iter()
-        .rev()
-        .map(|p| arc::Point {
-            x: geometry.scale.unscale(p.x),
-            y: geometry.scale.unscale(p.y),
-        })
-        .collect();
     Ok(())
 }
 
