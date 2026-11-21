@@ -35,6 +35,7 @@ impl Generator<'_> {
         }
         let layer = &self.plan.layers[self.layer_index];
         let layer_height = layer.height;
+        let combined_away = layer.combined_away;
         let perimeter = self.plan.perimeter_width;
         let current_depth = layer.depth - layer.changes_depth();
         let bounds = BoxCoordinates::new(
@@ -136,7 +137,7 @@ impl Generator<'_> {
         let previous = (closest + polygon.points().len() - 1) % polygon.points().len();
         writer.add_wipe_point(writer.position);
         writer.add_wipe_point(unscaled(polygon.points()[previous], self.scale));
-        if !self.plan.no_sparse || toolchanges_on_layer || first_layer {
+        if !combined_away && (!self.plan.no_sparse || toolchanges_on_layer || first_layer) {
             self.used_filament[self.current_tool] += writer.take_used_filament();
             self.current_height += layer_height;
         }

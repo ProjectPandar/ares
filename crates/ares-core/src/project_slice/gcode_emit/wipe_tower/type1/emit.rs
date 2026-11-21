@@ -208,6 +208,13 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
     config.insert("change_filament_gcode", Value::String(change));
     config.insert("filament_start_gcode", Value::String(start_filament));
     let text = templates::render(state, "tcr_rotated_gcode", &code, tool, &mut config);
+    super::super::sparse_combination::append_height_tag(
+        output,
+        state,
+        settings,
+        result.layer_height,
+        &text,
+    );
     let mut chars = text.chars();
     while let Some(ch) = chars.next() {
         let ch = if ch == '\\' {

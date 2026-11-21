@@ -12,6 +12,29 @@ impl Generator<'_> {
         if self.plan.layers.is_empty() {
             return Ok(Vec::new());
         }
+        if super::sparse_combination::enabled(self.settings) {
+            let combined = super::sparse_combination::combine(
+                self.settings,
+                self.plan.layers.iter().map(|layer| {
+                    (
+                        layer.height,
+                        layer
+                            .changes
+                            .first()
+                            .zip(layer.changes.last())
+                            .map(|(first, last)| (first.old_tool, last.new_tool)),
+                    )
+                }),
+                self.plan
+                    .first_layer
+                    .expect("nonempty tower plan has a first layer"),
+                self.current_tool,
+            );
+            for (layer, (height, away)) in self.plan.layers.iter_mut().zip(combined) {
+                layer.height = height;
+                layer.combined_away = away;
+            }
+        }
         self.plan.plan_tower();
         self.current_height = 0.0;
         for _ in 0..5 {
@@ -158,6 +181,11 @@ impl Generator<'_> {
             let mut merged = finish.merge(first);
             merged.force_travel = true;
             results.insert(0, merged);
+        }
+        if self.plan.layers[layer_index].combined_away {
+            for result in &mut results {
+                result.combined_away = true;
+            }
         }
         Ok(results)
     }

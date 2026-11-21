@@ -26,6 +26,7 @@ mod prime;
 mod result;
 mod route;
 mod runtime;
+mod sparse_combination;
 mod type1;
 pub(super) use runtime::{finalize, initialize, tool_change};
 mod tool_change;

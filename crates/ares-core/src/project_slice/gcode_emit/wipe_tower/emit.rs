@@ -233,6 +233,13 @@ pub(super) fn append(
                     ch
                 });
             }
+            super::sparse_combination::append_height_tag(
+                output,
+                state,
+                settings,
+                result.layer_height,
+                &unescaped,
+            );
             output.extend_from_slice(unescaped.as_bytes());
         }
         Err(error) => {

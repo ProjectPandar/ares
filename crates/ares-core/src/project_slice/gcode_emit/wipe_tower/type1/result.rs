@@ -57,6 +57,7 @@ impl Result {
                 new_tool: writer.tool,
                 print_z: z,
                 layer_height: height,
+                combined_away: false,
                 start: writer.start,
                 end,
                 gcode: writer.gcode,

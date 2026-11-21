@@ -15,6 +15,7 @@ pub(super) struct ToolChangeResult {
     pub(super) new_tool: usize,
     pub(super) print_z: f32,
     pub(super) layer_height: f32,
+    pub(super) combined_away: bool,
     pub(super) start: [f32; 2],
     pub(super) end: [f32; 2],
     pub(super) gcode: String,
