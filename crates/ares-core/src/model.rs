@@ -34,14 +34,6 @@ pub struct ZBounds {
     pub max: f32,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct XyBounds {
-    pub(crate) min_x: f64,
-    pub(crate) max_x: f64,
-    pub(crate) min_y: f64,
-    pub(crate) max_y: f64,
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Model {
     format: InputFormat,
@@ -80,35 +72,5 @@ impl Model {
             max = max.max(vertex.z);
         }
         Some(ZBounds { min, max })
-    }
-
-    pub(crate) fn xy_bounds(&self) -> Option<XyBounds> {
-        let mut vertices = self
-            .triangles
-            .iter()
-            .flat_map(|triangle| triangle.vertices().iter());
-        let first = vertices.next()?;
-        if !first.x.is_finite() || !first.y.is_finite() {
-            return None;
-        }
-        let mut min_x = first.x;
-        let mut max_x = first.x;
-        let mut min_y = first.y;
-        let mut max_y = first.y;
-        for vertex in vertices {
-            if !vertex.x.is_finite() || !vertex.y.is_finite() {
-                return None;
-            }
-            min_x = min_x.min(vertex.x);
-            max_x = max_x.max(vertex.x);
-            min_y = min_y.min(vertex.y);
-            max_y = max_y.max(vertex.y);
-        }
-        Some(XyBounds {
-            min_x: f64::from(min_x),
-            max_x: f64::from(max_x),
-            min_y: f64::from(min_y),
-            max_y: f64::from(max_y),
-        })
     }
 }

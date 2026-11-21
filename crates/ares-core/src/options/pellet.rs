@@ -41,14 +41,6 @@ impl super::SliceOptions {
             parse_filament_shrinkage_percent_vector("filament_shrinkage_compensation_z", value)?;
         Ok(DEFAULT_FILAMENT_SHRINKAGE_COMPENSATION_Z / percentages[0])
     }
-
-    pub(crate) fn filament_shrink_xy(&self) -> Result<f64, SliceError> {
-        let Some(value) = self.values.get("filament_shrink") else {
-            return Ok(1.0);
-        };
-        let percentages = parse_filament_shrinkage_percent_vector("filament_shrink", value)?;
-        Ok(DEFAULT_FILAMENT_SHRINKAGE_COMPENSATION_Z / percentages[0])
-    }
 }
 
 fn parse_filament_shrinkage_percent_vector(

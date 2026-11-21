@@ -1,4 +1,4 @@
-use crate::{PrintPathRole, SliceError};
+use crate::SliceError;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct SmallAreaInfillFlowCompensation {
@@ -18,21 +18,6 @@ impl SmallAreaInfillFlowCompensation {
         }
     }
 
-    pub(crate) const fn default_model_entries() -> &'static [&'static str] {
-        &[
-            "0,0",
-            "\n0.2,0.4444",
-            "\n0.4,0.6145",
-            "\n0.6,0.7059",
-            "\n0.8,0.7619",
-            "\n1.5,0.8571",
-            "\n2,0.8889",
-            "\n3,0.9231",
-            "\n5,0.9520",
-            "\n10,1",
-        ]
-    }
-
     pub(crate) fn parse(
         entries: Vec<String>,
         bottom_supported: bool,
@@ -47,45 +32,25 @@ impl SmallAreaInfillFlowCompensation {
         })
     }
 
-    pub(crate) fn multiplier(
-        &self,
-        role: PrintPathRole,
-        is_first_layer: bool,
-        line_length_mm: f64,
-    ) -> f64 {
-        let Some(model) = &self.model else {
-            return 1.0;
-        };
-        if !matches!(
-            role,
-            PrintPathRole::SolidInfill
-                | PrintPathRole::TopSolidInfill
-                | PrintPathRole::BottomSurface
-        ) {
-            return 1.0;
-        }
-        if !((is_first_layer && self.bottom_supported)
-            || (role == PrintPathRole::SolidInfill && self.internal_supported)
-            || (role == PrintPathRole::TopSolidInfill && self.top_supported))
-        {
-            return 1.0;
-        }
-        model.multiplier(line_length_mm)
-    }
-
     pub(crate) fn multiplier_for_feature(
         &self,
         feature: &str,
         is_first_layer: bool,
         line_length_mm: f64,
     ) -> f64 {
-        let role = match feature {
-            "Internal solid infill" => PrintPathRole::SolidInfill,
-            "Top surface" => PrintPathRole::TopSolidInfill,
-            "Bottom surface" => PrintPathRole::BottomSurface,
+        let supported = match feature {
+            "Internal solid infill" => self.internal_supported,
+            "Top surface" => self.top_supported,
+            "Bottom surface" => false,
             _ => return 1.0,
         };
-        self.multiplier(role, is_first_layer, line_length_mm)
+        if supported || (is_first_layer && self.bottom_supported) {
+            self.model
+                .as_ref()
+                .map_or(1.0, |model| model.multiplier(line_length_mm))
+        } else {
+            1.0
+        }
     }
 }
 

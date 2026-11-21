@@ -1,9 +1,4 @@
-use super::SliceOptions;
-use crate::SliceError;
-
-#[derive(
-    Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize,
-)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum GCodeFlavor {
     #[default]
     #[serde(rename = "marlin")]
@@ -42,20 +37,6 @@ impl GCodeFlavor {
         )
     }
 
-    pub(crate) fn emits_extrusion_axis_mode(self) -> bool {
-        matches!(
-            self,
-            Self::RepRapSprinter
-                | Self::RepRapFirmware
-                | Self::MarlinLegacy
-                | Self::MarlinFirmware
-                | Self::Teacup
-                | Self::Repetier
-                | Self::Smoothie
-                | Self::Klipper
-        )
-    }
-
     pub(crate) fn resets_absolute_e(self) -> bool {
         !matches!(self, Self::Mach3 | Self::MakerWare | Self::Sailfish)
     }
@@ -75,30 +56,5 @@ impl GCodeFlavor {
 
     pub(crate) fn waits_after_nozzle_temperature(self, wait: bool) -> bool {
         wait && matches!(self, Self::Teacup | Self::RepRapFirmware)
-    }
-}
-
-impl SliceOptions {
-    pub(crate) fn gcode_flavor(&self) -> Result<GCodeFlavor, SliceError> {
-        let Some(value) = self.values().get("gcode_flavor") else {
-            return Ok(GCodeFlavor::MarlinLegacy);
-        };
-        let Some(value) = value.as_str() else {
-            return Err(SliceError::InvalidInput(
-                "gcode_flavor must be a string".to_owned(),
-            ));
-        };
-        parse_active_gcode_flavor(value)
-    }
-}
-
-fn parse_active_gcode_flavor(value: &str) -> Result<GCodeFlavor, SliceError> {
-    match value {
-        "marlin" => Ok(GCodeFlavor::MarlinLegacy),
-        "klipper" => Ok(GCodeFlavor::Klipper),
-        "reprapfirmware" => Ok(GCodeFlavor::RepRapFirmware),
-        "repetier" => Ok(GCodeFlavor::Repetier),
-        "marlin2" => Ok(GCodeFlavor::MarlinFirmware),
-        _ => Err(SliceError::InvalidInput(format!("invalid value {value}"))),
     }
 }

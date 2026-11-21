@@ -1,7 +1,7 @@
 //! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:428-481,
 //! 535-583`).
 
-use crate::gcode_writer::GCodeWriter;
+use crate::project_slice::gcode_emit::klipper_acceleration::append_klipper_accel_to_decel;
 
 use super::{EmitState, format, jerk, travel::EPSILON};
 
@@ -50,7 +50,7 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
         crate::GCodeFlavor::Klipper => {
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
             if state.options.accel_to_decel_enable {
-                GCodeWriter::append_klipper_accel_to_decel(
+                append_klipper_accel_to_decel(
                     &mut line,
                     acceleration,
                     state.options.accel_to_decel_factor,
@@ -106,7 +106,7 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
     if acceleration != 0 && state.last_acceleration != Some(acceleration) {
         line.push_str(&format!(" ACCEL={acceleration}"));
         if state.options.accel_to_decel_enable {
-            GCodeWriter::append_klipper_accel_to_decel(
+            append_klipper_accel_to_decel(
                 &mut line,
                 acceleration,
                 state.options.accel_to_decel_factor,

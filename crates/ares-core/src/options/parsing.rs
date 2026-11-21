@@ -2,19 +2,6 @@ use serde_json::Value;
 
 use crate::SliceError;
 
-pub(super) fn parse_extrusion_width_text(text: &str, nozzle_diameter: f64) -> Option<f64> {
-    let text = text.trim();
-    if let Some(percent) = text.strip_suffix('%') {
-        percent
-            .trim()
-            .parse::<f64>()
-            .ok()
-            .map(|value| value / 100.0 * nozzle_diameter)
-    } else {
-        text.parse().ok()
-    }
-}
-
 pub(crate) fn parse_positive_numeric_or_percent_over_base(
     key: &str,
     value: &Value,
@@ -30,26 +17,6 @@ pub(crate) fn parse_positive_numeric_or_percent_over_base(
         Ok(value)
     } else {
         Err(SliceError::InvalidInput(format!("{key} must be positive")))
-    }
-}
-
-pub(crate) fn parse_non_negative_numeric_or_percent_over_base(
-    key: &str,
-    value: &Value,
-    base: f64,
-) -> Result<f64, SliceError> {
-    let value = match value {
-        Value::Number(number) => number.as_f64(),
-        Value::String(text) => parse_numeric_or_percent_text(text, base),
-        _ => None,
-    }
-    .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a number")))?;
-    if value.is_finite() && value >= 0.0 {
-        Ok(value)
-    } else {
-        Err(SliceError::InvalidInput(format!(
-            "{key} must be non-negative"
-        )))
     }
 }
 

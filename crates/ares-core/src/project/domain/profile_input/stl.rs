@@ -26,6 +26,18 @@ impl Project {
         overrides: &crate::ConfigOverrides,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let (settings, raw, preparation) = super::stl_settings::compose(profile, overrides)?;
+        let mut project = Self::from_stl(input, filename, settings, raw)?;
+        // Non-project CLI import calls ensure_on_bed before arrangement (OrcaSlicer.cpp:1978).
+        project.drop_instances_to_ground();
+        Ok((project, preparation))
+    }
+
+    pub(crate) fn from_stl(
+        input: &[u8],
+        filename: &str,
+        settings: crate::ProjectSettings,
+        raw: crate::project::raw_settings::ProjectSettingsRaw,
+    ) -> Result<Self, SliceError> {
         let volume = super::super::multipart::stl_volume(input, filename, 0)?;
         // STL.cpp creates the volume before the default instance, unlike 3MF build import.
         let mut object_ids = ObjectIdCounter::model_read();
@@ -45,7 +57,7 @@ impl Project {
             vec![volume],
             vec![instance],
         );
-        let mut project = Self::new(
+        Ok(Self::new(
             vec![ProjectModel::new(filename.to_owned(), vec![1])],
             vec![object],
             vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
@@ -67,9 +79,6 @@ impl Project {
                 preset_file_version: None,
                 preset_selection: None,
             },
-        );
-        // Non-project CLI import calls ensure_on_bed before arrangement (OrcaSlicer.cpp:1978).
-        project.drop_instances_to_ground();
-        Ok((project, preparation))
+        ))
     }
 }

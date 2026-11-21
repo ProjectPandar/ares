@@ -60,7 +60,7 @@ impl Writer {
             }
             GCodeFlavor::Klipper if self.accel_to_decel => {
                 let mut command = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
-                crate::gcode_writer::GCodeWriter::append_klipper_accel_to_decel(
+                crate::project_slice::gcode_emit::klipper_acceleration::append_klipper_accel_to_decel(
                     &mut command,
                     acceleration,
                     f64::from(self.accel_to_decel_factor),

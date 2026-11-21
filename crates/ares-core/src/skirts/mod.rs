@@ -222,22 +222,6 @@ pub fn generate_skirts(
         .collect()
 }
 
-pub(crate) fn generate_skirts_after_brims(
-    contours: &[LayerContours],
-    brims: &[crate::LayerBrims],
-    options: SkirtOptions,
-    effective_line_width: f64,
-    skirt_extrusion_per_mm: f64,
-) -> Result<Vec<LayerSkirts>, SliceError> {
-    brim_envelope::generate_skirts_after_brims(
-        contours,
-        brims,
-        options,
-        effective_line_width,
-        skirt_extrusion_per_mm,
-    )
-}
-
 fn generate_layer_skirts(
     layer: &LayerContours,
     options: SkirtOptions,

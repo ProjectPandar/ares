@@ -1,10 +1,5 @@
-use crate::{
-    InfillOptions, Layer, LayerContours, PerimeterOptions, Point2, SliceError,
-    bridges::{CounterboreHoleBridging, ExtraBridgeLayer},
-    options::GapFillTarget,
-};
+use crate::{LayerContours, PerimeterOptions, Point2, SliceError};
 
-mod solid_surface;
 mod wall;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -54,10 +49,6 @@ impl LayerGapFills {
     pub fn paths(&self) -> &[GapFillPath] {
         &self.paths
     }
-
-    fn append_paths(&mut self, paths: Vec<GapFillPath>) {
-        self.paths.extend(paths);
-    }
 }
 
 pub fn generate_gap_fills(
@@ -66,21 +57,4 @@ pub fn generate_gap_fills(
     gap_infill_speed_mm_s: f64,
 ) -> Result<Vec<LayerGapFills>, SliceError> {
     wall::generate(layers, options, gap_infill_speed_mm_s)
-}
-
-pub(crate) struct SolidSurfaceGapFillInput<'a> {
-    pub(crate) print_layers: &'a [Layer],
-    pub(crate) layer_contours: &'a [LayerContours],
-    pub(crate) infill_options: &'a InfillOptions,
-    pub(crate) target: GapFillTarget,
-    pub(crate) bridge_no_support: bool,
-    pub(crate) extra_bridge_layer: ExtraBridgeLayer,
-    pub(crate) counterbore_hole_bridging: CounterboreHoleBridging,
-}
-
-pub(crate) fn append_solid_surface_gap_fills(
-    gap_fills: &mut [LayerGapFills],
-    input: SolidSurfaceGapFillInput<'_>,
-) -> Result<(), SliceError> {
-    solid_surface::append(gap_fills, input)
 }

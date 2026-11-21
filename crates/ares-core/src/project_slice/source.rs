@@ -82,6 +82,11 @@ pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
     Model(&'a crate::Project),
     Assembly(&'a crate::Assembly<'a>),
+    OptionStl {
+        bytes: &'a [u8],
+        filename: &'a str,
+        options: &'a crate::SliceOptions,
+    },
 }
 
 impl ProjectInput<'_> {
@@ -132,6 +137,11 @@ impl ProjectInput<'_> {
                     Ok((project, preparation))
                 }
             },
+            Self::OptionStl {
+                bytes,
+                filename,
+                options,
+            } => super::option_stl::load(bytes, filename, options),
             Self::Model(model) => {
                 if refresh.is_some() {
                     return Err(crate::SliceError::InvalidInput(

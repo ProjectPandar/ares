@@ -10,10 +10,9 @@
 //! `print_z` shifts by `object_print_z_min`.
 
 use super::fill_params::flow_spacing;
-use super::fills::{self, RaftFillSpec, raft_layer_fill};
+use super::fills::{self, RaftFillSpec};
 use super::grid::{RaftLayerKind, RaftLayerZ};
-use crate::geometry::{CoordinateScale, Point, Polygon};
-use crate::print_paths::{LayerPrintPaths, PrintPath, PrintPathRole};
+use crate::geometry::Polygon;
 
 #[derive(Clone, Debug)]
 pub(crate) struct RaftLayerPlan {
@@ -141,73 +140,6 @@ pub(crate) fn raft_layer_plans(
         });
     }
     plans
-}
-
-/// Inputs from `SupportCommon.cpp:1440-1523 flow dimensions and Slicing.cpp:232-236 Z shift`.
-pub(crate) struct RaftDimensions {
-    pub(crate) object_print_z_min: f64,
-    pub(crate) line_width_mm: f64,
-    pub(crate) interface_line_width_mm: f64,
-    pub(crate) layer_height_mm: f64,
-}
-
-/// Inputs from `SupportCommon.cpp:1440-1523 raft fill reference and coordinate adapter`.
-pub(crate) struct RaftCoordinateFrame {
-    pub(crate) reference: Point,
-    pub(crate) scale: CoordinateScale,
-}
-
-/// Convert the plans to `LayerPrintPaths` and shift the object layers.
-#[expect(dead_code, reason = "wired by the pipeline integration slice")]
-pub(crate) fn apply_raft_to_stream(
-    plans: &[RaftLayerPlan],
-    object_layers: Vec<LayerPrintPaths>,
-    RaftDimensions {
-        object_print_z_min,
-        line_width_mm,
-        interface_line_width_mm,
-        layer_height_mm,
-    }: RaftDimensions,
-    RaftCoordinateFrame { reference, scale }: RaftCoordinateFrame,
-) -> Result<Vec<LayerPrintPaths>, crate::geometry::ClipperError> {
-    let raft_count = plans.len();
-    let mut stream = Vec::with_capacity(raft_count + object_layers.len());
-    for (index, plan) in plans.iter().enumerate() {
-        let polylines = raft_layer_fill(&plan.polygons, plan.spec, reference, scale)?;
-        let role = if plan.z.kind == RaftLayerKind::Base {
-            PrintPathRole::SupportMaterial
-        } else {
-            PrintPathRole::SupportMaterialInterface
-        };
-        let width = if plan.z.kind == RaftLayerKind::Base {
-            line_width_mm
-        } else {
-            interface_line_width_mm
-        };
-        let mut paths = Vec::with_capacity(polylines.len());
-        for polyline in polylines {
-            let points = polyline
-                .points()
-                .iter()
-                .map(|point| crate::Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
-                .collect::<Vec<_>>();
-            if let Ok(mut path) = PrintPath::new(role, points) {
-                path = path.with_effective_line_width_mm(Some(width));
-                path = path.with_effective_layer_height_mm(layer_height_mm);
-                paths.push(path);
-            }
-        }
-        stream.push(LayerPrintPaths::new(index, plan.z.print_z, paths));
-    }
-    for (index, mut layer) in object_layers.into_iter().enumerate() {
-        layer = LayerPrintPaths::new(
-            index + raft_count,
-            layer.print_z() + object_print_z_min,
-            layer.paths().to_vec(),
-        );
-        stream.push(layer);
-    }
-    Ok(stream)
 }
 
 /// Per-layer `SupportLayer::interface_id` (`SupportCommon.cpp:1369-1406`).

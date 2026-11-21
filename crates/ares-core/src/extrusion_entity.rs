@@ -1,4 +1,4 @@
-use crate::{Point2, PrintPathRole, SliceError};
+use crate::{Point2, SliceError};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize)]
 pub enum ExtrusionRole {
@@ -25,27 +25,6 @@ pub enum ExtrusionRole {
 }
 
 impl ExtrusionRole {
-    pub const fn from_print_path_role(role: PrintPathRole) -> Self {
-        match role {
-            PrintPathRole::Skirt => Self::Skirt,
-            PrintPathRole::Brim => Self::Brim,
-            PrintPathRole::Bridge => Self::BridgeInfill,
-            PrintPathRole::InternalBridge => Self::InternalBridgeInfill,
-            PrintPathRole::GapFill => Self::GapFill,
-            PrintPathRole::ExternalPerimeter => Self::ExternalPerimeter,
-            PrintPathRole::OverhangPerimeter => Self::OverhangPerimeter,
-            PrintPathRole::InternalPerimeter => Self::Perimeter,
-            PrintPathRole::SparseInfill => Self::InternalInfill,
-            PrintPathRole::SolidInfill => Self::SolidInfill,
-            PrintPathRole::TopSolidInfill => Self::TopSolidInfill,
-            PrintPathRole::BottomSurface => Self::BottomSurface,
-            PrintPathRole::SupportMaterial => Self::SupportMaterial,
-            PrintPathRole::SupportMaterialInterface => Self::SupportMaterialInterface,
-            PrintPathRole::Ironing => Self::Ironing,
-        }
-    }
-
-    /// `ExtrusionEntity::string_to_role` (`ExtrusionEntity.cpp:611-652`).
     pub fn from_name(name: &str) -> Self {
         match name {
             "Inner wall" => Self::Perimeter,
