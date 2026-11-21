@@ -46,14 +46,16 @@ mod profile;
 mod profile_entry;
 mod validated;
 pub(crate) use profile_entry::validate_profile_source;
-pub(crate) use profile_entry::{center_profile_project, load_and_place, load_profile_slice};
+pub(crate) use profile_entry::{center_profile_project, load_and_place};
 
 pub use source::{CliUpwardMachine, SlicedPlate};
 mod cli_plates;
+mod cli_stl;
 pub use cli_plates::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     slice_cli_project_plates,
 };
+pub use cli_stl::{SlicedStlPlate, StlPlateFailure, slice_stl_models_with_load_settings};
 pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, DirectProjectSliceRequest, slice_cli_project_plate_validated,
