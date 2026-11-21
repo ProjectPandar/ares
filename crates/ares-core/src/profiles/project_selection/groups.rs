@@ -30,7 +30,8 @@ pub(in crate::profiles) struct Selected<'a> {
     pub(in crate::profiles) different: String,
 }
 
-/// The collected groups; `apply` writes them as full_fff_config's result holds them.
+/// The collected groups; `apply` writes them over the loaded config and `store` keeps those
+/// full_fff_config stores.
 #[derive(Debug)]
 pub(crate) struct FullFffGroups([(&'static str, Vec<String>); 5]);
 
@@ -69,9 +70,16 @@ impl FullFffGroups {
             raw.remove(key);
         }
         for (key, values) in &self.0 {
-            raw.remove(key);
-            if values.iter().any(|value| !value.is_empty()) {
-                raw.insert_strings(key, values);
+            raw.insert_strings(key, values);
+        }
+    }
+
+    /// PresetBundle.cpp:5823-5841: a group is stored only when some entry is non-empty. It runs
+    /// after the edits, which the plater holds before full_fff_config collects the groups.
+    pub(crate) fn store(&self, raw: &mut ProjectSettingsRaw) {
+        for (key, _) in &self.0 {
+            if super::strings(raw, key).iter().all(String::is_empty) {
+                raw.remove(key);
             }
         }
     }
