@@ -35,6 +35,7 @@ pub enum SliceError {
     EmptyInput,
     MissingProjectPlate(u32),
     InvalidInput(String),
+    InvalidPresetFile(String),
     /// The CLI flush calculation cannot index the support flags for each slot.
     FilamentSupportCount,
     /// `Model::read_from_file` rejected the model in the option-only STL entry.
@@ -153,6 +154,7 @@ impl fmt::Display for SliceError {
             }
             Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::PresetAdmission(error) => error.fmt(f),
+            Self::InvalidPresetFile(message) => f.write_str(message),
             Self::FileVersionNotSupported => f.write_str(
                 "Unsupported 3MF version. Please make sure the 3MF file was created with the official version of Bambu Studio, not a beta version.",
             ),

@@ -85,23 +85,36 @@ pub async fn slice_with_load_settings_and_refresh(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_load_settings_source((input.as_ref(), None), request, refresh, metadata, context)
+    slice_load_settings_source(
+        (input.as_ref(), None),
+        request,
+        refresh,
+        (metadata, false),
+        context,
+    )
+    .map(|processed| processed.gcode)
 }
 
 pub(super) fn slice_load_settings_source(
     (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
     request: LoadSettingsSliceRequest<'_>,
     refresh: Option<&crate::NativeRefreshPresets>,
-    metadata: GenerationMetadata,
+    (metadata, record_moves): (GenerationMetadata, bool),
     context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
+) -> Result<crate::ProcessedGCode, SliceError> {
     with_load_settings_source(
         (ProjectInput::Bytes(input), input),
         request,
         refresh,
-        |source| slice_source(ProjectSource { loaded, ..source }, metadata, false, context),
+        |source| {
+            slice_source(
+                ProjectSource { loaded, ..source },
+                metadata,
+                record_moves,
+                context,
+            )
+        },
     )
-    .map(|processed| processed.gcode)
 }
 
 /// Slices one plate of a fixed-placement assembly with the ordinary CLI preset overlay.
@@ -155,12 +168,12 @@ pub async fn slice_with_load_settings_processed(
     context: SlicerContext<'_>,
     record_moves: bool,
 ) -> Result<crate::ProcessedGCode, SliceError> {
-    let input = input.as_ref();
-    with_load_settings_source(
-        (ProjectInput::Bytes(input), input),
+    slice_load_settings_source(
+        (input.as_ref(), None),
         request,
         None,
-        |source| slice_source(source, metadata, record_moves, context),
+        (metadata, record_moves),
+        context,
     )
 }
 

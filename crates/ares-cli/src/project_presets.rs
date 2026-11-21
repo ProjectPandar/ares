@@ -98,13 +98,11 @@ pub(super) enum Entry<'a> {
     Native(&'a ares_core::NativeRefreshPresets),
 }
 
-pub(super) async fn slice(
+pub(super) fn admit<'a>(
     args: &SliceArgs,
-    entry: Entry<'_>,
-    input: &[u8],
-    overrides: &ares_core::ConfigOverrides,
-    context: ares_core::SlicerContext<'_>,
-) -> Result<(), CliFailure> {
+    input: &'a [u8],
+    context: &ares_core::SlicerContext<'_>,
+) -> Result<ares_core::CliPresetProject<'a>, CliFailure> {
     if args
         .input()
         .extension()
@@ -117,20 +115,24 @@ pub(super) async fn slice(
         )
         .into());
     }
-    // CLI:1682–1690 admits the embedded project before reading supplied presets.
-    let admission = match entry {
-        Entry::Catalog(_) => ares_core::CliPresetProject::admit(input, &context).map(Some),
-        Entry::Native(_) => context.validate_load_settings_input(input).map(|()| None),
-    }
-    .map_err(|error| {
+    ares_core::CliPresetProject::admit(input, context).map_err(|error| {
         slice_error_to_failure(
             error,
             args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
         )
-    })?;
+    })
+}
 
+pub(super) fn slice(
+    args: &SliceArgs,
+    entry: Entry<'_>,
+    admitted: ares_core::CliPresetProject<'_>,
+    overrides: &ares_core::ConfigOverrides,
+    context: ares_core::SlicerContext<'_>,
+) -> Result<(), CliFailure> {
+    let input = admitted.input();
     let filename = args
         .input()
         .file_name()
@@ -156,8 +158,8 @@ pub(super) async fn slice(
         },
         report: &mut upward_report,
     };
-    let result = match (entry, admission) {
-        (Entry::Catalog(path), Some(admitted)) => {
+    let result = match entry {
+        Entry::Catalog(path) => {
             let catalog = fs::read_to_string(path).map_err(|error| {
                 io::Error::new(
                     error.kind(),
@@ -186,24 +188,19 @@ pub(super) async fn slice(
                 context,
             )
         }
-        (Entry::Native(refresh), None) => {
-            ares_core::slice_cli_project_plate_with_refresh(
-                input,
-                ares_core::CliProjectSliceRequest {
-                    orient: args.orient == Some(1),
-                    plate: args.plate,
-                    overrides,
-                    record_moves: args.dump_moves.is_some(),
-                    sliced_plate: &mut sliced_plate,
-                    upward,
-                },
-                metadata,
-                refresh,
-                context,
-            )
-            .await
-        }
-        _ => unreachable!("admission follows the preset entry"),
+        Entry::Native(refresh) => admitted.slice_project(
+            ares_core::CliProjectSliceRequest {
+                orient: args.orient == Some(1),
+                plate: args.plate,
+                overrides,
+                record_moves: args.dump_moves.is_some(),
+                sliced_plate: &mut sliced_plate,
+                upward,
+            },
+            metadata,
+            (None, Some(refresh)),
+            context,
+        ),
     };
     let processed = match result {
         Ok(processed) => processed,

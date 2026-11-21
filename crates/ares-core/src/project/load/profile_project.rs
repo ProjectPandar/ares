@@ -25,6 +25,22 @@ impl LoadedProfileProject {
         })
     }
 
+    pub(crate) fn into_direct_project(
+        self,
+        overrides: &crate::ConfigOverrides,
+    ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+        let Self {
+            mut project,
+            sparse_settings,
+            preparation,
+        } = self;
+        if !overrides.is_empty() {
+            let (raw, settings) = settings::resolve(sparse_settings, overrides, true)?;
+            project.set_embedded_settings(raw, settings);
+        }
+        Ok((project, preparation))
+    }
+
     pub(crate) fn into_profile_project(
         self,
     ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
