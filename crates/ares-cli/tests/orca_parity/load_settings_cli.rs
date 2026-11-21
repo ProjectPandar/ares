@@ -13,6 +13,8 @@ use serde_json::{Map, Value};
 mod direct_stl_compatibility;
 #[path = "load_settings_cli/machine_only.rs"]
 mod machine_only;
+#[path = "load_settings_cli/scalar_string.rs"]
+mod scalar_string;
 
 pub(crate) fn preset_files(directory: &Path, vendor_name: &str, printer: &str) -> Vec<String> {
     let profiles_root = crate::runner::repo_root().join("OrcaSlicer/resources/profiles");

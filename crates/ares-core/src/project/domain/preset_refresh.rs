@@ -1,8 +1,5 @@
 use super::Project;
-use crate::{
-    ConfigOverrides, SliceError, options::ProjectSettingsBuilder,
-    project::raw_settings::ProjectSettingsRaw,
-};
+use crate::{ConfigOverrides, SliceError, project::raw_settings::ProjectSettingsRaw};
 
 impl Project {
     pub fn preset_selection(&self) -> Option<&crate::profiles::PresetSelection> {
@@ -31,9 +28,9 @@ impl Project {
             .map_err(SliceError::InvalidInput)?;
         let mut materialized_raw = raw.clone();
         materialized_raw.complete_filament_variant_defaults()?;
-        self.settings = crate::options::json_deserialize::deserialize_preset_config::<
-            ProjectSettingsBuilder,
-        >(materialized_raw.into_object())
+        self.settings = crate::options::json_deserialize::deserialize_refreshed_config(
+            materialized_raw.into_object(),
+        )
         .map_err(|error| {
             SliceError::InvalidInput(format!("refreshed project settings are invalid: {error}"))
         })?
