@@ -23,7 +23,13 @@ pub(in crate::project_slice) struct SeamPerimeter {
     pub(in crate::project_slice) flow_width: f32,
     pub(in crate::project_slice) is_hole: bool,
     pub(in crate::project_slice) contour_reliable: bool,
-    pub(in crate::project_slice) exact_enforced_ends: Option<bool>,
+    pub(in crate::project_slice) exact_paint_ends: Option<ExactPaintEnds>,
+}
+
+#[derive(Debug, PartialEq)]
+pub(in crate::project_slice) struct ExactPaintEnds {
+    pub(in crate::project_slice) enforced: bool,
+    pub(in crate::project_slice) blocked: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -207,7 +213,7 @@ fn process_polygon(
             paint: PaintState::Neutral,
             central_enforcer: false,
         });
-    let exact_enforced_ends = if let Some(paint) = paint {
+    let exact_paint_ends = if let Some(paint) = paint {
         let xy = points
             .iter()
             .map(|point| [scale.unscale(point.x()), scale.unscale(point.y())])
@@ -227,7 +233,7 @@ fn process_polygon(
         // SeamPlacer.cpp:722-725: these are immutable contour inputs only.
         is_hole: source.boundary_hole.unwrap_or(was_clockwise),
         contour_reliable: source.boundary_hole.is_some(),
-        exact_enforced_ends,
+        exact_paint_ends,
     });
     Ok(())
 }

@@ -49,6 +49,8 @@ mod seam_paint_aligned_back;
 
 #[path = "seam_paint_nearest_rear.rs"]
 mod seam_paint_nearest_rear;
+#[path = "seam_paint_random.rs"]
+mod seam_paint_random;
 
 #[path = "seam_paint_split.rs"]
 mod seam_paint_split;

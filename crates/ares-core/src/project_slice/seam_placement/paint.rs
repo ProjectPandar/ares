@@ -5,8 +5,7 @@ mod intervals;
 mod samples;
 
 use crate::{
-    Point3d, ProcessSeamPosition, Project, ProjectObject, ProjectVolume, ProjectVolumeType,
-    SliceError, Transform3d,
+    Point3d, Project, ProjectObject, ProjectVolume, ProjectVolumeType, SliceError, Transform3d,
     geometry::CoordinateScale,
     project::{
         effective_config::types::{BoundedResolvedProjectConfig, ResolvedPrintObjectConfig},
@@ -29,13 +28,7 @@ pub(in crate::project_slice) fn validate_paint(
     for object in &resolved.objects {
         let source = &project.objects()[object.source_object_index];
         for volume in painted_volumes(source) {
-            if !matches!(
-                object.object.seam_position,
-                ProcessSeamPosition::Aligned
-                    | ProcessSeamPosition::AlignedBack
-                    | ProcessSeamPosition::Nearest
-                    | ProcessSeamPosition::Back
-            ) || resolved.views.full.process.print.spiral_mode.0
+            if resolved.views.full.process.print.spiral_mode.0
                 || volume.mesh().seam_facets.used_states()[3..]
                     .iter()
                     .any(|&used| used)
