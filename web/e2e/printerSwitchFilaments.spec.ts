@@ -140,9 +140,9 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
   // The plater's project config is full_fff_config, which takes one filament per selected filament preset
   // (PresetBundle.cpp:5545, 5651-5660), so the selection, not the project, decides the filament count.
   const session = platerSession(probe!, artifacts, ONE_FILAMENT, U1.printer);
-  // The plater saves full_config_secure() as the project config (Plater.cpp:19779); OrcaSlicer slices that 3MF as the
-  // CLI machine switch the web slice follows leaves it (cliSwitchedExport). The Native CLI itself crashes on this
-  // route: a one-filament BBL 3MF loaded with four U1 filaments.
+  // The plater saves full_config_secure() as the project config (Plater.cpp:19779); OrcaSlicer slices that 3MF after
+  // the CLI machine-switch steps the web slice still runs (cliSwitchedExport). The Native CLI itself crashes on the
+  // CLI route: a one-filament BBL 3MF loaded with four U1 filaments.
   const exported = cliSwitchedExport(session, ONE_FILAMENT, `${artifacts}plater-export.3mf`);
   const native = withoutCliGroups(orcaGcode(artifacts, `${artifacts}plater-export.3mf`), exported);
 
@@ -156,7 +156,7 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
   await (await download).saveAs(path);
   const browser = normalize(readFileSync(path, "utf8"), "Ares");
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    oracle: "OrcaSlicer 2.5.0 slicing the plater's saved project after the preset-select probe's U1 session, as the CLI machine switch leaves it",
+    oracle: "OrcaSlicer 2.5.0 slicing the plater's saved project after the preset-select probe's U1 session, after the CLI machine-switch steps",
     printer: U1.printer,
     filaments: session.filament_presets,
     bytes: browser.length,
