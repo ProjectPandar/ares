@@ -82,9 +82,9 @@ pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
     Model(&'a crate::Project),
     Assembly(&'a crate::Assembly<'a>),
+    ImportedStl(&'a crate::ImportedStl),
     OptionStl {
-        bytes: &'a [u8],
-        filename: &'a str,
+        input: super::option_stl::Input<'a>,
         options: &'a crate::SliceOptions,
     },
 }
@@ -137,11 +137,8 @@ impl ProjectInput<'_> {
                     Ok((project, preparation))
                 }
             },
-            Self::OptionStl {
-                bytes,
-                filename,
-                options,
-            } => super::option_stl::load(bytes, filename, options),
+            Self::OptionStl { input, options } => super::option_stl::load_input(input, options),
+            Self::ImportedStl(_) => unreachable!("imported STL requires profiles or options"),
             Self::Model(model) => {
                 if refresh.is_some() {
                     return Err(crate::SliceError::InvalidInput(

@@ -23,7 +23,10 @@ use import_scope::ImportScope;
 pub(crate) use plate_selection::{compute_colum_count, plate_dimensions, plate_origin_at};
 mod preset_refresh;
 mod profile_input;
+mod stl_units;
 mod volume_offsets;
+
+pub use stl_units::{ImportedStl, StlUnit};
 
 pub use documents::PlateMetadata;
 pub(crate) use documents::ProjectDocuments;
@@ -266,6 +269,7 @@ pub struct ProjectVolume {
     region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
     mesh_preparation: MeshPreparation,
+    converted_from: Option<StlUnit>,
 }
 
 impl ProjectVolume {
@@ -285,6 +289,7 @@ impl ProjectVolume {
             source_model_path,
             id,
             mesh_preparation: MeshPreparation::new(&mesh, transform, id as i32),
+            converted_from: None,
             mesh,
             transform,
             name: metadata.0,
@@ -320,6 +325,11 @@ impl ProjectVolume {
 
     pub(crate) fn region_overrides(&self) -> &RegionOptionOverrides {
         &self.region_overrides
+    }
+
+    /// The original unit if this volume was converted to millimeters.
+    pub fn converted_from(&self) -> Option<StlUnit> {
+        self.converted_from
     }
 
     pub fn source_transform(&self) -> Transform3d {

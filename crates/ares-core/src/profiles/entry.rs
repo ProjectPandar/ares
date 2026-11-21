@@ -6,9 +6,10 @@ use crate::{
 use super::catalog::selection;
 pub(crate) mod load_settings;
 pub use load_settings::{
-    LoadSettingsSliceRequest, slice_assembly, slice_stl_files_with_load_settings,
-    slice_stl_files_with_load_settings_processed, slice_with_load_settings,
-    slice_with_load_settings_and_refresh, slice_with_load_settings_processed,
+    LoadSettingsSliceRequest, slice_assembly, slice_imported_stl_with_load_settings_processed,
+    slice_stl_files_with_load_settings, slice_stl_files_with_load_settings_processed,
+    slice_with_load_settings, slice_with_load_settings_and_refresh,
+    slice_with_load_settings_processed,
 };
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`

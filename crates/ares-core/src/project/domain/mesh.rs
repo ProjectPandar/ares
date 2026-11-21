@@ -1,7 +1,7 @@
 use super::Point3d;
 use std::sync::Arc;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(super) struct MeshGeometry {
     pub(super) vertices: Vec<Point3d>,
     pub(super) triangles: Vec<[u32; 3]>,

@@ -25,7 +25,7 @@ pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
 }
 
 fn stl(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
-    let model = crate::stl::load(input)?;
+    let (model, _) = crate::stl::load(input)?;
     let mut mesh = Mesh {
         name: filename.to_owned(),
         vertices: Vec::new(),

@@ -10,11 +10,9 @@ const BINARY_PREFIX_LEN: usize = BINARY_HEADER_LEN + TRIANGLE_COUNT_LEN;
 const FORMAT_PROBE_LEN: usize = 128;
 const MIN_BINARY_LEN: usize = 284;
 
-pub fn load(input: &[u8]) -> Result<Model, SliceError> {
-    Ok(Model::new(
-        InputFormat::Stl,
-        repair::into_triangles(parse(input)?),
-    ))
+pub(crate) fn load(input: &[u8]) -> Result<(Model, Option<f32>), SliceError> {
+    let (triangles, volume) = repair::into_triangles(parse(input)?);
+    Ok((Model::new(InputFormat::Stl, triangles), volume))
 }
 
 pub(crate) fn load_closed(input: &[u8]) -> Result<Model, SliceError> {

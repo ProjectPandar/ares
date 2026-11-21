@@ -236,6 +236,7 @@ fn basename(path: &str) -> &str {
 
 fn read_stl(file: AssemblyFile<'_>, name: &str, id: u32) -> Result<ProjectVolume, AssemblyError> {
     stl_volume(file.bytes, name, id)
+        .map(|(volume, _)| volume)
         .map_err(|error| AssemblyError::Data(format!("{}: {error}", file.path)))
 }
 
