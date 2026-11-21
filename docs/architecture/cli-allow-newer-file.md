@@ -19,28 +19,43 @@ CLI in the pinned OrcaSlicer v2.5.0 source:
 - `OrcaSlicer/src/libslic3r/Format/bbs_3mf.cpp:1540-1550` chooses the file
   version: an `OrcaSlicer` metadata tag takes precedence over the
   `Application` tag, and the latter is parsed from the `OrcaSlicer-` or
-  `BambuStudio-` prefix. The actual major/minor comparison is in
-  `OrcaSlicer.cpp`, not in `bbs_3mf.cpp`.
+  `BambuStudio-` prefix. The active Production Extension path loads child
+  meshes with separate object importers and reads the root model with the
+  main importer (`bbs_3mf.cpp:1861-1875,1900-1947,4171-4187`). The actual
+  major/minor comparison is in `OrcaSlicer.cpp`, not in `bbs_3mf.cpp`.
 
 The option skips this one major/minor admission comparison only. It does not
 skip archive parsing, metadata parsing, project-settings deserialization,
 post-process admission, printer/process compatibility, config validation,
 plate selection, print validation, slicing, or export checks.
 
+## CLI entry points
+
+Native checks a first positional BBL 3MF in the shared model-input loop
+(`OrcaSlicer.cpp:1723-1779`), before dispatching actions. The check therefore
+applies to `--slice` (all or one plate), `--export-3mf` alone or with slicing,
+and mesh exports `--export-stl`, `--export-stls`, and `--export-obj` alike
+(`:6297`, `:6398-6445`). A BBL 3MF after the first input is already rejected
+by the separate file-order check; passing the flag cannot bypass that check.
+The `--load-assemble-list` branch does not use this positional input loop.
+
+Ares covers only its `ares slice` adapter for `.3mf` input: the direct route
+(with or without moves CSV), the project preset catalog route, and the
+explicit `--load-settings` / `--load-filaments` route. STL input and the
+non-CLI core and WASM APIs are unchanged. Native's standalone project/mesh
+exports, the multi-input CLI and assembly actions are outside this slice.
+
 ## Ares destination
 
-The Ares saved-project loader already extracts the effective BBL file version
-from model metadata in `crates/ares-core/src/project/load.rs:235-264` and
-stores it as `ProjectDocuments::preset_file_version`. The regular, catalog,
-and explicitly loaded-preset CLI paths all receive the same 3MF bytes before
-slicing. The current loader has no version rejection path: a newer effective
-version reaches slicing instead of producing the Native `-24` family result.
-
-Add the admission at the CLI saved-project boundary, before any route reads
-external preset files or starts slicing. The core exposes a focused version
-validation operation using the existing project loader and its effective
-metadata version. The CLI maps the new error to the existing family failure
-reporting machinery:
+The adapter reads the version before routing to the slicer or accessing
+external presets. `crates/ares-core/src/project/preset_version.rs` resolves
+the root model through the package relationships and projects only its
+metadata, without deserializing meshes, other model members, or project
+settings. The selected route still performs its normal full project load.
+Native checks after its load; the early projection does not replace any of
+the route's validation, and unreadable metadata falls through to the normal
+load diagnostics. The CLI maps newer-file refusal to the existing family
+failure reporting machinery:
 
 - POSIX process status `232` (the `-24` return code modulo 256);
 - stdout `run found error, return -24, exit...\n`;

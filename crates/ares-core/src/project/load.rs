@@ -69,29 +69,6 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
     load_project_with(input, &crate::ConfigOverrides::default())
 }
 
-/// Applies the BBL saved-project major/minor admission used by the CLI
-/// (`OrcaSlicer.cpp:1758-1779`).
-pub fn validate_project_version(
-    input: impl AsRef<[u8]>,
-    allow_newer_file: bool,
-) -> Result<(), SliceError> {
-    if allow_newer_file {
-        return Ok(());
-    }
-    let project = load_project(input)?;
-    if project
-        .documents()
-        .preset_file_version
-        .as_deref()
-        .is_some_and(|version| {
-            super::preset_version::is_newer(version, crate::ORCA_SLICER_COMPATIBILITY_VERSION)
-        })
-    {
-        return Err(SliceError::FileVersionNotSupported);
-    }
-    Ok(())
-}
-
 /// `load_project` with user option overrides applied on the
 /// project-settings layer (`ConfigBase::apply_only`, `Config.cpp:461`:
 /// last write wins). See `crate::ConfigOverrides` (M854).
