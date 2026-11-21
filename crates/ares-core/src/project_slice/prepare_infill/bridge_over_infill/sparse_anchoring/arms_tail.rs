@@ -22,7 +22,6 @@ pub(super) fn dispatch_tail(
     z: f64,
     object_reference: Point,
     lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    layer_id: usize,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     let multiline_params =
@@ -52,7 +51,7 @@ pub(super) fn dispatch_tail(
                         &expolygon,
                         multiline_params(fill.params),
                         crate::fill::stars_trapezoidal::SurfaceGeometry {
-                            layer_id,
+                            layer_id: layer_index,
                             thickness_layers: fill.representative.thickness_layers,
                         },
                         traversal.scale,
