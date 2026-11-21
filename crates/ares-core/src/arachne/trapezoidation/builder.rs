@@ -1,6 +1,6 @@
-use boostvoronoi::prelude::{Diagram, EdgeIndex, VertexIndex};
+use boostvoronoi::prelude::{EdgeIndex, VertexIndex};
 
-use crate::geometry::{Point, Polygon};
+use crate::geometry::{Point, Polygon, voronoi::Diagram};
 
 use super::{
     SkeletalTrapezoidation, TrapezoidationError,
