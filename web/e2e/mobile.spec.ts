@@ -59,7 +59,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
       expect.soft(await moving(page), `${step}: nothing moves under prefers-reduced-motion`).toEqual([]);
       return;
     }
-    const { reached, invisible } = await tabSweep(page, button("Import"));
+    const { reached, invisible } = await tabSweep(page, button("File"));
     expect.soft(invisible, `${step}: every Tab stop shows its focus`).toEqual([]);
     for (const name of reach) expect.soft(reached, `${step}: Tab reaches ${name}`).toContain(name);
   };
@@ -78,16 +78,22 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await shot("1-start");
-  if (touch) await expectFits(page, [button("Import"), tab("Prepare"), tab("Preview"), button("Slice plate"), ...toggle]);
+  if (touch) await expectFits(page, [button("File"), tab("Prepare"), tab("Preview"), button("Slice plate"), ...toggle]);
   await targets("start");
 
-  const untapped = await look(button("Import"));
+  const untapped = await look(button("File"));
+  // File › Import › Import 3MF/STL…; on touch a tap opens the submenu.
+  await act(input, button("File"));
+  await act(input, page.getByRole("menuitem", { name: "Import", exact: true }));
+  const importItem = page.getByRole("menu", { name: "Import", exact: true }).getByRole("menuitem", { name: "Import 3MF/STL…", exact: true });
+  if (touch) await expectFits(page, [importItem]);
+  await targets("file menu");
   const chooser = page.waitForEvent("filechooser");
-  await act(input, button("Import"));
+  await act(input, importItem);
   await (await chooser).setFiles(MODEL);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   // Touch has no pointer to move away, so hover styles must not stick to a tapped control.
-  if (touch) expect.soft(await look(button("Import")), "a tapped control keeps no hover style").toBe(untapped);
+  if (touch) expect.soft(await look(button("File")), "a tapped control keeps no hover style").toBe(untapped);
   await shot("2-imported");
 
   await settings(true);
