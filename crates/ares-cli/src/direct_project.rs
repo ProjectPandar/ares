@@ -94,7 +94,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             &ConfigOverrides::default(),
             args.project_actions
                 .context(SlicerContext::new(0))
-                .with_no_check(args.no_check),
+                .with_no_check(args.no_check)
+                .with_enable_timelapse(args.enable_timelapse),
         );
     }
     enum ProjectPresets<'a> {
