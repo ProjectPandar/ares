@@ -187,7 +187,10 @@ fn cli_unprintable_area_reports_selected_nonminimum_plate() {
 /// GCode.cpp:2166-2173 then rejects the complete retained export with -102.
 #[tokio::test]
 async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
-    use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext, slice_project_plate};
+    use ares_core::{
+        ConfigOverrides, GenerationMetadata, Placement, ProfileSliceRequest, SlicerContext,
+        slice_with_profiles,
+    };
 
     let artifacts = tempfile::Builder::new()
         .prefix("core-o6-retained-")
@@ -199,11 +202,20 @@ async fn circle_bed_per_vertex_accepts_inward_cylinder_then_rejects_export() {
         return;
     };
     let expected = expected.as_slice();
-    let result = slice_project_plate(
-        fs::read(&input).unwrap(),
+    let supply = crate::runner::application::project_supply()
+        .unwrap()
+        .expect("the preset catalog used for Native --datadir");
+    let result = slice_with_profiles(
+        &fs::read(&input).unwrap(),
+        ProfileSliceRequest {
+            filename: input.file_name().unwrap().to_str().unwrap(),
+            catalog_json: &supply.catalog,
+            selection_json: r#"{"from_project":true,"uptodate":false}"#,
+            plate: None,
+            overrides: &ConfigOverrides::default(),
+            placement: Placement::None,
+        },
         GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-        None,
-        &ConfigOverrides::default(),
         SlicerContext::new(0),
     )
     .await;
