@@ -115,8 +115,14 @@ switch; that difference is its own slice.
 
 Step 3 has to put the types in the project config, not in the overrides. Ares treats an
 override as the CLI's `--nozzle-volume-type`: a new vector that differs from the 3MF's triggers
-the flush rebuild (`options/flush_matrix.rs:62-71`). A project value of one Standard per head
-with no override does not. That matches the measured upstream GUI-route result below.
+the flush rebuild (`options/flush_matrix.rs:62-71`).
+
+The flush rebuild is part of the CLI's preparation before `Print::apply` (OrcaSlicer.cpp:3851-4023).
+The plater applies full_fff_config as it holds it, so the explicit GUI route resolves the loaded
+config the way an opened project's slice does, with no context from the 3MF it opened. The web
+sends the session's flush data and `filament_colour` as overrides, and a CLI colour override
+rebuilds the matrix from the colours. On the U1 slice that rebuild gives 61/203 where the session
+holds 84/280.
 
 Compatibility checks, `curr_bed_type` and the colour sync are unchanged. Every other web
 request (from-project, plater sessions, STL batches) keeps its current branch.
@@ -157,24 +163,24 @@ cites the upstream line it now follows.
 
 ## End-to-end references
 
-The browser's own slice is unchanged; only references move from the CLI composition to the
-GUI one.
+The references move from the CLI composition to the GUI one.
 
 - **`printerSwitchFilaments.spec.ts`, U1 slice.** The reference becomes the defined export B
   from `web-e2e-upstream-references.md` section 2: `cliSwitchedExport` with
   `nozzle_volume_type` set to one Standard per head (the session's own value).
   `compatible_printers_condition` is erased rather than taken from the process.
   `filament_ids` keeps the session's inherited ids (`OFDSrzZ8` for the four Generic PLA @U1
-  slots). The measured Native slice of B already matches the browser's flush matrix line
-  (84/280). Its remaining differences are `filament_ids` and `nozzle_volume_type`, which this
-  route change removes.
+  slots). The measured Native slice of B prints the session's flush matrix (84/280). Its remaining
+  differences are `filament_ids` and `nozzle_volume_type`, which this route change removes,
+  and the flush line, which the route keeps without the CLI preparation above.
 - **`presetSlice.spec.ts`, 3MF legs.** `withSelectedPresets` already erases
-  `compatible_printers_condition` and takes the session's ids. That matches the new browser
-  output, so only the comment changes, to cite this route.
-- **`presetSlice.spec.ts`, STL leg.** `withLoadedMultiColour` over the `--load-settings`
-  reference changes to the GUI composition. The `compatible_printers_condition` line is removed,
-  and `filament_ids` comes from the selected presets' inherited ids, taken from a preset-select
-  probe session for the same selection.
+  `compatible_printers_condition` and takes the session's ids. `withoutCliGroups` then removes
+  the all-empty groups the session lacks. `different_settings_to_system` stays: the deferred
+  one-colour prime-tower rule records `enable_prime_tower`, and the process edit dirties the
+  process column as the plater's edited print does (5586-5595).
+- **`presetSlice.spec.ts`, STL leg.** The `--load-settings` reference changes to the GUI
+  composition. The `compatible_printers_condition` line is removed, and `withoutCliGroups`
+  removes the groups the plater session lacks. Its `filament_ids` already equals the session's.
 - **STL slices with the first-run selection, and `profileSlice`, `multiExtruderVariant` and
   `bedDefault`.** Each reference that comes from the CLI composition gets the same two line
   changes from a probe session, or moves to a plater export where one exists. The complete list is
@@ -207,6 +213,12 @@ Both GUI branches change: the from-project (`Always`) branch, which already call
 (`profiles/project_refresh.rs:181-192`), and `--load-settings` composes through
 `load_settings.rs`. The export change is the only edit on a path the CLI also runs, so the CLI
 byte equality in Verification covers it.
+
+The sidebar edits reach the GUI route as overrides, and applying them records the changed keys
+the way the CLI records its command-line options (OrcaSlicer.cpp:4168-4220). That creates
+`different_settings_to_system` at filament count + 2 even when no preset owns a changed key. The
+plater holds its edits before full_fff_config collects the groups, so the store rule
+(5823-5841) runs after the edits on the explicit route.
 
 The reference stays as it is: `withoutCliGroups` (`web/e2e/platerExport.ts:97-112`) already
 removes the Native CLI's all-empty lines when the plater config lacks them.
