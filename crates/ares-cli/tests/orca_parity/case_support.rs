@@ -21,6 +21,9 @@ mod cli_uptodate_refresh;
 #[path = "export_3mf.rs"]
 mod export_3mf;
 
+#[path = "export_stl.rs"]
+mod export_stl;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 

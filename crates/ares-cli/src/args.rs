@@ -26,7 +26,12 @@ pub(crate) enum Commands {
 #[derive(Parser)]
 #[command(group(
     ArgGroup::new("action")
-        .args(["selection", "export_3mf"])
+        .args(["selection", "export_3mf", "export_stl", "export_stls"])
+        .multiple(true)
+))]
+#[command(group(
+    ArgGroup::new("export_action")
+        .args(["export_3mf", "export_stl", "export_stls"])
         .multiple(true)
 ))]
 pub(crate) struct SliceArgs {
@@ -78,7 +83,13 @@ pub(crate) struct SliceArgs {
     pub(crate) progress: bool,
     #[arg(
         short = 'o',
-        required_unless_present_any = ["selection", "export_3mf"]
+        required_unless_present_any = [
+            "selection",
+            "export_3mf",
+            "export_stl",
+            "export_stls",
+            "repair"
+        ]
     )]
     pub(crate) output: Option<PathBuf>,
     /// Slice all 3MF plates (0) or the given one-based plate number.
@@ -87,16 +98,25 @@ pub(crate) struct SliceArgs {
     /// Write an unsliced, headless FFF project instead of G-code.
     #[arg(long, value_name = "3MF")]
     pub(crate) export_3mf: Option<PathBuf>,
-    /// Write plate_<n>.gcode in this directory for the --slice action or the export for --export-3mf.
+    /// Write one binary STL per object under the stl output subdirectory.
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = native_bool)]
+    pub(crate) export_stl: Option<bool>,
+    /// Write one binary STL per object under the supplied directory.
+    #[arg(long, value_name = "DIRECTORY")]
+    pub(crate) export_stls: Option<PathBuf>,
+    /// Apply exact mesh cleanup before STL export.
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = native_bool)]
+    pub(crate) repair: Option<bool>,
+    /// Write plate_<n>.gcode in this directory for the --slice action or an export action.
     #[arg(long, requires = "action")]
     pub(crate) outputdir: Option<PathBuf>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) arrange: Option<u32>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) min_save: Option<u32>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) load_slicedata: Option<PathBuf>,
-    #[arg(long, requires = "export_3mf")]
+    #[arg(long, requires = "export_action")]
     pub(crate) export_slicedata: Option<PathBuf>,
     pub(crate) input: PathBuf,
 }
@@ -106,5 +126,13 @@ impl SliceArgs {
         self.output
             .as_deref()
             .unwrap_or_else(|| std::path::Path::new(""))
+    }
+}
+
+fn native_bool(value: &str) -> Result<bool, &'static str> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+        _ => Err("expected a boolean value"),
     }
 }
