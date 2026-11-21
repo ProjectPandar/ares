@@ -69,9 +69,8 @@ pub(crate) struct DirectSliceArgs {
     /// Fill empty --load-filaments entries with the first specified preset for STL slicing.
     #[arg(long)]
     pub(crate) load_defaultfila: bool,
-    /// Preserve the input model positions (0).
-    #[arg(long, value_parser = clap::value_parser!(u8).range(0..=0))]
-    pub(crate) arrange: Option<u8>,
+    #[command(flatten)]
+    pub(crate) arrange: crate::direct_stl::arrange::DirectArrangeArgs,
     #[arg(required = true)]
     pub(crate) inputs: Vec<PathBuf>,
 }

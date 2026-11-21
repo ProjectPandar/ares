@@ -8,30 +8,30 @@ use crate::{artifacts, load_settings_cli::preset_files, runner::OrcaRunner};
 
 #[test]
 fn cli_direct_stl_selects_one_plate() {
-    compare_slice("1", 1, false);
+    compare_slice("1", 1, None, false);
 }
 
 #[test]
 fn cli_direct_stl_selects_all_plates() {
-    compare_slice("0", 1, false);
+    compare_slice("0", 1, None, false);
 }
 
 #[test]
 fn cli_direct_stl_slices_two_objects_on_selected_plate() {
-    compare_slice("1", 2, false);
+    compare_slice("1", 2, Some("0"), false);
 }
 
 #[test]
 fn cli_direct_stl_slices_two_objects_in_all_plates_mode() {
-    compare_slice("0", 2, false);
+    compare_slice("0", 2, Some("0"), false);
 }
 
 #[test]
 fn cli_direct_stl_missing_input_leaves_only_report() {
-    compare_slice("1", 1, true);
+    compare_slice("1", 1, None, true);
 }
 
-fn compare_slice(selection: &str, count: usize, missing: bool) {
+pub(super) fn compare_slice(selection: &str, count: usize, arrange: Option<&str>, missing: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -61,8 +61,8 @@ fn compare_slice(selection: &str, count: usize, missing: bool) {
             .current_dir(&cwd)
             .args(["--slice", selection, "--outputdir", "out"])
             .args(["--load-settings", &settings, "--load-filaments", &filaments]);
-        if count > 1 {
-            command.args(["--arrange", "0"]);
+        if let Some(arrange) = arrange {
+            command.args(["--arrange", arrange]);
         }
         let output = command.args(&inputs).output().unwrap();
         fs::write(cwd.join("exit"), format!("{:?}\n", output.status.code())).unwrap();

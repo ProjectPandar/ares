@@ -180,6 +180,11 @@ pub(super) fn load_profile_slice(
     if project.orient {
         crate::plater::apply_cli_orientation(&mut loaded, project.plate)?;
     }
+    if profile.placement == Placement::Arrange
+        && matches!(project.input, super::ProjectInput::Model(_))
+    {
+        loaded = crate::plater::arrange_cli_stl(loaded)?;
+    }
     Ok((loaded, preparation))
 }
 

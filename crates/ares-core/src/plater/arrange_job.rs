@@ -4,6 +4,8 @@
 //! prime tower, the IDEX/IQEX zones, locked plates, the nozzles' shared bed and the first-layer-scan
 //! calibration region. Per-object skirts are not ported yet; projects needing them are rejected.
 
+mod cli;
+pub(crate) use cli::arrange_cli_stl;
 mod finalize;
 mod imex;
 mod nozzle_ids;
@@ -122,6 +124,15 @@ impl PlaterSession {
         scope: ArrangeScope,
         settings: ArrangeSettings,
     ) -> Result<(), SliceError> {
+        self.arrange_job(scope, settings, ArrangeOrigin::Gui)
+    }
+
+    fn arrange_job(
+        &mut self,
+        scope: ArrangeScope,
+        settings: ArrangeSettings,
+        origin: ArrangeOrigin,
+    ) -> Result<(), SliceError> {
         let current = match scope {
             ArrangeScope::All => None,
             ArrangeScope::CurrentPlate(plate) if plate < self.plates.plates.len() => {
@@ -145,12 +156,12 @@ impl PlaterSession {
         let project_settings = self.project.settings();
         let plate_sequence =
             current.map(|plate| prepare::real_print_sequence(&self.project, &self.plates, plate));
-        let mut params = params::arrange_params(
-            project_settings,
-            settings,
-            self.current_print_skirt_offset()?,
-            plate_sequence,
-        );
+        let skirt_offset = match origin {
+            ArrangeOrigin::Gui => self.current_print_skirt_offset()?,
+            ArrangeOrigin::Cli => 0.0,
+        };
+        let mut params =
+            params::arrange_params(project_settings, settings, skirt_offset, plate_sequence);
         let config = params::arrange_config(project_settings)?;
         let full = DynamicPrintConfig::new(project_settings)?;
         let zones = self.plates.imex_zones(&self.project, &full);
@@ -236,4 +247,9 @@ impl PlaterSession {
         self.wipe_tower = Some(positions);
         Ok(())
     }
+}
+
+enum ArrangeOrigin {
+    Gui,
+    Cli,
 }

@@ -125,7 +125,7 @@ pub async fn slice_imported_stl_with_load_settings_processed(
     )
 }
 
-/// Slice separately loaded STL objects at their supplied positions.
+/// Slice separately loaded STL objects with the requested placement.
 pub async fn slice_stl_files_with_load_settings(
     files: &[crate::StlFile<'_>],
     request: LoadSettingsSliceRequest<'_>,
