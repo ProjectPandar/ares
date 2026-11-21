@@ -34,7 +34,7 @@ pub(crate) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
-            critical_warning: None,
+            plate_warning: None,
             #[cfg(target_os = "linux")]
             completed: Vec::new(),
             stderr,

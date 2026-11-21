@@ -140,6 +140,7 @@ pub(super) async fn slice(
         substitutions(input),
         #[cfg(target_os = "linux")]
         result_json::Success {
+            strict_mode: false,
             output: args.output(),
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),

@@ -54,6 +54,11 @@ pub(crate) struct DirectSliceArgs {
     /// Write a statistics JSON sidecar for each sliced plate.
     #[arg(long)]
     pub(crate) export_statistics: bool,
+    /// Refuse to export a slice with a noncritical slicing warning.
+    #[arg(long)]
+    pub(crate) strict: bool,
+    #[arg(long, hide = true)]
+    pub(crate) no_check: bool,
     #[arg(long)]
     pub(crate) load_settings: Option<String>,
     #[arg(long)]

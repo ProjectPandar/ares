@@ -13,6 +13,21 @@ use crate::{
 };
 
 pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
+    if args.no_check {
+        if args.strict {
+            return Err(CliFailure::strict_no_check(
+                #[cfg(target_os = "linux")]
+                &args
+                    .outputdir
+                    .as_ref()
+                    .expect("required output dir")
+                    .join("plate_1.gcode"),
+            ));
+        }
+        return Err(
+            io::Error::new(io::ErrorKind::InvalidInput, "--no-check is not supported").into(),
+        );
+    }
     if args.inputs.len() == 1 && args.inputs[0].extension().is_some_and(|ext| ext == "3mf") {
         return crate::direct_project::run(args).await;
     }
@@ -155,9 +170,20 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             1,
         ),
     })?;
+    if args.strict {
+        crate::failure::slicing::check_strict(
+            #[cfg(target_os = "linux")]
+            &output,
+            1,
+            &sliced_plate,
+            &[],
+            None,
+        )?;
+    }
     crate::statistics::write(&output, gcode, args.export_statistics, 1)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
+        strict_mode: args.strict,
         output: &output,
         plate: 1,
         plate_index: selection as u32,
