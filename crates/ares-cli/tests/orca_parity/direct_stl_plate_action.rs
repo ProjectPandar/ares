@@ -1,6 +1,6 @@
 #![cfg(target_os = "linux")]
 
-use std::{fs, path::Path, process::Command};
+use std::{ffi::OsString, fs, path::Path, process::Command};
 
 use super::direct_stl_slice::{inventory, normalized_gcode, normalized_report, square_stl};
 use crate::{artifacts, load_settings_cli::preset_files, runner::OrcaRunner};
@@ -19,6 +19,96 @@ fn cli_direct_stl_slices_only_the_second_arranged_plate() {
 fn cli_direct_stl_prechecks_the_second_arranged_plate_before_exporting_the_first() {
     compare(1, &[1], None, Some(12));
     compare(0, &[], None, Some(12));
+}
+
+#[test]
+fn cli_direct_stl_keeps_the_first_export_when_the_second_plate_has_a_path_conflict() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = tempfile::Builder::new()
+        .prefix("direct-stl-arranged-conflict-")
+        .tempdir_in(artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let presets = preset_files(&root, "Creality", "Creality Ender-3 0.4 nozzle");
+    let mut process: serde_json::Value =
+        serde_json::from_slice(&fs::read(&presets[1]).unwrap()).unwrap();
+    // Positive contour compensation expands the two neighboring paths after arrangement.
+    process["xy_contour_compensation"] = "2".into();
+    fs::write(&presets[1], serde_json::to_vec(&process).unwrap()).unwrap();
+    let inputs = [("large", 180.0), ("medium", 102.0), ("small", 99.0)].map(|(name, edge)| {
+        let path = root.join(format!("{name}.stl"));
+        fs::write(&path, square_stl([0.0, 0.0], edge, 1.2)).unwrap();
+        OsString::from(path)
+    });
+    for (label, actions, no_check) in [
+        ("checked", &["--slice", "0"][..], false),
+        ("before", &["--no-check", "--slice", "0"], true),
+        ("after", &["--slice", "0", "--no-check"], false),
+    ] {
+        let root = root.join(label);
+        fs::create_dir(&root).unwrap();
+        let mut argv = ["--debug", "2", "--outputdir", "out"]
+            .into_iter()
+            .chain(actions.iter().copied())
+            .map(OsString::from)
+            .collect::<Vec<_>>();
+        argv.extend([
+            "--load-settings".into(),
+            presets[..2].join(";").into(),
+            "--load-filaments".into(),
+            presets[2..].join(";").into(),
+        ]);
+        argv.extend(inputs.iter().cloned());
+        fs::write(root.join("argv.json"), serde_json::to_vec(&argv).unwrap()).unwrap();
+        compare_path_conflict(&runner, &root, &argv, no_check);
+    }
+}
+
+fn compare_path_conflict(runner: &OrcaRunner, root: &Path, argv: &[OsString], no_check: bool) {
+    let native = super::cli_no_check::run(runner.bin(), root, "native", argv);
+    let ares = super::cli_no_check::run(Path::new(env!("CARGO_BIN_EXE_ares")), root, "ares", argv);
+    let native_dir = root.join("native/cwd/out");
+    let ares_dir = root.join("ares/cwd/out");
+    let expected = if no_check {
+        &["plate_1.gcode", "plate_2.gcode", "result.json"][..]
+    } else {
+        &["plate_1.gcode", "result.json"][..]
+    };
+    let report = normalized_report(&native_dir);
+    assert_eq!(
+        native.status.code(),
+        Some(if no_check { 0 } else { 155 }),
+        "{root:?}"
+    );
+    assert_eq!(
+        report["return_code"],
+        if no_check { 0 } else { -101 },
+        "{root:?}"
+    );
+    assert_eq!(
+        report["plate_index"],
+        if no_check { 0 } else { 2 },
+        "{root:?}"
+    );
+    assert_eq!(inventory(&native_dir), expected, "{root:?}");
+    assert!(
+        fs::metadata(native_dir.join("plate_1.gcode"))
+            .unwrap()
+            .len()
+            > 0,
+        "{root:?}"
+    );
+    assert_eq!(ares.status.code(), native.status.code(), "{root:?}");
+    assert_eq!(ares.stderr, native.stderr, "{root:?}");
+    assert_eq!(ares.stdout, native.stdout, "{root:?}");
+    assert_eq!(inventory(&ares_dir), expected, "{root:?}");
+    assert!(
+        fs::metadata(ares_dir.join("plate_1.gcode")).unwrap().len() > 0,
+        "{root:?}"
+    );
+    assert_eq!(normalized_report(&ares_dir), report, "{root:?}");
 }
 
 #[test]
