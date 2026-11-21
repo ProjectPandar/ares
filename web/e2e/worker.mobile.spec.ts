@@ -52,7 +52,9 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
   expect.soft(width, "canvas width is clientWidth x min(devicePixelRatio, 2)").toBe(expected);
 
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Import", exact: true }).tap();
+  await page.getByRole("button", { name: "File", exact: true }).tap();
+  await page.getByRole("menuitem", { name: "Import", exact: true }).tap();
+  await page.getByRole("menu", { name: "Import", exact: true }).getByRole("menuitem", { name: "Import 3MF/STL…", exact: true }).tap();
   await (await chooser).setFiles(model);
   const status = page.getByTestId("status");
   await expect(status).toHaveText("Ready to slice", { timeout: 60_000 });
