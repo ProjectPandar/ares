@@ -94,11 +94,36 @@ pub async fn slice_stl_named_validated(
     slice(input.as_ref(), filename, &options, true)
 }
 
+/// Option-only STL action with the existing plate report output.
+pub async fn slice_cli_stl_with_defaults(
+    input: &[u8],
+    filename: &str,
+    report: &mut crate::SlicedPlate,
+) -> Result<Vec<u8>, SliceError> {
+    slice_with_report(
+        input,
+        filename,
+        &SliceOptions::default(),
+        true,
+        Some(report),
+    )
+}
+
 pub(crate) fn slice(
     bytes: &[u8],
     filename: &str,
     options: &SliceOptions,
     validate_print: bool,
+) -> Result<Vec<u8>, SliceError> {
+    slice_with_report(bytes, filename, options, validate_print, None)
+}
+
+fn slice_with_report(
+    bytes: &[u8],
+    filename: &str,
+    options: &SliceOptions,
+    validate_print: bool,
+    sliced_plate: Option<&mut crate::SlicedPlate>,
 ) -> Result<Vec<u8>, SliceError> {
     super::slice_source(
         ProjectSource {
@@ -108,6 +133,7 @@ pub(crate) fn slice(
                 options,
             },
             validate_print,
+            sliced_plate,
             ..ProjectSource::from(bytes)
         },
         GenerationMetadata::default(),

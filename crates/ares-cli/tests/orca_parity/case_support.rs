@@ -63,6 +63,8 @@ mod absolute_e_reset_comment;
 
 #[path = "concentric_thick_polyline_rotation.rs"]
 mod concentric_thick_polyline_rotation;
+#[path = "direct_stl_slice.rs"]
+mod direct_stl_slice;
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
 

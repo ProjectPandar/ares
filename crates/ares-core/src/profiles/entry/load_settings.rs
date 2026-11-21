@@ -93,6 +93,23 @@ pub async fn slice_assembly(
     .map(|processed| processed.gcode)
 }
 
+/// Slice separately loaded STL objects at their supplied positions.
+pub async fn slice_stl_files_with_load_settings(
+    files: &[crate::StlFile<'_>],
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    let model = crate::Project::from_cli_stl_files(files)?;
+    with_load_settings_source(
+        (ProjectInput::Model(&model), files[0].bytes),
+        request,
+        None,
+        |source| slice_source(source, metadata, false, context),
+    )
+    .map(|processed| processed.gcode)
+}
+
 pub(crate) fn with_load_settings_source<T>(
     (input, bytes): (ProjectInput<'_>, &[u8]),
     request: LoadSettingsSliceRequest<'_>,

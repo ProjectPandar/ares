@@ -43,6 +43,25 @@ pub(super) fn stl_volume(input: &[u8], name: &str, id: u32) -> Result<ProjectVol
 }
 
 impl Project {
+    pub(crate) fn from_cli_stl_files(files: &[StlFile<'_>]) -> Result<Self, SliceError> {
+        let mut project = Self::from_stl_files(files)?;
+        let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(files.len() as u32);
+        let mut instances = Vec::with_capacity(files.len());
+        for object in &mut project.objects {
+            let identity = [object.id, 0, labels.clone_stl_instance()];
+            object.instances.push(ProjectInstance::new(
+                identity,
+                true,
+                true,
+                Transform3d::IDENTITY,
+            ));
+            instances.push(identity);
+        }
+        project.initialize_plate(instances);
+        project.drop_instances_to_ground();
+        Ok(project)
+    }
+
     pub(crate) fn from_stl_files(files: &[StlFile<'_>]) -> Result<Self, SliceError> {
         if files.len() < 2 {
             return Err(SliceError::InvalidInput(

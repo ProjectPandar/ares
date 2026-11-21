@@ -2,25 +2,64 @@ use std::path::{Path, PathBuf};
 
 use clap::{ArgGroup, Parser, Subcommand};
 
+pub(crate) fn require_single_input(inputs: &[PathBuf]) {
+    if inputs.len() != 1 {
+        clap::Error::raw(
+            if inputs.is_empty() {
+                clap::error::ErrorKind::MissingRequiredArgument
+            } else {
+                clap::error::ErrorKind::UnknownArgument
+            },
+            "slicing requires exactly one input model",
+        )
+        .exit();
+    }
+}
+
 #[derive(Parser)]
 #[command(
     name = "ares",
     args_conflicts_with_subcommands = true,
+    subcommand_negates_reqs = true,
     arg_required_else_help = true
 )]
 pub(crate) struct Cli {
     #[command(subcommand)]
     pub(crate) command: Option<Commands>,
-    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'
-    #[arg(long, value_name = "FILE", requires = "project")]
-    pub(crate) export_settings: Option<PathBuf>,
-    #[arg(requires = "export_settings")]
-    pub(crate) project: Option<PathBuf>,
+    #[command(flatten)]
+    pub(crate) direct: DirectSliceArgs,
 }
 
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     Slice(SliceArgs),
+}
+
+#[derive(clap::Args)]
+pub(crate) struct DirectSliceArgs {
+    /// Slice all plates (0) or the given one-based plate number.
+    #[arg(
+        long = "slice",
+        required_unless_present = "export_settings",
+        requires = "outputdir",
+        allow_negative_numbers = true
+    )]
+    pub(crate) selection: Option<i32>,
+    /// Export effective settings from a saved 3MF to FILE, or to stdout with '-'
+    #[arg(long, value_name = "FILE")]
+    pub(crate) export_settings: Option<PathBuf>,
+    /// Directory for plate_<n>.gcode and the slice result.
+    #[arg(long)]
+    pub(crate) outputdir: Option<PathBuf>,
+    #[arg(long)]
+    pub(crate) load_settings: Option<String>,
+    #[arg(long)]
+    pub(crate) load_filaments: Option<String>,
+    /// Preserve the input model positions (0).
+    #[arg(long, value_parser = clap::value_parser!(u8).range(0..=0))]
+    pub(crate) arrange: Option<u8>,
+    #[arg(required = true)]
+    pub(crate) inputs: Vec<PathBuf>,
 }
 
 #[derive(Parser)]
