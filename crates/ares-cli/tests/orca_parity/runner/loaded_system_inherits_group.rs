@@ -120,23 +120,15 @@ fn check(case: &str, repeat: u8) -> Recorded {
         )
         .unwrap();
     fs::write(runner.work.join("native.gcode"), &native).unwrap();
-    let settings = [
-        LoadSettingsFile {
-            label: "machine.json",
-            json: &texts[0],
-            source_identity: None,
-        },
-        LoadSettingsFile {
-            label: "process.json",
-            json: &texts[1],
-            source_identity: None,
-        },
-    ];
-    let filaments = [LoadSettingsFile {
-        label: "filament.json",
-        json: &texts[2],
-        source_identity: None,
-    }];
+    let sources = (case != "bypass").then(|| fixture::load_sources(&runner.work.join("profiles")));
+    let identities = paths
+        .each_ref()
+        .map(|path| sources.as_ref().map(|_| fixture::source_identity(path)));
+    let [machine, process, filament] = std::array::from_fn(|index| LoadSettingsFile {
+        label: paths[index].to_str().unwrap(),
+        json: &texts[index],
+        source_identity: identities[index].as_ref(),
+    });
     let api = tokio::runtime::Builder::new_current_thread()
         .build()
         .unwrap()
@@ -146,10 +138,10 @@ fn check(case: &str, repeat: u8) -> Recorded {
                 orient: false,
                 filename: "single.3mf",
                 catalog_json: None,
-                loaded_sources: None,
+                loaded_sources: sources.as_ref(),
                 uptodate: false,
-                settings: &settings,
-                filaments: &filaments,
+                settings: &[machine, process],
+                filaments: &[filament],
                 plate: None,
                 overrides: &ConfigOverrides::default(),
                 placement: ares_core::Placement::None,

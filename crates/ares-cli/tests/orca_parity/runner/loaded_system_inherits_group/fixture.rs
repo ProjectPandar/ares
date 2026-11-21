@@ -1,9 +1,11 @@
-use serde_json::Value;
+use ares_core::{LoadedPresetSources, SourceIdentity};
+use serde_json::{Map, Value, json};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
 
+const VENDORS: [&str; 2] = ["OrcaFilamentLibrary", "WEMAKE3D"];
 const ENTRIES: [(&str, &str); 3] = [
     ("machine", "WEMAKE3D"),
     ("process", "WEMAKE3D"),
@@ -24,7 +26,7 @@ pub(super) fn stage(work: &Path, case: &str, texts: &[String; 3]) -> [PathBuf; 3
     let system = supply.native_dir.join("system");
     let profiles = work.join("profiles");
     fs::create_dir(&profiles).unwrap();
-    for vendor in ["WEMAKE3D", "OrcaFilamentLibrary"] {
+    for vendor in VENDORS {
         let name = format!("{vendor}.json");
         fs::write(profiles.join(&name), fs::read(system.join(&name)).unwrap()).unwrap();
         copy_tree(&system.join(vendor), &profiles.join(vendor));
@@ -81,6 +83,45 @@ pub(super) fn stage(work: &Path, case: &str, texts: &[String; 3]) -> [PathBuf; 3
         }
         path
     })
+}
+
+pub(super) fn source_identity(path: &Path) -> SourceIdentity {
+    // These staged fixtures use the same canonical path on both sides, without aliases.
+    SourceIdentity::from_host_bytes(
+        fs::canonicalize(path)
+            .unwrap()
+            .as_os_str()
+            .as_encoded_bytes(),
+    )
+}
+
+pub(super) fn load_sources(profiles: &Path) -> LoadedPresetSources {
+    let mut sources = LoadedPresetSources::new();
+    for id in VENDORS {
+        let index = read_json(&profiles.join(format!("{id}.json")));
+        let mut files = Map::new();
+        let mut identities = Vec::new();
+        for list in [
+            "machine_model_list",
+            "machine_list",
+            "process_list",
+            "filament_list",
+        ] {
+            for entry in index[list].as_array().into_iter().flatten() {
+                let sub_path = sub_path(entry);
+                let path = profiles.join(id).join(sub_path);
+                files.insert(sub_path.to_owned(), read_json(&path));
+                identities.push((sub_path.to_owned(), source_identity(&path)));
+            }
+        }
+        sources
+            .add_vendor(
+                &json!({"id": id, "index": index, "files": files}).to_string(),
+                &identities,
+            )
+            .unwrap();
+    }
+    sources
 }
 
 fn copy_tree(source: &Path, target: &Path) {
