@@ -41,7 +41,7 @@ mod preset_scalar_loading;
 mod preset_vector_loading;
 
 #[path = "../plater_archive.rs"]
-mod plater_archive;
+pub(super) mod plater_archive;
 
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]

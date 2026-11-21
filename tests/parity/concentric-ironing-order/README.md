@@ -22,6 +22,10 @@ Single-object 3mf used only as input by
 driven by `ModelInstance::identify_id`, which is deterministic across oracles.
 It is a fixture choice, **not** an output mask.
 
+The Top control slices `project.3mf` unchanged. The AllSolid witness derives
+its input at test time by changing only `ironing_type` from `top` to `solid`
+in `Metadata/project_settings.config`; it shares the same model and settings.
+
 ## Divergence pinned by this fixture
 
 Both oracles agree with each other; Ares differs. First difference is at byte

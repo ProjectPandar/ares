@@ -1,6 +1,7 @@
 use crate::{
     geometry::{
-        ClipperError, CoordinateScale, JoinType, Polygon, Polyline, difference_polygons_paths,
+        BoundingBox, ClipperError, Coord, CoordinateScale, JoinType, Polygon, Polyline,
+        clip_clipper_polygons_with_subject_bbox, difference_polygons_paths,
         intersection_polygons_paths, offset_paths, opening_paths,
     },
     project_slice::perimeters::types::Flow,
@@ -83,10 +84,19 @@ where
     let closing_delta = scaled_spacing as f32;
 
     let bridging_area = opening(&bridging_area, opening_delta)?;
-    let bridging_area = closing(&bridging_area, closing_delta)?;
-    let bridging_area = intersection(&bridging_area, limiting_area)?;
-    let bridging_area = intersection(&bridging_area, total_fill_area)?;
-    let bridging_area = difference(&bridging_area, total_top_area)?;
+    let mut bridging_area = closing(&bridging_area, closing_delta)?;
+    if !bridging_area.is_empty() {
+        // PrintObject.cpp:4007–4011 reuses the post-closing bounds for all three clips.
+        let bounds = BoundingBox::from_polygons(&bridging_area)
+            .expect("closed bridge polygons have nonempty contours")
+            .inflated(scale.scaled_delta(1e-4) as Coord);
+        let limiting_area = clip_clipper_polygons_with_subject_bbox(limiting_area, bounds);
+        bridging_area = intersection(&bridging_area, &limiting_area)?;
+        let total_fill_area = clip_clipper_polygons_with_subject_bbox(total_fill_area, bounds);
+        bridging_area = intersection(&bridging_area, &total_fill_area)?;
+        let total_top_area = clip_clipper_polygons_with_subject_bbox(total_top_area, bounds);
+        bridging_area = difference(&bridging_area, &total_top_area)?;
+    }
     let expansion_area = difference(&expansion_area, &bridging_area)?;
 
     Ok(PostprocessedCandidateBridge {
