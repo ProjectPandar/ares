@@ -10,8 +10,8 @@ fn multiasingle_toolchange_round_trip_uses_all_roles() {
         ("MultiAsSingle", false),
         true,
         None,
-        &[(1.0, 2), (2.0, 1), (2.4, 3)],
-        Some(&[0, 1, 0]),
+        &[(1.0, 2), (2.0, 1), (2.4, 2), (2.8, 3)],
+        Some(&[0, 1, 0, 1, 0]),
     );
 }
 
@@ -177,6 +177,12 @@ fn assert_role_tools(gcode: &[u8], support_tools: Option<(u8, u8)>) {
     ] {
         assert!(roles.iter().any(|&(_, _, actual)| actual == role));
     }
+    if support_tools.is_none() {
+        assert!(roles.contains(&(b"1", 2, b"Internal solid infill")));
+        assert!(roles.contains(&(b"2", 1, b"Sparse infill")));
+        assert!(roles.contains(&(b"2.4", 2, b"Outer wall")));
+        assert!(roles.contains(&(b"2.8", 1, b"Outer wall")));
+    }
     if let Some((body, interface)) = support_tools {
         assert!(
             roles
@@ -225,7 +231,7 @@ fn write_toolchange_fixture(
         "sparse_infill_density": if rich_roles { "20%" } else { "0%" },
         "wall_loops": if rich_roles { "2" } else { "1" },
         "top_shell_layers": if rich_roles { "2" } else { "0" },
-        "bottom_shell_layers": if rich_roles { "2" } else { "0" },
+        "bottom_shell_layers": if !rich_roles { "0" } else if support_tools.is_some() { "2" } else { "6" },
         "enable_prime_tower": "0"
     });
     if let Some((body, interface)) = support_tools {
