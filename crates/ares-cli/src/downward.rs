@@ -23,6 +23,22 @@ pub(super) fn load(args: &SliceArgs) -> Result<Vec<DownwardMachine>, CliFailure>
         .collect()
 }
 
+pub(super) fn report(
+    args: &SliceArgs,
+    sliced_plate: &ares_core::SlicedPlate,
+    source: (&str, &[u8]),
+    upward_report: &[String],
+) -> Result<Vec<String>, CliFailure> {
+    crate::failure::slicing::check(args, sliced_plate, source.0, source.1, upward_report)?;
+    let downward_machines =
+        load(args).map_err(|error| error.with_upward_report(upward_report.to_vec()))?;
+    Ok(ares_core::compatible_downward_machines(
+        sliced_plate.object_size,
+        &downward_machines,
+        false,
+    ))
+}
+
 fn load_one(path: &Path, output: &Path) -> Result<DownwardMachine, CliFailure> {
     let bytes = fs::read(path).map_err(|error| {
         if error.kind() == std::io::ErrorKind::NotFound {

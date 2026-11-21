@@ -56,3 +56,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "cli_downward_machine_result.rs"]
+mod cli_downward_machine_result;

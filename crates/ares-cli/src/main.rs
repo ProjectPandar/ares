@@ -133,7 +133,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 .map(project_presets::load_resources_catalog)
                 .transpose()?;
             let mut upward_report = Vec::new();
-            let mut sliced_plate = ares_core::SlicedPlate::default();
+            let mut plate = ares_core::SlicedPlate::default();
             let upward = ares_core::CliUpwardMachine {
                 source,
                 input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
@@ -152,7 +152,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             overrides: &overrides,
                             record_moves: true,
                             upward,
-                            sliced_plate: &mut sliced_plate,
+                            sliced_plate: &mut plate,
                         },
                         metadata,
                         system_catalog.as_ref(),
@@ -164,7 +164,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                         Err(error) => {
                             failure::slicing::check(
                                 &args,
-                                &sliced_plate,
+                                &plate,
                                 &input_file,
                                 &input,
                                 &upward_report,
@@ -178,20 +178,12 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             .with_upward_report(upward_report)
                             .with_config_substitutions(&input_file, substitutions(&input));
                             #[cfg(target_os = "linux")]
-                            let failure = failure.with_slicing_warnings(
-                                args.plate.unwrap_or(1),
-                                sliced_plate.warnings,
-                            );
+                            let failure = failure
+                                .with_slicing_warnings(args.plate.unwrap_or(1), plate.warnings);
                             return Err(failure);
                         }
                     };
-                    failure::slicing::check(
-                        &args,
-                        &sliced_plate,
-                        &input_file,
-                        &input,
-                        &upward_report,
-                    )?;
+                    failure::slicing::check(&args, &plate, &input_file, &input, &upward_report)?;
                     fs::write(path, moves_csv::format(&processed.result))?;
                     processed.gcode
                 }
@@ -204,7 +196,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             overrides: &overrides,
                             record_moves: false,
                             upward,
-                            sliced_plate: &mut sliced_plate,
+                            sliced_plate: &mut plate,
                         },
                         metadata,
                         system_catalog.as_ref(),
@@ -216,7 +208,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                         Err(error) => {
                             failure::slicing::check(
                                 &args,
-                                &sliced_plate,
+                                &plate,
                                 &input_file,
                                 &input,
                                 &upward_report,
@@ -230,23 +222,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                             .with_upward_report(upward_report)
                             .with_config_substitutions(&input_file, substitutions(&input));
                             #[cfg(target_os = "linux")]
-                            let failure = failure.with_slicing_warnings(
-                                args.plate.unwrap_or(1),
-                                sliced_plate.warnings,
-                            );
+                            let failure = failure
+                                .with_slicing_warnings(args.plate.unwrap_or(1), plate.warnings);
                             return Err(failure);
                         }
                     }
                 }
             };
-            failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
-            let downward_machines = downward::load(&args)
-                .map_err(|error| error.with_upward_report(upward_report.clone()))?;
-            let downward_report = ares_core::compatible_downward_machines(
-                sliced_plate.object_size,
-                &downward_machines,
-                false,
-            );
+            let downward = downward::report(&args, &plate, (&input_file, &input), &upward_report)?;
             fs::write(&args.output, gcode)?;
             report_success(
                 &input_file,
@@ -256,9 +239,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     output: &args.output,
                     plate: args.plate.unwrap_or(1),
                     plate_index: args.plate.unwrap_or(0),
-                    sliced_plate,
+                    sliced_plate: plate,
                     upward_machines: &upward_report,
-                    downward_machines: &downward_report,
+                    downward_machines: &downward,
                 },
             );
             return Ok(());
