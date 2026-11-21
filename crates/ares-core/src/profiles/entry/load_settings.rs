@@ -5,7 +5,10 @@ use crate::{
         ProjectPresetPolicy,
         load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings},
     },
-    project_slice::{ProfileInput, ProjectInput, ProjectSource, slice_source},
+    project_slice::{
+        ArchiveSource, ProfileInput, ProjectInput, ProjectSource, slice_source,
+        slice_source_with_archive,
+    },
 };
 
 /// Model identity and preset files supplied by the native
@@ -161,6 +164,29 @@ pub async fn slice_with_load_settings_processed(
         request,
         None,
         |source| slice_source(source, metadata, record_moves, context),
+    )
+}
+
+/// Slice a single STL with the model and plate facts needed for sliced 3MF export.
+pub async fn slice_stl_with_load_settings_for_export(
+    model: &crate::ImportedStl,
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<crate::ProcessedGCode, SliceError> {
+    with_load_settings_source(
+        (ProjectInput::ImportedStl(model), &[]),
+        request,
+        None,
+        |source| {
+            slice_source_with_archive(
+                source,
+                metadata,
+                false,
+                context,
+                Some(ArchiveSource::DirectStl),
+            )
+        },
     )
 }
 

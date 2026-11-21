@@ -5,6 +5,12 @@ use crate::{GenerationMetadata, ProcessedGCode, SliceError, SlicerContext};
 
 use super::{ProjectSource, perimeters, slice_plate};
 
+#[derive(Clone, Copy)]
+pub(crate) enum ArchiveSource {
+    Saved,
+    DirectStl,
+}
+
 pub(crate) struct ArchivePlate {
     pub(crate) objects: Vec<crate::SlicedArchiveObject>,
     pub(crate) layer_count: usize,
@@ -13,6 +19,7 @@ pub(crate) struct ArchivePlate {
     pub(crate) filament_id: String,
     pub(crate) nozzle_diameter: f32,
     pub(crate) project_settings: ProjectSettingsRaw,
+    pub(crate) stl_model: Option<crate::project::export::Object>,
 }
 
 #[inline(never)]
@@ -30,7 +37,7 @@ pub(crate) fn slice_source_with_archive(
     metadata: GenerationMetadata,
     record_moves: bool,
     mut context: SlicerContext<'_>,
-    archive: Option<&mut Option<ArchivePlate>>,
+    archive: Option<ArchiveSource>,
 ) -> Result<ProcessedGCode, SliceError> {
     let sliced_plate = project.sliced_plate.take();
     slice_plate(

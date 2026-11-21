@@ -10,6 +10,8 @@ use md5::{Digest, Md5};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{LoadSettingsRequest, ProcessedGCode, SliceError};
+pub(crate) use geometry::Object;
+pub(crate) use project_settings::direct_stl_settings;
 
 const MODEL: &str = "3D/3dmodel.model";
 const SETTINGS: &str = "Metadata/project_settings.config";
@@ -18,8 +20,9 @@ const PLATE_GCODE: &str = "Metadata/plate_1.gcode";
 
 pub(crate) fn write_project_settings_raw(
     raw: &crate::project::raw_settings::ProjectSettingsRaw,
+    saved: bool,
 ) -> Result<Vec<u8>, SliceError> {
-    project_settings::write_raw(raw, true)
+    project_settings::write_raw(raw, saved)
 }
 
 struct SlicedMembers {
@@ -72,7 +75,7 @@ pub fn export_3mf(
 pub fn export_sliced_3mf(
     input: &[u8],
     filename: &str,
-    processed: ProcessedGCode,
+    mut processed: ProcessedGCode,
     first_print_object_id: u32,
 ) -> Result<Vec<u8>, SliceError> {
     if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
@@ -80,40 +83,55 @@ pub fn export_sliced_3mf(
             "export requires a source filename without a directory",
         ));
     }
-    let archive = processed
+    let mut archive = processed
         .archive
-        .as_ref()
+        .take()
         .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    if !filename.to_ascii_lowercase().ends_with(".3mf") {
-        return Err(deferred("sliced export requires a saved 3MF project"));
-    }
-    let saved = geometry::load_saved(input)?;
-    let mut identify_ids = vec![None; saved.objects.len()];
+    let model = if let Some(object) = archive.stl_model.take() {
+        if archive.filament_color.is_empty()
+            && let Some(color) = processed.result.extruder_colors.first()
+        {
+            archive.filament_color.clone_from(color);
+        }
+        geometry::SavedModel {
+            objects: vec![object],
+            orca_version: None,
+        }
+    } else {
+        if !filename.to_ascii_lowercase().ends_with(".3mf") {
+            return Err(deferred(
+                "sliced export requires a saved 3MF or a captured STL model",
+            ));
+        }
+        geometry::load_saved(input)?
+    };
+    let mut identify_ids = vec![None; model.objects.len()];
+    let mismatch = || invalid("captured plate does not match model objects");
     for object in &archive.objects {
         let id = identify_ids
             .get_mut(object.model_index)
-            .ok_or_else(|| invalid("captured plate does not match saved objects"))?;
+            .ok_or_else(mismatch)?;
         if id.replace(object.identify_id).is_some() {
-            return Err(invalid("captured plate does not match saved objects"));
+            return Err(mismatch());
         }
     }
     let identify_ids = identify_ids
         .into_iter()
         .collect::<Option<Vec<_>>>()
-        .ok_or_else(|| invalid("captured plate does not match saved objects"))?;
-    let plate_json = xml::plate_json(archive, first_print_object_id);
-    let slice_info = xml::slice_info(archive, &processed).into_bytes();
+        .ok_or_else(mismatch)?;
+    let plate_json = xml::plate_json(&archive, first_print_object_id);
+    let slice_info = xml::slice_info(&archive, &processed).into_bytes();
     let filament_sequence = xml::filament_sequence();
     write_package(
-        &saved.objects,
+        &model.objects,
         &identify_ids,
-        archive.project_settings.clone(),
+        archive.project_settings,
         Some(SlicedMembers {
             plate_json,
             gcode: processed.gcode,
             slice_info,
             filament_sequence,
-            orca_version: saved.orca_version,
+            orca_version: model.orca_version,
         }),
     )
 }

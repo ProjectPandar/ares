@@ -261,8 +261,7 @@ pub async fn slice_project_plate_with_archive(
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     overrides.validate_cli_config()?;
-    let mut archive = None;
-    let processed = slice_source_with_archive(
+    slice_source_with_archive(
         ProjectSource {
             loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
@@ -287,7 +286,6 @@ pub async fn slice_project_plate_with_archive(
         metadata,
         false,
         context,
-        Some(&mut archive),
-    )?;
-    Ok(processed)
+        Some(super::ArchiveSource::Saved),
+    )
 }
