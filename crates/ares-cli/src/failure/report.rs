@@ -44,7 +44,12 @@ impl From<serde_json::Error> for CliFailure {
 }
 
 impl CliFailure {
-    pub(super) fn triangle_count_exceeds_limit(_output: &Path) -> Self {
+    pub(super) fn triangle_count_exceeds_limit(_output: &Path, count: usize, limit: i32) -> Self {
+        // OrcaSlicer.cpp:6639 writes to the default file sink, not to stderr.
+        let _ = std::fs::write(
+            "00000.log",
+            format!("plate 1: triangle count {count} exceeds the limit:{limit}\n"),
+        );
         Self::Family(Box::new(FamilyFailure {
             return_code: -59,
             #[cfg(target_os = "linux")]

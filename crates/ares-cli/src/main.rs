@@ -27,7 +27,7 @@ use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let cli = args::parse();
+    let (cli, export_before_slice) = args::parse();
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
     let result = match cli.command {
@@ -41,13 +41,7 @@ async fn main() {
                 run_slice(args).await
             }
         }
-        None => match cli.direct.export_settings {
-            Some(destination) => {
-                require_single_input(&cli.direct.inputs);
-                settings_export::run(&cli.direct.inputs[0], &destination)
-            }
-            None => direct_stl::run(cli.direct).await,
-        },
+        None => direct_stl::run(cli.direct, export_before_slice).await,
     };
     if let Err(failure) = result {
         failure.report(

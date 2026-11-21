@@ -8,6 +8,10 @@ pub(crate) struct DirectArrangeArgs {
 }
 
 impl DirectArrangeArgs {
+    pub(super) fn requested(&self) -> bool {
+        self.arrange.is_some()
+    }
+
     pub(super) fn placement(&self, input_count: usize) -> Placement {
         if self.arrange == Some(0) {
             Placement::None

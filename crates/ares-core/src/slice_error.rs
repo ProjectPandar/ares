@@ -62,7 +62,10 @@ pub enum SliceError {
     /// model-read detail for the stderr channel.
     NoSuitableObjects(String),
     /// `CLI_TRIANGLE_COUNT_EXCEEDS_LIMIT` (`OrcaSlicer.cpp:6637–6641`).
-    TriangleCountExceedsLimit,
+    TriangleCountExceedsLimit {
+        count: usize,
+        limit: i32,
+    },
     /// `CLI_INVALID_VALUES_IN_3MF` (`Utils.hpp:43`): parameter values
     /// embedded in the 3MF/config fail validation; the payload is the
     /// `key: detail` block for the stderr channel.
@@ -127,7 +130,9 @@ impl fmt::Display for SliceError {
             Self::MissingProjectPlate(plate) => write!(f, "project has no plate {plate}"),
             Self::InvalidInput(message) => f.write_str(message),
             Self::FilamentSupportCount => f.write_str("filament support and colour counts differ"),
-            Self::TriangleCountExceedsLimit => f.write_str("plate triangle count exceeds the limit"),
+            Self::TriangleCountExceedsLimit { .. } => {
+                f.write_str("plate triangle count exceeds the limit")
+            }
             Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::PresetAdmission(error) => error.fmt(f),
             Self::FilamentSupportPaletteMismatch {

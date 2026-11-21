@@ -71,6 +71,8 @@ mod absolute_e_reset_comment;
 
 #[path = "cli_convert_unit.rs"]
 mod cli_convert_unit;
+#[path = "cli_export_settings_stl.rs"]
+mod cli_export_settings_stl;
 #[path = "cli_load_defaultfila.rs"]
 mod cli_load_defaultfila;
 #[path = "cli_mtcpp.rs"]

@@ -1,7 +1,7 @@
 use super::{OptionDefinition, OptionValueKind};
 
 pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
-    definition!("deretract_speed_extruder_change", FloatsNullable, "0"; true, false, "0"),
+    definition!("deretract_speed_extruder_change", FloatsNullable, "0"; false, false, "0"),
     definition!("deretraction_speed", Floats, "0"; true, false, "0"),
     definition!("detect_narrow_internal_solid_infill", Bool, "true"; true, false, "1"),
     definition!("detect_overhang_wall", Bool, "true"; true, false, "1"),

@@ -197,7 +197,6 @@ impl CliFailure {
 mod mapping;
 mod report;
 pub(crate) mod slicing;
-
 pub(super) use mapping::slice_error_to_failure;
 
 /// The stderr lines of `cli_report_config_substitutions` (`OrcaSlicer.cpp:525-527`).

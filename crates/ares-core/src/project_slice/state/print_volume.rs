@@ -274,7 +274,7 @@ pub(crate) fn inside_triangle_count(project: &Project, limit: i32) -> Result<usi
         for volume in parts {
             count += volume.mesh().triangles().len();
             if limit != 0 && (limit < 0 || count > limit as usize) {
-                return Err(SliceError::TriangleCountExceedsLimit);
+                return Err(SliceError::TriangleCountExceedsLimit { count, limit });
             }
         }
     }

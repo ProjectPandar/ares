@@ -26,6 +26,45 @@ pub struct LoadSettingsSliceRequest<'a> {
     pub sliced_plate: &'a mut crate::SlicedPlate,
 }
 
+/// Export the effective Orca CLI settings of a direct STL with loaded presets, without slicing.
+pub fn export_stl_settings(
+    input: impl AsRef<[u8]>,
+    filename: &str,
+    presets: LoadSettingsRequest<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    let model = crate::ImportedStl::read(input.as_ref(), filename)?;
+    let request = LoadSettingsSliceRequest {
+        filename,
+        catalog_json: None,
+        loaded_sources: presets.loaded_sources,
+        uptodate: false,
+        settings: presets.settings,
+        filaments: presets.filaments,
+        plate: None,
+        overrides: &Default::default(),
+        placement: Placement::None,
+        orient: false,
+        sliced_plate: &mut Default::default(),
+    };
+    with_load_settings_source(
+        (ProjectInput::ImportedStl(&model), &[]),
+        request,
+        None,
+        |source| {
+            let project = crate::project_slice::load_profile_project(&source)?;
+            let mut raw = project.documents().project_settings_raw.clone();
+            let mut settings = project.settings().clone();
+            // OrcaSlicer.cpp:3857–4023 computes the flush values before the action loop.
+            crate::options::flush_matrix::prepare_stl_settings_export(
+                &mut settings,
+                &mut raw,
+                source.overrides,
+            )?;
+            crate::project::export_loaded_settings(raw, project.cli_filament_count())
+        },
+    )
+}
+
 /// Slices through the project Print lifecycle with the loaded preset
 /// files composed by the same single merge as the profile entry
 /// (`OrcaSlicer.cpp:1953-3495`).
