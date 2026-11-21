@@ -87,5 +87,8 @@ mod brim_auto_group_clamp;
 mod outer_brim_width_quantization;
 #[path = "type1_compacted_exit.rs"]
 mod type1_compacted_exit;
+#[path = "type2_tower_entry_z.rs"]
+mod type2_tower_entry_z;
+
 #[path = "unclear_travel_lift_cancellation.rs"]
 mod unclear_travel_lift_cancellation;

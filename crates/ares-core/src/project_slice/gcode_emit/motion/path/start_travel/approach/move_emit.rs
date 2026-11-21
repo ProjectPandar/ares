@@ -24,9 +24,8 @@ pub(super) struct MoveContext<'a> {
     pub pending_target: Option<f64>,
     pub first_travel_lift: Option<LiftMode>,
     pub slope_start_z: Option<f64>,
-    pub target_z: f64,
-    /// `route.len()` — detour first legs lift to the nominal layer z.
-    pub route_len: usize,
+    pub leg_z: f64,
+    pub type2_entry: bool,
 }
 
 /// Outcome folded back into `emit_needs_travel`'s triple.
@@ -52,18 +51,9 @@ pub(super) fn emit_approach_move(
         pending_target,
         first_travel_lift,
         slope_start_z,
-        target_z,
-        route_len,
+        leg_z,
+        type2_entry,
     } = ctx;
-    // The first DETOUR waypoint's destination z is the nominal layer z
-    // (`m_nominal_z`, `GCode.cpp:7489-7492`) — the scarf `z` ratio only
-    // reaches the route's final leg (`waypoints`). `target_z` already
-    // resolves to the scarf start on the direct path (`start_travel.rs`).
-    let leg_z = if route_len > 1 {
-        state.layer_z
-    } else {
-        slope_start_z.unwrap_or(target_z)
-    };
     let mut travel_set_layer_z = false;
     let mut eager_lifted_travel = false;
     let mut unclear_position_travel = false;
@@ -88,6 +78,8 @@ pub(super) fn emit_approach_move(
     let cancelled_lift = pending_target.is_none()
         && state.lifted_amount > 0.0
         && (state.layer_change_travel_pending || travel_will_move_z(state, leg_z));
+    let rebase_lift =
+        type2_entry && !cancelled_lift && pending_target.is_none() && state.lifted_amount > 0.0;
     if cancelled_lift {
         state.lifted = false;
         state.lifted_amount = 0.0;
@@ -218,7 +210,7 @@ pub(super) fn emit_approach_move(
                 // destination: the NOMINAL layer z on a detour first leg,
                 // the scarf slope start on the direct leg
                 // (`GCode.cpp:7481-7498`).
-                dest_z: if route_len > 1 { state.layer_z } else { leg_z },
+                dest_z: leg_z,
             },
         );
     } else if layer_change_travel {
@@ -380,6 +372,16 @@ pub(super) fn emit_approach_move(
             );
             state.current_feedrate = z_feedrate;
             state.record_z(leg_z);
+        }
+    }
+    if rebase_lift && !travel_set_layer_z {
+        // `travel_to_xyz` rebases its lift on the XY-only branch
+        // (GCodeWriter.cpp:1096–1105). Preserve the subtraction order.
+        let nominal_z = state.writer_z.unwrap_or(state.layer_z) - state.lifted_amount;
+        state.lifted_amount -= leg_z - nominal_z;
+        if state.lifted_amount.abs() < travel::EPSILON {
+            state.lifted_amount = 0.0;
+            state.lifted = false;
         }
     }
     MoveOutcome {
