@@ -3,8 +3,7 @@
 //! (travel/Z/TYPE/wipe/retract) is identical to the object path.
 
 use super::super::{SliceError, motion, object::ObjectLabels, timelapse as timelapse_core};
-use super::entry::EntryGeometry;
-use super::raft_schedule::RaftSchedule;
+use super::{entry::EntryGeometry, layer_end, raft_schedule::RaftSchedule};
 use crate::project_slice::island_print_order::{OrderedExtrusionLayer, visits::InstanceVisit};
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -103,7 +102,7 @@ pub(super) fn emit(
     if let Some(labels) = labels {
         labels.queue_stop(output, state, emit_labels);
     }
-    if is_group_end {
+    if is_group_end && !layer_end::append_farthest_fallback(output, state, timelapse_context)? {
         motion::end_layer_for_timelapse(output, state);
     }
     Ok(())
