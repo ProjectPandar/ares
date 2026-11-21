@@ -20,10 +20,24 @@ pub fn export_stl(
     filename: &str,
     repair: bool,
 ) -> Result<Vec<StlExport>, SliceError> {
-    if !leaf_name(filename) {
-        return Err(unsupported("STL export requires a safe source filename"));
+    export_stls([(input, filename)], repair)
+}
+
+/// Export the merged objects of positional STL and plain 3MF models, in input order.
+/// Each input pairs its contents with its source basename.
+pub fn export_stls<'a>(
+    inputs: impl IntoIterator<Item = (&'a [u8], &'a str)>,
+    repair: bool,
+) -> Result<Vec<StlExport>, SliceError> {
+    let mut objects = Vec::new();
+    // OrcaSlicer.cpp:4040–4055 appends the objects of each model before dispatch.
+    for (input, filename) in inputs {
+        if !leaf_name(filename) {
+            return Err(unsupported("STL export requires a safe source filename"));
+        }
+        objects.extend(geometry::load(input, filename)?);
     }
-    geometry::load(input, filename)?
+    objects
         .into_iter()
         .enumerate()
         .map(|(index, mut mesh)| {
