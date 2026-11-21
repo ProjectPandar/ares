@@ -11,7 +11,10 @@ use std::{
 mod cases;
 use cases::{CASES, Case};
 
-fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
+#[path = "print_extruder_identity/short_ids.rs"]
+mod short_ids;
+
+fn author_settings(project: &[u8], updates: &[(&str, Value)]) -> Vec<u8> {
     let mut before = zip::ZipArchive::new(Cursor::new(project)).unwrap();
     let mut writer = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..before.len() {
@@ -20,8 +23,9 @@ fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
         file.read_to_end(&mut bytes).unwrap();
         if file.name() == "Metadata/project_settings.config" {
             let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-            settings["print_extruder_id"] = ids.clone();
-            settings["print_extruder_variant"] = variants.clone();
+            for (key, value) in updates {
+                settings[*key] = value.clone();
+            }
             bytes = serde_json::to_vec_pretty(&settings).unwrap();
         }
         writer
@@ -35,13 +39,10 @@ fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
     let result = writer.finish().unwrap().into_inner();
     let mut original = crate::runner::application::settings(project).unwrap();
     let mut actual = crate::runner::application::settings(&result).unwrap();
-    assert_eq!(actual.remove("print_extruder_id"), Some(ids.clone()));
-    assert_eq!(
-        actual.remove("print_extruder_variant"),
-        Some(variants.clone())
-    );
-    original.remove("print_extruder_id");
-    original.remove("print_extruder_variant");
+    for (key, value) in updates {
+        assert_eq!(actual.remove(*key).as_ref(), Some(value));
+        original.remove(*key);
+    }
     assert_eq!(
         actual, original,
         "all other settings, including master and physical maps, are frozen"
@@ -63,11 +64,8 @@ fn authored_identity(project: &[u8], ids: &Value, variants: &Value) -> Vec<u8> {
     result
 }
 
-async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
-    let label = format!("print-process-identity/{}", case.label);
-    let (vendor, printer) = ("BBL", case.printer);
-    let (ids, variants) = (json!(case.ids), json!(case.variants));
-    let (expected_ids, expected_variants) = (case.expected_ids, case.expected_variants);
+fn export_cube(runner: &OrcaRunner, printer: &str, label: &str) -> Vec<u8> {
+    let vendor = "BBL";
     let profiles = VendorProfiles::load(&profiles_root(), vendor).unwrap();
     let selected = parity::select_printer(&profiles, vendor, printer).unwrap();
     let machine = profiles.machine(&selected.printer).unwrap();
@@ -79,10 +77,10 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
-    let exported = runner
+    runner
         .export_case(
             &crate::runner::CaseInputs {
-                label: &label,
+                label,
                 machine: &machine,
                 process: &process,
                 filaments: &filaments,
@@ -90,14 +88,28 @@ async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
             &parity::smoke_overrides(),
             &crate::runner::repo_root().join("tests/parity/cube10.stl"),
         )
-        .unwrap();
+        .unwrap()
+        .project
+}
+
+async fn compare_identity(runner: &OrcaRunner, case: &Case) -> PathBuf {
+    let label = format!("print-process-identity/{}", case.label);
+    let printer = case.printer;
+    let (expected_ids, expected_variants) = (case.expected_ids, case.expected_variants);
+    let exported = export_cube(runner, printer, &label);
     let directory = tempfile::Builder::new()
         .prefix("print-process-identity-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    fs::write(directory.join("original.3mf"), &exported.project).unwrap();
-    let project = authored_identity(&exported.project, &ids, &variants);
+    fs::write(directory.join("original.3mf"), &exported).unwrap();
+    let project = author_settings(
+        &exported,
+        &[
+            ("print_extruder_id", json!(case.ids)),
+            ("print_extruder_variant", json!(case.variants)),
+        ],
+    );
     let settings = crate::runner::application::settings(&project).unwrap();
     fs::write(
         directory.join("requested-settings.json"),
