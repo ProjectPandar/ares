@@ -198,6 +198,7 @@ fn resolve_with_observer(
         views,
         filament_variant_checkpoint,
         applied_filament_map,
+        process_nozzle_assignments: None,
         process_variant_indices,
         logical_filament_count: first_validated.logical_filament_count,
         usage,

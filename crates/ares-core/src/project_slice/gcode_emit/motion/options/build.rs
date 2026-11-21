@@ -25,9 +25,9 @@ impl MotionOptions {
         &mut self,
         default: &crate::options::ProcessRegionSourceOptions,
         current: Option<&crate::RegionOptions>,
-        travel_speed: f64,
+        wipe_travel_speed: f64,
         nozzle: f64,
     ) {
-        region::apply(self, default, current, travel_speed, nozzle);
+        region::apply(self, default, current, wipe_travel_speed, nozzle);
     }
 }

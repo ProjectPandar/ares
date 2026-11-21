@@ -2,6 +2,7 @@ pub(crate) mod candidates;
 mod cardinality;
 pub(crate) mod grouping;
 pub(crate) mod layers;
+mod nozzle;
 pub(crate) mod occupancy;
 pub(crate) mod phases;
 pub(crate) mod scarf_joint_seam;

@@ -12,6 +12,30 @@ pub(in crate::project_slice::gcode_emit) struct NozzleGroup {
     pub(in crate::project_slice::gcode_emit) volume: i32,
 }
 
+// MultiNozzleUtils.cpp:380–447: resolve the published group, not a head-local guess.
+pub(super) fn process_assignments(
+    settings: &ProjectSettings,
+    groups: &[NozzleGroup],
+    count: usize,
+) -> Vec<Option<crate::options::ProcessNozzle>> {
+    (0..count)
+        .map(|filament| {
+            let id = settings
+                .project
+                .gcode
+                .filament_nozzle_map
+                .0
+                .get(filament)?
+                .0;
+            let group = groups.iter().find(|group| group.group_id as i32 == id)?;
+            Some(crate::options::ProcessNozzle {
+                physical: group.extruder,
+                volume: group.volume,
+            })
+        })
+        .collect()
+}
+
 // MultiNozzleUtils.cpp:319-369: one physical group per head on the static path.
 pub(super) fn static_groups(settings: &ProjectSettings) -> Vec<NozzleGroup> {
     settings
