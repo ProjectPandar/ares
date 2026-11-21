@@ -1,6 +1,9 @@
-//! PresetBundle.cpp::construct_full_config / CLI::run loaded-system group metadata.
+//! PresetBundle::resolve_preset_config and CLI::run loaded-system group metadata.
 //! Failures: source drift, admission, incomplete/unstable Native, non-neutral
 //! control, API/CLI disagreement, effective-config or complete-stream divergence.
+
+#[path = "loaded_system_inherits_group/fixture.rs"]
+mod fixture;
 use super::{OrcaRunner, cache_identity, profile_entry, stages};
 use ares_core::{ConfigOverrides, LoadSettingsFile, LoadSettingsSliceRequest};
 use serde_json::{Value, json};
@@ -18,6 +21,13 @@ fn loaded_system_inherits_group_preserves_cli_source_status() {
     if !super::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
         return;
     }
+    let bypass = check("bypass", 1);
+    assert!(
+        bypass.difference.is_none(),
+        "detached blank-parent bypass: {:?}; {:?}",
+        bypass.difference,
+        bypass.root
+    );
     let positive = check("positive", 1);
     let repeat = check("positive", 2);
     assert_eq!(
@@ -33,7 +43,7 @@ fn loaded_system_inherits_group_preserves_cli_source_status() {
     profile_entry::write_json(
         &control.root.join("loaded-system-summary.json"),
         &json!({"positive":positive.root,"repeat":repeat.root,"control":control.root,
-            "comparisons":3,"native_repeat":"PASS","api_repeat":"PASS",
+            "bypass":bypass.root,"comparisons":4,"native_repeat":"PASS","api_repeat":"PASS",
             "native_control_neutral":positive.native_sha==control.native_sha}),
     );
     assert_eq!(
@@ -41,16 +51,16 @@ fn loaded_system_inherits_group_preserves_cli_source_status() {
         "Native system-parent neutrality"
     );
     assert!(
-        control.difference.is_none(),
-        "control: {:?}; {:?}",
-        control.difference,
-        control.root
-    );
-    assert!(
         positive.difference.is_none(),
         "positive: {:?}; {:?}",
         positive.difference,
         positive.root
+    );
+    assert!(
+        control.difference.is_none(),
+        "control: {:?}; {:?}",
+        control.difference,
+        control.root
     );
     assert!(
         repeat.difference.is_none(),
@@ -78,21 +88,31 @@ fn check(case: &str, repeat: u8) -> Recorded {
         manifest["sha256"]["single.3mf"]
     );
     fs::write(runner.work.join("single.3mf"), &input).unwrap();
-    let texts: [String; 3] = ["machine", "process", "filament"].map(|kind| {
-        let relative = format!("{case}/{kind}.json");
+    let fixture_case = if case == "bypass" {
+        "control"
+    } else {
+        "positive"
+    };
+    let texts = ["machine", "process", "filament"].map(|kind| {
+        let relative = format!("{fixture_case}/{kind}.json");
         let bytes = fs::read(fixtures.join(&relative)).unwrap();
         assert_eq!(
             cache_identity::raw_digest(&bytes),
             manifest["sha256"][&relative]
         );
-        fs::write(runner.work.join(format!("{kind}.json")), &bytes).unwrap();
         let fields: Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(fields["from"], "system");
+        assert_eq!(
+            fields["inherits"].as_str().unwrap().is_empty(),
+            case == "bypass"
+        );
         String::from_utf8(bytes).unwrap()
     });
     fs::write(runner.work.join("manifest.json"), &manifest_bytes).unwrap();
-    let paths =
-        ["machine.json", "process.json", "filament.json"].map(|name| runner.work.join(name));
+    let paths = fixture::stage(&runner.work, case, &texts);
+    let texts = paths
+        .each_ref()
+        .map(|path| fs::read_to_string(path).unwrap());
     let native = runner
         .slice_stl_with_settings(
             [&paths[0], &paths[1], &paths[2]],
@@ -173,6 +193,7 @@ fn check(case: &str, repeat: u8) -> Recorded {
         &runner.work.join("loaded-system-result.json"),
         &json!({"case":case,"repeat":repeat,"approved_spec":manifest["approved_spec"],
             "input_sha256":cache_identity::raw_digest(&input),"input_sources":manifest["sha256"],
+            "staged_paths":paths,"staged_leaf_sha256":texts.each_ref().map(|text| cache_identity::raw_digest(text.as_bytes())),
             "manifest_sha256":cache_identity::raw_digest(&manifest_bytes),
             "native_sha256":cache_identity::raw_digest(&native),"native_normalized_sha256":native_sha,
             "ares_sha256":api_sha,"cli_sha256":cache_identity::raw_digest(&cli),
