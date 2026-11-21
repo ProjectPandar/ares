@@ -169,17 +169,14 @@ fn pitches(runner: &OrcaRunner, project: &[u8], label: &str) -> [Vec<i32>; 3] {
         cli.status
     );
     let cli = fs::read_to_string(cli_path).unwrap();
-    let ares_markers = ("; Nozzle change start\n", "; Nozzle change end");
+    let markers = (
+        "; NOZZLE_CHANGE_START OF0 NF1 ON1 NN0\n",
+        "; NOZZLE_CHANGE_END OF0 NF1 ON1 NN0",
+    );
     let actual = [
-        connector_lengths(
-            &case.native,
-            (
-                "; NOZZLE_CHANGE_START OF0 NF1 ON1 NN0\n",
-                "; NOZZLE_CHANGE_END OF0 NF1 ON1 NN0",
-            ),
-        ),
-        connector_lengths(std::str::from_utf8(&api).unwrap(), ares_markers),
-        connector_lengths(&cli, ares_markers),
+        connector_lengths(&case.native, markers),
+        connector_lengths(std::str::from_utf8(&api).unwrap(), markers),
+        connector_lengths(&cli, markers),
     ];
     fs::write(
         case.root.join("nozzle-row-spacing.json"),

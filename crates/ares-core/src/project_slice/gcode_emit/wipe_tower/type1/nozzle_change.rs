@@ -1,4 +1,5 @@
-//! `WipeTower.cpp:3623–3777`: old-nozzle extrusion before Type1 filament change.
+//! `WipeTower.cpp:3623–3802`: old-nozzle extrusion before Type1 filament change.
+use super::super::super::motion::tool_selection::nozzle;
 use super::{generator::Generator, result::NozzleChange};
 use crate::geometry::ClipperError;
 use std::fmt::Write;
@@ -42,7 +43,13 @@ impl Generator<'_> {
         writer.max_e_speed = self.filaments[self.current].max_e_speed;
         writer.set_y_shift(self.y_shift);
         writer.configure_accelerations(self.settings, self.index == 0);
-        writer.gcode.push_str("; Nozzle change start\n");
+        let old_nozzle = nozzle(self.settings, old);
+        let new_nozzle = nozzle(self.settings, new);
+        writeln!(
+            writer.gcode,
+            "; NOZZLE_CHANGE_START OF{old} NF{new} ON{old_nozzle} NN{new_nozzle}"
+        )
+        .unwrap();
         let block = self
             .plan
             .blocks
@@ -122,7 +129,11 @@ impl Generator<'_> {
                 position[1],
             ]);
         }
-        writer.gcode.push_str("; Nozzle change end\n");
+        writeln!(
+            writer.gcode,
+            "; NOZZLE_CHANGE_END OF{old} NF{new} ON{old_nozzle} NN{new_nozzle}"
+        )
+        .unwrap();
         Ok(NozzleChange {
             start: writer.start,
             origin_start: lower,
