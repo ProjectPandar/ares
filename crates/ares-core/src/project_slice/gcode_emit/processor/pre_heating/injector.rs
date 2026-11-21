@@ -1,27 +1,107 @@
-//! `GCodeProcessor::PreCoolingInjector` on the filament path
-//! (`GCodeProcessor.cpp:2150-2424,2429-2473`).
+//! `GCodeProcessor::PreCoolingInjector` (`GCodeProcessor.cpp:2150-2529`) with static nozzle mapping.
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::iter::once;
 
-use super::{FilamentUsage, InsertedLines, UsageBlocks, extruder_of};
-
+use super::{ExtruderUsage, FilamentUsage, InsertedLines, UsageBlocks, UsageEdge, extruder_of};
 use crate::project_slice::gcode_emit::tool_ordering::NozzleGroup;
 use crate::{Nullable, NullableFloats, OrcaInts, ProjectSettings};
 
 /// `room_temperature` (`:2374`).
 const ROOM_TEMPERATURE: f32 = 25.0;
 
-/// `ExtruderFreeBlock` (`GCodeProcessor.hpp:964-976`) of `build_by_filament_blocks`: the
-/// partial range is empty at `lower` and `ignore_cooling_before_tower` is set.
+/// `ExtruderFreeBlock` (`GCodeProcessor.hpp:964-976`): the partial interval ends at `lower`.
 struct FreeBlock {
     extruder: i32,
     lower: u32,
     upper: u32,
+    partial_lower: u32,
     last_filament: i32,
     next_filament: i32,
     last_nozzle: i32,
+    ignore_cooling_before_tower: bool,
+}
+
+/// `build_by_filament_blocks` (`:2431-2473`). No post-extrusion interval or tower cooling.
+fn filament_windows(blocks: &UsageBlocks) -> Vec<FreeBlock> {
+    let mut per_extruder = BTreeMap::<i32, Vec<FilamentUsage>>::new();
+    for block in &blocks.filaments {
+        per_extruder.entry(block.extruder).or_default().push(*block);
+    }
+    let frame = |lower, upper| FilamentUsage {
+        filament: -1,
+        extruder: -1,
+        nozzle: -1,
+        lower,
+        upper,
+    };
+    let start = frame(0, blocks.start_end);
+    let end = frame(blocks.end_start, u32::MAX);
+    let mut free_blocks = Vec::new();
+    for (extruder, usages) in per_extruder {
+        let framed = once(start)
+            .chain(usages)
+            .chain(once(end))
+            .collect::<Vec<_>>();
+        free_blocks.extend(framed.windows(2).map(|pair| FreeBlock {
+            extruder,
+            lower: pair[0].upper,
+            upper: pair[1].lower,
+            partial_lower: pair[0].upper,
+            last_filament: pair[0].filament,
+            next_filament: pair[1].filament,
+            last_nozzle: if pair[0].nozzle == -1 {
+                pair[1].nozzle
+            } else {
+                pair[0].nozzle
+            },
+            ignore_cooling_before_tower: true,
+        }));
+    }
+    free_blocks
+}
+
+/// `build_by_extruder_blocks` (`:2479-2529`): pair usages of the same physical extruder.
+fn extruder_windows(blocks: &UsageBlocks) -> Vec<FreeBlock> {
+    let mut per_extruder = BTreeMap::<i32, Vec<&ExtruderUsage>>::new();
+    for block in &blocks.extruders {
+        per_extruder.entry(block.extruder).or_default().push(block);
+    }
+    let boundary = |line| ExtruderUsage {
+        extruder: -1,
+        start: UsageEdge::machine(line),
+        end: UsageEdge::machine(line),
+        post_extrusion_start: line,
+        ignore_cooling_before_tower: false,
+    };
+    let start = boundary(blocks.start_end);
+    let end = boundary(blocks.end_start);
+    let mut free_blocks = Vec::new();
+    for (extruder, usages) in per_extruder {
+        let framed = once(&start)
+            .chain(usages)
+            .chain(once(&end))
+            .collect::<Vec<_>>();
+        free_blocks.extend(framed.windows(2).map(|pair| {
+            let (last, next) = (pair[0], pair[1]);
+            FreeBlock {
+                extruder,
+                lower: last.end.line,
+                upper: next.start.line,
+                partial_lower: last.post_extrusion_start,
+                last_filament: last.end.filament,
+                next_filament: next.start.filament,
+                last_nozzle: if last.end.nozzle == -1 {
+                    next.start.nozzle
+                } else {
+                    last.end.nozzle
+                },
+                ignore_cooling_before_tower: next.ignore_cooling_before_tower,
+            }
+        }));
+    }
+    free_blocks
 }
 
 /// One `add_M104_lines` call (`:2333-2370`).
@@ -45,7 +125,7 @@ pub(super) struct Injector<'a> {
 }
 
 impl<'a> Injector<'a> {
-    /// `build_by_filament_blocks` (`:2429-2473`).
+    /// `build_extruder_free_blocks` (`:2197-2206`).
     pub(super) fn new(
         settings: &'a ProjectSettings,
         (nozzle_group_result, nozzle_counts): (&'a [NozzleGroup], &'a [i64]),
@@ -53,38 +133,11 @@ impl<'a> Injector<'a> {
         times: &'a [f32],
         blocks: &'a UsageBlocks,
     ) -> Self {
-        let mut per_extruder = BTreeMap::<i32, Vec<FilamentUsage>>::new();
-        for block in &blocks.filaments {
-            per_extruder.entry(block.extruder).or_default().push(*block);
-        }
-        let frame = |lower, upper| FilamentUsage {
-            filament: -1,
-            extruder: -1,
-            nozzle: -1,
-            lower,
-            upper,
+        let mut free_blocks = if blocks.extruders.len() > 1 {
+            extruder_windows(blocks)
+        } else {
+            filament_windows(blocks)
         };
-        let start = frame(0, blocks.start_end);
-        let end = frame(blocks.end_start, u32::MAX);
-        let mut free_blocks = Vec::new();
-        for (extruder, usages) in per_extruder {
-            let framed = once(start)
-                .chain(usages)
-                .chain(once(end))
-                .collect::<Vec<_>>();
-            free_blocks.extend(framed.windows(2).map(|pair| FreeBlock {
-                extruder,
-                lower: pair[0].upper,
-                upper: pair[1].lower,
-                last_filament: pair[0].filament,
-                next_filament: pair[1].filament,
-                last_nozzle: if pair[0].nozzle == -1 {
-                    pair[1].nozzle
-                } else {
-                    pair[0].nozzle
-                },
-            }));
-        }
         free_blocks.sort_by_key(|block| (block.lower, block.upper));
         Self {
             settings,
@@ -108,22 +161,34 @@ impl<'a> Injector<'a> {
         for blocks in per_extruder.into_values() {
             let count = blocks.len();
             for (index, block) in blocks.iter().enumerate() {
-                let current = self.temperature(block.last_filament, 140);
-                let target = self.temperature(block.next_filament, 0);
+                let current = self.temperature(block.last_filament, 140, false);
+                let target =
+                    self.temperature(block.next_filament, 0, !block.ignore_cooling_before_tower);
                 self.inject(block, (current, target), index + 1 != count);
             }
         }
         self.inserted
     }
 
-    /// `get_nozzle_temp` without the first-layer temperature or the pre-heat delta: no
-    /// filament gives `missing`.
-    fn temperature(&self, filament: i32, missing: i32) -> f32 {
+    /// `get_nozzle_temp` (`:2156-2164`); the injector uses non-first-layer temperatures.
+    fn temperature(&self, filament: i32, missing: i32, apply_delta: bool) -> f32 {
         if filament == -1 {
-            missing as f32
-        } else {
-            self.nozzle_temperature(filament as usize) as f32
+            return missing as f32;
         }
+        let index = filament as usize;
+        let delta = if apply_delta
+            && let Some(Nullable::Value(value)) = self
+                .settings
+                .filament
+                .gcode
+                .filament_preheat_temperature_delta
+                .get(index)
+        {
+            value.0
+        } else {
+            0.0
+        };
+        (f64::from(self.nozzle_temperature(index)) - delta) as i32 as f32
     }
 
     /// `m_filament_nozzle_temp` (`:3189-3192`): the first-layer temperature replaces 0.
@@ -161,14 +226,28 @@ impl<'a> Injector<'a> {
     fn inject(&mut self, block: &FreeBlock, (mut current, target): (f32, f32), heating: bool) {
         let lower = self.position(block.lower);
         let upper = self.position(block.upper);
-        // The empty partial range ends before `lower`, so a window from the first move returns.
-        if lower == self.moves.len() || upper == 0 || lower == 0 {
+        let partial_lower = self.position(block.partial_lower);
+        // Both intervals end just before the move at their upper line ID (`:2297-2329`).
+        if lower == self.moves.len()
+            || upper == 0
+            || lower == 0
+            || partial_lower == self.moves.len()
+        {
             return;
         }
         let upper = upper - 1;
         let gap = self.times[upper] - self.times[lower - 1];
-        // `inject_time_threshold` is 0; the partial gap adds 0.
-        if lower >= upper || gap < 0.0 {
+        let partial_gap = self.times[lower - 1]
+            - partial_lower
+                .checked_sub(1)
+                .map_or(0.0, |index| self.times[index]);
+        let post_drop = self.post_extrusion_drop(block.last_filament);
+        let threshold_gap = if post_drop.is_some() {
+            gap + partial_gap
+        } else {
+            gap
+        };
+        if lower >= upper || threshold_gap < 0.0 {
             return;
         }
         let extruder = extruder_of(block.last_nozzle, self.nozzle_group_result);
@@ -181,12 +260,11 @@ impl<'a> Injector<'a> {
             skippable,
             comment,
         };
-        if let Some(drop) = self.post_extrusion_drop(block.last_filament) {
-            let partial_gap = 0.0_f32;
+        if let Some(drop) = post_drop {
             let cooling = current.min(drop.min(partial_gap * cooling_rate));
             current = ROOM_TEMPERATURE.max(current - cooling);
             let comment = "Multi extruder pre cooling in post extrusion";
-            self.add(block.lower, command(current as i32, None, comment));
+            self.add(block.partial_lower, command(current as i32, None, comment));
         }
         if !heating {
             if target < current {

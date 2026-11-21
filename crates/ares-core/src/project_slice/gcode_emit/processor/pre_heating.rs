@@ -1,5 +1,5 @@
 //! Pre-heating usage blocks and the second-pass injection of `GCodeProcessor`
-//! (`GCodeProcessor.cpp:1607-1943,1960-2141`) on the static filament path.
+//! (`GCodeProcessor.cpp:1607-1943,1960-2141`) with static nozzle mapping.
 //! Physical nozzle ownership is borrowed from the retained grouping result.
 
 mod injector;
@@ -22,9 +22,48 @@ struct FilamentUsage {
     upper: u32,
 }
 
+/// `ExtruderUsageBlcok` (`GCodeProcessor.hpp:538-565`). The end of the
+/// post-extrusion interval also ends usage of the outgoing extruder.
+struct ExtruderUsage {
+    extruder: i32,
+    start: UsageEdge,
+    end: UsageEdge,
+    post_extrusion_start: u32,
+    ignore_cooling_before_tower: bool,
+}
+
+struct UsageEdge {
+    filament: i32,
+    nozzle: i32,
+    line: u32,
+}
+
+impl UsageEdge {
+    fn machine(line: u32) -> Self {
+        Self {
+            filament: -1,
+            nozzle: -1,
+            line,
+        }
+    }
+}
+
+impl ExtruderUsage {
+    fn new(extruder: i32, start: UsageEdge) -> Self {
+        Self {
+            extruder,
+            start,
+            end: UsageEdge::machine(SENTINEL),
+            post_extrusion_start: SENTINEL,
+            ignore_cooling_before_tower: false,
+        }
+    }
+}
+
 /// The usage blocks of `run_post_process`, in output line ids after `remap_gcode_id`.
 struct UsageBlocks {
     filaments: Vec<FilamentUsage>,
+    extruders: Vec<ExtruderUsage>,
     skippable: Vec<(u32, u32)>,
     start_end: u32,
     end_start: u32,
@@ -91,8 +130,8 @@ fn splice(gcode: &mut Vec<u8>, inserted: &InsertedLines) {
 }
 
 impl UsageBlocks {
-    /// `build_usage_blocks` over every raw processor input line (`:1689-1771,1824-1833`) and
-    /// the close-out of the last filament block (`:1885-1886`).
+    /// `build_usage_blocks` over every raw processor input line (`:1689-1771,1824-1835`) and
+    /// the machine bounds (`:1883-1908`).
     fn build(
         lines: &[String],
         settings: &ProjectSettings,
@@ -100,6 +139,8 @@ impl UsageBlocks {
     ) -> Self {
         let mut blocks = Self {
             filaments: Vec::new(),
+            // The first extruder starts without a nozzle change (`:1630-1632`).
+            extruders: vec![ExtruderUsage::new(-1, UsageEdge::machine(SENTINEL))],
             skippable: Vec::new(),
             start_end: SENTINEL,
             end_start: SENTINEL,
@@ -109,6 +150,25 @@ impl UsageBlocks {
         }
         if let Some(last) = blocks.filaments.last_mut() {
             last.upper = blocks.end_start;
+        }
+        if blocks.extruders.len() > 1 {
+            let first = blocks.filaments.first().map_or(0, |block| block.filament);
+            let nozzle =
+                super::super::motion::tool_selection::nozzle(settings, first as usize) as i32;
+            let leading = &mut blocks.extruders[0];
+            leading.extruder = extruder_of(nozzle, nozzle_group_result);
+            leading.start = UsageEdge {
+                filament: first,
+                nozzle,
+                line: blocks.start_end,
+            };
+            let trailing = blocks.extruders.last_mut().unwrap();
+            trailing.post_extrusion_start = blocks.end_start;
+            trailing.end = UsageEdge {
+                filament: blocks.filaments.last().map_or(0, |block| block.filament),
+                nozzle: blocks.filaments.last().map_or(-1, |block| block.nozzle),
+                line: blocks.end_start,
+            };
         }
         blocks
     }
@@ -132,6 +192,32 @@ impl UsageBlocks {
             _ => {}
         }
         let command = line.trim_start_matches([' ', '\t']);
+        // `GCodeProcessor.cpp:1660-1686,1746-1771`: split usage around cross-head ramming.
+        if let Some(rest) = command.strip_prefix("; NOZZLE_CHANGE_START ") {
+            if nozzle_change_edges(rest, id).is_some() {
+                self.extruders.last_mut().unwrap().post_extrusion_start = id;
+            }
+            return;
+        }
+        if let Some(rest) = command.strip_prefix("; NOZZLE_CHANGE_END ") {
+            if let Some((old, new)) = nozzle_change_edges(rest, id) {
+                self.extruders.last_mut().unwrap().end = old;
+                let extruder = extruder_of(new.nozzle, nozzle_group_result);
+                self.extruders.push(ExtruderUsage::new(extruder, new));
+            }
+            return;
+        }
+        if let Some(rest) = command.strip_prefix("; CP_TOOLCHANGE_WIPE CT") {
+            let mut fields = rest.split_ascii_whitespace();
+            let contact = fields.next().and_then(|value| value.parse::<u8>().ok());
+            let first_layer = fields.next().and_then(|value| value.strip_prefix("FL")) == Some("1");
+            self.extruders
+                .last_mut()
+                .unwrap()
+                .ignore_cooling_before_tower =
+                contact.is_some_and(|value| value != 0 || first_layer);
+            return;
+        }
         let selection = if let Some(rest) = command.strip_prefix('T') {
             Some(rest)
         } else if let Some(rest) = command.strip_prefix(";VT") {
@@ -185,6 +271,11 @@ impl UsageBlocks {
             remap(&mut block.lower);
             remap(&mut block.upper);
         }
+        for block in &mut self.extruders {
+            remap(&mut block.start.line);
+            remap(&mut block.end.line);
+            remap(&mut block.post_extrusion_start);
+        }
         for (start, end) in &mut self.skippable {
             remap(start);
             remap(end);
@@ -193,6 +284,34 @@ impl UsageBlocks {
         remap(&mut self.end_start);
         self
     }
+}
+
+/// The four decimal IDs following a Type1 nozzle-change tag (`:1660-1670`).
+fn nozzle_change_edges(rest: &str, line: u32) -> Option<(UsageEdge, UsageEdge)> {
+    let mut fields = rest.split_ascii_whitespace();
+    let mut id = |tag: &str| {
+        let digits = fields.next()?.strip_prefix(tag)?;
+        if !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+            return None;
+        }
+        digits.parse::<i32>().ok()
+    };
+    let old_filament = id("OF")?;
+    let new_filament = id("NF")?;
+    let old_nozzle = id("ON")?;
+    let new_nozzle = id("NN")?;
+    Some((
+        UsageEdge {
+            filament: old_filament,
+            nozzle: old_nozzle,
+            line,
+        },
+        UsageEdge {
+            filament: new_filament,
+            nozzle: new_nozzle,
+            line,
+        },
+    ))
 }
 
 /// `get_valid_extruder_id` (`GCodeProcessor.cpp:2217-2223`) over the retained grouping.
