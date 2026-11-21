@@ -242,10 +242,11 @@ pub(super) fn auto_group_area(
             continue;
         }
         let width = super::scaled_f32(context.scale, polygon_width)?;
+        let outer_width = (width / context.spacing / 2.0).floor() * context.spacing * 2.0;
         let one = crate::brims::outer::area(
             std::slice::from_ref(polygon),
             context.gap,
-            width,
+            outer_width,
             context.spacing,
             context.resolution,
         )?;
