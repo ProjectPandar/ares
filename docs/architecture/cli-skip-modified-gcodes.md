@@ -80,11 +80,10 @@ Do not reproduce the unchecked access to the first model when there is none.
 ## Rust destinations and scope
 
 - On the existing saved-project route, carry the CLI bit from
-  `ares-cli/src/args.rs::SliceArgs` through the CLI requests in
-  `ares-core/src/project_slice/validated.rs`, `profiles/entry.rs`, and
-  `profiles/entry/load_settings.rs`. Apply the event removal to `Project` in
-  `project/plate_custom_gcodes.rs` at the loaded-project seam in
-  `project_slice` for both the direct and profile-overlay routes, before
+  `ares-cli/src/args.rs::SliceArgs` in the execution-local `SlicerContext`
+  through the CLI slice entry points. Apply the event removal to `Project`
+  in `project/plate_custom_gcodes.rs` at the loaded-project seam in
+  `project_slice` for both direct and profile-overlay routes, before
   print-state preparation. The existing archive parser and event emission
   stay unchanged. This part does not require Native preset file routing.
 - The automatic retained-filament merge is already represented by
@@ -93,8 +92,11 @@ Do not reproduce the unchecked access to the first model when there is none.
   keep-set exception there on the CLI path when the existing catalog
   resolves a retained slot. Keep the current selection and variant logic;
   do not create new catalog supply or extend the option to GUI/WASM profile
-  selection. The ordinary resolver-backed filament case can be verified
-  independently of the file-driven refresh.
+  selection. Include the ordinary resolver-backed filament case only if
+  both slicers can use matching sources through their existing paths.
+
+### Deferred
+
 - The source-file retain branches need the Native retained-preset refresh
   path (`ares-cli/src/native_refresh.rs`, core
   `profiles/project_refresh/native.rs` and the retained merge). The existing
@@ -136,24 +138,26 @@ The cases must execute against Native in official and seeded modes.
    Exercise both a recorded edit and the no-declared-changes `keep_project`
    case. Check a non-G-code override is retained and that other slots are
    not replaced by this slot's source.
-3. **Saved machine script with retained refresh.** Reuse the single-plate
-   saved-project fixture and flattened file layout from the retained-refresh
-   CLI cases. Give the project a user machine name inheriting a differently
-   named system machine. Put a short distinct harmless command in its
-   `machine_start_gcode` and list the key in the last override column. Give
-   the matching refresh source a different nonempty command; retain a
-   second non-G-code machine override in that column. Run
-   `--uptodate --uptodate-settings <machine.json>` with and without the flag;
-   also run the modified project with the flag but without `--uptodate`.
-   Assert first on Native's pre-config command and override column: the
-   command changes to the source only in the enabled retained-refresh
-   case and only the script key leaves the column. An unchanged control
-   stores the same start script as the source, without marking it; run it
-   with and without the flag and require identical output for the pair.
-   Compare Ares with Native separately in all cases. Reuse the file-driven
-   fixture for a retained filament with a nonempty source script and an
-   explicit replacement control to ensure the flag only affects retained
-   slots. Keep these cases separate from the plate event witness.
+### Deferred file-driven verification
+
+**Saved machine script with retained refresh.** Reuse the single-plate
+saved-project fixture and flattened file layout from the retained-refresh
+CLI cases. Give the project a user machine name inheriting a differently
+named system machine. Put a short distinct harmless command in its
+`machine_start_gcode` and list the key in the last override column. Give
+the matching refresh source a different nonempty command; retain a
+second non-G-code machine override in that column. Run
+`--uptodate --uptodate-settings <machine.json>` with and without the flag;
+also run the modified project with the flag but without `--uptodate`.
+Assert first on Native's pre-config command and override column: the
+command changes to the source only in the enabled retained-refresh
+case and only the script key leaves the column. An unchanged control
+stores the same start script as the source, without marking it; run it
+with and without the flag and require identical output for the pair.
+Compare Ares with Native separately in all cases. Reuse the file-driven
+fixture for a retained filament with a nonempty source script and an
+explicit replacement control to ensure the flag only affects retained
+slots. Keep these cases separate from the plate event witness.
 
 Use fail-first CLI tests for each slice, then run the affected parity cases
 in both modes and the normal formatting, workspace Clippy, and WASM checks.
