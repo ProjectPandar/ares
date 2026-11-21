@@ -10,6 +10,7 @@ pub(crate) struct PreparationContext {
     pub(super) current_nozzle_count: usize,
     pub(super) colour_override: bool,
     pub(super) current_volume_types: Vec<NozzleVolumeType>,
+    pub(crate) sparse_filament_slots: bool,
 }
 
 #[derive(Deserialize)]
@@ -66,6 +67,7 @@ impl PreparationContext {
             current_nozzle_count: count,
             colour_override: overrides.contains_key("filament_colour"),
             current_volume_types: types,
+            sparse_filament_slots: false,
         }
     }
 }

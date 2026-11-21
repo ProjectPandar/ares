@@ -151,12 +151,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     .iter()
                     .copied()
                     .find(|file| !file.label.is_empty())
-                    .ok_or_else(|| {
-                        CliFailure::missing_default_filament(
-                            #[cfg(target_os = "linux")]
-                            &output,
-                        )
-                    })?;
+                    .ok_or_else(|| CliFailure::invalid_preset_file(&output))?;
                 for file in filaments.iter_mut().filter(|file| file.label.is_empty()) {
                     *file = first;
                 }
