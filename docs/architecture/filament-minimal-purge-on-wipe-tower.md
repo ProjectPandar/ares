@@ -83,7 +83,7 @@ undefined behavior.
 - Rewriting infill/object/support allocation, soluble/support eligibility or
   `WipeTower2::first_toolchange_to_nonsoluble_nonsupport`. The existing Rust
   `generator.rs::first_nonsoluble_change` has a separate selection boundary;
-  this slice must not silently repair or change it.
+  this slice does not change it. The separate [Type2 finish filament port](type2-tower-finish-filament.md) covers that selector.
 - New per-layer variant/nozzle remapping, template functionality, profile refresh,
   key membership or vector resizing. Preserve existing float-vector semantics.
 - Ramming, cooling, interface-temperature, rib geometry, sparse-layer grouping,
