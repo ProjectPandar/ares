@@ -172,8 +172,16 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
   const native = withoutCliGroups(withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session), withDifferences(session));
   mkdirSync(`${centerWork}selected-system-reference`);
+  // With no project open the plater's project config holds the selected printer's bed type (load_selections,
+  // PresetBundle.cpp:4046-4055) and the default flush_volumes_vector (PrintConfig.cpp:8275) cut to a load/unload
+  // pair per filament (update_multi_material_filament_presets, PresetBundle.cpp:8623-8635); the CLI takes both
+  // project options from the command line, which records no preset column for them (OrcaSlicer.cpp:4168-4220).
+  const stlProject = [
+    "--curr-bed-type", (JSON.parse(session.full_fff_config) as { curr_bed_type: string }).curr_bed_type,
+    "--flush-volumes-vector", selection.filaments.flatMap(() => ["140", "140"]).join(","),
+  ];
   execFileSync(launcher, [
-    ...loadPresets, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
+    ...loadPresets, ...stlProject, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
   ], { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, { recursive: true });
   const nativeCenter = withPlaterStlLines(normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
