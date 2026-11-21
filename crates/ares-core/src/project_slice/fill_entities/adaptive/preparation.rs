@@ -18,6 +18,7 @@ use crate::{
 pub(in crate::project_slice) struct ObjectSpacing {
     pub(in crate::project_slice) adaptive: Vec<f64>,
     pub(in crate::project_slice) support: f64,
+    pub(super) body_trees: std::sync::OnceLock<super::body_trees::BodyTrees>,
 }
 
 impl ObjectSpacing {
@@ -63,6 +64,7 @@ pub(in crate::project_slice) fn object_spacings(
                 }
             })
             .collect(),
+        body_trees: std::sync::OnceLock::new(),
         support: super::line_spacing::object_configured(
             &region_options,
             nozzles,
@@ -106,7 +108,15 @@ pub(in crate::project_slice) struct SupportPreparation<'a> {
     pub(in crate::project_slice) spacing: &'a ObjectSpacing,
 }
 
-pub(in crate::project_slice) fn prepare_support(context: SupportPreparation<'_>) {
+pub(in crate::project_slice) fn prepare_octrees(
+    context: SupportPreparation<'_>,
+) -> Result<(), crate::SliceError> {
+    super::body_trees::prepare(&context)?;
+    prepare_support(context);
+    Ok(())
+}
+
+fn prepare_support(context: SupportPreparation<'_>) {
     let SupportPreparation {
         traversal,
         object_index,

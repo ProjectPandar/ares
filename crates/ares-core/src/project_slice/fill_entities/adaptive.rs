@@ -2,10 +2,13 @@
 //! `PrintObject.cpp:984`, `:275-356`).
 use crate::project_slice::perimeters::classic::materialize::Polyline3;
 
+mod body_layout;
+mod body_mesh;
+mod body_trees;
 pub(in crate::project_slice) mod line_spacing;
 mod preparation;
 pub(in crate::project_slice) use preparation::{
-    ObjectSpacing, SupportPreparation, object_spacings, prepare_support,
+    ObjectSpacing, SupportPreparation, object_spacings, prepare_octrees,
 };
 
 use crate::{
@@ -22,22 +25,44 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 /// Object inputs for the adaptive octree (`FillAdaptive.cpp:1483`,
 /// `PrintObject.cpp:275-356,984`).
 pub(in crate::project_slice) struct AdaptiveObject<'a> {
-    pub(super) traversal: &'a PreparedPostClassicTraversal,
-    pub(super) object_index: usize,
-    pub(super) line_spacing: f64,
+    traversal: &'a PreparedPostClassicTraversal,
+    object_index: usize,
+    layer_index: usize,
+    line_spacing: f64,
+    object_spacing: &'a ObjectSpacing,
 }
 
 impl<'a> AdaptiveObject<'a> {
     pub(in crate::project_slice) fn new(
         traversal: &'a PreparedPostClassicTraversal,
-        object_index: usize,
+        (object_index, layer_index): (usize, usize),
         line_spacing: f64,
+        object_spacing: &'a ObjectSpacing,
     ) -> Self {
         Self {
             traversal,
             object_index,
+            layer_index,
             line_spacing,
+            object_spacing,
         }
+    }
+
+    fn octree_for_fill(
+        &self,
+        kind: OctreeKind,
+        expolygon: &crate::geometry::ExPolygon,
+    ) -> Result<std::sync::Arc<octree::Octree>, SliceError> {
+        if kind == OctreeKind::Adaptive
+            && let Some(trees) = self.object_spacing.body_trees.get()
+        {
+            let islands =
+                body_trees::layer_islands(self.traversal, self.object_index, self.layer_index);
+            return trees
+                .for_fill(self.line_spacing, self.layer_index, islands, expolygon)
+                .map_err(clipper_error);
+        }
+        octree_for(self.traversal, self.object_index, kind, self.line_spacing)
     }
 }
 
@@ -50,16 +75,12 @@ pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     LayerGeometry { print_z, layer_id }: LayerGeometry,
-    AdaptiveObject {
-        traversal,
-        object_index,
-        line_spacing,
-    }: AdaptiveObject<'_>,
+    adaptive: AdaptiveObject<'_>,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, kind, line_spacing)?;
     for expolygon in &fill.expolygons {
+        let octree = adaptive.octree_for_fill(kind, expolygon)?;
         let mut polylines = Vec::new();
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
         // surface by (overlap − 0.5·spacing) before the per-component
@@ -142,22 +163,28 @@ fn octree_for(
     match kind {
         OctreeKind::Adaptive => traversal.adaptive_octrees.get_or_try_build(key, || {
             let (source, group) = object_input(traversal, object_index);
-            // PrintObject.cpp:91-110,981-984 / Print.hpp:327-328:
-            // use the same PrintObject frame as raw_intersections.rs:163-172.
-            let center = crate::project_slice::centering::center(source, group, traversal.scale)?;
-            let transform = group
-                .transform
-                .without_xy_translation()
-                .pretranslated(Point3d::new(
-                    -traversal.scale.unscale(center.x()),
-                    -traversal.scale.unscale(center.y()),
-                    0.0,
-                ));
+            let transform = centered_transform(source, group, traversal.scale)?;
             Ok(build_in_frame(source, transform, line_spacing, kind, &[]))
         }),
         // PrintObject.cpp:2735 builds the Support tree before anchoring/rewrite.
         OctreeKind::Support => Ok(traversal.adaptive_octrees.get(key)),
     }
+}
+
+fn centered_transform(
+    source: &ProjectObject,
+    group: &ResolvedPrintObjectConfig,
+    scale: CoordinateScale,
+) -> Result<Transform3d, SliceError> {
+    let center = crate::project_slice::centering::center(source, group, scale)?;
+    Ok(group
+        .transform
+        .without_xy_translation()
+        .pretranslated(Point3d::new(
+            -scale.unscale(center.x()),
+            -scale.unscale(center.y()),
+            0.0,
+        )))
 }
 
 fn build_object_octree(
@@ -318,18 +345,13 @@ pub(in crate::project_slice) fn anchoring_lines(
     layer_id: usize,
     scale: CoordinateScale,
 ) -> Result<Vec<crate::geometry::Polyline>, SliceError> {
-    let AdaptiveObject {
-        traversal,
-        object_index,
-        line_spacing,
-    } = adaptive;
     let kind = octree_kind(fill.params.pattern);
-    let octree = octree_for(traversal, object_index, kind, line_spacing)?;
     let mut polylines = Vec::new();
     // Fill.cpp:1492-1498 calls Fill::fill_surface (FillBase.cpp:105-117),
     // with the constructor's zero overlap (FillBase.hpp:181-187).
     let delta = ((0.0 - 0.5 * fill.params.spacing) / scale.factor()) as f32;
     for expolygon in &fill.expolygons {
+        let octree = adaptive.octree_for_fill(kind, expolygon)?;
         let components = crate::geometry::offset_expolygon(
             expolygon,
             delta,
