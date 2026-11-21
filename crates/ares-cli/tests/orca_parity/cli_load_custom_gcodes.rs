@@ -52,7 +52,7 @@ fn cli_load_custom_gcodes_multiasingle_toolchange_switches_filament() {
 
 #[test]
 fn cli_load_custom_gcodes_single_filament_toolchange_keeps_object_filament() {
-    toolchange::compare_multiasingle_toolchange("MultiExtruder", true, &[(0.4, 2)], &[0]);
+    toolchange::compare_multiasingle_toolchange("MultiExtruder", true, &[(0.4, 2)], &[]);
 }
 
 fn compare(saved: bool, status: Option<i32>) {

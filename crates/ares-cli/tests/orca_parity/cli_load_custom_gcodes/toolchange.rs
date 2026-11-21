@@ -239,6 +239,10 @@ fn write_toolchange_fixture(
         process["support_type"] = json!("normal(auto)");
         process["support_filament"] = json!(body.to_string());
         process["support_interface_filament"] = json!(interface.to_string());
+        if body == 1 {
+            // Exercise both tools at the object's switch height.
+            process["independent_support_layer_height"] = json!("0");
+        }
     }
     write("process.json", process);
     for (name, id, density, temperature) in [
