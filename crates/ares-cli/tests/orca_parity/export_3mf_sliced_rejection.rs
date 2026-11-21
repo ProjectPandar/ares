@@ -9,7 +9,7 @@ use super::export_3mf_sliced::{invoke, write_saved_input};
 use crate::OrcaRunner;
 
 #[test]
-fn cli_sliced_3mf_rejects_multiobject_saved_project() {
+fn cli_sliced_3mf_rejects_multiple_instances_of_one_object() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -18,16 +18,32 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
     fs::create_dir_all(&source).unwrap();
     fs::create_dir_all(cwd.join("out")).unwrap();
     write_saved_input(&runner, &source);
-    let input = multiobject_project(&fs::read(source.join("saved.3mf")).unwrap(), true);
-    let project = ares_core::load_project(&input).unwrap();
-    assert_eq!(
-        project
-            .objects()
-            .iter()
-            .map(|object| object.volumes().len())
-            .collect::<Vec<_>>(),
-        [2, 1]
+    let input = rewrite_project(
+        &fs::read(source.join("saved.3mf")).unwrap(),
+        |name, xml| match name {
+            "3D/3dmodel.model" => {
+                let item = xml.lines().find(|line| line.contains("<item ")).unwrap();
+                let copy = item
+                    .replace("00000002-", "00000003-")
+                    .replace(" 128 128 5\"", " 176 128 5\"");
+                xml.replace(item, &format!("{item}\n{copy}"))
+            }
+            "Metadata/model_settings.config" => {
+                let instance = xml_element(xml, "model_instance", ">");
+                let copy = instance.replace(
+                    "key=\"instance_id\" value=\"0\"",
+                    "key=\"instance_id\" value=\"1\"",
+                );
+                xml.replace(instance, &format!("{instance}\n{copy}"))
+            }
+            _ => xml.to_owned(),
+        },
     );
+    let project = ares_core::load_project(&input).unwrap();
+    let [object] = project.objects() else {
+        panic!("one object expected")
+    };
+    assert_eq!(object.instances().len(), 2);
     assert_eq!(project.plates().len(), 1);
     fs::write(cwd.join("saved.3mf"), &input).unwrap();
 
@@ -40,7 +56,7 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
     assert!(
         stderr.starts_with("Project export to export.3mf failed\nFailed exporting 3mf files. ")
     );
-    assert!(stderr.ends_with("sliced export requires one saved volume and instance per object\n"));
+    assert!(stderr.ends_with("sliced export requires one saved instance per object\n"));
     let mut expected = vec!["out", "saved.3mf"];
     if cfg!(target_os = "linux") {
         let report: Value =
@@ -61,20 +77,13 @@ fn cli_sliced_3mf_rejects_multiobject_saved_project() {
 }
 
 pub(super) fn multiobject_project(input: &[u8], additional_part: bool) -> Vec<u8> {
-    let mut archive = ZipArchive::new(Cursor::new(input)).unwrap();
-    let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
-    for index in 0..archive.len() {
-        let mut member = archive.by_index(index).unwrap();
-        let name = member.name().to_owned();
-        let mut bytes = Vec::new();
-        member.read_to_end(&mut bytes).unwrap();
-        let xml = std::str::from_utf8(&bytes).unwrap();
+    rewrite_project(input, |name, xml| {
         let object_variant = |object: &str| {
             object
                 .replace("id=\"2\"", "id=\"3\"")
                 .replace("00000001-", "00000002-")
         };
-        let patched = match name.as_str() {
+        match name {
             "3D/3dmodel.model" => {
                 let object = xml_element(xml, "object", " ");
                 let component = xml
@@ -137,7 +146,19 @@ pub(super) fn multiobject_project(input: &[u8], additional_part: bool) -> Vec<u8
                     .replace(instance, &format!("{instance}\n{second_instance}"))
             }
             _ => xml.to_owned(),
-        };
+        }
+    })
+}
+
+fn rewrite_project(input: &[u8], rewrite: impl Fn(&str, &str) -> String) -> Vec<u8> {
+    let mut archive = ZipArchive::new(Cursor::new(input)).unwrap();
+    let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..archive.len() {
+        let mut member = archive.by_index(index).unwrap();
+        let name = member.name().to_owned();
+        let mut xml = String::new();
+        member.read_to_string(&mut xml).unwrap();
+        let patched = rewrite(&name, &xml);
         out.start_file(name, zip::write::SimpleFileOptions::default())
             .unwrap();
         out.write_all(patched.as_bytes()).unwrap();

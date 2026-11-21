@@ -118,14 +118,18 @@ fn saved_print_object_id(project: &ares_core::Project) -> Result<u32, &'static s
     let objects = project.objects();
     let mut volumes = 0;
     for object in objects {
-        let ([volume], [instance]) = (object.volumes(), object.instances()) else {
-            return Err("sliced export requires one saved volume and instance per object");
+        let [instance] = object.instances() else {
+            return Err("sliced export requires one saved instance per object");
         };
-        if !instance.printable() || volume.volume_type() != ares_core::ProjectVolumeType::ModelPart
+        if !instance.printable()
+            || object
+                .volumes()
+                .iter()
+                .any(|volume| volume.volume_type() != ares_core::ProjectVolumeType::ModelPart)
         {
             return Err("sliced export requires printable instances of ordinary model parts");
         }
-        volumes += 1;
+        volumes += object.volumes().len() as u32;
     }
 
     // The saved-plate path starts with a fresh ObjectBase counter.
