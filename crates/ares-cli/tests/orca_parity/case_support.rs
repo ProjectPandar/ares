@@ -184,3 +184,6 @@ mod arachne_ioi_proximity;
 
 #[path = "overhang_wall_retract_wipe.rs"]
 mod overhang_wall_retract_wipe;
+
+#[path = "fixed_surface_layer_direction.rs"]
+mod fixed_surface_layer_direction;

@@ -24,6 +24,8 @@ macro_rules! region_option_fields {
             outer_wall_speed => "outer_wall_speed": OrcaFloatsNullable = OrcaFloatsNullable(vec![Nullable::Value(OrcaFloat(60.0))]),
             infill_direction => "infill_direction": OrcaFloat = OrcaFloat(45.0),
             solid_infill_direction => "solid_infill_direction": OrcaFloat = OrcaFloat(45.0),
+            top_layer_direction => "top_layer_direction": OrcaFloat = OrcaFloat(-1.0),
+            bottom_layer_direction => "bottom_layer_direction": OrcaFloat = OrcaFloat(-1.0),
             solid_infill_rotate_template => "solid_infill_rotate_template": OrcaString = string(""),
             symmetric_infill_y_axis => "symmetric_infill_y_axis": OrcaBool = OrcaBool(false),
             infill_complete_top => "infill_complete_top": OrcaBool = OrcaBool(false),
