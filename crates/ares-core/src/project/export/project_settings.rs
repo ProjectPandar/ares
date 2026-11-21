@@ -30,14 +30,48 @@ pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceE
     // The load-settings CLI resizes the flush table to the logical
     // filament count squared per nozzle (OrcaSlicer.cpp:3944–3945).
     raw.insert_strings("flush_volumes_matrix", &["0".into()]);
-    for key in ["inherits_group", "different_settings_to_system"] {
-        if !raw.contains_key(key) {
-            raw.insert_strings(key, &[String::new(), String::new(), String::new()]);
-        }
-    }
+    complete_preset_groups(&mut raw, 1);
     // `CLI::run` overlays the dynamic config on `FullPrintConfig` and
     // applies it back (`OrcaSlicer.cpp:4252–4256`) before persisting JSON.
     write_raw(&raw, false)
+}
+
+pub(crate) fn direct_stl_settings(
+    project: &crate::Project,
+) -> crate::project::raw_settings::ProjectSettingsRaw {
+    let mut raw = project.documents().project_settings_raw.clone();
+    let print = &project.settings().project.print;
+    let count = project.cli_filament_count();
+    if !raw.contains_key("flush_volumes_matrix") {
+        // CLI resizes the table before computing transitions. For a single
+        // filament, each nozzle contributes only its zero diagonal (OrcaSlicer.cpp:3944–3979).
+        let matrix = if count == 1 {
+            vec!["0".to_owned(); print.nozzle_diameter.0.len()]
+        } else {
+            print
+                .flush_volumes_matrix
+                .0
+                .iter()
+                .copied()
+                .map(format_number)
+                .collect()
+        };
+        raw.insert_strings("flush_volumes_matrix", &matrix);
+    }
+    complete_preset_groups(&mut raw, count);
+    raw
+}
+
+fn complete_preset_groups(
+    raw: &mut crate::project::raw_settings::ProjectSettingsRaw,
+    filament_count: usize,
+) {
+    // OrcaSlicer.cpp:3202–3206 allocates process, filament and machine columns.
+    for key in ["inherits_group", "different_settings_to_system"] {
+        if !raw.contains_key(key) {
+            raw.insert_strings(key, &vec![String::new(); filament_count + 2]);
+        }
+    }
 }
 
 pub(super) fn write_raw(

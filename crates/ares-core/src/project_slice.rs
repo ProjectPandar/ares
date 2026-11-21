@@ -12,7 +12,9 @@ mod capabilities;
 mod closing;
 pub(crate) mod compatibility;
 mod compensation;
-pub(crate) use archive_plate::{ArchivePlate, slice_source, slice_source_with_archive};
+pub(crate) use archive_plate::{
+    ArchivePlate, ArchiveSource, slice_source, slice_source_with_archive,
+};
 mod conical_overhang;
 mod contour_z;
 mod curl_estimation;
@@ -225,7 +227,7 @@ fn slice_plate(
     generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext<'_>,
     mut sliced_plate: Option<&mut SlicedPlate>,
-    archive: Option<&mut Option<ArchivePlate>>,
+    archive: Option<ArchiveSource>,
     prepare: impl FnOnce(
         Option<&mut SlicedPlate>,
         &mut crate::SlicerContext<'_>,
@@ -350,7 +352,7 @@ fn consume_post_island_print_order(
     generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
-    archive: Option<&mut Option<ArchivePlate>>,
+    archive: Option<ArchiveSource>,
 ) -> Result<ProcessedGCode, SliceError> {
     let mut output = gcode_emit::emit(&mut prepared, generation, context, warnings, archive)?;
     output.result.apply_filament_config(prepared.filament());

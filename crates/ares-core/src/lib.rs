@@ -118,6 +118,7 @@ pub use plater::{
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};
 pub use print::warnings::{PrintWarning, SlicingNotificationType, WarningLevel};
 
+pub use profiles::entry::load_settings::slice_stl_with_load_settings_for_export;
 pub use profiles::entry::slice_assembly;
 pub use project::assembly::{Assembly, AssemblyError, AssemblyFile, AssemblyList};
 pub use project_slice::gcode_emit::wipe_tower_estimate::config::DynamicPrintConfig;
