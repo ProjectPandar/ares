@@ -1,9 +1,16 @@
 use super::super::repo_root;
 
 #[test]
-fn project_catalog_cli_uptodate_requires_explicit_catalog() {
-    let error = rejected(&["--uptodate"]);
-    assert!(error.contains("--project-preset-catalog"), "{error}");
+fn project_catalog_cli_uptodate_checks_an_authored_catalog() {
+    let error = rejected(&[
+        "--uptodate",
+        "--project-preset-catalog",
+        "missing-catalog.json",
+    ]);
+    assert!(
+        error.contains("cannot read project preset catalog"),
+        "{error}"
+    );
 }
 
 #[test]

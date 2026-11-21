@@ -89,7 +89,7 @@ fn supplied_cli_adapter_preserves_filament_only_replacement() {
 }
 
 #[test]
-fn supplied_cli_adapter_keeps_missing_catalog_uptodate_error() {
+fn supplied_cli_adapter_preserves_bare_uptodate() {
     let work = tempfile::Builder::new()
         .prefix("cli-uptodate-protocol-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -105,7 +105,7 @@ fn supplied_cli_adapter_keeps_missing_catalog_uptodate_error() {
     fs::write(work.join("stderr"), &result.stderr).unwrap();
     fs::write(work.join("stdout"), &result.stdout).unwrap();
     profile_entry::write_json(
-        &work.join("result.json"),
+        &work.join("observation.json"),
         &json!({
             "catalog_supply_present": std::env::var_os("ARES_PARITY_PROJECT_PRESET_CATALOG").is_some(),
             "cli_exit": result.status.code(), "output_created": output.exists(),
@@ -113,16 +113,10 @@ fn supplied_cli_adapter_keeps_missing_catalog_uptodate_error() {
     );
     assert_eq!(
         result.status.code(),
-        Some(2),
-        "authored missing-catalog request must remain invalid; {work:?}"
+        Some(0),
+        "bare Native-style refresh must not require a catalog; {work:?}"
     );
-    let stderr = String::from_utf8_lossy(&result.stderr);
-    assert!(
-        stderr.contains("required arguments") && stderr.contains("--project-preset-catalog"),
-        "{stderr}; {work:?}"
-    );
-    assert!(result.stdout.is_empty());
-    assert!(!output.exists());
+    assert!(output.exists());
 }
 
 #[test]

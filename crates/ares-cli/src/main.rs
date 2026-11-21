@@ -4,6 +4,7 @@ mod failure;
 mod installed_resources;
 mod load_settings;
 mod moves_csv;
+mod native_refresh;
 mod preset_sources;
 mod project_presets;
 #[cfg(target_os = "linux")]
@@ -124,7 +125,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if let Some(catalog) = &args.project_preset_catalog
         && args.load_settings.is_none()
     {
-        return project_presets::slice(&args, catalog, &input, &overrides, context).await;
+        return project_presets::slice(
+            &args,
+            project_presets::Entry::Catalog(catalog),
+            &input,
+            &overrides,
+            context,
+        )
+        .await;
     }
     let load_settings = args
         .load_settings
@@ -142,6 +150,16 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             &input,
             &overrides,
             (&load_settings, &load_filaments),
+            context,
+        )
+        .await;
+    }
+    if let Some(refresh) = native_refresh::load(&args, &input, &load_filaments)? {
+        return project_presets::slice(
+            &args,
+            project_presets::Entry::Native(&refresh),
+            &input,
+            &overrides,
             context,
         )
         .await;
@@ -334,9 +352,6 @@ fn split_native_list(value: &str) -> Vec<&str> {
     value.split(';').collect()
 }
 
-/// Reads the referenced preset files, keeping the path for upstream error
-/// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
-/// Empty labels stay empty (dropped list slots).
 fn ensure_supported_input(path: &Path) -> Result<(), io::Error> {
     match path.extension().and_then(|extension| extension.to_str()) {
         Some("3mf" | "stl") => Ok(()),
