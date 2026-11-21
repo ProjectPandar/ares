@@ -91,13 +91,19 @@ impl ProfileFragment {
         });
         // OrcaSlicer.cpp::load_config_file loads into an empty DynamicPrintConfig;
         // collection defaults belong to resolved presets, not flattened files.
-        Self::from_catalog_values(values, BTreeMap::new()).map(|(profile, _)| profile)
+        Self::from_catalog_values(values, BTreeMap::new(), false).map(|(profile, _)| profile)
     }
 
     pub(super) fn from_catalog_values(
-        input: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
-        defaults: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+        mut input: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+        mut defaults: BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+        preserve_default_thumbnails: bool,
     ) -> Result<(Self, ProjectRuntimeOptionsBuilder), SliceError> {
+        // The collection default bypasses the authored thumbnail composite conversion.
+        if preserve_default_thumbnails && let Some((key, value)) = input.remove_entry("thumbnails")
+        {
+            defaults.insert(key, value);
+        }
         let mut metadata_values = defaults.clone();
         metadata_values.extend(input.clone());
         let parsed = metadata::parse_values(crate::project::raw_settings::RawConfigValue::Object(

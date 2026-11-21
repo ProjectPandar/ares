@@ -48,6 +48,7 @@ pub(super) fn records() -> Vec<Record> {
                 inherits: Some(String::new()),
                 instantiation: None,
                 includes: Vec::new(),
+                preserve_default_thumbnails: false,
                 fields,
             },
             source_identity: None,
