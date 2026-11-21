@@ -98,14 +98,16 @@ pub(super) async fn slice(
         .into());
     }
     // CLI:1682–1690 admits the embedded project before reading supplied presets.
-    ares_core::validate_load_settings_input(input).map_err(|error| {
-        slice_error_to_failure(
-            error,
-            args.output(),
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })?;
+    context
+        .validate_load_settings_input(input)
+        .map_err(|error| {
+            slice_error_to_failure(
+                error,
+                args.output(),
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        })?;
 
     let filename = args
         .input()

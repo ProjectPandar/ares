@@ -215,7 +215,7 @@ impl<'a> ProjectPresetRefresh<'a> {
         self,
         input: &[u8],
         overrides: &ConfigOverrides,
-        validate: bool,
+        validate_post_process: bool,
     ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
         if crate::InputFormat::detect(input) != crate::InputFormat::ThreeMf {
             return Err(SliceError::InvalidInput(
@@ -223,7 +223,7 @@ impl<'a> ProjectPresetRefresh<'a> {
             ));
         }
         let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
-        if validate {
+        if validate_post_process {
             crate::project_slice::validate_post_process(&project)?;
         }
         match self.policy {

@@ -36,7 +36,7 @@ impl Project {
         let embedded_raw = project.documents.project_settings_raw.clone();
         // The CLI composite entry checks the embedded
         // post_process before the profile overlay (`OrcaSlicer.cpp:1682-1690`).
-        if profile.validate_print {
+        if profile.validate_post_process {
             crate::project_slice::validate_post_process(&project)?;
         }
 

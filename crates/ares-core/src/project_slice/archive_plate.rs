@@ -45,6 +45,7 @@ pub(crate) fn slice_source_with_archive(
             perimeters::prepare_post_layer_region_perimeters(
                 ProjectSource {
                     sliced_plate: report,
+                    normative_check: context.normative_check(),
                     max_triangle_count: context.max_triangle_count,
                     custom_gcodes: context.custom_gcodes.take(),
                     ..project
