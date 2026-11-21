@@ -143,14 +143,19 @@ impl SlicedPlateEntry {
 
 pub(super) fn write_plate_batch(
     output: &Path,
-    selection: u32,
+    (plate_index, strict_mode): (u32, bool),
     (file, substitutions): (&str, Vec<ares_core::ConfigSubstitution>),
     upward_machines: &[String],
     completed: &[(u32, ares_core::SlicedPlate)],
 ) {
-    let Some((_, last)) = completed.last() else {
-        return;
-    };
+    let (layer_height, wall_loops, sparse_infill_density) =
+        completed.last().map_or((0.0, 0, 0.0), |(_, plate)| {
+            (
+                plate.layer_height,
+                plate.wall_loops,
+                plate.sparse_infill_density,
+            )
+        });
     let sliced_plates = completed
         .iter()
         .map(|(id, plate)| SlicedPlateEntry::from_plate(*id, plate))
@@ -170,11 +175,11 @@ pub(super) fn write_plate_batch(
     let _ = ResultJson {
         return_code: 0,
         error_string: "Success.",
-        plate_index: selection,
-        layer_height: last.layer_height,
-        wall_loops: last.wall_loops,
-        sparse_infill_density: last.sparse_infill_density,
-        strict_mode: false,
+        plate_index,
+        layer_height,
+        wall_loops,
+        sparse_infill_density,
+        strict_mode,
         upward_machines,
         sliced_plates: &sliced_plates,
         warnings: &warnings,

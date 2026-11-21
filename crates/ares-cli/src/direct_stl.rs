@@ -1,8 +1,8 @@
-use std::{fs, io};
+use std::{fs, io, path::Path};
 
 use ares_core::{
     ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsSliceRequest,
-    SliceError, SlicedPlate, SlicerContext, StlFile,
+    SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
 };
 
 use crate::{
@@ -47,43 +47,53 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         return crate::direct_project::run(args).await;
     }
-    let selection = args
-        .selection
-        .expect("--slice is required without a subcommand");
-    if !matches!(selection, 0 | 1) {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "expected --slice 0 or 1").into());
-    }
-
-    let output = args
+    let selection = u32::try_from(
+        args.selection
+            .expect("--slice is required without a subcommand"),
+    )
+    .map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "expected a nonnegative --slice",
+        )
+    })?;
+    let dir = args
         .outputdir
-        .expect("--outputdir is required without a subcommand")
-        .join("plate_1.gcode");
-    let mut inputs = Vec::with_capacity(args.inputs.len());
+        .as_ref()
+        .expect("--outputdir is required without a subcommand");
+    let output = dir.join("plate_1.gcode");
+    let multiple = args.inputs.len() > 1;
+    let mut models = Vec::new();
+    let mut single_input = Vec::new();
+    let mut filename = "";
     for path in &args.inputs {
         if path.extension().is_none_or(|ext| ext != "stl") {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "expected .stl input").into());
         }
-        let filename = path
+        let name = path
             .file_name()
             .and_then(|name| name.to_str())
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-        let bytes = match fs::read(path) {
-            Ok(bytes) => bytes,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                return Err(CliFailure::missing_input(
+        if filename.is_empty() {
+            filename = name;
+        }
+        let bytes = read_input(path, &output)?;
+        if multiple || selection > 1 {
+            let model = ares_core::load_model(&bytes).map_err(|_| {
+                CliFailure::invalid_stl_input(
                     path,
                     #[cfg(target_os = "linux")]
                     &output,
-                ));
-            }
-            Err(error) => return Err(error.into()),
-        };
-        inputs.push((filename, bytes));
+                )
+            })?;
+            models.push((name, model));
+        } else {
+            single_input = bytes;
+        }
     }
     let mut sliced_plate = SlicedPlate::default();
-    let (filename, bytes) = &inputs[0];
-    let imported = if args.convert_unit {
-        let mut model = ImportedStl::read(bytes, filename).map_err(|_| {
+    let imported = if args.convert_unit && models.is_empty() {
+        let mut model = ImportedStl::read(&single_input, filename).map_err(|_| {
             CliFailure::invalid_stl_input(
                 &args.inputs[0],
                 #[cfg(target_os = "linux")]
@@ -98,118 +108,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         None
     };
     let context = SlicerContext::new(0).with_max_triangle_count(args.mtcpp.unwrap_or_default());
-    let gcode =
-        if args.load_settings.is_none() && args.load_filaments.is_none() && inputs.len() == 1 {
-            if let Some(imported) = &imported {
-                ares_core::slice_imported_stl_with_defaults_processed(
-                    imported,
-                    &mut sliced_plate,
-                    args.export_statistics,
-                    context,
-                )
-                .await
-            } else {
-                ares_core::slice_cli_stl_with_defaults_processed(
-                    bytes,
-                    filename,
-                    &mut sliced_plate,
-                    args.export_statistics,
-                    context,
-                )
-                .await
-            }
-        } else {
-            let settings = read_preset_files(
-                &args
-                    .load_settings
-                    .as_deref()
-                    .map(split_native_list)
-                    .unwrap_or_default(),
-            )?;
-            let filaments = read_preset_files(
-                &args
-                    .load_filaments
-                    .as_deref()
-                    .map(split_native_list)
-                    .unwrap_or_default(),
-            )?;
-            let settings = settings
-                .iter()
-                .map(|(label, json, source_identity)| LoadSettingsFile {
-                    label,
-                    json,
-                    source_identity: source_identity.as_ref(),
-                })
-                .collect::<Vec<_>>();
-            let mut filaments = filaments
-                .iter()
-                .map(|(label, json, source_identity)| LoadSettingsFile {
-                    label,
-                    json,
-                    source_identity: source_identity.as_ref(),
-                })
-                .collect::<Vec<_>>();
-            // OrcaSlicer.cpp:2379–2469 fills holes in the list, not beyond it.
-            if args.load_defaultfila && !filaments.is_empty() {
-                let first = filaments
-                    .iter()
-                    .copied()
-                    .find(|file| !file.label.is_empty())
-                    .ok_or_else(|| CliFailure::invalid_preset_file(&output))?;
-                for file in filaments.iter_mut().filter(|file| file.label.is_empty()) {
-                    *file = first;
-                }
-            }
-            let request = LoadSettingsSliceRequest {
-                filename,
-                catalog_json: None,
-                loaded_sources: None,
-                uptodate: false,
-                settings: &settings,
-                filaments: &filaments,
-                // Unlike 3MF, a fresh STL model never enters the selected-plate importer.
-                // OrcaSlicer.cpp:2042–2045 resets the import selection for non-project files.
-                plate: None,
-                overrides: &ConfigOverrides::default(),
-                placement: args.arrange.placement(inputs.len()),
-                orient: false,
-                sliced_plate: &mut sliced_plate,
-            };
-            let metadata = GenerationMetadata::default();
-            if let Some(imported) = &imported {
-                ares_core::slice_imported_stl_with_load_settings_processed(
-                    imported,
-                    request,
-                    metadata,
-                    context,
-                    args.export_statistics,
-                )
-                .await
-            } else if inputs.len() == 1 {
-                ares_core::slice_with_load_settings_processed(
-                    bytes,
-                    request,
-                    metadata,
-                    context,
-                    args.export_statistics,
-                )
-                .await
-            } else {
-                let files = inputs
-                    .iter()
-                    .map(|(name, bytes)| StlFile { name, bytes })
-                    .collect::<Vec<_>>();
-                ares_core::slice_stl_files_with_load_settings_processed(
-                    &files,
-                    request,
-                    metadata,
-                    context,
-                    args.export_statistics,
-                )
-                .await
-            }
-        };
-    let gcode = gcode.map_err(|error| match error {
+    let failure = |error| match error {
         SliceError::OptionStlModelRead(_) => CliFailure::invalid_stl_input(
             &args.inputs[0],
             #[cfg(target_os = "linux")]
@@ -221,27 +120,178 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             #[cfg(target_os = "linux")]
             1,
         ),
-    })?;
-    if args.strict {
-        crate::failure::slicing::check_strict(
-            #[cfg(target_os = "linux")]
-            &output,
-            1,
-            &sliced_plate,
-            &[],
-            None,
+    };
+    let plates = if args.load_settings.is_none() && args.load_filaments.is_none() && !multiple {
+        if selection > 1 {
+            Vec::new()
+        } else {
+            let processed = if let Some(imported) = &imported {
+                ares_core::slice_imported_stl_with_defaults_processed(
+                    imported,
+                    &mut sliced_plate,
+                    args.export_statistics,
+                    context,
+                )
+                .await
+            } else {
+                ares_core::slice_cli_stl_with_defaults_processed(
+                    &single_input,
+                    filename,
+                    &mut sliced_plate,
+                    args.export_statistics,
+                    context,
+                )
+                .await
+            }
+            .map_err(&failure)?;
+            vec![SlicedStlPlate {
+                id: 1,
+                processed,
+                report: sliced_plate,
+            }]
+        }
+    } else {
+        let settings = read_preset_files(
+            &args
+                .load_settings
+                .as_deref()
+                .map(split_native_list)
+                .unwrap_or_default(),
         )?;
+        let filaments = read_preset_files(
+            &args
+                .load_filaments
+                .as_deref()
+                .map(split_native_list)
+                .unwrap_or_default(),
+        )?;
+        let settings = settings
+            .iter()
+            .map(|(label, json, source_identity)| LoadSettingsFile {
+                label,
+                json,
+                source_identity: source_identity.as_ref(),
+            })
+            .collect::<Vec<_>>();
+        let mut filaments = filaments
+            .iter()
+            .map(|(label, json, source_identity)| LoadSettingsFile {
+                label,
+                json,
+                source_identity: source_identity.as_ref(),
+            })
+            .collect::<Vec<_>>();
+        if args.load_defaultfila && !filaments.is_empty() {
+            let first = filaments
+                .iter()
+                .copied()
+                .find(|file| !file.label.is_empty())
+                .ok_or_else(|| CliFailure::invalid_preset_file(&output))?;
+            for file in filaments.iter_mut().filter(|file| file.label.is_empty()) {
+                *file = first;
+            }
+        }
+        let request = LoadSettingsSliceRequest {
+            filename,
+            catalog_json: None,
+            loaded_sources: None,
+            uptodate: false,
+            settings: &settings,
+            filaments: &filaments,
+            plate: None,
+            overrides: &ConfigOverrides::default(),
+            placement: args.arrange.placement(args.inputs.len()),
+            orient: false,
+            sliced_plate: &mut sliced_plate,
+        };
+        if models.is_empty() {
+            let processed = if let Some(imported) = &imported {
+                ares_core::slice_imported_stl_with_load_settings_processed(
+                    imported,
+                    request,
+                    GenerationMetadata::default(),
+                    context,
+                    args.export_statistics,
+                )
+                .await
+            } else {
+                ares_core::slice_with_load_settings_processed(
+                    &single_input,
+                    request,
+                    GenerationMetadata::default(),
+                    context,
+                    args.export_statistics,
+                )
+                .await
+            }
+            .map_err(&failure)?;
+            vec![SlicedStlPlate {
+                id: 1,
+                processed,
+                report: sliced_plate,
+            }]
+        } else {
+            ares_core::slice_stl_models_with_load_settings(
+                &models,
+                request,
+                selection,
+                args.mtcpp.unwrap_or_default(),
+                args.export_statistics,
+            )
+            .await
+            .map_err(&failure)?
+        }
+    };
+    let mut completed = Vec::with_capacity(plates.len());
+    for SlicedStlPlate {
+        id,
+        processed,
+        report,
+    } in plates
+    {
+        if args.strict {
+            crate::failure::slicing::check_strict(
+                #[cfg(target_os = "linux")]
+                &output,
+                id,
+                &report,
+                &[],
+                None,
+            )?;
+        }
+        crate::statistics::write(
+            &dir.join(format!("plate_{id}.gcode")),
+            processed,
+            args.export_statistics,
+            id,
+        )?;
+        completed.push((id, report));
     }
-    crate::statistics::write(&output, gcode, args.export_statistics, 1)?;
     #[cfg(target_os = "linux")]
-    crate::result_json::Success {
-        strict_mode: args.strict,
-        output: &output,
-        plate: 1,
-        plate_index: selection as u32,
-        sliced_plate,
-        upward_machines: &[],
-    }
-    .write(filename, Vec::new());
+    crate::result_json::write_plate_batch(
+        &output,
+        (selection, args.strict),
+        (filename, Vec::new()),
+        &[],
+        &completed,
+    );
     Ok(())
+}
+
+fn read_input(path: &Path, output: &Path) -> Result<Vec<u8>, CliFailure> {
+    #[cfg(not(target_os = "linux"))]
+    let _ = output;
+    match fs::read(path) {
+        Ok(bytes) => Ok(bytes),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Err(CliFailure::missing_input(
+            path,
+            #[cfg(target_os = "linux")]
+            output,
+        )),
+        Err(_) => Err(CliFailure::invalid_stl_input(
+            path,
+            #[cfg(target_os = "linux")]
+            output,
+        )),
+    }
 }

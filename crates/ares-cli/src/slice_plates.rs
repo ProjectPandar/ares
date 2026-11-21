@@ -199,7 +199,7 @@ pub(super) fn run(
     #[cfg(target_os = "linux")]
     crate::result_json::write_plate_batch(
         &result_path,
-        selection as u32,
+        (selection as u32, false),
         (&file, substitutions),
         &upward_report,
         &completed,
