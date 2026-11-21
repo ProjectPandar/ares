@@ -6,13 +6,12 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { withoutCliGroups, withPlaterBedType } from "./platerExport";
-import { type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { withDifferences, withoutCliGroups, withPlaterBedType, withPlaterConfigLines } from "./platerExport";
+import { lhModels, type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
-const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-slice/", import.meta.url));
 // A sidebar process edit that differs from the selected process preset's value.
 const EDIT = { key: "layer_height", value: "0.3" };
@@ -68,37 +67,14 @@ function multiColour(gcode: string) {
 }
 
 /**
- * The GuideFrame "All LH models" check: every LH model with each nozzle variant, the model's `nozzle_diameter`
- * entries (PresetBundle.cpp:8319-8327).
- */
-function lhModels() {
-  const vendor = JSON.parse(readFileSync(`${profiles}LH.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
-  return Object.fromEntries(vendor.machine_model_list.map(({ name, sub_path }) =>
-    [name, (JSON.parse(readFileSync(`${profiles}LH/${sub_path}`, "utf8")) as { nozzle_diameter: string }).nozzle_diameter.split(";")]));
-}
-
-/**
  * The STL reference with the plater's config lines: with no project open, load_selections copies the filament
- * colours into `filament_multi_colour` (PresetBundle.cpp:4116-4117); full_fff_config takes the scalar
- * `filament_plugin_config_overrides` from the first filament (PresetBundle.cpp:5726-5735), erases
- * `compatible_printers_condition` (PresetBundle.cpp:5790-5794) and stores only the groups `session` holds.
+ * colours into `filament_multi_colour` (PresetBundle.cpp:4116-4117), and full_fff_config decides the rest.
  */
 function withPlaterStlLines(gcode: string, session: NativeSelection) {
   const lines = gcode.split("\n");
   const colour = lines.find((line) => line.startsWith("; filament_colour = "))!.slice("; filament_colour = ".length);
   setConfigLine(lines, "filament_multi_colour", colour);
-  setConfigLine(lines, "filament_plugin_config_overrides", session.filament.edited.config.filament_plugin_config_overrides?.serialized);
-  setConfigLine(lines, "compatible_printers_condition", undefined);
-  return withoutCliGroups(lines.join("\n"), session);
-}
-
-/**
- * `session` with the plater keeping `different_settings_to_system`: the browser's 3MF slice still runs the CLI's
- * one-colour prime-tower rule (OrcaSlicer.cpp:4323-4342), which records `enable_prime_tower`, and the process edit
- * dirties the process column as the plater's edited print does (PresetBundle.cpp:5586-5595).
- */
-function withDifferences(session: NativeSelection): NativeSelection {
-  return { ...session, full_fff_config: JSON.stringify({ different_settings_to_system: [], ...JSON.parse(session.full_fff_config) }) };
+  return withPlaterConfigLines(lines.join("\n"), session);
 }
 
 async function exportGcode(page: Page, directory: string) {

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { expect } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { type NativeSelection, PROJECT_CONFIG } from "./presetSelectOracle";
+import { setConfigLine } from "./selectedPresetLines";
 
 /** The groups full_fff_config stores only when some entry is non-empty (PresetBundle.cpp:5826-5838). */
 const GROUPS = ["compatible_machine_expression_group", "compatible_process_expression_group", "inherits_group", "different_settings_to_system"];
@@ -101,4 +102,25 @@ export function withoutCliGroups(gcode: string, selection: NativeSelection) {
     expect(entries.every((entry) => entry === "" || entry === '""'), `every Native ${key} entry is empty`).toBe(true);
     return false;
   }).join("\n");
+}
+
+/**
+ * `gcode`, a Native --load-settings slice, with the config lines full_fff_config decides for the plater session
+ * `session`: the scalar `filament_plugin_config_overrides` from the first filament (PresetBundle.cpp:5726-5735), no
+ * `compatible_printers_condition` (PresetBundle.cpp:5790-5794), and only the groups `session` stores.
+ */
+export function withPlaterConfigLines(gcode: string, session: NativeSelection) {
+  const lines = gcode.split("\n");
+  setConfigLine(lines, "filament_plugin_config_overrides", session.filament.edited.config.filament_plugin_config_overrides?.serialized);
+  setConfigLine(lines, "compatible_printers_condition", undefined);
+  return withoutCliGroups(lines.join("\n"), session);
+}
+
+/**
+ * `session` with the plater keeping `different_settings_to_system`: the browser's 3MF slice still runs the CLI's
+ * one-colour prime-tower rule (OrcaSlicer.cpp:4323-4342), which records `enable_prime_tower`, and an edit dirties
+ * the process column as the plater's edited print does (PresetBundle.cpp:5586-5595).
+ */
+export function withDifferences(session: NativeSelection): NativeSelection {
+  return { ...session, full_fff_config: JSON.stringify({ different_settings_to_system: [], ...JSON.parse(session.full_fff_config) }) };
 }

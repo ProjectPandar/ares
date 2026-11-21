@@ -7,6 +7,7 @@ import { test } from "./failureDiagnostics";
 import { aresGeneratorLine, normalize } from "./orcaGcode";
 import { oraclePath } from "./oracleEnv";
 import { presetSelectProbe } from "./presetSelectOracle";
+import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 import { canvasDigest } from "./toolpathPreview";
 
@@ -50,7 +51,7 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
     const gcode = readFileSync(path, "utf8");
     const nativeGcode = readFileSync(`${directory}/plate_1.gcode`, "utf8");
     const selection = openedSelection(`${directory}/project.3mf`, `${directory}/selection/`)!;
-    expect(normalize(gcode, "Ares")).toBe(withSelectedPresets(normalize(nativeGcode, "OrcaSlicer"), selection));
+    expect(normalize(gcode, "Ares")).toBe(withoutCliGroups(withSelectedPresets(normalize(nativeGcode, "OrcaSlicer"), selection), selection));
     const m73 = (text: string) => text.split("\n").filter((line) => line.startsWith("M73 ")).join("\n");
     expect(m73(gcode).length).toBeGreaterThan(0);
     expect(m73(gcode)).toBe(m73(nativeGcode));
