@@ -115,7 +115,7 @@ fn prepare_object(
                                 input_object,
                                 input,
                                 scale,
-                                None,
+                                prelude.printable_lower_slices.as_deref(),
                             )?,
                             overhang_flow: input.overhang_flow,
                             ext_perimeter_flow: input.ext_perimeter_flow,

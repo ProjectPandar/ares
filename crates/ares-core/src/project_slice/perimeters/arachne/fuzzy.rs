@@ -101,6 +101,10 @@ impl Regions {
         })
     }
 
+    pub(in crate::project_slice::perimeters) fn supported_area(&self) -> Option<&[ExPolygon]> {
+        self.supported.as_deref()
+    }
+
     pub(in crate::project_slice::perimeters) fn merged(
         &self,
         layer_id: usize,
@@ -191,7 +195,7 @@ impl Regions {
 }
 
 // Feature/FuzzySkin.cpp:587-593: restricted empty masks mean no fuzzy coverage.
-fn restrict_to_supported(
+pub(in crate::project_slice::perimeters) fn restrict_to_supported(
     regions: &mut [Region],
     supported: Option<&[ExPolygon]>,
 ) -> Result<(), SliceError> {
