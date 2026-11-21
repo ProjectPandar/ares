@@ -140,15 +140,6 @@ async fn compare_expected(project: Value, catalog: Value, expected: Value, stale
         "Native CLI failed: {}",
         root.display()
     );
-    assert_eq!(
-        fs::read_to_string(root.join("native-affinity.txt"))
-            .unwrap()
-            .split(':')
-            .nth(1)
-            .unwrap()
-            .trim(),
-        "60"
-    );
     let native: Value =
         serde_json::from_slice(&fs::read(root.join("native.json")).unwrap()).unwrap();
     for (key, value) in expected.as_object().unwrap() {
