@@ -1,4 +1,5 @@
-use crate::geometry::{CoordinateScale, ExPolygon};
+use super::geometry::{even_width_mm, outer_width};
+use crate::geometry::{BoundingBox, CoordinateScale, ExPolygon, Line};
 
 pub(crate) struct WidthContext<'a> {
     pub(crate) max_speed: f64,
@@ -135,47 +136,29 @@ fn second_moment(source: &[ExPolygon], scale: CoordinateScale) -> (f64, f64) {
     (ixx * scale4, iyy * scale4)
 }
 
-pub(crate) fn polygon_width_mm(
+fn polygon_width(
     polygon: &ExPolygon,
-    group_width: f64,
+    (group_width, additional_width): (f32, f32),
     group_height: f64,
-    flow_width: f64,
-    scale: CoordinateScale,
-) -> f64 {
-    // Brim.cpp:497-527: bump and bbox clamp are per ExPolygon.
-    let (mut min_x, mut max_x, mut min_y, mut max_y) = (
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-    );
-    for point in polygon.contour().points() {
-        let x = point.x() as f64;
-        let y = point.y() as f64;
-        min_x = min_x.min(x);
-        max_x = max_x.max(x);
-        min_y = min_y.min(y);
-        max_y = max_y.max(y);
-    }
-    let max_bbox = (max_x - min_x).max(max_y - min_y) * scale.factor();
-    let contour_length = polygon
-        .contour()
-        .lines()
-        .into_iter()
-        .map(|line| line.length() * scale.factor())
-        .sum::<f64>();
+    (spacing, scale): (f32, CoordinateScale),
+) -> f32 {
     let mut width = group_width;
-    if group_height > 10.0
-        && contour_length > 0.0
-        && polygon.area().abs() * scale.factor() * scale.factor() / contour_length < 1.1
-        && width < flow_width
-    {
-        width += (5.0 / flow_width / 2.0).floor() * flow_width * 2.0;
+    let contour = polygon.contour();
+    // Brim.cpp:569–574, Polygon.cpp:24–32: keep the adhesion ratio in
+    // scaled units and sum the closing edge before the remaining edges.
+    if f64::from(width) < scale.scaled_delta(5.0) && group_height > 10.0 && width < spacing {
+        let points = contour.points();
+        let closing = Line::new(points[points.len() - 1], points[0]).length();
+        let length = points.windows(2).fold(closing, |length, pair| {
+            length + Line::new(pair[0], pair[1]).length()
+        });
+        if polygon.area() / length < f64::from(scale.scaled_delta(1.1) as f32) {
+            width += additional_width;
+        }
     }
-    // Brim.cpp:514-527: clamp each polygon independently, then quantize
-    // with the same flow-width lattice used by the group width.
-    let width = width.min(max_bbox).max(0.0);
-    (width / flow_width / 2.0).floor() * flow_width * 2.0
+    let bbox = BoundingBox::from_polygon(contour).expect("nonempty brim contour");
+    let max_side = (bbox.max().x() - bbox.min().x()).max(bbox.max().y() - bbox.min().y());
+    outer_width(width.min(max_side as f32), spacing)
 }
 
 pub(super) struct AutoGroupContext<'a> {
@@ -215,9 +198,14 @@ pub(super) fn auto_group_area(
         volume_materials: context.volume_materials,
         volume_ids: &group.volume_ids,
     };
-    let group_width = width_mm(&group.slices, context.scale, &width_context);
-    let group_width = (group_width / context.spacing_mm / 2.0).floor() * context.spacing_mm * 2.0;
-    // Brim.cpp:504-510 clips only the per-polygon consumer; group width
+    let scaled_width = |mm| {
+        context
+            .scale
+            .scaled_delta(even_width_mm(mm, context.spacing_mm)) as f32
+    };
+    let group_width = scaled_width(width_mm(&group.slices, context.scale, &width_context));
+    let additional_width = scaled_width(5.0);
+    // Brim.cpp:552–562 clips only the per-polygon consumer; group width
     // above retains the original slices for its moment/height calculation.
     let clipped;
     let slices = if let Some(bottom) = context.efc_bottom {
@@ -231,18 +219,15 @@ pub(super) fn auto_group_area(
     let mut forbidden = Vec::new();
     let mut islands = Vec::new();
     for polygon in slices {
-        let polygon_width = polygon_width_mm(
+        let outer_width = polygon_width(
             polygon,
-            group_width,
+            (group_width, additional_width),
             group_bbox[2],
-            context.spacing_mm,
-            context.scale,
+            (context.spacing, context.scale),
         );
-        if polygon_width <= 0.0 {
+        if outer_width <= 0.0 {
             continue;
         }
-        let width = super::scaled_f32(context.scale, polygon_width)?;
-        let outer_width = (width / context.spacing / 2.0).floor() * context.spacing * 2.0;
         let one = crate::brims::outer::area(
             std::slice::from_ref(polygon),
             context.gap,
