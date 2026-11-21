@@ -22,9 +22,9 @@ pub(super) fn run(
     let result_path = directory
         .unwrap_or_else(|| Path::new("."))
         .join("plate_1.gcode");
-    let file = args.input.to_string_lossy();
+    let file = args.input().to_string_lossy();
     let filename = args
-        .input
+        .input()
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
@@ -133,7 +133,7 @@ pub(super) fn run(
             filename,
             settings,
             overrides,
-            orient: args.orient == 1,
+            orient: args.orient == Some(1),
             upward: CliUpwardMachine {
                 source,
                 input: upward_input,

@@ -27,6 +27,9 @@ mod export_stl;
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 
+#[path = "cli_assemble.rs"]
+mod cli_assemble;
+
 #[path = "seam_paint.rs"]
 mod seam_paint;
 

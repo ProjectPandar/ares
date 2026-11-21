@@ -31,7 +31,7 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
         (args.load_slicedata.is_some(), "--load-slicedata"),
         (args.export_slicedata.is_some(), "--export-slicedata"),
         (args.arrange.is_some_and(|value| value != 0), "--arrange"),
-        (args.orient != 0, "--orient"),
+        (args.orient.is_some_and(|value| value != 0), "--orient"),
         (args.plate.is_some(), "--plate"),
         (args.dump_moves.is_some(), "--dump-moves"),
         (args.overrides.is_some(), "--overrides"),
@@ -52,11 +52,11 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
             format!("unsupported STL export option {option}"),
         ));
     }
-    let bytes = match fs::read(&args.input) {
+    let bytes = match fs::read(args.input()) {
         Ok(bytes) => bytes,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             return Err(CliFailure::missing_input(
-                &args.input,
+                args.input(),
                 #[cfg(target_os = "linux")]
                 &report_path,
             ));
@@ -64,7 +64,7 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
         Err(err) => return Err(failure(StlExportFailure::Input, err.to_string())),
     };
     let filename = args
-        .input
+        .input()
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| {

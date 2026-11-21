@@ -54,6 +54,25 @@ fn load_with_profile_preparation(
         retained_refresh: profile.retained_refresh,
     };
     match project.input {
+        super::ProjectInput::Assembly(assembly) => match &assembly.0 {
+            crate::project::assembly::AssemblySource::Archive(file) => {
+                let (mut loaded, preparation) = Project::from_3mf_with_profiles(
+                    file.bytes,
+                    selected,
+                    project.overrides,
+                    (None, project.edits),
+                    upward_report,
+                )?;
+                loaded.assemble_loaded_archive()?;
+                Ok((loaded, preparation))
+            }
+            crate::project::assembly::AssemblySource::Model(model) => {
+                let (mut loaded, preparation) =
+                    model.with_stl_profiles(selected, project.overrides)?;
+                loaded.place_assembly_plates();
+                Ok((loaded, preparation))
+            }
+        },
         super::ProjectInput::Model(model) => model
             .with_stl_profiles(selected, project.overrides)
             .map(|(mut loaded, preparation)| {
