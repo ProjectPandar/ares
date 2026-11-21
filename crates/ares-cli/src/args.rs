@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -24,6 +24,11 @@ pub(crate) enum Commands {
 }
 
 #[derive(Parser)]
+#[command(group(
+    ArgGroup::new("action")
+        .args(["selection", "export_3mf"])
+        .multiple(true)
+))]
 pub(crate) struct SliceArgs {
     /// Native data directory used for AppConfig and selected user presets
     #[arg(long)]
@@ -71,14 +76,28 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
-    #[arg(short = 'o', required_unless_present = "selection")]
+    #[arg(
+        short = 'o',
+        required_unless_present_any = ["selection", "export_3mf"]
+    )]
     pub(crate) output: Option<PathBuf>,
     /// Slice all 3MF plates (0) or the given one-based plate number.
     #[arg(long = "slice", allow_negative_numbers = true, conflicts_with_all = ["output", "plate", "dump_moves"])]
     pub(crate) selection: Option<i32>,
-    /// Write plate_<n>.gcode in this directory for the --slice action.
-    #[arg(long, requires = "selection")]
+    /// Write an unsliced, headless FFF project instead of G-code.
+    #[arg(long, value_name = "3MF")]
+    pub(crate) export_3mf: Option<PathBuf>,
+    /// Write plate_<n>.gcode in this directory for the --slice action or the export for --export-3mf.
+    #[arg(long, requires = "action")]
     pub(crate) outputdir: Option<PathBuf>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) arrange: Option<u32>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) min_save: Option<u32>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) load_slicedata: Option<PathBuf>,
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) export_slicedata: Option<PathBuf>,
     pub(crate) input: PathBuf,
 }
 

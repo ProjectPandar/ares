@@ -48,6 +48,7 @@ pub use entry::{
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};
 pub use inheritance::{MergedProfile, MergedProfileMetadata};
+pub(crate) use load_settings::export_settings;
 pub use load_settings::{LoadSettingsFile, LoadSettingsRequest};
 pub use project_refresh::{NativeRefreshFile, NativeRefreshPresets};
 

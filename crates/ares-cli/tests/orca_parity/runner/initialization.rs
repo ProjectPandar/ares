@@ -7,6 +7,10 @@ impl OrcaRunner {
         &self.bin
     }
 
+    pub(crate) fn work_dir(&self) -> &std::path::Path {
+        &self.work
+    }
+
     /// Only absent optional configuration returns None; initialization errors must fail callers.
     #[track_caller]
     pub(crate) fn from_env() -> Result<Option<Self>, StageError> {
