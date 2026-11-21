@@ -1,14 +1,14 @@
-//! Top-surface single-wall regeneration for the arachne generator
-//! (`PerimeterGenerator.cpp:2160-2248`): after the main single-wall pass,
-//! the not-top areas regrow their inner walls.
+//! Single-wall top-surface regeneration (`PerimeterGenerator.cpp:2751–2877`).
 
 use crate::{
     SliceError,
     arachne::{ExtrusionLine, wall_toolpaths},
     geometry::{
-        BoundingBox, CoordinateScale, ExPolygon, FillRule, JoinType,
-        clip_clipper_expolygons_with_subject_bbox, difference_ex, difference_ex_polygons,
-        intersection_ex, offset_expolygons, offset2_ex, union_ex, union_expolygons,
+        BoundingBox, ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Line, Polygon,
+        Polyline, clip_clipper_expolygons_with_subject_bbox, difference_ex, difference_ex_polygons,
+        difference_ex_polygons_with_safety_offset, difference_open_polylines, intersection_ex,
+        offset_expolygons, offset_open_paths, offset2_ex, union_ex, union_expolygons,
+        union_polygons_paths,
     },
     project_slice::region_slices::RegionSurface,
 };
@@ -18,25 +18,15 @@ use super::{
     walls::{ArachneSpacings, GeneratedSurfaceWalls, MITER_LIMIT},
 };
 
-/// Inputs for the top-surface single-wall regeneration
-/// (`PerimeterGenerator.cpp:2160-2248`).
 pub(in crate::project_slice) struct TopSurfaceInputs<'a> {
-    /// `*upper_slices` — the full upper-layer slices.
     pub(in crate::project_slice) upper_slices: &'a [ExPolygon],
-    /// `upper_slices_same_region` when `interface_shells` is set.
     pub(in crate::project_slice) upper_same_region: Option<&'a [RegionSurface]>,
-    /// `*lower_slices` for bridge removal.
     pub(in crate::project_slice) lower_slices: Option<&'a [ExPolygon]>,
-    /// `object_config->interface_shells`.
     pub(in crate::project_slice) interface_shells: bool,
-    /// `config->min_width_top_surface` resolved over the perimeter width
-    /// (mm).
     pub(in crate::project_slice) min_width_top_surface_mm: f64,
-    /// `perimeter_flow.scaled_width()`.
     pub(in crate::project_slice) perimeter_width: i64,
 }
 
-/// Wall regeneration inputs (`PerimeterGenerator.cpp:2177-2247`).
 pub(in crate::project_slice) struct Regeneration<'a> {
     pub(in crate::project_slice) spacings: &'a ArachneSpacings,
     pub(in crate::project_slice) last: &'a [ExPolygon],
@@ -47,189 +37,263 @@ pub(in crate::project_slice) struct Regeneration<'a> {
     pub(in crate::project_slice) inner_loop_number: i32,
 }
 
-/// The regeneration pass (`PerimeterGenerator.cpp:2177-2247`). Takes the
-/// main-pass single-wall output and regrows the inner walls on the not-top
-/// areas (or regenerates fully when no top surface exists on this island).
 pub(in crate::project_slice) fn regenerate(
-    toolpaths: Vec<Vec<ExtrusionLine>>,
-    infill_contour: Vec<ExPolygon>,
+    mut toolpaths: Vec<Vec<ExtrusionLine>>,
+    mut infill_contour: Vec<ExPolygon>,
     ts: &TopSurfaceInputs<'_>,
     config: &ArachneRecordConfig,
-    Regeneration {
-        spacings,
-        last,
-        wall_0_inset,
-        layer_height,
-        params,
-        scale,
-        inner_loop_number,
-    }: Regeneration<'_>,
+    regeneration: Regeneration<'_>,
 ) -> Result<GeneratedSurfaceWalls, SliceError> {
-    let mut bounds = BoundingBox::from_expolygons(&infill_contour);
-    if let Some(bounds) = bounds.as_mut() {
-        // `PerimeterGenerator.cpp:160 bbox.offset(SCALED_EPSILON)` — the
-        // bbox offset rounds the fractional delta through the
-        // `Point(double,double)` constructor.
-        bounds.offset(scale.scaled_delta(1e-4).round() as i64);
-    }
-    let upper_clipped = match bounds {
-        Some(bounds) => {
-            if ts.interface_shells
-                && let Some(surfaces) = ts.upper_same_region
+    let r = regeneration;
+    let spacing = r.spacings.ext_perimeter_spacing;
+    let tolerance = spacing / 10;
+    let mut full = None;
+    // A one-inset solve may widen its two outer beads enough to displace an
+    // inner bead where the object continues upward (:2811–2832).
+    if toolpaths
+        .iter()
+        .flatten()
+        .flat_map(|line| &line.junctions)
+        .any(|j| j.width > spacing + 2 * tolerance)
+    {
+        let nominal = offset(r.last, -(spacing + r.wall_0_inset) as f32)?;
+        let (top, uncovered) = top_area(&nominal, ts, &r)?;
+        if uncovered {
+            let top_zone = offset(&top, spacing as f32)?;
+            let reference = r.generate_full(config)?;
+            if let Some(outer) = reference
+                .toolpaths
+                .first()
+                .filter(|outer| !outer.is_empty())
+                && length_off_reference(&toolpaths, outer, &top_zone, tolerance)
+                    .map_err(geometry_error)?
+                    > ts.perimeter_width as f64
             {
-                clip_clipper_expolygons_with_subject_bbox(
-                    &surfaces
-                        .iter()
-                        .map(|surface| surface.as_parts().1.clone())
-                        .collect::<Vec<_>>(),
-                    bounds,
+                infill_contour = difference_ex_polygons_with_safety_offset(
+                    &nominal,
+                    &walls_footprint(outer).map_err(geometry_error)?,
                 )
-            } else {
-                clip_clipper_expolygons_with_subject_bbox(ts.upper_slices, bounds)
+                .map_err(geometry_error)?;
+                toolpaths = vec![outer.clone()];
             }
+            full = Some(reference);
         }
-        None => Vec::new(),
-    };
-    let mut top_expolygons =
-        difference_ex_polygons(&infill_contour, &upper_clipped).map_err(geometry_error)?;
-    if top_expolygons.is_empty() {
-        // No top surface on this island (`:2242-2247`): regenerate as if
-        // the feature were disabled — `inner_loop_number + 2` walls.
-        let regenerated = wall_toolpaths::generate(
-            &to_polygons(last),
-            wall_toolpaths::RawWallToolPathConfig {
-                outer_spacing: spacings.ext_perimeter_spacing,
-                inner_spacing: spacings.perimeter_spacing,
-                inset_count: usize::try_from(inner_loop_number + 2)
-                    .map_err(|_| invalid("wall_loops underflow"))?,
-                outer_wall_inset: wall_0_inset,
-                layer_height,
-                min_bead_width: params.min_bead_width,
-                min_feature_size: params.min_feature_size,
-                transition_length: params.wall_transition_length,
-                // WallToolPaths.cpp:490 / Geometry.hpp:301-305: T is float.
-                transitioning_angle: f64::from(
-                    std::f32::consts::PI * params.wall_transition_angle as f32 / 180.0_f32,
-                ),
-                transition_filter_deviation: params.wall_transition_filter_deviation,
-                wall_distribution_count: params.wall_distribution_count,
-                min_length_factor: params.min_length_factor,
-                wall_maximum_resolution: params.wall_maximum_resolution,
-                wall_maximum_deviation: params.wall_maximum_deviation,
-                is_top_or_bottom_layer: config.is_bottom_layer || config.is_topmost_layer,
-                coordinate_scale: scale,
-            },
-        )
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("Arachne wall generation failed: {error:?}"))
-        })?;
-        let infill =
-            union_ex(&regenerated.inner_contour, FillRule::NonZero).map_err(geometry_error)?;
+    }
+
+    let (top_expolygons, uncovered) = top_area(&infill_contour, ts, &r)?;
+    if !uncovered {
+        let generated = match full {
+            Some(generated) => generated,
+            None => r.generate_full(config)?,
+        };
         return Ok(GeneratedSurfaceWalls {
-            toolpaths: regenerated.toolpaths,
-            infill_contour: infill,
+            toolpaths: generated.toolpaths,
+            infill_contour: union_ex(&generated.inner_contour, FillRule::NonZero)
+                .map_err(geometry_error)?,
             top_expolygons,
         });
     }
-    // Remove bridges over lower slices (`:2196-2203`).
-    if let (Some(lower), Some(bounds)) = (ts.lower_slices, bounds.as_ref()) {
-        let bridge_offset = spacings.ext_perimeter_spacing.max(ts.perimeter_width) as f32;
-        let lower_clipped = clip_clipper_expolygons_with_subject_bbox(lower, *bounds);
-        let bridges = offset_expolygons(
-            &difference_ex_polygons(&top_expolygons, &lower_clipped).map_err(geometry_error)?,
-            bridge_offset,
-            JoinType::Miter,
-            MITER_LIMIT,
-        )
-        .map_err(geometry_error)?;
-        top_expolygons = difference_ex(&top_expolygons, &bridges).map_err(geometry_error)?;
-    }
-    // `PerimeterGenerator.cpp:2210-2215`: retain fractional scaled deltas
-    // until the float conversions, including the double-product margin.
-    let scaled_1e5 = scale.scaled_delta(0.00001) as f32;
-    let min_width_scaled = scale.scaled_delta(ts.min_width_top_surface_mm) as f32;
-    let top_surface_min_width = f32::max(
-        spacings.ext_perimeter_spacing as f32 / 4.0 + scaled_1e5,
-        min_width_scaled / 4.0,
-    );
-    top_expolygons = offset2_ex(
-        &top_expolygons,
-        -top_surface_min_width,
-        top_surface_min_width + (ts.perimeter_width as f64 * 0.85) as f32,
-        JoinType::Miter,
-        MITER_LIMIT,
-    )
-    .map_err(geometry_error)?;
+
     let not_top = difference_ex(&infill_contour, &top_expolygons).map_err(geometry_error)?;
-    top_expolygons = intersection_ex(&top_expolygons, &infill_contour).map_err(geometry_error)?;
-    // Inner walls on the not-top areas (`:2221-2223`).
-    let not_top_polygons = to_polygons(
-        &offset_expolygons(&not_top, wall_0_inset as f32, JoinType::Miter, MITER_LIMIT)
-            .map_err(geometry_error)?,
-    );
-    let mut inner_generated = wall_toolpaths::generate(
-        &not_top_polygons,
-        wall_toolpaths::RawWallToolPathConfig {
-            outer_spacing: spacings.perimeter_spacing,
-            inner_spacing: spacings.perimeter_spacing,
-            inset_count: usize::try_from(inner_loop_number + 1)
-                .map_err(|_| invalid("wall_loops underflow"))?,
-            outer_wall_inset: 0,
-            layer_height,
-            min_bead_width: params.min_bead_width,
-            min_feature_size: params.min_feature_size,
-            transition_length: params.wall_transition_length,
-            // WallToolPaths.cpp:490 / Geometry.hpp:301-305: T is float.
-            transitioning_angle: f64::from(
-                std::f32::consts::PI * params.wall_transition_angle as f32 / 180.0_f32,
-            ),
-            transition_filter_deviation: params.wall_transition_filter_deviation,
-            wall_distribution_count: params.wall_distribution_count,
-            min_length_factor: params.min_length_factor,
-            wall_maximum_resolution: params.wall_maximum_resolution,
-            wall_maximum_deviation: params.wall_maximum_deviation,
-            is_top_or_bottom_layer: config.is_bottom_layer || config.is_topmost_layer,
-            coordinate_scale: scale,
-        },
-    )
-    .map_err(|error| {
-        SliceError::InvalidInput(format!("Arachne wall generation failed: {error:?}"))
-    })?;
-    let mut toolpaths = toolpaths;
+    let not_top = offset(&not_top, r.wall_0_inset as f32)?;
+    let mut inner = r.generate(
+        &not_top,
+        config,
+        (r.spacings.perimeter_spacing, r.inner_loop_number + 1, 0),
+    )?;
     if !toolpaths.is_empty() {
-        for lines in &mut inner_generated.toolpaths {
-            for line in lines {
-                line.inset_index += 1;
-            }
+        for line in inner.toolpaths.iter_mut().flatten() {
+            line.inset_index += 1;
         }
     }
-    toolpaths.extend(inner_generated.toolpaths);
-    let final_contour = union_expolygons(
+    toolpaths.extend(inner.toolpaths);
+    let infill_contour = union_expolygons(
         &top_expolygons,
-        &union_ex(&inner_generated.inner_contour, FillRule::NonZero).map_err(geometry_error)?,
+        &union_ex(&inner.inner_contour, FillRule::NonZero).map_err(geometry_error)?,
     )
     .map_err(geometry_error)?;
     Ok(GeneratedSurfaceWalls {
         toolpaths,
-        infill_contour: final_contour,
+        infill_contour,
         top_expolygons,
     })
 }
 
-/// `to_polygons` (`ExPolygons.hpp`): contours and holes as one polygon set.
-fn to_polygons(expolygons: &[ExPolygon]) -> Vec<crate::geometry::Polygon> {
-    let mut polygons = Vec::new();
-    for expolygon in expolygons {
-        polygons.push(expolygon.contour().clone());
-        polygons.extend(expolygon.holes().iter().cloned());
+impl Regeneration<'_> {
+    fn generate_full(
+        &self,
+        config: &ArachneRecordConfig,
+    ) -> Result<wall_toolpaths::GeneratedWallToolPaths, SliceError> {
+        self.generate(
+            self.last,
+            config,
+            (
+                self.spacings.ext_perimeter_spacing,
+                self.inner_loop_number + 2,
+                self.wall_0_inset,
+            ),
+        )
     }
-    polygons
+
+    fn generate(
+        &self,
+        outline: &[ExPolygon],
+        config: &ArachneRecordConfig,
+        (outer_spacing, count, outer_wall_inset): (i64, i32, i64),
+    ) -> Result<wall_toolpaths::GeneratedWallToolPaths, SliceError> {
+        let p = self.params;
+        wall_toolpaths::generate(
+            &to_polygons(outline),
+            wall_toolpaths::RawWallToolPathConfig {
+                outer_spacing,
+                inner_spacing: self.spacings.perimeter_spacing,
+                inset_count: usize::try_from(count)
+                    .map_err(|_| SliceError::InvalidInput("wall_loops underflow".to_owned()))?,
+                outer_wall_inset,
+                layer_height: self.layer_height,
+                min_bead_width: p.min_bead_width,
+                min_feature_size: p.min_feature_size,
+                transition_length: p.wall_transition_length,
+                transitioning_angle: f64::from(
+                    std::f32::consts::PI * p.wall_transition_angle as f32 / 180.0_f32,
+                ),
+                transition_filter_deviation: p.wall_transition_filter_deviation,
+                wall_distribution_count: p.wall_distribution_count,
+                min_length_factor: p.min_length_factor,
+                wall_maximum_resolution: p.wall_maximum_resolution,
+                wall_maximum_deviation: p.wall_maximum_deviation,
+                is_top_or_bottom_layer: config.is_bottom_layer || config.is_topmost_layer,
+                coordinate_scale: self.scale,
+            },
+        )
+        .map_err(|error| {
+            SliceError::InvalidInput(format!("Arachne wall generation failed: {error:?}"))
+        })
+    }
 }
 
-fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
+// `get_top_expolygons` (:2762–2795); exposure is recorded before excluding
+// unsupported or too narrow regions.
+fn top_area(
+    contour: &[ExPolygon],
+    ts: &TopSurfaceInputs<'_>,
+    r: &Regeneration<'_>,
+) -> Result<(Vec<ExPolygon>, bool), SliceError> {
+    let Some(mut bounds) = BoundingBox::from_expolygons(contour) else {
+        return Ok((Vec::new(), false));
+    };
+    bounds.offset(r.scale.scaled_delta(1e-4).round() as i64);
+    let upper_clipped = if ts.interface_shells
+        && let Some(surfaces) = ts.upper_same_region
+    {
+        clip_clipper_expolygons_with_subject_bbox(
+            &surfaces
+                .iter()
+                .map(|surface| surface.as_parts().1.clone())
+                .collect::<Vec<_>>(),
+            bounds,
+        )
+    } else {
+        clip_clipper_expolygons_with_subject_bbox(ts.upper_slices, bounds)
+    };
+    let mut top = difference_ex_polygons(contour, &upper_clipped).map_err(geometry_error)?;
+    if top.is_empty() {
+        return Ok((top, false));
+    }
+    if let Some(lower) = ts.lower_slices {
+        let lower_clipped = clip_clipper_expolygons_with_subject_bbox(lower, bounds);
+        let unsupported = difference_ex_polygons(&top, &lower_clipped).map_err(geometry_error)?;
+        let bridges = offset(
+            &unsupported,
+            r.spacings.ext_perimeter_spacing.max(ts.perimeter_width) as f32,
+        )?;
+        top = difference_ex(&top, &bridges).map_err(geometry_error)?;
+    }
+    let min_width = f32::max(
+        r.spacings.ext_perimeter_spacing as f32 / 4.0 + r.scale.scaled_delta(0.00001) as f32,
+        r.scale.scaled_delta(ts.min_width_top_surface_mm) as f32 / 4.0,
+    );
+    top = offset2_ex(
+        &top,
+        -min_width,
+        min_width + (ts.perimeter_width as f64 * 0.85) as f32,
+        JoinType::Miter,
+        MITER_LIMIT,
+    )
+    .map_err(geometry_error)?;
+    Ok((
+        intersection_ex(&top, contour).map_err(geometry_error)?,
+        true,
+    ))
+}
+
+// `length_off_reference` (:779–803). ClipperUtils offsets polylines with
+// square joins and butt ends by default.
+fn length_off_reference(
+    walls: &[Vec<ExtrusionLine>],
+    reference: &[ExtrusionLine],
+    excluded: &[ExPolygon],
+    tolerance: i64,
+) -> Result<f64, ClipperError> {
+    let reference = centerlines(reference).map(Polygon::new).collect::<Vec<_>>();
+    let subject = centerlines(walls.iter().flatten())
+        .map(Polyline::new)
+        .collect::<Vec<_>>();
+    let envelope = offset_open_paths(&reference, tolerance as f32, JoinType::Square, 0.0)?;
+    let mut off = difference_open_polylines(&subject, &envelope)?;
+    if !excluded.is_empty() {
+        off = difference_open_polylines(&off, &to_polygons(excluded))?;
+    }
+    Ok(off
+        .iter()
+        .map(|line| {
+            line.points()
+                .windows(2)
+                .map(|p| Line::new(p[0], p[1]).length())
+                .sum::<f64>()
+        })
+        .sum())
+}
+
+fn centerlines<'a>(
+    lines: impl IntoIterator<Item = &'a ExtrusionLine>,
+) -> impl Iterator<Item = Vec<crate::geometry::Point>> {
+    lines
+        .into_iter()
+        .filter(|line| line.junctions.len() >= 2)
+        .map(|line| line.junctions.iter().map(|j| j.point).collect())
+}
+
+// `walls_footprint` (:805–818) uses each segment's greater endpoint width.
+fn walls_footprint(walls: &[ExtrusionLine]) -> Result<Vec<Polygon>, ClipperError> {
+    let mut footprints = Vec::new();
+    for pair in walls.iter().flat_map(|line| line.junctions.windows(2)) {
+        let width = pair[0].width.max(pair[1].width);
+        if width > 0 {
+            let segment = Polygon::new(vec![pair[0].point, pair[1].point]);
+            footprints.extend(offset_open_paths(
+                &[segment],
+                width as f32 / 2.0,
+                JoinType::Square,
+                0.0,
+            )?);
+        }
+    }
+    union_polygons_paths(&footprints)
+}
+
+fn to_polygons(expolygons: &[ExPolygon]) -> Vec<Polygon> {
+    expolygons
+        .iter()
+        .flat_map(|p| std::iter::once(p.contour()).chain(p.holes()))
+        .cloned()
+        .collect()
+}
+
+fn offset(polygons: &[ExPolygon], delta: f32) -> Result<Vec<ExPolygon>, SliceError> {
+    offset_expolygons(polygons, delta, JoinType::Miter, MITER_LIMIT).map_err(geometry_error)
+}
+
+fn geometry_error(error: ClipperError) -> SliceError {
     SliceError::InvalidInput(format!("Arachne top-surface geometry failed: {error:?}"))
-}
-
-fn invalid(message: &str) -> SliceError {
-    SliceError::InvalidInput(message.to_owned())
 }
