@@ -163,7 +163,7 @@
             traversal,
             farthest::LayerViews {
                 entries: &entries,
-                objects,
+                object_targets: farthest_object_targets,
                 support: support_layers,
                 raft: &raft_layers,
                 instances: &instances,

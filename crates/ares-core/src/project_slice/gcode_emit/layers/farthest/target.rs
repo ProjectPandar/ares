@@ -20,9 +20,11 @@ use crate::{
 type PathOrder = (usize, usize, usize, usize, usize);
 type Placement = (usize, usize, Point);
 
+#[derive(Clone, Copy)]
 pub(super) struct Candidate {
     pub(super) point: Point,
-    pub(super) physical_extruder: usize,
+    // Schedule construction can refresh the filament map.
+    pub(super) filament: usize,
     distance_squared: i64,
     order: (PathOrder, usize),
 }
@@ -31,25 +33,27 @@ pub(super) struct Candidate {
 struct Maximum(Option<Candidate>);
 
 impl Maximum {
-    fn collect(&mut self, polyline: &Polyline3, shift: Point, physical: usize, order: PathOrder) {
+    fn consider(&mut self, next: Candidate) {
+        // Island tours reorder collections; retained source keys recover
+        // the LayerRegion traversal's strict first-wins ties.
+        if self.0.is_none_or(|old| {
+            next.distance_squared > old.distance_squared
+                || (next.distance_squared == old.distance_squared && next.order < old.order)
+        }) {
+            self.0 = Some(next);
+        }
+    }
+
+    fn collect(&mut self, polyline: &Polyline3, shift: Point, filament: usize, order: PathOrder) {
         let mut consider = |index: usize| {
             let p = &polyline.points[index];
             let point = Point::new(p.x + shift.x(), p.y + shift.y());
-            let distance_squared = point.x() * point.x() + point.y() * point.y();
-            let order = (order, index);
-            // Island tours reorder collections; retained source keys recover
-            // the LayerRegion traversal's strict first-wins ties.
-            if self.0.as_ref().is_none_or(|old| {
-                distance_squared > old.distance_squared
-                    || (distance_squared == old.distance_squared && order < old.order)
-            }) {
-                self.0 = Some(Candidate {
-                    point,
-                    physical_extruder: physical,
-                    distance_squared,
-                    order,
-                });
-            }
+            self.consider(Candidate {
+                point,
+                filament,
+                distance_squared: point.x() * point.x() + point.y() * point.y(),
+                order: (order, index),
+            });
         };
         if polyline.fitting.is_empty() {
             for i in 0..polyline.points.len() {
@@ -71,73 +75,107 @@ impl Maximum {
     }
 }
 
-struct Search<'a> {
-    traversal: &'a PreparedPostClassicTraversal,
+#[derive(Default)]
+struct Maxima {
     external: Maximum,
     fallback: Maximum,
 }
 
-impl Search<'_> {
-    fn physical(&self, filament: usize) -> usize {
-        (self
-            .traversal
-            .resolved
-            .views
-            .full
-            .project
-            .gcode
-            .filament_map
-            .0[filament]
-            .0
-            - 1) as usize
+impl Maxima {
+    fn for_object_layer(
+        traversal: &PreparedPostClassicTraversal,
+        object: usize,
+        layer: &OrderedExtrusionLayer,
+        copies: &[Instance],
+    ) -> Self {
+        let mut maxima = Self::default();
+        for (copy, instance) in copies.iter().enumerate() {
+            object::collect(
+                &mut maxima,
+                traversal,
+                layer,
+                (object, copy, instance.shift),
+            );
+        }
+        maxima
+    }
+
+    fn merge(&mut self, other: &Self) {
+        if let Some(candidate) = other.external.0 {
+            self.external.consider(candidate);
+        }
+        if let Some(candidate) = other.fallback.0 {
+            self.fallback.consider(candidate);
+        }
     }
 }
 
-pub(super) fn compute(
-    traversal: &PreparedPostClassicTraversal,
-    views: LayerViews<'_>,
-    tools: &LayerTools,
-) -> Option<Candidate> {
-    let LayerViews {
-        entries,
-        objects,
-        support: supports,
-        raft,
-        instances,
-    } = views;
-    let mut search = Search {
-        traversal,
-        external: Maximum::default(),
-        fallback: Maximum::default(),
-    };
-    for entry in entries {
-        let object = entry.object_index;
-        let support_layer = entry.support_layer.map(|index| &supports[object][index]);
-        let raft_layer = entry.raft_layer.map(|index| &raft[object][index]);
-        let support_tools = support::tools(traversal, object, support_layer, raft_layer, tools);
-        for (copy, instance) in instances[object].iter().enumerate() {
-            let placement = (object, copy, instance.shift);
-            if let Some(layer) = entry.object_layer {
-                object::collect(&mut search, &objects[object][layer], placement);
-            }
-            support::collect(
-                &mut search,
-                (support_layer, raft_layer),
-                &support_tools,
-                placement,
-            );
-        }
+// GCode.cpp:6390–6435 scans fitted paths before :8547 changes the seam.
+pub(in crate::project_slice::gcode_emit) struct ObjectTargets(Vec<Vec<Maxima>>);
+
+impl ObjectTargets {
+    pub(in crate::project_slice::gcode_emit) fn capture(
+        traversal: &PreparedPostClassicTraversal,
+        objects: &[Vec<OrderedExtrusionLayer>],
+        instances: &[Vec<Instance>],
+    ) -> Option<Self> {
+        let full = &traversal.resolved.views.full;
+        let enabled = full.printer.gcode.farthest_point_timelapse.0
+            && full.process.print.timelapse_type == crate::ProcessTimelapseType::Traditional
+            && traversal.resolved.views.runtime_gcode.printer_structure
+                != crate::PrinterStructure::I3;
+        enabled.then(|| {
+            Self(
+                objects
+                    .iter()
+                    .zip(instances)
+                    .enumerate()
+                    .map(|(object, (layers, copies))| {
+                        layers
+                            .iter()
+                            .map(|layer| Maxima::for_object_layer(traversal, object, layer, copies))
+                            .collect()
+                    })
+                    .collect(),
+            )
+        })
     }
-    search
-        .external
-        .0
-        .filter(|candidate| candidate.distance_squared > 0)
-        .or_else(|| {
-            search
+
+    pub(super) fn select(
+        &self,
+        traversal: &PreparedPostClassicTraversal,
+        views: LayerViews<'_>,
+        tools: &LayerTools,
+    ) -> Option<Candidate> {
+        let mut maxima = Maxima::default();
+        for entry in views.entries {
+            let object = entry.object_index;
+            if let Some(layer) = entry.object_layer {
+                maxima.merge(&self.0[object][layer]);
+            }
+            let support_layer = entry
+                .support_layer
+                .map(|index| &views.support[object][index]);
+            let raft_layer = entry.raft_layer.map(|index| &views.raft[object][index]);
+            let support_tools = support::tools(traversal, object, support_layer, raft_layer, tools);
+            for (copy, instance) in views.instances[object].iter().enumerate() {
+                support::collect(
+                    &mut maxima.fallback,
+                    (support_layer, raft_layer),
+                    &support_tools,
+                    (object, copy, instance.shift),
+                );
+            }
+        }
+        maxima
+            .external
+            .0
+            .filter(|candidate| candidate.distance_squared > 0)
+            .or(maxima
                 .fallback
                 .0
-                .filter(|candidate| candidate.distance_squared > 0)
-        })
+                .filter(|candidate| candidate.distance_squared > 0))
+    }
 }
 
 fn visit_fill(entity: &IslandPrintEntity, visit: &mut impl FnMut(&Polyline3, ExtrusionRole)) {

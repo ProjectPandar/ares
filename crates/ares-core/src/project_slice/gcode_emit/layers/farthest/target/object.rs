@@ -6,7 +6,8 @@ use crate::project_slice::perimeters::classic::entity_collections::{
 };
 
 pub(super) fn collect(
-    search: &mut Search<'_>,
+    maxima: &mut Maxima,
+    traversal: &PreparedPostClassicTraversal,
     layer: &OrderedExtrusionLayer,
     placement: Placement,
 ) {
@@ -18,7 +19,13 @@ pub(super) fn collect(
         for entity in &island.entities {
             if let IslandPrintEntity::Perimeter(collection) = entity {
                 let region = *walls.next().expect("perimeter retains region");
-                perimeter(search, collection, placement, region);
+                perimeter(
+                    &mut maxima.external,
+                    traversal,
+                    collection,
+                    placement,
+                    region,
+                );
                 continue;
             }
             let (&region, &collection) = fills.next().expect("fill retains source owner");
@@ -26,18 +33,25 @@ pub(super) fn collect(
                 previous = Some(collection);
                 leaf = 0;
             }
-            infill(search, entity, placement, (region, collection), &mut leaf);
+            infill(
+                &mut maxima.fallback,
+                traversal,
+                entity,
+                placement,
+                (region, collection, &mut leaf),
+            );
         }
     }
 }
 
 fn perimeter(
-    search: &mut Search<'_>,
+    maximum: &mut Maximum,
+    traversal: &PreparedPostClassicTraversal,
     collection: &ExtrusionEntityCollection,
     (object, copy, shift): Placement,
     region: usize,
 ) {
-    let regions = search.traversal.objects[object]
+    let regions = traversal.objects[object]
         .predecessor
         .predecessor
         .predecessor
@@ -49,7 +63,7 @@ fn perimeter(
         .0
         .as_parts()
         .2;
-    let physical = search.physical((regions[region].options.outer_wall_filament_id.0 - 1) as usize);
+    let filament = (regions[region].options.outer_wall_filament_id.0 - 1) as usize;
     let mut leaf = 0;
     for entity in &collection.entities {
         let paths = match entity {
@@ -59,10 +73,10 @@ fn perimeter(
         };
         for path in paths {
             if path.role == WallRole::ExternalPerimeter {
-                search.external.collect(
+                maximum.collect(
                     &path.polyline,
                     shift,
-                    physical,
+                    filament,
                     (object, copy, region, collection.source_order, leaf),
                 );
             }
@@ -72,13 +86,13 @@ fn perimeter(
 }
 
 fn infill(
-    search: &mut Search<'_>,
+    maximum: &mut Maximum,
+    traversal: &PreparedPostClassicTraversal,
     entity: &IslandPrintEntity,
     (object, copy, shift): Placement,
-    (region, collection): (usize, usize),
-    leaf: &mut usize,
+    (region, collection, leaf): (usize, usize, &mut usize),
 ) {
-    let regions = search.traversal.objects[object]
+    let regions = traversal.objects[object]
         .predecessor
         .predecessor
         .predecessor
@@ -100,11 +114,10 @@ fn infill(
             _ => None,
         };
         if let Some(filament) = filament {
-            let physical = search.physical((filament - 1) as usize);
-            search.fallback.collect(
+            maximum.collect(
                 polyline,
                 shift,
-                physical,
+                (filament - 1) as usize,
                 (object, copy, region, collection, *leaf),
             );
         }

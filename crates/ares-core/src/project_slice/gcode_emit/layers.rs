@@ -12,7 +12,7 @@ mod group;
 mod layer_end;
 
 pub(super) use context::Context;
-mod instances;
+pub(super) mod instances;
 mod island_visits;
 pub(super) use instances::Instance;
 mod object_entry;
@@ -56,6 +56,7 @@ pub(super) fn append(
         brim,
         skirt,
         schedule,
+        farthest_object_targets,
     } = context;
     let traversal = &prepared
         .predecessor
