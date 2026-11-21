@@ -111,7 +111,9 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
             let column_major = part.transform.to_column_major();
             let transform = numbers(
                 column_major
-                    .chunks_exact(4)
+                    .as_chunks::<4>()
+                    .0
+                    .iter()
                     .flat_map(|column| &column[..3])
                     .copied(),
             );
