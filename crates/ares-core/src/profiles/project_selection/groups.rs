@@ -33,6 +33,36 @@ pub(in crate::profiles) struct Selected<'a> {
     pub(in crate::profiles) different: String,
 }
 
+/// PresetBundle.cpp:124-172 `s_project_options`: full_fff_config takes these from the project config
+/// over the presets (5542).
+const PROJECT_OPTIONS: [&str; 25] = [
+    "flush_volumes_vector",
+    "flush_volumes_matrix",
+    "filament_colour",
+    "filament_colour_type",
+    "filament_multi_colour",
+    "wipe_tower_x",
+    "wipe_tower_y",
+    "curr_bed_type",
+    "flush_multiplier",
+    "flush_multiplier_fast",
+    "prime_volume_mode",
+    "nozzle_volume_type",
+    "filament_map_mode",
+    "filament_map",
+    "filament_volume_map",
+    "filament_nozzle_map",
+    "has_filament_switcher",
+    "enable_filament_dynamic_map",
+    "filament_is_mixed",
+    "filament_mixed_components",
+    "filament_mixed_sublayer_ratios",
+    "filament_mixed_gradient",
+    "filament_mixed_gradient_range",
+    "filament_mixed_gradient_curve",
+    "filament_mixed_gradient_per_part",
+];
+
 /// The groups full_fff_config collects, in `FullFffGroups` order.
 const GROUPS: [&str; 5] = [
     "compatible_machine_expression_group",
@@ -118,7 +148,11 @@ impl FullFffGroups {
         {
             let held = crate::option_definition(&key)
                 .is_some_and(|definition| !definition.full_config_default);
-            if held && !ERASED.contains(&key.as_str()) && !GROUPS.contains(&key.as_str()) {
+            if held
+                && ![ERASED.as_slice(), &GROUPS, &PROJECT_OPTIONS]
+                    .iter()
+                    .any(|keys| keys.contains(&key.as_str()))
+            {
                 self.held.insert(key, value);
             }
         }
