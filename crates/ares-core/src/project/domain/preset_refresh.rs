@@ -13,6 +13,7 @@ impl Project {
         overrides: &ConfigOverrides,
     ) -> Result<(), SliceError> {
         self.apply_project_preset_refresh(raw, overrides)?;
+        crate::profiles::FullFffGroups::store(&mut self.documents.project_settings_raw);
         self.documents.preset_selection = Some(std::sync::Arc::new(selection));
         self.documents.config_composer = super::documents::ConfigComposer::FullFffConfig;
         Ok(())

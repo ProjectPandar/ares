@@ -3,7 +3,10 @@
 //! non-empty (5823-5841), with the keys it erases (5791-5797).
 
 use super::{PresetRecord, config::PresetConfig};
-use crate::{SliceError, project::raw_settings::ProjectSettingsRaw};
+use crate::{
+    SliceError,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
+};
 
 /// PresetBundle.cpp:5515-5518 `ignore_settings_list`.
 const IGNORED: [&str; 4] = [
@@ -30,10 +33,23 @@ pub(in crate::profiles) struct Selected<'a> {
     pub(in crate::profiles) different: String,
 }
 
+/// The groups full_fff_config collects, in `FullFffGroups` order.
+const GROUPS: [&str; 5] = [
+    "compatible_machine_expression_group",
+    "compatible_process_expression_group",
+    "inherits_group",
+    "different_settings_to_system",
+    "print_compatible_printers",
+];
+
 /// The collected groups; `apply` writes them over the loaded config and `store` keeps those
 /// full_fff_config stores.
 #[derive(Debug)]
-pub(crate) struct FullFffGroups([(&'static str, Vec<String>); 5]);
+pub(crate) struct FullFffGroups {
+    groups: [Vec<String>; 5],
+    /// Preset options the loaded config lacks, which full_fff_config holds.
+    held: ProjectSettingsRaw,
+}
 
 impl FullFffGroups {
     pub(in crate::profiles) fn collect(
@@ -56,28 +72,77 @@ impl FullFffGroups {
         inherits.push(text(printer.preset, "inherits"));
         different.push(printer.different.clone());
         let print_compatible = super::strings(&process.preset.config.0, "compatible_printers");
-        Self([
-            ("compatible_machine_expression_group", machine_conditions),
-            ("compatible_process_expression_group", process_conditions),
-            ("inherits_group", inherits),
-            ("different_settings_to_system", different),
-            ("print_compatible_printers", print_compatible),
-        ])
+        Self {
+            groups: [
+                machine_conditions,
+                process_conditions,
+                inherits,
+                different,
+                print_compatible,
+            ],
+            held: ProjectSettingsRaw::default(),
+        }
+    }
+
+    /// full_fff_config applies the selected presets, each loaded over its default preset, so it
+    /// holds every option of each kind: scalars from the first filament, vectors joined over the
+    /// filaments (PresetBundle.cpp:5536-5542, 5721-5774). The G-code prints every key the config
+    /// holds but the banned and nil ones (GCode.cpp:8305-8370); `apply` adds the absent keys the
+    /// export would not print by default.
+    pub(in crate::profiles) fn holding(
+        mut self,
+        process: &PresetRecord,
+        filaments: &[&PresetRecord],
+        printer: &PresetRecord,
+    ) -> Self {
+        let list = |preset: &PresetRecord, key: &str| match preset.config.0.get(key) {
+            Some(RawConfigValue::List(values)) => values.clone(),
+            _ => Vec::new(),
+        };
+        let filament = filaments[0].config.0.entries().map(|(key, value)| {
+            let value = match value {
+                RawConfigValue::List(_) => RawConfigValue::List(
+                    filaments
+                        .iter()
+                        .flat_map(|preset| list(preset, key))
+                        .collect(),
+                ),
+                value => value.clone(),
+            };
+            (key.clone(), value)
+        });
+        let presets = process.config.0.entries().chain(printer.config.0.entries());
+        for (key, value) in presets
+            .map(|(key, value)| (key.clone(), value.clone()))
+            .chain(filament)
+        {
+            let held = crate::option_definition(&key)
+                .is_some_and(|definition| !definition.full_config_default);
+            if held && !ERASED.contains(&key.as_str()) && !GROUPS.contains(&key.as_str()) {
+                self.held.insert(key, value);
+            }
+        }
+        self
     }
 
     pub(crate) fn apply(&self, raw: &mut ProjectSettingsRaw) {
         for key in ERASED {
             raw.remove(key);
         }
-        for (key, values) in &self.0 {
+        for (key, values) in GROUPS.iter().zip(&self.groups) {
             raw.insert_strings(key, values);
+        }
+        for (key, value) in self.held.entries() {
+            if !raw.contains_key(key) {
+                raw.insert(key.clone(), value.clone());
+            }
         }
     }
 
     /// PresetBundle.cpp:5823-5841: a group is stored only when some entry is non-empty. It runs
     /// after the edits, which the plater holds before full_fff_config collects the groups.
-    pub(crate) fn store(&self, raw: &mut ProjectSettingsRaw) {
-        for (key, _) in &self.0 {
+    pub(crate) fn store(raw: &mut ProjectSettingsRaw) {
+        for key in GROUPS {
             if super::strings(raw, key).iter().all(String::is_empty) {
                 raw.remove(key);
             }
