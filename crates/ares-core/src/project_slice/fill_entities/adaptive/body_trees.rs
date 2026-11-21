@@ -17,18 +17,18 @@ use super::{body_layout::BodyLayout, body_mesh::Mesh, preparation::SupportPrepar
 
 pub(super) struct BodyTrees {
     layout: BodyLayout,
-    sets: BTreeMap<u64, Vec<Option<Arc<Octree>>>>,
+    sets: BTreeMap<(u64, bool), Vec<Option<Arc<Octree>>>>,
 }
 
 impl BodyTrees {
     pub(super) fn for_fill(
         &self,
-        spacing: f64,
+        (spacing, support): (f64, bool),
         layer: usize,
         islands: &[ExPolygon],
         surface: &ExPolygon,
     ) -> Result<Arc<Octree>, ClipperError> {
-        let trees = &self.sets[&spacing.to_bits()];
+        let trees = &self.sets[&(spacing.to_bits(), support)];
         let body = self.layout.fill_body(layer, islands, surface)?;
         // FillAdaptive.hpp:43-60: body, whole object, any prepared body.
         Ok(Arc::clone(
@@ -49,7 +49,7 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
         prelude,
         spacing,
     } = context;
-    if !spacing.adaptive.iter().any(|&spacing| spacing > 0.0) {
+    if spacing.active_sets().next().is_none() {
         return Ok(());
     }
     let (regions, islands) = prelude.object.as_parts();
@@ -98,14 +98,9 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
     }
 
     let mut to_build = BTreeMap::new();
-    for (region_index, &distance) in spacing
-        .adaptive
-        .iter()
-        .enumerate()
-        .filter(|&(_, spacing)| *spacing > 0.0)
-    {
+    for (region_index, key) in spacing.active_sets() {
         let trees = to_build
-            .entry(distance.to_bits())
+            .entry(key)
             .or_insert_with(|| vec![false; layout.count + 1]);
         for (layer_index, islands) in islands.iter().enumerate() {
             mark_layer_trees(
@@ -119,7 +114,7 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
     }
     let sets = to_build
         .into_iter()
-        .map(|(distance, active)| {
+        .map(|(key, active)| {
             let trees = active
                 .into_iter()
                 .enumerate()
@@ -129,12 +124,12 @@ pub(super) fn prepare(context: &SupportPreparation<'_>) -> Result<(), SliceError
                             body,
                             layout.count,
                             (&mesh, &bodies, &overhangs),
-                            f64::from_bits(distance),
+                            (f64::from_bits(key.0), key.1),
                         )
                     })
                 })
                 .collect();
-            (distance, trees)
+            (key, trees)
         })
         .collect();
     assert!(spacing.body_trees.set(BodyTrees { layout, sets }).is_ok());
@@ -176,7 +171,7 @@ fn build_tree(
     body: usize,
     object_body: usize,
     meshes: (&Mesh, &[Mesh], &[Vec<[f64; 3]>]),
-    spacing: f64,
+    (spacing, support): (f64, bool),
 ) -> Arc<Octree> {
     let (mesh, bodies, overhangs) = meshes;
     let mesh = if body == object_body {
@@ -188,7 +183,7 @@ fn build_tree(
         mesh.input(),
         &overhangs[body],
         spacing,
-        false,
+        support,
         [0.0; 3],
     ))
 }

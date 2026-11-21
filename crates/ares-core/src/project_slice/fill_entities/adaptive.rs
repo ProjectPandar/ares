@@ -53,13 +53,16 @@ impl<'a> AdaptiveObject<'a> {
         kind: OctreeKind,
         expolygon: &crate::geometry::ExPolygon,
     ) -> Result<std::sync::Arc<octree::Octree>, SliceError> {
-        if kind == OctreeKind::Adaptive
-            && let Some(trees) = self.object_spacing.body_trees.get()
-        {
+        if let Some(trees) = self.object_spacing.body_trees.get() {
             let islands =
                 body_trees::layer_islands(self.traversal, self.object_index, self.layer_index);
             return trees
-                .for_fill(self.line_spacing, self.layer_index, islands, expolygon)
+                .for_fill(
+                    (self.line_spacing, kind == OctreeKind::Support),
+                    self.layer_index,
+                    islands,
+                    expolygon,
+                )
                 .map_err(clipper_error);
         }
         octree_for(self.traversal, self.object_index, kind, self.line_spacing)
