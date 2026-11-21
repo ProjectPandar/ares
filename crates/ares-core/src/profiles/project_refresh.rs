@@ -3,6 +3,7 @@ pub(crate) use filament::loaded_filament_ordinary_values;
 pub(in crate::profiles) mod keys;
 pub(super) mod preset;
 pub(in crate::profiles) use filament::{dev_key, is_vector};
+pub(crate) use preset::connection as is_connection_option;
 
 pub(crate) use filament::{dev_key as is_filament_dev_key, set_filament_dev_options};
 
