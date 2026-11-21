@@ -87,8 +87,8 @@ pub(in crate::project_slice) fn generate(
             && super::style::resolve(object.support_type, object.support_style)
                 == ProcessSupportStyle::Organic;
         // PrintObject.cpp:998–1002 dispatches raft-only objects to their support generator.
-        let organic_raft = organic && object.raft_layers.0 > 0 && !plan.layers.is_empty();
-        if !object.enable_support.0 && object.enforce_support_layers.0 == 0 && !organic_raft {
+        let tree_raft = tree && object.raft_layers.0 > 0 && !plan.layers.is_empty();
+        if !object.enable_support.0 && object.enforce_support_layers.0 == 0 && !tree_raft {
             output.push(Vec::new());
             continue;
         }
