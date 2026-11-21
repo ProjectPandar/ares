@@ -26,6 +26,8 @@ mod export_3mf;
 
 #[path = "export_stl.rs"]
 mod export_stl;
+#[path = "grid_bridge_anchor_direction.rs"]
+mod grid_bridge_anchor_direction;
 
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
