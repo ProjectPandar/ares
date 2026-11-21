@@ -12,6 +12,36 @@ import { expectFits, expectNoOverlap, pinch, swipe, undersized } from "./touch";
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
 
+/**
+ * Once the 3D view is not drawing, watches its frames: Viewport.render sets data-drawing when it requests a frame
+ * and removes it once WebGLRenderer.render has drawn it. `drawn` waits until a frame requested after the watch
+ * began has been drawn and no other is requested.
+ */
+async function watchFrames(page: Page) {
+  const viewport = (await page.getByTestId("viewport").elementHandle())!;
+  const frames = await page.waitForFunction((element) => {
+    if (element.hasAttribute("data-drawing")) return null;
+    const state = {
+      requested: false,
+      drawn: false,
+      observer: new MutationObserver((records) => {
+        for (const { oldValue } of records) {
+          if (oldValue === null) state.requested = true;
+          else if (state.requested) state.drawn = true;
+        }
+      }),
+    };
+    state.observer.observe(element, { attributeFilter: ["data-drawing"], attributeOldValue: true });
+    return state;
+  }, viewport, { timeout: 60_000 });
+  return {
+    drawn: async () => {
+      await page.waitForFunction(([element, state]) => state!.drawn && !element.hasAttribute("data-drawing"), [viewport, frames] as const, { timeout: 60_000 });
+      await frames.evaluate((state) => state!.observer.disconnect());
+    },
+  };
+}
+
 /** axe-core WCAG A/AA scan of one step; serious and critical violations fail it. */
 async function axe(page: Page, directory: string, step: string) {
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
@@ -136,13 +166,17 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     // Single-finger orbit and two-finger zoom on the 3D view change what it draws.
     const box = (await canvas.boundingBox())!;
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const frames = await watchFrames(page);
     let before = await canvas.screenshot();
     gestures.orbit = await swipe(page, center, { x: center.x + box.width / 4, y: center.y });
-    await expect.poll(async () => (await canvas.screenshot()).equals(before), "one-finger swipe orbits the view").toBe(false);
+    await frames.drawn();
+    expect((await canvas.screenshot()).equals(before), "one-finger swipe orbits the view").toBe(false);
     await shot("5-orbit");
+    const zoomFrames = await watchFrames(page);
     before = await canvas.screenshot();
     gestures.zoom = await pinch(page, center, 40, 160);
-    await expect.poll(async () => (await canvas.screenshot()).equals(before), "pinch zooms the view").toBe(false);
+    await zoomFrames.drawn();
+    expect((await canvas.screenshot()).equals(before), "pinch zooms the view").toBe(false);
     await shot("6-pinch");
 
     // Dragging the top layer thumb down shows a lower top layer.
