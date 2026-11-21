@@ -4,9 +4,9 @@
 
 Source: OrcaSlicer v2.5.0, `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
 Port the command-line input side of `libslic3r/Config.cpp:265–282,1784–1916`
-(`ConfigOptionDef::cli_args`, `DynamicConfig::read_cli`) for four FFF keys,
-and use the existing port of `ConfigBase::apply_only` (`:484–524`) to apply
-those values. The adapter call sites are `OrcaSlicer.cpp:8203–8247`
+(`ConfigOptionDef::cli_args`, `DynamicConfig::read_cli`) as a registry lookup
+and dispatch by option kind. Use the existing port of `ConfigBase::apply_only`
+(`:484–524`) to apply the parsed values. The adapter call sites are `OrcaSlicer.cpp:8203–8247`
 (`CLI::setup`) and `:1352–1353,4157–4226,6924–6932` (`CLI::run`). This
 adds a way to populate `ConfigOverrides`, not another configuration store
 or slicing flow.
@@ -94,7 +94,7 @@ into the archive; reopening can then retain changes rather than restoring
 system preset values. Archive writing itself is outside this slice.
 
 The G-code config block serializes the applied print configuration, including
-these four values and the dirty columns, through
+the overridden values and the dirty columns, through
 `libslic3r/GCode.cpp:4913–4928,8272–8376` (`GCode::append_full_config`). This
 is not a change to footer formatting. Linux `result.json` reports numeric
 `layer_height`, `wall_loops` and `sparse_infill_density` from the global
@@ -104,39 +104,53 @@ print keys; `brim_type` and `nozzle_temperature` are not new result fields.
 
 ## First slice and Rust destination
 
-| CLI spelling | Core key / source kind | Native definition |
-| --- | --- | --- |
-| `--layer-height` | `layer_height` / float | `PrintConfig.cpp:1134` |
-| `--sparse-infill-density` | `sparse_infill_density` / percent | `PrintConfig.cpp:3691` |
-| `--brim-type` | `brim_type` / enum | `PrintConfig.cpp:2116–2139` |
-| `--nozzle-temperature` | `nozzle_temperature` / integer vector | `PrintConfig.cpp:8064–8071` |
+Use the direct `--slice <n> --outputdir <dir>` entry on a saved FFF 3MF or a
+single STL with explicit settings and filament presets. Support every common
+or FFF definition with a CLI spelling and a non-nullable `Float`, `Percent`,
+`Int`, `Enum` or `Ints` kind. The examples below are witnesses, not an option
+allowlist.
 
-Use the native-style direct `--slice <n> --outputdir <dir>` entry on a saved
-FFF 3MF and on a single STL with explicit settings and filament presets.
-Support both value spellings, last scalar wins, and ordered concatenation
-of the integer vector's comma-separated and repeated occurrences. The
-first slice exposes only the four spellings in the table; it does not
-publish every registry entry as a flag.
-
-- `crates/ares-cli/src/args.rs` owns the argv spellings and accumulation.
-  Append the four value fields (or one private flattened group of those
-  fields) at the tail of `DirectSliceArgs` once the direct entry is
-  available. Do not add them to the `action` or `export_action` group or
-  retag/replace `selection`, `inputs`, `outputdir`, or `SliceArgs::output()`.
-  They are slice inputs, not action selectors; do not accept and silently
-  drop them in an export-only invocation. Recheck the exact direct-entry
-  symbols on the integration base before adding tests. The parsing and
-  overlay design does not depend on the action refactor; literal same-argv
-  execution uses the direct routes supplied by it, so do not backport a
-  second dispatcher onto the subcommand-only base.
-- Adapt the collected values to the existing `{key: string|string[]}`
-  interface of `crates/ares-core/src/options/overrides.rs::ConfigOverrides::from_json`.
-  Pass vector element tokens as array entries, with no shell or preset-path
-  splitting. The registry in `options/registry` owns kinds and metadata;
-  `ConfigOverrides` owns typed-wire admission and `validate_cli_config`.
-  Run that preflight before file I/O. No new single-key setter is needed:
-  `ConfigOverrides::apply` is internal and `SliceOptions::values()` is a
-  read-only view, not an alternate override path.
+- Add one argv intake step beside `crates/ares-cli/src/args.rs`. Mirror
+  `DynamicConfig::read_cli` (`Config.cpp:1784–1848`): for each long option
+  not owned by clap, split the spelling from any `=value` and resolve it
+  through the core registry. Use `option_definitions` and `option_metadata`
+  in `options/registry.rs` for the key, kind and metadata. Generate the raw
+  `ConfigOptionDef::cli` metadata from `PrintConfig.cpp` via the existing
+  `scripts/gen-configdef.mjs` generator. Use `cli_args` rules to derive the
+  hyphenated default name, use explicit `|`-separated spellings verbatim, and
+  omit `nocli`. The preset `aliases` field and keys with underscores are
+  not implicit CLI aliases. Do not maintain a second list of print keys.
+- Existing clap arguments retain ownership of their spellings, including
+  collisions, as the action, transform and miscellaneous definitions do
+  upstream. Leave their tokens and values intact, including `--slice`,
+  `--outputdir`, `--arrange`, and the preset load flags. Preserve positionals
+  and the `--` terminator. Do not add a clap field per print key or change
+  `selection`, `inputs`, `outputdir`, `SliceArgs::output()`, or the `action`
+  and `export_action` groups. Pass one collected override set to the direct
+  slice dispatch. Do not accept and discard it on an export-only route.
+  Start implementation on main after the direct project and STL routes and
+  their action/selection parsing have landed. Do not backport a dispatcher.
+- Dispatch on kind after resolving the spelling (`Config.cpp:1843–1914`).
+  For supported kinds, read `=value` or the following token. Repeated
+  scalars replace earlier values. Split `Ints` on commas and append elements
+  from repeated occurrences in argv order. Collect one `{key: string|string[]}`
+  object with vector elements as array entries. `split_native_list` splits
+  preset paths on `;`. It is not the numeric vector decoder or a general
+  `coStrings` parser.
+- Any other kind fails setup before consuming an operand or loading files.
+  This includes bools, strings, points, other numeric and enum kinds, and
+  nullable definitions. Native's `coBool`/`coBools` branches
+  (`Config.cpp:1843–1849,1876–1906`) do not consume a following token. This
+  slice rejects those recognized options by kind instead of treating them
+  as unknown or consuming an input filename as a value. Report
+  `Unsupported option --<spelling> (kind: <kind>)` followed by
+  `setup params error`, with status `254` on POSIX and no output files.
+  This is an explicit Ares scope diagnostic, not Native's unknown diagnostic.
+- Pass the map to `ConfigOverrides::from_json` in
+  `crates/ares-core/src/options/overrides.rs` for typed-wire admission, then
+  call `validate_cli_config` before file I/O. No new single-key setter is
+  needed. `ConfigOverrides::apply` is internal and `SliceOptions::values()`
+  is read-only.
 - Replace the empty override argument at the direct project's
   `CliProjectSliceRequest` and at the direct STL's
   `LoadSettingsSliceRequest`; pass the same validated value set into the
@@ -147,22 +161,16 @@ publish every registry entry as a flag.
   comparison, ownership, normalization and output logic in core. The
   existing JSON `slice --overrides` interface stays unchanged. The empty
   direct-input placeholder is the only configuration handoff replaced.
-- Match the setup-failure stderr/status and lack of output for unknown and
-  `nocli` direct print-option spellings and for the malformed and semantic
-  controls below. Put argv diagnostics in the CLI adapter; do not turn an
-  unknown spelling into a core project-load error. Do not change unrelated
-  positional-argument or subcommand diagnostics. `split_native_list` in
-  `main.rs` splits paths for `--load-settings`/`--load-filaments` on `;`;
-  it is not the numeric vector decoder or a general `coStrings` parser.
+- Preserve Native's setup stderr, status and lack of output for unknown or
+  `nocli` spellings and for the malformed and semantic controls below.
+  Report argv errors at the adapter rather than as project-load errors.
+  Leave unrelated positional-argument and subcommand diagnostics unchanged.
 
-Deferred: other FFF keys (including `wall_loops`, `brim_width` and all
-bools), SLA, arbitrary aliases and single-dash spellings, unusual empty or
-partial numeric tokens, nullable/string/float/point/bool vectors, automatic
-registry-to-argv generation, export actions, inspect actions, multi-model
+Deferred: decoding the unsupported kinds, SLA, single-dash spellings,
+empty or partial numeric tokens, export and inspect actions, multi-model
 and all-plate routing, per-object edits, combined saved-3MF plus replacement
-presets, and accepting direct print flags on the separate `slice` subcommand
-or mixing them with its JSON overrides. Do not implement undefined upstream
-parsing behavior.
+presets, and direct print flags on the `slice` subcommand. Do not implement
+undefined upstream parsing behavior.
 
 ## Public CLI witnesses
 
@@ -170,11 +178,15 @@ Run Native and Ares with **identical argument vectors** (excluding the
 executable name), from separate directories containing identical input
 bytes and relative filenames. Compare complete `plate_1.gcode` bytes with
 only the generator banner normalized, including the config block and dirty
-columns. Run each pair with the live official and seeded producers; an
-unavailable or skipped Native execution cannot establish parity. Retain
+columns. Run each pair with the live official and seeded producers unless
+specified otherwise. A skipped Native execution cannot establish parity. Retain
 argv, inputs or their hashes, statuses, stdout/stderr, result JSON when
 present, and G-code outside the repository. No captured Native G-code in
 fixtures and no edits to presets to simulate argv overrides.
+
+The four primary values are defined in `libslic3r/PrintConfig.cpp`:
+`layer_height` (`:1134`), `sparse_infill_density` (`:3691`),
+`brim_type` (`:2116–2139`), and `nozzle_temperature` (`:8064–8071`).
 
 - **Saved 3MF overrides the loaded project:** use `tests/parity/orca_cli_ender3.3mf`
   with `--slice 1 --outputdir out --layer-height 0.3
@@ -207,6 +219,17 @@ fixtures and no edits to presets to simulate argv overrides.
   `--layer-height=0.2 --nozzle-temperature=220,220`. Native serializes both
   vector entries but keeps the empty dirty columns (`;;`). Include the
   full config block and unchanged report fields in the comparison.
+- **Another key of a supported kind uses the same intake:** on the saved
+  fixture pass `--wall-loops=3` (`coInt`, `PrintConfig.cpp:5968`). Run the
+  same-argv whole-G-code comparison in official mode. Require
+  `; wall_loops = 3`, `; different_settings_to_system = wall_loops;;`, and
+  Linux `result.json` `wall_loops: 3` instead of the baseline `2`. No
+  `wall_loops` argument field or key-specific parser branch is needed.
+- **A known spelling of a deferred kind fails setup:** on the same direct
+  entry pass `--enable-support=0` (`coBool`, `PrintConfig.cpp:7316`). This
+  Ares-only control requires the `bool` kind diagnostic, setup failure,
+  status `254`, and neither G-code nor `result.json`. Native supports the
+  kind, so this is not a same-outcome comparison.
 - **Unknown, hidden and invalid input:** use the saved-project argv with
   `--not-a-print-config-key 1`, `--different-settings-to-system=x`, and
   `--layer-height=bad` in separate runs. Assert status `254`, the native
