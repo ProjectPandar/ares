@@ -329,7 +329,7 @@ impl PlaterSession {
                         let item = &self.project.objects()[object];
                         match item.instances().get(instance) {
                             Some(placed) => placed
-                                .loaded_label_id()
+                                .saved_identify_id()
                                 .map(|label| [placed.object_id(), placed.instance_id(), label]),
                             None => Some([item.id(), instance as u32, 0]),
                         }

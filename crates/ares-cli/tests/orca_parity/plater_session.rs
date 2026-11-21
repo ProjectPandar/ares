@@ -180,7 +180,7 @@ fn rewrite_plates(settings: &str, session: &PlaterSession) -> String {
             let identify_id = object
                 .instances()
                 .get(*instance)
-                .map_or(0, |item| item.loaded_label_id().unwrap());
+                .map_or(0, |item| item.saved_identify_id().unwrap());
             plates.push_str(&format!(
                 "    <model_instance>\n      <metadata key=\"object_id\" value=\"{}\"/>\n      <metadata key=\"instance_id\" value=\"{}\"/>\n      <metadata key=\"identify_id\" value=\"{}\"/>\n    </model_instance>\n",
                 object.id(),

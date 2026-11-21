@@ -3,7 +3,7 @@ use super::{Project, ProjectInstance, Transform3d};
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum InstanceLabel {
     Loaded(u32),
-    Allocated(u32),
+    Allocated(u32, Option<u32>),
 }
 
 /// `ModelInstanceEPrintVolumeState` (`Model.hpp:1408-1415` at v2.5.0-beta `345efec64`): where an
@@ -50,11 +50,12 @@ impl ProjectInstance {
         printable: bool,
         auto_drop: bool,
         transform: Transform3d,
+        saved_identify_id: Option<u32>,
     ) -> Self {
         Self {
             object_id: identity[0],
             instance_id: identity[1],
-            label: InstanceLabel::Allocated(identity[2]),
+            label: InstanceLabel::Allocated(identity[2], saved_identify_id),
             printable,
             auto_drop,
             transform,
@@ -73,13 +74,21 @@ impl ProjectInstance {
     pub fn loaded_label_id(&self) -> Option<u32> {
         match self.label {
             InstanceLabel::Loaded(id) => Some(id),
-            InstanceLabel::Allocated(_) => None,
+            InstanceLabel::Allocated(..) => None,
+        }
+    }
+
+    /// Plate routing and edits retain the saved ID even when it is not a loaded label.
+    pub fn saved_identify_id(&self) -> Option<u32> {
+        match self.label {
+            InstanceLabel::Loaded(id) => Some(id),
+            InstanceLabel::Allocated(_, saved_id) => saved_id,
         }
     }
 
     pub(crate) fn labeled_id(&self) -> u32 {
         match self.label {
-            InstanceLabel::Loaded(id) | InstanceLabel::Allocated(id) => id,
+            InstanceLabel::Loaded(id) | InstanceLabel::Allocated(id, _) => id,
         }
     }
 

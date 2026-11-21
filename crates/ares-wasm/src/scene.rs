@@ -199,12 +199,12 @@ pub(crate) fn scene_instances(object: &ProjectObject) -> Vec<SceneInstance> {
         .collect()
 }
 
-/// `[object_id, instance_id, loaded_label_id]`, the plate identity of an instance.
+/// `[object_id, instance_id, identify_id]`, the saved plate identity of an instance.
 pub(crate) fn instance_identity(instance: &ProjectInstance) -> [u32; 3] {
     [
         instance.object_id(),
         instance.instance_id(),
-        instance.loaded_label_id().unwrap_or(0),
+        instance.saved_identify_id().unwrap_or(0),
     ]
 }
 

@@ -119,7 +119,7 @@ fn project_domain_with_budget(
         let instance_id = builders
             .get(&identity)
             .map_or(0, |builder| builder.instances.len() as u32);
-        let loaded_label_id = metadata.loaded_labels.get(&(item.object_id, instance_id));
+        let saved_label = metadata.saved_labels.get(&(item.object_id, instance_id));
 
         if let std::collections::btree_map::Entry::Vacant(entry) = builders.entry(identity.clone())
         {
@@ -151,18 +151,19 @@ fn project_domain_with_budget(
         }
         // bbs_3mf.cpp:4381–4448 creates build instances before deferred volumes (:5212).
         let allocated_label_id = object_ids.add_instance();
-        let instance = match loaded_label_id {
-            Some(&label) => ProjectInstance::new(
-                [item.object_id, instance_id, label],
+        let instance = match saved_label {
+            Some(label) if label.loaded => ProjectInstance::new(
+                [item.object_id, instance_id, label.identify_id],
                 item.printable,
                 item.auto_drop,
                 item.transform,
             ),
-            None => ProjectInstance::unassigned(
+            _ => ProjectInstance::unassigned(
                 [item.object_id, instance_id, allocated_label_id],
                 item.printable,
                 item.auto_drop,
                 item.transform,
+                saved_label.map(|label| label.identify_id),
             ),
         };
         builders
