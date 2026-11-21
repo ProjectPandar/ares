@@ -38,6 +38,7 @@ pub async fn slice_plater_plate(
             system_catalog: None,
             overrides: slice.overrides,
             validate_print: slice.validate_print,
+            allow_mix_temp: false,
             validate_config: false,
             orient: false,
             upward: None,

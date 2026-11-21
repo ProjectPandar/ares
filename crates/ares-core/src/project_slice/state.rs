@@ -78,7 +78,7 @@ pub(super) fn prepare_project_source(
         project,
         source.plate,
         None,
-        source.validate_print,
+        (source.validate_print, source.allow_mix_temp),
         Some((preparation, source.overrides)),
     )
 }
@@ -87,7 +87,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     project: Project,
     plate: Option<u32>,
     selected_printer: Option<&str>,
-    validate_print: bool,
+    (validate_print, allow_mix_temp): (bool, bool),
     preparation: Option<(
         crate::options::flush_matrix::PreparationContext,
         &crate::ConfigOverrides,
@@ -119,6 +119,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
             &resolved,
             plate_id,
             selected_printer,
+            allow_mix_temp,
         )?;
     }
     // OrcaSlicer writes the config block into every sliced G-code and uses it

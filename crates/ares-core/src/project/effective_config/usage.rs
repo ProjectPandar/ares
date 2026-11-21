@@ -35,28 +35,7 @@ pub(crate) fn collect_bounded_project_usage(
         .filter(|group| !group.transforms.is_empty())
         .zip(sources.resolved)
         .map(|(group, resolved)| {
-            let object = &sources.objects[group.source_object_index];
-            ObjectUsageInput {
-                object: &resolved.object,
-                regions: &resolved.all_regions,
-                object_extruder: object.region_overrides().extruder.map(|value| value.0),
-                model_part_extruders: object
-                    .volumes()
-                    .iter()
-                    .filter(|volume| {
-                        matches!(
-                            volume.volume_type(),
-                            ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
-                        )
-                    })
-                    .map(|volume| volume.region_overrides().extruder.map(|value| value.0))
-                    .collect(),
-                layer_range_extruders: object
-                    .layer_config_ranges()
-                    .iter()
-                    .filter_map(|range| range.region_overrides().extruder.map(|value| value.0))
-                    .collect(),
-            }
+            object_usage_input(&sources.objects[group.source_object_index], resolved)
         })
         .collect::<Vec<_>>();
     collect_usage(
@@ -65,6 +44,50 @@ pub(crate) fn collect_bounded_project_usage(
         sources.settings.filament.gcode.filament_diameter.0.len(),
         sources.custom_tool_changes,
     )
+}
+
+pub(crate) fn object_usage_input<'a>(
+    object: &ProjectObject,
+    resolved: &'a ResolvedProjectObject,
+) -> ObjectUsageInput<'a> {
+    ObjectUsageInput {
+        object: &resolved.object,
+        regions: &resolved.all_regions,
+        object_extruder: object.region_overrides().extruder.map(|value| value.0),
+        model_part_extruders: object
+            .volumes()
+            .iter()
+            .filter(|volume| {
+                matches!(
+                    volume.volume_type(),
+                    ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
+                )
+            })
+            .map(|volume| volume.region_overrides().extruder.map(|value| value.0))
+            .collect(),
+        layer_range_extruders: object
+            .layer_config_ranges()
+            .iter()
+            .filter_map(|range| range.region_overrides().extruder.map(|value| value.0))
+            .collect(),
+    }
+}
+
+pub(crate) fn append_object_filaments(
+    output: &mut Vec<usize>,
+    input: &ObjectUsageInput<'_>,
+    has_brim: bool,
+) {
+    for region in input.regions {
+        append_region_filaments(output, region, has_brim);
+    }
+    for &volume_selector in &input.model_part_extruders {
+        let selector = match volume_selector {
+            Some(selector) if selector != 0 => selector,
+            _ => input.object_extruder.unwrap_or(1),
+        };
+        append_positive(output, selector);
+    }
 }
 
 pub(crate) fn collect_usage(
@@ -79,16 +102,7 @@ pub(crate) fn collect_usage(
     let mut support_uses_current = false;
 
     for input in objects {
-        for region in input.regions {
-            append_region_filaments(&mut object_filaments, region, has_brim);
-        }
-        for &volume_selector in &input.model_part_extruders {
-            let selector = match volume_selector {
-                Some(selector) if selector != 0 => selector,
-                _ => input.object_extruder.unwrap_or(1),
-            };
-            append_positive(&mut object_filaments, selector);
-        }
+        append_object_filaments(&mut object_filaments, input, has_brim);
         for &selector in &input.layer_range_extruders {
             append_positive(&mut object_filaments, selector);
         }

@@ -149,7 +149,7 @@ pub(super) fn prepare_profile_slice(
                 .printer_settings_id
                 .0,
         ),
-        project.validate_print,
+        (project.validate_print, project.allow_mix_temp),
         Some((preparation, project.overrides)),
     )
 }

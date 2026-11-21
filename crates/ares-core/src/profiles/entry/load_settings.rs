@@ -102,6 +102,7 @@ fn with_load_settings_source<T>(
         overrides,
         validate_print,
         validate_config: true,
+        allow_mix_temp: false,
         orient,
         upward: None,
         sliced_plate: Some(sliced_plate),

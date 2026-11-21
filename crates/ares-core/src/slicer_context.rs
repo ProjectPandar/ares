@@ -25,6 +25,7 @@ pub struct SlicerContext<'a> {
     rng: Mt19937,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
+    allow_mix_temp: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -34,6 +35,7 @@ impl<'a> SlicerContext<'a> {
             rng: Mt19937::new(seed),
             status: None,
             thumbnail_images: Vec::new(),
+            allow_mix_temp: false,
         }
     }
 
@@ -42,6 +44,17 @@ impl<'a> SlicerContext<'a> {
     pub fn with_thumbnail_images(mut self, images: Vec<ThumbnailData>) -> Self {
         self.thumbnail_images = images;
         self
+    }
+
+    /// `Print::set_check_multi_filaments_compatibility(!allow)` (`Print.hpp:1360`).
+    #[must_use]
+    pub fn with_allow_mix_temp(mut self, allow: bool) -> Self {
+        self.allow_mix_temp = allow;
+        self
+    }
+
+    pub(crate) fn allow_mix_temp(&self) -> bool {
+        self.allow_mix_temp
     }
 
     /// `PrintBase::set_status_callback` (`PrintBase.hpp:489`): `callback` receives every status

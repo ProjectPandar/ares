@@ -71,6 +71,13 @@ pub enum SliceError {
         wall_loops: i32,
         sparse_infill_density: f64,
     },
+    FilamentsDifferentTemperature {
+        message: String,
+        plate_index: u32,
+        layer_height: f64,
+        wall_loops: i32,
+        sparse_infill_density: f64,
+    },
     LayeredPrintCollision {
         message: String,
         plate_index: u32,
@@ -128,6 +135,7 @@ impl fmt::Display for SliceError {
             Self::NoSuitableObjects(message) => f.write_str(message),
             Self::InvalidValuesInProject(message) => f.write_str(message),
             Self::Validate { message, .. }
+            | Self::FilamentsDifferentTemperature { message, .. }
             | Self::SequentialPrintCollision { message, .. }
             | Self::LayeredPrintCollision { message, .. }
             | Self::CustomGCode { message, .. }

@@ -145,6 +145,31 @@ pub(crate) fn slice_error_to_failure(
             "There are some incorrect slicing parameters in the 3mf. Please verify the slicing of all plates in Orca Slicer before uploading.",
             format!("{message}\n"),
         ),
+        SliceError::FilamentsDifferentTemperature {
+            message,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            ..
+        } => family(
+            -62,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height,
+            #[cfg(target_os = "linux")]
+            wall_loops,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density,
+            #[cfg(target_os = "linux")]
+            "The temperature difference of the filaments used is too large. Please verify the slicing of all plates in Orca Slicer before uploading.",
+            format!("{message}\n"),
+        ),
         SliceError::SequentialPrintCollision {
             message,
             #[cfg(target_os = "linux")]

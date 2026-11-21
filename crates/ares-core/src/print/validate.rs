@@ -5,6 +5,7 @@ mod estimated_tower;
 mod extrusion_width;
 mod identity;
 mod layered_wrapping;
+mod mixed_temperature;
 mod sequential_clearance;
 
 pub(crate) use identity::project_is_bbl;
@@ -181,7 +182,7 @@ pub(crate) fn validate_loaded_project(
     let project = project.select_plate(plate)?;
     let plate = project.first_plate_id();
     let resolved = resolve_bounded_project_config(&project)?;
-    validate_applied_project(&project, &resolved, plate, selected_printer)
+    validate_applied_project(&project, &resolved, plate, selected_printer, false)
 }
 
 pub(crate) fn validate_applied_project(
@@ -189,9 +190,11 @@ pub(crate) fn validate_applied_project(
     resolved: &BoundedResolvedProjectConfig,
     plate_number: u32,
     selected_printer: Option<&str>,
+    allow_mix_temp: bool,
 ) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
     let into_validate = |error: SliceError| into_validate_message(error, settings);
+    mixed_temperature::validate(project, resolved, plate_number, allow_mix_temp)?;
     layered_wrapping::validate(project, resolved, plate_number)?;
     // `Print.cpp:1334-1341`: spiral vase admits one copy unless the print
     // runs by object; the adjacent regions check (`:1342-1353`) stays

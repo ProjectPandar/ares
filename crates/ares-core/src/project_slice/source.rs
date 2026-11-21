@@ -12,6 +12,7 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) overrides: &'a ConfigOverrides,
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
+    pub(crate) allow_mix_temp: bool,
     /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
@@ -159,6 +160,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,
+            allow_mix_temp: false,
             orient: false,
             upward: None,
             sliced_plate: None,
@@ -179,6 +181,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             system_catalog: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            allow_mix_temp: false,
             validate_config: true,
             orient: false,
             upward: None,

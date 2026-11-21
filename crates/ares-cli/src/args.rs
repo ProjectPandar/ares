@@ -59,4 +59,8 @@ pub(crate) struct SliceArgs {
     #[arg(short = 'o')]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+    /// Allow filaments with incompatible nozzle temperatures to be printed together.
+    #[arg(long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
+        default_value = "false", default_missing_value = "true", value_parser = clap::builder::BoolishValueParser::new())]
+    pub(crate) allow_mix_temp: bool,
 }
