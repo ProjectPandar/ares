@@ -80,7 +80,10 @@ pub fn slice_cli_project_plates(
     let skip_modified_gcodes = context.skip_modified_gcodes();
     let custom_gcodes = context.custom_gcodes.take();
     let downward = context.downward.take();
-    let run = |source_input: ProjectSource<'_>| {
+    let run = |mut source_input: ProjectSource<'_>| {
+        if let Some(profile) = source_input.profile.as_mut() {
+            profile.enable_timelapse = context.enable_timelapse;
+        }
         let source_input = ProjectSource {
             max_triangle_count: 0,
             orient,
