@@ -9,7 +9,7 @@ import { cstyle, openedSelection, withGuiMissingKeys } from "./selectedPresetLin
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = `${root}target/web-e2e/estimation`;
-const FIXTURES = ["time-cost", "unused-filament"];
+const FIXTURES = ["time-cost", "unused-filament", "wipe-tower"];
 
 type Volumes = Record<string, number>;
 interface Native {
