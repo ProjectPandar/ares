@@ -64,6 +64,8 @@ pub(in crate::profiles) struct ProfileDocument {
     pub instantiation: Option<String>,
     #[serde(rename = "include", default, deserialize_with = "deserialize_includes")]
     pub includes: Vec<String>,
+    #[serde(skip)]
+    pub preserve_default_thumbnails: bool,
     #[serde(flatten)]
     pub fields: BTreeMap<String, RawConfigValue>,
 }

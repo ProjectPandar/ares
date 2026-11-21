@@ -196,6 +196,7 @@ impl Catalog {
             let (fragment, project) = ProfileFragment::from_catalog_values(
                 layer.values(),
                 std::mem::take(&mut defaults),
+                layer.preserve_default_thumbnails,
             )?;
             runtime.overlay(project);
             let mut authored = ProjectSettingsRaw::default();

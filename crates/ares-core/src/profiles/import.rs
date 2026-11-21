@@ -89,6 +89,7 @@ pub(super) fn parse_import_documents(
                 inherits: text("inherits"),
                 instantiation: text("instantiation"),
                 includes: Vec::new(),
+                preserve_default_thumbnails: false,
                 fields,
             }
         })
