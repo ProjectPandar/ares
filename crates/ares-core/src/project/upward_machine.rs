@@ -2,10 +2,8 @@
 use serde::Deserialize;
 
 use super::{
-    ArchiveLimits, PackagePath, ProjectArchive,
+    ArchiveLimits, PackagePath, ProjectArchive, model_identity::ModelIdentity,
     raw_settings::ProjectSettingsRaw,
-    relationships::{MODEL_RELATIONSHIP_TYPE, Relationships},
-    xml::{XmlRole, deserialize_xml},
 };
 use crate::SliceError;
 
@@ -35,50 +33,20 @@ struct MachineFields {
     upward_compatible_machine: Vec<String>,
 }
 
-#[derive(Deserialize)]
-struct ModelIdentity {
-    #[serde(rename = "$value", default)]
-    children: Vec<IdentityChild>,
-}
-
-#[derive(Deserialize)]
-enum IdentityChild {
-    #[serde(rename = "metadata")]
-    Metadata(Metadata),
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Deserialize)]
-struct Metadata {
-    #[serde(rename = "@name")]
-    name: String,
-    #[serde(rename = "$text", default)]
-    value: String,
-}
-
 impl UpwardMachineSource {
     /// Reads only package identity/settings, without building or copying mesh
     /// geometry. Non-BBL projects have no original BBL machine fetch.
     pub fn from_project(input: &[u8]) -> Result<Option<Self>, SliceError> {
         let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-        let root = PackagePath::root();
-        let relationships: Relationships = deserialize_xml(
-            &archive.read(&root.resolve("_rels/.rels")?)?,
-            XmlRole::Relationships,
-        )?;
-        let model_path = relationships.resolve_required(&root, MODEL_RELATIONSHIP_TYPE)?;
-        let identity: ModelIdentity = deserialize_xml(&archive.read(&model_path)?, XmlRole::Model)?;
-        if !identity.children.iter().any(|child| {
-            let IdentityChild::Metadata(entry) = child else {
-                return false;
-            };
+        let identity = ModelIdentity::read(&mut archive)?;
+        if !identity.metadata().any(|entry| {
             entry.name == "Application"
                 && (entry.value.starts_with("BambuStudio-")
                     || entry.value.starts_with("OrcaSlicer-"))
         }) {
             return Ok(None);
         }
+        let root = PackagePath::root();
         let fields = fields(&archive.read(&root.resolve("Metadata/project_settings.config")?)?)?;
         let system_printer = match fields.inherits_group {
             Some(mut group) => {
