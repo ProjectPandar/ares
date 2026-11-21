@@ -18,6 +18,13 @@ contours use the strict traversal (`:1540–1666`), which subdivides selected
 leaves along neighboring T-junctions so interior edges cancel by vertex
 identity. `GCode/SeamPlacer.cpp:1114–1133` builds these two views separately
 for both enforcers and blockers; neither changes the sliced model mesh.
+`GCode/SeamPlacer.cpp:1103–1156` consumes only model parts and negative
+volumes. `project_slice/seam_placement/paint.rs::SeamPaint::from_object`
+applies `trafo_sliced * volume_matrix` to each volume's leaves. The strict
+contour is extracted within each volume before appending its edges; edges
+from separate volumes must not cancel. The ordinary distance triangles are
+combined by paint state. Residual annotations on helpers and ordinary
+modifiers do not participate in validation or collection.
 `GCode/SeamPlacer.cpp:601–667,672–979` projects the boundary crossings onto the perimeter,
 adds exact-end samples (including blocker guards) or samples green by radius
 when ends are unavailable, resolves red over green, and selects a central
@@ -36,13 +43,15 @@ Aligned mode, not merely to initial corner selection.
 ## Included and deferred
 
 - Included: neutral, enforcer and blocker leaves, with or without selector
-  subdivision, on ordinary single-part objects with the Aligned strategy,
+  subdivision, on model parts and negative volumes with the Aligned strategy,
   including unpainted controls and both Classic and Arachne walls. Reuse the
   transformed object coordinate frame already used by seam visibility,
-  without involving machine-space offsets.
-- Deferred: extended palette values, paint on or in
-  composition with other volume types, spiral mode, other seam strategies,
-  precise seam modifiers, and full-green normalization (`:557–595`). These
+  without involving machine-space offsets. Negative paint can affect the
+  perimeter of the hole cut by that volume.
+- Deferred: extended palette values on participating volumes, spiral mode,
+  other seam strategies, precise seam modifiers, and full-green normalization
+  (`:557–595`). The existing full-coverage rejection still applies to each
+  painted volume; partial paint also retains the perimeter coverage guard. These
   combinations must return a seam-specific unsupported input error before
   emitting G-code. No silent Neutral fallback for deferred input. In particular
   Random (`:1366–1437`) restricts viable outgoing edges, and Nearest also
@@ -58,4 +67,8 @@ approaches to prove activation separately from byte parity; side paint must
 retain the unpainted output. For each printer, also compare a locally subdivided
 front patch with a T-junction against a control with no paint and against a
 locally subdivided side patch that must preserve unpainted Native output.
-Include public rejection cases for deferred paint.
+For each printer, also exercise two separately transformed model parts and a
+painted negative volume cutting a hole. Compare each to its unpainted Native
+control and check that changes reach the intended walls. Residual paint on
+an ordinary modifier and a helper must preserve complete output. Include
+public rejection cases for deferred paint.

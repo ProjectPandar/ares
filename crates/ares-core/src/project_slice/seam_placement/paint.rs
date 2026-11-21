@@ -5,7 +5,8 @@ mod intervals;
 mod samples;
 
 use crate::{
-    Point3d, ProcessSeamPosition, Project, ProjectObject, ProjectVolumeType, SliceError,
+    Point3d, ProcessSeamPosition, Project, ProjectObject, ProjectVolume, ProjectVolumeType,
+    SliceError, Transform3d,
     geometry::CoordinateScale,
     project::{
         effective_config::types::{BoundedResolvedProjectConfig, ResolvedPrintObjectConfig},
@@ -26,31 +27,32 @@ pub(in crate::project_slice) fn validate_paint(
     resolved: &BoundedResolvedProjectConfig,
 ) -> Result<(), SliceError> {
     for object in &resolved.objects {
-        let volumes = project.objects()[object.source_object_index].volumes();
-        if volumes
-            .iter()
-            .all(|volume| volume.mesh().seam_facets.mapping.is_empty())
-        {
-            continue;
-        }
-        if volumes.len() != 1
-            || volumes[0].volume_type() != ProjectVolumeType::ModelPart
-            || object.object.seam_position != ProcessSeamPosition::Aligned
-            || resolved.views.full.process.print.spiral_mode.0
-            || volumes[0].mesh().seam_facets.used_states()[3..]
-                .iter()
-                .any(|&used| used)
-        {
-            return Err(deferred());
+        let source = &project.objects()[object.source_object_index];
+        for volume in painted_volumes(source) {
+            if object.object.seam_position != ProcessSeamPosition::Aligned
+                || resolved.views.full.process.print.spiral_mode.0
+                || volume.mesh().seam_facets.used_states()[3..]
+                    .iter()
+                    .any(|&used| used)
+            {
+                return Err(deferred());
+            }
         }
     }
     Ok(())
 }
 
+fn painted_volumes(object: &ProjectObject) -> impl Iterator<Item = &ProjectVolume> {
+    object.volumes().iter().filter(|volume| {
+        matches!(
+            volume.volume_type(),
+            ProjectVolumeType::ModelPart | ProjectVolumeType::NegativeVolume
+        ) && !volume.mesh().seam_facets.mapping.is_empty()
+    })
+}
+
 fn deferred() -> SliceError {
-    SliceError::InvalidInput(
-        "seam painting is outside the supported aligned single-part domain".to_owned(),
-    )
+    SliceError::InvalidInput("seam painting is outside the supported aligned domain".to_owned())
 }
 
 pub(in crate::project_slice) struct SeamPaint {
@@ -64,21 +66,40 @@ impl SeamPaint {
         group: &ResolvedPrintObjectConfig,
         scale: CoordinateScale,
     ) -> Result<Option<Self>, SliceError> {
-        let Some(volume) = object
-            .volumes()
-            .iter()
-            .find(|volume| !volume.mesh().seam_facets.mapping.is_empty())
-        else {
+        let mut volumes = painted_volumes(object).peekable();
+        if volumes.peek().is_none() {
             return Ok(None);
-        };
-        let mesh = volume.mesh();
-        let annotation = &mesh.seam_facets;
-        let states = annotation.used_states();
-        if annotation.mapping.len() == mesh.triangles().len() && !states[0] && !states[2] {
-            return Err(deferred());
         }
-        let selector = FacetSelector::deserialize(mesh, annotation)?;
-        let transform = centered_transform(object, group, scale).then(volume.transform());
+        let object_transform = centered_transform(object, group, scale);
+        let mut enforcers = PaintFacets::default();
+        let mut blockers = PaintFacets::default();
+        for volume in volumes {
+            let mesh = volume.mesh();
+            let annotation = &mesh.seam_facets;
+            let states = annotation.used_states();
+            if annotation.mapping.len() == mesh.triangles().len() && !states[0] && !states[2] {
+                return Err(deferred());
+            }
+            let selector = FacetSelector::deserialize(mesh, annotation)?;
+            let transform = object_transform.then(volume.transform());
+            enforcers.append(&selector, 1, transform);
+            blockers.append(&selector, 2, transform);
+        }
+        Ok(Some(Self {
+            enforcers: enforcers.into_surface(),
+            blockers: blockers.into_surface(),
+        }))
+    }
+}
+
+#[derive(Default)]
+struct PaintFacets {
+    triangles: Vec<Triangle>,
+    contour: Vec<contour::PaintEdge>,
+}
+
+impl PaintFacets {
+    fn append(&mut self, selector: &FacetSelector, state: u8, transform: Transform3d) {
         let transform_vertices = |vertices: Vec<[f32; 3]>| -> Vec<Vec3> {
             vertices
                 .into_iter()
@@ -89,33 +110,44 @@ impl SeamPaint {
                 })
                 .collect()
         };
-        let surface = |state| -> PaintSurface {
-            let selected = selector.ordinary_facets(state);
-            let vertices = transform_vertices(selected.vertices);
-            let triangles = selected
-                .triangles
-                .into_iter()
-                .map(|face| Triangle {
-                    vertices: face.map(|vertex| vertices[vertex as usize]),
-                })
-                .collect();
-            let mesh = TriangleMesh {
-                triangles,
-                negative_start: 0,
-            };
-            let tree = TriangleBvh::new(&mesh);
-            let strict = selector.strict_facets(state);
-            let contour = contour::edges(&transform_vertices(strict.vertices), &strict.triangles);
-            PaintSurface {
-                mesh,
-                tree,
-                contour,
+        let mirrored = transform.linear_determinant() < 0.0;
+        let orient = |mut face: [u32; 3]| {
+            if mirrored {
+                face.swap(0, 2);
             }
+            face
         };
-        Ok(Some(Self {
-            enforcers: surface(1),
-            blockers: surface(2),
-        }))
+        let ordinary = selector.ordinary_facets(state);
+        let vertices = transform_vertices(ordinary.vertices);
+        self.triangles
+            .extend(ordinary.triangles.into_iter().map(|face| Triangle {
+                vertices: orient(face).map(|vertex| vertices[vertex as usize]),
+            }));
+
+        // Determine edge incidence within this volume before appending its contour.
+        let mut strict = selector.strict_facets(state);
+        if mirrored {
+            for face in &mut strict.triangles {
+                *face = orient(*face);
+            }
+        }
+        self.contour.extend(contour::edges(
+            &transform_vertices(strict.vertices),
+            &strict.triangles,
+        ));
+    }
+
+    fn into_surface(self) -> PaintSurface {
+        let mesh = TriangleMesh {
+            triangles: self.triangles,
+            negative_start: 0,
+        };
+        let tree = TriangleBvh::new(&mesh);
+        PaintSurface {
+            mesh,
+            tree,
+            contour: self.contour,
+        }
     }
 }
 

@@ -36,6 +36,9 @@ mod seam_paint;
 #[path = "seam_paint_split.rs"]
 mod seam_paint_split;
 
+#[path = "seam_paint_volumes.rs"]
+mod seam_paint_volumes;
+
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
