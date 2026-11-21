@@ -13,6 +13,15 @@ pub(crate) fn parse() -> (Cli, bool) {
     {
         cli.direct.mtcpp = None;
     }
+    // OrcaSlicer.cpp:1393,6426–6427: the strict pair is global; slicing is ordered.
+    if !cli.direct.strict
+        && matches
+            .index_of("no_check")
+            .zip(matches.index_of("selection"))
+            .is_some_and(|(check, slice)| check > slice)
+    {
+        cli.direct.no_check = false;
+    }
     // OrcaSlicer.cpp:6297,8220–8226: actions run in argument order.
     let export_before_slice = matches
         .index_of("export_settings")
