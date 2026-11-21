@@ -266,8 +266,10 @@ pub(in crate::project_slice) fn generate(
                 counts: &counts,
                 slices,
                 layers: &layers,
+                planned: &plan.layers,
                 bridges: &bridges,
                 enforcers: &enforcers,
+                vertical_enforcers: &vertical_enforcers,
                 blockers: &blockers,
                 extrusion_width,
                 bed: bed::polygon(

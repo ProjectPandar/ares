@@ -39,6 +39,9 @@ mod support_contact_overlap;
 #[path = "support_interface_top_layers_base_connect.rs"]
 mod support_interface_top_layers_base_connect;
 
+#[path = "organic_vertical_enforcer.rs"]
+mod organic_vertical_enforcer;
+
 #[path = "sequential_origin_label_flush.rs"]
 mod sequential_origin_label_flush;
 
