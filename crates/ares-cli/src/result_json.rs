@@ -35,6 +35,7 @@ pub(super) struct ResultJson<'a> {
     pub(super) sparse_infill_density: f64,
     pub(super) strict_mode: bool,
     pub(super) upward_machines: &'a [String],
+    pub(super) downward_machines: &'a [String],
     pub(super) sliced_plates: &'a [SlicedPlateEntry],
     pub(super) warnings: &'a [CliWarning],
 }
@@ -43,6 +44,14 @@ impl ResultJson<'_> {
     /// Writes result.json beside `output`. `warnings` and `strict_mode` are always written
     /// (`:573-574`).
     pub(super) fn write(&self, output: &Path) -> Result<(), serde_json::Error> {
+        let downward = if self.downward_machines.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "\t\"downward_compatible_machine\": {},\n",
+                pretty(&self.downward_machines)?.replace('\n', "\n\t")
+            )
+        };
         let upward = if self.upward_machines.is_empty() {
             String::new()
         } else {
@@ -54,7 +63,7 @@ impl ResultJson<'_> {
         let body = format!(
             "{{\n\t\"error_string\": {},\n\t\"export_time\": 0,\n\t\"layer_height\": {:?},\n\t\
              \"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\"return_code\": {},\n{}\t\
-             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": {},\n{upward}\t\
+             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": {},\n{downward}{upward}\t\
              \"wall_loops\": {},\n\t\"warnings\": {}\n}}\n",
             serde_json::to_string(self.error_string)?,
             self.layer_height,
@@ -181,6 +190,7 @@ pub(super) fn write_plate_batch(
         sparse_infill_density,
         strict_mode,
         upward_machines,
+        downward_machines: &[],
         sliced_plates: &sliced_plates,
         warnings: &warnings,
     }
@@ -196,6 +206,7 @@ pub(super) struct Success<'a> {
     pub(super) plate_index: u32,
     pub(super) sliced_plate: ares_core::SlicedPlate,
     pub(super) upward_machines: &'a [String],
+    pub(super) downward_machines: &'a [String],
 }
 
 impl Success<'_> {
@@ -223,6 +234,7 @@ impl Success<'_> {
             sparse_infill_density: self.sliced_plate.sparse_infill_density,
             strict_mode: self.strict_mode,
             upward_machines: self.upward_machines,
+            downward_machines: self.downward_machines,
             sliced_plates: &[SlicedPlateEntry {
                 id: self.plate,
                 triangle_count: self.sliced_plate.triangle_count,

@@ -5,6 +5,7 @@ mod custom_gcodes;
 mod diagnostics;
 mod direct_project;
 mod direct_stl;
+mod downward;
 mod export_3mf;
 mod export_stl;
 mod failure;
@@ -26,7 +27,6 @@ use std::path::Path;
 
 use args::{Commands, SliceArgs, require_single_input};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
-
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let (cli, export_before_slice) = args::parse();
@@ -197,7 +197,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 .map(project_presets::load_resources_catalog)
                 .transpose()?;
             let mut upward_report = Vec::new();
-            let mut sliced_plate = ares_core::SlicedPlate::default();
+            let mut sliced_plate = ares_core::SlicedPlate::with_size(args.has_downward_targets());
             let upward = ares_core::CliUpwardMachine {
                 source,
                 input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
@@ -304,6 +304,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 }
             };
             failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
+            let _downward = downward::compatibility(&args, &sliced_plate, &upward_report)?;
             fs::write(args.output(), gcode)?;
             report_success(
                 &input_file,
@@ -316,6 +317,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     plate_index: args.plate.unwrap_or(0),
                     sliced_plate,
                     upward_machines: &upward_report,
+                    downward_machines: &_downward,
                 },
             );
             return Ok(());

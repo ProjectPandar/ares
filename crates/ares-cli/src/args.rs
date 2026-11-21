@@ -254,6 +254,10 @@ pub(crate) struct SliceArgs {
         value_parser = clap::builder::BoolishValueParser::new(),
     )]
     pub(crate) allow_newer_file: bool,
+    #[arg(long)]
+    pub(crate) downward_check: bool,
+    #[arg(long)]
+    pub(crate) downward_settings: Option<String>,
     #[arg(
         short = 'o',
         required_unless_present_any = [
@@ -294,6 +298,14 @@ pub(crate) struct SliceArgs {
 }
 
 impl SliceArgs {
+    pub(crate) fn has_downward_targets(&self) -> bool {
+        self.downward_check
+            && self
+                .downward_settings
+                .as_deref()
+                .is_some_and(|paths| paths.split(';').any(|path| !path.is_empty()))
+    }
+
     pub(crate) fn input(&self) -> &Path {
         &self.inputs[0]
     }

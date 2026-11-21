@@ -174,6 +174,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         plate_index: plate,
         sliced_plate,
         upward_machines: &upward_machines,
+        downward_machines: &[],
     }
     .write(&input_file, crate::substitutions(&bytes));
     Ok(())

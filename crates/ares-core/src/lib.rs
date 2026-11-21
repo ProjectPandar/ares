@@ -10,6 +10,7 @@ pub mod arrangement;
 mod bridges;
 mod brims;
 mod contours;
+mod downward;
 mod extrusion_entity;
 mod extrusions;
 mod fill;
@@ -45,6 +46,7 @@ pub use brims::{BrimOptions, BrimPath, BrimType, LayerBrims, generate_brims};
 pub use geometry::{ConvexHull3d, convex_hull_3d};
 
 pub use contours::{Contour, LayerContours, stitch_layer_slices};
+pub use downward::{DownwardMachine, compatible_downward_machines};
 pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRole};
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub use gcode_processor::{

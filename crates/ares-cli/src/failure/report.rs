@@ -18,6 +18,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: error.error_string().to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -65,6 +66,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "Triangle count of single plate exceeds the limit. Please simplify the model and try to upload again.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -91,6 +93,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "The input preset file is invalid and can not be parsed.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -117,6 +120,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "Invalid parameters to the slicer.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -147,6 +151,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "Failed exporting the G-code statistics.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -181,6 +186,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "The input model file to the slicer can not be parsed.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -270,6 +276,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: error_string.to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -351,6 +358,7 @@ impl FamilyFailure {
             sparse_infill_density: self.sparse_infill_density,
             strict_mode,
             upward_machines: &self.upward_machines,
+            downward_machines: &self.downward_machines,
             sliced_plates: sliced_plates.as_slice(),
             warnings: &self.warnings,
         }

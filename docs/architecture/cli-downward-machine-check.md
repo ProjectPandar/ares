@@ -6,7 +6,7 @@ OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`) declares `downwar
 
 When `downward_settings` is empty, Native loads its built-in target list from `resources/profiles/BBL/cli_config.json` using the current machine system name and model (`OrcaSlicer.cpp:1104–1173, 4729–4736`). When explicit paths are supplied, each path is loaded as a machine preset. Native requires `config_type == "machine"` and `config_from == "system"` (`4729–4750`), then extracts printable area, height, bed-exclude area, wrapping area, and per-extruder printable limits (`4752–4819`).
 
-The check compares each loaded target against each plate's object bounding-box size (`OrcaSlicer.cpp:4704–4711, 4823–4868`). It marks a target incompatible when height, depth or width exceeds the target; applies the bed-exclude-area rule when both reduced dimensions exceed the object; and applies the wrapping-area rule when enabled (`4847–4868`). If at least one target remains compatible, Native publishes its names as `downward_compatible_machine`; if every target fails, it leaves that field absent (`4870–4893`). The Linux result report includes the field before the existing upward field (`OrcaSlicer.cpp:535–586`).
+The check compares each loaded target against each plate's object bounding-box size (`OrcaSlicer.cpp:4704–4711, 4823–4868`). `printer_plate_info_t` stores target dimensions as `int`; Native computes each printable-area bounding-box dimension as `int`, which truncates a fractional value at `4723–4780`. The later comparisons are `double` object dimensions against those integer fields. The implementation must retain this boundary: a target width of 10.6 becomes 10, so an object width of 10.3 does not fit. It marks a target incompatible when height, depth or width exceeds the target; applies the bed-exclude-area rule only when both reduced dimensions exceed the object (`real_width` and `real_depth` joined by `&&` at `4847–4860`), so a single-axis exceedance remains compatible; and applies the wrapping-area rule when enabled (`4862–4868`). If at least one target remains compatible, Native publishes its names as `downward_compatible_machine`; if every target fails, it leaves that field absent (`4870–4893`). The Linux result report includes the field before the existing upward field (`OrcaSlicer.cpp:535–586`).
 
 ## Rust destination
 
@@ -20,10 +20,11 @@ Use the existing plate object bounds produced by the slicing/project model; do n
 - `--downward-settings <machine.json>` with one explicit system machine preset.
 - A target that fits and appears in `result.json` as `downward_compatible_machine`.
 - A target that fails the dimensional check and leaves the downward field absent.
-- A target that exercises the bed-exclude rule separately from the plain width/depth/height rule.
+- A target that exercises the bed-exclude rule separately from the plain width/depth/height rule, including one single-axis exceedance that remains compatible and one two-axis exceedance that fails.
+- A fractional-size object/target witness proving the target dimensions are truncated to `int` before the `double` comparison.
 - Repeated official and seeded Native observations using the same synthetic project and target file.
 
-The first implementation may use one target file and one plate. It must still preserve the vector semantics so that later multiple-target support does not change the one-target result. The control invocation omits `--downward-check`; it must not publish a downward field. The existing upward report, when present, must remain byte-for-byte and semantically distinct.
+The first implementation may use one target file and one plate. It must still preserve the vector semantics so that later multiple-target support does not change the one-target result. The control invocation omits `--downward-check`; it must not publish a downward field. The existing upward report, when present, must remain byte-for-byte and semantically distinct. An explicit target missing on disk maps to Native exit 253 and result `return_code: -3`, with the same missing-setting stderr; malformed JSON maps to exit 251 and result `return_code: -5`, with empty stderr.
 
 ## Deferred
 

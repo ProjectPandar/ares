@@ -138,6 +138,7 @@ pub(crate) fn path_conflict(
         #[cfg(target_os = "linux")]
         error_string: " G-code conflicts detected after slicing. Please make sure the 3mf file can be successfully sliced in the latest Orca Slicer. If the file slices normally in Orca Slicer, try moving the wipe tower further from other models, as we use more conservative parameters for it during upload.".into(),
         upward_machines: Vec::new(),
+        downward_machines: Vec::new(),
         #[cfg(target_os = "linux")]
         warnings: Vec::new(),
         #[cfg(target_os = "linux")]
@@ -200,6 +201,7 @@ fn warning_failure(
         #[cfg(target_os = "linux")]
         error_string: "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.".to_owned(),
         upward_machines: Vec::new(),
+        downward_machines: Vec::new(),
         #[cfg(target_os = "linux")]
         warnings: Vec::new(),
         #[cfg(target_os = "linux")]
