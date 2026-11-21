@@ -163,7 +163,12 @@ pub(super) fn prepare_profile_slice(
             project.max_triangle_count,
             project.allow_mix_temp,
         ),
-        Some((&preparation, project.overrides)),
+        // The CLI prepares the loaded config before Print::apply (OrcaSlicer.cpp:3851-4023); the
+        // plater applies full_fff_config as it holds it.
+        profile
+            .full_fff_config
+            .is_none()
+            .then_some((&preparation, project.overrides)),
     )
 }
 

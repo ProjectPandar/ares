@@ -116,6 +116,9 @@ pub(super) fn compose(
             })?
             .resolve()
     };
+    if let Some(groups) = profile.full_fff_config {
+        groups.store(&mut raw);
+    }
     // CLI:4243-4244 normalizes mixed metadata for the loaded logical slots.
     let filament_count = settings.project.preset.filament_settings_id.0.len();
     super::resize_mixed_filament_metadata(&mut raw, filament_count, filament_count);
