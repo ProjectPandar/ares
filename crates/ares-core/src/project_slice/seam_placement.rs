@@ -2,6 +2,7 @@ mod alignment;
 pub(in crate::project_slice) mod fitting;
 pub(in crate::project_slice) mod kdtree;
 mod mesh;
+pub(super) mod paint;
 mod placement;
 mod runtime;
 mod sampling;
@@ -12,7 +13,7 @@ mod split;
 mod visibility;
 
 use crate::{
-    ProcessSeamPosition,
+    ProcessSeamPosition, SliceError,
     project_slice::{
         island_print_order::{
             NearestSeamLayer, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
@@ -41,7 +42,11 @@ pub(in crate::project_slice) use runtime::{
     place_nearest, place_nearest_penalized, place_nearest_projection,
 };
 
-pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
+pub(super) use paint::validate_paint;
+
+pub(in crate::project_slice) fn apply(
+    prepared: &mut PreparedPostIslandPrintOrder,
+) -> Result<(), SliceError> {
     let predecessor = &prepared.predecessor;
     let traversal = &predecessor
         .predecessor
@@ -58,7 +63,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         traversal.resolved.views.full.process.print.spiral_mode.0,
     );
     if !placements.iter().any(Option::is_some) {
-        return;
+        return Ok(());
     }
 
     // `SeamPlacer.cpp:1442` — occlusion is computed per PrintObject, each
@@ -116,8 +121,9 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         },
         nozzle_diameter,
         &mut nearest_seam_plans,
-    );
+    )?;
     prepared.nearest_seam_plans = nearest_seam_plans;
+    Ok(())
 }
 
 /// Inputs from `SeamPlacer.cpp::SeamPlacer::init object choices and visibility`.
@@ -135,7 +141,7 @@ fn apply_objects(
     }: SeamObjectSettings<'_>,
     nozzle_diameter: f32,
     nearest_plans: &mut [Vec<NearestSeamLayer>],
-) {
+) -> Result<(), SliceError> {
     for (object_index, layers) in objects.iter_mut().enumerate() {
         let Some(placement) = placements[object_index] else {
             continue;
@@ -155,13 +161,19 @@ fn apply_objects(
             .iter()
             .map(|layer| layer.slice_z as f32)
             .collect::<Vec<_>>();
+        let (source, group) = traversal.print_object_config(object_index);
+        let paint = paint::SeamPaint::from_object(
+            &traversal.project.objects()[source.source_object_index],
+            group,
+            traversal.scale,
+        )?;
         let mut plans = alignment::prepare(
             (layers, &layer_zs),
             traversal,
             object_index,
             nozzle_diameter,
-            visibility,
-        );
+            (visibility, paint.as_ref()),
+        )?;
         match placement {
             ProcessSeamPosition::Aligned
             | ProcessSeamPosition::AlignedBack
@@ -188,6 +200,7 @@ fn apply_objects(
             placement::place_layer(layer, plan, staggered, traversal.scale);
         }
     }
+    Ok(())
 }
 
 fn nearest_seam_data(

@@ -1,4 +1,6 @@
+use super::seam_placement::paint::{SeamPaint, paint_candidates};
 use crate::{
+    SliceError,
     geometry::{CoordinateScale, Point},
     project_slice::perimeters::classic::{
         chained_loops::ExtrusionLoopRole,
@@ -21,13 +23,24 @@ pub(in crate::project_slice) struct SeamPerimeter {
     pub(in crate::project_slice) flow_width: f32,
     pub(in crate::project_slice) is_hole: bool,
     pub(in crate::project_slice) contour_reliable: bool,
+    pub(in crate::project_slice) exact_enforced_ends: Option<bool>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub(in crate::project_slice) enum PaintState {
+    Blocked,
+    #[default]
+    Neutral,
+    Enforced,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice) struct SeamCandidate {
     pub(in crate::project_slice) position: SeamCandidatePosition,
     pub(in crate::project_slice) perimeter_index: usize,
     pub(in crate::project_slice) local_ccw_angle: f32,
+    pub(in crate::project_slice) paint: PaintState,
+    pub(in crate::project_slice) central_enforcer: bool,
 }
 
 #[derive(Debug, Default, PartialEq)]
@@ -46,13 +59,14 @@ pub(in crate::project_slice) fn generate_regions(
     z: f32,
     scale: CoordinateScale,
     angle_arm_mm: f32,
-) -> LayerSeamCandidates {
+    paint: Option<&SeamPaint>,
+) -> Result<LayerSeamCandidates, SliceError> {
     let polygons = extract_perimeter_polygons(regions);
     let mut output = LayerSeamCandidates::default();
     for polygon in polygons {
-        process_polygon(polygon, z, scale, angle_arm_mm, &mut output);
+        process_polygon(polygon, z, scale, (angle_arm_mm, paint), &mut output)?;
     }
-    output
+    Ok(output)
 }
 
 #[derive(Debug, PartialEq)]
@@ -164,11 +178,11 @@ fn process_polygon(
     source: SourcePerimeterPolygon,
     z: f32,
     scale: CoordinateScale,
-    angle_arm_mm: f32,
+    (angle_arm_mm, paint): (f32, Option<&SeamPaint>),
     output: &mut LayerSeamCandidates,
-) {
+) -> Result<(), SliceError> {
     if source.points.is_empty() {
-        return;
+        return Ok(());
     }
     let mut points = source.points;
     let was_clockwise = signed_area(&points) < 0.0;
@@ -179,20 +193,33 @@ fn process_polygon(
     let angles = vertex_angles(&points, &lengths, angle_arm_mm);
     let perimeter_index = output.perimeters.len();
     let start_index = output.points.len();
-    output.points.extend(
-        points
+    let candidates = points
+        .iter()
+        .zip(angles)
+        .map(|(point, angle)| SeamCandidate {
+            position: SeamCandidatePosition {
+                x: scale.unscale(point.x()) as f32,
+                y: scale.unscale(point.y()) as f32,
+                z,
+            },
+            perimeter_index,
+            local_ccw_angle: if was_clockwise { -angle } else { angle },
+            paint: PaintState::Neutral,
+            central_enforcer: false,
+        });
+    let exact_enforced_ends = if let Some(paint) = paint {
+        let xy = points
             .iter()
-            .zip(angles)
-            .map(|(point, angle)| SeamCandidate {
-                position: SeamCandidatePosition {
-                    x: scale.unscale(point.x()) as f32,
-                    y: scale.unscale(point.y()) as f32,
-                    z,
-                },
-                perimeter_index,
-                local_ccw_angle: if was_clockwise { -angle } else { angle },
-            }),
-    );
+            .map(|point| [scale.unscale(point.x()), scale.unscale(point.y())])
+            .collect::<Vec<_>>();
+        let (samples, exact) =
+            paint_candidates(paint, candidates.collect(), &xy, source.flow_width)?;
+        output.points.extend(samples);
+        Some(exact)
+    } else {
+        output.points.extend(candidates);
+        None
+    };
     output.perimeters.push(SeamPerimeter {
         start_index,
         end_index: output.points.len(),
@@ -200,7 +227,9 @@ fn process_polygon(
         // SeamPlacer.cpp:722-725: these are immutable contour inputs only.
         is_hole: source.boundary_hole.unwrap_or(was_clockwise),
         contour_reliable: source.boundary_hole.is_some(),
+        exact_enforced_ends,
     });
+    Ok(())
 }
 
 fn edge_lengths(points: &[Point], scale: CoordinateScale) -> Vec<f32> {

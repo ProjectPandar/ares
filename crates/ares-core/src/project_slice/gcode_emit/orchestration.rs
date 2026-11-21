@@ -21,7 +21,7 @@ pub(in crate::project_slice) fn emit(
     let instances = layers::instances::collect(traversal);
     let farthest_object_targets =
         layers::farthest::ObjectTargets::capture(traversal, &prepared.objects, &instances);
-    crate::project_slice::seam_placement::apply(prepared);
+    crate::project_slice::seam_placement::apply(prepared)?;
     // `Print.cpp:3540-3550` detects auto-lift overhangs per object (`PrintObject.cpp:940`; Ares runs
     // the detection in `AutoLift::prepare`), then makes the skirt and brim (`Print.cpp:3638`).
     for _ in &prepared.objects {

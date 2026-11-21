@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use crate::{
-    ProcessSeamPosition,
+    ProcessSeamPosition, SliceError,
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
@@ -22,15 +22,15 @@ use super::{
     contour_continuation::{Contour, Layers},
     is_better,
 };
-use crate::project_slice::seam_placement::{candidate_penalty, visibility};
+use crate::project_slice::seam_placement::{candidate_penalty, paint::SeamPaint, visibility};
 
 pub(in crate::project_slice::seam_placement) fn prepare(
     layers: (&[OrderedExtrusionLayer], &[f32]),
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     nozzle_diameter: f32,
-    visibility: Option<&visibility::GlobalVisibility>,
-) -> Vec<LayerPlan> {
+    (visibility, paint): (Option<&visibility::GlobalVisibility>, Option<&SeamPaint>),
+) -> Result<Vec<LayerPlan>, SliceError> {
     let (layers, layer_zs) = layers;
     let placement = traversal
         .print_object_config(object_index)
@@ -65,10 +65,10 @@ pub(in crate::project_slice::seam_placement) fn prepare(
                 z,
                 traversal.scale,
                 (nozzle_diameter, max_nozzle_diameter),
-                (visibility, placement),
+                (visibility, placement, paint),
             )
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, _>>()?;
     let (post_region, layer_slices) = input.object.as_parts();
     let (planned_object, _, _) = post_region.as_parts();
     context::populate(
@@ -90,7 +90,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             })
             .collect();
     }
-    plans
+    Ok(plans)
 }
 
 // SeamPlacer.cpp:1915-1929: immutable geometry, independent of choices.
@@ -175,8 +175,12 @@ fn prepare_layer(
     z: f32,
     scale: CoordinateScale,
     (nozzle_diameter, max_nozzle_diameter): (f32, f64),
-    (visibility, placement): (Option<&visibility::GlobalVisibility>, ProcessSeamPosition),
-) -> LayerPlan {
+    (visibility, placement, paint): (
+        Option<&visibility::GlobalVisibility>,
+        ProcessSeamPosition,
+        Option<&SeamPaint>,
+    ),
+) -> Result<LayerPlan, SliceError> {
     let collections = regions
         .iter()
         .map(|region| region.collection.expect("printing perimeter collection"))
@@ -190,7 +194,7 @@ fn prepare_layer(
             external_flow_width: regions[index].external_flow_width,
         })
         .collect::<Vec<_>>();
-    let candidates = seam_candidates::generate_regions(&regions, z, scale, nozzle_diameter);
+    let candidates = seam_candidates::generate_regions(&regions, z, scale, nozzle_diameter, paint)?;
     let candidate_count = candidates.points.len();
     let scores = candidates
         .points
@@ -217,7 +221,7 @@ fn prepare_layer(
         .iter()
         .map(|collection| association.collection_map(collection))
         .collect();
-    LayerPlan {
+    Ok(LayerPlan {
         placement,
         candidates,
         choices: Vec::new(),
@@ -230,7 +234,7 @@ fn prepare_layer(
         embedded_distances: vec![0.0; candidate_count],
         positions,
         point_tree,
-    }
+    })
 }
 
 struct PerimeterAssociation<'a> {
