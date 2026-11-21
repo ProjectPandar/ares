@@ -39,6 +39,16 @@ pub(crate) struct ProjectDocuments {
     pub bbl_family_3mf: bool,
     pub preset_file_version: Option<String>,
     pub preset_selection: Option<std::sync::Arc<crate::profiles::PresetSelection>>,
+    pub config_composer: ConfigComposer,
+}
+
+/// What composed `project_settings_raw`: the CLI run, whose resize creates the absent dirty and
+/// inherits groups (OrcaSlicer.cpp:3202-3205), or `PresetBundle::full_fff_config`, which stores
+/// only the non-empty ones (PresetBundle.cpp:5823-5841).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum ConfigComposer {
+    CliRun,
+    FullFffConfig,
 }
 
 impl ProjectDocuments {
@@ -53,6 +63,7 @@ impl ProjectDocuments {
             bbl_family_3mf: self.bbl_family_3mf,
             preset_file_version: self.preset_file_version.clone(),
             preset_selection: self.preset_selection.clone(),
+            config_composer: self.config_composer,
         }
     }
 }

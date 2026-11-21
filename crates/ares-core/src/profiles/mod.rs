@@ -17,6 +17,7 @@ pub(crate) use project_refresh::{
     is_connection_option, is_filament_dev_key, loaded_filament_ordinary_values, preset_owns_option,
     set_filament_dev_options,
 };
+pub(crate) use project_selection::FullFffGroups;
 pub use project_selection::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,
     load_preset_bundle,
@@ -39,8 +40,9 @@ pub use composition::{
 };
 pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
-    CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSliceRequest,
-    SlicedStlPlate, export_stl_settings, profile_placed_project, slice_cli_with_profiles_validated,
+    CliProfileSliceRequest, Composition, GuiProfileSliceRequest, LoadSettingsSliceRequest,
+    Placement, ProfileRequest, ProfileSliceRequest, SlicedStlPlate, export_stl_settings,
+    profile_placed_project, slice_cli_with_profiles_validated,
     slice_imported_stl_with_load_settings_processed, slice_stl_models_with_load_settings,
     slice_with_load_settings, slice_with_load_settings_and_refresh,
     slice_with_load_settings_processed, slice_with_profiles, slice_with_profiles_processed,

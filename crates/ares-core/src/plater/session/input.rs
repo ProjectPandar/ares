@@ -2,7 +2,7 @@
 
 use super::PlaterSession;
 use crate::profiles::entry::ProfileSettings;
-use crate::{ProfileSliceRequest, Project, SliceError};
+use crate::{ProfileRequest, Project, SliceError};
 
 pub(in crate::plater) enum SessionInput {
     Bytes(Vec<u8>),
@@ -24,13 +24,13 @@ impl PlaterSession {
         }
     }
 
-    pub async fn profile_settings(
+    pub async fn profile_settings<'a>(
         &self,
-        request: ProfileSliceRequest<'_>,
+        request: impl ProfileRequest<'a>,
     ) -> Result<ProfileSettings, SliceError> {
         crate::profiles::with_edited_profile_source(
             self.source(),
-            request,
+            (request.request(), request.composition()),
             &super::super::NO_EDITS,
             |source| {
                 let project = crate::project_slice::load_profile_project(&source)?;

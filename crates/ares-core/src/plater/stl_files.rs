@@ -1,7 +1,7 @@
 //! Plater::priv::load_files multipart choices (Plater.cpp:10075–10125).
 
 use super::{PlaterSession, session::SessionInput};
-use crate::{ProfileSliceRequest, Project, SliceError};
+use crate::{ProfileRequest, Project, SliceError};
 
 #[derive(Clone, Copy, Debug)]
 pub struct StlFile<'a> {
@@ -25,15 +25,15 @@ impl PlaterSession {
         Ok(Self::with_stl_model(project))
     }
 
-    pub async fn load_stl_files_with_profiles(
+    pub async fn load_stl_files_with_profiles<'a>(
         files: &[StlFile<'_>],
         options: StlImportOptions,
-        request: ProfileSliceRequest<'_>,
+        request: impl ProfileRequest<'a>,
     ) -> Result<Self, SliceError> {
         let model = Project::from_stl_files(files)?;
         let mut project = crate::profiles::with_edited_profile_source(
             crate::project_slice::ProjectInput::Model(&model),
-            request,
+            (request.request(), request.composition()),
             &super::NO_EDITS,
             |source| crate::project_slice::load_profile_project(&source),
         )?;

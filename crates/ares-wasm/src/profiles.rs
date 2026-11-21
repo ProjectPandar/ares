@@ -132,14 +132,14 @@ pub async fn slice_with_profiles_bytes(
 ) -> Result<Vec<u8>, String> {
     let options = ProfileSliceOptions::parse(options_json)?;
     let overrides = options.overrides();
-    let request = ProfileSliceRequest {
+    let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
         filename,
         catalog_json,
         selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
-    };
+    });
     ares_core::slice_with_profiles_validated(
         input,
         request,
@@ -180,14 +180,14 @@ pub async fn slice_with_profiles_processed_bytes(
 ) -> Result<ares_core::gcode_processor::ProcessedGCode, String> {
     let options = ProfileSliceOptions::parse(options_json)?;
     let overrides = options.overrides();
-    let request = ares_core::ProfileSliceRequest {
+    let request = ares_core::GuiProfileSliceRequest(ares_core::ProfileSliceRequest {
         filename,
         catalog_json,
         selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
-    };
+    });
     ares_core::slice_with_profiles_processed_validated(
         input,
         request,
@@ -228,14 +228,14 @@ pub async fn profile_settings_json(
     let overrides = options.overrides();
     let settings = ares_core::profile_settings(
         input,
-        ares_core::ProfileSliceRequest {
+        ares_core::GuiProfileSliceRequest(ares_core::ProfileSliceRequest {
             filename,
             catalog_json,
             selection_json,
             plate: options.plate,
             overrides: &overrides,
             placement: options.placement(),
-        },
+        }),
     )
     .await
     .map_err(|error| error.to_string())?;
@@ -259,14 +259,14 @@ pub async fn placement_scene(
     let overrides = options.overrides();
     let project = ares_core::profile_placed_project(
         input,
-        ares_core::ProfileSliceRequest {
+        ares_core::GuiProfileSliceRequest(ares_core::ProfileSliceRequest {
             filename: &filename,
             catalog_json: &catalog_json,
             selection_json: &selection_json,
             plate: options.plate,
             overrides: &overrides,
             placement: options.placement(),
-        },
+        }),
     )
     .await
     .map_err(|error| JsValue::from_str(&error.to_string()))?;

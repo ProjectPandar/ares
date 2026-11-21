@@ -62,14 +62,14 @@ impl PlaterSession {
         let overrides = options.overrides();
         let settings = self
             .session
-            .profile_settings(ProfileSliceRequest {
+            .profile_settings(ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
                 filename: &self.filename,
                 catalog_json: &catalog_json,
                 selection_json: &selection_json,
                 plate: options.plate,
                 overrides: &overrides,
                 placement: options.placement(),
-            })
+            }))
             .await
             .map_err(js_error)?;
         serde_json::to_string(&settings).map_err(js_error)
@@ -101,14 +101,14 @@ pub async fn create_plater_session_from_stl_files_with_profiles(
     let (import, bytes) = Import::parse(input, &import_json)?;
     let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
     let overrides = options.overrides();
-    let request = ProfileSliceRequest {
+    let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
         filename: "multipart.stl",
         catalog_json: &catalog_json,
         selection_json: &selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
-    };
+    });
     let session = ares_core::PlaterSession::load_stl_files_with_profiles(
         &import.files(&bytes),
         import.options(),

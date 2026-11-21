@@ -279,6 +279,7 @@ pub(crate) fn with_load_settings_source<T>(
             composed: &composed.profile,
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
+            full_fff_config: None,
             load_names: Some(&load_names),
             retained_refresh: refresh
                 .map(crate::profiles::ProjectPresetRefresh::native)

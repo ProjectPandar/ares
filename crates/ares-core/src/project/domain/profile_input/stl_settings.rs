@@ -59,6 +59,9 @@ pub(super) fn compose(
     ] {
         raw.insert_strings(key, values);
     }
+    if let Some(groups) = profile.full_fff_config {
+        groups.apply(&mut raw);
+    }
     for (key, values) in [
         ("filament_map", &project.gcode.filament_map.0),
         ("filament_self_index", &project.preset.filament_self_index.0),

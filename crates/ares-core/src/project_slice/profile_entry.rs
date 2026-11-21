@@ -52,8 +52,9 @@ fn load_with_profile_preparation(
         validate_print: project.validate_print,
         load_names: profile.load_names,
         retained_refresh: profile.retained_refresh,
+        full_fff_config: profile.full_fff_config,
     };
-    match project.input {
+    let (mut loaded, preparation) = match project.input {
         super::ProjectInput::Assembly(assembly) => match &assembly.0 {
             crate::project::assembly::AssemblySource::Archive(file) => {
                 let (mut loaded, preparation) = Project::from_3mf_with_profiles(
@@ -108,7 +109,11 @@ fn load_with_profile_preparation(
                     (loaded, preparation)
                 })
         }
+    }?;
+    if profile.full_fff_config.is_some() {
+        loaded.compose_as_full_fff_config();
     }
+    Ok((loaded, preparation))
 }
 
 /// Loads with profiles and applies placement without slicing — the exact

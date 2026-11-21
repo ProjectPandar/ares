@@ -116,7 +116,7 @@ pub(in crate::project_slice) fn emit(
     let mut export_config = Vec::new();
     crate::options::write_config_block(
         &traversal.resolved.views,
-        &traversal.project.documents().project_settings_raw,
+        traversal.project.documents(),
         traversal.project.current_plate_index(),
         Some(initial_filaments.compat_temperatures(traversal)),
         &mut export_config,

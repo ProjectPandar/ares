@@ -277,6 +277,7 @@ fn load_project_raw(
             bbl_family_3mf,
             preset_file_version,
             preset_selection: None,
+            config_composer: crate::project::domain::ConfigComposer::CliRun,
         },
     );
     project.plates_custom_gcodes = plates_custom_gcodes;

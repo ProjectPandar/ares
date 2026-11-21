@@ -1,5 +1,13 @@
-use super::{PresetCollectionState, PresetRecord};
-use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
+use super::{
+    PresetCollectionState, PresetRecord,
+    project_selection::{
+        FullFffGroups, Selected, dirty_options, filament_diff, filament_parent, selected_parent,
+    },
+};
+use crate::{
+    SliceError,
+    project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
+};
 
 /// The selected process, printer and filament presets applied onto `result`.
 pub(super) fn full_fff_config(
@@ -7,9 +15,7 @@ pub(super) fn full_fff_config(
     process: &PresetCollectionState,
     printer: &PresetCollectionState,
     filaments: &[PresetCollectionState],
-) {
-    // full_fff_config erases it (PresetBundle.cpp:5790-5794).
-    result.remove("compatible_printers_condition");
+) -> Result<(), SliceError> {
     for state in [process, printer] {
         for (key, value) in state.edited.config.0.entries() {
             if matches!(
@@ -28,17 +34,62 @@ pub(super) fn full_fff_config(
             result.insert(key.clone(), value.clone());
         }
     }
-    compose_filaments(result, filaments);
+    let presets = filament_presets(filaments);
+    compose_filaments(result, &presets);
+    groups(process, printer, filaments, &presets)?.apply(result);
+    Ok(())
 }
 
-// PresetBundle::full_fff_config(false) (PresetBundle.cpp:5621-5774), the project config the
-// plater saves (full_config_secure, Plater.cpp:19779): each filament is find_preset(name, true),
-// the edited copy for the selected preset; scalars come from the first filament, vectors are
-// appended in filament order, filament_self_index numbers each filament's variants, and
-// filament_ids are the presets' filament_id (5636, 5679, 5821).
-fn compose_filaments(result: &mut ProjectSettingsRaw, states: &[PresetCollectionState]) {
+/// The groups of the selected states (PresetBundle.cpp:5571-5595, 5628-5712, 5778-5788).
+fn groups(
+    process: &PresetCollectionState,
+    printer: &PresetCollectionState,
+    filaments: &[PresetCollectionState],
+    presets: &[&PresetRecord],
+) -> Result<FullFffGroups, SliceError> {
+    let selected = |state: &PresetCollectionState| {
+        let parent = selected_parent(&state.selected, &state.edited, &state.records, |name| {
+            state.records.iter().find(|record| record.name == name)
+        });
+        dirty_options(parent.map(|parent| &parent.config), &state.edited.config)
+    };
+    let first = &filaments[0];
+    let filament_groups = if let [only] = filaments {
+        vec![Selected {
+            preset: &only.edited,
+            different: selected(only)?,
+        }]
+    } else {
+        presets
+            .iter()
+            .map(|preset| {
+                let parent = filament_parent(preset, &first.selected, |name| {
+                    first.records.iter().find(|record| record.name == name)
+                });
+                Ok(Selected {
+                    preset,
+                    different: filament_diff(parent.map(|parent| &parent.config), &preset.config)?,
+                })
+            })
+            .collect::<Result<Vec<_>, SliceError>>()?
+    };
+    Ok(FullFffGroups::collect(
+        &Selected {
+            preset: &process.edited,
+            different: selected(process)?,
+        },
+        &filament_groups,
+        &Selected {
+            preset: &printer.edited,
+            different: selected(printer)?,
+        },
+    ))
+}
+
+/// Each filament as find_preset(name, true) returns it: the edited copy for the selected preset.
+fn filament_presets(states: &[PresetCollectionState]) -> Vec<&PresetRecord> {
     let selected = &states[0];
-    let presets = states
+    states
         .iter()
         .map(|state| {
             if state.selected.name == selected.selected.name {
@@ -51,7 +102,15 @@ fn compose_filaments(result: &mut ProjectSettingsRaw, states: &[PresetCollection
                     .expect("loaded filament preset")
             }
         })
-        .collect::<Vec<_>>();
+        .collect()
+}
+
+// PresetBundle::full_fff_config(false) (PresetBundle.cpp:5621-5774), the project config the
+// plater saves (full_config_secure, Plater.cpp:19779): each filament is find_preset(name, true),
+// the edited copy for the selected preset; scalars come from the first filament, vectors are
+// appended in filament order, filament_self_index numbers each filament's variants, and
+// filament_ids are the presets' filament_id (5636, 5679, 5821).
+fn compose_filaments(result: &mut ProjectSettingsRaw, presets: &[&PresetRecord]) {
     let list = |preset: &PresetRecord, key: &str| match preset.config.0.get(key) {
         Some(RawConfigValue::List(values)) => values.clone(),
         _ => Vec::new(),

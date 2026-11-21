@@ -1,6 +1,6 @@
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
-use super::{PresetSelection, ProfileSliceRequest};
+use super::{PresetSelection, ProfileRequest};
 use crate::{SliceError, project::raw_settings::ProjectSettingsRaw};
 
 /// Effective settings plus the reference/edited collection state of an Always request.
@@ -22,11 +22,12 @@ impl Serialize for ProfileSettings {
 }
 
 /// The effective settings and selection state consumed by the profile slice entry.
-pub async fn profile_settings(
+pub async fn profile_settings<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
 ) -> Result<ProfileSettings, SliceError> {
-    super::entry::with_profile_source(input.as_ref(), request, |source| {
+    let (composition, request) = (request.composition(), request.request());
+    super::entry::with_profile_source(input.as_ref(), request, composition, |source| {
         let project = crate::project_slice::load_profile_project(&source)?;
         Ok(ProfileSettings {
             settings: project.documents().project_settings_raw.clone(),

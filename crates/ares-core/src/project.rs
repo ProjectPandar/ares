@@ -3,6 +3,7 @@ mod brim_ear_points;
 mod content_types;
 mod domain;
 pub(crate) use domain::assembly;
+pub(crate) use domain::{ConfigComposer, ProjectDocuments};
 pub(crate) mod effective_config;
 mod export;
 mod export_stl;

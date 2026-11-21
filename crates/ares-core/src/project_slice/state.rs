@@ -209,7 +209,7 @@ impl AppliedPlate {
         // (`GCode.cpp:8342-8346` at v2.5.0-beta `345efec64`).
         write_config_block(
             &resolved.views,
-            &project.documents().project_settings_raw,
+            project.documents(),
             project.current_plate_index(),
             None,
             &mut config_block,

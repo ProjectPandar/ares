@@ -5,12 +5,14 @@ use crate::{
 
 use super::catalog::selection;
 pub(crate) mod load_settings;
+mod request;
 pub use load_settings::{
     LoadSettingsSliceRequest, SlicedStlPlate, export_stl_settings, slice_assembly,
     slice_imported_stl_with_load_settings_processed, slice_stl_models_with_load_settings,
     slice_with_load_settings, slice_with_load_settings_and_refresh,
     slice_with_load_settings_processed,
 };
+pub use request::{Composition, GuiProfileSliceRequest, ProfileRequest};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
 /// transform (`OrcaSlicer.cpp:4376-4392`): bed-center placement plus the
@@ -50,9 +52,9 @@ pub struct ProfileSliceRequest<'a> {
 }
 
 /// Compose selected Orca profiles and slice through the project Print lifecycle.
-pub async fn slice_with_profiles(
+pub async fn slice_with_profiles<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
@@ -62,9 +64,9 @@ pub async fn slice_with_profiles(
 /// The `slice_with_profiles` entry with processor move recording, mirroring
 /// `slice_project_plate_processed`: the G-code is identical to the plain
 /// entry and `ProcessedGCode::result` carries the toolpath moves.
-pub async fn slice_with_profiles_processed(
+pub async fn slice_with_profiles_processed<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
@@ -72,15 +74,15 @@ pub async fn slice_with_profiles_processed(
 }
 
 /// Adapter entry: compose and load once, then validate before processing.
-pub async fn slice_with_profiles_validated(
+pub async fn slice_with_profiles_validated<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_validated_profile_source(
         input,
-        request,
+        (request.request(), request.composition()),
         metadata,
         (false, false, None, None),
         context,
@@ -88,13 +90,19 @@ pub async fn slice_with_profiles_validated(
     .map(|output| output.gcode)
 }
 
-pub async fn slice_with_profiles_processed_validated(
+pub async fn slice_with_profiles_processed_validated<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
+    slice_validated_profile_source(
+        input,
+        (request.request(), request.composition()),
+        metadata,
+        (true, false, None, None),
+        context,
+    )
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
@@ -124,7 +132,7 @@ pub async fn slice_cli_with_profiles_validated(
     upward.report.clear();
     slice_validated_profile_source(
         input,
-        profile,
+        (profile, Composition::Cli),
         metadata,
         (record_moves, orient, Some(sliced_plate), Some(upward)),
         context,
@@ -133,7 +141,7 @@ pub async fn slice_cli_with_profiles_validated(
 
 fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    (request, composition): (ProfileSliceRequest<'_>, Composition),
     metadata: GenerationMetadata,
     (record_moves, orient, sliced_plate, upward): (
         bool,
@@ -144,7 +152,7 @@ fn slice_validated_profile_source(
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
-    with_profile_source(input.as_ref(), request, |source| {
+    with_profile_source(input.as_ref(), request, composition, |source| {
         let mut source = ProjectSource {
             max_triangle_count: 0,
             orient,
@@ -164,41 +172,51 @@ fn slice_validated_profile_source(
 /// placement, returning the placed project for scene extraction without
 /// slicing. Reuses the exact `load_with_profile` and placement logic from
 /// `prepare_profile_slice` — no separate centering implementation.
-pub async fn profile_placed_project(
+pub async fn profile_placed_project<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
 ) -> Result<crate::Project, SliceError> {
-    with_profile_source(input.as_ref(), request, |source| {
-        if let Some(refresh) = source.refresh {
-            let mut project = crate::project_slice::load_profile_project(&source)?;
-            project.apply_plater_edits(source.edits);
-            refresh.place(&mut project);
-            return Ok(project);
-        }
-        let Some(profile) = source.profile else {
-            return Err(SliceError::InvalidInput(
-                "a selected profile is required".to_owned(),
-            ));
-        };
-        crate::project_slice::load_and_place(&source, profile)
-    })
+    with_profile_source(
+        input.as_ref(),
+        request.request(),
+        request.composition(),
+        |source| {
+            if let Some(refresh) = source.refresh {
+                let mut project = crate::project_slice::load_profile_project(&source)?;
+                project.apply_plater_edits(source.edits);
+                refresh.place(&mut project);
+                return Ok(project);
+            }
+            let Some(profile) = source.profile else {
+                return Err(SliceError::InvalidInput(
+                    "a selected profile is required".to_owned(),
+                ));
+            };
+            crate::project_slice::load_and_place(&source, profile)
+        },
+    )
 }
-pub fn validate_with_profiles(
+pub fn validate_with_profiles<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
 ) -> Result<(), SliceError> {
-    with_profile_source(input.as_ref(), request, |source| {
-        if let Some(profile) = source.profile {
-            crate::project_slice::validate_profile_source(&source, profile)?;
-        } else if source.refresh.is_some() {
-            let project = crate::project_slice::load_profile_project(&source)?;
-            project
-                .settings()
-                .validate_loaded_config(&project.documents().project_settings_raw, true)?;
-            crate::print::validate::validate_loaded_project(project, source.plate, None)?;
-        }
-        Ok(())
-    })
+    with_profile_source(
+        input.as_ref(),
+        request.request(),
+        request.composition(),
+        |source| {
+            if let Some(profile) = source.profile {
+                crate::project_slice::validate_profile_source(&source, profile)?;
+            } else if source.refresh.is_some() {
+                let project = crate::project_slice::load_profile_project(&source)?;
+                project
+                    .settings()
+                    .validate_loaded_config(&project.documents().project_settings_raw, true)?;
+                crate::print::validate::validate_loaded_project(project, source.plate, None)?;
+            }
+            Ok(())
+        },
+    )
 }
 
 /// `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the project
@@ -217,16 +235,19 @@ pub fn validate_load_settings_input(input: impl AsRef<[u8]>) -> Result<(), Slice
     crate::project_slice::validate_post_process(&project)
 }
 
-fn slice_profile_source(
+fn slice_profile_source<'a>(
     input: impl AsRef<[u8]>,
-    request: ProfileSliceRequest<'_>,
+    request: impl ProfileRequest<'a>,
     metadata: GenerationMetadata,
     record_moves: bool,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    with_profile_source(input.as_ref(), request, |source| {
-        slice_source(source, metadata, record_moves, context)
-    })
+    with_profile_source(
+        input.as_ref(),
+        request.request(),
+        request.composition(),
+        |source| slice_source(source, metadata, record_moves, context),
+    )
 }
 
 /// The effective config view for a selected-profile request.
@@ -238,11 +259,12 @@ pub struct ProfileSettings(pub(crate) crate::project::raw_settings::ProjectSetti
 pub(crate) fn with_profile_source<T>(
     input: &[u8],
     request: ProfileSliceRequest<'_>,
+    composition: Composition,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
     with_edited_profile_source(
         crate::project_slice::ProjectInput::Bytes(input),
-        request,
+        (request, composition),
         &crate::plater::NO_EDITS,
         body,
     )
@@ -251,7 +273,7 @@ pub(crate) fn with_profile_source<T>(
 /// `with_profile_source` with plater edits applied to the loaded model.
 pub(crate) fn with_edited_profile_source<T>(
     input: crate::project_slice::ProjectInput<'_>,
-    request: ProfileSliceRequest<'_>,
+    (request, composition): (ProfileSliceRequest<'_>, Composition),
     edits: &crate::plater::PlaterEdits,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
@@ -293,7 +315,13 @@ pub(crate) fn with_edited_profile_source<T>(
         });
     }
     let selection = selection(selection_json)?;
-    let composed = catalog.catalog.compose(&selection)?;
+    let (composed, full_fff_config) = match composition {
+        Composition::Cli => (catalog.catalog.compose(&selection)?, None),
+        Composition::Gui => {
+            let (composed, groups) = super::project_selection::explicit(&catalog, &selection)?;
+            (composed, Some(groups))
+        }
+    };
     body(ProjectSource {
         input,
         plate,
@@ -302,6 +330,7 @@ pub(crate) fn with_edited_profile_source<T>(
             composed: &composed.profile,
             raw: &composed.raw,
             filament_raws: &composed.filament_raws,
+            full_fff_config: full_fff_config.as_ref(),
             load_names: None,
             retained_refresh: None,
             placement,

@@ -5,13 +5,13 @@ use super::{
     transform::transformed_for_export,
 };
 use crate::options::project_config_views::ProjectConfigViews;
-use crate::project::raw_settings::ProjectSettingsRaw;
+use crate::project::ProjectDocuments;
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
 pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
-    raw_settings: &ProjectSettingsRaw,
+    documents: &ProjectDocuments,
     plate_index: usize,
     compat_temperatures: Option<(i32, i32)>,
     output: &mut Vec<u8>,
@@ -24,7 +24,7 @@ pub(crate) fn write_config_block(
         &transformed,
         plate_index,
         &entries,
-        raw_settings,
+        documents,
         &mut scratch,
     )?;
     write_runtime_tail(

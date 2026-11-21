@@ -48,9 +48,10 @@ pub(super) fn write_entries(
     settings: &ProjectSettings,
     plate_index: usize,
     entries: &[ConfigEntry],
-    raw_settings: &ProjectSettingsRaw,
+    documents: &crate::project::ProjectDocuments,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
+    let raw_settings = &documents.project_settings_raw;
     // GCode.cpp:8338-8351: serialize the applied FullPrintConfig, not a
     // historical output-key list. Registry ownership supplies absent defaults.
     let filament_count = settings.filament.gcode.filament_diameter.0.len();
@@ -215,7 +216,9 @@ pub(super) fn write_entries(
     // creates an absent key at filament_count + 2 before
     // GCode::append_full_config serializes it.
     for key in ["different_settings_to_system", "inherits_group"] {
-        if !raw_settings.contains_key(key) {
+        if documents.config_composer == crate::project::ConfigComposer::CliRun
+            && !raw_settings.contains_key(key)
+        {
             emit(
                 &mut lines,
                 &mut emitted_keys,

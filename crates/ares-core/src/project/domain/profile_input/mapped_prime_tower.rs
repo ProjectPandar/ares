@@ -7,6 +7,7 @@ pub(super) fn disable_after_mapping(
     raw: &mut ProjectSettingsRaw,
     settings: &ProjectSettings,
     overrides: &crate::ConfigOverrides,
+    filament_count: usize,
 ) {
     let single_preset_mapping = settings
         .project
@@ -54,10 +55,12 @@ pub(super) fn disable_after_mapping(
         "enable_prime_tower".to_owned(),
         RawConfigValue::Text("0".to_owned()),
     );
-    let RawConfigValue::List(mut columns) =
-        raw.get("different_settings_to_system").unwrap().clone()
-    else {
-        unreachable!("profile overlay constructs vector dirty columns")
+    // full_fff_config stores no all-empty group (PresetBundle.cpp:5823-5841); the CLI resize
+    // (OrcaSlicer.cpp:3202-3205) creates its process, filament and printer columns.
+    let mut columns = match raw.get("different_settings_to_system") {
+        Some(RawConfigValue::List(columns)) => columns.clone(),
+        Some(_) => unreachable!("profile overlay constructs vector dirty columns"),
+        None => vec![RawConfigValue::Text(String::new()); filament_count + 2],
     };
     let column = columns[0].token().unwrap();
     let keys = crate::options::unescape_strings_cstyle(&column).unwrap();

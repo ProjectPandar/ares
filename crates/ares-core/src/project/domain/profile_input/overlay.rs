@@ -27,6 +27,7 @@ pub(crate) struct SelectedProfile<'a> {
     pub(crate) validate_print: bool,
     pub(crate) load_names: Option<&'a crate::project_slice::compatibility::LoadedPresetNames>,
     pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
+    pub(crate) full_fff_config: Option<&'a crate::profiles::FullFffGroups>,
 }
 
 /// The selected-profile overlay onto a raw settings view:
