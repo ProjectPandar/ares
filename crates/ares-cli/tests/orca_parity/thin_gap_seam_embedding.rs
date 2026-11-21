@@ -1,4 +1,7 @@
-//! Thin-gap-j1 IDEX nearest-seam embedding layer gate witnesses.
+//! Thin-gap-j1 IDEX nearest-seam embedding witnesses.
+
+const CLASSIC: &[u8] =
+    include_bytes!("../../../../tests/parity/thin-gap-j1-seam-embedding/wall-classic.3mf");
 
 #[test]
 fn wall_arachne_matches_native() {
@@ -13,8 +16,49 @@ fn wall_arachne_matches_native() {
 fn wall_classic_matches_native() {
     check(
         "wall-classic",
-        include_bytes!("../../../../tests/parity/thin-gap-j1-seam-embedding/wall-classic.3mf"),
+        CLASSIC,
         "482eb2e6a19b43a56cc13553dc9c8795ca9d4ccf9510743d45d236b547cab01d",
+    );
+}
+
+#[test]
+fn wall_classic_with_thin_wall_detection_matches_native() {
+    use std::io::{Cursor, Read, Write};
+
+    const SETTINGS: &str = "Metadata/project_settings.config";
+    const DISABLED: &str = "\"detect_thin_wall\": \"0\"";
+    const ENABLED: &str = "\"detect_thin_wall\": \"1\"";
+    let mut source = zip::ZipArchive::new(Cursor::new(CLASSIC)).unwrap();
+    let mut project = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for index in 0..source.len() {
+        let mut member = source.by_index(index).unwrap();
+        if member.name() == SETTINGS {
+            let mut settings = String::new();
+            member.read_to_string(&mut settings).unwrap();
+            assert_eq!(settings.matches(DISABLED).count(), 1);
+            project
+                .start_file(SETTINGS, zip::write::SimpleFileOptions::default())
+                .unwrap();
+            project
+                .write_all(settings.replacen(DISABLED, ENABLED, 1).as_bytes())
+                .unwrap();
+        } else {
+            project.raw_copy_file(member).unwrap();
+        }
+    }
+    let project = project.finish().unwrap().into_inner();
+    crate::runner::native_stream_case::check(
+        (
+            "classic-thin-wall",
+            &[
+                "PerimeterGenerator.cpp:258-278 converts thin walls before variable-width extrusion",
+                "Arachne/utils/ExtrusionLine.hpp:212-230 expands junction widths into segment widths",
+            ],
+        ),
+        "detect-thin-wall",
+        &project,
+        &crate::runner::native_api_cli::sha(&project),
+        (true, |_, _| {}),
     );
 }
 

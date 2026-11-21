@@ -132,10 +132,10 @@ impl Regions {
         Ok(merged)
     }
 
-    pub(super) fn apply(
+    pub(in crate::project_slice::perimeters) fn apply(
         &self,
         extrusion: &mut ExtrusionLine,
-        contour: bool,
+        (contour, whole_path_closed): (bool, bool),
         layer: Layer,
         context: &mut SlicerContext,
     ) -> Result<(), SliceError> {
@@ -145,7 +145,13 @@ impl Regions {
                 .base
                 .should_fuzzify(layer.id, extrusion.inset_index, contour)
             {
-                junctions::fuzzify(&mut extrusion.junctions, config, layer, context, true);
+                junctions::fuzzify(
+                    &mut extrusion.junctions,
+                    config,
+                    layer,
+                    context,
+                    whole_path_closed,
+                );
             }
             return Ok(());
         }
@@ -156,7 +162,7 @@ impl Regions {
                 merged[0].config,
                 layer,
                 context,
-                true,
+                whole_path_closed,
             );
             return Ok(());
         }
@@ -178,7 +184,7 @@ impl Regions {
             if self.supported.is_some() && region.mask.is_empty() {
                 continue;
             }
-            apply_mask(extrusion, &region, layer, context)?;
+            apply_mask(extrusion, &region, layer, context, whole_path_closed)?;
         }
         Ok(())
     }
@@ -233,6 +239,7 @@ fn apply_mask(
     region: &Region,
     layer: Layer,
     context: &mut SlicerContext,
+    whole_path_closed: bool,
 ) -> Result<(), SliceError> {
     let points: Vec<_> = extrusion.junctions.iter().map(|j| j.point).collect();
     let split = split_line(&points, &region.mask, false, layer.scale).map_err(geometry_error)?;
@@ -245,7 +252,7 @@ fn apply_mask(
             region.config,
             layer,
             context,
-            true,
+            whole_path_closed,
         );
     } else {
         rebuild(extrusion, split, region.config, layer, context);
@@ -307,11 +314,11 @@ fn rebuild(
 }
 
 #[derive(Clone, Copy)]
-pub(super) struct Layer {
-    pub(super) id: usize,
-    pub(super) slice_z: f64,
-    pub(super) layer_height: f64,
-    pub(super) scale: CoordinateScale,
+pub(in crate::project_slice::perimeters) struct Layer {
+    pub(in crate::project_slice::perimeters) id: usize,
+    pub(in crate::project_slice::perimeters) slice_z: f64,
+    pub(in crate::project_slice::perimeters) layer_height: f64,
+    pub(in crate::project_slice::perimeters) scale: CoordinateScale,
 }
 
 fn append_segment(
