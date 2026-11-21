@@ -243,6 +243,8 @@ mod change_filament_flush_blocks;
 mod clearance_admission;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
+#[path = "orca_parity/cli_downward_machine_result.rs"]
+mod cli_downward_machine_result;
 #[path = "orca_parity/cli_exit_channels.rs"]
 mod cli_exit_channels;
 #[path = "orca_parity/cli_exit_compat17.rs"]
@@ -257,7 +259,6 @@ mod cli_sequential_clearance;
 mod cli_upward_machine_result;
 #[path = "orca_parity/gated_role_flow.rs"]
 mod gated_role_flow;
-
 #[path = "orca_parity/filament_flow_admission.rs"]
 mod filament_flow_admission;
 #[path = "orca_parity/firmware_zero_layer_lift.rs"]
