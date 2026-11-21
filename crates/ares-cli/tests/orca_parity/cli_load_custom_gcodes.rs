@@ -44,12 +44,12 @@ fn cli_load_custom_gcodes_reports_missing_file() {
 
 #[test]
 fn cli_load_custom_gcodes_multiasingle_toolchange_switches_filament() {
-    compare_multiasingle_toolchange("MultiAsSingle", true);
+    compare_multiasingle_toolchange("MultiAsSingle", true, false);
 }
 
 #[test]
-fn cli_load_custom_gcodes_multiextruder_toolchange_keeps_object_filament() {
-    compare_multiasingle_toolchange("MultiExtruder", false);
+fn cli_load_custom_gcodes_single_filament_toolchange_keeps_object_filament() {
+    compare_multiasingle_toolchange("MultiExtruder", false, true);
 }
 
 fn compare(saved: bool, status: Option<i32>) {
@@ -184,7 +184,7 @@ fn compare(saved: bool, status: Option<i32>) {
     }
 }
 
-fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool) {
+fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool, single_filament: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -193,7 +193,7 @@ fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool) {
         .tempdir_in(artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    write_toolchange_fixture(&root);
+    write_toolchange_fixture(&root, single_filament);
     let events = root.join("events.json");
     fs::write(
         &events,
@@ -207,6 +207,15 @@ fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool) {
         .unwrap(),
     )
     .unwrap();
+    let filaments = if single_filament {
+        root.join("filament-a.json").display().to_string()
+    } else {
+        format!(
+            "{};{}",
+            root.join("filament-a.json").display(),
+            root.join("filament-b.json").display()
+        )
+    };
     let argv = [
         "--debug",
         "0",
@@ -221,11 +230,7 @@ fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool) {
             root.join("process.json").display()
         ),
         "--load-filaments",
-        &format!(
-            "{};{}",
-            root.join("filament-a.json").display(),
-            root.join("filament-b.json").display()
-        ),
+        &filaments,
         "--load-custom-gcodes",
         events.to_str().unwrap(),
         root.join("block.stl").to_str().unwrap(),
@@ -265,7 +270,7 @@ fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool) {
     );
 }
 
-fn write_toolchange_fixture(root: &Path) {
+fn write_toolchange_fixture(root: &Path, single_filament: bool) {
     let write = |name: &str, value: Value| {
         fs::write(root.join(name), serde_json::to_vec(&value).unwrap()).unwrap();
     };
@@ -277,7 +282,12 @@ fn write_toolchange_fixture(root: &Path) {
             "printable_area": ["0x0", "200x0", "200x200", "0x200"],
             "nozzle_diameter": ["0.4"], "printer_extruder_id": ["1"],
             "printer_extruder_variant": ["Direct Drive Standard"],
-            "filament_diameter": ["1.75", "1.75"], "layer_change_gcode": "G92 E0"
+            "filament_diameter": if single_filament {
+                json!(["1.75"])
+            } else {
+                json!(["1.75", "1.75"])
+            },
+            "layer_change_gcode": "G92 E0"
         }),
     );
     write(

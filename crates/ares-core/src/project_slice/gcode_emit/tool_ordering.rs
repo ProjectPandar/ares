@@ -238,6 +238,11 @@ fn collect_layers(
         None => initialize_layers(traversal, support, raft.map(|raft| raft.plans.as_slice())),
     };
     let candidates = collect::print_extruders(traversal);
+    let per_layer_extruder_switches = if scoped_object.is_some() {
+        Vec::new()
+    } else {
+        custom_gcodes::multi_as_single_switches(traversal)
+    };
     let mut object_bottom_z = 0.0;
     let mut max_object_layer_height = 0.0_f64;
     let object_range = match scoped_object {
@@ -261,13 +266,28 @@ fn collect_layers(
         {
             object_bottom_z = physical.print_z - physical.height;
         }
+        let mut switch_index = 0;
+        let mut extruder_override = None;
         for (physical, layer) in traversal.objects[object]
             .physical_layers()
             .iter()
             .zip(&objects[object])
         {
+            while switch_index < per_layer_extruder_switches.len()
+                && per_layer_extruder_switches[switch_index].0 < physical.print_z + 1e-4
+            {
+                extruder_override = (per_layer_extruder_switches[switch_index].1 != 0)
+                    .then_some(per_layer_extruder_switches[switch_index].1);
+                switch_index += 1;
+            }
             let target = layer_index(&layers, physical.print_z);
-            collect::object(&mut layers[target], layer, traversal, object);
+            collect::object(
+                &mut layers[target],
+                layer,
+                traversal,
+                object,
+                extruder_override,
+            );
         }
         for layer in &support[object] {
             let target = layer_index(&layers, layer.print_z);
