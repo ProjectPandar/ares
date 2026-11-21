@@ -1,0 +1,7 @@
+# Count emitted Type1 tool changes
+
+OrcaSlicer 2.5.0 (`40ecc66f7`), `src/libslic3r/GCode.cpp:1371`, supplies `m_toolchange_count + 1` when expanding the Type1 filament-change template. After expanding and unescaping the complete `tcr_gcode` block, `:1631–1637` advances the count only when `custom_gcode_changes_tool` (`:455–481`) finds the selected filament. The scanner uses the writer's flavor-dependent prefix and the last parseable, line-leading tool command. Text preceding the block, including travel down to the tower, is not part of this decision.
+
+The Rust boundary is `wipe_tower/type1/emit.rs::append` and its `tool_transition::type1_config` placeholder input. Replace the unconditional advance at entry with a check over the rendered, unescaped block. Use the existing `motion::tool_selection` prefix and scanner. A tower visit with no selected-tool command leaves the count unchanged; the next template still sees the next one-based ordinal. This does not change planning, tool installation, path generation, or the Type2 and non-tower `set_extruder` paths.
+
+Exercise the public selected-plate slice and CLI using runtime edits of the two-cube Type1 fixture: short and full-height sparse-role assignments, a height-range filament assignment, and a solid-role assignment. Include the ordinary two-object/two-filament control. The reference is the ordered Native output with only its generator line normalized; the Ares API and CLI must also agree byte for byte.

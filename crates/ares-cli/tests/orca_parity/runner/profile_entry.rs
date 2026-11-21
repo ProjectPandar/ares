@@ -49,6 +49,9 @@ mod arachne_voronoi_repair;
 #[path = "profile_entry/tree_extra_wall_areas.rs"]
 mod tree_extra_wall_areas;
 
+#[path = "profile_entry/type1_toolchange_count.rs"]
+mod type1_toolchange_count;
+
 // G-code config block string-vector quoting against Native.
 #[path = "../config_string_vector_quoting.rs"]
 mod config_string_vector_quoting;

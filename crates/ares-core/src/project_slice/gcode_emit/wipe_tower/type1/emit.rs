@@ -71,7 +71,6 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         );
     }
     let (mut end_filament, close_mask) = templates::end(state, context, result.print_z)?;
-    state.toolchange_count += 1;
     let mut retract = Vec::new();
     motion::tower::type1_retract(&mut retract, state, metadata.tool_change && !nozzle_change);
     motion::append_exclude_end(&mut retract, state);
@@ -215,6 +214,7 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         result.layer_height,
         &text,
     );
+    let block_start = output.len();
     let mut chars = text.chars();
     while let Some(ch) = chars.next() {
         let ch = if ch == '\\' {
@@ -228,6 +228,11 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         };
         let mut bytes = [0; 4];
         output.extend_from_slice(ch.encode_utf8(&mut bytes).as_bytes());
+    }
+    let emitted = std::str::from_utf8(&output[block_start..]).expect("tower G-code is UTF-8");
+    let prefix = motion::tool_selection::prefix(context.traversal);
+    if motion::tool_selection::custom_changes_tool(emitted, prefix, tool) {
+        state.toolchange_count += 1;
     }
     pressure_advance::append(output, state, context.traversal, tool);
     motion::tower::finish(
