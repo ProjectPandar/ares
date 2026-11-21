@@ -153,6 +153,7 @@ pub async fn slice_project_plate_with_catalog(
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -196,6 +197,7 @@ pub async fn slice_project_plate_processed_with_catalog(
             upward: None,
             sliced_plate: None,
             max_triangle_count: 0,
+            custom_gcodes: None,
             edits: &crate::plater::NO_EDITS,
         },
         metadata,
@@ -222,6 +224,7 @@ pub(crate) fn slice_source(
                 ProjectSource {
                     sliced_plate: report,
                     max_triangle_count: context.max_triangle_count,
+                    custom_gcodes: context.custom_gcodes.take(),
                     ..project
                 },
                 context,

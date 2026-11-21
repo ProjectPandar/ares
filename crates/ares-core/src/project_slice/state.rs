@@ -34,7 +34,12 @@ pub(super) fn prepare_project_source(
     if let super::ProjectInput::ArrangedStl(project, preparation) = source.input {
         let plate = source.plate.expect("the slice action selects a plate");
         super::capabilities::validate_settings(project.settings())?;
-        let project = crate::plater::fit_slice_wipe_tower(project.copy_stl_model(), Some(plate))?;
+        // Install the plate events before the wipe-tower fit reads its extruders.
+        let mut copy = project.copy_stl_model();
+        if let Some(custom_gcodes) = source.custom_gcodes {
+            copy.replace_plate_custom_gcodes(custom_gcodes);
+        }
+        let project = crate::plater::fit_slice_wipe_tower(copy, Some(plate))?;
         return apply_plate(
             project.plate_view(plate, false)?,
             None,
@@ -67,6 +72,9 @@ pub(super) fn load_project_source(
         source.system_catalog,
         source.validate_print,
     )?;
+    if let Some(custom_gcodes) = source.custom_gcodes {
+        project.replace_plate_custom_gcodes(custom_gcodes);
+    }
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);

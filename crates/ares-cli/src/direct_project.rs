@@ -48,6 +48,12 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     };
     let resources = crate::installed_resources::resolve(None)?;
     let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
+    let context = crate::custom_gcodes::load(
+        SlicerContext::new(0).with_no_check(args.no_check),
+        args.load_custom_gcodes.as_deref(),
+        &output,
+        plate as i32 - 1,
+    )?;
     let mut sliced_plate = SlicedPlate::default();
     let mut upward_machines = Vec::new();
     let processed = ares_core::slice_cli_project_plate_validated(
@@ -65,7 +71,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             sliced_plate: &mut sliced_plate,
         },
         GenerationMetadata::default(),
-        SlicerContext::new(0).with_no_check(args.no_check),
+        context,
     )
     .await
     .map_err(|error| {

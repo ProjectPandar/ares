@@ -118,6 +118,7 @@ pub async fn slice_assembly(
                 upward: None,
                 sliced_plate: Some(request.sliced_plate),
                 max_triangle_count: 0,
+                custom_gcodes: None,
                 edits: &crate::plater::NO_EDITS,
             },
             metadata,
@@ -174,11 +175,12 @@ pub struct SlicedStlPlate {
 
 /// Place the decoded STL models once, then apply the one-based slice action
 /// (`OrcaSlicer.cpp:2042–2045,6441–6445,6522–6531`). `0` slices every plate.
+/// The context supplies `--mtcpp` and `--load-custom-gcodes`.
 pub async fn slice_stl_models_with_load_settings(
     models: &[(&str, crate::Model)],
     request: LoadSettingsSliceRequest<'_>,
     selection: u32,
-    max_triangle_count: i32,
+    context: SlicerContext<'_>,
     record_moves: bool,
 ) -> Result<Vec<SlicedStlPlate>, SliceError> {
     if models.is_empty() {
@@ -202,6 +204,10 @@ pub async fn slice_stl_models_with_load_settings(
                     continue;
                 }
                 let mut report = crate::SlicedPlate::default();
+                let mut plate_context =
+                    SlicerContext::new(0).with_max_triangle_count(context.max_triangle_count);
+                // OrcaSlicer.cpp:2042–2074: STL events are keyed to index 0 for every plate.
+                plate_context.custom_gcodes = context.custom_gcodes.clone();
                 let processed = slice_source(
                     ProjectSource {
                         input: ProjectInput::ArrangedStl(&project, &preparation),
@@ -209,11 +215,12 @@ pub async fn slice_stl_models_with_load_settings(
                         profile: None,
                         upward: None,
                         sliced_plate: Some(&mut report),
+                        custom_gcodes: None,
                         ..source
                     },
                     GenerationMetadata::default(),
                     record_moves,
-                    SlicerContext::new(0).with_max_triangle_count(max_triangle_count),
+                    plate_context,
                 )?;
                 plates.push(SlicedStlPlate {
                     id,
@@ -299,6 +306,7 @@ pub(crate) fn with_load_settings_source<T>(
         upward: None,
         sliced_plate: Some(sliced_plate),
         max_triangle_count: 0,
+        custom_gcodes: None,
         edits: &crate::plater::NO_EDITS,
     })
 }

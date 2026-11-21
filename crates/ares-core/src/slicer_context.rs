@@ -27,6 +27,7 @@ pub struct SlicerContext<'a> {
     thumbnail_images: Vec<ThumbnailData>,
     pub(crate) max_triangle_count: i32,
     pub(crate) no_check: bool,
+    pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -38,6 +39,7 @@ impl<'a> SlicerContext<'a> {
             thumbnail_images: Vec::new(),
             max_triangle_count: 0,
             no_check: false,
+            custom_gcodes: None,
         }
     }
 
@@ -46,6 +48,13 @@ impl<'a> SlicerContext<'a> {
     #[must_use]
     pub fn with_no_check(mut self, no_check: bool) -> Self {
         self.no_check = no_check;
+        self
+    }
+
+    /// Replaces model layer events with the supplied events for one zero-based plate.
+    #[must_use]
+    pub fn with_custom_gcodes(mut self, plate_index: i32, info: crate::CustomGCodeInfo) -> Self {
+        self.custom_gcodes = Some((plate_index, info));
         self
     }
 
