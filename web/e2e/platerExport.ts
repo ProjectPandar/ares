@@ -35,7 +35,6 @@ function bedSize(config: Record<string, unknown>): [number, number, number] {
  * - curr_bed_type is the printer's default_bed_type, which Sidebar::update_presets selects for a printer without a
  *   stored bed type (Plater.cpp:3880-3900, Preset.cpp:1140-1150), where the probe keeps the wizard's;
  * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216);
- * - filament_plugin_config_overrides, a scalar filament option the CLI skips (3715-3734), comes only from the 3MF;
  * - one filament preset in every slot, of one colour, turns the prime tower off and records it in the process
  *   column of different_settings_to_system (2531-2535, 3880-3888, 4316-4343), sized filament count + 2 (3202-3205).
  */
@@ -55,13 +54,11 @@ export function cliSwitchedExport(selection: NativeSelection, opened: string, ou
   const moved = (values: string[], offset: number) => [String(Number(values[0]) + offset), ...values.slice(1)];
   const bedType = plater.default_bed_type as string;
   expect(bedType, "a default_bed_type (Preset.cpp:1142-1150)").not.toBe("");
-  const { filament_plugin_config_overrides: _, ...config } = plater;
-  Object.assign(config, {
+  const config = Object.assign({ ...plater }, {
     wipe_tower_x: moved(plater.wipe_tower_x as string[], x),
     wipe_tower_y: moved(plater.wipe_tower_y as string[], y),
     curr_bed_type: bedType,
   });
-  if ("filament_plugin_config_overrides" in project) config.filament_plugin_config_overrides = project.filament_plugin_config_overrides;
   // 4291-4320 keep the tower for wrapping detection, a mixed filament or a smooth timelapse.
   expect(plater.enable_wrapping_detection !== "1" && !(plater.filament_is_mixed as string[]).includes("1") && plater.timelapse_type !== "1",
     "no tower kept by 4291-4320").toBe(true);
