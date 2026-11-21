@@ -5,9 +5,6 @@ use std::{fs, path::Path};
 
 #[test]
 fn resource_vertex_missing_coordinate_matches_native_public_slicing() {
-    if !super::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
-        return;
-    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

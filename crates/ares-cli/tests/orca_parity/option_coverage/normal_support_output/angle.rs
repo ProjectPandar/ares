@@ -2,10 +2,9 @@ use super::*;
 
 #[test]
 fn rotated_normal_support_preserves_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_ANGLE_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();

@@ -39,7 +39,7 @@ mod printer_columns;
 
 #[test]
 fn printing_toolchange_restores_pressure_advance_after_filament_start() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("; pressure start {filament_extruder_id}", "", false, &[]);
@@ -68,7 +68,7 @@ fn printing_toolchange_restores_pressure_advance_after_filament_start() {
 
 #[test]
 fn first_printing_toolchange_renders_old_end_then_new_start() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(
@@ -98,7 +98,7 @@ fn first_printing_toolchange_renders_old_end_then_new_start() {
 
 #[test]
 fn printing_tool_templates_use_selected_cut_and_ec_aliases() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(
@@ -136,7 +136,7 @@ fn printing_tool_templates_use_selected_cut_and_ec_aliases() {
 
 #[test]
 fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(
@@ -174,7 +174,7 @@ fn legacy_vectors_use_logical_tool_context_and_preserve_explicit_indices() {
 
 #[test]
 fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(
@@ -211,7 +211,7 @@ fn printing_toolchange_retracts_old_nozzle_before_filament_end() {
 
 #[test]
 fn filament_header_lists_scheduled_logical_ids_not_their_count() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);
@@ -227,7 +227,7 @@ fn filament_header_lists_scheduled_logical_ids_not_their_count() {
 
 #[test]
 fn scheduled_toolchange_total_is_shared_by_templates_and_summary() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs(

@@ -3,12 +3,10 @@
 /// by the native CLI with exit code -19 and by Ares with the same message.
 #[test]
 fn mk3s_post_process_rejection() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env()
+        .unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = super::repo_root();
     let fixture =
         std::fs::read(root.join("tests/parity/validation/post-process-mk3s-postprocess.3mf"))

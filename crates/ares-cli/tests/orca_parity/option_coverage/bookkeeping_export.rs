@@ -4,10 +4,12 @@ use std::io::{Cursor, Read, Write};
 
 #[test]
 fn bookkeeping_short_vectors_pad_to_filament_count() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_BOOKKEEPING_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
@@ -113,10 +115,12 @@ fn configure_different_settings(settings: &mut Value, supplied: bool) {
 
 #[test]
 fn bookkeeping_matches_complete_configured_filament_output() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_BOOKKEEPING_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();

@@ -3,7 +3,7 @@ use serde_json::json;
 
 #[test]
 fn auto_lift_preserves_native_travel_lifts() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[("z_hop_types", json!(["Auto Lift"]))]);

@@ -3,7 +3,7 @@ use crate::runner::CaseInputs;
 
 #[test]
 fn postprocessed_statistics_include_unused_trailing_filament() {
-    if !crate::runner::reference_enabled("ARES_PARITY_FILAMENT_STATS_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     for cost in ["25", "0"] {

@@ -122,10 +122,7 @@ fn overhang_case(
     style: &str,
     overrides: &[(&str, &str)],
 ) -> Option<super::ParityCase> {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_SUPPORT_REFERENCE") {
-        return None;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let runner = OrcaRunner::from_env().unwrap()?;
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

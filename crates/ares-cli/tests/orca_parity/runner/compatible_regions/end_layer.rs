@@ -4,10 +4,9 @@ use serde_json::json;
 
 #[test]
 fn machine_end_uses_live_integer_layer_num_in_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

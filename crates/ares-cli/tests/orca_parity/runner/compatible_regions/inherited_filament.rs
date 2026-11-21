@@ -5,10 +5,9 @@ use std::io::{Cursor, Read};
 
 #[test]
 fn modifier_density_activates_inherited_second_filament() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Snapmaker",

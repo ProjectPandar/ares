@@ -2,10 +2,12 @@ use super::*;
 
 #[test]
 fn initialized_reference_repeats_complete_stock_project_output() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_OBJECT_ID_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let directory = tempfile::Builder::new()
         .prefix("initialized-object-id-")

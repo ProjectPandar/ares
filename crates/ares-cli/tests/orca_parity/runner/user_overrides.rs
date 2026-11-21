@@ -29,9 +29,6 @@ fn overrides_json() -> String {
 
 #[test]
 fn user_overrides_match_native_cli_option_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_OVERRIDE_REFERENCE") {
-        return;
-    }
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

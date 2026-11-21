@@ -11,10 +11,9 @@ fn initialized_compressed_bridge_matches_complete_output() {
 }
 
 fn compare_polygon(label: &str, x_scale: f32) {
-    if !crate::runner::reference_enabled("ARES_PARITY_BRIDGE_DIRECTION_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let directory = tempfile::tempdir().unwrap();
     let model = directory
         .path()

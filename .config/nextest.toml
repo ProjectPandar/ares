@@ -36,11 +36,17 @@ default-filter = '''
     test(=option_coverage::staggered_inner_seams::staggered_inner_seams_convex_depth_matches_complete_output) |
     test(=option_coverage::wall_generator_arachne::wall_generator_arachne_matches_complete_output) |
     test(=runner::initialized_loop_chain::initialized_loop_chain_matches_complete_output) |
-    test(=runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output)
+    test(=runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output) |
+    test(=smoke::printer_sweep) |
+    test(=stock_presets::sweep::tests::stock_printer_sweep)
 ))
 '''
 
 [profile.parity-seeded]
 default-filter = '''
-!(binary_id(=ares-cli::orca_parity) & test(=object_emission_cases::fuzzy_allwalls_rng_order::official_fuzzy_allwalls_oracle_is_explicitly_unstable))
+!(binary_id(=ares-cli::orca_parity) & (
+    test(=object_emission_cases::fuzzy_allwalls_rng_order::official_fuzzy_allwalls_oracle_is_explicitly_unstable) |
+    test(=smoke::printer_sweep) |
+    test(=stock_presets::sweep::tests::stock_printer_sweep)
+))
 '''

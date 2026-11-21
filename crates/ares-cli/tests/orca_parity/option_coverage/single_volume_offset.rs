@@ -4,10 +4,12 @@ use std::io::{Cursor, Read};
 
 #[test]
 fn single_volume_offset_matches_complete_prism_output() {
-    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_VOLUME_OFFSETS_REFERENCE")) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     assert_eq!(std::env::var("ORCA_REPLAY_SEED").unwrap(), "0");
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =

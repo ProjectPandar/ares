@@ -5,12 +5,9 @@ use serde_json::json;
 
 #[test]
 fn stl_override_preserves_vendor_default_thumbnails() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = crate::runner::repo_root();
     let profiles = root.join("OrcaSlicer/resources/profiles");
     let vendors = ["OrcaFilamentLibrary", "WEMAKE3D"];

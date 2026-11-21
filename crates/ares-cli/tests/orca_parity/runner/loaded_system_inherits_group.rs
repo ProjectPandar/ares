@@ -15,7 +15,7 @@ struct Recorded {
 
 #[test]
 fn loaded_system_inherits_group_preserves_cli_source_status() {
-    if !super::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let positive = check("positive", 1);

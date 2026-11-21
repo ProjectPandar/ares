@@ -10,12 +10,9 @@ const PROCESS: &str = "0.2mm Standard @WEMAKE3D PhoenixProV1 0.4mm nozzle";
 const FILAMENT: &str = "Generic PLA @System";
 
 pub(super) fn check(name: &str, filename: &str, none: bool) {
-    if !super::environment::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let root = super::repo_root();
     let fixtures = root.join("tests/parity/counterbore-partiallybridge");
     let profiles_root = root.join("OrcaSlicer/resources/profiles");

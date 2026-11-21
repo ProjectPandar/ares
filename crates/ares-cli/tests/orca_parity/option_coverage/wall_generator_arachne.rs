@@ -10,7 +10,7 @@ use crate::runner::native_stream_case::check;
 fn wall_generator_arachne_matches_complete_output() {
     // This frozen KSR project needs the previously qualified seeded oracle:
     // uninitialized `; printing object` IDs make official double replay differ.
-    if !crate::runner::seeded_reference_enabled(None) {
+    if !crate::runner::seeded_reference_enabled() {
         return;
     }
     check(

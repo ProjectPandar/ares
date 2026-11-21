@@ -3,7 +3,7 @@ use super::outputs;
 
 #[test]
 fn two_nozzle_vendor_indented_fan_commands_survive_output_processing() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);
@@ -23,7 +23,7 @@ fn two_nozzle_vendor_indented_fan_commands_survive_output_processing() {
 
 #[test]
 fn two_nozzle_first_layer_cooling_preserves_native_extrusion_feedrates() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);
@@ -47,7 +47,7 @@ fn two_nozzle_first_layer_cooling_preserves_native_extrusion_feedrates() {
 
 #[test]
 fn nonzero_initial_tool_uses_its_filament_cooling_settings() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = configured(

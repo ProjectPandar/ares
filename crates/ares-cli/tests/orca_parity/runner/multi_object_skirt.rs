@@ -19,10 +19,9 @@ fn no_skirt_per_object_preserves_complete_output() {
 }
 
 fn run(loops: &str, skirt_type: &str, height: &str, shield: &str, skirt_layers: usize) {
-    if !crate::runner::reference_enabled("ARES_PARITY_MULTIOBJECT_SKIRT_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let tall_x = if loops == "0" && height == "1" {
         109.0
     } else {

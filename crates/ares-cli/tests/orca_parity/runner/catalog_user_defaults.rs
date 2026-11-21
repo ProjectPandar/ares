@@ -11,12 +11,9 @@ use super::{OrcaRunner, native_user_presets, stages, vendor, write_json};
 
 #[tokio::test]
 async fn inherited_catalog_user_presets_preserve_collection_defaults() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let profiles_root = super::super::repo_root().join("OrcaSlicer/resources/profiles");
     let profiles = crate::presets::VendorProfiles::load(&profiles_root, "LH").unwrap();
     let machine = "LH Stinger 0.4 nozzle";

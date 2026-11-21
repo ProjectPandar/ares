@@ -2,7 +2,7 @@ use super::outputs;
 
 #[test]
 fn two_nozzle_overhang_vertex_preserves_native_seam_and_role_order() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);

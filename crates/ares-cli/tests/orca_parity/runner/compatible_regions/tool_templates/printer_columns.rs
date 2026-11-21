@@ -6,7 +6,7 @@ use std::fs;
 
 #[test]
 fn project_without_variant_columns_matches_native_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (project, reference, actual) = configured_project("", "", false, Overrides::default());

@@ -2,10 +2,9 @@ use super::*;
 
 #[test]
 fn support_flow_and_gap_dependencies_preserve_complete_raft_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_SUPPORT_FLOW_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();

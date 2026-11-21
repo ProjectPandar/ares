@@ -128,7 +128,6 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
-      ARES_PARITY_PROFILE_ENTRY_REFERENCE: "1",
       ARES_ORCA_BIN: launcher,
       ...(seeded ? {} : nativeEnv(orca!)),
       ARES_PARITY_ARTIFACT_ROOT: nativeRoot,

@@ -133,12 +133,9 @@ fn slice(session: &PlaterSession, presets: &Presets) -> Vec<u8> {
 
 #[test]
 fn plater_stl_session_centers_moves_and_slices_like_native() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    };
     let presets = presets(&runner);
     let native_presets = super::native_user_presets::resolved(
         &runner.work,

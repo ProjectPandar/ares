@@ -6,15 +6,12 @@ use serde_json::json;
 
 #[test]
 fn klipper_stl_session_processor_times_match_native() {
-    if !crate::runner::reference_enabled("ARES_PARITY_PROFILE_ENTRY_REFERENCE") {
-        return;
-    }
     let Some(oracle) = crate::native_environment::binary("ARES_PROCGCODE_BIN") else {
         return;
     };
-    let runner = OrcaRunner::from_env()
-        .unwrap()
-        .expect("native profile oracle");
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     presets(&runner);
     let reference = native(
         &runner,

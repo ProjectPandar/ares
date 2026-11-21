@@ -3,10 +3,9 @@ use std::fs;
 
 #[test]
 fn twisted_aligned_seam_preserves_native_wipe_section() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let root = tempfile::Builder::new()
         .prefix("twisted-aligned-seam-wipe-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())

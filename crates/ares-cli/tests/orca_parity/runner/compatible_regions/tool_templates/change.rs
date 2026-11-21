@@ -3,7 +3,7 @@ use serde_json::json;
 
 #[test]
 fn custom_toolchange_renders_runtime_context_and_selects_tool_once() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let source = "; custom change {previous_extruder} {next_extruder} {toolchange_count} {layer_num} {relative_e_axis}\n T[next_extruder]\nG1 Z{toolchange_z + 2}";

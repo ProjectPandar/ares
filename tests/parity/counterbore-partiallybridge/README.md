@@ -71,8 +71,7 @@ written before the parity assertion in `counterbore-result.json` and, for errors
 `ares-error.json`. A Native failure/TIMEOUT is not promoted to a parity verdict.
 
 Run via `cargo nextest run -p ares-cli --test orca_parity -E 'test(counterbore_)'`
-with `ARES_PARITY_PROFILE_ENTRY_REFERENCE=1` and the normal Native harness
-environment. Prebuild outside the shared300s per-case deadline. Use fresh Native
+with the normal required Native harness environment. Prebuild outside the shared300s per-case deadline. Use fresh Native
 cache/artifact roots and seed0. The independent
 `orca_parity_seam_visibility_eigen_distance_complete_output` RED reuses the
 unchanged None-control input and full-output assertion under

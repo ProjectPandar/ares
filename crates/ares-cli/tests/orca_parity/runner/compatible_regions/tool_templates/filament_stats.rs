@@ -9,7 +9,7 @@ fn footer(bytes: &[u8]) -> String {
 
 #[test]
 fn two_nozzle_footer_preserves_each_filament_usage_and_totals() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = outputs("", "", false, &[]);
@@ -44,7 +44,7 @@ fn two_nozzle_footer_preserves_each_filament_usage_and_totals() {
 
 #[test]
 fn two_nozzle_footer_uses_each_filaments_properties_and_zero_cost_slot() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (reference, actual) = super::fixture::configured(

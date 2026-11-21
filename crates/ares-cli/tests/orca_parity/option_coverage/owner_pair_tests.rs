@@ -12,10 +12,7 @@ fn hash(bytes: &[u8]) -> String {
 
 #[test]
 fn actual_orca_owner_pair_exports_distinct_typed_widths() {
-    if !crate::runner::reference_enabled("ARES_PARITY_WIDTH_OWNER_PAIR") {
-        eprintln!(
-            "not executed: set ARES_PARITY_WIDTH_OWNER_PAIR=1 for two fresh actual-Orca cases"
-        );
+    if !crate::runner::reference_available() {
         return;
     }
     let root = parity::artifacts::root_from_env().unwrap();

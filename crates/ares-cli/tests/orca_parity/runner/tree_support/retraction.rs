@@ -13,7 +13,7 @@ const ROOF_BASE_TALL_SKIRT: &[(&str, &str)] = &[
 
 #[test]
 fn single_cpu_slim_tree_concentric_hole_preserves_extrusion_direction() {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let case = super::overhang_case(
@@ -79,7 +79,7 @@ fn single_cpu_slim_tree_concentric_hole_preserves_extrusion_direction() {
 
 #[test]
 fn single_cpu_slim_tree_roof_slice_does_not_suppress_retraction() {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let case = super::overhang_case(
@@ -151,7 +151,7 @@ fn single_cpu_slim_tree_roof_slice_does_not_suppress_retraction() {
 
 #[test]
 fn single_cpu_slim_tree_roof_base_tall_skirt_preserves_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     super::compare_overhang(
@@ -163,7 +163,7 @@ fn single_cpu_slim_tree_roof_base_tall_skirt_preserves_complete_output() {
 
 #[test]
 fn single_cpu_slim_tree_tall_skirt_preserves_complete_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     super::compare_overhang(
@@ -175,7 +175,7 @@ fn single_cpu_slim_tree_tall_skirt_preserves_complete_output() {
 
 #[test]
 fn single_cpu_slim_tree_contained_travel_does_not_retract() {
-    if !crate::runner::reference_enabled("ARES_PARITY_TREE_CONTAINMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let case =

@@ -13,10 +13,9 @@ fn infill_first_ironing_preserves_traditional_timelapse() {
 }
 
 fn assert_complete_output(time_lapse_gcode: &str) {
-    if !crate::runner::reference_enabled("ARES_PARITY_EMISSION_PHASES_REFERENCE") {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
-    }
-    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    };
     let profiles = VendorProfiles::load(
         &repo_root().join("OrcaSlicer/resources/profiles"),
         "Creality",

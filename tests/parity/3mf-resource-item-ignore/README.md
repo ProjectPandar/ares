@@ -23,9 +23,8 @@ schema-valid as a main item. No oracle G-code/output/cache is committed.
 
 ## Runtime contract
 
-`resource_item_ignored_public_slicing`, enabled with the existing
-`ARES_PARITY_PROFILE_ENTRY_REFERENCE`/`OrcaRunner::from_env` contract, always
-creates three fresh Native --slice references (positive/repeat/control), then
+`resource_item_ignored_public_slicing` uses the standard `OrcaRunner::from_env`
+contract. With Native configured it creates three fresh Native --slice references (positive/repeat/control), then
 validated public API + real CLI on the same input bytes. No Native-only switch,
 external reference injection or cached/export/load-only substitute.
 Native `--slice 0 --outputdir`, no arrange flag, loaded JSONs or extra overrides.

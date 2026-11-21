@@ -12,7 +12,7 @@ whole inputs and every ZIP-entry SHA. No Native-generated products are committed
 Test `modifier_physical_layer_seam_plane_matches_native_public_slicing` runs
 fresh Native control→public validated API+real bare CLI→whole strict/raw equality,
 then fresh Native positive→both public calls/receipts→target success/raw/whole
-assertions. Enable ARES_PARITY_PROFILE_ENTRY_REFERENCE=1 and require Native.
+assertions. Set `ARES_REQUIRE_ORCA=1` to require Native.
 The exact same code must FAIL before the bounded handoff fix and PASS after it.
 Missing streams are NOT EVALUATED. No injected reference, Native-only gate,
 M73/geometry filter or expected-error PASS. Complete comparison uses the unchanged

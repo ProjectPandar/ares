@@ -60,7 +60,7 @@ fn injections(gcode: &[u8]) -> Vec<Injection> {
 
 #[test]
 fn injected_temperature_lines_and_positions_match_native() {
-    if !crate::runner::reference_enabled("ARES_PARITY_REGION_FILAMENT_REFERENCE") {
+    if !crate::runner::reference_available() {
         return;
     }
     let (project, reference, actual) = configured_project(
