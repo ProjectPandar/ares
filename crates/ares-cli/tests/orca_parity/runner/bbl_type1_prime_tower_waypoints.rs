@@ -14,6 +14,37 @@ const UPSTREAM: &[&str] = &[
     "GCode.cpp:712-1117,2926-2939",
 ];
 
+const LAST_CHANGE_HEIGHT: &[&str] =
+    &["GCode/WipeTower.cpp:4496-4507,4861-4862,5057-5093,5528-5533"];
+
+fn framework_project(source: &[u8], updates: serde_json::Value) -> Vec<u8> {
+    use std::io::{Cursor, Write};
+
+    let mut archive = zip::ZipArchive::new(Cursor::new(source)).unwrap();
+    let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for i in 0..archive.len() {
+        let entry = archive.by_index(i).unwrap();
+        if entry.name() == "Metadata/project_settings.config" {
+            output
+                .start_file(entry.name(), zip::write::SimpleFileOptions::default())
+                .unwrap();
+            let mut settings: serde_json::Value = serde_json::from_reader(entry).unwrap();
+            assert_eq!(settings["prime_tower_enable_framework"], "0");
+            settings["prime_tower_enable_framework"] = serde_json::json!("1");
+            settings
+                .as_object_mut()
+                .unwrap()
+                .extend(updates.as_object().unwrap().clone());
+            output
+                .write_all(&serde_json::to_vec(&settings).unwrap())
+                .unwrap();
+        } else {
+            output.raw_copy_file(entry).unwrap();
+        }
+    }
+    output.finish().unwrap().into_inner()
+}
+
 #[test]
 fn bbl_type1_prime_tower_waypoints_enabled() {
     crate::runner::native_stream_case::check(
@@ -23,6 +54,85 @@ fn bbl_type1_prime_tower_waypoints_enabled() {
         "ab00b9040c3ccc1c10490a220880b87108aed7edd3a19926b8e7967f1287e506",
         (false, |_, _| {}),
     );
+}
+
+#[test]
+fn bbl_type1_framework_skips_finish_block_above_last_change_height() {
+    let source = include_bytes!("../../../../../tests/parity/bbl-type1-tower/enabled.3mf");
+    let project = framework_project(source, serde_json::json!({}));
+    crate::runner::native_stream_case::check(
+        ("bbl-type1-tower", LAST_CHANGE_HEIGHT),
+        "framework-above-last-change-height",
+        &project,
+        &crate::runner::native_api_cli::sha(&project),
+        (false, |_, _| {}),
+    );
+}
+
+#[test]
+fn bbl_type1_framework_keeps_finish_block_inside_two_heads_heights() {
+    use crate::runner::{application, native_api_cli::sha, native_stream_case};
+    use ares_core::{ConfigOverrides, GenerationMetadata, SlicerContext};
+
+    let source = include_bytes!(
+        "../../../../../tests/parity/filament-group-flush-restriction-pairs/x2d_pla_both_heads_reach_models.3mf"
+    );
+    let project = framework_project(
+        source,
+        serde_json::json!({
+            "enable_prime_tower": "1",
+            "filament_map": ["1", "2", "1"],
+            "filament_map_mode": "Manual",
+        }),
+    );
+    let (reference, _) = native_stream_case::qualify(
+        ("bbl-type1-tower", LAST_CHANGE_HEIGHT),
+        "framework-two-head-heights",
+        &project,
+        &sha(&project),
+        true,
+    );
+    let api = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(application::slice_project_plate_validated(
+            &project,
+            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
+            None,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0),
+        ))
+        .unwrap();
+    std::fs::write(reference.root.join("ares.api.gcode"), &api).unwrap();
+    let cli_path = reference.root.join("ares.cli.gcode");
+    let cli = application::cli_command()
+        .args(["slice", "-o"])
+        .arg(&cli_path)
+        .arg(reference.root.join("input.3mf"))
+        .output()
+        .unwrap();
+    assert!(
+        cli.status.success(),
+        "{}",
+        String::from_utf8_lossy(&cli.stderr)
+    );
+    assert_eq!(api, std::fs::read(cli_path).unwrap());
+
+    // Earlier tower geometry differs; this control checks the final block is admitted.
+    for text in [&reference.native, std::str::from_utf8(&api).unwrap()] {
+        assert!(text.lines().any(|line| line == "; filament_map = 1,2,1"));
+        assert!(
+            text.lines()
+                .any(|line| line == "; extruder_printable_height = 261,256")
+        );
+        let (_, last_layer) = text.rsplit_once("; CHANGE_LAYER\n").unwrap();
+        assert!(last_layer.starts_with("; Z_HEIGHT: 1.2\n"));
+        assert!(last_layer.lines().any(|line| line == "T0 H-1"));
+        assert!(last_layer.lines().any(|line| line == "T1 H-1"));
+        assert!(last_layer.contains("; CP EMPTY GRID START\n; layer #7\n"));
+        assert_eq!(last_layer.matches("; CP EMPTY GRID END\n").count(), 1);
+    }
 }
 
 #[test]
