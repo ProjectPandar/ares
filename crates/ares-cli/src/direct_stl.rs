@@ -338,18 +338,8 @@ pub(super) async fn run(
         report,
     } in plates
     {
-        if args.strict {
-            crate::failure::slicing::check_strict(
-                #[cfg(target_os = "linux")]
-                &output,
-                id,
-                &report,
-                &[],
-                None,
-            )?;
-        }
         crate::failure::slicing::check_direct(
-            (&mut args.diagnostics, args.no_check),
+            (&mut args.diagnostics, args.no_check, args.strict),
             #[cfg(target_os = "linux")]
             &output,
             (id, &report),

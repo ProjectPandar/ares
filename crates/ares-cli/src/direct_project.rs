@@ -147,18 +147,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     })?;
     let input_file = input.to_string_lossy();
     let project = Some((input_file.as_ref(), bytes.as_slice()));
-    if args.strict {
-        crate::failure::slicing::check_strict(
-            #[cfg(target_os = "linux")]
-            &output,
-            plate,
-            &sliced_plate,
-            &upward_machines,
-            project,
-        )?;
-    }
     crate::failure::slicing::check_direct(
-        (&mut args.diagnostics, args.no_check),
+        (&mut args.diagnostics, args.no_check, args.strict),
         #[cfg(target_os = "linux")]
         &output,
         (plate, &sliced_plate),
