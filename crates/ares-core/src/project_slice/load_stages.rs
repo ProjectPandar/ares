@@ -44,6 +44,10 @@ pub(super) fn prepare_post_closing(
             sparse_infill_density: f64::from(
                 settings.process.region.sparse_infill_density.0 as f32,
             ),
+            object_size: {
+                let (min, max) = project.instances_world_bbox();
+                [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
+            },
         };
     }
     let spiral_mode = resolved.views.full.process.print.spiral_mode.0;

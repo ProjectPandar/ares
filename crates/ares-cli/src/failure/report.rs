@@ -59,6 +59,7 @@ impl FamilyFailure {
             wall_loops: self.wall_loops,
             sparse_infill_density: self.sparse_infill_density,
             upward_machines: &self.upward_machines,
+            downward_machines: &self.downward_machines,
             sliced_plates: sliced_plates.as_slice(),
             warnings: &self.warnings,
         }

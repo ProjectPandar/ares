@@ -59,4 +59,8 @@ pub(crate) struct SliceArgs {
     #[arg(short = 'o')]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+    #[arg(long)]
+    pub(crate) downward_check: bool,
+    #[arg(long)]
+    pub(crate) downward_settings: Option<String>,
 }

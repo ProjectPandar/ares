@@ -45,6 +45,8 @@ pub struct SlicedPlate {
     pub layer_height: f64,
     pub wall_loops: i32,
     pub sparse_infill_density: f64,
+    /// Object bounding-box dimensions for the selected plate in millimetres.
+    pub object_size: [f64; 3],
 }
 
 #[derive(Clone, Copy)]

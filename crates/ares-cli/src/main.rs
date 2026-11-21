@@ -1,5 +1,6 @@
 mod args;
 mod compatible_machine;
+mod downward;
 mod failure;
 mod load_settings;
 mod moves_csv;
@@ -239,6 +240,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 }
             };
             failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
+            let downward_machines = downward::load(&args)
+                .map_err(|error| error.with_upward_report(upward_report.clone()))?;
+            let downward_report = ares_core::compatible_downward_machines(
+                sliced_plate.object_size,
+                &downward_machines,
+                false,
+            );
             fs::write(&args.output, gcode)?;
             report_success(
                 &input_file,
@@ -250,6 +258,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     plate_index: args.plate.unwrap_or(0),
                     sliced_plate,
                     upward_machines: &upward_report,
+                    downward_machines: &downward_report,
                 },
             );
             return Ok(());

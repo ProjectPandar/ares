@@ -11,6 +11,7 @@ mod bridge_support;
 mod bridges;
 mod brims;
 mod contours;
+mod downward;
 mod extrusion_entity;
 mod extrusions;
 mod fill;
@@ -101,6 +102,7 @@ pub use geometry::{ConvexHull3d, convex_hull_3d};
 
 pub(crate) use contours::stitch_printable;
 pub use contours::{Contour, LayerContours, stitch_layer_slices};
+pub use downward::{DownwardMachine, compatible_downward_machines};
 pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRole};
 pub use extrusions::{
     ExtrusionMove, ExtrusionOptions, LayerExtrusionMoves, generate_extrusion_moves,

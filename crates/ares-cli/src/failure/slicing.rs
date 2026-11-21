@@ -27,6 +27,7 @@ pub(crate) fn check(
         #[cfg(target_os = "linux")]
         error_string: "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.",
         upward_machines: upward.to_vec(),
+        downward_machines: Vec::new(),
         #[cfg(target_os = "linux")]
         warnings: Vec::new(),
         #[cfg(target_os = "linux")]

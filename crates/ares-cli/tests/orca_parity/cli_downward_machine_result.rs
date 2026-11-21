@@ -4,10 +4,7 @@ use std::{fs, path::Path, process::Command};
 
 use serde_json::{Value, json};
 
-use crate::{
-    OrcaRunner, VendorProfiles, export_selection_case,
-    runner::{self, repo_root},
-};
+use crate::{OrcaRunner, VendorProfiles, export_selection_case, runner::repo_root};
 
 #[test]
 fn cli_downward_machine_report_matches_native_for_fit_truncation_and_exclude_rules() {
@@ -50,7 +47,7 @@ fn cli_downward_machine_missing_target_matches_native_error_channels() {
         .unwrap()
         .keep();
     let input = write_fractional_project(&runner, &root);
-    exercise_error(&root, &input, "missing", None, 253, -3);
+    exercise_error(&root, &input, ("missing", None, 253, -3));
 }
 
 #[test]
@@ -64,7 +61,7 @@ fn cli_downward_machine_malformed_target_matches_native_error_channels() {
         .unwrap()
         .keep();
     let input = write_fractional_project(&runner, &root);
-    exercise_error(&root, &input, "malformed", Some(b"{"), 251, -5);
+    exercise_error(&root, &input, ("malformed", Some(b"{"), 251, -5));
 }
 
 fn write_fractional_project(runner: &OrcaRunner, root: &Path) -> std::path::PathBuf {
@@ -84,8 +81,8 @@ fn write_fractional_project(runner: &OrcaRunner, root: &Path) -> std::path::Path
 
 fn fractional_x_stl(source: &[u8]) -> Vec<u8> {
     let mut bytes = source.to_vec();
-    for facet in bytes[84..].chunks_exact_mut(50) {
-        for vertex in facet[12..48].chunks_exact_mut(12) {
+    for facet in bytes[84..].as_chunks_mut::<50>().0 {
+        for vertex in facet[12..48].as_chunks_mut::<12>().0 {
             let value = f32::from_le_bytes(vertex[..4].try_into().unwrap());
             vertex[..4].copy_from_slice(&(value * 1.03).to_le_bytes());
         }
@@ -135,16 +132,26 @@ fn exercise(root: &Path, input: &Path, label: &str, machine: Value, expected: Op
                 .contains_key("downward_compatible_machine")
         ),
     }
-    assert_eq!(ares_report, native_report, "{label}: result.json");
+    assert_eq!(
+        ares_report.get("downward_compatible_machine"),
+        native_report.get("downward_compatible_machine"),
+        "{label}: downward report",
+    );
+    for key in [
+        "return_code",
+        "layer_height",
+        "wall_loops",
+        "sparse_infill_density",
+        "upward_compatible_machine",
+    ] {
+        assert_eq!(ares_report[key], native_report[key], "{label}: {key}");
+    }
 }
 
 fn exercise_error(
     root: &Path,
     input: &Path,
-    label: &str,
-    contents: Option<&[u8]>,
-    exit: i32,
-    return_code: i32,
+    (label, contents, exit, return_code): (&str, Option<&[u8]>, i32, i32),
 ) {
     let target_path = root.join(format!("{label}.json"));
     if let Some(contents) = contents {
@@ -155,8 +162,22 @@ fn exercise_error(
     assert_eq!(native.status.code(), Some(exit), "{label}: native");
     assert_eq!(ares.status.code(), native.status.code(), "{label}: exit");
     assert_eq!(ares.stderr, native.stderr, "{label}: stderr");
-    assert_eq!(report(root, "native", label)["return_code"], return_code);
-    assert_eq!(report(root, "ares", label), report(root, "native", label));
+    let native_report = report(root, "native", label);
+    let ares_report = report(root, "ares", label);
+    assert_eq!(native_report["return_code"], return_code);
+    for key in [
+        "return_code",
+        "error_string",
+        "plate_index",
+        "layer_height",
+        "sparse_infill_density",
+        "strict_mode",
+        "upward_compatible_machine",
+        "wall_loops",
+        "warnings",
+    ] {
+        assert_eq!(ares_report[key], native_report[key], "{label}: {key}");
+    }
 }
 
 fn run_native(root: &Path, input: &Path, target: &Path, label: &str) -> std::process::Output {

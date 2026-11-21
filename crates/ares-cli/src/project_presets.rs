@@ -183,6 +183,7 @@ pub(super) async fn slice(
             plate_index: args.plate.unwrap_or(0),
             sliced_plate,
             upward_machines: &upward_report,
+            downward_machines: &[],
         },
     );
     Ok(())

@@ -141,6 +141,7 @@ pub(super) async fn slice(
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),
             upward_machines: &std::mem::take(&mut sliced_plate.upward_machines),
+            downward_machines: &[],
             sliced_plate,
         },
     );
