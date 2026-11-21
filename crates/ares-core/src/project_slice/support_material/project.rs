@@ -79,13 +79,6 @@ pub(in crate::project_slice) fn generate(
             .position(|resolved| resolved.source_object_index == plan.source_object_index)
             .expect("planned support object retains its resolved configuration");
         let object = &traversal.resolved.objects[resolved_index].object;
-        if !object.enable_support.0 && object.enforce_support_layers.0 == 0 {
-            output.push(Vec::new());
-            continue;
-        }
-        if plan.layers.len() > 1 || object.raft_layers.0 > 0 {
-            context.set_status(50, format_args!("Generating support"), 0);
-        }
         let tree = matches!(
             object.support_type,
             ProcessSupportType::TreeAuto | ProcessSupportType::TreeManual
@@ -93,6 +86,15 @@ pub(in crate::project_slice) fn generate(
         let organic = tree
             && super::style::resolve(object.support_type, object.support_style)
                 == ProcessSupportStyle::Organic;
+        // PrintObject.cpp:998–1002 dispatches raft-only objects to their support generator.
+        let organic_raft = organic && object.raft_layers.0 > 0 && !plan.layers.is_empty();
+        if !object.enable_support.0 && object.enforce_support_layers.0 == 0 && !organic_raft {
+            output.push(Vec::new());
+            continue;
+        }
+        if plan.layers.len() > 1 || object.raft_layers.0 > 0 {
+            context.set_status(50, format_args!("Generating support"), 0);
+        }
         let source_object = &traversal.project.objects()[plan.source_object_index];
         let resolved_object = &traversal.resolved.objects[resolved_index];
         let mut enforcers = annotations::slice_volumes(
