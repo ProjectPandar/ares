@@ -211,7 +211,7 @@ export class Viewport {
     delete this.container.dataset.segmentGeometry;
     delete this.container.dataset.segmentColors;
     if (toolpaths) {
-      this.#toolpaths = buildToolpathMesh(toolpaths);
+      this.#toolpaths = buildToolpathMesh(toolpaths, this.#renderer.capabilities.maxTextureSize);
       this.#toolpathColors = toolpaths.colors;
       const markers = buildOptionMarkers(toolpaths);
       this.#toolpaths.add(markers.mesh);
