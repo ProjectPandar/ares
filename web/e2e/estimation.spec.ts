@@ -40,14 +40,21 @@ function native(bin: string, name: string, input: string): Native {
   return JSON.parse(readFileSync(`${directory}/plate_1.print_statistics.json`, "utf8")) as Native;
 }
 
-/** The reference config block prints each added GUI value: a scalar as is, a vector comma- or cstyle-joined. */
+/**
+ * The reference config block prints each added GUI value: a scalar as is, a vector comma- or cstyle-joined, or with
+ * the same elements where slicing resizes it to the printer's extruders (PresetBundle.cpp:253-306). filament_map_2
+ * is derived by the slice, never read (PrintApply.cpp:1505-1511, GCode.cpp:8300-8304).
+ */
 function expectAddedValues(gcode: string, added: Record<string, string | string[]>) {
   const lines = gcode.split("\n");
   const block = new Map(lines.slice(lines.indexOf("; CONFIG_BLOCK_START") + 1, lines.indexOf("; CONFIG_BLOCK_END"))
     .map((line) => /^; (\S+) = (.*)$/.exec(line)!).map(([, key, value]) => [key, value]));
   for (const [key, value] of Object.entries(added)) {
-    if (!block.has(key)) continue;
-    expect(Array.isArray(value) ? [value.join(","), cstyle(value)] : [value], `reference ${key}`).toContain(block.get(key));
+    const printed = block.get(key);
+    if (printed === undefined || key === "filament_map_2") continue;
+    if (!Array.isArray(value)) expect(printed, `reference ${key}`).toBe(value);
+    else if (printed !== value.join(",") && printed !== cstyle(value))
+      expect(new Set(printed.split(",")), `reference ${key} elements`).toEqual(new Set(value));
   }
 }
 
