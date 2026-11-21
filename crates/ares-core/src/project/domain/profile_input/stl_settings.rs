@@ -17,22 +17,29 @@ pub(super) fn compose(
     )?;
     // STL --load-settings is not the BBL 3MF filament-mapping branch
     // (OrcaSlicer.cpp:2275–2277); apply user edits to the composed profile.
-    let mut raw = profile.profile_raw.clone();
-    let ordinary = crate::profiles::loaded_filament_ordinary_values(profile.filament_raws)?;
-    raw.extend_raw(&ordinary);
-    let capped = super::cli_machine_limits::apply(&mut raw, profile.load_names, "");
     // CLI preset identities are injected after loading settings
     // (OrcaSlicer.cpp:2048,2088,3152–3158,3175–3180), before
     // command-line overrides (:3613–3615). Use the same composed data
     // for both STL paths (profiles/composition.rs:186–211).
     let project = &profile.settings.project;
-    preparation.sparse_filament_slots = profile.load_names.is_some()
+    let sparse = profile.load_names.is_some()
         && project
             .preset
             .filament_settings_id
             .0
             .iter()
             .any(String::is_empty);
+    // Sparse composition already expands vectors to every CLI slot; the
+    // ordinary overlay only sees loaded files and would compact the gaps.
+    let ordinary = if sparse {
+        ProjectSettingsRaw::default()
+    } else {
+        crate::profiles::loaded_filament_ordinary_values(profile.filament_raws)?
+    };
+    let mut raw = profile.profile_raw.clone();
+    raw.extend_raw(&ordinary);
+    let capped = super::cli_machine_limits::apply(&mut raw, profile.load_names, "");
+    preparation.sparse_filament_slots = sparse;
     for (key, value) in [
         ("print_settings_id", &project.preset.print_settings_id.0),
         ("printer_settings_id", &project.preset.printer_settings_id.0),
@@ -71,11 +78,13 @@ pub(super) fn compose(
         // view (`Config.cpp:577-579` normalizes every loaded preset at
         // compose, before any overlay).
         let mut settings = profile.settings.clone();
-        let (_, _, ordinary, _) =
-            crate::options::json_deserialize::deserialize_config_values(ordinary.into_object())
-                .map_err(SliceError::InvalidInput)?
-                .into_profile_parts();
-        ordinary.apply_present(&mut settings.filament);
+        if !sparse {
+            let (_, _, ordinary, _) =
+                crate::options::json_deserialize::deserialize_config_values(ordinary.into_object())
+                    .map_err(SliceError::InvalidInput)?
+                    .into_profile_parts();
+            ordinary.apply_present(&mut settings.filament);
+        }
         if capped {
             settings.printer.machine = crate::options::json_deserialize::deserialize_config_values(
                 raw.clone().into_object(),
