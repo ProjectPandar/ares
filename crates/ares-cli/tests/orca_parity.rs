@@ -241,6 +241,8 @@ mod byobject_transition_comments;
 mod change_filament_flush_blocks;
 #[path = "orca_parity/clearance_admission.rs"]
 mod clearance_admission;
+#[path = "orca_parity/cli_allow_mix_temp.rs"]
+mod cli_allow_mix_temp;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_exit_channels.rs"]
@@ -255,13 +257,12 @@ mod cli_retained_input;
 mod cli_sequential_clearance;
 #[path = "orca_parity/cli_upward_machine_result.rs"]
 mod cli_upward_machine_result;
-#[path = "orca_parity/gated_role_flow.rs"]
-mod gated_role_flow;
-
 #[path = "orca_parity/filament_flow_admission.rs"]
 mod filament_flow_admission;
 #[path = "orca_parity/firmware_zero_layer_lift.rs"]
 mod firmware_zero_layer_lift;
+#[path = "orca_parity/gated_role_flow.rs"]
+mod gated_role_flow;
 #[path = "orca_parity/gcode_flavor_admission.rs"]
 mod gcode_flavor_admission;
 #[path = "orca_parity/global_combined_brim.rs"]
