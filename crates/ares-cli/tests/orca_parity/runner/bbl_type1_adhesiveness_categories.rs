@@ -1,5 +1,8 @@
 //! The pre-slice footprint witness covers Type1 category sizing before tower
 //! placement: WipeTower.cpp:1760–1819 and WipeTowerEstimate.cpp:86–245.
+
+#[path = "../type1_tower_category_gap.rs"]
+mod type1_tower_category_gap;
 #[test]
 fn bbl_type1_prime_tower_waypoints_two_categories() {
     crate::runner::native_stream_case::check(
