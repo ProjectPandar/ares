@@ -280,7 +280,7 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
             .bytes = digest.into_bytes();
     }
     assert_eq!(native.len(), ares.len());
-    for (native, ares) in native.into_iter().zip(ares) {
+    for (mut native, mut ares) in native.into_iter().zip(ares) {
         assert_eq!(native.name, ares.name);
         assert_eq!(native.compression, ares.compression, "{}", native.name);
         assert_eq!(
@@ -301,6 +301,10 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
         assert_eq!(native.extra, ares.extra, "{} extra fields", native.name);
         assert_eq!(native.comment, ares.comment, "{} comment", native.name);
 
+        if native.name == "Metadata/model_settings.config" && native.bytes != ares.bytes {
+            native.bytes = model_settings_in_object_id_order(&native.bytes);
+            ares.bytes = model_settings_in_object_id_order(&ares.bytes);
+        }
         let mismatch = native
             .bytes
             .iter()
@@ -314,4 +318,33 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
             ares.bytes.len(),
         );
     }
+}
+
+fn model_settings_in_object_id_order(bytes: &[u8]) -> Vec<u8> {
+    // bbs_3mf.cpp:6218,8306: Native iterates object records by model pointer.
+    // Reorder only the complete top-level records, without reserializing XML.
+    let object = Regex::new(r#"(?ms)^  <object id="([0-9]+)"[^>\n]*>\n.*?^  </object>\n"#).unwrap();
+    let mut records: Vec<_> = object
+        .captures_iter(bytes)
+        .map(|record| (record.get(1).unwrap().as_bytes(), record.get(0).unwrap()))
+        .collect();
+    if records.len() < 2 {
+        return bytes.to_vec();
+    }
+    assert!(
+        records
+            .windows(2)
+            .all(|pair| pair[0].1.end() == pair[1].1.start())
+    );
+    let start = records[0].1.start();
+    let end = records.last().unwrap().1.end();
+    records.sort_unstable_by_key(|record| record.0);
+    assert!(records.windows(2).all(|pair| pair[0].0 != pair[1].0));
+    let mut ordered = Vec::with_capacity(bytes.len());
+    ordered.extend_from_slice(&bytes[..start]);
+    for (_, record) in records {
+        ordered.extend_from_slice(record.as_bytes());
+    }
+    ordered.extend_from_slice(&bytes[end..]);
+    ordered
 }
