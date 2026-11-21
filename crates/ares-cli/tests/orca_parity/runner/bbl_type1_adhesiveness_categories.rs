@@ -1,6 +1,8 @@
 //! The pre-slice footprint witness covers Type1 category sizing before tower
 //! placement: WipeTower.cpp:1760–1819 and WipeTowerEstimate.cpp:86–245.
 
+#[path = "type1_nozzle_change_width.rs"]
+mod type1_nozzle_change_width;
 #[path = "../type1_tower_category_gap.rs"]
 mod type1_tower_category_gap;
 #[test]

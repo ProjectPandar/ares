@@ -10,7 +10,7 @@ impl Generator<'_> {
         new: usize,
         solid: bool,
     ) -> Result<NozzleChange, ClipperError> {
-        let width = 2.0 * self.plan.perimeter;
+        let width = self.plan.nozzle_perimeter;
         let change = self.plan.layers[self.index]
             .changes
             .iter()

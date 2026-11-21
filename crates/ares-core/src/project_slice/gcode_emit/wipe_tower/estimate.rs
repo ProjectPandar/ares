@@ -8,7 +8,9 @@ mod statics;
 use std::f64::consts::PI;
 
 use self::config::{DynamicPrintConfig, get_at};
-pub(crate) use self::statics::{align_ceil, auto_brim_by_height, limit_depth_by_height};
+pub(crate) use self::statics::{
+    align_ceil, auto_brim_by_height, limit_depth_by_height, nozzle_change_perimeter_width,
+};
 use crate::geometry::{
     ExPolygon, FillRule, Point, Polygon, convex_hull, difference_ex_polygons, point_in_polygon,
     union_ex,

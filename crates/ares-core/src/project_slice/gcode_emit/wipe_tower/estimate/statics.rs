@@ -79,12 +79,12 @@ pub(crate) fn wrapping_detection_depth() -> f32 {
 }
 
 /// `WipeTower::nozzle_change_perimeter_width`: an exact key match, as `std::map::find`.
-fn nozzle_change_perimeter_width(nozzle_diameter: f32) -> f32 {
+pub(crate) fn nozzle_change_perimeter_width(nozzle_diameter: f32) -> f32 {
     NOZZLE_CHANGE_WIDTH
         .iter()
         .find(|&&(diameter, _)| diameter == nozzle_diameter)
         .map_or(
-            2.0 * nozzle_diameter * WIDTH_TO_NOZZLE_RATIO,
+            2.0 * (nozzle_diameter * WIDTH_TO_NOZZLE_RATIO),
             |&(_, width)| width,
         )
 }
