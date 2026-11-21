@@ -241,6 +241,8 @@ mod byobject_transition_comments;
 mod change_filament_flush_blocks;
 #[path = "orca_parity/clearance_admission.rs"]
 mod clearance_admission;
+#[path = "orca_parity/cli_allow_newer_file.rs"]
+mod cli_allow_newer_file;
 #[path = "orca_parity/cli_custom_gcode_exit.rs"]
 mod cli_custom_gcode_exit;
 #[path = "orca_parity/cli_exit_channels.rs"]
