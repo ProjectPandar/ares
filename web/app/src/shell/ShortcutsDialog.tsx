@@ -7,6 +7,7 @@ import { ctrlLabel as ctrl, mac } from "./keys";
  */
 const GROUPS: [string, [string, string][]][] = [
   ["Global shortcuts", [
+    [`${ctrl}O`, "Open Project"],
     [`${ctrl}I`, "Import geometry data from STL/3MF files"],
     [`${ctrl}G`, "Export plate sliced file"],
     [`${ctrl}R`, "Slice plate"],

@@ -1,17 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { exportAllGcode, exportGcode, importFiles, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
+import { exportAllGcode, exportGcode, importFile, importFiles, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
+import { FileMenu } from "./FileMenu";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
-/** BBLTopbar: file actions and the project title. */
-export function TitleBar({ importInput: input, onShortcuts, onAbout }: {
+/** BBLTopbar: the File menu and the project title. */
+export function TitleBar({ importInput: input, projectInput, onShortcuts, onAbout }: {
   importInput: RefObject<HTMLInputElement | null>;
+  projectInput: RefObject<HTMLInputElement | null>;
   onShortcuts: () => void;
   onAbout: () => void;
 }) {
-  const { theme, engine, file, loadingFile } = useApp();
+  const { theme, file } = useApp();
   const presetInput = useRef<HTMLInputElement>(null);
   return (
     <header className="titlebar">
@@ -20,20 +22,20 @@ export function TitleBar({ importInput: input, onShortcuts, onAbout }: {
           <span className="brand-mark">A</span>
           Ares
         </span>
-        <button className="bar-button" title="Import 3MF/STL" onClick={() => input.current?.click()}
-          disabled={engine !== "ready" || loadingFile}>
-          <OrcaIcon name="topbar_open" /> <span>Import</span>
-        </button>
+        <FileMenu importInput={input} projectInput={projectInput} presetInput={presetInput} />
         <input ref={input} type="file" accept=".3mf,.stl" multiple hidden data-testid="import-input"
           onChange={(event) => {
             importFiles([...(event.target.files ?? [])]);
             event.target.value = "";
           }} />
+        {/* Plater::load_project (File > Open Project). */}
+        <input ref={projectInput} type="file" accept=".3mf" hidden data-testid="project-input"
+          onChange={(event) => {
+            const picked = event.target.files?.[0];
+            if (picked) void importFile(picked);
+            event.target.value = "";
+          }} />
         {/* MainFrame::load_config_file (File > Import > Import Configs). */}
-        <button className="bar-button" title="Import Configs" onClick={() => presetInput.current?.click()}
-          disabled={engine !== "ready"}>
-          <span>Import Configs</span>
-        </button>
         <input ref={presetInput} type="file" accept=".json,.zip,.orca_printer,.orca_bundle,.orca_filament" multiple hidden
           data-testid="preset-import-input" onChange={(event) => {
             const picked = [...(event.target.files ?? [])];

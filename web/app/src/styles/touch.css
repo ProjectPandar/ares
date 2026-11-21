@@ -1,6 +1,7 @@
 /* Coarse pointers (touch screens): 44x44 CSS px targets (WCAG 2.5.5). */
 @media (pointer: coarse) {
   .bar-button, .view-button { min-width: 44px; min-height: 44px; justify-content: center; }
+  .file-menu .context-menu button { min-height: 44px; }
   .tab { min-height: 44px; }
   .side-button { min-height: 44px; }
   .combo { height: 44px; }
