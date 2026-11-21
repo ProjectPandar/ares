@@ -6,7 +6,7 @@ Port the MultiAsSingle branch of `OrcaSlicer/src/libslic3r/GCode/ToolOrdering.cp
 
 ## Included behavior
 
-When the active machine has more than one filament, every object uses one distinct extruder, and the selected plate's custom-G-code mode is `MultiAsSingle`, collect `ToolChange` events as ordered `(print_z, one-based filament id)` switches. An event applies to its layer and later layers, with an out-of-range filament id mapped to the first filament as in `CustomGCode::custom_tool_changes`. The active switch replaces the object's configured printing extruders at and above that Z while preserving the existing layer-role and support collection rules. The event remains available to the existing custom-G-code assignment so the writer emits its `Tn` transition.
+When the active machine has more than one filament, every object uses one distinct extruder, and the selected plate's custom-G-code mode is `MultiAsSingle`, collect `ToolChange` events as ordered `(print_z, one-based filament id)` switches. An event applies to its layer and later layers, with an out-of-range filament id mapped to the first filament as in `CustomGCode::custom_tool_changes`. The active switch replaces the object's configured printing extruders at and above that Z while preserving the existing layer-role and support collection rules. The writer emits the `Tn` transition from the ordered layer tools, not from a second custom-G-code emission.
 
 `ToolOrdering.cpp:837` retains the switch on `LayerTools` for export. The object tool buckets use it for walls and fills (`ToolOrdering.cpp:118-139, 166-175`); support and raft buckets keep their own selectors. `Print::object_extruders()` (`Print.cpp:689-703`) excludes support, so a support filament can share a layer without disabling the object override.
 
@@ -14,7 +14,7 @@ The mode decision uses the existing `Project::curr_plate_custom_gcodes` model ac
 
 ## Deferred behavior
 
-Support-filament overrides, wipe-tower-specific ordering, sequential/by-object ordering, color-change conversion, and custom-G-code parsing are outside this slice. Existing custom-G-code event assignment remains unchanged except that a MultiAsSingle `ToolChange` is no longer discarded before writer emission.
+Support-filament overrides, wipe-tower-specific ordering, sequential/by-object ordering, color-change conversion, and custom-G-code parsing are outside this slice. Custom-G-code emission still skips `ToolChange` items because their effects are represented in the layer ordering.
 
 ## Verification
 
