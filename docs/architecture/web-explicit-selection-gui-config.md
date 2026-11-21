@@ -48,15 +48,51 @@ The CLI does not reach that branch:
 - The CLI's 3MF preset refresh sends only from-project selections
   (`crates/ares-cli/src/project_presets.rs:111-123`).
 
-So the explicit-selection branch serves only the wasm adapter and the Rust tests of the
-public `slice_with_profiles*` entries.
+So the CLI binary never reaches the explicit-selection branch. Two kinds of caller do:
+
+- the wasm adapter;
+- the Rust tests of the public `slice_with_profiles*` entries. 43 `ares-cli` parity test files
+  (about 63 tests) pass an explicit `{machine, process, filaments}` selection and compare the
+  bytes with Native `--load-settings` (`tests/orca_parity/runner/native_user_presets.rs:112-147`).
+  For them, this branch is the CLI composition.
 
 ## Change
 
-### Core
+### Composition is chosen by the request type
 
-In entry.rs, the explicit-selection branch stops calling `Catalog::compose`. It composes
-through a new function in `profiles/project_selection/`, which:
+Upstream has two compositions of the same selected presets: the GUI's
+`PresetBundle::full_fff_config` and the CLI's `--load-settings` (OrcaSlicer.cpp:2251-2254,
+3097-3103, 3403-3408, 3616-3621). Both stay, and the caller names which one it wants:
+
+- `pub enum Composition { Gui, Cli }` in `profiles/`. The explicit branch of
+  `with_edited_profile_source` matches it exhaustively: `Cli` keeps `Catalog::compose`, and `Gui`
+  takes the function below.
+- `ProfileSliceRequest` stays the CLI request. `CliProfileSliceRequest` wraps it and is CLI too.
+- A new `GuiProfileSliceRequest<'a>(pub ProfileSliceRequest<'a>)` is the plater's request.
+- The public entries take either type through one sealed trait. The trait yields the inner
+  request and its `Composition`, with static dispatch. The entries are `slice_with_profiles*`,
+  `validate_with_profiles`, `profile_settings`, `profile_placed_project`,
+  `slice_plater_with_profiles`, `PlaterSession::profile_settings` and
+  `load_stl_files_with_profiles`.
+- The wasm adapter builds `GuiProfileSliceRequest` at its 8 request sites: `src/profiles.rs`
+  135, 183, 231 and 262; `src/plater.rs` 101 and 316; `src/plater/stl_files.rs` 65 and 104.
+  `ares-cli` and every Rust test keep `ProfileSliceRequest`.
+
+The alternative was a required `composition` field on `ProfileSliceRequest`, with no default.
+The compiler would then list every caller. But there are 80 request literals in 66 files, about
+68 of them in tests, including all 43 parity files, so that variant edits each of them for no
+change in behaviour. The typed request edits the 8 wasm sites and the entry signatures, and no
+test file. Every caller still states its composition through the type it builds: the CLI types
+have always meant the CLI composition, and the GUI one is new and used only by wasm.
+
+`Composition` decides only explicit selections. A from-project selection keeps its policy from
+the selection JSON: `load_and_select: always` is the plater, otherwise the CLI
+(`project_refresh.rs:129-130`).
+
+### The GUI composition
+
+For `Composition::Gui`, the explicit branch composes through a new function in
+`profiles/project_selection/`, which:
 
 1. Loads the process, printer and filament collections from the catalog with
    `Collection::load` (`project_selection/collection.rs:64-134`). Its records already carry
@@ -89,7 +125,8 @@ request (from-project, plater sessions, STL batches) keeps its current branch.
 
 ### Affected entries
 
-All of these reach entry.rs:286-288 with an explicit selection:
+Built from a `GuiProfileSliceRequest`, all of these reach entry.rs:286-288 with an explicit
+selection and `Composition::Gui`:
 
 | crate | entry |
 | --- | --- |
@@ -106,15 +143,17 @@ suite take this branch too.
 
 ### CLI cases that must not change
 
-- Every `ares-cli` parity and `--load-settings` case. Their bytes go through
-  `load_settings.rs` and never reach the changed branch.
+- Every `ares-cli` parity and `--load-settings` case:
+  - the binary composes through `load_settings.rs`;
+  - the 43 parity test files that call `slice_with_profiles*` keep `ProfileSliceRequest`, so
+    they keep `Composition::Cli`.
 - The CLI 3MF project-preset refresh (`project_presets.rs`, `ProjectPresetPolicy::Cli`).
 - The `ares-cli` `orca_parity` and `ares-core` profile tests that call `slice_with_load_settings`
   or `--load-settings`.
 
-The implementation lists the Rust tests that call the changed entries with an explicit
-selection. Each one either expects the GUI composition with an upstream citation, or switches
-to the CLI entry if it was checking CLI behaviour.
+No Rust test changes its request type. The `Always` suite (`tests/project_preset_selection/`)
+sees the group-key change of the from-project branch below. Each assertion that changes there
+cites the upstream line it now follows.
 
 ## End-to-end references
 
