@@ -171,7 +171,7 @@ adds the file to the current plate. That difference already exists and is not ch
 
 ## Verification
 
-A Playwright spec (`web/e2e/fileMenu.spec.ts`, desktop project, port 4241) covers:
+A Playwright spec (`web/e2e/fileMenu.spec.ts`, desktop project) covers:
 - The File menu opens from the button and from the keyboard. Every row has the order, label,
   enabled state, accelerator and reason above.
 - The spec writes the structure to `target/web-e2e/file-menu/menu.json`, including each
