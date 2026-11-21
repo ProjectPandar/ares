@@ -22,13 +22,12 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use args::{Cli, Commands, SliceArgs, require_single_input};
-use clap::Parser;
+use args::{Commands, SliceArgs, require_single_input};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let cli = Cli::parse();
+    let cli = args::parse();
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
     let result = match cli.command {

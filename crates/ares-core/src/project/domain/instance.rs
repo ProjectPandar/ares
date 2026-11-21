@@ -100,7 +100,11 @@ impl ProjectInstance {
     /// `ModelObject::printable` is always true here: the 3MF import sets only the instance's flag
     /// (`bbs_3mf.cpp:4397, 4429, 4448`).
     pub(crate) fn is_printable(&self) -> bool {
-        self.printable && self.print_volume_state == InstancePvs::Inside
+        self.printable && self.is_inside_print_volume()
+    }
+
+    pub(crate) fn is_inside_print_volume(&self) -> bool {
+        self.print_volume_state == InstancePvs::Inside
     }
 
     pub fn auto_drop(&self) -> bool {

@@ -25,6 +25,7 @@ pub struct SlicerContext<'a> {
     rng: Mt19937,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
+    pub(crate) max_triangle_count: i32,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -34,7 +35,15 @@ impl<'a> SlicerContext<'a> {
             rng: Mt19937::new(seed),
             status: None,
             thumbnail_images: Vec::new(),
+            max_triangle_count: 0,
         }
+    }
+
+    /// Supplies the direct STL plate limit (`OrcaSlicer.cpp:6637`); zero is unlimited.
+    #[must_use]
+    pub fn with_max_triangle_count(mut self, count: i32) -> Self {
+        self.max_triangle_count = count;
+        self
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.

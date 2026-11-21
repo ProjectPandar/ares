@@ -146,6 +146,7 @@ fn slice_validated_profile_source(
     request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |source| {
         let mut source = ProjectSource {
+            max_triangle_count: 0,
             orient,
             sliced_plate,
             upward,
@@ -286,6 +287,7 @@ pub(crate) fn with_edited_profile_source<T>(
             orient: false,
             upward: None,
             sliced_plate: None,
+            max_triangle_count: 0,
             edits,
         });
     }
@@ -312,6 +314,7 @@ pub(crate) fn with_edited_profile_source<T>(
         orient: false,
         upward: None,
         sliced_plate: None,
+        max_triangle_count: 0,
         edits,
     })
 }

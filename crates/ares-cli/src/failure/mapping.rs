@@ -43,6 +43,7 @@ pub(crate) fn slice_error_to_failure(
         }))
     };
     match error {
+        SliceError::TriangleCountExceedsLimit => CliFailure::triangle_count_exceeds_limit(output),
         // OrcaSlicer.cpp:5291–5295 rejects before slicing, with plate index 0.
         SliceError::MissingProjectPlate(_) => family(
             -2,

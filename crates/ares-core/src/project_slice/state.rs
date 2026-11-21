@@ -32,14 +32,14 @@ pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
     let plate = source.plate;
-    let validate_print = source.validate_print;
+    let validation = (source.validate_print, source.max_triangle_count);
     let overrides = source.overrides;
     let (project, preparation) = load_project_source(source)?;
     prepare_loaded_project_slice_with_validation(
         project,
         plate,
         None,
-        validate_print,
+        validation,
         Some((&preparation, overrides)),
     )
 }
@@ -103,7 +103,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     project: Project,
     plate: Option<u32>,
     selected_printer: Option<&str>,
-    validate_print: bool,
+    validation: (bool, i32),
     preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
 ) -> Result<ProjectSliceState, SliceError> {
     super::capabilities::validate_settings(project.settings())?;
@@ -112,7 +112,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
     apply_plate(
         project.select_plate(plate)?,
         selected_printer,
-        validate_print,
+        validation,
         preparation,
     )?
     .prepare()
@@ -126,7 +126,7 @@ pub(super) struct AppliedPlate {
 pub(super) fn apply_plate(
     mut project: Project,
     selected_printer: Option<&str>,
-    validate_print: bool,
+    (validate_print, max_triangle_count): (bool, i32),
     preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
 ) -> Result<AppliedPlate, SliceError> {
     let plate_id = project.first_plate_id();
@@ -135,6 +135,9 @@ pub(super) fn apply_plate(
     // -50 text (`Model.cpp:839-852 update_print_volume_state`; text `OrcaSlicer.cpp:220`).
     if print_volume::update_print_volume_state(&mut project)? == 0 {
         return Err(no_printable_objects());
+    }
+    if max_triangle_count != 0 {
+        inside_triangle_count(&project, max_triangle_count)?;
     }
     let resolved = match preparation {
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, context, overrides)?,
@@ -225,7 +228,7 @@ pub(super) fn slice_report(
     report: &mut crate::SlicedPlate,
 ) -> Result<(), SliceError> {
     let settings = &resolved.views.full;
-    report.triangle_count = inside_triangle_count(project)?;
+    report.triangle_count = inside_triangle_count(project, 0)?;
     report.layer_height = f64::from(settings.process.object.layer_height.0 as f32);
     report.wall_loops = settings.process.region.wall_loops.0;
     report.sparse_infill_density =

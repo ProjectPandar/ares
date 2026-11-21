@@ -73,6 +73,8 @@ mod absolute_e_reset_comment;
 mod cli_convert_unit;
 #[path = "cli_load_defaultfila.rs"]
 mod cli_load_defaultfila;
+#[path = "cli_mtcpp.rs"]
+mod cli_mtcpp;
 #[path = "cli_sparse_filament_slots.rs"]
 mod cli_sparse_filament_slots;
 #[path = "cli_strict.rs"]
