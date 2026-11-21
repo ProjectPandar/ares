@@ -333,6 +333,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 .unwrap_or("input.stl");
             match ares_core::slice_stl_named_validated(input, filename, options).await {
                 Ok(gcode) => gcode,
+                Err(ares_core::SliceError::OptionStlModelRead(_)) => {
+                    return Err(CliFailure::invalid_stl_input(
+                        args.input(),
+                        #[cfg(target_os = "linux")]
+                        args.output(),
+                    ));
+                }
                 Err(error) => {
                     return Err(slice_error_to_failure(
                         error,

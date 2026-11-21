@@ -63,13 +63,14 @@ fn validate_layer_templates(
 
 /// Validate an option-only STL using its completed print configuration.
 pub fn validate_stl(input: impl AsRef<[u8]>, options: &SliceOptions) -> Result<(), SliceError> {
+    use crate::project_slice::option_stl::{self, byte_api_error};
+
     let (project, _) =
-        crate::project_slice::option_stl::load(input.as_ref(), "input.stl", options)?;
+        option_stl::load(input.as_ref(), "input.stl", options).map_err(byte_api_error)?;
     project
         .settings()
         .validate_loaded_config(&project.documents().project_settings_raw, true)?;
-    validate_loaded_project(project, None, None)
-        .map_err(crate::project_slice::option_stl::stl_validation_error)
+    validate_loaded_project(project, None, None).map_err(byte_api_error)
 }
 
 /// Apply project configuration and validate before an independent processing call.

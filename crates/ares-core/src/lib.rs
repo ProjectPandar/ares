@@ -218,4 +218,5 @@ pub async fn slice(input: impl AsRef<[u8]>, options: SliceOptions) -> Result<Vec
         }
     }
     project_slice::option_stl::slice(input.as_ref(), "input.stl", &options, false)
+        .map_err(project_slice::option_stl::byte_api_error)
 }

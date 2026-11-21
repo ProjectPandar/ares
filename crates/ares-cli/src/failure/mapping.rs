@@ -303,6 +303,7 @@ pub(crate) fn slice_error_to_failure(
         }
         SliceError::EmptyInput
         | SliceError::InvalidInput(_)
+        | SliceError::OptionStlModelRead(_)
         | SliceError::ProjectSlicingIncomplete
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),
         SliceError::PresetAdmission(error) => CliFailure::config_file_error(
