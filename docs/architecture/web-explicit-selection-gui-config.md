@@ -15,7 +15,9 @@ the already ported `profiles/full_fff_config.rs`.
 | --- | --- | --- |
 | `PresetBundle::full_fff_config` | PresetBundle.cpp:5536-5542 | starts from `FullPrintConfig::defaults()`, applies the edited print, the default filament and the edited printer, then `project_config` |
 | | 5636, 5679 | each filament's `filament_id` is its preset's `filament_id` |
-| | 5790-5794 | erases `compatible_prints`, `compatible_prints_condition`, `compatible_printers`, `compatible_printers_condition` and `inherits` |
+| | 5791-5795, 5797 | erases `compatible_prints`, `compatible_prints_condition`, `compatible_printers`, `compatible_printers_condition` and `inherits`, then `different_settings_to_system` |
+| | 5571-5595, 5628-5647, 5673-5712, 5778-5788 | collects the group entries from the edited print, each filament and the edited printer |
+| | 5823-5841 | stores `compatible_machine_expression_group`, `compatible_process_expression_group`, `inherits_group`, `different_settings_to_system` and `print_compatible_printers` only when some entry is non-empty |
 | | 5821 | writes the collected `filament_ids` |
 | `PresetBundle::resolve_vendor_preset` | 7793-7817 | a system preset without its own `filament_id` inherits its parent's, across bundles |
 | `PresetBundle::load_selections` | 4196-4216 | sets `project_config.nozzle_volume_type` from the stored types of the base printer, or the printer's `default_nozzle_volume_type`, padded to its length |
@@ -140,6 +142,36 @@ GUI one.
   whatever the implementation's paired suite on main shows as changed. Every spec that changes
   is named in the hand-off report, together with its reference change.
 
+### Group keys
+
+The H2D sidebar slice (`dualExtruder.spec.ts`, after the flow options) prints
+`; different_settings_to_system = ;;;` and `; inherits_group = ;;;`. The plater export it is
+compared with has neither line. Both lines come from two gaps on the GUI route, and both are part
+of this slice.
+
+1. `profiles/full_fff_config.rs` ports the erase list and the filament composition, but not the
+   group composition above (5571-5595, 5628-5647, 5673-5712, 5778-5788, 5797, 5823-5841). The
+   from-project route starts from the 3MF's own config (`project_selection.rs:142`), so the 3MF's
+   all-empty groups stay. After this slice, `full_fff_config.rs` removes the five group keys,
+   collects them from the selected presets as upstream does, and stores each one only when some
+   entry is non-empty.
+2. The G-code config export creates `different_settings_to_system` and `inherits_group` at
+   filament count + 2 whenever they are absent
+   (`options/config_export/full_config.rs:213-227`). That is the CLI's resize in `CLI::run`
+   (OrcaSlicer.cpp:3202-3205), and the GUI slice never runs it: `append_full_config` prints only
+   the keys the applied config holds (GCode.cpp:8272-8274). After this slice the resize runs only
+   for configs loaded on the CLI route. Configs composed by `full_fff_config` keep what it stored.
+
+Both GUI branches change: the from-project (`Always`) branch, which already calls
+`full_fff_config.rs`, and the explicit branch this slice moves onto it. The CLI does not reach
+`full_fff_config.rs`: its 3MF refresh takes the `Cli` policy through `preset::refresh`
+(`profiles/project_refresh.rs:181-192`), and `--load-settings` composes through
+`load_settings.rs`. The export change is the only edit on a path the CLI also runs, so the CLI
+byte equality in Verification covers it.
+
+The reference stays as it is: `withoutCliGroups` (`web/e2e/platerExport.ts:97-112`) already
+removes the Native CLI's all-empty lines when the plater config lacks them.
+
 ## Included and deferred
 
 Included:
@@ -148,7 +180,9 @@ Included:
 - the inherited filament ids (7793-7817) through the existing collection load;
 - the `load_selections` volume types (4196-4216);
 - the U1 reference B, and the U1 flush matrix line that section 2 of the references document
-  moved here.
+  moved here;
+- the group keys (5571-5595, 5628-5647, 5673-5712, 5778-5788, 5797, 5823-5841) on both GUI
+  branches, and the CLI resize (OrcaSlicer.cpp:3202-3205) only on the CLI route.
 
 Deferred:
 
@@ -167,4 +201,5 @@ In order:
 4. The whole web suite, paired with main.
 
 The pass condition is no spec that passes on main failing, every changed reference explained,
-and the U1 slice passing.
+the U1 slice passing, and the H2D sidebar slice of `dualExtruder.spec.ts` equal to its plater
+export.
