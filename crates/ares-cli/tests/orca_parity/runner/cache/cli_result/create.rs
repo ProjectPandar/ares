@@ -30,6 +30,7 @@ impl OrcaRunner {
             argv.push("--load-filaments".to_owned());
             argv.push(lists.filaments.join(";"));
         }
+        #[cfg(target_os = "linux")]
         if matches!(
             kind,
             ResultKind::Early(EarlyExit::FilamentSupportPaletteMismatch)
