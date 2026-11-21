@@ -35,7 +35,7 @@ pub(super) fn prepare_project_source(
         source.overrides,
         source.refresh,
         source.system_catalog,
-        source.validate_print,
+        (source.validate_print, source.loaded),
     )?;
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {

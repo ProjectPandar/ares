@@ -37,12 +37,13 @@ pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_with_profile_preparation(project, profile, None).map(|(loaded, _)| loaded)
+    load_with_profile_preparation(project, profile, None, None).map(|(loaded, _)| loaded)
 }
 
 fn load_with_profile_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let selected = SelectedProfile {
@@ -64,7 +65,7 @@ fn load_with_profile_preparation(
             if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf =>
         {
             Project::from_3mf_with_profiles(
-                bytes,
+                (bytes, loaded),
                 selected,
                 project.overrides,
                 (project.plate, project.edits),
@@ -87,15 +88,17 @@ pub(crate) fn load_and_place(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_and_place_with_preparation(project, profile, None).map(|(loaded, _)| loaded)
+    load_and_place_with_preparation(project, profile, None, None).map(|(loaded, _)| loaded)
 }
 
 fn load_and_place_with_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    let (mut loaded, preparation) = load_with_profile_preparation(project, profile, upward_report)?;
+    let (mut loaded, preparation) =
+        load_with_profile_preparation(project, profile, loaded, upward_report)?;
     if profile.placement == Placement::Center {
         let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
         loaded.center_instances_around_point(bed);
@@ -110,10 +113,11 @@ fn load_and_place_with_preparation(
 pub(super) fn prepare_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
     let (mut loaded, preparation) =
-        load_and_place_with_preparation(project, profile, upward_report)?;
+        load_and_place_with_preparation(project, profile, loaded, upward_report)?;
     // `OrcaSlicer.cpp:2575-2620,:2653-2654`: the compatible-printers
     // gate fires after load and before parameter validation —
     // loaded-names adjudication for the `--load-settings` composite

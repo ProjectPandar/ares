@@ -85,66 +85,55 @@ pub(super) async fn slice(
         )
         .into());
     }
-    // CLI:1682–1690 admits the embedded project before reading supplied presets.
-    ares_core::validate_load_settings_input(input).map_err(|error| {
-        slice_error_to_failure(
-            error,
-            &args.output,
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })?;
-    let catalog = fs::read_to_string(catalog_path).map_err(|error| {
-        io::Error::new(
-            error.kind(),
-            format!(
-                "cannot read project preset catalog {}: {error}",
-                catalog_path.display()
-            ),
-        )
-    })?;
-    let filename = args
-        .input
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-    let selection = if args.uptodate {
-        r#"{"from_project":true,"uptodate":true}"#
-    } else {
-        r#"{"from_project":true,"uptodate":false}"#
-    };
-    let request = ares_core::ProfileSliceRequest {
-        filename,
-        catalog_json: &catalog,
-        selection_json: selection,
-        plate: args.plate,
-        overrides,
-        placement: ares_core::Placement::None,
-    };
-    let metadata = ares_core::GenerationMetadata::default();
     let input_file = args.input.to_string_lossy();
-    let source = ares_core::UpwardMachineSource::from_project(input)
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
     let mut upward_report = Vec::new();
     let mut sliced_plate = ares_core::SlicedPlate::default();
-    let processed = match ares_core::slice_cli_with_profiles_validated(
+    let processed = match ares_core::slice_cli_preset_project(
         input,
-        ares_core::CliProfileSliceRequest {
+        ares_core::CliPresetSliceRequest {
+            plate: args.plate,
+            overrides,
             orient: args.orient == 1,
-            profile: request,
+            uptodate: args.uptodate,
             record_moves: args.dump_moves.is_some(),
             sliced_plate: &mut sliced_plate,
-            upward: ares_core::CliUpwardMachine {
-                source,
-                input: ares_core::UpwardMachineInput::Embedded,
-                report: &mut upward_report,
-            },
         },
-        metadata,
         context,
-    )
-    .await
-    {
+        |error| {
+            slice_error_to_failure(
+                error,
+                &args.output,
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        },
+        || {
+            let catalog = fs::read_to_string(catalog_path).map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!(
+                        "cannot read project preset catalog {}: {error}",
+                        catalog_path.display()
+                    ),
+                )
+            })?;
+            let filename = args
+                .input
+                .file_name()
+                .and_then(|name| name.to_str())
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename")
+                })?;
+            let upward_source = ares_core::UpwardMachineSource::from_project(input)
+                .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
+            Ok(ares_core::CliPresetFiles::ProjectCatalog {
+                filename,
+                catalog,
+                upward_source,
+                upward_report: &mut upward_report,
+            })
+        },
+    )? {
         Ok(processed) => processed,
         Err(error) => {
             crate::failure::slicing::check(

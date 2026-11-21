@@ -17,7 +17,7 @@ impl Project {
     /// still bounds the number of `--load-settings` filaments. A plater
     /// selection's count is its own.
     pub(crate) fn from_3mf_with_profiles(
-        input: &[u8],
+        (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
         profile: SelectedProfile<'_>,
         overrides: &crate::ConfigOverrides,
         (plate, edits): (Option<u32>, &crate::plater::PlaterEdits),
@@ -30,7 +30,10 @@ impl Project {
             retained_refresh,
             ..
         } = profile;
-        let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
+        let (mut project, preparation) = match loaded {
+            Some(project) => project.into_profile_project()?,
+            None => crate::project::load_project_for_profiles(input)?,
+        };
         project.apply_plater_edits(edits);
         let preparation = preparation.for_overrides(overrides);
         let embedded_raw = project.documents.project_settings_raw.clone();

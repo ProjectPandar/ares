@@ -4,6 +4,7 @@ use crate::{ConfigOverrides, project::raw_settings::ProjectSettingsRaw};
 /// existing project-state seam; no intermediate archive is serialized.
 pub(crate) struct ProjectSource<'a> {
     pub(crate) input: ProjectInput<'a>,
+    pub(crate) loaded: Option<Box<crate::project::LoadedProfileProject>>,
     pub(crate) plate: Option<u32>,
     pub(crate) profile: Option<ProfileInput<'a>>,
     pub(crate) refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
@@ -77,7 +78,7 @@ impl ProjectInput<'_> {
         overrides: &ConfigOverrides,
         refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
         system_catalog: Option<&crate::PresetCatalogHandle>,
-        validate_print: bool,
+        (validate_print, loaded): (bool, Option<Box<crate::project::LoadedProfileProject>>),
     ) -> Result<
         (
             crate::Project,
@@ -88,7 +89,7 @@ impl ProjectInput<'_> {
         match self {
             Self::Bytes(bytes) => {
                 let (mut project, preparation) = match refresh {
-                    Some(refresh) => refresh.load(bytes, overrides, validate_print)?,
+                    Some(refresh) => refresh.load(bytes, overrides, validate_print, loaded)?,
                     None if system_catalog.is_some() => {
                         crate::project::load_project_for_profiles(bytes)?
                     }
@@ -151,6 +152,7 @@ impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
 impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
     fn into_source(self) -> ProjectSource<'a> {
         ProjectSource {
+            loaded: None,
             input: ProjectInput::Bytes(self.as_ref()),
             plate: None,
             profile: None,
@@ -172,6 +174,7 @@ static EMPTY_OVERRIDES: ConfigOverrides = ConfigOverrides::empty();
 impl<'a> From<&'a [u8]> for ProjectSource<'a> {
     fn from(bytes: &'a [u8]) -> Self {
         Self {
+            loaded: None,
             input: ProjectInput::Bytes(bytes),
             plate: None,
             profile: None,

@@ -162,13 +162,17 @@ impl ProjectPresetRefresh<'_> {
         input: &[u8],
         overrides: &ConfigOverrides,
         validate: bool,
+        loaded: Option<Box<crate::project::LoadedProfileProject>>,
     ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
         if crate::InputFormat::detect(input) != crate::InputFormat::ThreeMf {
             return Err(SliceError::InvalidInput(
                 "project-derived selection requires a 3MF project".to_owned(),
             ));
         }
-        let (mut project, preparation) = crate::project::load_project_for_profiles(input)?;
+        let (mut project, preparation) = match loaded {
+            Some(project) => project.into_profile_project()?,
+            None => crate::project::load_project_for_profiles(input)?,
+        };
         if validate {
             crate::project_slice::validate_post_process(&project)?;
         }

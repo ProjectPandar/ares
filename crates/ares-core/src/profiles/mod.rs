@@ -38,10 +38,11 @@ pub use composition::{
 };
 pub(crate) use entry::with_edited_profile_source;
 pub use entry::{
-    CliProfileSliceRequest, LoadSettingsSliceRequest, Placement, ProfileSliceRequest,
-    profile_placed_project, slice_cli_with_profiles_validated, slice_with_load_settings,
-    slice_with_profiles, slice_with_profiles_processed, slice_with_profiles_processed_validated,
-    slice_with_profiles_validated, validate_load_settings_input, validate_with_profiles,
+    CliPresetFiles, CliPresetSliceRequest, CliProfileSliceRequest, LoadSettingsSliceRequest,
+    Placement, ProfileSliceRequest, profile_placed_project, slice_cli_preset_project,
+    slice_cli_with_profiles_validated, slice_with_load_settings, slice_with_profiles,
+    slice_with_profiles_processed, slice_with_profiles_processed_validated,
+    slice_with_profiles_validated, validate_with_profiles,
 };
 pub use fragment::{ProfileFragment, ProfileKind, merge_profile_fragments};
 pub use import::{ParsedPresetBundle, parse_preset_bundle};

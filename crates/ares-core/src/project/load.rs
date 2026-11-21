@@ -3,6 +3,9 @@ mod colors;
 mod graph;
 mod mesh_prepare;
 mod metadata;
+mod profile_project;
+mod settings;
+pub(crate) use profile_project::LoadedProfileProject;
 mod volume_metadata;
 
 use std::collections::BTreeSet;
@@ -87,19 +90,20 @@ pub(crate) fn load_project_with_preparation(
     input: impl AsRef<[u8]>,
     overrides: &crate::ConfigOverrides,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    load_project_raw(input.as_ref(), overrides, true)
+    load_project_raw(input.as_ref(), overrides, true, None)
 }
 
 pub(crate) fn load_project_for_profiles(
     input: &[u8],
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    load_project_raw(input, &crate::ConfigOverrides::default(), false)
+    load_project_raw(input, &crate::ConfigOverrides::default(), false, None)
 }
 
 fn load_project_raw(
     input: &[u8],
     overrides: &crate::ConfigOverrides,
     materialize_retained_defaults: bool,
+    sparse_settings: Option<&mut ProjectSettingsRaw>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
@@ -186,43 +190,14 @@ fn load_project_raw(
         &project_settings_raw,
         overrides,
     )?;
-    // Preset.cpp:1059-1089 constructs retained presets over their full defaults,
-    // excluding embedded connection credentials from the project overlay.
-    if materialize_retained_defaults {
-        crate::profiles::apply_retained_preset_defaults(&mut project_settings_raw, None)?;
+    if let Some(sparse_settings) = sparse_settings {
+        sparse_settings.clone_from(&project_settings_raw);
     }
-    // Overrides win over document values (`apply_only`, `Config.cpp:461`).
-    overrides.apply(&mut project_settings_raw)?;
-    // Same upstream deserializer semantics as preset documents: JSON
-    // strings on vector-kind options deserialize through
-    // `ConfigOptionVector::deserialize` (`Config.hpp:868-887`,
-    // `ConfigOptionStrings::deserialize`, `Config.hpp:1153-1159`) — a bare
-    // scalar is a single-element vector, an empty string an empty one.
-    project_settings_raw
-        .normalize_wire_vector_shapes()
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-        })?;
-    // Caller overrides are a later serialized write (`Config.cpp:602`);
-    // normalize their tokens without repeating an embedded-only load pass.
-    if !overrides.is_empty() {
-        project_settings_raw.handle_legacy();
-    }
-    // The array branch of the same upstream load: joined string arrays bind
-    // scalar options (`Config.cpp:945-1001`), so the validation flat map and
-    // the typed builders see the bound scalar, not the array.
-    project_settings_raw
-        .normalize_scalar_arrays()
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-        })?;
-    let mut materialized_settings_raw = project_settings_raw.clone();
-    materialized_settings_raw.complete_filament_variant_defaults()?;
-    let settings = <crate::options::ProjectSettingsBuilder as serde::Deserialize>::deserialize(
-        materialized_settings_raw.into_object(),
-    )
-    .map_err(|error| SliceError::InvalidInput(format!("invalid project settings JSON: {error}")))?
-    .resolve();
+    let (project_settings_raw, settings) = settings::resolve(
+        project_settings_raw,
+        overrides,
+        materialize_retained_defaults,
+    )?;
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::materialize_meshes(&mut objects);

@@ -31,6 +31,7 @@ pub async fn slice_plater_plate(
     let edits = session.edits();
     slice_source(
         ProjectSource {
+            loaded: None,
             input: session.source(),
             plate: slice.plate,
             profile: None,

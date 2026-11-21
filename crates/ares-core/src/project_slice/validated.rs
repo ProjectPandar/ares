@@ -65,6 +65,7 @@ pub async fn slice_cli_project_plate_validated_with_catalog(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
+            loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,
@@ -124,6 +125,7 @@ pub async fn slice_project_plate_validated_with_catalog(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
+            loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,
@@ -178,6 +180,7 @@ pub async fn slice_project_plate_processed_validated_with_catalog(
     overrides.validate_cli_config()?;
     slice_source(
         ProjectSource {
+            loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
             plate,
             profile: None,

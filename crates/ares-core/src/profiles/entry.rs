@@ -4,7 +4,9 @@ use crate::{
 };
 
 use super::catalog::selection;
+mod cli_presets;
 mod load_settings;
+pub use cli_presets::{CliPresetFiles, CliPresetSliceRequest, slice_cli_preset_project};
 pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
@@ -77,7 +79,7 @@ pub async fn slice_with_profiles_validated(
         input,
         request,
         metadata,
-        (false, false, None, None),
+        (false, false, None, None, None),
         context,
     )
     .map(|output| output.gcode)
@@ -89,7 +91,13 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
+    slice_validated_profile_source(
+        input,
+        request,
+        metadata,
+        (true, false, None, None, None),
+        context,
+    )
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
@@ -109,6 +117,16 @@ pub async fn slice_cli_with_profiles_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    slice_cli_profile_source(input.as_ref(), request, metadata, context, None)
+}
+
+fn slice_cli_profile_source(
+    input: &[u8],
+    request: CliProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     let CliProfileSliceRequest {
         profile,
         orient,
@@ -121,7 +139,13 @@ pub async fn slice_cli_with_profiles_validated(
         input,
         profile,
         metadata,
-        (record_moves, orient, Some(sliced_plate), Some(upward)),
+        (
+            record_moves,
+            orient,
+            Some(sliced_plate),
+            Some(upward),
+            loaded,
+        ),
         context,
     )
 }
@@ -130,17 +154,19 @@ fn slice_validated_profile_source(
     input: impl AsRef<[u8]>,
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
-    (record_moves, orient, sliced_plate, upward): (
+    (record_moves, orient, sliced_plate, upward, loaded): (
         bool,
         bool,
         Option<&mut crate::SlicedPlate>,
         Option<crate::CliUpwardMachine<'_>>,
+        Option<Box<crate::project::LoadedProfileProject>>,
     ),
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
     with_profile_source(input.as_ref(), request, |source| {
         let mut source = ProjectSource {
+            loaded,
             orient,
             sliced_plate,
             upward,
@@ -193,22 +219,6 @@ pub fn validate_with_profiles(
         }
         Ok(())
     })
-}
-
-/// `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the project
-/// before the CLI adapter reads the `--load-settings` files
-/// (`:1953-2024`); this admission probe runs the same embedded
-/// `post_process` gate the composite slice entry runs, so the `-19`
-/// rejection wins over the adapter's missing-file `-5`.
-pub fn validate_load_settings_input(input: impl AsRef<[u8]>) -> Result<(), SliceError> {
-    // The gate lives in the 3MF load block, so other input formats take
-    // the adapter path unchanged (the same keying the composite entry
-    // applies to its `validate_print` flag).
-    if crate::InputFormat::detect(input.as_ref()) != crate::InputFormat::ThreeMf {
-        return Ok(());
-    }
-    let project = crate::project::load_project(input)?;
-    crate::project_slice::validate_post_process(&project)
 }
 
 fn slice_profile_source(
@@ -265,6 +275,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let catalog = super::project_selection::loaded_catalog(catalog_json)?;
     if let Some(policy) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
+            loaded: None,
             input,
             plate,
             profile: None,
@@ -287,6 +298,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let selection = selection(selection_json)?;
     let composed = catalog.catalog.compose(&selection)?;
     body(ProjectSource {
+        loaded: None,
         input,
         plate,
         profile: Some(ProfileInput {

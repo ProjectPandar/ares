@@ -35,15 +35,26 @@ pub async fn slice_with_load_settings(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    with_load_settings_source(input.as_ref(), request, |source| {
+    slice_load_settings_source(input.as_ref(), request, metadata, context, None)
+        .map(|processed| processed.gcode)
+}
+
+pub(super) fn slice_load_settings_source(
+    input: &[u8],
+    request: LoadSettingsSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
+) -> Result<crate::ProcessedGCode, SliceError> {
+    with_load_settings_source(input, request, loaded, |source| {
         slice_source(source, metadata, false, context)
     })
-    .map(|processed| processed.gcode)
 }
 
 fn with_load_settings_source<T>(
     input: &[u8],
     request: LoadSettingsSliceRequest<'_>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
     let LoadSettingsSliceRequest {
@@ -78,6 +89,7 @@ fn with_load_settings_source<T>(
     // only — `from_3mf_with_profiles` checks the pre-overlay embedded raw.
     let validate_print = crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
+        loaded,
         input: ProjectInput::Bytes(input),
         plate,
         profile: Some(ProfileInput {

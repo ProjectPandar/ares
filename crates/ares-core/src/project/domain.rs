@@ -116,6 +116,15 @@ impl Project {
         self.plate_origin
     }
 
+    pub(super) fn set_embedded_settings(
+        &mut self,
+        raw: super::raw_settings::ProjectSettingsRaw,
+        settings: ProjectSettings,
+    ) {
+        self.documents.project_settings_raw = raw;
+        self.settings = settings;
+    }
+
     pub fn settings(&self) -> &ProjectSettings {
         &self.settings
     }

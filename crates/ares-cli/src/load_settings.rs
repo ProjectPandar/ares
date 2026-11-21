@@ -21,84 +21,68 @@ pub(super) async fn slice(
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-    // `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the
-    // project before `:1953-2024` reads the preset files — probe the
-    // admission first so the embedded `-19` gate wins over the
-    // adapter's missing-file `-5`.
-    if let Err(error) = ares_core::validate_load_settings_input(input) {
-        return Err(slice_error_to_failure(
-            error,
-            &args.output,
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        ));
-    }
-    let catalog = args
-        .project_preset_catalog
-        .as_ref()
-        .map(fs::read_to_string)
-        .transpose()?;
-    let settings = read_preset_files(load_settings)?;
-    let filaments = read_preset_files(load_filaments)?;
-    let settings = settings
-        .iter()
-        .map(
-            |(label, json, source_identity)| ares_core::LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            },
-        )
-        .collect::<Vec<_>>();
-    let filaments = filaments
-        .iter()
-        .map(
-            |(label, json, source_identity)| ares_core::LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            },
-        )
-        .collect::<Vec<_>>();
-    let loaded_sources = crate::preset_sources::load(
-        args.datadir.as_deref(),
-        settings.iter().chain(&filaments).copied(),
-    )
-    .map_err(|error| match error.downcast::<ares_core::SliceError>() {
-        Ok(error) => slice_error_to_failure(
-            *error,
-            &args.output,
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        ),
-        Err(error) => CliFailure::config_file_error(
-            #[cfg(target_os = "linux")]
-            &args.output,
-            format!("{error}\n"),
-        ),
-    })?;
     let mut sliced_plate = ares_core::SlicedPlate::default();
-    let gcode = match ares_core::slice_with_load_settings(
+    let gcode = match ares_core::slice_cli_preset_project(
         input,
-        ares_core::LoadSettingsSliceRequest {
-            orient: args.orient == 1,
-            filename,
-            catalog_json: catalog.as_deref(),
-            loaded_sources: Some(&loaded_sources),
-            uptodate: args.uptodate,
-            settings: &settings,
-            filaments: &filaments,
+        ares_core::CliPresetSliceRequest {
             plate: args.plate,
             overrides,
-            placement: ares_core::Placement::None,
+            orient: args.orient == 1,
+            uptodate: args.uptodate,
+            record_moves: false,
             sliced_plate: &mut sliced_plate,
         },
-        ares_core::GenerationMetadata::default(),
         context,
-    )
-    .await
-    {
-        Ok(gcode) => gcode,
+        |error| {
+            slice_error_to_failure(
+                error,
+                &args.output,
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        },
+        || {
+            let catalog = args
+                .project_preset_catalog
+                .as_ref()
+                .map(fs::read_to_string)
+                .transpose()?;
+            let settings = read_preset_files(load_settings)?;
+            let filaments = read_preset_files(load_filaments)?;
+            let loaded_sources = crate::preset_sources::load(
+                args.datadir.as_deref(),
+                settings
+                    .iter()
+                    .chain(&filaments)
+                    .map(|(label, json, identity)| ares_core::LoadSettingsFile {
+                        label,
+                        json,
+                        source_identity: identity.as_ref(),
+                    }),
+            )
+            .map_err(|error| match error.downcast::<ares_core::SliceError>() {
+                Ok(error) => slice_error_to_failure(
+                    *error,
+                    &args.output,
+                    #[cfg(target_os = "linux")]
+                    args.plate.unwrap_or(1),
+                ),
+                Err(error) => CliFailure::config_file_error(
+                    #[cfg(target_os = "linux")]
+                    &args.output,
+                    format!("{error}\n"),
+                ),
+            })?;
+            Ok(ares_core::CliPresetFiles::LoadSettings {
+                filename,
+                catalog,
+                settings,
+                filaments,
+                loaded_sources: Box::new(loaded_sources),
+            })
+        },
+    )? {
+        Ok(processed) => processed.gcode,
         Err(error) => {
             crate::failure::slicing::check(
                 args,

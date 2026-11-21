@@ -192,15 +192,16 @@ pub(crate) use print_paths::{
 pub use profiles::LoadedPresetSources;
 pub use profiles::Placement;
 pub use profiles::{
-    CliProfileSliceRequest, ComposedProfile, CurrentPrinter, FilamentSlotState, FilteredPresets,
-    GuideFilament, GuideModel, InstalledPrinters, LoadSettingsFile, LoadSettingsRequest,
-    LoadSettingsSliceRequest, MergedProfile, MergedProfileMetadata, MissingParent,
-    ParsedPresetBundle, PresetCatalogHandle, PresetValues, PrinterModelInfo, ProfileFragment,
-    ProfileGroupMetadata, ProfileKind, ProfileSelection, ProfileSettings, ProfileSliceRequest,
-    SelectablePrinter, SourceIdentity, compose_profile_fragments, filter_compatible_presets,
-    guide_models, merge_profile_fragments, parse_preset_bundle, profile_placed_project,
-    profile_settings, slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
-    validate_load_settings_input, validate_with_profiles,
+    CliPresetFiles, CliPresetSliceRequest, CliProfileSliceRequest, ComposedProfile, CurrentPrinter,
+    FilamentSlotState, FilteredPresets, GuideFilament, GuideModel, InstalledPrinters,
+    LoadSettingsFile, LoadSettingsRequest, LoadSettingsSliceRequest, MergedProfile,
+    MergedProfileMetadata, MissingParent, ParsedPresetBundle, PresetCatalogHandle, PresetValues,
+    PrinterModelInfo, ProfileFragment, ProfileGroupMetadata, ProfileKind, ProfileSelection,
+    ProfileSettings, ProfileSliceRequest, SelectablePrinter, SourceIdentity,
+    compose_profile_fragments, filter_compatible_presets, guide_models, merge_profile_fragments,
+    parse_preset_bundle, profile_placed_project, profile_settings, slice_cli_preset_project,
+    slice_with_load_settings, slice_with_profiles, slice_with_profiles_processed,
+    validate_with_profiles,
 };
 pub use profiles::{
     PresetCollectionState, PresetConfig, PresetOutcome, PresetRecord, PresetSelection,

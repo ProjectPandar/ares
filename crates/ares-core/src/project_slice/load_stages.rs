@@ -17,9 +17,11 @@ pub(super) fn prepare_post_closing(
         scale,
         looped_objects,
     } = if let Some(profile) = project.profile {
+        let loaded = project.loaded.take();
         profile_entry::prepare_profile_slice(
             &project,
             profile,
+            loaded,
             sliced_plate
                 .as_deref_mut()
                 .map(|report| &mut report.upward_machines),
