@@ -6,8 +6,8 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { withPlaterBedType } from "./platerExport";
-import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { withoutCliGroups, withPlaterBedType } from "./platerExport";
+import { type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 
@@ -78,14 +78,25 @@ function lhModels() {
 }
 
 /**
- * The STL reference with the plater's `filament_multi_colour`: with no project open, load_selections copies the
- * filament colours into it (PresetBundle.cpp:4116-4117).
+ * The STL reference with the plater's config lines: with no project open, load_selections copies the filament
+ * colours into `filament_multi_colour` (PresetBundle.cpp:4116-4117); full_fff_config erases
+ * `compatible_printers_condition` (PresetBundle.cpp:5790-5794) and stores only the groups `session` holds.
  */
-function withLoadedMultiColour(gcode: string) {
+function withPlaterStlLines(gcode: string, session: NativeSelection) {
   const lines = gcode.split("\n");
   const colour = lines.find((line) => line.startsWith("; filament_colour = "))!.slice("; filament_colour = ".length);
   setConfigLine(lines, "filament_multi_colour", colour);
-  return lines.join("\n");
+  setConfigLine(lines, "compatible_printers_condition", undefined);
+  return withoutCliGroups(lines.join("\n"), session);
+}
+
+/**
+ * `session` with the plater keeping `different_settings_to_system`: the browser's 3MF slice still runs the CLI's
+ * one-colour prime-tower rule (OrcaSlicer.cpp:4323-4342), which records `enable_prime_tower`, and the process edit
+ * dirties the process column as the plater's edited print does (PresetBundle.cpp:5586-5595).
+ */
+function withDifferences(session: NativeSelection): NativeSelection {
+  return { ...session, full_fff_config: JSON.stringify({ different_settings_to_system: [], ...JSON.parse(session.full_fff_config) }) };
 }
 
 async function exportGcode(page: Page, directory: string) {
@@ -141,8 +152,8 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   expect(JSON.parse(readFileSync(`${work}result.json`, "utf8"))).toMatchObject({ native_repeat: "PASS" });
   const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8")) as { machine: string; process: string; filaments: string[] };
   // The plater session the browser replays: the first-run app opens the 3MF, the GuideFrame wizard installs every
-  // LH model and the sidebar picks the selected LH system presets. The browser slices it on the explicit preset
-  // route, the --load-settings model, so each reference is the CLI slice with this session's selected-preset lines.
+  // LH model and the sidebar picks the selected LH system presets. The browser composes them as full_fff_config,
+  // so each reference is the CLI slice with this session's selected-preset lines and group keys.
   const session = nativeSelection(probe, `${artifacts}native/plater-session/`, `${work}profile-entry.3mf`, [], {
     wizard: { LH: lhModels() },
     select: { printer: selection.machine, process: selection.process, filaments: selection.filaments },
@@ -157,13 +168,13 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
-  const native = withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
+  const native = withoutCliGroups(withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session), withDifferences(session));
   mkdirSync(`${centerWork}selected-system-reference`);
   execFileSync(launcher, [
     ...loadPresets, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
   ], { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, { recursive: true });
-  const nativeCenter = withLoadedMultiColour(normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"));
+  const nativeCenter = withPlaterStlLines(normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
   const centerNames = ["machine", "process", "filament"].map((kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name);
   expect(centerNames, "both native runs use the same presets").toEqual([selection.machine, selection.process, ...selection.filaments]);
 
@@ -177,7 +188,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     "--slice", "0", "--outputdir", `${work}override-reference`, platerBed,
   ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
   cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
-  const nativeEdited = withSelectedPresets(normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
+  const nativeEdited = withoutCliGroups(withSelectedPresets(normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session), withDifferences(session));
   expect(nativeEdited === native, "the edit changes the native output").toBe(false);
 
   await page.goto("/");
