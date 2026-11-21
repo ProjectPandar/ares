@@ -5,7 +5,7 @@ pub(super) fn finish(
     state: &motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     nozzle_groups: &[tool_ordering::NozzleGroup],
-    record_moves: bool,
+    (record_moves, tower_statistics): (bool, (f64, f64)),
 ) -> Result<crate::ProcessedGCode, SliceError> {
     // Upstream throws after emit when any custom template failed
     // (`GCode.cpp:3637-3645` — `failed_templates` collected via
@@ -34,6 +34,7 @@ pub(super) fn finish(
             .with_settings(&traversal.resolved.views.full)
             .extruder_colors(extruder_colors)
             .writer_extruders(state.extruders.ids().to_vec())
+            .tower_statistics(tower_statistics)
             .recording_moves(record_moves)
             .pre_heating(traversal.resolved.views.runtime_gcode.enable_pre_heating.0)
             .nozzle_groups(nozzle_groups)

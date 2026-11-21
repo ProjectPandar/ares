@@ -157,14 +157,16 @@ pub(super) fn append_filament_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     state: &super::motion::EmitState,
-) {
+) -> (f64, f64) {
     let filament = &traversal.resolved.views.full.filament.gcode;
+    let mut tower_mm = 0.0;
+    let mut tower_cost = 0.0;
     // Writer signed counters decide line presence; once present, processor
     // post-processing replaces the entire configured-width vector.
     let mut weight_line = false;
     let mut cost_line = false;
     for &id in state.extruders.ids() {
-        let (_, mut weight) = state.extruders.statistics(
+        let (extruded_volume, mut weight) = state.extruders.statistics(
             id,
             &state.extruder,
             (state.options.filament_area, state.options.filament_density),
@@ -175,9 +177,19 @@ pub(super) fn append_filament_stats(
                 id,
                 &state.extruder,
                 state.options.single_extruder_multi_material,
-            ) + tower.used_filament(id);
+            );
+            let tower_used = tower.used_filament(id);
+            // GCode.cpp:3251–3253,3281–3282 uses the writer's counters;
+            // the volume increment multiplies two floats before promotion.
+            tower_mm += (used + tower_used) - used;
+            let with_tower = extruded_volume + f64::from(tower_used as f32 * 2.4052_f32);
+            tower_cost += (with_tower - extruded_volume)
+                * float_at(&filament.filament_density, id)
+                * 0.001
+                * float_at(&filament.filament_cost, id)
+                * 0.001;
             let diameter = float_at(&filament.filament_diameter, id);
-            let volume = used * (diameter * diameter * std::f64::consts::PI / 4.0);
+            let volume = (used + tower_used) * (diameter * diameter * std::f64::consts::PI / 4.0);
             weight = volume * float_at(&filament.filament_density, id) * 0.001;
         }
         if weight > 0.0 {
@@ -195,6 +207,7 @@ pub(super) fn append_filament_stats(
         }
         output.extend_from_slice(stats.as_bytes());
     }
+    (tower_mm, tower_cost)
 }
 
 fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {

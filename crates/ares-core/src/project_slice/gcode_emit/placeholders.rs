@@ -28,8 +28,10 @@ pub(super) fn base_config(
     config.random = rng.cloned();
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal, layer_count);
-    for (key, tag) in super::processor::DEFERRED_PLACEHOLDERS {
-        config.insert(key, Value::String(tag.to_owned()));
+    for (names, tag) in super::processor::DEFERRED_PLACEHOLDERS {
+        for &name in names {
+            config.insert(name, Value::String(tag.to_owned()));
+        }
     }
     config.insert("current_extruder", Value::Integer(0));
     config.insert("filament_extruder_id", Value::Integer(0));
