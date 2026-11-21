@@ -1,12 +1,9 @@
 //! Once-per-layer wrapping-detection retract and template insert.
 //!
-//! `GCode.cpp:5281-5284` / `5302-5305`: when `enable_wrapping_detection`
-//! is on, the per-extruder loop emits `retract(false, false,
-//! auto_lift_type, true)` + `insert_wrapping_detection_gcode()` before
-//! the toolchange and the instance markers — once per layer, before the
-//! layer's first object block. The retract is not gated on the template
-//! being non-empty or on `wrapping_detection_layers` (the layer-count
-//! gate lives only in the wipe-tower path, `WipeTower.cpp:2577`).
+//! `GCode.cpp:7533–7537,7562–7566`: the per-extruder loop emits this
+//! interrupt once per layer, after the pre-change timelapse check and
+//! before the first eligible tower or non-tower call. The retract is not
+//! gated on the template being non-empty or on `wrapping_detection_layers`.
 //!
 //! `insert_wrapping_detection_gcode` (`GCode.cpp:5215-5236`) renders the
 //! `wrapping_detection_gcode` printer template with layer placeholders,
@@ -19,8 +16,6 @@ use crate::SliceError;
 
 use super::super::{motion, placeholders, template, timelapse, value};
 
-/// Emits the wrapping-detection block for a layer chunk. Runs once per
-/// layer, after the change-layer block and before skirt/object content.
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
