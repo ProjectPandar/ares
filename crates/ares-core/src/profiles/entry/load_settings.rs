@@ -126,31 +126,64 @@ pub async fn slice_imported_stl_with_load_settings_processed(
     )
 }
 
-/// Slice separately loaded STL objects with the requested placement.
-pub async fn slice_stl_files_with_load_settings(
-    files: &[crate::StlFile<'_>],
-    request: LoadSettingsSliceRequest<'_>,
-    metadata: GenerationMetadata,
-    context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
-    slice_stl_files_with_load_settings_processed(files, request, metadata, context, false)
-        .await
-        .map(|processed| processed.gcode)
+/// The output and report of one plate from the direct STL slice action.
+pub struct SlicedStlPlate {
+    pub id: u32,
+    pub processed: crate::ProcessedGCode,
+    pub report: crate::SlicedPlate,
 }
 
-pub async fn slice_stl_files_with_load_settings_processed(
-    files: &[crate::StlFile<'_>],
+/// Place the decoded STL models once, then apply the one-based slice action
+/// (`OrcaSlicer.cpp:2042–2045,6441–6445,6522–6531`). `0` slices every plate.
+pub async fn slice_stl_models_with_load_settings(
+    models: &[(&str, crate::Model)],
     request: LoadSettingsSliceRequest<'_>,
-    metadata: GenerationMetadata,
-    context: SlicerContext<'_>,
+    selection: u32,
+    max_triangle_count: i32,
     record_moves: bool,
-) -> Result<crate::ProcessedGCode, SliceError> {
-    let model = crate::Project::from_cli_stl_files(files)?;
+) -> Result<Vec<SlicedStlPlate>, SliceError> {
+    if models.is_empty() {
+        return Err(SliceError::EmptyInput);
+    }
+    let model = crate::Project::from_cli_stl_models(models);
     with_load_settings_source(
-        (ProjectInput::Model(&model), files[0].bytes),
+        (ProjectInput::Model(&model), &[]),
         request,
         None,
-        |source| slice_source(source, metadata, record_moves, context),
+        |source| {
+            let (project, preparation) = crate::project_slice::load_profile_slice(
+                &source,
+                source.profile.expect("loaded settings supply a profile"),
+                None,
+            )?;
+            let mut plates = Vec::new();
+            for plate in project.plates() {
+                let id = plate.id();
+                if selection != 0 && selection != id {
+                    continue;
+                }
+                let mut report = crate::SlicedPlate::default();
+                let processed = slice_source(
+                    ProjectSource {
+                        input: ProjectInput::ArrangedStl(&project, &preparation),
+                        plate: Some(id),
+                        profile: None,
+                        upward: None,
+                        sliced_plate: Some(&mut report),
+                        ..source
+                    },
+                    GenerationMetadata::default(),
+                    record_moves,
+                    SlicerContext::new(0).with_max_triangle_count(max_triangle_count),
+                )?;
+                plates.push(SlicedStlPlate {
+                    id,
+                    processed,
+                    report,
+                });
+            }
+            Ok(plates)
+        },
     )
 }
 

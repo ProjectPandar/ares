@@ -84,6 +84,10 @@ pub(crate) enum ProjectInput<'a> {
     Model(&'a crate::Project),
     Assembly(&'a crate::Assembly<'a>),
     ImportedStl(&'a crate::ImportedStl),
+    ArrangedStl(
+        &'a crate::Project,
+        &'a crate::options::flush_matrix::PreparationContext,
+    ),
     OptionStl {
         input: super::option_stl::Input<'a>,
         options: &'a crate::SliceOptions,
@@ -140,6 +144,7 @@ impl ProjectInput<'_> {
             },
             Self::OptionStl { input, options } => super::option_stl::load_input(input, options),
             Self::ImportedStl(_) => unreachable!("imported STL requires profiles or options"),
+            Self::ArrangedStl(..) => unreachable!("already loaded and arranged"),
             Self::Model(model) => {
                 if refresh.is_some() {
                     return Err(crate::SliceError::InvalidInput(

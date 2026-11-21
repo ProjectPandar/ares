@@ -14,7 +14,11 @@ pub(super) fn stl_volume(
     id: u32,
 ) -> Result<(ProjectVolume, Option<f32>), SliceError> {
     let (model, solid_volume) = crate::load_stl_model(input)?;
-    let (vertices, triangles) = super::profile_input::index_stl_vertices(&model);
+    Ok((stl_model_volume(&model, name, id), solid_volume))
+}
+
+fn stl_model_volume(model: &crate::Model, name: &str, id: u32) -> ProjectVolume {
+    let (vertices, triangles) = super::profile_input::index_stl_vertices(model);
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
     for vertex in &vertices {
@@ -32,7 +36,7 @@ pub(super) fn stl_volume(
             Point3d::new(point[0], point[1], point[2])
         })
         .collect();
-    let volume = ProjectVolume::new(
+    ProjectVolume::new(
         name.to_owned(),
         id,
         ProjectMesh::new(vertices, triangles, Vec::new()),
@@ -43,15 +47,40 @@ pub(super) fn stl_volume(
             Default::default(),
             Transform3d::IDENTITY,
         ),
-    );
-    Ok((volume, solid_volume))
+    )
+}
+
+fn stl_object(name: &str, index: u32, volume: ProjectVolume) -> ProjectObject {
+    ProjectObject::new(
+        name.to_owned(),
+        index + 1,
+        (
+            name.to_owned(),
+            String::new(),
+            Default::default(),
+            Default::default(),
+        ),
+        vec![volume],
+        Vec::new(),
+    )
 }
 
 impl Project {
-    pub(crate) fn from_cli_stl_files(files: &[StlFile<'_>]) -> Result<Self, SliceError> {
-        let mut project = Self::from_stl_files(files)?;
-        let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(files.len() as u32);
-        let mut instances = Vec::with_capacity(files.len());
+    pub(crate) fn from_cli_stl_models(models: &[(&str, crate::Model)]) -> Self {
+        let objects = models
+            .iter()
+            .enumerate()
+            .map(|(index, (name, model))| {
+                stl_object(
+                    name,
+                    index as u32,
+                    stl_model_volume(model, name, index as u32),
+                )
+            })
+            .collect();
+        let mut project = Self::from_stl_objects(models[0].0, objects);
+        let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(models.len() as u32);
+        let mut instances = Vec::with_capacity(models.len());
         for object in &mut project.objects {
             let identity = [object.id, 0, labels.clone_stl_instance()];
             object.instances.push(ProjectInstance::new(
@@ -64,7 +93,7 @@ impl Project {
         }
         project.initialize_plate(instances);
         project.drop_instances_to_ground();
-        Ok(project)
+        project
     }
 
     pub(crate) fn from_stl_files(files: &[StlFile<'_>]) -> Result<Self, SliceError> {
@@ -81,23 +110,16 @@ impl Project {
                 ));
             }
             let (volume, _) = stl_volume(file.bytes, file.name, index as u32)?;
-            objects.push(ProjectObject::new(
-                file.name.to_owned(),
-                index as u32 + 1,
-                (
-                    file.name.to_owned(),
-                    String::new(),
-                    Default::default(),
-                    Default::default(),
-                ),
-                vec![volume],
-                Vec::new(),
-            ));
+            objects.push(stl_object(file.name, index as u32, volume));
         }
-        Ok(Self::new(
+        Ok(Self::from_stl_objects(files[0].name, objects))
+    }
+
+    fn from_stl_objects(name: &str, objects: Vec<ProjectObject>) -> Self {
+        Self::new(
             vec![ProjectModel::new(
-                files[0].name.to_owned(),
-                (1..=files.len() as u32).collect(),
+                name.to_owned(),
+                (1..=objects.len() as u32).collect(),
             )],
             objects,
             vec![PlateMetadata::new(1, Vec::new())],
@@ -121,7 +143,7 @@ impl Project {
                 preset_file_version: None,
                 preset_selection: None,
             },
-        ))
+        )
     }
 
     pub(crate) fn copy_stl_model(&self) -> Self {

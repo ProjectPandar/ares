@@ -73,7 +73,9 @@ fn load_with_profile_preparation(
                 Ok((loaded, preparation))
             }
         },
-        super::ProjectInput::OptionStl { .. } => unreachable!("option-only STL has no profiles"),
+        super::ProjectInput::OptionStl { .. } | super::ProjectInput::ArrangedStl(..) => {
+            unreachable!("not a selected-profile input")
+        }
         super::ProjectInput::Model(model) => model
             .with_stl_profiles(selected, project.overrides)
             .map(|(mut loaded, preparation)| {
@@ -150,7 +152,7 @@ pub(super) fn prepare_profile_slice(
     )
 }
 
-pub(super) fn load_profile_slice(
+pub(crate) fn load_profile_slice(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,

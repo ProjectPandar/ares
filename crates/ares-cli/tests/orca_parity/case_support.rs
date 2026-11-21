@@ -83,6 +83,8 @@ mod cli_strict;
 mod concentric_thick_polyline_rotation;
 #[path = "direct_stl_auto_arrange.rs"]
 mod direct_stl_auto_arrange;
+#[path = "direct_stl_plate_action.rs"]
+mod direct_stl_plate_action;
 #[path = "direct_stl_slice.rs"]
 mod direct_stl_slice;
 #[path = "export_statistics.rs"]

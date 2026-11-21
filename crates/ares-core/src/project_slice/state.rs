@@ -31,6 +31,18 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
+    if let super::ProjectInput::ArrangedStl(project, preparation) = source.input {
+        let plate = source.plate.expect("the slice action selects a plate");
+        super::capabilities::validate_settings(project.settings())?;
+        let project = crate::plater::fit_slice_wipe_tower(project.copy_stl_model(), Some(plate))?;
+        return apply_plate(
+            project.plate_view(plate, false)?,
+            None,
+            (source.validate_print, source.max_triangle_count),
+            Some((preparation, source.overrides)),
+        )?
+        .prepare();
+    }
     let plate = source.plate;
     let validation = (source.validate_print, source.max_triangle_count);
     let overrides = source.overrides;
