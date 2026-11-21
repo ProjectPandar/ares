@@ -44,8 +44,8 @@ impl Estimate {
         lines: impl IntoIterator<Item = &'a str> + Clone,
         line_count: usize,
         machine_load_filament_time: f64,
-        config: &ProcessorConfig<'_>,
-        recorder: Option<&mut MoveRecorder>,
+        config: &'a ProcessorConfig<'_>,
+        recorder: Option<&mut MoveRecorder<'a>>,
     ) -> Self {
         let mut owned = None;
         let recorder = match recorder {
@@ -324,7 +324,12 @@ impl Estimate {
             custom_gcode_times: timing.custom_gcode_times,
             stop_times: timing.stop_times,
             prepare: f64::from(timing.prepare),
-            print_statistics: used_filaments.finish(filaments.selection().1),
+            print_statistics: crate::PrintEstimatedStatistics {
+                total_filament_changes: filaments.changes,
+                total_travel_distance: recorder.travel_distance(),
+                ..used_filaments.finish(filaments.selection().1)
+            },
+
             printable_area,
             elapsed,
             export_elapsed,

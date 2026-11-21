@@ -25,6 +25,7 @@ pub(crate) mod lexer;
 mod machine;
 pub(in crate::project_slice) mod motion;
 mod object;
+mod object_mass;
 mod offset;
 mod placeholders;
 mod preamble;

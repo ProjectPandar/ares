@@ -135,7 +135,7 @@ fn normalized_report(dir: &Path) -> Value {
     result
 }
 
-fn block_stl(x: f32) -> Vec<u8> {
+pub(super) fn block_stl(x: f32) -> Vec<u8> {
     let vertices = [
         [x, 122.0, 0.0],
         [x + 10.0, 122.0, 0.0],

@@ -2,7 +2,7 @@ use super::super::estimate::options_z::MoveIds;
 use super::super::motion::Trapezoid;
 use super::MoveRecorder;
 
-impl MoveRecorder {
+impl MoveRecorder<'_> {
     pub(in crate::project_slice::gcode_emit::processor) fn next_vertex(&self) -> MoveIds {
         self.options_z.next_vertex(self.moves.len())
     }

@@ -48,16 +48,12 @@ impl<'a> UsedFilaments<'a> {
             flushing: false,
             virtual_flushing: false,
             statistics: crate::PrintEstimatedStatistics {
-                volumes_per_color_change: Vec::new(),
-                used_filaments_per_role: std::collections::BTreeMap::new(),
                 model_volumes_per_extruder: vec![0.0; count],
                 support_volumes_per_extruder: vec![0.0; count],
                 wipe_tower_volumes_per_extruder: vec![0.0; count],
                 total_volumes_per_extruder: vec![0.0; count],
                 flush_per_filament: vec![0.0; count],
-                total_used_filament: 0.0,
-                normal_time: 0.0,
-                normal_prepare_time: 0.0,
+                ..Default::default()
             },
         }
     }

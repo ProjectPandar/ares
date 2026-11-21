@@ -12,6 +12,7 @@ pub(super) struct FilamentChange<'a> {
     load: f32,
     unload: f32,
     change: f32,
+    pub(super) changes: usize,
 }
 
 impl<'a> FilamentChange<'a> {
@@ -26,6 +27,7 @@ impl<'a> FilamentChange<'a> {
             load: load as f32,
             unload: config.settings.printer.gcode.machine_unload_filament_time.0 as f32,
             change: config.settings.printer.gcode.machine_tool_change_time.0 as f32,
+            changes: 0,
         }
     }
 
@@ -70,6 +72,7 @@ impl<'a> FilamentChange<'a> {
         }
         let mut extra = 0.0_f32;
         if self.physical == Some(next_physical) {
+            self.changes += 1;
             self.current[next_physical] = Some(filament);
             extra += self.unload_time();
             self.unloaded = false;
@@ -82,6 +85,7 @@ impl<'a> FilamentChange<'a> {
                 self.unloaded = false;
                 extra += self.load;
             } else if self.last[next_physical] != Some(filament) {
+                self.changes += 1;
                 self.current[next_physical] = Some(filament);
                 extra += self.unload_time();
                 self.unloaded = false;

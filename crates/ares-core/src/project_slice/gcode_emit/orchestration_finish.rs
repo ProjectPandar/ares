@@ -36,6 +36,7 @@ pub(super) fn finish(
             .writer_extruders(state.extruders.ids().to_vec())
             .tower_statistics(tower_statistics)
             .recording_moves(record_moves)
+            .mass_locator(record_moves.then(|| super::object_mass::Locator::new(traversal)))
             .pre_heating(traversal.resolved.views.runtime_gcode.enable_pre_heating.0)
             .nozzle_groups(nozzle_groups)
             .nozzle_counts(&nozzle_counts),
