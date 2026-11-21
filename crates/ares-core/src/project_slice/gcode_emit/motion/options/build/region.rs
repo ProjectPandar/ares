@@ -71,6 +71,11 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.wall_direction = region.map_or(default.wall_direction, |value| value.wall_direction);
     options.print_flow_ratio =
         region.map_or(default.print_flow_ratio.0, |value| value.print_flow_ratio.0);
+    let slot = options.nozzle_config_index;
+    options.top_solid_infill_flow_ratio = region.map_or_else(
+        || default.top_solid_infill_flow_ratio.get_at(slot),
+        |value| value.top_solid_infill_flow_ratio.get_at(slot),
+    );
     options.outer_wall_flow_ratio = region.map_or(default.outer_wall_flow_ratio.0, |value| {
         value.outer_wall_flow_ratio.0
     });
@@ -93,7 +98,6 @@ pub(in crate::project_slice::gcode_emit) fn apply(
     options.first_layer_flow_ratio = region.map_or(default.first_layer_flow_ratio.0, |value| {
         value.first_layer_flow_ratio.0
     });
-    let slot = options.nozzle_config_index;
     options.inner_wall_speed = region.map_or_else(
         || default.inner_wall_speed.get_at(slot),
         |value| value.inner_wall_speed.get_at(slot),

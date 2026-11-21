@@ -156,7 +156,7 @@ pub(super) fn project_surface(
     };
     // Fill.cpp:1077–1085 selects the emitted role's mapped extruder.
     let slot = crate::options::mapped_extruder_id(context.settings, (params.extruder - 1) as usize);
-    params.flow_ratio = role_flow_ratio(context, params.extrusion_role, slot);
+    params.flow_ratio = prebaked_flow_ratio(context.region, params.extrusion_role);
     let seam_gap = match context.region.seam_gap {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => f64::from(params.flow.nozzle_diameter) * value.0 / 100.0,
@@ -241,12 +241,8 @@ pub(super) fn flow_role(kind: RegionSurfaceKind, solid: bool) -> FillFlowRole {
     }
 }
 
-fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole, slot: usize) -> f64 {
-    let region = context.region;
-    // Only the earlier, ungated roles remain pre-baked. GCode.cpp:6485-6507
-    // is owned by motion::extrusion::effective_flow for every entity family.
+fn prebaked_flow_ratio(region: &RegionOptions, role: ExtrusionRole) -> f64 {
     match role {
-        ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.get_at(slot),
         ExtrusionRole::BottomSurface => region.bottom_solid_infill_flow_ratio.0,
         ExtrusionRole::InternalBridgeInfill => region.internal_bridge_flow.0,
         _ => 1.0,

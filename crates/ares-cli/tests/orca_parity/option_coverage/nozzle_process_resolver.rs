@@ -3,6 +3,9 @@ use crate::{OrcaRunner, presets::VendorProfiles, runner};
 use serde_json::{Value, json};
 use std::io::{Cursor, Read, Write};
 
+#[path = "nozzle_process_resolver/top_flow.rs"]
+mod top_flow;
+
 fn set_overhang_speeds(settings: &mut Value) {
     for quarter in 1..=4 {
         settings[format!("overhang_{quarter}_4_speed")] = json!(["15", "30"]);
@@ -10,7 +13,8 @@ fn set_overhang_speeds(settings: &mut Value) {
 }
 
 fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
-    let singleton = case == "singleton";
+    let singleton = matches!(case, "singleton" | "top_flow_singleton");
+    let manual_top_flow = matches!(case, "top_flow_unmatched" | "top_flow_equal");
     let profiles = VendorProfiles::load(
         &runner::repo_root().join("OrcaSlicer/resources/profiles"),
         "BBL",
@@ -56,7 +60,7 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
         if member.name() == "Metadata/project_settings.config" {
             let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
             let (ids, variants, speeds) = match case {
-                "singleton" => (
+                "singleton" | "top_flow_singleton" => (
                     json!(["1"]),
                     json!(["Direct Drive Standard"]),
                     json!(["200"]),
@@ -125,17 +129,43 @@ fn project(runner: &OrcaRunner, case: &str) -> Vec<u8> {
                 settings["travel_jerk"] = json!(["16", "12"]);
                 settings["initial_layer_travel_jerk"] = json!(["50%", "25%"]);
             }
+            if manual_top_flow {
+                settings["filament_map"] = json!(["2"]);
+                settings["filament_map_mode"] = json!("Manual");
+            }
+            match case {
+                "top_flow_unmatched" => {
+                    settings["top_solid_infill_flow_ratio"] =
+                        json!(["0.87", "0.87", "1.13", "1.13"]);
+                }
+                "top_flow_equal" => {
+                    settings["top_solid_infill_flow_ratio"] = json!(["1", "1", "1", "1"]);
+                }
+                "top_flow_singleton" => {
+                    settings["top_solid_infill_flow_ratio"] = json!(["0.87"]);
+                }
+                _ => {}
+            }
             if case == "percent_wipe" {
                 settings["role_based_wipe_speed"] = json!("0");
                 settings["wipe_speed"] = json!("80%");
                 settings["travel_speed"] = json!(["300", "150"]);
             }
             bytes = serde_json::to_vec(&settings).unwrap();
+        } else if manual_top_flow && member.name() == "Metadata/model_settings.config" {
+            let xml = String::from_utf8(bytes).unwrap();
+            let mode = r#"key="filament_map_mode" value="Auto For Flush""#;
+            assert!(xml.contains(mode));
+            bytes = xml
+                .replace(mode, r#"key="filament_map_mode" value="Manual""#)
+                .into_bytes();
         }
         output
             .start_file(
                 member.name(),
-                zip::write::SimpleFileOptions::default().compression_method(member.compression()),
+                zip::write::SimpleFileOptions::default()
+                    .compression_method(member.compression())
+                    .last_modified_time(zip::DateTime::default()),
             )
             .unwrap();
         output.write_all(&bytes).unwrap();

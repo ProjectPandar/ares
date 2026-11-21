@@ -35,6 +35,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_density: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) print_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) top_solid_infill_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) set_other_flow_ratios: bool,
     pub(in crate::project_slice::gcode_emit) outer_wall_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) inner_wall_flow_ratio: f64,
