@@ -9,8 +9,9 @@ in each of two fresh seeded Native processes, against the workspace backend.
 
 ## Mandatory test / retained evidence
 
-Run from repository root with required seeded Native + matching separate DWARF,
-GDB Python/ptrace access, Python3 and pinned clean upstream source available.
+Run from repository root with the v2.5.0 seed-replay recipe's ELF and matching
+separate DWARF, GDB Python/ptrace access, Python3 and a clean upstream checkout at
+`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
 Set the shell variables below to your installation paths and one available CPU;
 there are no machine-path or CPU defaults in the harness:
 
@@ -21,6 +22,10 @@ ARES_ORCA_BIN="$ORCA_WRAPPER" \
 ARES_ORCA_NATIVE_BIN="$ORCA_NATIVE_ELF" \
 ARES_ORCA_RESOURCES_DIR="$ORCA_RESOURCES" \
 ARES_ORCA_DEBUG_DIR="$ORCA_DEBUG_DIRECTORY" \
+ARES_ORCA_DEBUG_FILE="$ORCA_DEBUG_FILE" \
+ARES_ORCA_NATIVE_SHA256="$ORCA_NATIVE_SHA256" \
+ARES_ORCA_DEBUG_SHA256="$ORCA_DEBUG_SHA256" \
+ORCA_REPLAY_CPU="$CPU" \
 ARES_ORCA_SOURCE_DIR="$ORCA_BUILD_LIBSLIC3R" \
 ARES_ORCA_UPSTREAM_DIR="$ORCA_SOURCE_CHECKOUT" \
 ARES_GDB_BIN="$GDB_BIN" \
@@ -54,7 +59,7 @@ data/registers/arguments modified
 by observer (GDB uses ordinary code/finish breakpoints).
 
 `prepare.py` in the existing paint-color fixture generates input at runtime.
-Two actual MMU constructors (`MultiMaterialSegmentation.cpp:1555-1556`) execute
+Two actual MMU constructors (`MultiMaterialSegmentation.cpp:1665-1666`) execute
 with default detection/repair dispatch (`Geometry/Voronoi.cpp:28-73`). The
 observer captures effective return diagrams BEFORE graph mutations. A second
 raw-byte decoder independently qualifies all100 arrays. Seed0 and50 completed
