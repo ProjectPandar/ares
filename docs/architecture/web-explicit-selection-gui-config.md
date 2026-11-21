@@ -191,6 +191,11 @@ The references move from the CLI composition to the GUI one.
   removes the groups the plater session lacks. `filament_plugin_config_overrides` comes from the
   session's first filament (5726-5735), as `withSelectedPresets` sets it for the 3MF legs. Its
   `filament_ids` already equals the session's.
+  The Native run takes the plater's two project options for an STL on the command line:
+  `curr_bed_type`, the selected printer's from load_selections (4046-4055), and
+  `flush_volumes_vector`, the default (PrintConfig.cpp:8275) cut to a load/unload pair per
+  filament by update_multi_material_filament_presets (8623-8635). The CLI records no preset column
+  for a project option (OrcaSlicer.cpp:4168-4220). The bed type also sets the bed temperatures.
 - **STL slices with the first-run selection, and `profileSlice`, `multiExtruderVariant` and
   `bedDefault`.** Each reference that comes from the CLI composition gets the same two line
   changes from a probe session, or moves to a plater export where one exists. The complete list is
