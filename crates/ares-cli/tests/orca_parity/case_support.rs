@@ -27,6 +27,9 @@ mod startup_fan_initial_tool;
 #[path = "seam_paint.rs"]
 mod seam_paint;
 
+#[path = "seam_paint_split.rs"]
+mod seam_paint_split;
+
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 

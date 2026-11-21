@@ -11,7 +11,14 @@ and fuzzy paint). No export change is part of this slice.
 
 `GCode/SeamPlacer.cpp:1077–1156` collects the ordinary enforcer/blocker leaves
 for distance queries and strict leaves for contour ends in the sliced object
-frame. `:601–667,672–979` projects the boundary crossings onto the perimeter,
+frame. Seam paint reuses the shared tree decoder in
+`project/facets_annotation/selector.rs` (`TriangleSelector.cpp:1717–1799,
+1813–1949`): distance uses the ordinary leaves (`:1474–1493`), whereas
+contours use the strict traversal (`:1540–1666`), which subdivides selected
+leaves along neighboring T-junctions so interior edges cancel by vertex
+identity. `GCode/SeamPlacer.cpp:1114–1133` builds these two views separately
+for both enforcers and blockers; neither changes the sliced model mesh.
+`GCode/SeamPlacer.cpp:601–667,672–979` projects the boundary crossings onto the perimeter,
 adds exact-end samples (including blocker guards) or samples green by radius
 when ends are unavailable, resolves red over green, and selects a central
 candidate from the longest enforced patch. The Rust destinations are
@@ -28,11 +35,12 @@ Aligned mode, not merely to initial corner selection.
 
 ## Included and deferred
 
-- Included: neutral, enforcer and blocker leaves on ordinary single-part
-  objects, with the Aligned strategy, including unpainted controls and both
-  Classic and Arachne walls. Reuse the transformed object coordinate frame
-  already used by seam visibility, without involving machine-space offsets.
-- Deferred: split selector trees, extended palette values, paint on or in
+- Included: neutral, enforcer and blocker leaves, with or without selector
+  subdivision, on ordinary single-part objects with the Aligned strategy,
+  including unpainted controls and both Classic and Arachne walls. Reuse the
+  transformed object coordinate frame already used by seam visibility,
+  without involving machine-space offsets.
+- Deferred: extended palette values, paint on or in
   composition with other volume types, spiral mode, other seam strategies,
   precise seam modifiers, and full-green normalization (`:557–595`). These
   combinations must return a seam-specific unsupported input error before
@@ -47,4 +55,7 @@ Native in Official and seed-0 modes. Each of X1C, K1 and MK4 has the same box
 with no paint, front-only enforcer, rear-only blocker, both front and rear
 paint, and a side-painted control. Compare Native control and painted wall
 approaches to prove activation separately from byte parity; side paint must
-retain the unpainted output. Include a public rejection case for deferred paint.
+retain the unpainted output. For each printer, also compare a locally subdivided
+front patch with a T-junction against a control with no paint and against a
+locally subdivided side patch that must preserve unpainted Native output.
+Include public rejection cases for deferred paint.

@@ -9,7 +9,7 @@ use crate::{
     geometry::CoordinateScale,
     project::{
         effective_config::types::{BoundedResolvedProjectConfig, ResolvedPrintObjectConfig},
-        facets_annotation::strict_annotated_facets,
+        facets_annotation::FacetSelector,
     },
 };
 
@@ -37,12 +37,9 @@ pub(in crate::project_slice) fn validate_paint(
             || volumes[0].volume_type() != ProjectVolumeType::ModelPart
             || object.object.seam_position != ProcessSeamPosition::Aligned
             || resolved.views.full.process.print.spiral_mode.0
-            || volumes[0]
-                .mesh()
-                .seam_facets
-                .codes
+            || volumes[0].mesh().seam_facets.used_states()[3..]
                 .iter()
-                .any(|code| !matches!(code, 0 | 4 | 8))
+                .any(|&used| used)
         {
             return Err(deferred());
         }
@@ -52,7 +49,7 @@ pub(in crate::project_slice) fn validate_paint(
 
 fn deferred() -> SliceError {
     SliceError::InvalidInput(
-        "seam painting is outside the supported aligned single-part leaf domain".to_owned(),
+        "seam painting is outside the supported aligned single-part domain".to_owned(),
     )
 }
 
@@ -75,27 +72,29 @@ impl SeamPaint {
             return Ok(None);
         };
         let mesh = volume.mesh();
-        if mesh.seam_facets.codes.len() == mesh.triangles().len()
-            && mesh.seam_facets.codes.iter().all(|&code| code == 4)
-        {
+        let annotation = &mesh.seam_facets;
+        let states = annotation.used_states();
+        if annotation.mapping.len() == mesh.triangles().len() && !states[0] && !states[2] {
             return Err(deferred());
         }
+        let selector = FacetSelector::deserialize(mesh, annotation)?;
         let transform = centered_transform(object, group, scale).then(volume.transform());
-        let surface = |state| -> Result<PaintSurface, SliceError> {
-            // Ordinary and strict leaves coincide without selector subdivisions.
-            let selected = strict_annotated_facets(mesh, &mesh.seam_facets, state)?;
-            let vertices = selected
-                .vertices
+        let transform_vertices = |vertices: Vec<[f32; 3]>| -> Vec<Vec3> {
+            vertices
                 .into_iter()
                 .map(|[x, y, z]| {
                     let point =
                         transform.transform_point(Point3d::new(x.into(), y.into(), z.into()));
                     Vec3::new(point.x as f32, point.y as f32, point.z as f32)
                 })
-                .collect::<Vec<_>>();
+                .collect()
+        };
+        let surface = |state| -> PaintSurface {
+            let selected = selector.ordinary_facets(state);
+            let vertices = transform_vertices(selected.vertices);
             let triangles = selected
                 .triangles
-                .iter()
+                .into_iter()
                 .map(|face| Triangle {
                     vertices: face.map(|vertex| vertices[vertex as usize]),
                 })
@@ -105,15 +104,17 @@ impl SeamPaint {
                 negative_start: 0,
             };
             let tree = TriangleBvh::new(&mesh);
-            Ok(PaintSurface {
+            let strict = selector.strict_facets(state);
+            let contour = contour::edges(&transform_vertices(strict.vertices), &strict.triangles);
+            PaintSurface {
                 mesh,
                 tree,
-                contour: contour::edges(&vertices, &selected.triangles),
-            })
+                contour,
+            }
         };
         Ok(Some(Self {
-            enforcers: surface(1)?,
-            blockers: surface(2)?,
+            enforcers: surface(1),
+            blockers: surface(2),
         }))
     }
 }
