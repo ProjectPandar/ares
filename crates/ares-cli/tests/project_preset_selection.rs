@@ -6,6 +6,8 @@ mod differences;
 mod existing;
 #[path = "project_preset_selection/filament_composition.rs"]
 mod filament_composition;
+#[path = "project_preset_selection/groups.rs"]
+mod groups;
 #[path = "project_preset_selection/input.rs"]
 mod input;
 #[path = "project_preset_selection/loaded_filament_sync.rs"]

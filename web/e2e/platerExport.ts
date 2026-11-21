@@ -27,17 +27,15 @@ function bedSize(config: Record<string, unknown>): [number, number, number] {
 
 /**
  * The plater export of `selection`, a session that switched the opened BBL 3MF `opened` to a never-used printer,
- * saved to `out` as the Native CLI leaves the project when it loads `opened` with that printer, process and
- * filaments (OrcaSlicer.cpp at 40ecc66f7), the route the web slice follows. Returns `selection` with that project
- * config. Each change is computed from `opened` and `selection`:
+ * saved to `out` with the CLI machine-switch steps the web slice still runs on the plater's full_fff_config
+ * (OrcaSlicer.cpp at 40ecc66f7). Returns `selection` with that project config. Each change is computed from
+ * `opened` and `selection`:
  * - the instances and wipe tower move onto the larger bed (shrink_to_new_bed 1, 1899-1909, 4371-4382,
  *   4414-4443, 4619-4685): by the difference of the bed centres;
  * - curr_bed_type is the printer's default_bed_type, which Sidebar::update_presets selects for a printer without a
  *   stored bed type (Plater.cpp:3880-3900, Preset.cpp:1140-1150), where the probe keeps the wizard's;
- * - nozzle_volume_type stays the 3MF's when it has one (filled only when absent, 6981-6985);
+ * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216);
  * - filament_plugin_config_overrides, a scalar filament option the CLI skips (3715-3734), comes only from the 3MF;
- * - compatible_printers_condition is the loaded process's (every key applied, 3099-3102, 3405-3407), which
- *   full_fff_config erases;
  * - one filament preset in every slot, of one colour, turns the prime tower off and records it in the process
  *   column of different_settings_to_system (2531-2535, 3880-3888, 4316-4343), sized filament count + 2 (3202-3205).
  */
@@ -62,11 +60,8 @@ export function cliSwitchedExport(selection: NativeSelection, opened: string, ou
     wipe_tower_x: moved(plater.wipe_tower_x as string[], x),
     wipe_tower_y: moved(plater.wipe_tower_y as string[], y),
     curr_bed_type: bedType,
-    compatible_printers_condition: selection.process.edited.config.compatible_printers_condition.serialized,
   });
-  for (const key of ["nozzle_volume_type", "filament_plugin_config_overrides"]) {
-    if (key in project) config[key] = project[key];
-  }
+  if ("filament_plugin_config_overrides" in project) config.filament_plugin_config_overrides = project.filament_plugin_config_overrides;
   // 4291-4320 keep the tower for wrapping detection, a mixed filament or a smooth timelapse.
   expect(plater.enable_wrapping_detection !== "1" && !(plater.filament_is_mixed as string[]).includes("1") && plater.timelapse_type !== "1",
     "no tower kept by 4291-4320").toBe(true);
