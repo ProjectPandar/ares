@@ -2,23 +2,26 @@
 
 ## Scope
 
-Three web e2e specs fail on main because their expected values do not follow the upstream
-source they cite. The app, `ares-wasm` and `ares-core` already follow that source:
+Two web e2e specs fail on main because their expected values do not follow the upstream source
+they cite, while the app, `ares-wasm` and `ares-core` already follow it. A third is measured
+here and changed elsewhere:
 
 - `dualExtruder.spec.ts`: the expected H2D flow options;
 - `printerSwitchFilaments.spec.ts`, the U1 slice: the Native reference for the
-  `flush_volumes_matrix` line;
+  `flush_volumes_matrix` line, measured in section 2 and changed by the explicit-selection
+  slice;
 - `estimation.spec.ts`: the Native reference slices the 3MF on the CLI route, while the web
   opens it on the GUI route.
 
 This document only changes web e2e code. No `libslic3r` or `libvgcode` behaviour, no app code
 and no core code changes. Upstream lines are cited at OrcaSlicer 40ecc66f7 (v2.5.0).
 
-Not covered here: the `filament_ids` line of the U1 slice and the `compatible_printers_condition`
-line of `presetSlice.spec.ts`. Both depend on one open question, which this document does not
-answer: when the web slices an explicit preset selection, should it follow the GUI's
-`PresetBundle::full_fff_config` or the CLI's `--load-settings` composition? Until that is
-decided, the U1 slice still fails on its `filament_ids` line after the change below.
+Not covered here: the `filament_ids` line of the U1 slice, the U1 flush matrix reference and
+the `compatible_printers_condition` line of `presetSlice.spec.ts`. The web slice of an explicit
+preset selection follows the GUI's `PresetBundle::full_fff_config`, not the CLI's
+`--load-settings` composition. That route change and its reference changes are specified in
+`web-explicit-selection-gui-config.md`. Section 2 keeps the
+measurement that slice relies on.
 
 ## 1. dualExtruder: H2D flow options
 
@@ -123,28 +126,11 @@ equals the browser's line. Four Standard entries is also what the GUI session's 
 
 ### Change
 
-The spec slices two Native references from the same export:
-
-- **A**, the route-faithful reference: `cliSwitchedExport` as today.
-- **B**, the defined control: A's 3MF with `nozzle_volume_type` set to one Standard per
-  `nozzle_diameter` entry.
-
-Assertions:
-
-- B differs from A only on the `nozzle_volume_type` line and the `flush_volumes_matrix` line.
-  This guards the control against drifting from A.
-- The browser equals A on every line except `flush_volumes_matrix`.
-- The browser's `flush_volumes_matrix` line equals B's.
-- `result.json` records A's line, B's line and the browser's line.
-
-No line loses coverage. A documented exclusion would drop the matrix line, so it is not used.
-The ARD's own control, an explicit `--nozzle-volume-type` with four entries, is also not used.
-It does trigger a rebuild, but the browser gets no such input for the U1: the flow combo exists
-only for a two-extruder BBL printer (Plater.cpp:4010-4015, `isDual` in `extruders.ts`).
-
-The control costs one more Native slice. If the route question resolves to the GUI, the
-browser's `nozzle_volume_type` becomes the session's four entries, B becomes the
-route-faithful reference for every line, and A can go.
+None in this document. The explicit-selection slice now follows the GUI's
+`PresetBundle::full_fff_config`, so the browser's `nozzle_volume_type` becomes the session's
+one entry per head. The four-entry export B above is then the route-faithful reference for
+every line, and the one-entry export A is no longer needed. The reference change moves to the
+slice that switches that route: `web-explicit-selection-gui-config.md`.
 
 ## 3. estimation: a GUI-route reference
 
@@ -230,6 +216,6 @@ is compared with main.
 | spec | expected after the change |
 | --- | --- |
 | `dualExtruder.spec.ts` | the flow assertions pass; the first later difference, if any, is reported as found |
-| `printerSwitchFilaments.spec.ts` U1 slice | fails only on `filament_ids`, until the route question is decided |
+| `printerSwitchFilaments.spec.ts` U1 slice | unchanged here; see the explicit-selection slice |
 | `estimation.spec.ts` | fails only by the deferred residual, or passes |
 | the rest of the suite | no spec that passes on main fails |
