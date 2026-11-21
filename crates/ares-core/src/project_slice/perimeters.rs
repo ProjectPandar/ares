@@ -32,13 +32,13 @@ pub(super) struct PreparedPostPerimeterInputs {
 pub(super) fn prepare_post_perimeter_inputs<'a>(
     project: impl ProjectBytes<'a>,
 ) -> Result<PreparedPostPerimeterInputs, SliceError> {
-    finish_post_perimeter_inputs(prepare_post_compensation(project.into_source())?)
+    finish_post_perimeter_inputs(prepare_post_compensation(project)?)
 }
 
 pub(super) fn prepare_post_classic_prelude<'a>(
     project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicPrelude, SliceError> {
-    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project.into_source())?)
+    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project)?)
 }
 
 fn classic_infill_boundary(

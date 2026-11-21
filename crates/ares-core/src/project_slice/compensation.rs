@@ -146,7 +146,7 @@ pub(super) fn prepare_post_compensation<'a>(
         scale,
         objects,
         painting,
-    } = prepare_post_interlocking(project.into_source())?;
+    } = prepare_post_interlocking(project.into_plate_input())?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
     let objects = apply_project_compensation(

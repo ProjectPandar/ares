@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::catalog::selection;
-mod load_settings;
+pub(crate) mod load_settings;
 pub use load_settings::{LoadSettingsSliceRequest, slice_with_load_settings};
 
 /// Model placement before slicing. `Center` mirrors the CLI `--center`
@@ -229,7 +229,7 @@ pub struct ProfileSettings(pub(crate) crate::project::raw_settings::ProjectSetti
 
 /// Composes the request and runs `body` on the resulting source; both the
 /// slice entries and the settings view share this single compose path.
-pub(super) fn with_profile_source<T>(
+pub(crate) fn with_profile_source<T>(
     input: &[u8],
     request: ProfileSliceRequest<'_>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,

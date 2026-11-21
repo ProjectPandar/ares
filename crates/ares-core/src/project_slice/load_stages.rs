@@ -1,51 +1,41 @@
 use crate::SliceError;
 
 use super::{
-    PreparedPostClosing, PreparedPostRegions, ProjectSource, closing, conical_overhang,
-    largest_contours, pre_closing_unions, profile_entry, region_slices, simplification,
-    slicing_mode_intersections, state, top_empty_layers, volume_bounds, volume_regions,
+    PreparedPostClosing, PreparedPostRegions, closing, conical_overhang, largest_contours,
+    pre_closing_unions, profile_entry, region_slices, simplification, slicing_mode_intersections,
+    source::PlateInput, state, top_empty_layers, volume_bounds, volume_regions,
 };
 
 pub(super) fn prepare_post_closing(
-    mut project: ProjectSource<'_>,
+    input: PlateInput<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
-    let mut sliced_plate = project.sliced_plate.take();
     let state::ProjectSliceState {
         project,
         resolved,
         config_block,
         scale,
         looped_objects,
-    } = if let Some(profile) = project.profile {
-        profile_entry::prepare_profile_slice(
-            &project,
-            profile,
-            sliced_plate
-                .as_deref_mut()
-                .map(|report| &mut report.upward_machines),
-        )?
-    } else {
-        state::prepare_project_source(ProjectSource {
-            sliced_plate: sliced_plate.as_deref_mut(),
-            ..project
-        })?
+    } = match input {
+        PlateInput::Applied(plate) => plate.prepare()?,
+        PlateInput::Source(mut source) => {
+            let mut report = source.sliced_plate.take();
+            let state = if let Some(profile) = source.profile {
+                profile_entry::prepare_profile_slice(
+                    &source,
+                    profile,
+                    report
+                        .as_deref_mut()
+                        .map(|report| &mut report.upward_machines),
+                )?
+            } else {
+                state::prepare_project_source(*source)?
+            };
+            if let Some(report) = report {
+                state::slice_report(&state.project, &state.resolved, report)?;
+            }
+            state
+        }
     };
-    if let Some(sliced_plate) = sliced_plate {
-        // `OrcaSlicer.cpp:6576-6640, 6926-6931`: the plate's facets and `m_print_config` values, read
-        // as `Print::validate`'s failure families read them (`print/validate.rs`).
-        let warnings = std::mem::take(&mut sliced_plate.warnings);
-        let settings = &resolved.views.full;
-        *sliced_plate = crate::SlicedPlate {
-            warnings,
-            upward_machines: std::mem::take(&mut sliced_plate.upward_machines),
-            triangle_count: state::inside_triangle_count(&project)?,
-            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
-            wall_loops: settings.process.region.wall_loops.0,
-            sparse_infill_density: f64::from(
-                settings.process.region.sparse_infill_density.0 as f32,
-            ),
-        };
-    }
     let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
     let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
         looped_objects,
@@ -65,7 +55,7 @@ pub(super) fn prepare_post_closing(
 }
 
 pub(super) fn prepare_post_largest_contours(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut prepared = prepare_post_closing(project)?;
     largest_contours::apply_project_largest_contours(&mut prepared.objects);
@@ -73,7 +63,7 @@ pub(super) fn prepare_post_largest_contours(
 }
 
 pub(super) fn prepare_post_simplification(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut prepared = prepare_post_largest_contours(project)?;
     let resolution = prepared.resolved.views.full.process.print.resolution.0;
@@ -86,7 +76,7 @@ pub(super) fn prepare_post_simplification(
 }
 
 pub(super) fn prepare_post_regions(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let PreparedPostClosing {
         project,
@@ -157,7 +147,7 @@ pub(super) fn prepare_post_regions(
 }
 
 pub(super) fn prepare_post_top_empty_layers(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_regions(project)?;
     top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
@@ -173,7 +163,7 @@ pub(super) fn prepare_post_top_empty_layers(
 }
 
 pub(super) fn prepare_post_conical_overhang(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_top_empty_layers(project)?;
     conical_overhang::apply_project_conical_overhang(
@@ -185,7 +175,7 @@ pub(super) fn prepare_post_conical_overhang(
 }
 
 pub(super) fn prepare_post_painted(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_conical_overhang(project)?;
     region_slices::painted::apply_project(&mut prepared)?;
@@ -194,7 +184,7 @@ pub(super) fn prepare_post_painted(
 }
 
 pub(super) fn prepare_post_interlocking(
-    project: ProjectSource<'_>,
+    project: PlateInput<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_painted(project)?;
     let contexts = prepared

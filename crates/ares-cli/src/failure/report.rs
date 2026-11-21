@@ -28,6 +28,100 @@ impl CliFailure {
     }
 }
 
+impl CliFailure {
+    pub(crate) fn invalid_slice_selection(#[cfg(target_os = "linux")] output: &Path) -> Self {
+        Self::slice_action_failure(
+            #[cfg(target_os = "linux")]
+            output,
+            #[cfg(target_os = "linux")]
+            0,
+            -2,
+            #[cfg(target_os = "linux")]
+            "Invalid parameters to the slicer.",
+            String::new(),
+        )
+    }
+
+    pub(crate) fn slice_export_error(
+        #[cfg(target_os = "linux")] output: &Path,
+        #[cfg(target_os = "linux")] plate: u32,
+        error: io::Error,
+    ) -> Self {
+        Self::slice_action_failure(
+            #[cfg(target_os = "linux")]
+            output,
+            #[cfg(target_os = "linux")]
+            plate,
+            -100,
+            #[cfg(target_os = "linux")]
+            "Failed slicing the model. Please verify the slicing of all plates on Orca Slicer before uploading.",
+            format!("{error}\n"),
+        )
+    }
+
+    fn slice_action_failure(
+        #[cfg(target_os = "linux")] output: &Path,
+        #[cfg(target_os = "linux")] plate_index: u32,
+        return_code: i32,
+        #[cfg(target_os = "linux")] error_string: &'static str,
+        stderr: String,
+    ) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code,
+            #[cfg(target_os = "linux")]
+            plate_index,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string,
+            upward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            critical_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
+            stderr,
+            #[cfg(target_os = "linux")]
+            output: output.to_owned(),
+        }))
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(crate) fn with_plate_batch(
+        mut self,
+        plate: u32,
+        report: ares_core::SlicedPlate,
+        completed: Vec<(u32, ares_core::SlicedPlate)>,
+    ) -> Self {
+        if let Self::Family(family) = &mut self {
+            if family.return_code == -50 || family.return_code == -100 {
+                family.layer_height = report.layer_height;
+                family.wall_loops = report.wall_loops;
+                family.sparse_infill_density = report.sparse_infill_density;
+            }
+            for (id, report) in completed {
+                family
+                    .completed
+                    .push(crate::result_json::SlicedPlateEntry::from_plate(
+                        id, &report,
+                    ));
+                family
+                    .warnings
+                    .extend(crate::result_json::slicing_warnings(id, report.warnings));
+            }
+            family
+                .warnings
+                .extend(crate::result_json::slicing_warnings(plate, report.warnings));
+        }
+        self
+    }
+}
+
 impl FamilyFailure {
     pub(super) fn flush_and_exit(self) -> ! {
         #[cfg(target_os = "linux")]
@@ -43,7 +137,7 @@ impl FamilyFailure {
     /// `record_exit_reson` with the family's fields (`OrcaSlicer.cpp:535-586`).
     #[cfg(target_os = "linux")]
     fn record_exit_reason(&self) -> Result<(), serde_json::Error> {
-        let sliced_plates =
+        let critical =
             self.critical_warning
                 .as_ref()
                 .map(|message| crate::result_json::SlicedPlateEntry {
@@ -51,6 +145,12 @@ impl FamilyFailure {
                     triangle_count: 0,
                     warning_message: message.clone(),
                 });
+        let sliced_plates = self
+            .completed
+            .iter()
+            .cloned()
+            .chain(critical)
+            .collect::<Vec<_>>();
         crate::result_json::ResultJson {
             return_code: self.return_code,
             error_string: self.error_string,

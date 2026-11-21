@@ -5,7 +5,8 @@ use std::{fs, io};
 use crate::{
     SliceArgs,
     failure::{CliFailure, slice_error_to_failure},
-    read_preset_files, report_success, substitutions,
+    preset_sources::read_preset_files,
+    report_success, substitutions,
 };
 
 pub(super) async fn slice(
@@ -28,7 +29,7 @@ pub(super) async fn slice(
     if let Err(error) = ares_core::validate_load_settings_input(input) {
         return Err(slice_error_to_failure(
             error,
-            &args.output,
+            args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
         ));
@@ -67,13 +68,13 @@ pub(super) async fn slice(
     .map_err(|error| match error.downcast::<ares_core::SliceError>() {
         Ok(error) => slice_error_to_failure(
             *error,
-            &args.output,
+            args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
         ),
         Err(error) => CliFailure::config_file_error(
             #[cfg(target_os = "linux")]
-            &args.output,
+            args.output(),
             format!("{error}\n"),
         ),
     })?;
@@ -109,7 +110,7 @@ pub(super) async fn slice(
             )?;
             let failure = slice_error_to_failure(
                 error,
-                &args.output,
+                args.output(),
                 #[cfg(target_os = "linux")]
                 // The request above selects args.plate; CLI :5681-5690
                 // selects that same one-based plate (default first), and
@@ -131,13 +132,13 @@ pub(super) async fn slice(
         input,
         &sliced_plate.upward_machines,
     )?;
-    fs::write(&args.output, gcode)?;
+    fs::write(args.output(), gcode)?;
     report_success(
         &input_file,
         substitutions(input),
         #[cfg(target_os = "linux")]
         result_json::Success {
-            output: &args.output,
+            output: args.output(),
             plate: args.plate.unwrap_or(1),
             plate_index: args.plate.unwrap_or(0),
             upward_machines: &std::mem::take(&mut sliced_plate.upward_machines),

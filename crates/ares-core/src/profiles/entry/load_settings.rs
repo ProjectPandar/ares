@@ -41,7 +41,7 @@ pub async fn slice_with_load_settings(
     .map(|processed| processed.gcode)
 }
 
-fn with_load_settings_source<T>(
+pub(crate) fn with_load_settings_source<T>(
     input: &[u8],
     request: LoadSettingsSliceRequest<'_>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,

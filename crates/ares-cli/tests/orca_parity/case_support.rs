@@ -12,6 +12,9 @@ pub(crate) mod smoke_overrides;
 #[path = "vendor_inventory.rs"]
 pub(crate) mod vendor_inventory;
 
+#[path = "cli_slice_plates.rs"]
+mod cli_slice_plates;
+
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;
 

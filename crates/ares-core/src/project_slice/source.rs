@@ -65,6 +65,18 @@ pub(crate) struct ProfileInput<'a> {
     pub(crate) validate_print: bool,
 }
 
+impl<'a> ProfileInput<'a> {
+    pub(super) fn printer_name(self) -> &'a str {
+        &self
+            .composed
+            .settings()
+            .project
+            .preset
+            .printer_settings_id
+            .0
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
@@ -138,32 +150,30 @@ fn apply_direct_catalog(
     project.apply_project_preset_refresh(raw, overrides)
 }
 
-pub(super) trait ProjectBytes<'a> {
-    fn into_source(self) -> ProjectSource<'a>;
+pub(super) enum PlateInput<'a> {
+    Source(Box<ProjectSource<'a>>),
+    Applied(Box<super::state::AppliedPlate>),
 }
 
-impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
-    fn into_source(self) -> ProjectSource<'a> {
+pub(super) trait ProjectBytes<'a> {
+    fn into_plate_input(self) -> PlateInput<'a>;
+}
+
+impl<'a> ProjectBytes<'a> for PlateInput<'a> {
+    fn into_plate_input(self) -> PlateInput<'a> {
         self
     }
 }
 
+impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
+    fn into_plate_input(self) -> PlateInput<'a> {
+        PlateInput::Source(Box::new(self))
+    }
+}
+
 impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
-    fn into_source(self) -> ProjectSource<'a> {
-        ProjectSource {
-            input: ProjectInput::Bytes(self.as_ref()),
-            plate: None,
-            profile: None,
-            refresh: None,
-            system_catalog: None,
-            overrides: &EMPTY_OVERRIDES,
-            validate_print: false,
-            validate_config: true,
-            orient: false,
-            upward: None,
-            sliced_plate: None,
-            edits: &crate::plater::NO_EDITS,
-        }
+    fn into_plate_input(self) -> PlateInput<'a> {
+        ProjectSource::from(self.as_ref()).into_plate_input()
     }
 }
 
