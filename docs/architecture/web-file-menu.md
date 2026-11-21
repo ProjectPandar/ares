@@ -142,6 +142,17 @@ adds the file to the current plate. That difference already exists and is not ch
 - The menu uses the existing `.context-menu` styles. On the mobile layout it fits the viewport,
   and the touch rules keep the 44 px targets.
 
+## Web deviations
+
+- New Project always keeps the modified presets. Upstream asks Keep, Discard or Save
+  (`check_and_keep_current_preset_changes`); the web takes the Keep answer and does not ask.
+- The presets of an opened 3MF exist in the web only with that project's scene, so New Project
+  drops them together with the project, the state a page reload also reaches. System and imported
+  presets the user selected stay, with the sidebar edits.
+- New Project's confirmation has Discard and Cancel only until the 3MF export slice adds Save.
+- Until the 3MF export slice rebinds Ctrl+G, the Export G-code row shows Ctrl+G, because that key
+  runs it. Upstream shows Ctrl+G on Export plate sliced file.
+
 ## Included
 
 - The File bar button and menu with the rows above.
