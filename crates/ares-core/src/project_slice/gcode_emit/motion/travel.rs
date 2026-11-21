@@ -10,7 +10,6 @@ mod wipe_execute;
 mod wipe_path;
 mod wipe_sequence;
 pub(super) use retract_core::plain_retract;
-pub(super) use wipe_execute::without_retraction as wipe_without_retraction;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::gcode_comment;
 pub(in crate::project_slice::gcode_emit) use wipe_sequence::reset_e;
 pub(super) use wipe_sequence::retract_and_wipe;
