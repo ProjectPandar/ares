@@ -103,8 +103,13 @@ For `Composition::Gui`, the explicit branch composes through a new function in
 3. Sets `nozzle_volume_type` in the project config by `load_selections` (4196-4216) when the
    request carries none. The wasm `nozzle_volume_type` override of a dual-nozzle printer stays
    as it is.
-4. Calls `full_fff_config::full_fff_config` on the opened project's config. For an STL there is
-   no opened config, so it uses the project option defaults.
+4. Composes the selected presets' values with the catalog, which loads the same resolved presets
+   as `--load-settings`, and collects from the records what full_fff_config decides beyond those
+   values: the group keys, and the preset options no preset file sets. A loaded preset holds every
+   option of its kind (5536-5542, 5721-5774), and the G-code prints each held key but the banned
+   and nil ones (GCode.cpp:8305-8370). These apply over the merged config, so a key the opened
+   3MF holds keeps its value. For an STL there is no opened config, so they apply over the
+   composed one.
 5. Returns the composed profile in the shape `ProfileInput` takes today (`profile`, `raw`,
    `filament_raws`).
 
@@ -180,7 +185,9 @@ The references move from the CLI composition to the GUI one.
   process column as the plater's edited print does (5586-5595).
 - **`presetSlice.spec.ts`, STL leg.** The `--load-settings` reference changes to the GUI
   composition. The `compatible_printers_condition` line is removed, and `withoutCliGroups`
-  removes the groups the plater session lacks. Its `filament_ids` already equals the session's.
+  removes the groups the plater session lacks. `filament_plugin_config_overrides` comes from the
+  session's first filament (5726-5735), as `withSelectedPresets` sets it for the 3MF legs. Its
+  `filament_ids` already equals the session's.
 - **STL slices with the first-run selection, and `profileSlice`, `multiExtruderVariant` and
   `bedDefault`.** Each reference that comes from the CLI composition gets the same two line
   changes from a probe session, or moves to a plater export where one exists. The complete list is
@@ -218,7 +225,7 @@ The sidebar edits reach the GUI route as overrides, and applying them records th
 the way the CLI records its command-line options (OrcaSlicer.cpp:4168-4220). That creates
 `different_settings_to_system` at filament count + 2 even when no preset owns a changed key. The
 plater holds its edits before full_fff_config collects the groups, so the store rule
-(5823-5841) runs after the edits on the explicit route.
+(5823-5841) runs after the edits on both GUI branches.
 
 The reference stays as it is: `withoutCliGroups` (`web/e2e/platerExport.ts:97-112`) already
 removes the Native CLI's all-empty lines when the plater config lacks them.
