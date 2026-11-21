@@ -4,11 +4,7 @@ use std::io::{Cursor, Read, Write};
 
 #[test]
 fn bookkeeping_short_vectors_pad_to_filament_count() {
-    if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
-        return;
-    }
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
-        crate::native_environment::skipped("seeded-only reference");
+    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_BOOKKEEPING_REFERENCE")) {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();
@@ -117,11 +113,7 @@ fn configure_different_settings(settings: &mut Value, supplied: bool) {
 
 #[test]
 fn bookkeeping_matches_complete_configured_filament_output() {
-    if !crate::runner::reference_enabled("ARES_PARITY_BOOKKEEPING_REFERENCE") {
-        return;
-    }
-    if std::env::var("ARES_PARITY_SEEDED_REFERENCE").as_deref() != Ok("1") {
-        crate::native_environment::skipped("seeded-only reference");
+    if !crate::runner::seeded_reference_enabled(Some("ARES_PARITY_BOOKKEEPING_REFERENCE")) {
         return;
     }
     let runner = OrcaRunner::from_env().unwrap().unwrap();

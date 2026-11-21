@@ -10,3 +10,37 @@ test-threads = "num-cpus"
 # successful output from unrelated tests or synthetic launcher/cache probes.
 filter = '(binary(orca_parity) & !test(runner::initialization_tests) & !test(runner::path_tests) & !test(runner::cache_contract_tests) & !test(runner::strict_reference_tests) & !test(runner::wrapper_tests) & !test(runner::lifecycle_tests) & !test(runner::stage_tests)) | binary(gcode_moves_oracle)'
 success-output = "immediate"
+
+[profile.parity-official]
+default-filter = '''
+!(binary_id(=ares-cli::orca_parity) & (
+    test(=object_emission_cases::fuzzy_allwalls_rng_order::fuzzy_allwalls_seeded_oracle_ordered_bytes) |
+    test(=object_emission_cases::fuzzy_allwalls_rng_order::fuzzy_external_seeded_oracle_control) |
+    test(=object_emission_cases::fuzzy_allwalls_rng_order::fuzzy_all_seeded_oracle_control) |
+    test(=runner::template_rng::seeded_template_file_start_draws_from_the_shared_stream) |
+    test(=runner::template_rng::seeded_template_flashforge_04) |
+    test(=runner::template_rng::seeded_template_flashforge_06) |
+    test(=runner::template_rng::seeded_template_flashforge_08) |
+    test(=runner::template_rng::seeded_template_raise3d_dual) |
+    test(=runner::template_rng::seeded_template_raise3d_left) |
+    test(=runner::template_rng::seeded_template_raise3d_right) |
+    test(=runner::template_rng::seeded_template_distributions_and_shared_stream) |
+    test(=option_coverage::bookkeeping_export::bookkeeping_short_vectors_pad_to_filament_count) |
+    test(=option_coverage::bookkeeping_export::bookkeeping_matches_complete_configured_filament_output) |
+    test(=option_coverage::initialized_object_id::initialized_reference_repeats_complete_stock_project_output) |
+    test(=option_coverage::initialized_short_line::initialized_short_line_matches_complete_internal_fill_output) |
+    test(=option_coverage::initialized_stitch_junction::initialized_stitch_junction_matches_complete_internal_fill) |
+    test(=option_coverage::initialized_transition_snap::initialized_transition_snap_matches_complete_internal_fill) |
+    test(=option_coverage::seam_position_random::seam_position_random_concave_epsilon_matches_complete_output) |
+    test(=option_coverage::single_volume_offset::single_volume_offset_matches_complete_prism_output) |
+    test(=option_coverage::staggered_inner_seams::staggered_inner_seams_convex_depth_matches_complete_output) |
+    test(=option_coverage::wall_generator_arachne::wall_generator_arachne_matches_complete_output) |
+    test(=runner::initialized_loop_chain::initialized_loop_chain_matches_complete_output) |
+    test(=runner::initialized_overhang_intersections::initialized_overhang_intersections_match_complete_output)
+))
+'''
+
+[profile.parity-seeded]
+default-filter = '''
+!(binary_id(=ares-cli::orca_parity) & test(=object_emission_cases::fuzzy_allwalls_rng_order::official_fuzzy_allwalls_oracle_is_explicitly_unstable))
+'''
