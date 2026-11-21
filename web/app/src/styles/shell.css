@@ -142,3 +142,17 @@ a { color: var(--accent-ink); }
 .notification p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .notification-close { flex: none; border: 0; background: none; color: var(--text-dim); cursor: pointer; padding: 0 2px; }
 .engine-crash-message { white-space: pre-wrap; margin: 0 16px; }
+
+/* MainFrame File menu under BBLTopbar's File tool; submenus open to the right */
+.file-menu { position: relative; }
+.file-menu > .context-menu { position: absolute; top: 100%; left: 0; min-width: 240px; max-width: calc(100vw - 16px); }
+.file-submenu { position: relative; display: flex; flex-direction: column; }
+.file-submenu > .context-menu { position: absolute; top: -5px; left: 100%; min-width: 260px; }
+.file-menu .context-menu button { display: grid; grid-template-columns: 1fr auto; column-gap: 24px; align-items: center; }
+.file-menu .context-menu button[aria-expanded="true"] { background: var(--accent-checked); }
+.file-menu .context-menu button[aria-disabled="true"] { cursor: default; }
+.file-menu .context-menu button[aria-disabled="true"] .menu-label { color: var(--text-dim); }
+@media (hover: hover) { .file-menu .context-menu button[aria-disabled="true"]:hover { background: none; } }
+.menu-shortcut, .menu-arrow { color: var(--text-dim); }
+.menu-reason { grid-column: 1 / -1; font-size: 11px; color: var(--text-dim); }
+.menu-separator { height: 1px; margin: 4px 0; background: var(--border); }
