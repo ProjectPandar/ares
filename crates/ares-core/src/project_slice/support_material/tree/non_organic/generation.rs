@@ -144,7 +144,7 @@ pub(in crate::project_slice::support_material) fn generate(
     }
     .run(context)
     .map_err(error)?;
-    smoothing::smooth_nodes(&mut arena, &contacts.layers, object, tree.scale);
+    smoothing::smooth_nodes(&mut arena, &contacts.layers);
     context.set_status(65, format_args!("Generating support"), 0);
     let trim_layers = tree
         .slices
