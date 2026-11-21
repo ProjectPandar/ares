@@ -218,6 +218,21 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
+    /// Skip custom G-code edits in a saved project.
+    #[arg(
+        long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
+        default_value = "false", default_missing_value = "true",
+        value_parser = |value: &str| {
+            let first = value.split(',').map(str::trim).find(|token| !token.is_empty());
+            match first.unwrap_or("").to_ascii_lowercase().as_str() {
+                "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
+                "0" | "false" | "no" | "off" | "disabled" => Ok(false),
+                "" if value.is_empty() => Ok(true),
+                _ => Err("expected a boolean"),
+            }
+        }
+    )]
+    pub(crate) skip_modified_gcodes: bool,
     /// Check whether a saved project declares post-processing.
     #[arg(
         long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
