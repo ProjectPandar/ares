@@ -79,13 +79,15 @@ function lhModels() {
 
 /**
  * The STL reference with the plater's config lines: with no project open, load_selections copies the filament
- * colours into `filament_multi_colour` (PresetBundle.cpp:4116-4117); full_fff_config erases
+ * colours into `filament_multi_colour` (PresetBundle.cpp:4116-4117); full_fff_config takes the scalar
+ * `filament_plugin_config_overrides` from the first filament (PresetBundle.cpp:5726-5735), erases
  * `compatible_printers_condition` (PresetBundle.cpp:5790-5794) and stores only the groups `session` holds.
  */
 function withPlaterStlLines(gcode: string, session: NativeSelection) {
   const lines = gcode.split("\n");
   const colour = lines.find((line) => line.startsWith("; filament_colour = "))!.slice("; filament_colour = ".length);
   setConfigLine(lines, "filament_multi_colour", colour);
+  setConfigLine(lines, "filament_plugin_config_overrides", session.filament.edited.config.filament_plugin_config_overrides?.serialized);
   setConfigLine(lines, "compatible_printers_condition", undefined);
   return withoutCliGroups(lines.join("\n"), session);
 }
