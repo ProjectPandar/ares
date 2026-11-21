@@ -8,18 +8,11 @@ pub(super) fn validate(
         if resolved.object.brim_type == crate::ProcessBrimType::LeadingEdgeOnly {
             return unsupported("brim_type: leading_edge_only");
         }
-        if resolved.object.support_interface_pattern
-            == crate::ProcessSupportInterfacePattern::SpiralInset
-        {
-            return unsupported("support_interface_pattern: spiralinset");
-        }
         if resolved.object.support_ironing_pattern == crate::ProcessInfillPattern::SpiralInset {
             return unsupported("support_ironing_pattern: spiralinset");
         }
         for region in &resolved.all_regions {
             for (key, pattern) in [
-                ("top_surface_pattern", region.top_surface_pattern),
-                ("bottom_surface_pattern", region.bottom_surface_pattern),
                 (
                     "internal_solid_infill_pattern",
                     region.internal_solid_infill_pattern,
@@ -54,14 +47,6 @@ pub(super) fn validate(
 pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(), SliceError> {
     for (key, pattern) in [
         (
-            "top_surface_pattern",
-            settings.process.region.top_surface_pattern,
-        ),
-        (
-            "bottom_surface_pattern",
-            settings.process.region.bottom_surface_pattern,
-        ),
-        (
             "internal_solid_infill_pattern",
             settings.process.region.internal_solid_infill_pattern,
         ),
@@ -76,13 +61,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
         ),
     ] {
         validate_pattern(key, pattern)?;
-    }
-    if settings.process.object.support_interface_pattern
-        == crate::ProcessSupportInterfacePattern::SpiralInset
-    {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "support_interface_pattern: spiralinset".to_owned(),
-        ));
     }
     if settings.process.object.brim_type == crate::ProcessBrimType::LeadingEdgeOnly {
         return Err(SliceError::UnsupportedProjectFeature(

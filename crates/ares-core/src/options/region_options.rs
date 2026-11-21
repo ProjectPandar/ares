@@ -5,8 +5,9 @@ use super::{
     OrcaFloatsNullable, OrcaInt, OrcaInts, OrcaString, OrcaStrings, Percent,
     ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
     ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
-    ProcessRegionSourceOptions, ProcessSeamScarfType, ProcessTopSurfaceExpansionDirection,
-    ProcessWallDirection, ProcessWallSequence, region_fields::region_option_fields,
+    ProcessRegionSourceOptions, ProcessSeamScarfType, ProcessSurfaceFillOrder,
+    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
+    region_fields::region_option_fields,
 };
 
 mod merge;
@@ -41,6 +42,8 @@ macro_rules! declare_region_options {
         #[derive(Clone, Debug, PartialEq)]
         pub struct RegionOptions {
             $(pub $field: $ty),*,
+            pub top_surface_fill_order: ProcessSurfaceFillOrder,
+            pub bottom_surface_fill_order: ProcessSurfaceFillOrder,
             pub filament_ironing_flow: Percent,
             pub filament_ironing_spacing: OrcaFloat,
             pub filament_ironing_inset: OrcaFloat,
@@ -52,6 +55,8 @@ macro_rules! declare_region_options {
             pub(crate) fn from_base(base: &ProcessRegionSourceOptions) -> Self {
                 Self {
                     $($field: base.$field.clone()),*,
+                    top_surface_fill_order: base.top_surface_fill_order,
+                    bottom_surface_fill_order: base.bottom_surface_fill_order,
                     filament_ironing_flow: base.ironing_flow,
                     filament_ironing_spacing: base.ironing_spacing,
                     filament_ironing_inset: base.ironing_inset,
@@ -62,6 +67,8 @@ macro_rules! declare_region_options {
             fn from_parent(parent: &Self) -> Self {
                 Self {
                     $($field: parent.$field.clone()),*,
+                    top_surface_fill_order: parent.top_surface_fill_order,
+                    bottom_surface_fill_order: parent.bottom_surface_fill_order,
                     filament_ironing_flow: parent.ironing_flow,
                     filament_ironing_spacing: parent.ironing_spacing,
                     filament_ironing_inset: parent.ironing_inset,

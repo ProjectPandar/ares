@@ -48,6 +48,7 @@ pub(crate) enum RaftFillPattern {
     SupportBase,
     Honeycomb,
     Concentric,
+    SpiralInset,
     Grid,
 }
 
@@ -71,14 +72,10 @@ pub(crate) fn contact_fill_pattern(
     let zero_gap_top =
         object.support_interface_top_layers.0 > 0 && object.support_top_z_distance.0 == 0.0;
     Ok(match object.support_interface_pattern {
-        ProcessSupportInterfacePattern::SpiralInset => {
-            return Err(crate::SliceError::UnsupportedProjectFeature(
-                "support_interface_pattern: spiralinset".to_owned(),
-            ));
-        }
         ProcessSupportInterfacePattern::Grid => RaftFillPattern::Grid,
         ProcessSupportInterfacePattern::RectilinearInterlaced => RaftFillPattern::Rectilinear,
         ProcessSupportInterfacePattern::Concentric => RaftFillPattern::Concentric,
+        ProcessSupportInterfacePattern::SpiralInset => RaftFillPattern::SpiralInset,
         ProcessSupportInterfacePattern::Auto if zero_gap_top => RaftFillPattern::Concentric,
         ProcessSupportInterfacePattern::Auto | ProcessSupportInterfacePattern::Rectilinear => {
             if density > 0.95 {

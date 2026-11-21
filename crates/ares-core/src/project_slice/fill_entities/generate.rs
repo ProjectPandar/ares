@@ -110,11 +110,6 @@ pub(in crate::project_slice) fn generate_layer_with_active(
             dont_adjust: fill.params.bridge,
         };
         match fill.params.pattern {
-            SurfaceFillPattern::Configured(ProcessInfillPattern::SpiralInset) => {
-                return Err(crate::SliceError::UnsupportedProjectFeature(
-                    "infill pattern: spiralinset".to_owned(),
-                ));
-            }
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 super::crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
@@ -312,6 +307,15 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                         traversal.scale,
                     )?;
                 }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::SpiralInset) => {
+                super::spiral_inset::append(
+                    &mut output,
+                    fill,
+                    layer.height,
+                    minimum_nozzle_diameter,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
                 super::concentric::append_configured(

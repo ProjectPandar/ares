@@ -19,6 +19,7 @@ mod object_bounds;
 mod plane_path;
 mod quartercubic;
 mod simplify;
+mod spiral_inset;
 mod stars;
 mod surface;
 mod tpms_d;

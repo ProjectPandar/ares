@@ -174,6 +174,15 @@ fn fill_expolygons(
                 )?);
                 continue;
             }
+            RaftFillPattern::SpiralInset => {
+                out.extend(crate::fill::spiral_inset::support(
+                    &expolygon,
+                    spec.spacing,
+                    spec.density,
+                    scale,
+                )?);
+                continue;
+            }
             RaftFillPattern::Grid => {
                 out.extend(patterns::grid(&expolygon, spec, reference, scale)?);
                 continue;

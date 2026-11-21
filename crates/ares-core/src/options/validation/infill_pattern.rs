@@ -13,13 +13,16 @@ impl SliceOptions {
             "sparse_infill_pattern",
             is_active_sparse_infill_pattern,
         )?;
-        for key in [
-            "top_surface_pattern",
-            "bottom_surface_pattern",
-            "internal_solid_infill_pattern",
-        ] {
-            self.validate_pattern_option(&mut errors, key, is_active_surface_infill_pattern)?;
+        for key in ["top_surface_pattern", "bottom_surface_pattern"] {
+            self.validate_pattern_option(&mut errors, key, |pattern| {
+                pattern == "spiralinset" || is_active_surface_infill_pattern(pattern)
+            })?;
         }
+        self.validate_pattern_option(
+            &mut errors,
+            "internal_solid_infill_pattern",
+            is_active_surface_infill_pattern,
+        )?;
 
         Ok(errors)
     }

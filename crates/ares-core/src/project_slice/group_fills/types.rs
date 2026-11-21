@@ -14,6 +14,7 @@ pub(in crate::project_slice) enum SurfaceFillPattern {
 pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) extruder: u32,
     pub(in crate::project_slice) pattern: SurfaceFillPattern,
+    pub(in crate::project_slice) fill_order: crate::ProcessSurfaceFillOrder,
     pub(in crate::project_slice) spacing: f64,
     pub(in crate::project_slice) overlap: f64,
     pub(in crate::project_slice) angle: f32,

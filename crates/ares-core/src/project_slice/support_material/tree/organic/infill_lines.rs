@@ -124,7 +124,7 @@ pub(super) fn generate(
                     out.extend(fill_honeycomb(&component, params, scale)?);
                 }
             }
-            RaftFillPattern::Grid | RaftFillPattern::Concentric => {
+            RaftFillPattern::Grid | RaftFillPattern::Concentric | RaftFillPattern::SpiralInset => {
                 unreachable!("SupportParameters selects contact patterns separately")
             }
         }

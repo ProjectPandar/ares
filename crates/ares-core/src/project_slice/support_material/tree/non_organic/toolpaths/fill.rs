@@ -167,6 +167,9 @@ impl Filler {
                 Ok(lines)
             }
             RaftFillPattern::Concentric => concentric(area, self.spacing, density, scale),
+            RaftFillPattern::SpiralInset => {
+                crate::fill::spiral_inset::support(area, self.spacing, density, scale)
+            }
         }
     }
 }

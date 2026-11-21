@@ -126,6 +126,12 @@ fn apply_overrides(
         };
     }
     region_option_fields!(apply_fields);
+    if let Some(order) = source.top_surface_fill_order {
+        options.top_surface_fill_order = order;
+    }
+    if let Some(order) = source.bottom_surface_fill_order {
+        options.bottom_surface_fill_order = order;
+    }
 
     if let Some(extruder) = source.extruder.filter(|value| value.0 > 0) {
         apply_fallbacks!(options, mask, extruder;

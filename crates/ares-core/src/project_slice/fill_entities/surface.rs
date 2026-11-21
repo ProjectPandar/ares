@@ -41,9 +41,6 @@ pub(in crate::project_slice) fn surface_polylines(
     request: &SurfaceRequest,
 ) -> Result<Vec<Polyline>, SliceError> {
     match request.pattern {
-        ProcessInfillPattern::SpiralInset => Err(SliceError::UnsupportedProjectFeature(
-            "infill pattern: spiralinset".to_owned(),
-        )),
         ProcessInfillPattern::Rectilinear
         | ProcessInfillPattern::AlignedRectilinear
         | ProcessInfillPattern::Monotonic
@@ -286,7 +283,8 @@ pub(in crate::project_slice) fn surface_polylines(
             request.params,
             request.call.scale,
         ),
-        ProcessInfillPattern::Lightning
+        ProcessInfillPattern::SpiralInset
+        | ProcessInfillPattern::Lightning
         | ProcessInfillPattern::AdaptiveCubic
         | ProcessInfillPattern::SupportCubic => Err(SliceError::UnsupportedProjectFeature(
             "support_ironing_pattern".into(),

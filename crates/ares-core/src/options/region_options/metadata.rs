@@ -14,7 +14,8 @@ use super::super::{
     OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
     ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
     ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
+    ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
+    ProcessWallSequence,
 };
 
 pub(super) trait RegionMetadataCodec: Sized {
@@ -48,6 +49,7 @@ lexical_codecs!(
     ProcessIroningType,
     ProcessNoiseType,
     ProcessSeamScarfType,
+    ProcessSurfaceFillOrder,
     ProcessTopSurfaceExpansionDirection,
     ProcessWallDirection,
     ProcessWallSequence,

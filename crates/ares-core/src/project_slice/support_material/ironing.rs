@@ -86,6 +86,7 @@ impl IroningSurface {
             resolution: 0.0,
             filter_out_gap_fill: 0.0,
             gap_fill_target: crate::ProcessGapFillTarget::default(),
+            fill_order: crate::ProcessSurfaceFillOrder::Default,
         };
         let call = SurfaceCall {
             dont_alternate_fill_direction: false,
