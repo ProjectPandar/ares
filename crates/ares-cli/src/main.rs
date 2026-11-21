@@ -135,7 +135,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     };
     let mut context = ares_core::SlicerContext::new(0)
         .with_normative_check(args.normative_check)
-        .with_skip_modified_gcodes(args.skip_modified_gcodes);
+        .with_skip_modified_gcodes(args.skip_modified_gcodes)
+        .with_allow_mix_temp(args.allow_mix_temp);
     if args.progress {
         context.set_status_callback(&mut print_status);
     }

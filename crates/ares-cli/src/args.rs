@@ -218,6 +218,10 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
+    /// Allow filaments with incompatible nozzle temperatures to be printed together.
+    #[arg(long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
+        default_value = "false", default_missing_value = "true", value_parser = clap::builder::BoolishValueParser::new())]
+    pub(crate) allow_mix_temp: bool,
     /// Skip custom G-code edits in a saved project.
     #[arg(
         long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,

@@ -123,7 +123,7 @@ pub fn slice_cli_project_plates(
             let state = state::apply_plate(
                 view,
                 selected_printer,
-                (true, 0),
+                (true, 0, false),
                 Some((&preparation, overrides)),
             )?;
             let mut report = SlicedPlate::default();
