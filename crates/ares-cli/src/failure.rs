@@ -98,10 +98,7 @@ impl CliFailure {
         self
     }
 
-    pub(super) fn downward_missing(
-        input: &Path,
-        #[cfg(target_os = "linux")] output: &Path,
-    ) -> Self {
+    pub(super) fn downward_missing(input: &Path, _output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -3,
             #[cfg(target_os = "linux")]
@@ -125,11 +122,11 @@ impl CliFailure {
                 input.display()
             ),
             #[cfg(target_os = "linux")]
-            output: output.to_owned(),
+            output: _output.to_owned(),
         }))
     }
 
-    pub(super) fn downward_config(#[cfg(target_os = "linux")] output: &Path) -> Self {
+    pub(super) fn downward_config(_output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -5,
             #[cfg(target_os = "linux")]
@@ -150,7 +147,7 @@ impl CliFailure {
             critical_warning: None,
             stderr: String::new(),
             #[cfg(target_os = "linux")]
-            output: output.to_owned(),
+            output: _output.to_owned(),
         }))
     }
 
