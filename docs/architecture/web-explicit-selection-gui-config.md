@@ -107,7 +107,8 @@ For `Composition::Gui`, the explicit branch composes through a new function in
    as `--load-settings`, and collects from the records what full_fff_config decides beyond those
    values: the group keys, and the preset options no preset file sets. A loaded preset holds every
    option of its kind (5536-5542, 5721-5774), and the G-code prints each held key but the banned
-   and nil ones (GCode.cpp:8305-8370). These apply over the merged config, so a key the opened
+   and nil ones (GCode.cpp:8305-8370). The project options (124-172) are not among them:
+   full_fff_config takes those from the project config (5542). These apply over the merged config, so a key the opened
    3MF holds keeps its value. For an STL there is no opened config, so they apply over the
    composed one.
 5. Returns the composed profile in the shape `ProfileInput` takes today (`profile`, `raw`,
@@ -175,7 +176,9 @@ The references move from the CLI composition to the GUI one.
   `nozzle_volume_type` set to one Standard per head (the session's own value).
   `compatible_printers_condition` is erased rather than taken from the process.
   `filament_ids` keeps the session's inherited ids (`OFDSrzZ8` for the four Generic PLA @U1
-  slots). The measured Native slice of B prints the session's flush matrix (84/280). Its remaining
+  slots). `filament_plugin_config_overrides` is the session's, the first filament's scalar
+  (5726-5735), no longer the 3MF's: the CLI's filament overlay that skips scalars
+  (OrcaSlicer.cpp:3715-3734) does not run on this route. The measured Native slice of B prints the session's flush matrix (84/280). Its remaining
   differences are `filament_ids` and `nozzle_volume_type`, which this route change removes,
   and the flush line, which the route keeps without the CLI preparation above.
 - **`presetSlice.spec.ts`, 3MF legs.** `withSelectedPresets` already erases
