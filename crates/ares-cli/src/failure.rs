@@ -24,7 +24,7 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     sparse_infill_density: f64,
     #[cfg(target_os = "linux")]
-    error_string: &'static str,
+    error_string: String,
     upward_machines: Vec<String>,
     #[cfg(target_os = "linux")]
     warnings: Vec<crate::result_json::CliWarning>,
@@ -71,7 +71,7 @@ impl CliFailure {
         #[cfg(target_os = "linux")] output: &Path,
         stderr: String,
         return_code: i32,
-        #[cfg(target_os = "linux")] error_string: &'static str,
+        error_string: impl Into<String>,
     ) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code,
@@ -84,7 +84,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string,
+            error_string: error_string.into(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -96,6 +96,24 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             output: output.to_owned(),
         }))
+    }
+
+    pub(super) fn modified_printable_size(
+        #[cfg(target_os = "linux")] output: &Path,
+        width: i32,
+        depth: i32,
+        height: i32,
+    ) -> Self {
+        let error = format!(
+            "Printer Settings: the printable size {{{width}, {depth}, {height}}} exceeds the default size."
+        );
+        Self::preset_input_error(
+            #[cfg(target_os = "linux")]
+            output,
+            format!("{error}\n"),
+            -23,
+            error,
+        )
     }
 
     pub(super) fn missing_input(input: &Path, #[cfg(target_os = "linux")] output: &Path) -> Self {
@@ -110,7 +128,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string: "The input files to the slicer are not found.",
+            error_string: "The input files to the slicer are not found.".to_owned(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),

@@ -77,7 +77,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             sparse_infill_density: 0.0,
             #[cfg(target_os = "linux")]
-            error_string,
+            error_string: error_string.to_owned(),
             upward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
@@ -153,7 +153,7 @@ impl FamilyFailure {
             .collect::<Vec<_>>();
         crate::result_json::ResultJson {
             return_code: self.return_code,
-            error_string: self.error_string,
+            error_string: &self.error_string,
             plate_index: self.plate_index,
             layer_height: self.layer_height,
             wall_loops: self.wall_loops,
