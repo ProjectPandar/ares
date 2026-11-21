@@ -23,11 +23,13 @@ pub(super) fn load(args: &SliceArgs) -> Result<Vec<DownwardMachine>, CliFailure>
         .collect()
 }
 
-pub(super) fn compatibility(
+pub(super) fn report(
     args: &SliceArgs,
     plate: &ares_core::SlicedPlate,
+    source: (&str, &[u8]),
     upward: &[String],
 ) -> Result<Vec<String>, CliFailure> {
+    crate::failure::slicing::check(args, plate, source.0, source.1, upward)?;
     let machines = load(args).map_err(|error| error.with_upward_report(upward.to_vec()))?;
     if machines.is_empty() {
         return Ok(Vec::new());

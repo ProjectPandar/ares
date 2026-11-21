@@ -303,8 +303,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                     }
                 }
             };
-            failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
-            let _downward = downward::compatibility(&args, &sliced_plate, &upward_report)?;
+            let _downward =
+                downward::report(&args, &sliced_plate, (&input_file, &input), &upward_report)?;
             fs::write(args.output(), gcode)?;
             report_success(
                 &input_file,
