@@ -32,7 +32,6 @@ impl Project {
         object_ids.add_object();
         object_ids.add_volume();
         let label_id = object_ids.add_instance();
-        // `ModelInstance` drops onto the bed by default (`auto_drop(true)`, `Model.hpp:1392`).
         let instance = ProjectInstance::new([1, 0, label_id], true, true, Transform3d::IDENTITY);
         let object = ProjectObject::new(
             filename.to_owned(),
@@ -46,31 +45,31 @@ impl Project {
             vec![volume],
             vec![instance],
         );
-        Ok((
-            Self::new(
-                vec![ProjectModel::new(filename.to_owned(), vec![1])],
-                vec![object],
-                vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
-                settings,
-                ProjectDocuments {
-                    model_settings: ModelSettings {
-                        objects: Vec::new(),
-                        plates: Vec::new(),
-                        assemble: None,
-                    },
-                    project_settings_raw: raw,
-                    slice_info: SliceInfo {
-                        header: SliceInfoHeader { items: Vec::new() },
-                    },
-                    filament_sequences: FilamentSequences(Default::default()),
-                    plate_documents: Vec::new(),
-                    has_painted_layer_height_profile: false,
-                    bbl_family_3mf: false,
-                    preset_file_version: None,
-                    preset_selection: None,
+        let mut project = Self::new(
+            vec![ProjectModel::new(filename.to_owned(), vec![1])],
+            vec![object],
+            vec![PlateMetadata::new(1, vec![[1, 0, label_id]])],
+            settings,
+            ProjectDocuments {
+                model_settings: ModelSettings {
+                    objects: Vec::new(),
+                    plates: Vec::new(),
+                    assemble: None,
                 },
-            ),
-            preparation,
-        ))
+                project_settings_raw: raw,
+                slice_info: SliceInfo {
+                    header: SliceInfoHeader { items: Vec::new() },
+                },
+                filament_sequences: FilamentSequences(Default::default()),
+                plate_documents: Vec::new(),
+                has_painted_layer_height_profile: false,
+                bbl_family_3mf: false,
+                preset_file_version: None,
+                preset_selection: None,
+            },
+        );
+        // Non-project CLI import calls ensure_on_bed before arrangement (OrcaSlicer.cpp:1978).
+        project.drop_instances_to_ground();
+        Ok((project, preparation))
     }
 }
