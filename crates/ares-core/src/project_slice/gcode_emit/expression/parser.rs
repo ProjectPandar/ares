@@ -103,7 +103,7 @@ impl Parser<'_> {
             // `regex_op` (`PlaceholderParser.cpp:754-759`) rejects a deferred subject.
             self.reject_deferred(&[&left])?;
             let pattern =
-                match regex::bytes::Regex::new(&format!("^(?-u:{})$", right.value.as_string())) {
+                match regex::bytes::Regex::new(&format!("^(?s-u:{})$", right.value.as_string())) {
                     Ok(pattern) => pattern,
                     // Suppressed (inactive) branch: `regex_op` no-ops while
                     // skipping (`PlaceholderParser.cpp:687-691`).

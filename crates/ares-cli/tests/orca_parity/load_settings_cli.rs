@@ -9,6 +9,8 @@ use std::{fs, path::Path};
 
 use serde_json::{Map, Value};
 
+#[path = "load_settings_cli/direct_stl_compatibility.rs"]
+mod direct_stl_compatibility;
 #[path = "load_settings_cli/machine_only.rs"]
 mod machine_only;
 
