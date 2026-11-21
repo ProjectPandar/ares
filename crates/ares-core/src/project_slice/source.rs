@@ -4,6 +4,7 @@ use crate::{ConfigOverrides, project::raw_settings::ProjectSettingsRaw};
 /// existing project-state seam; no intermediate archive is serialized.
 pub(crate) struct ProjectSource<'a> {
     pub(crate) input: ProjectInput<'a>,
+    pub(crate) loaded: Option<Box<crate::project::LoadedProfileProject>>,
     pub(crate) plate: Option<u32>,
     pub(crate) profile: Option<ProfileInput<'a>>,
     pub(crate) refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
@@ -105,7 +106,7 @@ impl ProjectInput<'_> {
         overrides: &ConfigOverrides,
         refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
         system_catalog: Option<&crate::PresetCatalogHandle>,
-        validate_post_process: bool,
+        (validate_post_process, loaded): (bool, Option<Box<crate::project::LoadedProfileProject>>),
     ) -> Result<
         (
             crate::Project,
@@ -116,7 +117,9 @@ impl ProjectInput<'_> {
         match self {
             Self::Bytes(bytes) => {
                 let (mut project, preparation) = match refresh {
-                    Some(refresh) => refresh.load(bytes, overrides, validate_post_process)?,
+                    Some(refresh) => {
+                        refresh.load(bytes, overrides, validate_post_process, loaded)?
+                    }
                     None if system_catalog.is_some() => {
                         crate::project::load_project_for_profiles(bytes)?
                     }
@@ -141,7 +144,7 @@ impl ProjectInput<'_> {
                         overrides,
                         refresh,
                         system_catalog,
-                        validate_post_process,
+                        (validate_post_process, loaded),
                     )?;
                     project.place_assembly_plates();
                     Ok((project, preparation))
@@ -219,6 +222,7 @@ static EMPTY_OVERRIDES: ConfigOverrides = ConfigOverrides::empty();
 impl<'a> From<&'a [u8]> for ProjectSource<'a> {
     fn from(bytes: &'a [u8]) -> Self {
         Self {
+            loaded: None,
             input: ProjectInput::Bytes(bytes),
             plate: None,
             profile: None,

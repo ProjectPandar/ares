@@ -21,7 +21,7 @@ pub(super) fn prepare_post_closing(
             let mut report = source.sliced_plate.take();
             let state = if let Some(profile) = source.profile {
                 profile_entry::prepare_profile_slice(
-                    &source,
+                    &mut source,
                     profile,
                     report
                         .as_deref_mut()

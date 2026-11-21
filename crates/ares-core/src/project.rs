@@ -43,7 +43,9 @@ pub use export::{export_3mf, export_sliced_3mf};
 pub use export_stl::{StlExport, export_stl, export_stls};
 pub use layer_config_ranges::LayerConfigRange;
 pub use load::{ConfigSubstitution, load_project, load_project_with, project_config_substitutions};
-pub(crate) use load::{load_project_for_profiles, load_project_with_preparation};
+pub(crate) use load::{
+    LoadedProfileProject, load_project_for_profiles, load_project_with_preparation,
+};
 pub use plate_custom_gcodes::{CustomGCodeInfo, CustomGCodeMode};
 pub use preset_version::validate_project_version;
 pub use transform::Transform3d;

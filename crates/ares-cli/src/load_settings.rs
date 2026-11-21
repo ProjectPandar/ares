@@ -26,14 +26,14 @@ pub(super) async fn slice(
     // project before `:1953-2024` reads the preset files — probe the
     // admission first so the embedded `-19` gate wins over the
     // adapter's missing-file `-5`.
-    if let Err(error) = context.validate_load_settings_input(input) {
-        return Err(slice_error_to_failure(
+    let admitted = ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
+        slice_error_to_failure(
             error,
             args.output(),
             #[cfg(target_os = "linux")]
             args.plate.unwrap_or(1),
-        ));
-    }
+        )
+    })?;
     let catalog = args
         .project_preset_catalog
         .as_ref()
@@ -78,10 +78,9 @@ pub(super) async fn slice(
             format!("{error}\n"),
         ),
     })?;
-    let refresh = crate::native_refresh::load(args, input, load_filaments)?;
+    let refresh = crate::native_refresh::load_admitted(args, &admitted, load_filaments)?;
     let mut sliced_plate = ares_core::SlicedPlate::default();
-    let gcode = match ares_core::slice_with_load_settings_and_refresh(
-        input,
+    let gcode = match admitted.slice_with_load_settings(
         ares_core::LoadSettingsSliceRequest {
             orient: args.orient == Some(1),
             filename,
@@ -98,9 +97,7 @@ pub(super) async fn slice(
         refresh.as_ref(),
         ares_core::GenerationMetadata::default(),
         context,
-    )
-    .await
-    {
+    ) {
         Ok(gcode) => gcode,
         Err(error) => {
             crate::failure::slicing::check(

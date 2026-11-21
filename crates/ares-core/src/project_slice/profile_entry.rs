@@ -37,13 +37,14 @@ pub(super) fn load_with_profile(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_with_profile_preparation(project, profile, None).map(|(loaded, _)| loaded)
+    load_with_profile_preparation(project, profile, None, None).map(|(loaded, _)| loaded)
 }
 
 fn load_with_profile_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let selected = SelectedProfile {
         settings: profile.composed.settings(),
@@ -58,7 +59,7 @@ fn load_with_profile_preparation(
         super::ProjectInput::Assembly(assembly) => match &assembly.0 {
             crate::project::assembly::AssemblySource::Archive(file) => {
                 let (mut loaded, preparation) = Project::from_3mf_with_profiles(
-                    file.bytes,
+                    (file.bytes, None),
                     selected,
                     project.overrides,
                     (None, project.edits),
@@ -95,7 +96,7 @@ fn load_with_profile_preparation(
             if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf =>
         {
             Project::from_3mf_with_profiles(
-                bytes,
+                (bytes, loaded),
                 selected,
                 project.overrides,
                 (project.plate, project.edits),
@@ -118,15 +119,17 @@ pub(crate) fn load_and_place(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
 ) -> Result<Project, SliceError> {
-    load_and_place_with_preparation(project, profile, None).map(|(loaded, _)| loaded)
+    load_and_place_with_preparation(project, profile, None, None).map(|(loaded, _)| loaded)
 }
 
 fn load_and_place_with_preparation(
     project: &ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    let (mut loaded, preparation) = load_with_profile_preparation(project, profile, upward_report)?;
+    let (mut loaded, preparation) =
+        load_with_profile_preparation(project, profile, upward_report, loaded)?;
     if profile.placement == Placement::Center {
         let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
         loaded.center_instances_around_point(bed);
@@ -139,11 +142,13 @@ fn load_and_place_with_preparation(
 /// project enters the ordinary plate-selection lifecycle, with the
 /// requested placement applied first.
 pub(super) fn prepare_profile_slice(
-    project: &ProjectSource<'_>,
+    project: &mut ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let (loaded, preparation) = load_profile_slice(project, profile, upward_report)?;
+    let loaded = project.loaded.take();
+    let (loaded, preparation) =
+        load_profile_slice_with_import(project, profile, upward_report, loaded)?;
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,
@@ -162,8 +167,17 @@ pub(crate) fn load_profile_slice(
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+    load_profile_slice_with_import(project, profile, upward_report, None)
+}
+
+fn load_profile_slice_with_import(
+    project: &ProjectSource<'_>,
+    profile: ProfileInput<'_>,
+    upward_report: Option<&mut Vec<String>>,
+    loaded: Option<Box<crate::project::LoadedProfileProject>>,
+) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
     let (mut loaded, preparation) =
-        load_and_place_with_preparation(project, profile, upward_report)?;
+        load_and_place_with_preparation(project, profile, upward_report, loaded)?;
     if let Some(custom_gcodes) = project.custom_gcodes.clone() {
         loaded.replace_plate_custom_gcodes(custom_gcodes);
     }

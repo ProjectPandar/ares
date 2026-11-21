@@ -118,16 +118,18 @@ pub(super) async fn slice(
         .into());
     }
     // CLI:1682–1690 admits the embedded project before reading supplied presets.
-    context
-        .validate_load_settings_input(input)
-        .map_err(|error| {
-            slice_error_to_failure(
-                error,
-                args.output(),
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            )
-        })?;
+    let admission = match entry {
+        Entry::Catalog(_) => ares_core::CliPresetProject::admit(input, &context).map(Some),
+        Entry::Native(_) => context.validate_load_settings_input(input).map(|()| None),
+    }
+    .map_err(|error| {
+        slice_error_to_failure(
+            error,
+            args.output(),
+            #[cfg(target_os = "linux")]
+            args.plate.unwrap_or(1),
+        )
+    })?;
 
     let filename = args
         .input()
@@ -154,8 +156,8 @@ pub(super) async fn slice(
         },
         report: &mut upward_report,
     };
-    let result = match entry {
-        Entry::Catalog(path) => {
+    let result = match (entry, admission) {
+        (Entry::Catalog(path), Some(admitted)) => {
             let catalog = fs::read_to_string(path).map_err(|error| {
                 io::Error::new(
                     error.kind(),
@@ -165,8 +167,7 @@ pub(super) async fn slice(
                     ),
                 )
             })?;
-            ares_core::slice_cli_with_profiles_validated(
-                input,
+            admitted.slice_with_profiles(
                 ares_core::CliProfileSliceRequest {
                     orient: args.orient == Some(1),
                     profile: ares_core::ProfileSliceRequest {
@@ -184,9 +185,8 @@ pub(super) async fn slice(
                 metadata,
                 context,
             )
-            .await
         }
-        Entry::Native(refresh) => {
+        (Entry::Native(refresh), None) => {
             ares_core::slice_cli_project_plate_with_refresh(
                 input,
                 ares_core::CliProjectSliceRequest {
@@ -203,6 +203,7 @@ pub(super) async fn slice(
             )
             .await
         }
+        _ => unreachable!("admission follows the preset entry"),
     };
     let processed = match result {
         Ok(processed) => processed,

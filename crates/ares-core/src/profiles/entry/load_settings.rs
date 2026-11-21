@@ -85,12 +85,21 @@ pub async fn slice_with_load_settings_and_refresh(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    let input = input.as_ref();
+    slice_load_settings_source((input.as_ref(), None), request, refresh, metadata, context)
+}
+
+pub(super) fn slice_load_settings_source(
+    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
+    request: LoadSettingsSliceRequest<'_>,
+    refresh: Option<&crate::NativeRefreshPresets>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
     with_load_settings_source(
         (ProjectInput::Bytes(input), input),
         request,
         refresh,
-        |source| slice_source(source, metadata, false, context),
+        |source| slice_source(ProjectSource { loaded, ..source }, metadata, false, context),
     )
     .map(|processed| processed.gcode)
 }
@@ -106,6 +115,7 @@ pub async fn slice_assembly(
     if request.settings.is_empty() && request.filaments.is_empty() {
         return slice_source(
             ProjectSource {
+                loaded: None,
                 input,
                 plate: request.plate,
                 profile: None,
@@ -213,6 +223,7 @@ pub async fn slice_stl_models_with_load_settings(
                 plate_context.custom_gcodes = context.custom_gcodes.clone();
                 let processed = slice_source(
                     ProjectSource {
+                        loaded: None,
                         input: ProjectInput::ArrangedStl(&project, &preparation),
                         plate: Some(id),
                         profile: None,
@@ -275,6 +286,7 @@ pub(crate) fn with_load_settings_source<T>(
     let validate_print = matches!(input, ProjectInput::Assembly(_))
         || crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf;
     body(ProjectSource {
+        loaded: None,
         input,
         plate,
         profile: Some(ProfileInput {
