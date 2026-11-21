@@ -17,7 +17,14 @@ pub(super) fn load_resources_catalog(
     resources_dir: &Path,
 ) -> Result<ares_core::PresetCatalogHandle, CliFailure> {
     let profiles_dir = resources_dir.join("profiles");
-    let mut vendor_paths = fs::read_dir(&profiles_dir)?
+    let entries = match fs::read_dir(&profiles_dir) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            return Ok(ares_core::PresetCatalogHandle::new());
+        }
+        Err(error) => return Err(error.into()),
+    };
+    let mut vendor_paths = entries
         .filter_map(Result::ok)
         .map(|entry| entry.path())
         .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("json"))

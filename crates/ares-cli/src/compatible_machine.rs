@@ -7,7 +7,7 @@ use crate::failure::CliFailure;
 
 pub(super) fn load(
     input: &[u8],
-    resources: Option<&Path>,
+    resources: &Path,
 ) -> Result<(Option<UpwardMachineSource>, Option<Vec<u8>>), CliFailure> {
     let source = UpwardMachineSource::from_project(input)
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
@@ -17,18 +17,6 @@ pub(super) fn load(
     let bytes = if original.system_printer().is_empty() {
         None
     } else {
-        let default_resources;
-        let resources = match resources {
-            Some(path) => path,
-            None => {
-                let executable = std::env::current_exe()?;
-                default_resources = executable
-                    .parent()
-                    .expect("absolute executable path has a parent")
-                    .join("resources");
-                &default_resources
-            }
-        };
         let path = resources
             .join("profiles")
             .join("BBL")
