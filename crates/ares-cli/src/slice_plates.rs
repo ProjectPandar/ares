@@ -7,6 +7,7 @@ use ares_core::{
 
 use crate::{
     SliceArgs,
+    args::ProjectActionArgs,
     failure::{CliFailure, slice_error_to_failure},
     substitutions,
 };
@@ -14,6 +15,7 @@ use crate::{
 pub(super) struct PlateOptions<'a> {
     pub input: &'a Path,
     pub directory: Option<&'a Path>,
+    pub actions: &'a ProjectActionArgs,
     pub datadir: Option<&'a Path>,
     pub load_settings: Option<&'a str>,
     pub load_filaments: Option<&'a str>,
@@ -30,6 +32,7 @@ impl<'a> From<&'a SliceArgs> for PlateOptions<'a> {
         Self {
             input: args.input(),
             directory: output_directory(args),
+            actions: &args.project_actions,
             datadir: args.datadir.as_deref(),
             load_settings: args.load_settings.as_deref(),
             load_filaments: args.load_filaments.as_deref(),
@@ -61,7 +64,7 @@ pub(super) fn run(
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
     let loaded_files = args.load_settings.is_some() || args.load_filaments.is_some();
-    if loaded_files && let Err(error) = ares_core::validate_load_settings_input(input) {
+    if loaded_files && let Err(error) = context.validate_load_settings_input(input) {
         return Err(slice_error_to_failure(
             error,
             &result_path,
@@ -144,6 +147,14 @@ pub(super) fn run(
         UpwardMachineInput::FetchOriginal(machine_full.as_deref())
     };
     let mut upward_report = Vec::new();
+    let mut downward_report = Vec::new();
+    let context = crate::custom_gcodes::load(
+        context,
+        args.actions.load_custom_gcodes.as_deref(),
+        &result_path,
+        selection.saturating_sub(1).max(0),
+    )?;
+    let targets = crate::downward::load(args.actions, &result_path)?;
     let mut completed = Vec::new();
     let mut publish_failure = None;
     let result = ares_core::slice_cli_project_plates(
@@ -161,7 +172,7 @@ pub(super) fn run(
             },
         },
         GenerationMetadata::default(),
-        context,
+        context.with_downward_check(&targets, &mut downward_report),
         |plate, gcode, report| {
             if let Some(failure) = crate::failure::slicing::critical_failure(
                 #[cfg(target_os = "linux")]
@@ -207,6 +218,7 @@ pub(super) fn run(
                 ),
             })
             .with_upward_report(upward_report)
+            .with_downward_report(downward_report)
             .with_config_substitutions(&file, substitutions);
         #[cfg(target_os = "linux")]
         let failure = failure.with_plate_batch(error.plate, *error.report, completed);
@@ -221,7 +233,7 @@ pub(super) fn run(
         &result_path,
         (selection as u32, false),
         (&file, substitutions),
-        &upward_report,
+        (&upward_report, &downward_report),
         &completed,
     );
     Ok(())

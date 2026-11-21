@@ -41,7 +41,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     if plate == 0
         && let Some((_, flag)) = [
             (args.strict, "--strict"),
-            (args.load_custom_gcodes.is_some(), "--load-custom-gcodes"),
             (args.export_statistics, "--export-statistics"),
         ]
         .into_iter()
@@ -79,6 +78,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             PlateOptions {
                 input,
                 directory: Some(directory),
+                actions: &args.project_actions,
                 datadir,
                 load_settings: args.load_settings.as_deref(),
                 load_filaments: args.load_filaments.as_deref(),
@@ -92,7 +92,9 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             selection,
             &bytes,
             &ConfigOverrides::default(),
-            SlicerContext::new(0).with_no_check(args.no_check),
+            args.project_actions
+                .context(SlicerContext::new(0))
+                .with_no_check(args.no_check),
         );
     }
     enum ProjectPresets<'a> {
@@ -107,12 +109,16 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         (settings, filaments) => ProjectPresets::Replace(settings, filaments),
     };
+    let mut downward_machines = Vec::new();
+    let targets = crate::downward::load(&args.project_actions, &output)?;
     let context = crate::custom_gcodes::load(
-        SlicerContext::new(0)
+        args.project_actions
+            .context(SlicerContext::new(0))
             .with_no_check(args.no_check)
             .with_cli_path_conflict_check()
-            .with_enable_timelapse(args.enable_timelapse),
-        args.load_custom_gcodes.as_deref(),
+            .with_enable_timelapse(args.enable_timelapse)
+            .with_downward_check(&targets, &mut downward_machines),
+        args.project_actions.load_custom_gcodes.as_deref(),
         &output,
         plate as i32 - 1,
     )?;
@@ -164,7 +170,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         ) {
             return failure
                 .with_config_substitutions(&input.to_string_lossy(), crate::substitutions(&bytes))
-                .with_upward_report(upward_machines.clone());
+                .with_upward_report(upward_machines.clone())
+                .with_downward_report(downward_machines.clone());
         }
         #[cfg(target_os = "linux")]
         let detail = match &error {
@@ -179,7 +186,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             #[cfg(target_os = "linux")]
             plate,
         )
-        .with_upward_report(upward_machines.clone());
+        .with_upward_report(upward_machines.clone())
+        .with_downward_report(downward_machines.clone());
         #[cfg(target_os = "linux")]
         let failure = failure.with_validation_detail(detail);
         failure
@@ -193,7 +201,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         (plate, &sliced_plate),
         &upward_machines,
         project,
-    )?;
+    )
+    .map_err(|failure| failure.with_downward_report(downward_machines.clone()))?;
     crate::statistics::write(&output, processed, args.export_statistics, plate)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
@@ -203,7 +212,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         plate_index: plate,
         sliced_plate,
         upward_machines: &upward_machines,
-        downward_machines: &[],
+        downward_machines: &downward_machines,
     }
     .write(&input_file, crate::substitutions(&bytes));
     Ok(())
@@ -216,7 +225,7 @@ async fn slice_with_replacement(
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
 ) -> Result<Result<ProcessedGCode, SliceError>, CliFailure> {
-    if let Err(error) = ares_core::validate_load_settings_input(bytes) {
+    if let Err(error) = context.validate_load_settings_input(bytes) {
         return Ok(Err(error));
     }
     let settings = read_preset_files(&settings.map(split_native_list).unwrap_or_default())?;

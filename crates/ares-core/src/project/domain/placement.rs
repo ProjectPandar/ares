@@ -64,6 +64,40 @@ impl Project {
         (min, max)
     }
 
+    /// `PartPlate::get_objects_bounding_box` (PartPlate.cpp:4741–4759) uses only
+    /// the instances on that plate, from objects retained by the BBS importer.
+    pub(crate) fn imported_plate_sizes(&self, selection: Option<u32>) -> Vec<[f64; 3]> {
+        let selected = selection.and_then(|id| self.plates.iter().find(|plate| plate.id() == id));
+        self.plates
+            .iter()
+            .filter_map(|plate| {
+                let mut min = [f64::INFINITY; 3];
+                let mut max = [f64::NEG_INFINITY; 3];
+                for object in &self.objects {
+                    if selected.is_some_and(|plate| {
+                        !plate.instances().iter().any(|id| id[0] == object.id())
+                    }) {
+                        continue;
+                    }
+                    for instance in &object.instances {
+                        if plate.instances().iter().any(|id| {
+                            id[0] == instance.object_id()
+                                && id[1] == instance.instance_id()
+                                && Some(id[2]) == instance.saved_identify_id()
+                        }) {
+                            for point in world_vertices(object, instance.transform) {
+                                merge_bbox_point(&mut min, &mut max, point);
+                            }
+                        }
+                    }
+                }
+                min[0]
+                    .is_finite()
+                    .then(|| std::array::from_fn(|i| max[i] - min[i]))
+            })
+            .collect()
+    }
+
     /// `PartPlate::translate_all_instance` (`OrcaSlicer.cpp:4037`): shift
     /// every instance offset by the shrink_to_new_bed plate re-centering
     /// delta.

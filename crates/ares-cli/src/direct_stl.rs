@@ -148,7 +148,7 @@ pub(super) async fn run(
         SlicerContext::new(0)
             .with_max_triangle_count(args.mtcpp.unwrap_or_default())
             .with_no_check(args.no_check),
-        args.load_custom_gcodes.as_deref(),
+        args.project_actions.load_custom_gcodes.as_deref(),
         &output,
         0,
     )?;
@@ -276,7 +276,7 @@ pub(super) async fn run(
                     &output,
                     (0, args.strict),
                     (filename, Vec::new()),
-                    &[],
+                    (&[], &[]),
                     &[],
                 );
                 return Ok(());
@@ -370,7 +370,7 @@ pub(super) async fn run(
         &output,
         (selection, args.strict),
         (filename, Vec::new()),
-        &[],
+        (&[], &[]),
         &completed,
     );
     Ok(())

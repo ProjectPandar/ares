@@ -50,6 +50,7 @@ pub(crate) fn slice_source_with_archive(
                     allow_mix_temp: context.allow_mix_temp(),
                     max_triangle_count: context.max_triangle_count,
                     custom_gcodes: context.custom_gcodes.take(),
+                    downward: context.downward.take(),
                     ..project
                 },
                 context,
