@@ -21,9 +21,7 @@ mod settings_export;
 mod slice_plates;
 mod statistics;
 
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{fs, io, path::Path};
 
 use args::{Commands, SliceArgs, require_single_input};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
@@ -134,9 +132,9 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text);
     };
-    let mut context = ares_core::SlicerContext::new(0)
-        .with_normative_check(args.normative_check)
-        .with_skip_modified_gcodes(args.skip_modified_gcodes)
+    let mut context = args
+        .project_actions
+        .context(ares_core::SlicerContext::new(0))
         .with_allow_mix_temp(args.allow_mix_temp);
     if args.progress {
         context.set_status_callback(&mut print_status);
@@ -197,7 +195,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                 .map(project_presets::load_resources_catalog)
                 .transpose()?;
             let mut upward_report = Vec::new();
-            let mut sliced_plate = ares_core::SlicedPlate::with_size(args.has_downward_targets());
+            let mut sliced_plate =
+                ares_core::SlicedPlate::with_size(args.project_actions.has_downward_targets());
             let upward = ares_core::CliUpwardMachine {
                 source,
                 input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),

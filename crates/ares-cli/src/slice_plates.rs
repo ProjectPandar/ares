@@ -7,6 +7,7 @@ use ares_core::{
 
 use crate::{
     SliceArgs,
+    args::ProjectActionArgs,
     failure::{CliFailure, slice_error_to_failure},
     substitutions,
 };
@@ -18,32 +19,68 @@ pub(super) fn run(
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
-    let directory = output_directory(args);
+    run_project(
+        PlateArgs {
+            input: args.input(),
+            directory: output_directory(args),
+            actions: &args.project_actions,
+            settings: args.load_settings.as_deref(),
+            filaments: args.load_filaments.as_deref(),
+            catalog: args.project_preset_catalog.as_deref(),
+            datadir: args.datadir.as_deref(),
+            resources: args.resources_dir.as_deref(),
+            uptodate: args.uptodate,
+            orient: args.orient == Some(1),
+        },
+        selection,
+        input,
+        overrides,
+        context,
+    )
+}
+
+pub(super) struct PlateArgs<'a> {
+    pub input: &'a Path,
+    pub directory: Option<&'a Path>,
+    pub actions: &'a ProjectActionArgs,
+    pub settings: Option<&'a str>,
+    pub filaments: Option<&'a str>,
+    pub catalog: Option<&'a Path>,
+    pub datadir: Option<&'a Path>,
+    pub resources: Option<&'a Path>,
+    pub uptodate: bool,
+    pub orient: bool,
+}
+
+pub(super) fn run_project(
+    args: PlateArgs<'_>,
+    selection: i32,
+    input: &[u8],
+    overrides: &ConfigOverrides,
+    context: SlicerContext<'_>,
+) -> Result<(), CliFailure> {
+    let directory = args.directory;
     let result_path = directory
         .unwrap_or_else(|| Path::new("."))
         .join("plate_1.gcode");
-    let file = args.input().to_string_lossy();
+    let file = args.input.to_string_lossy();
     let filename = args
-        .input()
+        .input
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-    let loaded_files = args.load_settings.is_some() || args.load_filaments.is_some();
-    if loaded_files && let Err(error) = ares_core::validate_load_settings_input(input) {
+    let loaded_files = args.settings.is_some() || args.filaments.is_some();
+    if loaded_files && let Err(error) = context.validate_load_settings_input(input) {
         return Err(slice_error_to_failure(
             error,
             &result_path,
             #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
+            1,
         ));
     }
-    let catalog = args
-        .project_preset_catalog
-        .as_ref()
-        .map(fs::read_to_string)
-        .transpose()?;
-    let settings_files = preset_files(args.load_settings.as_deref())?;
-    let filament_files = preset_files(args.load_filaments.as_deref())?;
+    let catalog = args.catalog.map(fs::read_to_string).transpose()?;
+    let settings_files = preset_files(args.settings)?;
+    let filament_files = preset_files(args.filaments)?;
     let settings = settings_files
         .iter()
         .map(|(label, json, source_identity)| LoadSettingsFile {
@@ -63,23 +100,21 @@ pub(super) fn run(
     let loaded_sources;
     let system_catalog;
     let (settings, source, machine_full) = if loaded_files {
-        loaded_sources = crate::preset_sources::load(
-            args.datadir.as_deref(),
-            settings.iter().chain(&filaments).copied(),
-        )
-        .map_err(|error| match error.downcast::<SliceError>() {
-            Ok(error) => slice_error_to_failure(
-                *error,
-                &result_path,
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            ),
-            Err(error) => CliFailure::config_file_error(
-                #[cfg(target_os = "linux")]
-                &result_path,
-                format!("{error}\n"),
-            ),
-        })?;
+        loaded_sources =
+            crate::preset_sources::load(args.datadir, settings.iter().chain(&filaments).copied())
+                .map_err(|error| match error.downcast::<SliceError>() {
+                Ok(error) => slice_error_to_failure(
+                    *error,
+                    &result_path,
+                    #[cfg(target_os = "linux")]
+                    1,
+                ),
+                Err(error) => CliFailure::config_file_error(
+                    #[cfg(target_os = "linux")]
+                    &result_path,
+                    format!("{error}\n"),
+                ),
+            })?;
         (
             CliPlatesSettings::Files {
                 settings: &settings,
@@ -103,11 +138,10 @@ pub(super) fn run(
             None,
         )
     } else {
-        let resources = crate::installed_resources::resolve(args.resources_dir.as_deref())?;
+        let resources = crate::installed_resources::resolve(args.resources)?;
         let (source, machine) = crate::compatible_machine::load(input, &resources)?;
         system_catalog = args
-            .resources_dir
-            .as_deref()
+            .resources
             .map(crate::project_presets::load_resources_catalog)
             .transpose()?;
         (
@@ -124,6 +158,14 @@ pub(super) fn run(
         UpwardMachineInput::FetchOriginal(machine_full.as_deref())
     };
     let mut upward_report = Vec::new();
+    let mut downward_report = Vec::new();
+    let context = crate::custom_gcodes::load(
+        context,
+        args.actions.load_custom_gcodes.as_deref(),
+        &result_path,
+        selection.saturating_sub(1).max(0),
+    )?;
+    let targets = crate::downward::load(args.actions, &result_path)?;
     let mut completed = Vec::new();
     let mut publish_failure = None;
     let result = ares_core::slice_cli_project_plates(
@@ -133,7 +175,7 @@ pub(super) fn run(
             filename,
             settings,
             overrides,
-            orient: args.orient == Some(1),
+            orient: args.orient,
             upward: CliUpwardMachine {
                 source,
                 input: upward_input,
@@ -141,7 +183,7 @@ pub(super) fn run(
             },
         },
         GenerationMetadata::default(),
-        context,
+        context.with_downward_check(&targets, &mut downward_report),
         |plate, gcode, report| {
             if let Some(failure) = crate::failure::slicing::critical_failure(
                 #[cfg(target_os = "linux")]
@@ -187,6 +229,7 @@ pub(super) fn run(
                 ),
             })
             .with_upward_report(upward_report)
+            .with_downward_report(downward_report)
             .with_config_substitutions(&file, substitutions);
         #[cfg(target_os = "linux")]
         let failure = failure.with_plate_batch(error.plate, *error.report, completed);
@@ -201,7 +244,7 @@ pub(super) fn run(
         &result_path,
         (selection as u32, false),
         (&file, substitutions),
-        &upward_report,
+        (&upward_report, &downward_report),
         &completed,
     );
     Ok(())

@@ -149,6 +149,7 @@ pub(super) fn prepare_profile_slice(
     let loaded = project.loaded.take();
     let (loaded, preparation) =
         load_profile_slice_with_import(project, profile, upward_report, loaded)?;
+    crate::downward::check_project(&loaded, project.plate, project.downward.take());
     state::prepare_loaded_project_slice_with_validation(
         loaded,
         project.plate,

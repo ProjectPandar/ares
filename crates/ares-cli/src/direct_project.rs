@@ -19,7 +19,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             .expect("--slice is required without a subcommand"),
     )
     .ok()
-    .filter(|&plate| plate > 0)
     .ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -41,10 +40,11 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
     };
     let input = &args.inputs[0];
-    let output = args
+    let directory = args
         .outputdir
-        .expect("--outputdir is required without a subcommand")
-        .join(format!("plate_{plate}.gcode"));
+        .as_deref()
+        .expect("--outputdir is required without a subcommand");
+    let output = directory.join(format!("plate_{}.gcode", plate.max(1)));
     let bytes = match fs::read(input) {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
@@ -56,6 +56,26 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    if plate == 0 {
+        return crate::slice_plates::run_project(
+            crate::slice_plates::PlateArgs {
+                input,
+                directory: Some(directory),
+                actions: &args.project_actions,
+                settings: args.load_settings.as_deref(),
+                filaments: args.load_filaments.as_deref(),
+                catalog: None,
+                datadir: None,
+                resources: None,
+                uptodate: false,
+                orient: false,
+            },
+            0,
+            &bytes,
+            &ConfigOverrides::default(),
+            args.project_actions.context(SlicerContext::new(0)),
+        );
+    }
     enum ProjectPresets<'a> {
         Replace(&'a str, &'a str),
         Saved(Option<UpwardMachineSource>, Option<Vec<u8>>),
@@ -68,12 +88,16 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             ProjectPresets::Saved(source, machine)
         }
     };
+    let mut downward_machines = Vec::new();
+    let targets = crate::downward::load(&args.project_actions, &output)?;
     let context = crate::custom_gcodes::load(
-        SlicerContext::new(0)
+        args.project_actions
+            .context(SlicerContext::new(0))
             .with_no_check(args.no_check)
             .with_cli_path_conflict_check()
-            .with_enable_timelapse(args.enable_timelapse),
-        args.load_custom_gcodes.as_deref(),
+            .with_enable_timelapse(args.enable_timelapse)
+            .with_downward_check(&targets, &mut downward_machines),
+        args.project_actions.load_custom_gcodes.as_deref(),
         &output,
         plate as i32 - 1,
     )?;
@@ -125,7 +149,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         ) {
             return failure
                 .with_config_substitutions(&input.to_string_lossy(), crate::substitutions(&bytes))
-                .with_upward_report(upward_machines.clone());
+                .with_upward_report(upward_machines.clone())
+                .with_downward_report(downward_machines.clone());
         }
         #[cfg(target_os = "linux")]
         let detail = match &error {
@@ -140,7 +165,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             #[cfg(target_os = "linux")]
             plate,
         )
-        .with_upward_report(upward_machines.clone());
+        .with_upward_report(upward_machines.clone())
+        .with_downward_report(downward_machines.clone());
         #[cfg(target_os = "linux")]
         let failure = failure.with_validation_detail(detail);
         failure
@@ -154,7 +180,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         (plate, &sliced_plate),
         &upward_machines,
         project,
-    )?;
+    )
+    .map_err(|failure| failure.with_downward_report(downward_machines.clone()))?;
     crate::statistics::write(&output, processed, args.export_statistics, plate)?;
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
@@ -164,7 +191,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         plate_index: plate,
         sliced_plate,
         upward_machines: &upward_machines,
-        downward_machines: &[],
+        downward_machines: &downward_machines,
     }
     .write(&input_file, crate::substitutions(&bytes));
     Ok(())
@@ -177,7 +204,7 @@ async fn slice_with_replacement(
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
 ) -> Result<Result<ProcessedGCode, SliceError>, CliFailure> {
-    if let Err(error) = ares_core::validate_load_settings_input(bytes) {
+    if let Err(error) = context.validate_load_settings_input(bytes) {
         return Ok(Err(error));
     }
     let settings = read_preset_files(&split_native_list(settings))?;

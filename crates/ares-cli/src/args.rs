@@ -114,9 +114,8 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) load_settings: Option<String>,
     #[arg(long)]
     pub(crate) load_filaments: Option<String>,
-    /// Replace saved layer G-code events with those from a JSON file for the selected plate.
-    #[arg(long, value_name = "FILE", requires = "selection")]
-    pub(crate) load_custom_gcodes: Option<PathBuf>,
+    #[command(flatten)]
+    pub(crate) project_actions: ProjectActionArgs,
     /// Fill empty --load-filaments entries with the first specified preset for STL slicing.
     #[arg(long)]
     pub(crate) load_defaultfila: bool,
@@ -222,28 +221,8 @@ pub(crate) struct SliceArgs {
     #[arg(long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
         default_value = "false", default_missing_value = "true", value_parser = clap::builder::BoolishValueParser::new())]
     pub(crate) allow_mix_temp: bool,
-    /// Skip custom G-code edits in a saved project.
-    #[arg(
-        long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
-        default_value = "false", default_missing_value = "true",
-        value_parser = |value: &str| {
-            let first = value.split(',').map(str::trim).find(|token| !token.is_empty());
-            match first.unwrap_or("").to_ascii_lowercase().as_str() {
-                "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
-                "0" | "false" | "no" | "off" | "disabled" => Ok(false),
-                "" if value.is_empty() => Ok(true),
-                _ => Err("expected a boolean"),
-            }
-        }
-    )]
-    pub(crate) skip_modified_gcodes: bool,
-    /// Check whether a saved project declares post-processing.
-    #[arg(
-        long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
-        default_value = "true", default_missing_value = "true",
-        value_parser = clap::builder::BoolishValueParser::new()
-    )]
-    pub(crate) normative_check: bool,
+    #[command(flatten)]
+    pub(crate) project_actions: ProjectActionArgs,
     #[arg(
         long,
         action = clap::ArgAction::Set,
@@ -254,10 +233,7 @@ pub(crate) struct SliceArgs {
         value_parser = clap::builder::BoolishValueParser::new(),
     )]
     pub(crate) allow_newer_file: bool,
-    #[arg(long)]
-    pub(crate) downward_check: bool,
-    #[arg(long)]
-    pub(crate) downward_settings: Option<String>,
+
     #[arg(
         short = 'o',
         required_unless_present_any = [
@@ -297,7 +273,27 @@ pub(crate) struct SliceArgs {
     pub(crate) inputs: Vec<PathBuf>,
 }
 
-impl SliceArgs {
+#[derive(clap::Args)]
+pub(crate) struct ProjectActionArgs {
+    /// Replace saved layer G-code events with those from a JSON file.
+    #[arg(long, value_name = "FILE", requires = "selection")]
+    pub(crate) load_custom_gcodes: Option<PathBuf>,
+    /// Skip custom G-code edits in a saved project.
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true",
+        default_value_t = false, action = clap::ArgAction::Set, value_parser = action_bool)]
+    pub(crate) skip_modified_gcodes: bool,
+    /// Check whether a saved project declares post-processing.
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true",
+        default_value_t = true, action = clap::ArgAction::Set, value_parser = action_bool)]
+    pub(crate) normative_check: bool,
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true",
+        default_value_t = false, action = clap::ArgAction::Set, value_parser = action_bool)]
+    pub(crate) downward_check: bool,
+    #[arg(long)]
+    pub(crate) downward_settings: Option<String>,
+}
+
+impl ProjectActionArgs {
     pub(crate) fn has_downward_targets(&self) -> bool {
         self.downward_check
             && self
@@ -306,6 +302,17 @@ impl SliceArgs {
                 .is_some_and(|paths| paths.split(';').any(|path| !path.is_empty()))
     }
 
+    pub(crate) fn context<'a>(
+        &self,
+        context: ares_core::SlicerContext<'a>,
+    ) -> ares_core::SlicerContext<'a> {
+        context
+            .with_normative_check(self.normative_check)
+            .with_skip_modified_gcodes(self.skip_modified_gcodes)
+    }
+}
+
+impl SliceArgs {
     pub(crate) fn input(&self) -> &Path {
         &self.inputs[0]
     }
@@ -315,6 +322,19 @@ impl SliceArgs {
             .as_deref()
             .unwrap_or_else(|| std::path::Path::new(""))
     }
+}
+
+fn action_bool(value: &str) -> Result<bool, &'static str> {
+    if value.is_empty() {
+        return Ok(true);
+    }
+    native_bool(
+        value
+            .split(',')
+            .map(str::trim)
+            .find(|token| !token.is_empty())
+            .unwrap_or_default(),
+    )
 }
 
 fn native_bool(value: &str) -> Result<bool, &'static str> {
