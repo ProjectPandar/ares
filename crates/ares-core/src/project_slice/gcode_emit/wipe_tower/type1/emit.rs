@@ -240,12 +240,7 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
         state.toolchange_count += 1;
     }
     pressure_advance::append(output, state, context.traversal, tool);
-    motion::tower::finish(
-        state,
-        geometry.scale,
-        end,
-        result.wipe_path.iter().copied().map(transform),
-    );
+    motion::tower::set_exit_position(state, geometry.scale, end);
     if different_z {
         motion::tower::change_z(
             output,
@@ -254,6 +249,12 @@ pub(in crate::project_slice::gcode_emit::wipe_tower) fn append(
             "Travel back up to the topmost object layer.",
         );
     } else {
+        // GCode.cpp:1652-1657 prepares the future wipe only on the same Z.
+        motion::tower::prepare_wipe(
+            state,
+            geometry.scale,
+            result.wipe_path.iter().copied().map(transform),
+        );
         motion::tower::type1_retract(output, state, false);
     }
     state.use_external_mp_once = true;
