@@ -276,13 +276,13 @@ pub(super) fn prepare_region_slices(
                 });
                 if complex {
                     complex_layer_indices.push(layer_index);
-                } else {
-                    move_layer(
-                        &mut output,
-                        &mut working_slices,
-                        &records[first_index],
-                        layer_index,
-                    );
+                    continue;
+                }
+                for record in records[first_index..]
+                    .iter()
+                    .filter(|record| record.kind == ProjectVolumeType::ModelPart && active(record))
+                {
+                    move_layer(&mut output, &mut working_slices, record, layer_index);
                 }
             }
         }
