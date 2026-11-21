@@ -127,6 +127,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    project_presets::check_input_version(&args, extension.as_deref(), &input)?;
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
     let input_file = args.input().to_string_lossy().into_owned();
     // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).

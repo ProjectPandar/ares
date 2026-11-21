@@ -34,6 +34,9 @@ pub enum SliceError {
     /// `Model::read_from_file` rejected the model in the option-only STL entry.
     OptionStlModelRead(Box<SliceError>),
     PresetAdmission(PresetAdmissionError),
+    /// `CLI_FILE_VERSION_NOT_SUPPORTED` (`Utils.hpp:67`): a BBL project
+    /// whose effective major/minor version is newer than the CLI.
+    FileVersionNotSupported,
     /// Support/palette admission (`OrcaSlicer.cpp:3929-3933`).
     FilamentSupportPaletteMismatch {
         support_count: usize,
@@ -143,6 +146,9 @@ impl fmt::Display for SliceError {
             }
             Self::OptionStlModelRead(error) => fmt::Display::fmt(error, f),
             Self::PresetAdmission(error) => error.fmt(f),
+            Self::FileVersionNotSupported => f.write_str(
+                "Unsupported 3MF version. Please make sure the 3MF file was created with the official version of Bambu Studio, not a beta version.",
+            ),
             Self::FilamentSupportPaletteMismatch {
                 support_count,
                 palette_count,
