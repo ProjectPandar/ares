@@ -201,6 +201,16 @@ The references move from the CLI composition to the GUI one.
   changes from a probe session, or moves to a plater export where one exists. The complete list is
   whatever the implementation's paired suite on main shows as changed. Every spec that changes
   is named in the hand-off report, together with its reference change.
+- **Plater sessions over a CLI slice of the opened 3MF.** `orcaPlate` (the plate edit specs and
+  `multiPlate`), `import`, `slice`, `settings` and `colorChange` take `withoutCliGroups` after
+  `withSelectedPresets`: the from-project route stores the groups by the same rule, so the
+  all-empty `inherits_group` and `different_settings_to_system` the CLI prints leave the
+  reference. The edited `slice` leg keeps `different_settings_to_system`, whose process column
+  the edit dirties.
+- **`profileSlice`.** Both legs take `withPlaterConfigLines` from a probe session that opens the
+  override project and picks the selected LH presets: the first filament's
+  `filament_plugin_config_overrides`, no `compatible_printers_condition`, and only the groups
+  the session stores. The override leg keeps `different_settings_to_system`.
 
 ### Group keys
 
