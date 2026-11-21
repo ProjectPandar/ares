@@ -70,14 +70,20 @@ pub(super) fn run_project(
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
     let loaded_files = args.settings.is_some() || args.filaments.is_some();
-    if loaded_files && let Err(error) = context.validate_load_settings_input(input) {
-        return Err(slice_error_to_failure(
-            error,
-            &result_path,
-            #[cfg(target_os = "linux")]
-            1,
-        ));
-    }
+    let admitted = if loaded_files {
+        Some(
+            ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
+                slice_error_to_failure(
+                    error,
+                    &result_path,
+                    #[cfg(target_os = "linux")]
+                    1,
+                )
+            })?,
+        )
+    } else {
+        None
+    };
     let catalog = args.catalog.map(fs::read_to_string).transpose()?;
     let settings_files = preset_files(args.settings)?;
     let filament_files = preset_files(args.filaments)?;
@@ -168,51 +174,52 @@ pub(super) fn run_project(
     let targets = crate::downward::load(args.actions, &result_path)?;
     let mut completed = Vec::new();
     let mut publish_failure = None;
-    let result = ares_core::slice_cli_project_plates(
-        input,
-        CliPlatesRequest {
-            selection,
-            filename,
-            settings,
-            overrides,
-            orient: args.orient,
-            upward: CliUpwardMachine {
-                source,
-                input: upward_input,
-                report: &mut upward_report,
-            },
+    let request = CliPlatesRequest {
+        selection,
+        filename,
+        settings,
+        overrides,
+        orient: args.orient,
+        upward: CliUpwardMachine {
+            source,
+            input: upward_input,
+            report: &mut upward_report,
         },
-        GenerationMetadata::default(),
-        context.with_downward_check(&targets, &mut downward_report),
-        |plate, gcode, report| {
-            if let Some(failure) = crate::failure::slicing::critical_failure(
+    };
+    let metadata = GenerationMetadata::default();
+    let context = context.with_downward_check(&targets, &mut downward_report);
+    let publish = |plate, gcode: &[u8], report: &ares_core::SlicedPlate| {
+        if let Some(failure) = crate::failure::slicing::critical_failure(
+            #[cfg(target_os = "linux")]
+            &result_path,
+            plate,
+            report,
+        ) {
+            publish_failure = Some(failure);
+            return Err(SliceError::InvalidInput(
+                "plate failed slicing admission".to_owned(),
+            ));
+        }
+        if let Some(directory) = directory
+            && let Err(error) = fs::create_dir_all(directory)
+                .and_then(|()| fs::write(directory.join(format!("plate_{plate}.gcode")), gcode))
+        {
+            publish_failure = Some(CliFailure::slice_export_error(
                 #[cfg(target_os = "linux")]
                 &result_path,
+                #[cfg(target_os = "linux")]
                 plate,
-                report,
-            ) {
-                publish_failure = Some(failure);
-                return Err(SliceError::InvalidInput(
-                    "plate failed slicing admission".to_owned(),
-                ));
-            }
-            if let Some(directory) = directory
-                && let Err(error) = fs::create_dir_all(directory)
-                    .and_then(|()| fs::write(directory.join(format!("plate_{plate}.gcode")), gcode))
-            {
-                publish_failure = Some(CliFailure::slice_export_error(
-                    #[cfg(target_os = "linux")]
-                    &result_path,
-                    #[cfg(target_os = "linux")]
-                    plate,
-                    error,
-                ));
-                return Err(SliceError::InvalidInput("cannot export G-code".to_owned()));
-            }
-            completed.push((plate, report.clone()));
-            Ok(())
-        },
-    );
+                error,
+            ));
+            return Err(SliceError::InvalidInput("cannot export G-code".to_owned()));
+        }
+        completed.push((plate, report.clone()));
+        Ok(())
+    };
+    let result = match admitted {
+        Some(project) => project.slice_plates(request, metadata, context, publish),
+        None => ares_core::slice_cli_project_plates(input, request, metadata, context, publish),
+    };
     let substitutions = substitutions(input);
     if let Err(error) = result {
         let failure = publish_failure

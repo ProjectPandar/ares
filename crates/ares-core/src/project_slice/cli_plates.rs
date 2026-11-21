@@ -55,6 +55,28 @@ pub fn slice_cli_project_plates(
     input: &[u8],
     request: CliPlatesRequest<'_>,
     metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
+) -> Result<(), CliPlateFailure> {
+    slice_project_plates((input, None), request, metadata, context, publish)
+}
+
+impl crate::CliPresetProject<'_> {
+    pub fn slice_plates(
+        self,
+        request: CliPlatesRequest<'_>,
+        metadata: GenerationMetadata,
+        context: SlicerContext<'_>,
+        publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
+    ) -> Result<(), CliPlateFailure> {
+        slice_project_plates(self.into_parts(), request, metadata, context, publish)
+    }
+}
+
+fn slice_project_plates(
+    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
+    request: CliPlatesRequest<'_>,
+    metadata: GenerationMetadata,
     mut context: SlicerContext<'_>,
     mut publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
 ) -> Result<(), CliPlateFailure> {
@@ -84,7 +106,8 @@ pub fn slice_cli_project_plates(
         if let Some(profile) = source_input.profile.as_mut() {
             profile.enable_timelapse = context.enable_timelapse;
         }
-        let source_input = ProjectSource {
+        let mut source_input = ProjectSource {
+            loaded,
             max_triangle_count: 0,
             orient,
             validate_print: true,
@@ -98,7 +121,7 @@ pub fn slice_cli_project_plates(
             .profile
             .map(super::source::ProfileInput::printer_name);
         let (project, preparation) = if let Some(profile) = source_input.profile {
-            profile_entry::load_profile_slice(&source_input, profile, Some(upward_report))?
+            profile_entry::load_profile_slice(&mut source_input, profile, Some(upward_report))?
         } else {
             state::load_project_source(ProjectSource {
                 max_triangle_count: 0,

@@ -5,18 +5,15 @@ use std::{
 
 use ares_core::{NativeRefreshFile, NativeRefreshPresets, ProfileKind, UpwardMachineSource};
 
-use crate::{
-    SliceArgs,
-    failure::{CliFailure, slice_error_to_failure},
-    split_native_list,
-};
+use crate::{SliceArgs, failure::CliFailure, split_native_list};
 
-pub(super) fn load(
-    args: &SliceArgs,
-    input: &[u8],
-    load_filaments: &[&str],
-) -> Result<Option<NativeRefreshPresets>, CliFailure> {
-    load_impl(args, input, load_filaments, false)
+pub(super) fn requested(args: &SliceArgs) -> bool {
+    args.uptodate
+        && args.project_preset_catalog.is_none()
+        && args
+            .input()
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
 }
 
 pub(super) fn load_admitted(
@@ -24,35 +21,10 @@ pub(super) fn load_admitted(
     input: &ares_core::CliPresetProject<'_>,
     load_filaments: &[&str],
 ) -> Result<Option<NativeRefreshPresets>, CliFailure> {
-    load_impl(args, input.input(), load_filaments, true)
-}
-
-fn load_impl(
-    args: &SliceArgs,
-    input: &[u8],
-    load_filaments: &[&str],
-    admitted: bool,
-) -> Result<Option<NativeRefreshPresets>, CliFailure> {
-    if !args.uptodate
-        || args.project_preset_catalog.is_some()
-        || !args
-            .input()
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
-    {
+    if !requested(args) {
         return Ok(None);
     }
-    if !admitted {
-        ares_core::validate_load_settings_input(input).map_err(|error| {
-            slice_error_to_failure(
-                error,
-                args.output(),
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            )
-        })?;
-    }
-    let Some(source) = UpwardMachineSource::from_project(input)
+    let Some(source) = UpwardMachineSource::from_project(input.input())
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
     else {
         return Ok(None);

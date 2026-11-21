@@ -129,10 +129,14 @@ impl ProjectInput<'_> {
                     Some(refresh) => {
                         refresh.load(bytes, overrides, validate_post_process, loaded)?
                     }
-                    None if system_catalog.is_some() => {
-                        crate::project::load_project_for_profiles(bytes)?
-                    }
-                    None => crate::project::load_project_with_preparation(bytes, overrides)?,
+                    None if system_catalog.is_some() => match loaded {
+                        Some(project) => project.into_profile_project()?,
+                        None => crate::project::load_project_for_profiles(bytes)?,
+                    },
+                    None => match loaded {
+                        Some(project) => project.into_direct_project(overrides)?,
+                        None => crate::project::load_project_with_preparation(bytes, overrides)?,
+                    },
                 };
                 if refresh.is_none()
                     && let Some(system_catalog) = system_catalog

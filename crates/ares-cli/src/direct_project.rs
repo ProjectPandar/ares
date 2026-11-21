@@ -1,9 +1,9 @@
 use std::{fs, io, path::Path};
 
 use ares_core::{
-    CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides, GenerationMetadata,
-    LoadSettingsFile, LoadSettingsSliceRequest, Placement, ProcessedGCode, SliceError, SlicedPlate,
-    SlicerContext, UpwardMachineInput, UpwardMachineSource,
+    CliPresetProject, CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides,
+    GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement, ProcessedGCode,
+    SliceError, SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
 };
 
 use crate::{
@@ -113,8 +113,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 context,
                 &mut sliced_plate,
                 args.export_statistics,
-            )
-            .await?;
+            )?;
             upward_machines = std::mem::take(&mut sliced_plate.upward_machines);
             processed
         }
@@ -199,16 +198,17 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     Ok(())
 }
 
-async fn slice_with_replacement(
+fn slice_with_replacement(
     (input, bytes, plate): (&Path, &[u8], u32),
     (settings, filaments): (&str, &str),
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
 ) -> Result<Result<ProcessedGCode, SliceError>, CliFailure> {
-    if let Err(error) = context.validate_load_settings_input(bytes) {
-        return Ok(Err(error));
-    }
+    let admitted = match CliPresetProject::admit(bytes, &context) {
+        Ok(project) => project,
+        Err(error) => return Ok(Err(error)),
+    };
     let settings = read_preset_files(&split_native_list(settings))?;
     let filaments = read_preset_files(&split_native_list(filaments))?;
     let settings = settings
@@ -231,8 +231,7 @@ async fn slice_with_replacement(
         .file_name()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?
         .to_string_lossy();
-    Ok(ares_core::slice_with_load_settings_processed(
-        bytes,
+    Ok(admitted.slice_with_load_settings_processed(
         LoadSettingsSliceRequest {
             filename: &filename,
             catalog_json: None,
@@ -249,6 +248,5 @@ async fn slice_with_replacement(
         GenerationMetadata::default(),
         context,
         record_moves,
-    )
-    .await)
+    ))
 }

@@ -99,7 +99,7 @@ pub(crate) fn export_settings(
 /// and `type` must be a known kind.
 fn parse_file(file: &LoadSettingsFile<'_>) -> Result<(String, ProfileDocument), SliceError> {
     let document: ProfileDocument = serde_json::from_str(file.json).map_err(|error| {
-        invalid(format!(
+        SliceError::InvalidPresetFile(format!(
             "Loading setting file \"{}\" failed: {error}",
             file.label
         ))

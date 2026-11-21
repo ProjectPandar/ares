@@ -145,14 +145,14 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if let Some(catalog) = &args.project_preset_catalog
         && args.load_settings.is_none()
     {
+        let admitted = project_presets::admit(&args, &input, &context)?;
         return project_presets::slice(
             &args,
             project_presets::Entry::Catalog(catalog),
-            &input,
+            admitted,
             &overrides,
             context,
-        )
-        .await;
+        );
     }
     let load_settings = args
         .load_settings
@@ -174,16 +174,21 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         )
         .await;
     }
-    if let Some(refresh) = native_refresh::load(&args, &input, &load_filaments)? {
-        return project_presets::slice(
-            &args,
-            project_presets::Entry::Native(&refresh),
-            &input,
-            &overrides,
-            context,
-        )
-        .await;
-    }
+    let admitted = if native_refresh::requested(&args) {
+        let admitted = project_presets::admit(&args, &input, &context)?;
+        if let Some(refresh) = native_refresh::load_admitted(&args, &admitted, &load_filaments)? {
+            return project_presets::slice(
+                &args,
+                project_presets::Entry::Native(&refresh),
+                admitted,
+                &overrides,
+                context,
+            );
+        }
+        Some(admitted)
+    } else {
+        None
+    };
     let output = match extension {
         Some(extension) if extension == "3mf" => {
             let metadata = ares_core::GenerationMetadata::default();
@@ -205,49 +210,35 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
             // --slice0 is used, or selects the explicit one-based plate.
             // This byte API slices one view; its default is that first plate.
-            let gcode = match &args.dump_moves {
-                Some(path) => {
-                    let processed = match ares_core::slice_cli_project_plate_validated_with_catalog(
+            let request = ares_core::CliProjectSliceRequest {
+                orient: args.orient == Some(1),
+                plate: args.plate,
+                overrides: &overrides,
+                record_moves: args.dump_moves.is_some(),
+                upward,
+                sliced_plate: &mut sliced_plate,
+            };
+            let result = match admitted {
+                Some(project) => project.slice_project(
+                    request,
+                    metadata,
+                    (system_catalog.as_ref(), None),
+                    context,
+                ),
+                None => {
+                    ares_core::slice_cli_project_plate_validated_with_catalog(
                         &input,
-                        ares_core::CliProjectSliceRequest {
-                            orient: args.orient == Some(1),
-                            plate: args.plate,
-                            overrides: &overrides,
-                            record_moves: true,
-                            upward,
-                            sliced_plate: &mut sliced_plate,
-                        },
+                        request,
                         metadata,
                         system_catalog.as_ref(),
                         context,
                     )
                     .await
-                    {
-                        Ok(processed) => processed,
-                        Err(error) => {
-                            failure::slicing::check(
-                                &args,
-                                &sliced_plate,
-                                &input_file,
-                                &input,
-                                &upward_report,
-                            )?;
-                            let failure = slice_error_to_failure(
-                                error,
-                                args.output(),
-                                #[cfg(target_os = "linux")]
-                                args.plate.unwrap_or(1),
-                            )
-                            .with_upward_report(upward_report)
-                            .with_config_substitutions(&input_file, substitutions(&input));
-                            #[cfg(target_os = "linux")]
-                            let failure = failure.with_slicing_warnings(
-                                args.plate.unwrap_or(1),
-                                sliced_plate.warnings,
-                            );
-                            return Err(failure);
-                        }
-                    };
+                }
+            };
+            let processed = match result {
+                Ok(processed) => processed,
+                Err(error) => {
                     failure::slicing::check(
                         &args,
                         &sliced_plate,
@@ -255,56 +246,27 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
                         &input,
                         &upward_report,
                     )?;
-                    fs::write(path, moves_csv::format(&processed.result))?;
-                    processed.gcode
-                }
-                None => {
-                    match ares_core::slice_cli_project_plate_validated_with_catalog(
-                        &input,
-                        ares_core::CliProjectSliceRequest {
-                            orient: args.orient == Some(1),
-                            plate: args.plate,
-                            overrides: &overrides,
-                            record_moves: false,
-                            upward,
-                            sliced_plate: &mut sliced_plate,
-                        },
-                        metadata,
-                        system_catalog.as_ref(),
-                        context,
+                    let failure = slice_error_to_failure(
+                        error,
+                        args.output(),
+                        #[cfg(target_os = "linux")]
+                        args.plate.unwrap_or(1),
                     )
-                    .await
-                    {
-                        Ok(processed) => processed.gcode,
-                        Err(error) => {
-                            failure::slicing::check(
-                                &args,
-                                &sliced_plate,
-                                &input_file,
-                                &input,
-                                &upward_report,
-                            )?;
-                            let failure = slice_error_to_failure(
-                                error,
-                                args.output(),
-                                #[cfg(target_os = "linux")]
-                                args.plate.unwrap_or(1),
-                            )
-                            .with_upward_report(upward_report)
-                            .with_config_substitutions(&input_file, substitutions(&input));
-                            #[cfg(target_os = "linux")]
-                            let failure = failure.with_slicing_warnings(
-                                args.plate.unwrap_or(1),
-                                sliced_plate.warnings,
-                            );
-                            return Err(failure);
-                        }
-                    }
+                    .with_upward_report(upward_report)
+                    .with_config_substitutions(&input_file, substitutions(&input));
+                    #[cfg(target_os = "linux")]
+                    let failure = failure
+                        .with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+                    return Err(failure);
                 }
             };
+            if let Some(path) = &args.dump_moves {
+                failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
+                fs::write(path, moves_csv::format(&processed.result))?;
+            }
             let _downward =
                 downward::report(&args, &sliced_plate, (&input_file, &input), &upward_report)?;
-            fs::write(args.output(), gcode)?;
+            fs::write(args.output(), processed.gcode)?;
             report_success(
                 &input_file,
                 substitutions(&input),
