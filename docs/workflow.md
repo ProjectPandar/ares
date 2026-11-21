@@ -320,6 +320,8 @@ wrap suppliers to set affinity. The outer runner supplies the replay CPU inside 
 
 ### Outcomes and closeout
 
+Supply the required Native probe environment variables. A skipped reference comparison is not a PASS.
+
 Each attempt directory is exclusive. Keep failed attempts, commands, raw logs and actual exits.
 A preparation failure is not a test result. Do not retry an executed test to replace its outcome.
 
