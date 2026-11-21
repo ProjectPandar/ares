@@ -13,6 +13,8 @@ use crate::runner::{OrcaRunner, repo_root};
 
 #[path = "custom_gcode_motion_state.rs"]
 mod custom_gcode_motion_state;
+#[path = "wipe_tower1_wall_filament.rs"]
+mod wipe_tower1_wall_filament;
 #[path = "wipe_tower2_final_purge.rs"]
 mod wipe_tower2_final_purge;
 #[path = "wipe_tower2_gap_travel.rs"]
