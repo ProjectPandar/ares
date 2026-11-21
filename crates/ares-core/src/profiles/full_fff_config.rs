@@ -36,9 +36,7 @@ pub(super) fn full_fff_config(
     }
     let presets = filament_presets(filaments);
     compose_filaments(result, &presets);
-    let groups = groups(process, printer, filaments, &presets)?;
-    groups.apply(result);
-    groups.store(result);
+    groups(process, printer, filaments, &presets)?.apply(result);
     Ok(())
 }
 

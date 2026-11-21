@@ -56,7 +56,8 @@ pub(in crate::profiles) fn compose(
         &selected(processes, process)?,
         &filament_groups,
         &selected(printers, printer)?,
-    );
+    )
+    .holding(process, &slots, printer);
     let settings = &mut composed.profile.settings;
     // 5636, 5679, 5821: each preset's filament_id, inherited along its chain (7793-7817).
     settings.project.gcode.filament_ids = crate::OrcaStrings(
