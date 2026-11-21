@@ -4,6 +4,7 @@ use std::{
     fs,
     io::{Cursor, Read, Write},
     path::{Path, PathBuf},
+    process::Command,
 };
 
 use serde_json::{Value, json};
@@ -11,7 +12,7 @@ use serde_json::{Value, json};
 use crate::{
     golden::compare_ordered_bytes_generator_only,
     native_wall_clock::result_comparison_bytes,
-    runner::{OrcaRunner, application::cli_command, stages},
+    runner::{OrcaRunner, stages},
 };
 
 const PROJECT: &[u8] =
@@ -249,7 +250,7 @@ fn paired(
     let code = result.map_or_else(|error| error.captured.unwrap().code, |()| Some(0));
     assert_eq!(code, Some(exit), "Native: {native:?}");
     let expected = outputs(&native, names, downward);
-    let output = cli_command()
+    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
         .current_dir(&ares)
         .args(&args)
         .output()
