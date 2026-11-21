@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
+import { presetSelectProbe } from "./presetSelectOracle";
+import { cstyle, openedSelection, withGuiMissingKeys } from "./selectedPresetLines";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = `${root}target/web-e2e/estimation`;
@@ -20,22 +22,33 @@ interface Native {
 }
 
 /**
- * `plate_1.print_statistics.json` of tools/chain-probe/print-statistics.nix,
+ * `plate_1.print_statistics.json` of tools/chain-probe/print-statistics.nix slicing `input`,
  * pinned to the one CPU `ORCA_REPLAY_CPU` names with the seeded reference's seed like
  * `OrcaRunner::print_statistics_reference` (scripts/orca-seeded-parity.sh). Written to target/, never the repo.
  */
-function native(bin: string, name: string): Native {
+function native(bin: string, name: string, input: string): Native {
   const directory = `${artifacts}/${name}`;
   const cpu = process.env.ORCA_REPLAY_CPU;
   if (!cpu || !/^\d+$/.test(cpu)) throw new Error(`ORCA_REPLAY_CPU=${cpu ?? "(unset)"} must name the one CPU the Native probe runs on`);
   mkdirSync(directory, { recursive: true });
-  const run = spawnSync("taskset", ["-c", cpu, bin, "--slice", "0", "--outputdir", directory, `${root}tests/parity/summary/${name}.3mf`], {
+  const run = spawnSync("taskset", ["-c", cpu, bin, "--slice", "0", "--outputdir", directory, input], {
     env: { ...process.env, ORCA_REPLAY_SEED: "0" }, encoding: "utf8", timeout: 290_000, killSignal: "SIGKILL",
   });
   writeFileSync(`${directory}/native.log`, `${run.stdout}\n${run.stderr}`);
   if (run.error) throw run.error;
   expect(run.status, `native slice of ${name}`).toBe(0);
   return JSON.parse(readFileSync(`${directory}/plate_1.print_statistics.json`, "utf8")) as Native;
+}
+
+/** The reference config block prints each added GUI value: a scalar as is, a vector comma- or cstyle-joined. */
+function expectAddedValues(gcode: string, added: Record<string, string | string[]>) {
+  const lines = gcode.split("\n");
+  const block = new Map(lines.slice(lines.indexOf("; CONFIG_BLOCK_START") + 1, lines.indexOf("; CONFIG_BLOCK_END"))
+    .map((line) => /^; (\S+) = (.*)$/.exec(line)!).map(([, key, value]) => [key, value]));
+  for (const [key, value] of Object.entries(added)) {
+    if (!block.has(key)) continue;
+    expect(Array.isArray(value) ? [value.join(","), cstyle(value)] : [value], `reference ${key}`).toContain(block.get(key));
+  }
 }
 
 /** glibc `%.Nf`: half to even on the exact double (toFixed rounds ties up). */
@@ -110,17 +123,24 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
   test.setTimeout(900_000);
   const bin = oraclePath("ARES_PRINT_STATISTICS_BIN", "the PrintStatistics probe", "tools/chain-probe/print-statistics.nix");
   if (!bin) test.skip();
+  if (!presetSelectProbe()) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while the PrintStatistics probe is set: the reference needs the GUI route");
   mkdirSync(artifacts, { recursive: true });
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   const report: Record<string, unknown> = {};
   let excluded = false;
   for (const name of FIXTURES) {
-    const stats = native(bin!, name);
+    // The web opens the 3MF on the GUI route; the reference is the 3MF with the GUI's values for the keys it lacks.
+    const fixture = `${root}tests/parity/summary/${name}.3mf`;
+    mkdirSync(`${artifacts}/${name}`, { recursive: true });
+    const added = withGuiMissingKeys(fixture, openedSelection(fixture, `${artifacts}/${name}/selection/`)!, `${artifacts}/${name}/gui-route.3mf`);
+    expect(Object.keys(added), `${name} lacks a key the CLI fills from the system preset`).toContain("enable_pre_heating");
+    const stats = native(bin!, name, `${artifacts}/${name}/gui-route.3mf`);
+    expectAddedValues(readFileSync(`${artifacts}/${name}/plate_1.gcode`, "utf8"), added);
     // Normal mode only: the mode suffix and button (:4566-4570, 4646-4670) are deferred.
     expect(stats.stealth_time, `${name} stealth_time`).toBe(0);
     await page.getByRole("link", { name: "Prepare", exact: true }).click();
-    await page.getByTestId("import-input").setInputFiles(`${root}tests/parity/summary/${name}.3mf`);
+    await page.getByTestId("import-input").setInputFiles(fixture);
     await expect(page.getByTestId("status")).toHaveText("Ready to slice");
     await page.getByRole("button", { name: "Slice plate", exact: true }).click();
     await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
@@ -151,7 +171,7 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
           return summary.actual;
         }).toEqual(summary.expected);
     }
-    report[name] = { native: stats, views, summary };
+    report[name] = { native: stats, added, views, summary };
   }
   // Model Filament must differ from Total Filament on some fixture.
   expect(excluded, "a fixture with support, flushed or wipe-tower filament").toBe(true);
