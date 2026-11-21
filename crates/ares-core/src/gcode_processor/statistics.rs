@@ -222,7 +222,7 @@ impl GCodeProcessorResult {
                 weight: "g",
             },
             summary: Summary {
-                time: rounded(f64::from(stats.normal_time), 1000.0),
+                time: rounded(stats.normal_time, 1000.0),
                 prepare_time: rounded(f64::from(stats.normal_prepare_time), 1000.0),
                 travel_time: rounded(travel_time, 1000.0),
                 travel_distance: rounded(f64::from(stats.total_travel_distance), 100.0),

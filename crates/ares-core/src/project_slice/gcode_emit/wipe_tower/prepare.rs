@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub(in crate::project_slice::gcode_emit) enum Planned {
-    Type1(type1::Planned),
+    Type1(Box<type1::Planned>),
     Type2(planning::Planned),
 }
 
@@ -23,9 +23,9 @@ pub(in crate::project_slice::gcode_emit) fn prepare(
     ordering: &mut ToolOrdering,
 ) -> Option<Planned> {
     match ordering.tower_type? {
-        crate::WipeTowerType::Type1 => Some(Planned::Type1(type1::prepare(
+        crate::WipeTowerType::Type1 => Some(Planned::Type1(Box::new(type1::prepare(
             traversal, original, support, ordering,
-        ))),
+        )))),
         crate::WipeTowerType::Type2 => {
             planning::prepare(traversal, original, support, ordering).map(Planned::Type2)
         }
@@ -40,7 +40,7 @@ impl Planned {
         height: f64,
     ) -> Result<Data, ClipperError> {
         match self {
-            Self::Type1(plan) => plan.generate(settings, scale, tools.1, height),
+            Self::Type1(plan) => (*plan).generate(settings, scale, tools.1, height),
             Self::Type2(plan) => plan.generate(settings, scale, tools, height),
         }
     }

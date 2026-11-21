@@ -143,7 +143,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 )
                 .await
             }
-            .map_err(&failure)?;
+            .map_err(failure)?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
@@ -224,7 +224,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 )
                 .await
             }
-            .map_err(&failure)?;
+            .map_err(failure)?;
             vec![SlicedStlPlate {
                 id: 1,
                 processed,
@@ -239,7 +239,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                 args.export_statistics,
             )
             .await
-            .map_err(&failure)?
+            .map_err(failure)?
         }
     };
     let mut completed = Vec::with_capacity(plates.len());
