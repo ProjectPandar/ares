@@ -102,6 +102,7 @@ fn with_load_settings_source<T>(
         overrides,
         validate_print,
         validate_config: true,
+        skip_modified_gcodes: false,
         orient,
         upward: None,
         sliced_plate: Some(sliced_plate),

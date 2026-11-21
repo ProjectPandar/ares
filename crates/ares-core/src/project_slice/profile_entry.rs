@@ -134,6 +134,9 @@ pub(super) fn prepare_profile_slice(
             project.validate_print,
         )?;
     }
+    if project.skip_modified_gcodes {
+        loaded.remove_custom_plate_gcodes();
+    }
     if project.orient {
         crate::plater::apply_cli_orientation(&mut loaded, project.plate)?;
     }

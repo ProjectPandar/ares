@@ -92,7 +92,8 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text);
     };
-    let mut context = ares_core::SlicerContext::new(0);
+    let mut context =
+        ares_core::SlicerContext::new(0).with_skip_modified_gcodes(args.skip_modified_gcodes);
     if args.progress {
         context.set_status_callback(&mut print_status);
     }

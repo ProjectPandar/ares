@@ -71,6 +71,9 @@ pub(super) fn prepare_project_source(
         let filament_count = project.cli_filament_count();
         project.initialize_cli_loaded_project_config(filament_count);
     }
+    if source.skip_modified_gcodes {
+        project.remove_custom_plate_gcodes();
+    }
     if source.orient {
         crate::plater::apply_cli_orientation(&mut project, source.plate)?;
     }

@@ -143,6 +143,7 @@ pub async fn slice_project_plate_with_catalog(
             overrides,
             validate_print: false,
             validate_config: true,
+            skip_modified_gcodes: false,
             orient: false,
             upward: None,
             sliced_plate: None,
@@ -185,6 +186,7 @@ pub async fn slice_project_plate_processed_with_catalog(
             overrides,
             validate_print: false,
             validate_config: true,
+            skip_modified_gcodes: false,
             orient: false,
             upward: None,
             sliced_plate: None,
@@ -210,6 +212,7 @@ pub(crate) fn slice_source(
     let mut sliced_plate = project.sliced_plate.take();
     let project = ProjectSource {
         sliced_plate: sliced_plate.as_deref_mut(),
+        skip_modified_gcodes: context.skip_modified_gcodes(),
         ..project
     };
     let walls = perimeters::prepare_post_layer_region_perimeters(project, &mut context)?;

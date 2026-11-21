@@ -15,6 +15,7 @@ pub(crate) struct ProjectSource<'a> {
     /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
+    pub(crate) skip_modified_gcodes: bool,
     pub(crate) orient: bool,
     pub(crate) upward: Option<CliUpwardMachine<'a>>,
     /// The CLI's success report values, filled once the plate is set up.
@@ -159,6 +160,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,
+            skip_modified_gcodes: false,
             orient: false,
             upward: None,
             sliced_plate: None,
@@ -180,6 +182,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             validate_config: true,
+            skip_modified_gcodes: false,
             orient: false,
             upward: None,
             sliced_plate: None,

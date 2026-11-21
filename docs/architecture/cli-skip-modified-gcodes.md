@@ -86,16 +86,17 @@ Do not reproduce the unchecked access to the first model when there is none.
   `project_slice` for both direct and profile-overlay routes, before
   print-state preparation. The existing archive parser and event emission
   stay unchanged. This part does not require Native preset file routing.
-- The automatic retained-filament merge is already represented by
-  `profiles/project_refresh/preset.rs::refresh` and
-  `profiles/project_refresh/filament/slot.rs::apply`. Apply the same
-  keep-set exception there on the CLI path when the existing catalog
-  resolves a retained slot. Keep the current selection and variant logic;
-  do not create new catalog supply or extend the option to GUI/WASM profile
-  selection. Include the ordinary resolver-backed filament case only if
-  both slicers can use matching sources through their existing paths.
 
 ### Deferred
+
+- Put the automatic retained-filament exception in the existing CLI path
+  through `profiles/project_refresh/preset.rs::refresh` and
+  `profiles/project_refresh/filament/slot.rs::apply`. It does not require
+  file routing, but the catalog-backed edited project differs in unrelated
+  machine config serialization even without the flag. Keep that separate
+  from event removal and require a passing whole-output control before
+  changing the retained merge. Do not extend the policy to GUI/WASM profile
+  selection or alter the existing catalog supply.
 
 - The source-file retain branches need the Native retained-preset refresh
   path (`ares-cli/src/native_refresh.rs`, core
@@ -130,15 +131,17 @@ The cases must execute against Native in official and seeded modes.
    `Template` control. No flag emits both, the bare flag removes only
    the `Custom` item, and `=false` is identical to omission. Also check
    an unchanged project without a `Custom` event with and without the flag.
-2. **Ordinary retained filament.** Use a fixture whose named filament is
-   resolvable on both sides (matched Native system preset and Ares catalog).
-   Give its saved slot a distinct `filament_start_gcode`, without passing
-   `--load-filaments`. With no refresh flags, show that
-   omission keeps the saved script and the skip flag uses the system script.
-   Exercise both a recorded edit and the no-declared-changes `keep_project`
-   case. Check a non-G-code override is retained and that other slots are
-   not replaced by this slot's source.
-### Deferred file-driven verification
+
+### Deferred preset verification
+
+**Ordinary retained filament.** Use a fixture whose named filament is
+resolvable on both sides (matched Native system preset and Ares catalog).
+Give its saved slot a distinct `filament_start_gcode`, without passing
+`--load-filaments`. With no refresh flags, show that omission keeps the
+saved script and the skip flag uses the system script. Exercise both a
+recorded edit and the no-declared-changes `keep_project` case. Check that a
+non-G-code override is retained and other slots are not replaced by this
+slot's source.
 
 **Saved machine script with retained refresh.** Reuse the single-plate
 saved-project fixture and flattened file layout from the retained-refresh

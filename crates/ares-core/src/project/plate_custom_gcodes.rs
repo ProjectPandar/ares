@@ -304,6 +304,14 @@ fn invalid(reason: impl Display) -> SliceError {
 }
 
 impl Project {
+    /// `CLI::run` (`OrcaSlicer.cpp:4117–4134`) removes only Custom items.
+    pub(crate) fn remove_custom_plate_gcodes(&mut self) {
+        for info in self.plates_custom_gcodes.values_mut() {
+            info.gcodes
+                .retain(|item| item.kind != CustomGCodeType::Custom);
+        }
+    }
+
     /// `Model::plates_custom_gcodes`, keyed by the zero-based plate index.
     pub fn plates_custom_gcodes(&self) -> &BTreeMap<i32, CustomGCodeInfo> {
         &self.plates_custom_gcodes

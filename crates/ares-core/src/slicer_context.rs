@@ -25,6 +25,7 @@ pub struct SlicerContext<'a> {
     rng: Mt19937,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
+    skip_modified_gcodes: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -34,7 +35,19 @@ impl<'a> SlicerContext<'a> {
             rng: Mt19937::new(seed),
             status: None,
             thumbnail_images: Vec::new(),
+            skip_modified_gcodes: false,
         }
+    }
+
+    /// Applies the CLI `--skip-modified-gcodes` policy to this slice.
+    #[must_use]
+    pub fn with_skip_modified_gcodes(mut self, enabled: bool) -> Self {
+        self.skip_modified_gcodes = enabled;
+        self
+    }
+
+    pub(crate) fn skip_modified_gcodes(&self) -> bool {
+        self.skip_modified_gcodes
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.
