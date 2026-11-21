@@ -2,8 +2,8 @@
 //! `ModelObject::split` branch (OrcaSlicer v2.5.0 Model.cpp:926–977,2220–2346).
 
 use super::{
-    Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume,
-    ProjectVolumeType, Transform3d,
+    ImportedStl, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
+    ProjectVolume, ProjectVolumeType, Transform3d,
     documents::{PlateMetadata, ProjectDocuments},
 };
 use crate::{SliceError, StlFile, StlImportOptions};
@@ -66,21 +66,23 @@ fn stl_object(name: &str, index: u32, volume: ProjectVolume) -> ProjectObject {
 }
 
 impl Project {
-    pub(crate) fn from_cli_stl_models(models: &[(&str, crate::Model)]) -> Self {
+    pub(crate) fn from_cli_stl_models(models: Vec<ImportedStl>) -> Self {
+        let filename = models[0].0.name.clone();
+        let model_count = models.len();
         let objects = models
-            .iter()
+            .into_iter()
             .enumerate()
-            .map(|(index, (name, model))| {
-                stl_object(
-                    name,
-                    index as u32,
-                    stl_model_volume(model, name, index as u32),
-                )
+            .map(|(index, imported)| {
+                let mut volume = imported.0;
+                let name = volume.name.clone();
+                volume.id = index as u32;
+                volume.mesh_preparation.key = index as i32;
+                stl_object(&name, index as u32, volume)
             })
             .collect();
-        let mut project = Self::from_stl_objects(models[0].0, objects);
-        let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(models.len() as u32);
-        let mut instances = Vec::with_capacity(models.len());
+        let mut project = Self::from_stl_objects(&filename, objects);
+        let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(model_count as u32);
+        let mut instances = Vec::with_capacity(model_count);
         for object in &mut project.objects {
             let identity = [object.id, 0, labels.clone_stl_instance()];
             object.instances.push(ProjectInstance::new(

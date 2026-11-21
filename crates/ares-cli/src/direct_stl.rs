@@ -67,16 +67,14 @@ pub(super) async fn run(
         )
         .into());
     }
-    if args.convert_unit
-        && (args.inputs.len() != 1 || args.inputs[0].extension().is_none_or(|ext| ext != "stl"))
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "--convert-unit requires one STL input",
-        )
-        .into());
-    }
     if args.inputs.len() == 1 && args.inputs[0].extension().is_some_and(|ext| ext == "3mf") {
+        if args.convert_unit {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "--convert-unit requires STL input",
+            )
+            .into());
+        }
         if args.mtcpp.is_some() {
             return Err(
                 io::Error::new(io::ErrorKind::InvalidInput, "--mtcpp requires STL input").into(),
@@ -91,7 +89,9 @@ pub(super) async fn run(
         )
     })?;
     let multiple = args.inputs.len() > 1;
+    let arranged = multiple || selection > 1;
     let mut models = Vec::new();
+    let mut imported = None;
     let mut single_input = Vec::new();
     let mut filename = "";
     for path in &args.inputs {
@@ -106,36 +106,30 @@ pub(super) async fn run(
             filename = name;
         }
         let bytes = read_input(path, &output)?;
-        if multiple || selection > 1 {
-            let model = ares_core::load_model(&bytes).map_err(|_| {
+        if arranged || args.convert_unit {
+            let mut model = ImportedStl::read(&bytes, name).map_err(|_| {
                 CliFailure::invalid_stl_input(
                     path,
                     #[cfg(target_os = "linux")]
                     &output,
                 )
             })?;
-            models.push((name, model));
+            if args.convert_unit
+                && let Some(unit) = model.infer_unit()
+            {
+                model.convert_to_millimeters(unit);
+            }
+            if arranged {
+                models.push(model);
+            } else {
+                imported = Some(model);
+            }
         }
         if !multiple {
             single_input = bytes;
         }
     }
     let mut sliced_plate = SlicedPlate::default();
-    let imported = if args.convert_unit && models.is_empty() {
-        let mut model = ImportedStl::read(&single_input, filename).map_err(|_| {
-            CliFailure::invalid_stl_input(
-                &args.inputs[0],
-                #[cfg(target_os = "linux")]
-                &output,
-            )
-        })?;
-        if let Some(unit) = model.infer_unit() {
-            model.convert_to_millimeters(unit);
-        }
-        Some(model)
-    } else {
-        None
-    };
     let context = crate::custom_gcodes::load(
         SlicerContext::new(0)
             .with_max_triangle_count(args.mtcpp.unwrap_or_default())
@@ -307,7 +301,7 @@ pub(super) async fn run(
                     args.strict,
                     args.export_statistics,
                 ),
-                (&models, request, selection, context),
+                (models, request, selection, context),
                 &mut completed,
             )?;
             Vec::new()
