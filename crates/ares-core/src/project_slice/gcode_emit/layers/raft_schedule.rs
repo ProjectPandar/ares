@@ -193,8 +193,11 @@ pub(super) fn simplify_layers(
     traversal: &crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
     raft_layers: &mut [Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
 ) {
+    use super::super::tool_ordering::object_options;
+    use crate::ProcessSupportType;
+    use crate::project_slice::path_simplification::{SUPPORT_RESOLUTION, simplify_layers};
+
     let process = &traversal.resolved.views.full.process;
-    // Layer.cpp (345efec64c7b):383-419, support/raft is not sparse infill.
     let arc_fitting = if process.gcode.enable_arc_fitting == crate::ArcFittingMode::Enabled
         && !process.print.spiral_mode.0
     {
@@ -202,13 +205,18 @@ pub(super) fn simplify_layers(
     } else {
         crate::ArcFittingMode::Disabled
     };
-    let tolerance = process.print.resolution.0;
-    for object_layers in raft_layers {
-        crate::project_slice::path_simplification::simplify_layers(
-            object_layers,
-            traversal.scale,
-            tolerance,
-            arc_fitting,
-        );
+    for (index, object_layers) in raft_layers.iter_mut().enumerate() {
+        // Layer.cpp:379–425 applies the support tolerance even though the
+        // normal raft adapter carries its paths as fill entities.
+        let tolerance = if arc_fitting == crate::ArcFittingMode::Enabled
+            && matches!(
+                object_options(traversal, index).support_type,
+                ProcessSupportType::NormalAuto | ProcessSupportType::NormalManual
+            ) {
+            SUPPORT_RESOLUTION
+        } else {
+            process.print.resolution.0
+        };
+        simplify_layers(object_layers, traversal.scale, tolerance, arc_fitting);
     }
 }

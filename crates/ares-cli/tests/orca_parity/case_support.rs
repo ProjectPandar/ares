@@ -89,6 +89,8 @@ mod support_contact_overlap;
 #[path = "support_interface_top_layers_base_connect.rs"]
 mod support_interface_top_layers_base_connect;
 
+#[path = "normal_raft_interface_arcs.rs"]
+mod normal_raft_interface_arcs;
 #[path = "organic_vertical_enforcer.rs"]
 mod organic_vertical_enforcer;
 
