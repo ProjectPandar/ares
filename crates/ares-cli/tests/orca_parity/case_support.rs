@@ -81,6 +81,8 @@ mod cli_load_defaultfila;
 mod cli_mtcpp;
 #[path = "cli_no_check.rs"]
 mod cli_no_check;
+#[path = "cli_no_check_support_warning.rs"]
+mod cli_no_check_support_warning;
 #[path = "cli_sparse_filament_slots.rs"]
 mod cli_sparse_filament_slots;
 #[path = "cli_strict.rs"]
