@@ -1,5 +1,8 @@
 #![cfg(target_os = "linux")]
 
+#[path = "cli_load_custom_gcodes/toolchange.rs"]
+mod toolchange;
+
 use std::{
     ffi::OsString,
     fs,
@@ -44,12 +47,12 @@ fn cli_load_custom_gcodes_reports_missing_file() {
 
 #[test]
 fn cli_load_custom_gcodes_multiasingle_toolchange_switches_filament() {
-    compare_multiasingle_toolchange("MultiAsSingle", true, false);
+    toolchange::compare_multiasingle_toolchange("MultiAsSingle", false, &[(0.4, 2)], &[0, 1]);
 }
 
 #[test]
 fn cli_load_custom_gcodes_single_filament_toolchange_keeps_object_filament() {
-    compare_multiasingle_toolchange("MultiExtruder", false, true);
+    toolchange::compare_multiasingle_toolchange("MultiExtruder", true, &[(0.4, 2)], &[0]);
 }
 
 fn compare(saved: bool, status: Option<i32>) {
@@ -182,143 +185,6 @@ fn compare(saved: bool, status: Option<i32>) {
             "complete G-code differs: {root:?}"
         );
     }
-}
-
-fn compare_multiasingle_toolchange(mode: &str, switches_filament: bool, single_filament: bool) {
-    let Some(runner) = OrcaRunner::from_env().unwrap() else {
-        return;
-    };
-    let root = tempfile::Builder::new()
-        .prefix("cli-load-custom-gcodes-toolchange-")
-        .tempdir_in(artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
-    write_toolchange_fixture(&root, single_filament);
-    let events = root.join("events.json");
-    fs::write(
-        &events,
-        serde_json::to_vec(&json!({
-            "mode": mode,
-            "gcodes": [{
-                "type": "ToolChange", "print_z": 0.4, "color": "",
-                "extruder": 2, "extra": ""
-            }]
-        }))
-        .unwrap(),
-    )
-    .unwrap();
-    let filaments = if single_filament {
-        root.join("filament-a.json").display().to_string()
-    } else {
-        format!(
-            "{};{}",
-            root.join("filament-a.json").display(),
-            root.join("filament-b.json").display()
-        )
-    };
-    let argv = [
-        "--debug",
-        "0",
-        "--outputdir",
-        "out",
-        "--slice",
-        "1",
-        "--load-settings",
-        &format!(
-            "{};{}",
-            root.join("machine.json").display(),
-            root.join("process.json").display()
-        ),
-        "--load-filaments",
-        &filaments,
-        "--load-custom-gcodes",
-        events.to_str().unwrap(),
-        root.join("block.stl").to_str().unwrap(),
-    ]
-    .map(OsString::from);
-    fs::write(root.join("argv.json"), serde_json::to_vec(&argv).unwrap()).unwrap();
-    let native = run(runner.bin(), &root, "native", &argv);
-    let ares = run(Path::new(env!("CARGO_BIN_EXE_ares")), &root, "ares", &argv);
-    let native_cwd = root.join("native/cwd");
-    let ares_cwd = root.join("ares/cwd");
-    assert_eq!(native.status.code(), Some(0), "{root:?}");
-    assert_eq!(ares.status.code(), native.status.code(), "{root:?}");
-    assert_eq!(ares.stderr, native.stderr, "{root:?}");
-    assert_eq!(ares.stdout, native.stdout, "{root:?}");
-    assert_eq!(inventory(&ares_cwd), inventory(&native_cwd), "{root:?}");
-    let native_report = fs::read(native_cwd.join("out/result.json")).unwrap();
-    let actual = fs::read(ares_cwd.join("out/result.json")).unwrap();
-    assert!(
-        result_comparison_bytes(&actual) == result_comparison_bytes(&native_report),
-        "complete report differs: {root:?}"
-    );
-    let native_gcode = gcode(&native_cwd);
-    let ares_gcode = gcode(&ares_cwd);
-    assert_eq!(
-        ares_gcode, native_gcode,
-        "complete G-code differs: {root:?}"
-    );
-    let tool_change = b"T1\n";
-    let expected_tool_changes = if switches_filament { 1 } else { 0 };
-    assert_eq!(
-        native_gcode
-            .windows(tool_change.len())
-            .filter(|window| *window == tool_change)
-            .count(),
-        expected_tool_changes,
-        "{root:?}"
-    );
-}
-
-fn write_toolchange_fixture(root: &Path, single_filament: bool) {
-    let write = |name: &str, value: Value| {
-        fs::write(root.join(name), serde_json::to_vec(&value).unwrap()).unwrap();
-    };
-    write(
-        "machine.json",
-        json!({
-            "type": "machine", "name": "Synthetic dual-filament machine", "from": "system",
-            "printer_technology": "FFF", "printable_height": "200",
-            "printable_area": ["0x0", "200x0", "200x200", "0x200"],
-            "nozzle_diameter": ["0.4"], "printer_extruder_id": ["1"],
-            "printer_extruder_variant": ["Direct Drive Standard"],
-            "filament_diameter": if single_filament {
-                json!(["1.75"])
-            } else {
-                json!(["1.75", "1.75"])
-            },
-            "layer_change_gcode": "G92 E0"
-        }),
-    );
-    write(
-        "process.json",
-        json!({
-            "type": "process", "name": "Synthetic single-object process", "from": "system",
-            "compatible_printers": ["Synthetic dual-filament machine"], "layer_height": "0.2",
-            "initial_layer_print_height": "0.2", "sparse_infill_density": "0%",
-            "top_shell_layers": "0", "bottom_shell_layers": "0", "enable_prime_tower": "0"
-        }),
-    );
-    for (name, id, density, temperature) in [
-        ("filament-a.json", "SYNTH_A", "1.11", "205"),
-        ("filament-b.json", "SYNTH_B", "1.33", "225"),
-    ] {
-        write(
-            name,
-            json!({
-                "type": "filament", "name": name, "from": "system", "filament_id": id,
-                "filament_diameter": ["1.75"], "filament_density": [density],
-                "filament_is_support": ["0"], "nozzle_temperature": [temperature],
-                "filament_extruder_variant": ["Direct Drive Standard"],
-                "filament_start_gcode": ["; synthetic filament"]
-            }),
-        );
-    }
-    fs::write(
-        root.join("block.stl"),
-        super::direct_stl_slice::block_stl(108.0),
-    )
-    .unwrap();
 }
 
 fn seed_archived_event(project: &Path) {
