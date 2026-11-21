@@ -31,17 +31,18 @@ pub(super) struct ProjectSliceState {
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<ProjectSliceState, SliceError> {
+    let check_post_process = source.validate_print && source.normative_check;
     let (mut project, preparation) = source.input.load(
         source.overrides,
         source.refresh,
         source.system_catalog,
-        source.validate_print,
+        check_post_process,
     )?;
     project.apply_plater_edits(source.edits);
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);
     }
-    if source.validate_print {
+    if check_post_process {
         super::validated::validate_post_process(&project)?;
     }
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate

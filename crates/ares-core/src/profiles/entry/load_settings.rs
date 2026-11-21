@@ -101,6 +101,7 @@ fn with_load_settings_source<T>(
         system_catalog: None,
         overrides,
         validate_print,
+        normative_check: true,
         validate_config: true,
         orient,
         upward: None,

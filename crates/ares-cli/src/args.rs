@@ -56,6 +56,13 @@ pub(crate) struct SliceArgs {
     /// Print each slicing status to stderr as `Percent N: text` (`PrintBase.cpp:123-128`)
     #[arg(long)]
     pub(crate) progress: bool,
+    /// Check whether a saved project declares post-processing.
+    #[arg(
+        long, action = clap::ArgAction::Set, num_args = 0..=1, require_equals = true,
+        default_value = "true", default_missing_value = "true",
+        value_parser = clap::builder::BoolishValueParser::new()
+    )]
+    pub(crate) normative_check: bool,
     #[arg(short = 'o')]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,

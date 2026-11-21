@@ -49,7 +49,7 @@ fn load_with_profile_preparation(
         settings: profile.composed.settings(),
         profile_raw: profile.raw,
         filament_raws: profile.filament_raws,
-        validate_print: project.validate_print,
+        validate_post_process: project.validate_print && project.normative_check,
         load_names: profile.load_names,
         retained_refresh: profile.retained_refresh,
     };

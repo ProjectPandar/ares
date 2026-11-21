@@ -25,6 +25,7 @@ pub struct SlicerContext<'a> {
     rng: Mt19937,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
+    normative_check: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -34,7 +35,19 @@ impl<'a> SlicerContext<'a> {
             rng: Mt19937::new(seed),
             status: None,
             thumbnail_images: Vec::new(),
+            normative_check: true,
         }
+    }
+
+    /// Controls admission of embedded post-processing settings on CLI slice paths.
+    #[must_use]
+    pub fn with_normative_check(mut self, enabled: bool) -> Self {
+        self.normative_check = enabled;
+        self
+    }
+
+    pub(crate) fn normative_check(&self) -> bool {
+        self.normative_check
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.

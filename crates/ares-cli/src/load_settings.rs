@@ -25,7 +25,7 @@ pub(super) async fn slice(
     // project before `:1953-2024` reads the preset files — probe the
     // admission first so the embedded `-19` gate wins over the
     // adapter's missing-file `-5`.
-    if let Err(error) = ares_core::validate_load_settings_input(input) {
+    if let Err(error) = context.validate_load_settings_input(input) {
         return Err(slice_error_to_failure(
             error,
             &args.output,
