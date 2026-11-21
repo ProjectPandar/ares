@@ -25,17 +25,14 @@ pub(in crate::project_slice) fn validate_paint(
     project: &Project,
     resolved: &BoundedResolvedProjectConfig,
 ) -> Result<(), SliceError> {
-    for object in &resolved.objects {
-        let source = &project.objects()[object.source_object_index];
-        for volume in painted_volumes(source) {
-            if resolved.views.full.process.print.spiral_mode.0
-                || volume.mesh().seam_facets.used_states()[3..]
-                    .iter()
-                    .any(|&used| used)
-            {
-                return Err(deferred());
-            }
-        }
+    if resolved.views.full.process.print.spiral_mode.0
+        && resolved.objects.iter().any(|object| {
+            painted_volumes(&project.objects()[object.source_object_index])
+                .next()
+                .is_some()
+        })
+    {
+        return Err(deferred());
     }
     Ok(())
 }
@@ -75,6 +72,10 @@ impl SeamPaint {
             let mesh = volume.mesh();
             let annotation = &mesh.seam_facets;
             let states = annotation.used_states();
+            // SeamPlacer.cpp:1114–1133 gathers only exact enforcers and blockers.
+            if !states[1] && !states[2] {
+                continue;
+            }
             if annotation.mapping.len() == mesh.triangles().len() && !states[0] && !states[2] {
                 return Err(deferred());
             }
@@ -82,6 +83,9 @@ impl SeamPaint {
             let transform = object_transform.then(volume.transform());
             enforcers.append(&selector, 1, transform);
             blockers.append(&selector, 2, transform);
+        }
+        if enforcers.triangles.is_empty() && blockers.triangles.is_empty() {
+            return Ok(None);
         }
         Ok(Some(Self {
             enforcers: enforcers.into_surface(),

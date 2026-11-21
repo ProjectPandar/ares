@@ -4,14 +4,16 @@ use serde::{Deserialize, Deserializer, de::Error};
 
 mod selector;
 
+pub(super) const SELECTOR_MAX_STATE: u8 = 32;
+
 pub(crate) use selector::{
     Selector as FacetSelector, ordinary_facets, strict_annotated_facets, strict_facets,
 };
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct TriangleCodes(Vec<u8>);
+pub(crate) struct TriangleCodes<const MAX_STATE: u8 = 16>(Vec<u8>);
 
-impl<'de> Deserialize<'de> for TriangleCodes {
+impl<'de, const MAX_STATE: u8> Deserialize<'de> for TriangleCodes<MAX_STATE> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let text = String::deserialize(deserializer)?;
         let codes = text
@@ -29,7 +31,7 @@ impl<'de> Deserialize<'de> for TriangleCodes {
         let mut cursor = 0;
         while pending != 0 {
             pending -= 1;
-            pending += validate_node(&codes, &mut cursor).map_err(D::Error::custom)?;
+            pending += validate_node::<MAX_STATE>(&codes, &mut cursor).map_err(D::Error::custom)?;
         }
         if cursor != codes.len() {
             return Err(D::Error::custom("trailing facet painting codes"));
@@ -38,7 +40,10 @@ impl<'de> Deserialize<'de> for TriangleCodes {
     }
 }
 
-fn validate_node(codes: &[u8], cursor: &mut usize) -> Result<usize, &'static str> {
+fn validate_node<const MAX_STATE: u8>(
+    codes: &[u8],
+    cursor: &mut usize,
+) -> Result<usize, &'static str> {
     let code = *codes
         .get(*cursor)
         .ok_or("truncated support painting tree")?;
@@ -51,16 +56,28 @@ fn validate_node(codes: &[u8], cursor: &mut usize) -> Result<usize, &'static str
         }
         return Ok(usize::from(splits) + 1);
     }
-    if code >> 2 == 3 {
-        let state = *codes
-            .get(*cursor)
-            .ok_or("truncated support painting state")?;
-        if state > 13 {
-            return Err("invalid support painting state");
-        }
-        *cursor += 1;
+    let state = leaf_state(code, codes, cursor).ok_or("truncated support painting state")?;
+    if state > MAX_STATE {
+        return Err("invalid support painting state");
     }
     Ok(0)
+}
+
+// TriangleSelector.cpp:1855–1870: F escapes into the second extension nibble.
+fn leaf_state(code: u8, codes: &[u8], cursor: &mut usize) -> Option<u8> {
+    let inline = code >> 2;
+    if inline != 3 {
+        return Some(inline);
+    }
+    let extension = *codes.get(*cursor)?;
+    *cursor += 1;
+    if extension == 15 {
+        let high = *codes.get(*cursor)?;
+        *cursor += 1;
+        Some(high + 18)
+    } else {
+        Some(extension + 3)
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -72,27 +89,23 @@ pub(crate) struct FacetsAnnotation {
 impl FacetsAnnotation {
     pub(crate) fn used_states(&self) -> [bool; 17] {
         let mut states = [false; 17];
-        let mut codes = self.codes.iter().copied();
-        while let Some(code) = codes.next() {
+        let mut cursor = 0;
+        while let Some(&code) = self.codes.get(cursor) {
+            cursor += 1;
             if code & 3 != 0 {
                 continue;
             }
-            let state = if code >> 2 == 3 {
-                codes
-                    .next()
-                    .map_or(usize::MAX, |extension| usize::from(extension) + 3)
-            } else {
-                usize::from(code >> 2)
-            };
-            // TriangleSelector.cpp:1918 skips states outside the supported palette.
-            if let Some(used) = states.get_mut(state) {
+            let state = leaf_state(code, &self.codes, &mut cursor).expect("validated facet state");
+            if let Some(used) = states.get_mut(usize::from(state)) {
                 *used = true;
             }
         }
         states
     }
 
-    pub(crate) fn from_triangles<'a>(triangles: impl Iterator<Item = &'a TriangleCodes>) -> Self {
+    pub(crate) fn from_triangles<'a, const MAX_STATE: u8>(
+        triangles: impl Iterator<Item = &'a TriangleCodes<MAX_STATE>>,
+    ) -> Self {
         let mut annotation = Self::default();
         for (triangle, codes) in triangles.enumerate() {
             if !codes.0.is_empty() {
