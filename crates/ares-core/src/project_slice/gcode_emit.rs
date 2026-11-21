@@ -50,6 +50,8 @@ mod orchestration_header;
 pub(crate) mod value;
 mod wipe_tower;
 pub(super) use orchestration::emit;
-pub(crate) use wipe_tower::estimate as wipe_tower_estimate;
+pub(crate) use wipe_tower::{
+    estimate as wipe_tower_estimate, sparse_layers_skipped as wipe_tower_sparse_layers_skipped,
+};
 
 pub(in crate::project_slice) use emit_helpers::format_processor_float;

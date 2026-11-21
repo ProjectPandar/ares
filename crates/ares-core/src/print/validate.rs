@@ -1,6 +1,7 @@
 //! `Print.cpp:1524-1556,1627-1781::Print::validate` (OrcaSlicer v2.4.2):
 //! applied height/width bounds, extruder addressing, then bed compatibility.
 mod bed_filament;
+mod compacted_tower;
 mod estimated_tower;
 mod extrusion_width;
 mod identity;
