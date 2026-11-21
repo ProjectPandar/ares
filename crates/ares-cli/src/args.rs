@@ -59,4 +59,14 @@ pub(crate) struct SliceArgs {
     #[arg(short = 'o')]
     pub(crate) output: PathBuf,
     pub(crate) input: PathBuf,
+    #[arg(
+        long,
+        action = clap::ArgAction::Set,
+        num_args = 0..=1,
+        require_equals = true,
+        default_missing_value = "true",
+        default_value_t = false,
+        value_parser = clap::builder::BoolishValueParser::new(),
+    )]
+    pub(crate) allow_newer_file: bool,
 }

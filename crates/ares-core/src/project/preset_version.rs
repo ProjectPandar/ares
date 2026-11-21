@@ -45,3 +45,19 @@ pub(crate) fn parse(value: &str) -> Option<String> {
     }
     Some(result)
 }
+
+pub(crate) fn is_newer(value: &str, current: &str) -> bool {
+    let Some(value) = major_minor(value) else {
+        return false;
+    };
+    let Some(current) = major_minor(current) else {
+        return false;
+    };
+    value > current
+}
+
+fn major_minor(value: &str) -> Option<(i32, i32)> {
+    let normalized = parse(value)?;
+    let mut parts = normalized.split('.');
+    Some((parts.next()?.parse().ok()?, parts.next()?.parse().ok()?))
+}

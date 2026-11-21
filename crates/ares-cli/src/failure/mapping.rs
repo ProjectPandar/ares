@@ -41,6 +41,20 @@ pub(crate) fn slice_error_to_failure(
         }))
     };
     match error {
+        SliceError::FileVersionNotSupported => family(
+            -24,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            0,
+            #[cfg(target_os = "linux")]
+            0.0,
+            #[cfg(target_os = "linux")]
+            "Unsupported 3MF version. Please make sure the 3MF file was created with the official version of Bambu Studio, not a beta version.",
+            String::new(),
+        ),
         SliceError::FilamentSupportPaletteMismatch { .. } => CliFailure::config_file_error(
             #[cfg(target_os = "linux")]
             output,

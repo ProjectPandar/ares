@@ -15,6 +15,7 @@ use std::path::Path;
 use args::{Cli, Commands, SliceArgs};
 use clap::Parser;
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
+use preset_sources::{read_preset_files, read_preset_source};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -86,6 +87,17 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    if extension.as_deref() == Some("3mf")
+        && let Err(error @ ares_core::SliceError::FileVersionNotSupported) =
+            ares_core::validate_project_version(&input, args.allow_newer_file)
+    {
+        return Err(slice_error_to_failure(
+            error,
+            &args.output,
+            #[cfg(target_os = "linux")]
+            args.plate.unwrap_or(1),
+        ));
+    }
     // The file name as the CLI received it (`m_input_files`), which the substitution report names.
     let input_file = args.input.to_string_lossy().into_owned();
     // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).
@@ -307,84 +319,6 @@ fn substitutions(input: &[u8]) -> Vec<ares_core::ConfigSubstitution> {
 /// Splits one native coStrings CLI value (`"a;b;c"`, `PrintConfig.cpp:10890-10901`).
 fn split_native_list(value: &str) -> Vec<&str> {
     value.split(';').collect()
-}
-
-/// Reads the referenced preset files, keeping the path for upstream error
-/// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
-/// Empty labels stay empty (dropped list slots).
-fn source_identity(file: &fs::File) -> io::Result<ares_core::SourceIdentity> {
-    let mut bytes = Vec::new();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::MetadataExt;
-        let metadata = file.metadata()?;
-        bytes.extend_from_slice(&metadata.dev().to_le_bytes());
-        bytes.extend_from_slice(&metadata.ino().to_le_bytes());
-    }
-    #[cfg(windows)]
-    {
-        use std::os::windows::io::AsRawHandle;
-        use windows_sys::Win32::{
-            Foundation::HANDLE,
-            Storage::FileSystem::{BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle},
-        };
-        let mut information = std::mem::MaybeUninit::<BY_HANDLE_FILE_INFORMATION>::uninit();
-        // SAFETY: the open File owns a live handle and the output allocation is writable.
-        let success = unsafe {
-            GetFileInformationByHandle(file.as_raw_handle() as HANDLE, information.as_mut_ptr())
-        };
-        if success == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        // SAFETY: a successful GetFileInformationByHandle initializes the output.
-        let information = unsafe { information.assume_init() };
-        bytes.extend_from_slice(&information.dwVolumeSerialNumber.to_le_bytes());
-        let file_index =
-            (u64::from(information.nFileIndexHigh) << 32) | u64::from(information.nFileIndexLow);
-        bytes.extend_from_slice(&file_index.to_le_bytes());
-    }
-    #[cfg(not(any(unix, windows)))]
-    {
-        let _ = file;
-        return Err(io::Error::new(
-            io::ErrorKind::Unsupported,
-            "preset source identity is unsupported on this host",
-        ));
-    }
-    Ok(ares_core::SourceIdentity::from_host_bytes(
-        bytes.into_boxed_slice(),
-    ))
-}
-
-fn read_preset_source(path: &Path) -> io::Result<(String, ares_core::SourceIdentity)> {
-    use std::io::Read;
-    let mut file = fs::File::open(path)?;
-    let identity = source_identity(&file)?;
-    let mut json = String::new();
-    file.read_to_string(&mut json)?;
-    Ok((json, identity))
-}
-
-fn read_preset_files(
-    labels: &[&str],
-) -> Result<Vec<(String, String, Option<ares_core::SourceIdentity>)>, CliFailure> {
-    labels
-        .iter()
-        .map(|label| {
-            let (json, identity) = if label.is_empty() {
-                (String::new(), None)
-            } else {
-                let (json, identity) = read_preset_source(Path::new(label)).map_err(|error| {
-                    io::Error::new(
-                        io::ErrorKind::InvalidInput,
-                        format!("Loading setting file \"{label}\" failed: {error}"),
-                    )
-                })?;
-                (json, Some(identity))
-            };
-            Ok(((*label).to_owned(), json, identity))
-        })
-        .collect()
 }
 
 fn ensure_supported_input(path: &Path) -> Result<(), io::Error> {
