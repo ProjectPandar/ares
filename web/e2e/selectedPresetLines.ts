@@ -1,5 +1,7 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { expect } from "@playwright/test";
-import { type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
+import { type NativeSelection, nativeSelection, PROJECT_CONFIG, presetSelectProbe } from "./presetSelectOracle";
 
 /**
  * The G-code lines the plater's preset selection decides, by key; a CLI-route slice of the same project
@@ -29,7 +31,7 @@ export const SELECTED_PRESET_KEYS = [
 ] as const;
 
 /** ConfigOptionStrings::serialize, escape_strings_cstyle (Config.cpp:99-147). */
-function cstyle(values: string[]) {
+export function cstyle(values: string[]) {
   return values.map((value) => {
     const quote = (values.length === 1 && value === "") || /[ \t;\\"\r\n]/.test(value);
     return quote ? `"${value.replace(/[\\"]/g, "\\$&").replace(/\r/g, "\\r").replace(/\n/g, "\\n")}"` : value;
@@ -110,4 +112,24 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
   const erased = lines.findIndex((line, index) => index > start && line.startsWith("; compatible_printers_condition = "));
   if (erased >= 0) lines.splice(erased, 1);
   return lines.join("\n");
+}
+
+/**
+ * The opened 3MF `opened` saved to `out` with each project config key it lacks set from `selection`'s
+ * full_fff_config, the plater's project config. Where the GUI finds no system base for its presets it keeps
+ * FullPrintConfig::defaults() for those keys (Plater.cpp:9463, Preset.cpp:1090-1115), while the Native CLI fills
+ * them from the system preset (OrcaSlicer.cpp:3163-3196). With no key missing and no different_settings_to_system,
+ * the CLI keeps every project key (OrcaSlicer.cpp:2775-2791), so it slices the GUI's values under the 3MF's preset
+ * names. Returns the added values.
+ */
+export function withGuiMissingKeys(opened: string, selection: NativeSelection, out: string) {
+  const entries = unzipSync(readFileSync(opened));
+  const project = JSON.parse(strFromU8(entries[PROJECT_CONFIG])) as Record<string, unknown>;
+  const added = Object.fromEntries(Object.entries(JSON.parse(selection.full_fff_config) as Record<string, unknown>)
+    .filter(([key]) => !(key in project)));
+  const config = { ...project, ...added };
+  expect("different_settings_to_system" in config, "no different_settings_to_system turns on refresh_unlisted").toBe(false);
+  entries[PROJECT_CONFIG] = strToU8(JSON.stringify(config));
+  writeFileSync(out, zipSync(entries));
+  return added as Record<string, string | string[]>;
 }
