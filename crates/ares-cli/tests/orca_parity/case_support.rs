@@ -56,3 +56,6 @@ mod spiral_vase_object_start_z;
 
 #[path = "spiral_byobject_transition.rs"]
 mod spiral_byobject_transition;
+
+#[path = "cli_skip_modified_gcodes.rs"]
+mod cli_skip_modified_gcodes;
