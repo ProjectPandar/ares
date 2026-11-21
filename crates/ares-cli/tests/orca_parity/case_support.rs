@@ -19,6 +19,8 @@ mod arachne_top_wall_split;
 
 #[path = "cli_normative_check.rs"]
 mod cli_normative_check;
+#[path = "cli_skip_modified_gcodes.rs"]
+mod cli_skip_modified_gcodes;
 #[path = "cli_slice_plates.rs"]
 mod cli_slice_plates;
 #[path = "cli_uptodate_printable_size.rs"]
