@@ -1,6 +1,11 @@
 #![cfg(target_os = "linux")]
 
-use std::{fs, path::Path, process::Command};
+use std::{ffi::OsString, fs, path::Path, process::Command};
+
+use super::{
+    cli_no_check::{inventory, run},
+    direct_stl_slice::square_stl,
+};
 
 use crate::{
     artifacts,
@@ -22,6 +27,92 @@ fn cli_convert_unit_infers_inches_for_small_stl() {
 #[test]
 fn cli_convert_unit_leaves_millimeter_stl_unchanged() {
     compare("millimeters", 10.0, 0, false);
+}
+
+#[test]
+fn cli_convert_unit_scales_all_stls_before_arranging_selected_plate() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = tempfile::Builder::new()
+        .prefix("cli-convert-unit-selected-plate-")
+        .tempdir_in(artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    let presets = preset_files(&root, "Creality", "Creality Ender-3 0.4 nozzle");
+    let settings = presets[..2].join(";");
+    let inputs = |unit, edges: [f32; 2], height| {
+        edges.map(|edge| {
+            let path = root.join(format!("{unit}-{edge}.stl"));
+            fs::write(&path, square_stl([0.0, 0.0], edge, height)).unwrap();
+            path.into_os_string()
+        })
+    };
+    let meters = inputs("m", [0.13, 0.129], 0.0008);
+    let millimeters = inputs("mm", [130.0, 129.0], 0.8);
+    for (label, files, flag, selected_output) in [
+        ("unconverted", &meters, None, false),
+        ("millimeters", &millimeters, None, true),
+        ("converted", &meters, Some("--convert-unit"), true),
+    ] {
+        let argv = [
+            "--debug",
+            "0",
+            "--outputdir",
+            "out",
+            "--slice",
+            "2",
+            "--arrange",
+            "1",
+            "--load-settings",
+            &settings,
+            "--load-filaments",
+            &presets[2],
+        ]
+        .into_iter()
+        .chain(flag)
+        .map(OsString::from)
+        .chain(files.iter().cloned())
+        .collect::<Vec<_>>();
+        fs::write(
+            root.join(format!("{label}-argv.json")),
+            serde_json::to_vec(&argv).unwrap(),
+        )
+        .unwrap();
+        for (engine, bin) in [
+            ("native", runner.bin().as_path()),
+            ("ares", Path::new(env!("CARGO_BIN_EXE_ares"))),
+        ] {
+            let name = format!("{label}-{engine}");
+            let output = run(bin, &root, &name, &argv);
+            assert_eq!(output.status.code(), Some(0), "{name}: {root:?}");
+            let cwd = root.join(name).join("cwd");
+            let expected = if selected_output {
+                &["out/", "out/plate_2.gcode", "out/result.json"][..]
+            } else {
+                &["out/", "out/result.json"][..]
+            };
+            assert_eq!(inventory(&cwd), expected, "{cwd:?}");
+            let report: serde_json::Value =
+                serde_json::from_slice(&fs::read(cwd.join("out/result.json")).unwrap()).unwrap();
+            assert_eq!(report["return_code"], 0, "{cwd:?}");
+            assert_eq!(report["plate_index"], 2, "{cwd:?}");
+            if !selected_output {
+                continue;
+            }
+            let gcode = fs::read_to_string(cwd.join("out/plate_2.gcode")).unwrap();
+            for line in [
+                "; total layer number: 4",
+                "; max_z_height: 0.80",
+                "; filament used [mm] = 5625.82",
+            ] {
+                assert!(
+                    gcode.lines().any(|actual| actual == line),
+                    "missing {line:?}: {cwd:?}"
+                );
+            }
+        }
+    }
 }
 
 #[derive(PartialEq)]
