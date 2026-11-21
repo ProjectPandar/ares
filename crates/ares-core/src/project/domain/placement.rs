@@ -70,32 +70,42 @@ impl Project {
         let selected = selection.and_then(|id| self.plates.iter().find(|plate| plate.id() == id));
         self.plates
             .iter()
-            .filter_map(|plate| {
-                let mut min = [f64::INFINITY; 3];
-                let mut max = [f64::NEG_INFINITY; 3];
-                for object in &self.objects {
-                    if selected.is_some_and(|plate| {
-                        !plate.instances().iter().any(|id| id[0] == object.id())
-                    }) {
-                        continue;
-                    }
-                    for instance in &object.instances {
-                        if plate.instances().iter().any(|id| {
-                            id[0] == instance.object_id()
-                                && id[1] == instance.instance_id()
-                                && Some(id[2]) == instance.saved_identify_id()
-                        }) {
-                            for point in world_vertices(object, instance.transform) {
-                                merge_bbox_point(&mut min, &mut max, point);
-                            }
-                        }
-                    }
-                }
-                min[0]
-                    .is_finite()
-                    .then(|| std::array::from_fn(|i| max[i] - min[i]))
-            })
+            .filter_map(|plate| self.imported_plate_size(plate, selected))
             .collect()
+    }
+
+    fn imported_plate_size(
+        &self,
+        plate: &super::PlateMetadata,
+        selected: Option<&super::PlateMetadata>,
+    ) -> Option<[f64; 3]> {
+        let mut min = [f64::INFINITY; 3];
+        let mut max = [f64::NEG_INFINITY; 3];
+        let contains = |instance: &&super::ProjectInstance| {
+            instance.saved_identify_id().is_some_and(|label| {
+                plate
+                    .instances()
+                    .contains(&[instance.object_id(), instance.instance_id(), label])
+            })
+        };
+        for object in &self.objects {
+            if selected
+                .is_some_and(|plate| !plate.instances().iter().any(|id| id[0] == object.id()))
+            {
+                continue;
+            }
+            let vertices = object
+                .instances
+                .iter()
+                .filter(contains)
+                .flat_map(|instance| world_vertices(object, instance.transform));
+            for point in vertices {
+                merge_bbox_point(&mut min, &mut max, point);
+            }
+        }
+        min[0]
+            .is_finite()
+            .then(|| std::array::from_fn(|i| max[i] - min[i]))
     }
 
     /// `PartPlate::translate_all_instance` (`OrcaSlicer.cpp:4037`): shift
