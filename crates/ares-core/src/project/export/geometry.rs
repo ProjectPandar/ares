@@ -117,10 +117,8 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
         .objects()
         .iter()
         .map(|object| {
-            let ([volume], [instance]) = (object.volumes(), object.instances()) else {
-                return Err(deferred(
-                    "expected one saved volume and instance per object",
-                ));
+            let [instance] = object.instances() else {
+                return Err(deferred("expected one saved instance per object"));
             };
             if !instance.printable()
                 || instance.transform().without_translation() != Transform3d::IDENTITY
@@ -136,7 +134,11 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
             Ok(Object {
                 name: object.name().to_owned(),
                 placement: [offset[12], offset[13], offset[14]],
-                parts: vec![saved_part(volume, &settings.parts)?],
+                parts: object
+                    .volumes()
+                    .iter()
+                    .map(|volume| saved_part(volume, &settings.parts))
+                    .collect::<Result<_, _>>()?,
             })
         })
         .collect::<Result<_, SliceError>>()?;
@@ -158,8 +160,8 @@ fn saved_part(
         .iter()
         .find(|entry| entry.id == volume.id())
         .ok_or_else(|| deferred("expected saved part settings"))?;
-    if part.subtype != "normal_part" || volume.transform() != Transform3d::IDENTITY {
-        return Err(deferred("saved part type or transform"));
+    if volume.volume_type() != crate::ProjectVolumeType::ModelPart {
+        return Err(deferred("expected ordinary model parts"));
     }
     let metadata = |key| {
         part.retained_metadata
