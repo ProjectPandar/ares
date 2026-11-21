@@ -88,6 +88,7 @@ pub(in crate::project_slice) struct NearestSeamLayer {
     /// Penalty score per candidate: `visibility +
     /// ANGLE_IMPORTANCE_NEAREST * angle_penalty` (`SeamPlacer.cpp:788-791`).
     pub(in crate::project_slice) scores: Vec<f32>,
+    pub(in crate::project_slice) paint_states: Vec<super::seam_candidates::PaintState>,
     /// Overhang distance per candidate (`SeamPlacer.cpp:765-767`).
     pub(in crate::project_slice) overhangs: Vec<f32>,
     pub(in crate::project_slice) unsupported_distances: Option<Vec<f32>>,

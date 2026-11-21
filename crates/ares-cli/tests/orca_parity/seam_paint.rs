@@ -87,25 +87,30 @@ fn compare(printer: &str, variant: &str) {
 }
 
 #[test]
-fn nearest_seam_paint_rejects_without_output() {
+fn deferred_seam_paint_modes_reject_without_output() {
     let (_, project, _) = input("x1c", "front");
-    let overrides =
-        ares_core::ConfigOverrides::from_json(br#"{"seam_position":"nearest"}"#).unwrap();
-    let result = tokio::runtime::Builder::new_current_thread()
+    let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
-        .unwrap()
-        .block_on(crate::runner::application::slice_project_plate_validated(
+        .unwrap();
+    for config in [
+        br#"{"seam_position":"aligned_back"}"#.as_slice(),
+        br#"{"seam_position":"random"}"#,
+        br#"{"seam_position":"nearest","spiral_mode":"1"}"#,
+    ] {
+        let overrides = ares_core::ConfigOverrides::from_json(config).unwrap();
+        let result = runtime.block_on(crate::runner::application::slice_project_plate_validated(
             &project,
             ares_core::GenerationMetadata::default(),
             None,
             &overrides,
             ares_core::SlicerContext::new(0),
         ));
-    assert!(
-        matches!(result, Err(ares_core::SliceError::InvalidInput(ref message))
-        if message.contains("seam painting is outside the supported aligned")),
-        "{result:?}"
-    );
+        assert!(
+            matches!(result, Err(ares_core::SliceError::InvalidInput(ref message))
+            if message.contains("seam painting is outside the supported")),
+            "{result:?}"
+        );
+    }
 }
 
 macro_rules! printer_cases {

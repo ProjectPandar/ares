@@ -80,10 +80,11 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         scale.unscale(cursor.x) as f32,
         scale.unscale(cursor.y) as f32,
     );
-    // `SeamPlacer.cpp:760-794` `SeamComparator::is_first_better` (spNearest):
-    // lexicographic cascade — overhang wins outright, then embedded
-    // (hidden) points, then the composite penalty.
+    // SeamPlacer.cpp:1176–1222: paint outranks geometric context and distance.
     let is_first_better = |a: usize, b: usize| -> bool {
+        if layer.paint_states[a] != layer.paint_states[b] {
+            return layer.paint_states[a] > layer.paint_states[b];
+        }
         let overhang_a = layer.overhangs[a];
         let overhang_b = layer.overhangs[b];
         if overhang_a > 0.0 || overhang_b > 0.0 {
