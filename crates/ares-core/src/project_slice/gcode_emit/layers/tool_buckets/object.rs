@@ -13,12 +13,21 @@ use crate::{ExtrusionRole, ObjectOptions, RegionOptions};
 
 pub(super) fn split<'a>(
     layer: &mut OrderedExtrusionLayer,
-    tools: &[usize],
+    (tools, layer_override): (&[usize], Option<usize>),
     region_options: impl Fn(usize) -> &'a RegionOptions,
     override_tool: impl Fn(CollectionId) -> Option<usize>,
 ) -> BTreeMap<(usize, bool), OrderedExtrusionLayer> {
     let count = layer.islands.len();
     let mut buckets = BTreeMap::new();
+    // `LayerTools::extruder` selects the override before membership fallback.
+    let select_tool = |id: i32| {
+        let tool = layer_override.unwrap_or_else(|| if id == 0 { 0 } else { (id - 1) as usize });
+        if tools.contains(&tool) {
+            tool
+        } else {
+            *tools.last().unwrap()
+        }
+    };
     for (island_id, island) in layer.islands.iter_mut().enumerate() {
         let mut walls = std::mem::take(&mut island.perimeter_regions).into_iter();
         let mut fills = std::mem::take(&mut island.infill_regions)
@@ -48,7 +57,7 @@ pub(super) fn split<'a>(
                 continue;
             }
             let options = region_options(region);
-            for (tool, entity) in route(entity, options, tools).into_iter().flatten() {
+            for (tool, entity) in route(entity, options, select_tool).into_iter().flatten() {
                 append(
                     &mut buckets,
                     (tool, false),
@@ -111,19 +120,16 @@ pub(super) fn raft(
 fn route(
     entity: IslandPrintEntity,
     options: &RegionOptions,
-    tools: &[usize],
+    select_tool: impl Fn(i32) -> usize,
 ) -> [Option<(usize, IslandPrintEntity)>; 2] {
     if let IslandPrintEntity::Perimeter(collection) = entity {
-        split_walls(collection, options, tools).map(|entry| {
+        split_walls(collection, options, select_tool).map(|entry| {
             entry.map(|(tool, collection)| (tool, IslandPrintEntity::Perimeter(collection)))
         })
     } else {
         let (role, infill, solid) = entity_kind(&entity);
         [
-            Some((
-                resolve(filament(role, infill, solid, options), tools),
-                entity,
-            )),
+            Some((select_tool(filament(role, infill, solid, options)), entity)),
             None,
         ]
     }
@@ -132,7 +138,7 @@ fn route(
 fn split_walls(
     collection: ExtrusionEntityCollection,
     options: &RegionOptions,
-    tools: &[usize],
+    select_tool: impl Fn(i32) -> usize,
 ) -> [Option<(usize, ExtrusionEntityCollection)>; 2] {
     let role =
         collection
@@ -151,7 +157,7 @@ fn split_walls(
     {
         return [
             Some((
-                resolve(filament(role, false, false, options), tools),
+                select_tool(filament(role, false, false, options)),
                 collection,
             )),
             None,
@@ -179,7 +185,7 @@ fn split_walls(
         (inner, options.inner_wall_filament_id.0),
     ]
     .map(|(collection, id)| {
-        (!collection.entities.is_empty()).then(|| (resolve(id, tools), collection))
+        (!collection.entities.is_empty()).then(|| (select_tool(id), collection))
     })
 }
 
@@ -211,15 +217,6 @@ fn append<K: Ord>(
         target.infill_collections.push(collection);
     }
     target.entities.push(entity);
-}
-
-fn resolve(id: i32, tools: &[usize]) -> usize {
-    let tool = if id == 0 { 0 } else { (id - 1) as usize };
-    if tools.contains(&tool) {
-        tool
-    } else {
-        *tools.last().unwrap()
-    }
 }
 
 fn filament(role: ExtrusionRole, infill: bool, solid: bool, options: &RegionOptions) -> i32 {

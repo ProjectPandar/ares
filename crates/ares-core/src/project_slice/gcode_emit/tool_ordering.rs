@@ -30,6 +30,8 @@ use crate::project_slice::{
 pub(super) struct LayerTools {
     pub(super) print_z: f64,
     pub(super) extruders: Vec<usize>,
+    /// `LayerTools::extruder_override` (`ToolOrdering.cpp:837`), zero-based for export.
+    pub(super) extruder_override: Option<usize>,
     has_object: bool,
     has_support: bool,
     pub(super) wipe_tower_partitions: usize,
@@ -281,6 +283,7 @@ fn collect_layers(
                 switch_index += 1;
             }
             let target = layer_index(&layers, physical.print_z);
+            layers[target].extruder_override = extruder_override.map(|id| id - 1);
             collect::object(
                 &mut layers[target],
                 layer,
