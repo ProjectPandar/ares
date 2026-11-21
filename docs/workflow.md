@@ -149,11 +149,13 @@ recreate them after every restart or context reset.
 
    The upstream reference is the pinned Orca release.
 3. Run these checks:
-   - only the affected cases, in both modes. The env files alone omit some bindings (GDB, the
-     `*_REFERENCE` flags); the complete set is the `environment` object that the last baseline FULL
-     recorded for each mode, minus its target dir, home, PATH and CPU bindings (`ARES_PIN_CPUS` and the
-     seeded `ORCA_REPLAY_CPU` both move to the worker's own CPUs). A skipped Native run or a
-     missing producer never counts as a result;
+   - only the affected cases, in both modes. Use each mode's canonical environment with the run's
+     own build and affinity settings, including seeded replay affinity;
+   - select focused tests by substring. The tip's test inventory must include every base ID and may
+     add IDs only under module paths the chain adds or modifies;
+   - before focused verification, check that the worktree's upstream source link points to the pinned
+     revision. Disclose a failed preflight as not executed (neither PASS nor FAIL), fix it, and continue
+     from that point without counting it as a rerun;
    - `cargo fmt`;
    - `cargo clippy --workspace --all-targets -- -D warnings`;
    - wasm32 and web checks, when those parts are touched.
@@ -260,7 +262,7 @@ reads existing results and does not take `--plan`.
 
 | Entry point | Input and action |
 |---|---|
-| `restack` | Read ordered `{id, range: "START..END", title}` entries. Rebase each range onto the preceding result in a detached worktree with recorded-resolution reuse disabled. On conflict, save hunks, index stages and the stopped patch, abort and HOLD. Never skip or resolve a chain automatically. After every chain succeeds, write `LINEAR-CONFIG.json`. |
+| `restack` | Read ordered `{id, range: "START..END", title}` entries. Rebase each range onto the preceding result in a detached worktree with recorded-resolution reuse disabled. On conflict, save hunks, index stages and the stopped patch, then abort and stop. Never skip a chain or resolve a conflict automatically. After every chain succeeds, write `LINEAR-CONFIG.json`. |
 | `assemble` | Consume a linear configuration. Prove adjacent ancestry intervals cover every source commit exactly once, then replay them in order. Apply an optional final release commit last. |
 | `check-ends` | Run `cargo check --workspace --all-targets` at every chain endpoint and the optional release endpoint. Retain every exit, including compiler failures. |
 | `static` | Run formatting, workspace/all-target Clippy with warnings denied, and the core/WASM target check on the exact tip. |
@@ -269,6 +271,18 @@ reads existing results and does not take `--plan`.
 | `full` | Require exact-tip endpoint, static and paired incremental results plus the prepared manifest hash. Consume that manifest once and run official, seeded and browser lanes on disjoint CPU allocations without retries. |
 | `collect` | Compare inventories and results with the baselines. Write summary JSON, complete nonPASS frames and a report. Partial coverage cannot qualify. |
 | `land` | Require external approval bound to the tested tip. Create one local commit per chain with `git commit-tree`, followed by the optional release commit. Verify the final tree equals the tested tree. Print the push command without executing it. |
+
+- After resolving a replay conflict, resume using the stopped chain's index, never a later
+  index. For a seal-only restart, use `seal-<idx>`.
+- During replay, take the union for pure add/add registry conflicts and fix unambiguous compile
+  migrations directly (missing struct fields, renamed accessors, type adaptations, or added failure
+  report fields), recording these fixes in the notes. Collect all other conflicts into one HOLD and
+  wait for the coordinator's ruling.
+- The target side's restructured layout is canonical. Carry over the incoming feature additively
+  without restoring functions removed on the target side.
+- After an amend or a replay rewrite, regenerate the range-diff and show it to the coordinator again.
+  Do not reuse the old range-diff.
+- A replay seal requires a passing `cargo clippy --workspace --all-targets -- -D warnings`.
 
 After `restack`, use its generated linear configuration for `assemble`. Change only destination
 worktree and output paths when allocating the next stage. If `assemble` changes commit IDs,
@@ -322,6 +336,8 @@ wrap suppliers to set affinity. The outer runner supplies the replay CPU inside 
 
 Each attempt directory is exclusive. Keep failed attempts, commands, raw logs and actual exits.
 A preparation failure is not a test result. Do not retry an executed test to replace its outcome.
+For paired verification, keep official base, official tip, seeded base and seeded tip in four separate
+run directories. An overwritten log invalidates its result and requires repeating the affected run.
 
 Stop owned processes on an unapproved baseline PASS becoming nonPASS, a failing unpaired new
 test, an abnormal terminal outcome, an unapproved Native signal or a CPU escape. Preserve the
@@ -348,6 +364,10 @@ comparator or silently omit a test.
   - No committed Native outputs.
   - Output must not depend on core count.
   - Upstream undefined behaviour is not ported.
+  - Load the canonical reference flags for every focused, paired or full parity verification run. A
+    skipped or missing required Native comparison does not count as PASS.
+- **Native instrumentation.** Use only `printf` instrumentation compiled into a local upstream build.
+  Do not use a debugger or debugger scripts.
 - **Approval.** Destructive or outward-facing actions need the user's approval.
 - **Archives.** A helper that writes into shared archives or caches prints its argv in a dry run first; check the
   order of the output and input arguments before the real run.
