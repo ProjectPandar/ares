@@ -137,7 +137,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     source_identity: source_identity.as_ref(),
                 })
                 .collect::<Vec<_>>();
-            let filaments = filaments
+            let mut filaments = filaments
                 .iter()
                 .map(|(label, json, source_identity)| LoadSettingsFile {
                     label,
@@ -145,6 +145,22 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     source_identity: source_identity.as_ref(),
                 })
                 .collect::<Vec<_>>();
+            // OrcaSlicer.cpp:2379–2469 fills holes in the list, not beyond it.
+            if args.load_defaultfila && !filaments.is_empty() {
+                let first = filaments
+                    .iter()
+                    .copied()
+                    .find(|file| !file.label.is_empty())
+                    .ok_or_else(|| {
+                        CliFailure::missing_default_filament(
+                            #[cfg(target_os = "linux")]
+                            &output,
+                        )
+                    })?;
+                for file in filaments.iter_mut().filter(|file| file.label.is_empty()) {
+                    *file = first;
+                }
+            }
             let request = LoadSettingsSliceRequest {
                 filename,
                 catalog_json: None,
