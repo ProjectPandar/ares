@@ -178,6 +178,18 @@ fn check(case: &str, repeat: u8) -> Recorded {
     let native_config = config(&native);
     let api_config = config(&api);
     let cli_config = config(&cli);
+    if case == "positive" {
+        assert_eq!(
+            api_config
+                .get("machine_max_junction_deviation")
+                .map(String::as_str),
+            Some("0.01,0.01")
+        );
+        assert_eq!(
+            api_config.get("thumbnails").map(String::as_str),
+            Some("48x48/PNG,300x300/PNG")
+        );
+    }
     let difference = crate::golden::compare_ordered_bytes_generator_only(&native, &api).err();
     let cli_difference = crate::golden::compare_ordered_bytes_generator_only(&native, &cli).err();
     let normalized =
