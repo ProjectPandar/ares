@@ -95,6 +95,7 @@ dependencies = [
  "jiff",
  "md-5",
  "predicates",
+ "quick-xml",
  "regex",
  "serde",
  "serde_json",

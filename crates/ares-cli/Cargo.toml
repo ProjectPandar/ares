@@ -24,6 +24,7 @@ jiff = { workspace = true }
 md-5 = { workspace = true }
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
+quick-xml = { workspace = true }
 regex = { workspace = true }
 sha2 = { workspace = true }
 zip = { workspace = true }

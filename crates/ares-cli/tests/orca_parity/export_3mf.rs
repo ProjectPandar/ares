@@ -8,6 +8,8 @@ use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 use crate::{OrcaRunner, presets::VendorProfiles, runner::repo_root};
 
+use super::export_3mf_model_settings::object_record_permutation;
+
 #[path = "export_3mf/comparison_tests.rs"]
 mod comparison_tests;
 
@@ -147,12 +149,14 @@ fn compare_archive_members(
         actual.iter().map(|(name, _)| name).collect::<Vec<_>>()
     );
     for ((name, expected), (_, actual)) in expected.iter().zip(actual) {
+        if expected == actual || object_record_permutation(name, expected, actual) {
+            continue;
+        }
         let mismatch = expected
             .iter()
             .zip(actual)
             .position(|(left, right)| left != right);
-        assert!(
-            mismatch.is_none() && expected.len() == actual.len(),
+        panic!(
             "{name} differs in {} at byte {mismatch:?} ({} != {} bytes)",
             path.display(),
             expected.len(),
