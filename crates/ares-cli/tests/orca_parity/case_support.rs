@@ -124,6 +124,8 @@ mod cli_ordered_slicing_warnings;
 mod cli_path_conflict;
 #[path = "cli_saved_load_settings_remap.rs"]
 mod cli_saved_load_settings_remap;
+#[path = "cli_saved_project_family.rs"]
+mod cli_saved_project_family;
 #[path = "cli_sparse_filament_slots.rs"]
 mod cli_sparse_filament_slots;
 #[path = "cli_strict.rs"]
