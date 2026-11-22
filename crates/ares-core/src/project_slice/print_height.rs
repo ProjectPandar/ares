@@ -1,6 +1,9 @@
 //! Print.cpp:1354-1396: validate generated object-layer upper bounds.
 
-use crate::{Project, SliceError, project::effective_config::types::BoundedResolvedProjectConfig};
+use crate::{
+    PrintValidationKind, Project, SliceError,
+    project::effective_config::types::BoundedResolvedProjectConfig,
+};
 
 pub(crate) fn validate(
     project: &Project,
@@ -34,6 +37,7 @@ pub(crate) fn validate(
             continue;
         };
         return Err(SliceError::Validate {
+            kind: PrintValidationKind::Generic,
             message,
             plate_index,
             layer_height: f64::from(settings.process.object.layer_height.0 as f32),

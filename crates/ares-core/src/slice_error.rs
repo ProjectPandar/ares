@@ -24,6 +24,12 @@ impl fmt::Display for PresetAdmissionError {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrintValidationKind {
+    Generic,
+    FilamentNotMatchBedType,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum SliceError {
     EmptyInput,
@@ -70,12 +76,13 @@ pub enum SliceError {
     /// embedded in the 3MF/config fail validation; the payload is the
     /// `key: detail` block for the stderr channel.
     InvalidValuesInProject(String),
-    /// `CLI_VALIDATE_ERROR` (`Utils.hpp:62`): `Print::validate` rejection.
+    /// `Print::validate` rejection and its upstream error kind.
     /// `sliced_info` is already populated at the validate point
     /// (`OrcaSlicer.cpp:5981-5987`), so the result.json fields ride along:
     /// plate_index, layer_height (the f32-stored value widened to f64),
     /// wall_loops, sparse_infill_density.
     Validate {
+        kind: PrintValidationKind,
         message: String,
         plate_index: u32,
         layer_height: f64,
