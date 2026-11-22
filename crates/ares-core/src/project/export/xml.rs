@@ -88,11 +88,7 @@ fn relationship<'a>(paths: impl IntoIterator<Item = &'a str>, media_type: &str) 
     out
 }
 
-pub(super) fn main_model(
-    objects: &[ObjectEntry<'_>],
-    loaded_orca_version: Option<&str>,
-    scene: bool,
-) -> String {
+pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Option<&str>) -> String {
     let mut out = format!(
         "{DECL}{MODEL_OPEN} <metadata name=\"Application\">BambuStudio-{BAMBU_VERSION}</metadata>\n <metadata name=\"OrcaSlicer\">{ORCA_VERSION}</metadata>\n{VERSION_METADATA}"
     );
