@@ -24,29 +24,35 @@ async function choose(page: Page, combo: string, group: string, name: string) {
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
-/**
- * Centroid of the model-coloured (filament teal) viewport pixels relative to the canvas centre, in
- * canvas-width fractions, with their count. The bed axes (ColorRGB::X/Y/Z) are excluded by hue.
- */
-function modelOffset(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+function viewportFrame(page: Page) {
+  return page.locator("[data-testid=viewport] canvas").evaluate(async (canvas: HTMLCanvasElement) => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     const probe = document.createElement("canvas");
     [probe.width, probe.height] = [400, Math.round((400 * canvas.height) / canvas.width)];
     const context = probe.getContext("2d")!;
     context.drawImage(canvas, 0, 0, probe.width, probe.height);
-    const pixels = context.getImageData(0, 0, probe.width, probe.height).data;
-    let [count, sumX, sumY] = [0, 0, 0];
-    for (let index = 0; index < pixels.length; index += 4) {
-      const [r, g, b] = [pixels[index], pixels[index + 1], pixels[index + 2]];
-      if (g - r > 60 && b - r > 60 && Math.abs(g - b) < 50) {
-        const pixel = index / 4;
-        count++;
-        sumX += pixel % probe.width;
-        sumY += Math.floor(pixel / probe.width);
-      }
-    }
-    return { count, x: (sumX / count - probe.width / 2) / probe.width, y: (sumY / count - probe.height / 2) / probe.width };
+    return { width: probe.width, height: probe.height, pixels: [...context.getImageData(0, 0, probe.width, probe.height).data] };
   });
+}
+
+/** Compare against the same empty plate. Geometry and centroid do not depend on the filament hue. */
+function modelOffset(frames: readonly [Awaited<ReturnType<typeof viewportFrame>>, Awaited<ReturnType<typeof viewportFrame>>], filament: number[]) {
+  const [{ width, height, pixels }, empty] = frames;
+  expect([width, height]).toEqual([empty.width, empty.height]);
+  const chroma = (rgb: number[]) => Math.max(...rgb) - Math.min(...rgb);
+  const hue = (rgb: number[]) => rgb.map((channel) => (channel - Math.min(...rgb)) / chroma(rgb));
+  const expected = hue(filament);
+  let [count, matching, sumX, sumY] = [0, 0, 0, 0];
+  for (let index = 0; index < pixels.length; index += 4) {
+    const rgb = pixels.slice(index, index + 3);
+    if (!rgb.some((value, channel) => Math.abs(value - empty.pixels[index + channel]) > 24)) continue;
+    const pixel = index / 4;
+    count++;
+    sumX += pixel % width;
+    sumY += Math.floor(pixel / width);
+    if (chroma(rgb) > 25 && hue(rgb).every((channel, i) => Math.abs(channel - expected[i]) < 0.25)) matching++;
+  }
+  return { count, matching, x: (sumX / count - width / 2) / width, y: (sumY / count - height / 2) / width };
 }
 
 /** `BuildVolume::bed_center` (BuildVolume.hpp:83): the printable_area bbox centre of a raw vendor machine, through `inherits`. */
@@ -258,11 +264,24 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const viewToolbar = page.getByTestId("view-toolbar");
   await viewToolbar.getByRole("button", { name: "Fit to plate" }).click();
   await viewToolbar.getByRole("button", { name: "Top", exact: true }).click();
-  await expect.poll(async () => (await modelOffset(page)).count, "the model is drawn").toBeGreaterThan(50);
-  const offset = await modelOffset(page);
+  const swatch = await page.getByTestId("filament-swatch-1").evaluate((element) => getComputedStyle(element).backgroundColor);
+  const filament = swatch.match(/\d+/g)!.map(Number);
+  expect(filament, "the slot swatch has an opaque RGB colour").toHaveLength(3);
+  const hex = filament.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase();
+  expect(nativeCenter, "the slot swatch matches the Native slice's filament colour").toContain(`; filament_colour = #${hex}\n`);
+  const occupied = await viewportFrame(page);
   await page.screenshot({ path: `${artifacts}prepare-stl-top.png` });
-  writeFileSync(`${artifacts}prepare-stl.json`, `${JSON.stringify({ bedCenter: bedCenter("LH", selection.machine), offset }, null, 2)}\n`);
+  const model = page.getByRole("treeitem", { name: "cube10.stl" });
+  await page.keyboard.press("Control+d");
+  await expect(model).toHaveCount(0);
+  const empty = await viewportFrame(page);
+  const offset = modelOffset([occupied, empty], filament);
+  writeFileSync(`${artifacts}prepare-stl.json`, `${JSON.stringify({ bedCenter: bedCenter("LH", selection.machine), swatch, offset }, null, 2)}\n`);
+  expect(offset.count, "the model changes pixels against the empty plate").toBeGreaterThan(50);
   expect(Math.hypot(offset.x, offset.y), "model centred on the selected printer's plate").toBeLessThan(0.01);
+  expect(offset.matching, "the model uses the colour shown in its filament slot").toBeGreaterThan(50);
+  await page.keyboard.press("Control+z");
+  await expect(model).toBeVisible();
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
