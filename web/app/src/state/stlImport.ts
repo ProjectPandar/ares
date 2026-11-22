@@ -20,7 +20,7 @@ export async function importStlFiles(picked: File[], choices: StlImportOptions) 
       file: { kind: "stl-batch", name: files[0].name, files, choices },
       scene: { ...scene, format: "stl", settings: null }, plater,
       currentPlate: 0, arrange: null, arrangeError: undefined, plateSlices: {}, typedSettings: null,
-      selectedObject: null, selectedInstance: null, overrides: {}, slice: { status: "idle" }, loadWarning: undefined,
+      selectedObject: null, selectedInstance: null, filamentSelection: [], overrides: {}, slice: { status: "idle" }, loadWarning: undefined,
     });
     candidate = undefined;
     void previous?.free();

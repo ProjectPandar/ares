@@ -1,4 +1,4 @@
-import type { ArrangeSettings, ConfigValue, CurrentPrinter, InstalledPrinters, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
+import type { FilamentTarget, ArrangeSettings, ConfigValue, CurrentPrinter, InstalledPrinters, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
 
 import type { FilamentSlotState } from "./presetCatalog.js";
 
@@ -14,6 +14,7 @@ export type PlaterEdit =
   | { op: "scale"; object: number; instance: number; factor: Vec3 }
   | { op: "mirror"; object: number; instance: number; axis: 0 | 1 | 2 }
   | { op: "scaleToFit"; object: number; instance: number }
+  | { op: "setFilament"; targets: readonly FilamentTarget[]; slot: number; count: number }
   | { op: "addPlate" }
   | { op: "deletePlate"; index: number }
   | { op: "lockPlate"; index: number; locked: boolean }
