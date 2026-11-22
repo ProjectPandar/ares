@@ -21,7 +21,8 @@ pub fn export_project_settings(input: impl AsRef<[u8]>) -> Result<Vec<u8>, Slice
     let overrides = ConfigOverrides::default();
     let (mut project, preparation) = load_project_with_preparation(input, &overrides)?;
     let filament_count = project.cli_filament_count();
-    project.initialize_cli_loaded_project_config(filament_count);
+    let upward = project.documents().bbl_family_3mf;
+    project.initialize_cli_loaded_project_config(filament_count, upward);
     let mut raw = project.documents().project_settings_raw.clone();
     // OrcaSlicer.cpp:3849–4023 prepares the missing matrix before default completion.
     if !raw.contains_key("flush_volumes_matrix") {

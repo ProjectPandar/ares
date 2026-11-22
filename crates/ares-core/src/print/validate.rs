@@ -86,7 +86,7 @@ pub fn validate_project_plate(
         .settings()
         .validate_loaded_config(&project.documents().project_settings_raw, true)?;
     let filament_count = project.cli_filament_count();
-    project.initialize_cli_loaded_project_config(filament_count);
+    project.initialize_cli_loaded_project_config(filament_count, true);
     validate_loaded_project(project, plate, None)
 }
 

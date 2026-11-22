@@ -120,7 +120,7 @@ pub(super) fn load_project_source(
         || matches!(source.input, super::ProjectInput::Assembly(assembly) if assembly.archive().is_some())
     {
         let filament_count = project.cli_filament_count();
-        project.initialize_cli_loaded_project_config(filament_count);
+        project.initialize_cli_loaded_project_config(filament_count, true);
     }
     if source.skip_modified_gcodes {
         project.remove_custom_plate_gcodes();

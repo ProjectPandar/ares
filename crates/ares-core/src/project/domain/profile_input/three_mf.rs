@@ -180,7 +180,9 @@ impl Project {
 
         project.settings = resolved;
         project.documents.project_settings_raw = merged;
-        project.initialize_cli_loaded_project_config(filament_count);
+        // The plater keeps the key; the CLI creates it only for a BBL-family 3MF.
+        let upward = full_fff_config.is_some() || project.documents.bbl_family_3mf;
+        project.initialize_cli_loaded_project_config(filament_count, upward);
         Ok((project, preparation))
     }
 }
