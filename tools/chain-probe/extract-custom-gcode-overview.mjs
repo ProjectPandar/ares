@@ -40,14 +40,14 @@ const replace = (text, from, to) => {
 const adapted = [
   epsilon,
   find,
-  replace(zs, "std::vector<double> get_layers_zs() const {", "template <class Viewer> std::vector<double> get_layers_zs(const Viewer &m_viewer) {"),
+  replace(zs, "std::vector<double> get_layers_zs() const {", "template <class Viewer> std::vector<double> get_layers_zs(const Viewer &m_viewer, const std::vector<double> &m_belt_layer_zs) {"),
   [
     "template <class Viewer, class Imgui>",
-    "void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &custom_gcode_per_print_z, const Viewer &m_viewer, Imgui &imgui, float window_padding, float max_len)",
+    "void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &custom_gcode_per_print_z, const Viewer &m_viewer, const std::vector<double> &m_belt_layer_zs, Imgui &imgui, float window_padding, float max_len)",
     "{",
     labels,
     replace(
-      replace(overview, "get_layers_zs();", "get_layers_zs(m_viewer);"),
+      replace(overview, "get_layers_zs();", "get_layers_zs(m_viewer, m_belt_layer_zs);"),
       "            imgui.text(short_time(get_time_dhms(custom_gcode_time)));",
       "            imgui.time(custom_gcode_time);\n            imgui.text(short_time(get_time_dhms(custom_gcode_time)));",
     ),
@@ -75,7 +75,7 @@ files["extraction.json"] = `${JSON.stringify({
   },
   label: "native source-kernel oracle; not full native viewer execution",
   adaptations: [
-    "GCodeViewer::get_layers_zs member to a free function over the viewer",
+    "GCodeViewer::get_layers_zs member to a free function over the viewer and its belt layer Zs",
     "the label strings and the overview loop wrapped in a function; locals, m_viewer and imgui supplied as parameters",
     "imgui.time records the accumulated float before the formatted text",
   ],

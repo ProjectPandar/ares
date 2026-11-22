@@ -20,7 +20,7 @@ static int find_close_layer_idx(const std::vector<double> &zs, double &z, double
     return -1;
 }
 
-    template <class Viewer> std::vector<double> get_layers_zs(const Viewer &m_viewer) {
+    template <class Viewer> std::vector<double> get_layers_zs(const Viewer &m_viewer, const std::vector<double> &m_belt_layer_zs) {
         // Belt printers: the layer Z the slider labels and the colour-change ticks
         // use is the layer's print Z (see load_as_gcode), not a toolpath height.
         if (! m_belt_layer_zs.empty())
@@ -32,7 +32,7 @@ static int find_close_layer_idx(const std::vector<double> &zs, double &z, double
     }
 
 template <class Viewer, class Imgui>
-void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &custom_gcode_per_print_z, const Viewer &m_viewer, Imgui &imgui, float window_padding, float max_len)
+void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &custom_gcode_per_print_z, const Viewer &m_viewer, const std::vector<double> &m_belt_layer_zs, Imgui &imgui, float window_padding, float max_len)
 {
         // Types of custom gcode
         std::string cgcode_pause_str = _u8L("Pause");
@@ -42,7 +42,7 @@ void render_custom_gcode_overview(const std::vector<Slic3r::CustomGCode::Item> &
         std::string cgcode_unknown_str = _u8L("Unknown");
 
         // ORCA: Get layer Zs as doubles
-        std::vector<double> layer_zs = get_layers_zs(m_viewer);
+        std::vector<double> layer_zs = get_layers_zs(m_viewer, m_belt_layer_zs);
         // loop invariant, same reason as the layer Zs above
         const std::vector<float> layer_times = m_viewer.get_layers_estimated_times();
 

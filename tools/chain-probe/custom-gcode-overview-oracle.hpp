@@ -17,7 +17,9 @@
 #include "libslic3r/Utils.hpp"
 
 namespace custom_gcode_overview_source {
-using namespace Slic3r::CustomGCode;
+namespace CustomGCode = Slic3r::CustomGCode;
+using CustomGCode::Item;
+using CustomGCode::Type;
 using Slic3r::get_time_dhms;
 using Slic3r::short_time;
 
@@ -72,6 +74,11 @@ inline uint32_t bits(float value)
 /// `items` is a plate-custom-gcodes.nix dump; `plate` the zero-based sliced plate key.
 inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, int plate, const char* path)
 {
+    // The headless conversion does not model the belt preview transform.
+    if (result.belt_tilt_angle != 0.f) {
+        std::fputs("custom G-code overview oracle does not support belt prints\n", stderr);
+        return false;
+    }
     Slic3r::CNumericLocalesSetter locale;
     std::vector<Item> custom_gcode_per_print_z;
     std::ifstream in(items);
@@ -96,7 +103,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, 
 
     Cells cells;
     Imgui imgui{ cells };
-    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, imgui, 0.0f, 0.0f);
+    render_custom_gcode_overview(custom_gcode_per_print_z, layers_viewer, {}, imgui, 0.0f, 0.0f);
 
     auto zs = nlohmann::json::array();
     for (float z : layers_viewer.get_layers_zs())
@@ -111,7 +118,7 @@ inline bool dump(const Slic3r::GCodeProcessorResult& result, const char* items, 
             { "timeBits", bits(cells.times[i]) }, { "time", cells.text[3 * i + 2] } });
     const nlohmann::json data = {
         { "oracle", "native source-kernel (not full Viewer execution)" },
-        { "upstream", "8500fcdccaa10b5099ac20d252af3a7c560046f1" },
+        { "upstream", "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19" },
         { "zsBits", zs },
         { "timesBits", times },
         { "rows", rows },
