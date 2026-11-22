@@ -11,20 +11,52 @@ use crate::{
     substitutions,
 };
 
+pub(super) struct PlateOptions<'a> {
+    pub input: &'a Path,
+    pub directory: Option<&'a Path>,
+    pub datadir: Option<&'a Path>,
+    pub load_settings: Option<&'a str>,
+    pub load_filaments: Option<&'a str>,
+    pub project_preset_catalog: Option<&'a Path>,
+    pub resources_dir: Option<&'a Path>,
+    pub uptodate: bool,
+    pub orient: bool,
+    #[cfg(target_os = "linux")]
+    pub report_plate: u32,
+}
+
+impl<'a> From<&'a SliceArgs> for PlateOptions<'a> {
+    fn from(args: &'a SliceArgs) -> Self {
+        Self {
+            input: args.input(),
+            directory: output_directory(args),
+            datadir: args.datadir.as_deref(),
+            load_settings: args.load_settings.as_deref(),
+            load_filaments: args.load_filaments.as_deref(),
+            project_preset_catalog: args.project_preset_catalog.as_deref(),
+            resources_dir: args.resources_dir.as_deref(),
+            uptodate: args.uptodate,
+            orient: args.orient == Some(1),
+            #[cfg(target_os = "linux")]
+            report_plate: args.plate.unwrap_or(1),
+        }
+    }
+}
+
 pub(super) fn run(
-    args: &SliceArgs,
+    args: PlateOptions<'_>,
     selection: i32,
     input: &[u8],
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
-    let directory = output_directory(args);
+    let directory = args.directory;
     let result_path = directory
         .unwrap_or_else(|| Path::new("."))
         .join("plate_1.gcode");
-    let file = args.input().to_string_lossy();
+    let file = args.input.to_string_lossy();
     let filename = args
-        .input()
+        .input
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
@@ -34,16 +66,15 @@ pub(super) fn run(
             error,
             &result_path,
             #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
+            args.report_plate,
         ));
     }
     let catalog = args
         .project_preset_catalog
-        .as_ref()
         .map(fs::read_to_string)
         .transpose()?;
-    let settings_files = preset_files(args.load_settings.as_deref())?;
-    let filament_files = preset_files(args.load_filaments.as_deref())?;
+    let settings_files = preset_files(args.load_settings)?;
+    let filament_files = preset_files(args.load_filaments)?;
     let settings = settings_files
         .iter()
         .map(|(label, json, source_identity)| LoadSettingsFile {
@@ -63,23 +94,13 @@ pub(super) fn run(
     let loaded_sources;
     let system_catalog;
     let (settings, source, machine_full) = if loaded_files {
-        loaded_sources = crate::preset_sources::load(
-            args.datadir.as_deref(),
+        loaded_sources = sources_for_slice(
+            args.datadir,
             settings.iter().chain(&filaments).copied(),
-        )
-        .map_err(|error| match error.downcast::<SliceError>() {
-            Ok(error) => slice_error_to_failure(
-                *error,
-                &result_path,
-                #[cfg(target_os = "linux")]
-                args.plate.unwrap_or(1),
-            ),
-            Err(error) => CliFailure::config_file_error(
-                #[cfg(target_os = "linux")]
-                &result_path,
-                format!("{error}\n"),
-            ),
-        })?;
+            &result_path,
+            #[cfg(target_os = "linux")]
+            args.report_plate,
+        )?;
         (
             CliPlatesSettings::Files {
                 settings: &settings,
@@ -103,11 +124,10 @@ pub(super) fn run(
             None,
         )
     } else {
-        let resources = crate::installed_resources::resolve(args.resources_dir.as_deref())?;
+        let resources = crate::installed_resources::resolve(args.resources_dir)?;
         let (source, machine) = crate::compatible_machine::load(input, &resources)?;
         system_catalog = args
             .resources_dir
-            .as_deref()
             .map(crate::project_presets::load_resources_catalog)
             .transpose()?;
         (
@@ -133,7 +153,7 @@ pub(super) fn run(
             filename,
             settings,
             overrides,
-            orient: args.orient == Some(1),
+            orient: args.orient,
             upward: CliUpwardMachine {
                 source,
                 input: upward_input,
@@ -211,6 +231,29 @@ pub(super) fn output_directory(args: &SliceArgs) -> Option<&Path> {
     args.outputdir
         .as_deref()
         .filter(|path| !path.as_os_str().is_empty())
+}
+
+pub(super) fn sources_for_slice<'a>(
+    datadir: Option<&Path>,
+    files: impl Iterator<Item = LoadSettingsFile<'a>>,
+    output: &Path,
+    #[cfg(target_os = "linux")] plate: u32,
+) -> Result<ares_core::LoadedPresetSources, CliFailure> {
+    crate::preset_sources::load(datadir, files).map_err(|error| {
+        match error.downcast::<SliceError>() {
+            Ok(error) => slice_error_to_failure(
+                *error,
+                output,
+                #[cfg(target_os = "linux")]
+                plate,
+            ),
+            Err(error) => CliFailure::config_file_error(
+                #[cfg(target_os = "linux")]
+                output,
+                format!("{error}\n"),
+            ),
+        }
+    })
 }
 
 fn preset_files(

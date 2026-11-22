@@ -76,6 +76,10 @@ pub(crate) struct DirectSliceArgs {
     )]
     pub(crate) selection: Option<i32>,
 
+    /// Data directory for saved 3MF project slicing.
+    #[arg(long, requires = "selection")]
+    pub(crate) datadir: Option<PathBuf>,
+
     /// Export effective settings to FILE, or to stdout with '-'.
     #[arg(long, value_name = "FILE")]
     pub(crate) export_settings: Option<PathBuf>,
