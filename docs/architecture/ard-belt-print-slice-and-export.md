@@ -112,6 +112,16 @@ variants are rejection cases until the ordinary belt-height classification,
 path splitting and affected writer/cooling behavior are ported. Brim generation,
 support, belt purge, arrange/calibration and processor/preview are also deferred.
 
+With an inactive floor, Orca still emits belt cooling transitions using the
+slicing layer ID: `GCode.hpp:1007–1012` and `GCode.cpp:9582–9597,10082,10213`.
+The existing motion and cooling buffer boundaries retain this fallback:
+fan-off carries across the layer boundary until the first extrusion outside
+the gate, as in `GCode/CoolingBuffer.cpp:903–905,972–980,1065–1081`.
+This requires no height query, segment split, or slope-based feed adjustment.
+The applied print config also derives the physical tilt from the belt axis
+and angle (`PrintApply.cpp:1379–1386`, `BeltTransform.hpp:73–83`); export
+serializes those derived settings without changing project config I/O.
+
 ## Verification
 
 Use public CLI slicing for positive parity: a synthetic one-material cube with
