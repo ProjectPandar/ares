@@ -4,7 +4,9 @@ use crate::{
 };
 
 use super::catalog::selection;
+mod cli_presets;
 pub(crate) mod load_settings;
+pub use cli_presets::CliPresetProject;
 pub use load_settings::{
     LoadSettingsSliceRequest, SlicedStlPlate, export_stl_settings, slice_assembly,
     slice_imported_stl_with_load_settings_processed, slice_stl_models_with_load_settings,
@@ -79,7 +81,7 @@ pub async fn slice_with_profiles_validated(
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     slice_validated_profile_source(
-        input,
+        (input.as_ref(), None),
         request,
         metadata,
         (false, false, None, None),
@@ -94,7 +96,13 @@ pub async fn slice_with_profiles_processed_validated(
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
-    slice_validated_profile_source(input, request, metadata, (true, false, None, None), context)
+    slice_validated_profile_source(
+        (input.as_ref(), None),
+        request,
+        metadata,
+        (true, false, None, None),
+        context,
+    )
 }
 
 /// Selected profiles and the CLI's processing/report outputs.
@@ -110,6 +118,15 @@ pub struct CliProfileSliceRequest<'a> {
 /// (`OrcaSlicer.cpp:6926-6931,7150-7160,8126-8136`).
 pub async fn slice_cli_with_profiles_validated(
     input: impl AsRef<[u8]>,
+    request: CliProfileSliceRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
+    slice_cli_profile_source((input.as_ref(), None), request, metadata, context)
+}
+
+fn slice_cli_profile_source(
+    input: (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
     request: CliProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
@@ -132,7 +149,7 @@ pub async fn slice_cli_with_profiles_validated(
 }
 
 fn slice_validated_profile_source(
-    input: impl AsRef<[u8]>,
+    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
     request: ProfileSliceRequest<'_>,
     metadata: GenerationMetadata,
     (record_moves, orient, sliced_plate, upward): (
@@ -144,8 +161,9 @@ fn slice_validated_profile_source(
     context: SlicerContext<'_>,
 ) -> Result<crate::gcode_processor::ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
-    with_profile_source(input.as_ref(), request, |source| {
+    with_profile_source(input, request, |source| {
         let mut source = ProjectSource {
+            loaded,
             max_triangle_count: 0,
             orient,
             sliced_plate,
@@ -284,6 +302,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let catalog = super::project_selection::loaded_catalog(catalog_json)?;
     if let Some(policy) = super::project_refresh::selection(selection_json)? {
         return body(ProjectSource {
+            loaded: None,
             input,
             plate,
             profile: None,
@@ -311,6 +330,7 @@ pub(crate) fn with_edited_profile_source<T>(
     let selection = selection(selection_json)?;
     let composed = catalog.catalog.compose(&selection)?;
     body(ProjectSource {
+        loaded: None,
         input,
         plate,
         profile: Some(ProfileInput {

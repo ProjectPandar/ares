@@ -74,7 +74,7 @@ pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project
                 source.overrides,
                 Some(refresh),
                 source.system_catalog,
-                source.validate_print,
+                (source.validate_print, None),
             )
             .map(|(project, _)| project);
     }
@@ -144,6 +144,7 @@ pub async fn slice_project_plate_with_catalog(
 ) -> Result<Vec<u8>, SliceError> {
     slice_source(
         ProjectSource {
+            loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,
@@ -191,6 +192,7 @@ pub async fn slice_project_plate_processed_with_catalog(
 ) -> Result<ProcessedGCode, SliceError> {
     slice_source(
         ProjectSource {
+            loaded: None,
             input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
             plate,
             profile: None,

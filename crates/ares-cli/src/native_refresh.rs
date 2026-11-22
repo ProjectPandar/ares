@@ -16,6 +16,23 @@ pub(super) fn load(
     input: &[u8],
     load_filaments: &[&str],
 ) -> Result<Option<NativeRefreshPresets>, CliFailure> {
+    load_impl(args, input, load_filaments, false)
+}
+
+pub(super) fn load_admitted(
+    args: &SliceArgs,
+    input: &ares_core::CliPresetProject<'_>,
+    load_filaments: &[&str],
+) -> Result<Option<NativeRefreshPresets>, CliFailure> {
+    load_impl(args, input.input(), load_filaments, true)
+}
+
+fn load_impl(
+    args: &SliceArgs,
+    input: &[u8],
+    load_filaments: &[&str],
+    admitted: bool,
+) -> Result<Option<NativeRefreshPresets>, CliFailure> {
     if !args.uptodate
         || args.project_preset_catalog.is_some()
         || !args
@@ -25,14 +42,16 @@ pub(super) fn load(
     {
         return Ok(None);
     }
-    ares_core::validate_load_settings_input(input).map_err(|error| {
-        slice_error_to_failure(
-            error,
-            args.output(),
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })?;
+    if !admitted {
+        ares_core::validate_load_settings_input(input).map_err(|error| {
+            slice_error_to_failure(
+                error,
+                args.output(),
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        })?;
+    }
     let Some(source) = UpwardMachineSource::from_project(input)
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
     else {
