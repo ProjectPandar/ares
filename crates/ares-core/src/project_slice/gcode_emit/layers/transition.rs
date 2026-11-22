@@ -185,7 +185,7 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     let rendered = match super::super::template::render(
         raw,
         &mut config,
-        &mut state.template_globals,
+        &mut state.template_context,
     ) {
         Ok(rendered) => {
             motion::invalidate_after_custom_gcode(&rendered, state);

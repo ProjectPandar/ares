@@ -63,7 +63,7 @@ pub(super) fn emit(
         timelapse::insert_physical_extruder_ids(&mut config, traversal, state);
         // Write-back validation precedes emission
         // (`GCode.cpp:3920-3933`).
-        match template::render(source, &mut config, &mut state.template_globals) {
+        match template::render(source, &mut config, &mut state.template_context) {
             Ok(text) => {
                 rendered = text;
                 if let Err(error) = motion::apply_writer_state(

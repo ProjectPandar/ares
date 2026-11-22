@@ -176,40 +176,53 @@ pub(super) fn append_second_layer_transition(
     }
 }
 
+pub(super) fn render_start_template(
+    (name, source): (&str, &str),
+    state: &mut motion::EmitState,
+    traversal: &PreparedPostClassicTraversal,
+    metadata: GenerationMetadata,
+    first_layer_bounds: Option<footprint::FirstLayerBounds>,
+) -> Result<String, SliceError> {
+    if source.is_empty() {
+        return Ok(String::new());
+    }
+    let mut config =
+        start_config::self_start_config(traversal, state, metadata, first_layer_bounds)?;
+    let result = template::render_for_filament(
+        source,
+        &mut config,
+        state.initial_filaments.initial(),
+        &mut state.template_context,
+    )
+    .and_then(|rendered| {
+        motion::apply_writer_state(name, &config, &rendered, state).map(|()| rendered)
+    });
+    Ok(match result {
+        Ok(rendered) => rendered,
+        Err(error) => {
+            state.record_template_failure(name, &error);
+            format!(
+                "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+            )
+        }
+    })
+}
+
 pub(super) fn append_start(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
-    first_layer_bounds: Option<footprint::FirstLayerBounds>,
+    (first_layer_bounds, mode_gcode): (Option<footprint::FirstLayerBounds>, &str),
 ) -> Result<i32, SliceError> {
-    let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let rendered = if template.is_empty() {
-        String::new()
-    } else {
-        let mut config =
-            start_config::self_start_config(traversal, state, metadata, first_layer_bounds)?;
-        let name = "machine_start_gcode";
-        let result = template::render_for_filament(
-            template,
-            &mut config,
-            state.initial_filaments.initial(),
-            &mut state.template_globals,
-        )
-        .map_err(|error| error.to_string())
-        .and_then(|rendered| {
-            motion::apply_writer_state(name, &config, &rendered, state).map(|()| rendered)
-        });
-        match result {
-            Ok(rendered) => rendered,
-            Err(error) => {
-                state.record_template_failure(name, &error);
-                format!(
-                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
-                )
-            }
-        }
-    };
+    let source = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
+    let rendered = render_start_template(
+        ("machine_start_gcode", source),
+        state,
+        traversal,
+        metadata,
+        first_layer_bounds,
+    )?;
     state.start_gcode_filament = super::tool_transition::last_start_filament(&rendered);
     state.start_gcode_sets_nozzle_temperature = temperature::sets_temperature(
         &rendered,
@@ -228,10 +241,12 @@ pub(super) fn append_start(
     temperature::append_chamber_startup(output, traversal, &rendered, state.extruders.ids());
     // `GCodeOutputStream::writeln` (`GCode.cpp:6266-6270`) writes nothing for
     // an empty rendered template and otherwise appends exactly one newline.
-    if !rendered.is_empty() {
-        output.extend_from_slice(rendered.as_bytes());
-        if !rendered.ends_with('\n') {
-            output.push(b'\n');
+    for gcode in [mode_gcode, &rendered] {
+        if !gcode.is_empty() {
+            output.extend_from_slice(gcode.as_bytes());
+            if !gcode.ends_with('\n') {
+                output.push(b'\n');
+            }
         }
     }
     // `GCode.cpp:4379-4386`.
