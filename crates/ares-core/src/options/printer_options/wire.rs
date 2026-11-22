@@ -9,7 +9,7 @@ impl Serialize for PrinterOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(168))?;
+        let mut map = serializer.serialize_map(Some(169))?;
         map.serialize_entry(
             "adaptive_bed_mesh_margin",
             &self.remaining.adaptive_bed_mesh_margin,
@@ -131,6 +131,7 @@ impl Serialize for PrinterOptions {
         map.serialize_entry("imex_carriage_margin", &self.gcode.imex_carriage_margin)?;
         map.serialize_entry("imex_gantry_count", &self.gcode.imex_gantry_count)?;
         map.serialize_entry("imex_mode_active_tools", &self.gcode.imex_mode_active_tools)?;
+        map.serialize_entry("imex_mode_gcodes", &self.gcode.imex_mode_gcodes)?;
         map.serialize_entry("imex_mode_names", &self.gcode.imex_mode_names)?;
         map.serialize_entry(
             "imex_nozzle_clearance_x",

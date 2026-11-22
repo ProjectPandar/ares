@@ -204,7 +204,7 @@ fn append(
         source,
         &mut config,
         state.extruders.active_id(),
-        &mut state.template_globals,
+        &mut state.template_context,
     ) {
         Ok(rendered) => Some(rendered),
         Err(error) => {

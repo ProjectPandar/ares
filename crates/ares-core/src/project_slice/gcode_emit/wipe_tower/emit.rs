@@ -217,7 +217,7 @@ pub(super) fn append(
         &code,
         &mut config,
         new_tool.unwrap_or(usize::MAX),
-        &mut state.template_globals,
+        &mut state.template_context,
     )
     .and_then(|text| motion::apply_writer_state(name, &config, &text, state).map(|()| text));
     match rendered {

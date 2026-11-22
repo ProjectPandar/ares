@@ -7,7 +7,7 @@ impl Serialize for PrinterGCodeSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(72))?;
+        let mut map = serializer.serialize_map(Some(73))?;
         map.serialize_entry("auxiliary_fan", &self.auxiliary_fan)?;
         map.serialize_entry("bed_temperature_formula", &self.bed_temperature_formula)?;
         map.serialize_entry("before_layer_change_gcode", &self.before_layer_change_gcode)?;
@@ -43,6 +43,7 @@ impl Serialize for PrinterGCodeSourceOptions {
         map.serialize_entry("imex_carriage_margin", &self.imex_carriage_margin)?;
         map.serialize_entry("imex_gantry_count", &self.imex_gantry_count)?;
         map.serialize_entry("imex_mode_active_tools", &self.imex_mode_active_tools)?;
+        map.serialize_entry("imex_mode_gcodes", &self.imex_mode_gcodes)?;
         map.serialize_entry("imex_mode_names", &self.imex_mode_names)?;
         map.serialize_entry("imex_nozzle_clearance_x", &self.imex_nozzle_clearance_x)?;
         map.serialize_entry("imex_nozzle_clearance_y", &self.imex_nozzle_clearance_y)?;

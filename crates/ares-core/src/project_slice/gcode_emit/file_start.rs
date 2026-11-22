@@ -3,27 +3,30 @@ use crate::{
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-use super::{
-    footprint::FirstLayerBounds,
-    placeholders, template,
-    value::{TemplateRng, variables::Variables},
-};
+use super::{footprint::FirstLayerBounds, machine, motion::EmitState, placeholders, template};
 
 pub(super) struct FileStart<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
     pub(super) metadata: GenerationMetadata,
     pub(super) first_layer_bounds: Option<FirstLayerBounds>,
     pub(super) layer_count: usize,
-    pub(super) template_rng: &'a TemplateRng,
-    pub(super) template_globals: &'a mut Variables,
 }
 
-/// `file_start_gcode` is rendered before every generated header
-/// (`GCode.cpp:4230-4231`), through the regular custom G-code path, so it draws
-/// from the same template stream as the templates emitted after it. Timing and
-/// filament totals are resolved by the post-processor after the complete file
-/// is available.
-pub(super) fn append(output: &mut Vec<u8>, start: FileStart<'_>) -> Result<(), SliceError> {
+/// Render the buffered mode script before file start (`GCode.cpp:4221-4231`),
+/// so both use the same context even though the mode script is written later.
+pub(super) fn append(
+    output: &mut Vec<u8>,
+    start: FileStart<'_>,
+    state: &mut EmitState,
+) -> Result<String, SliceError> {
+    let mode = state.template_context.mode_script().to_owned();
+    let mode_gcode = machine::render_start_template(
+        ("imex_mode_gcode", &mode),
+        state,
+        start.traversal,
+        start.metadata,
+        start.first_layer_bounds,
+    )?;
     let source = &start
         .traversal
         .resolved
@@ -32,17 +35,17 @@ pub(super) fn append(output: &mut Vec<u8>, start: FileStart<'_>) -> Result<(), S
         .file_start_gcode
         .0;
     if source.is_empty() {
-        return Ok(());
+        return Ok(mode_gcode);
     }
     let mut config = placeholders::base_config(
         start.traversal,
         start.metadata,
         start.first_layer_bounds,
-        Some(start.template_rng),
+        Some(&state.template_rng),
         start.layer_count,
     )?;
     let rendered =
-        template::render(source, &mut config, start.template_globals).map_err(|error| {
+        template::render(source, &mut config, &mut state.template_context).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project file-start G-code template: {error}"
             ))
@@ -53,5 +56,5 @@ pub(super) fn append(output: &mut Vec<u8>, start: FileStart<'_>) -> Result<(), S
             output.push(b'\n');
         }
     }
-    Ok(())
+    Ok(mode_gcode)
 }

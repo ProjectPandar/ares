@@ -65,6 +65,7 @@ declare_option_group! {
         imex_tool_layout => "imex_tool_layout": ImexToolLayout = ImexToolLayout::FrontLeft,
         imex_mode_names => "imex_mode_names": OrcaStrings = OrcaStrings(Vec::new()),
         imex_mode_active_tools => "imex_mode_active_tools": OrcaStrings = OrcaStrings(Vec::new()),
+        imex_mode_gcodes => "imex_mode_gcodes": OrcaStrings = OrcaStrings(Vec::new()),
         change_filament_gcode => "change_filament_gcode": OrcaString = string(""),
         change_extrusion_role_gcode => "change_extrusion_role_gcode": OrcaString = string(""),
         silent_mode => "silent_mode": OrcaBool = OrcaBool(false),
@@ -102,7 +103,7 @@ declare_option_group! {
 }
 
 impl PrinterGCodeSourceOptions {
-    pub const DECLARATION_ORDER: [&'static str; 72] = [
+    pub const DECLARATION_ORDER: [&'static str; 73] = [
         "before_layer_change_gcode",
         "printing_by_object_gcode",
         "machine_end_gcode",
@@ -142,6 +143,7 @@ impl PrinterGCodeSourceOptions {
         "imex_tool_layout",
         "imex_mode_names",
         "imex_mode_active_tools",
+        "imex_mode_gcodes",
         "change_filament_gcode",
         "change_extrusion_role_gcode",
         "silent_mode",

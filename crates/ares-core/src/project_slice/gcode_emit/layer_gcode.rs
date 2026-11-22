@@ -113,7 +113,7 @@ pub(super) fn append_before_layer_change_gcode(
         template,
         &mut config,
         state.extruders.active_id(),
-        &mut state.template_globals,
+        &mut state.template_context,
     ) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
@@ -207,7 +207,7 @@ pub(super) fn append_layer_change(
             template,
             &mut config,
             state.extruders.active_id(),
-            &mut state.template_globals,
+            &mut state.template_context,
         ) {
             Ok(rendered) => Some(rendered),
             Err(error) => {
