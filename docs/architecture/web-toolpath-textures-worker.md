@@ -68,11 +68,19 @@ The moved code goes to a new `web/packages/ares-wasm-js/src/toolpathTextures.ts`
   - `probes` (sizes, geometry, and colors for `Toolpaths.colors`).
 
   The worker keeps the drawn-segment list with the vertices it already keeps for `viewRange`.
-- `viewColors` and `viewRange` colors carry the colors probe of the colors they return.
+- `ViewColors` (`viewColors`) and `MovesView` (`movesHigher`) carry `colorsProbe`, the colors probe of the colors they return.
 - `buildToolpathMesh` builds the three.js textures, attributes and bounding volumes from
-  `toolpaths.textures`. `setToolpaths` and `setToolpathColors` write the probes they receive.
+  `toolpaths.textures`. It copies `segments` for the `aSegment` attribute, which `applyEnabled` writes into, as each
+  mesh had its own array before. `setToolpaths` and `setToolpathColors` write the probes they receive.
 
 The attributes keep their values and are written in the same task as before. No E2E spec changes.
+
+The package worker bundle stays self-contained: it imports no runtime module of the client entry, so the build emits no
+shared chunk and the packed file list stays the same. `toolpathTextures.ts` writes the `MOVE_TYPES` / `EXTRUSION_ROLES`
+indices, the `VERTEX_VALUES` length and `KIND_OPTION` as literals whose types are derived from those `as const`
+constants, so a mismatch fails the type check. Its declaration file is left out of the package like the other
+worker-only modules. `KIND_OPTION` moves from the app's `segmentShader.ts` to `toolpaths.ts`, the shader contract
+the worker now packs for. `AresSlicerOptions` moves to `types.ts` to keep `index.ts` under 400 lines.
 The color texture (`writeColors`), option markers and enabled-segment updates stay where they are.
 
 ## Verification
