@@ -21,6 +21,7 @@ mod min_sphere;
 mod mirror;
 mod plate_list;
 mod plate_lock;
+mod save;
 mod scale;
 mod scale_to_fit;
 mod selection;
