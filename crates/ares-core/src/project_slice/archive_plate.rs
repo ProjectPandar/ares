@@ -46,6 +46,7 @@ pub(crate) fn slice_source_with_archive(
                 ProjectSource {
                     sliced_plate: report,
                     normative_check: context.normative_check(),
+                    skip_modified_gcodes: context.skip_modified_gcodes(),
                     max_triangle_count: context.max_triangle_count,
                     custom_gcodes: context.custom_gcodes.take(),
                     ..project

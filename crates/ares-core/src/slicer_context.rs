@@ -31,6 +31,7 @@ pub struct SlicerContext<'a> {
     pub(crate) enable_timelapse: bool,
     pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
     normative_check: bool,
+    skip_modified_gcodes: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -46,6 +47,7 @@ impl<'a> SlicerContext<'a> {
             enable_timelapse: false,
             custom_gcodes: None,
             normative_check: true,
+            skip_modified_gcodes: false,
         }
     }
 
@@ -95,6 +97,17 @@ impl<'a> SlicerContext<'a> {
 
     pub(crate) fn normative_check(&self) -> bool {
         self.normative_check
+    }
+
+    /// Applies the CLI `--skip-modified-gcodes` policy to this slice.
+    #[must_use]
+    pub fn with_skip_modified_gcodes(mut self, enabled: bool) -> Self {
+        self.skip_modified_gcodes = enabled;
+        self
+    }
+
+    pub(crate) fn skip_modified_gcodes(&self) -> bool {
+        self.skip_modified_gcodes
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.
