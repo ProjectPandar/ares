@@ -14,6 +14,8 @@ use crate::{
 
 #[path = "cli_slice_plates/direct.rs"]
 mod direct;
+#[path = "cli_slice_plates/partial_presets.rs"]
+mod partial_presets;
 
 const PROJECT: &[u8] =
     include_bytes!("../../../../tests/parity/custom-gcode-overview/two-plates.3mf");
