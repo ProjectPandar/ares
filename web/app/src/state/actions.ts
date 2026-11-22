@@ -59,9 +59,9 @@ export async function importFile(file: File) {
     useApp.setState({ loadError: `${file.name} is not a 3MF or STL file` });
     return;
   }
-  const bytes = new Uint8Array(await file.arrayBuffer());
   useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined });
   try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure)
     // and its presets filled from the installed system presets.
     const plater = /\.3mf$/i.test(file.name)

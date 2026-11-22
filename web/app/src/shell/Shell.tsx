@@ -18,6 +18,7 @@ const hasFiles = (event: DragEvent) => event.dataTransfer.types.includes("Files"
 export function Shell() {
   const theme = useApp((state) => state.theme);
   const engine = useApp((state) => state.engine);
+  const importing = useApp((state) => state.loadingFile);
   const wizard = useApp((state) => state.wizard);
   const stlImport = useApp((state) => state.stlImport);
   const [dragging, setDragging] = useState(false);
@@ -64,7 +65,7 @@ export function Shell() {
     <div className="shell">
       <TitleBar importInput={importInput} projectInput={projectInput} onShortcuts={() => setShortcutsOpen(true)} onAbout={() => setAboutOpen(true)} />
       <TabBar />
-      <main className="workspace" data-testid="workspace"
+      <main className="workspace" data-testid="workspace" inert={importing}
         onDragOver={(event) => {
           if (!hasFiles(event) || engine !== "ready") return;
           event.preventDefault();
