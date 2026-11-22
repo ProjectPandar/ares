@@ -317,6 +317,10 @@ fn finite(value: f64) -> Result<f64, &'static str> {
 }
 
 pub(crate) fn format_number(value: f64) -> String {
+    format_number_precision(value, 6)
+}
+
+pub(crate) fn format_number_precision(value: f64, digits: usize) -> String {
     if value == 0.0 {
         return if value.is_sign_negative() {
             "-0".to_owned()
@@ -324,15 +328,16 @@ pub(crate) fn format_number(value: f64) -> String {
             "0".to_owned()
         };
     }
-    let scientific = format!("{value:.5e}");
+    let mantissa_decimals = digits - 1;
+    let scientific = format!("{value:.mantissa_decimals$e}");
     let (mantissa, raw_exponent) = scientific.split_once('e').unwrap();
     let exponent = raw_exponent.parse::<i32>().unwrap();
-    if !(-4..6).contains(&exponent) {
+    if !(-4..digits as i32).contains(&exponent) {
         let mut mantissa = mantissa.to_owned();
         trim_fraction(&mut mantissa);
         format!("{mantissa}e{exponent:+03}")
     } else {
-        let decimals = (5 - exponent).max(0) as usize;
+        let decimals = (mantissa_decimals as i32 - exponent).max(0) as usize;
         let mut output = format!("{value:.decimals$}");
         trim_fraction(&mut output);
         output
