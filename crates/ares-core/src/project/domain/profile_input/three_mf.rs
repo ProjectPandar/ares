@@ -123,16 +123,18 @@ impl Project {
         super::cli_machine_limits::apply(&mut merged, load_names, original_printer);
         // User overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged)?;
+        // The one-colour prime-tower rule is CLI::run's alone (OrcaSlicer.cpp:2531-2535,
+        // 4316-4343); the plater applies full_fff_config as it is (Plater.cpp:11429-11442).
         if full_fff_config.is_some() {
             crate::profiles::FullFffGroups::store(&mut merged);
+        } else {
+            mapped_prime_tower::disable_after_mapping(
+                &mut merged,
+                settings,
+                overrides,
+                profile.enable_timelapse,
+            );
         }
-        mapped_prime_tower::disable_after_mapping(
-            &mut merged,
-            settings,
-            overrides,
-            profile.enable_timelapse,
-            filament_count,
-        );
         // `set_deserialize`/`handle_legacy` runs on every option token the
         // merged config carries — embedded base and profile overlay alike
         // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
