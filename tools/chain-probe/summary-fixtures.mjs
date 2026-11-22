@@ -22,13 +22,13 @@ const FIXTURES = [
     edits: { filament_density: ["1.24", "1.31"], filament_cost: ["24.99", "31.7"], time_cost: "1.7" },
   },
   {
-    // time-cost with both filaments on the left nozzle and a prime tower, so
-    // the tool changes purge into wipe-tower filament.
+    // time-cost with a prime tower. The plate keeps its own filament map mode
+    // (PartPlate.cpp:409-420), so the map is not edited.
     name: "wipe-tower",
     source: "tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf",
     edits: {
       filament_density: ["1.24", "1.31"], filament_cost: ["24.99", "31.7"], time_cost: "1.7",
-      enable_prime_tower: "1", filament_map_mode: "Manual", filament_map: ["1", "1"],
+      enable_prime_tower: "1",
     },
   },
 ];
