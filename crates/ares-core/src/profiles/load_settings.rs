@@ -158,7 +158,10 @@ pub(crate) fn compose_project_load_settings(
     let stl = names.embedded.is_none()
         && direct_stl
         && request.filaments.iter().any(|file| file.label.is_empty());
-    let composed = compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
+    let mut composed = compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
+    if crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf {
+        project::decode_filament_string_vectors(&mut composed.filament_raws)?;
+    }
     Ok((composed, names))
 }
 
@@ -243,7 +246,7 @@ fn compose_with_project(
         loaded_indices.push(slot);
     }
     let selection = match embedded {
-        Some(config) => ProfileSelection::machine_for_project(machine.unwrap(), config)?,
+        Some(config) => ProfileSelection::for_project_without_filaments(process, machine, config)?,
         None => ProfileSelection::new_partial(process, machine, filament_slots)?,
     };
     let sparse = stl && loaded_indices.len() < request.filaments.len();

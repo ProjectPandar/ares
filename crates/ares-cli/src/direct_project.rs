@@ -53,20 +53,10 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         )
         .into());
     }
-    let presets = match (
+    let files = (
         args.load_settings.as_deref(),
         args.load_filaments.as_deref(),
-    ) {
-        (None, None) => None,
-        (Some(settings), Some(filaments)) => Some((settings, filaments)),
-        _ => {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "direct project preset replacement requires --load-settings and --load-filaments",
-            )
-            .into());
-        }
-    };
+    );
     let input = &args.inputs[0];
     let directory = args
         .outputdir
@@ -106,16 +96,16 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
         );
     }
     enum ProjectPresets<'a> {
-        Replace(&'a str, &'a str),
+        Replace(Option<&'a str>, Option<&'a str>),
         Saved(Option<UpwardMachineSource>, Option<Vec<u8>>),
     }
-    let presets = match presets {
-        Some((settings, filaments)) => ProjectPresets::Replace(settings, filaments),
-        None => {
+    let presets = match files {
+        (None, None) => {
             let resources = crate::installed_resources::resolve(None)?;
             let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
             ProjectPresets::Saved(source, machine)
         }
+        (settings, filaments) => ProjectPresets::Replace(settings, filaments),
     };
     let context = crate::custom_gcodes::load(
         SlicerContext::new(0).with_no_check(args.no_check),
@@ -204,7 +194,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
 
 async fn slice_with_replacement(
     (input, bytes, plate, output): (&Path, &[u8], u32, &Path),
-    (settings, filaments, datadir): (&str, &str, Option<&Path>),
+    (settings, filaments, datadir): (Option<&str>, Option<&str>, Option<&Path>),
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
@@ -212,8 +202,8 @@ async fn slice_with_replacement(
     if let Err(error) = ares_core::validate_load_settings_input(bytes) {
         return Ok(Err(error));
     }
-    let settings = read_preset_files(&split_native_list(settings))?;
-    let filaments = read_preset_files(&split_native_list(filaments))?;
+    let settings = read_preset_files(&settings.map(split_native_list).unwrap_or_default())?;
+    let filaments = read_preset_files(&filaments.map(split_native_list).unwrap_or_default())?;
     let settings = settings
         .iter()
         .map(|(label, json, source_identity)| LoadSettingsFile {
