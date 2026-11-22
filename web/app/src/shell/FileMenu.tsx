@@ -2,6 +2,7 @@ import { useRouter } from "@tanstack/react-router";
 import { type KeyboardEvent, type MouseEvent, type RefObject, useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { exportGcode, newProject } from "../state/actions";
+import { saveProject, saveProjectBlocker } from "../state/saveProject";
 import { useApp } from "../state/store";
 import { OrcaIcon } from "./icons";
 import { ctrlLabel, mac } from "./keys";
@@ -38,7 +39,8 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
   projectInput: RefObject<HTMLInputElement | null>;
   presetInput: RefObject<HTMLInputElement | null>;
 }) {
-  const { engine, file, loadingFile, slice } = useApp();
+  const state = useApp();
+  const { engine, file, loadingFile, slice } = state;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<string | null>(null);
@@ -48,6 +50,8 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
   const menuId = useId();
   const ready = engine === "ready";
   const slicing = slice.status === "slicing";
+  const saveReason = saveProjectBlocker(state);
+  const save = saveReason ? undefined : () => void saveProject();
 
   const close = () => {
     setOpen(false);
@@ -62,8 +66,8 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
     { label: "New Project", run: slicing ? undefined : () => (file ? setConfirming(true) : startNewProject()) },
     { label: "Open Project…", key: "O", run: ready && !loadingFile && !slicing ? () => projectInput.current!.click() : undefined },
     { label: "Recent files", reason: "Recent files are not kept in the browser yet.", submenu: [] },
-    { label: "Save Project", reason: WRITER },
-    { label: "Save Project as…", reason: WRITER },
+    { label: "Save Project", run: save, reason: saveReason },
+    { label: "Save Project as…", run: save, reason: saveReason },
     "-",
     { label: "Import", submenu: [
       { label: "Import 3MF/STL…", key: "I", run: ready && !loadingFile ? () => importInput.current!.click() : undefined },
