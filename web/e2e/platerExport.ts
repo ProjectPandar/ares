@@ -9,7 +9,7 @@ const GROUPS = ["compatible_machine_expression_group", "compatible_process_expre
 
 /**
  * The 3MF `out` the plater saves after the session `selection`, which the preset-select probe replayed on the
- * opened 3MF `opened`: the model is the opened one, the project config is full_config_secure() (Plater.cpp:19779),
+ * opened 3MF `opened`: the model is the opened one, the project config is full_config_secure() (Plater.cpp:20493),
  * the probe's full_fff_config, with the sidebar edits `edit` on top.
  */
 export function platerExport(selection: NativeSelection, opened: string, out: string, edit: Record<string, unknown> = {}) {
@@ -35,9 +35,9 @@ function bedSize(config: Record<string, unknown>): [number, number, number] {
  *   4414-4443, 4619-4685): by the difference of the bed centres;
  * - curr_bed_type is the printer's default_bed_type, which Sidebar::update_presets selects for a printer without a
  *   stored bed type (Plater.cpp:3880-3900, Preset.cpp:1140-1150), where the probe keeps the wizard's;
- * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216);
- * - one filament preset in every slot, of one colour, turns the prime tower off and records it in the process
- *   column of different_settings_to_system (2531-2535, 3880-3888, 4316-4343), sized filament count + 2 (3202-3205).
+ * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216).
+ * The one-colour prime-tower rule (2531-2535, 4316-4343) is CLI::run's alone: the plater applies full_fff_config to
+ * the print as it is (Plater.cpp:11429-11442), so the export keeps the session's enable_prime_tower.
  */
 export function cliSwitchedExport(selection: NativeSelection, opened: string, out: string): NativeSelection {
   const entries = unzipSync(readFileSync(opened));
@@ -60,14 +60,6 @@ export function cliSwitchedExport(selection: NativeSelection, opened: string, ou
     wipe_tower_y: moved(plater.wipe_tower_y as string[], y),
     curr_bed_type: bedType,
   });
-  // 4291-4320 keep the tower for wrapping detection, a mixed filament or a smooth timelapse.
-  expect(plater.enable_wrapping_detection !== "1" && !(plater.filament_is_mixed as string[]).includes("1") && plater.timelapse_type !== "1",
-    "no tower kept by 4291-4320").toBe(true);
-  const colours = new Set((plater.filament_colour as string[]).filter((colour) => colour !== ""));
-  if (new Set(selection.filament_presets).size === 1 && colours.size === 1) {
-    config.enable_prime_tower = "0";
-    config.different_settings_to_system = ["enable_prime_tower", ...selection.filament_presets.map(() => ""), ""];
-  }
   entries[PROJECT_CONFIG] = strToU8(JSON.stringify(config));
   writeFileSync(out, zipSync(entries));
   return { ...selection, full_fff_config: JSON.stringify(config) };
@@ -117,10 +109,46 @@ export function withPlaterConfigLines(gcode: string, session: NativeSelection) {
 }
 
 /**
- * `session` with the plater keeping `different_settings_to_system`: the browser's 3MF slice still runs the CLI's
- * one-colour prime-tower rule (OrcaSlicer.cpp:4323-4342), which records `enable_prime_tower`, and an edit dirties
- * the process column as the plater's edited print does (PresetBundle.cpp:5586-5595).
+ * `session` keeping `different_settings_to_system`: an edit dirties the process column as the plater's edited print
+ * does (PresetBundle.cpp:5586-5595), and a CLI `--load-filaments` reference keeps the column the one-colour
+ * prime-tower rule records for withPlaterTower.
  */
 export function withDifferences(session: NativeSelection): NativeSelection {
   return { ...session, full_fff_config: JSON.stringify({ different_settings_to_system: [], ...JSON.parse(session.full_fff_config) }) };
+}
+
+const TOWER_LINES = ["; enable_prime_tower = ", "; different_settings_to_system = "];
+
+/** The entries of a config line value, unquoted (Config.cpp:99-139 escape_strings_cstyle). */
+function configEntries(value: string) {
+  return [...value.matchAll(/"((?:[^"\\]|\\.)*)"|([^;]*)/g)].filter((match) => match.index === 0 || value[match.index - 1] === ";")
+    .map((match) => match[1] ?? match[2]);
+}
+
+/**
+ * `expected`, a Native CLI `--load-filaments` reference for the one-filament plater `session`, with the plater's
+ * prime tower. CLI::run alone turns the tower off for one mapped preset (OrcaSlicer.cpp:2531-2535, 4316-4343); the
+ * plater applies full_fff_config as it is (Plater.cpp:11429-11442). With one filament the setting prints no tower
+ * (Print.cpp:5205), so only two config lines differ, and `browser` must equal `expected` without them:
+ * - enable_prime_tower takes the session's full_fff_config value;
+ * - different_settings_to_system loses the enable_prime_tower the rule appends to the process column (4330-4340),
+ *   and the line goes when every entry is empty, as the plater stores no empty group (PresetBundle.cpp:5826-5838).
+ */
+export function withPlaterTower(expected: string, browser: string, session: NativeSelection) {
+  expect(session.filament_presets, "one filament prints no tower (Print.cpp:5205)").toHaveLength(1);
+  const others = (gcode: string) => gcode.split("\n").filter((line) => !TOWER_LINES.some((key) => line.startsWith(key))).join("\n");
+  expect(others(browser) === others(expected), "the browser differs from the CLI reference only in the two tower lines").toBe(true);
+  const plater = JSON.parse(session.full_fff_config) as { enable_prime_tower: string };
+  const lines = expected.split("\n");
+  const tower = lines.findIndex((line) => line.startsWith(TOWER_LINES[0]));
+  expect(lines[tower], "the CLI rule turns the tower off").toBe(`${TOWER_LINES[0]}0`);
+  lines[tower] = `${TOWER_LINES[0]}${plater.enable_prime_tower}`;
+  const dirty = lines.findIndex((line) => line.startsWith(TOWER_LINES[1]));
+  const columns = configEntries(lines[dirty].slice(TOWER_LINES[1].length));
+  const keys = columns[0].split(";");
+  expect(keys.at(-1), "the CLI rule appends enable_prime_tower last").toBe("enable_prime_tower");
+  columns[0] = keys.slice(0, -1).join(";");
+  if (columns.every((column) => column === "")) lines.splice(dirty, 1);
+  else lines[dirty] = `${TOWER_LINES[1]}${columns.map((column) => (column.includes(";") ? `"${column}"` : column)).join(";")}`;
+  return lines.join("\n");
 }
