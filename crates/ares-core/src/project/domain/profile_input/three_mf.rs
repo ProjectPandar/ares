@@ -125,9 +125,10 @@ impl Project {
         overrides.apply(&mut merged)?;
         // The one-colour prime-tower rule is CLI::run's alone (OrcaSlicer.cpp:2531-2535,
         // 4316-4343); the plater applies full_fff_config as it is (Plater.cpp:11429-11442).
+        // It needs a BBL-family 3MF (`is_bbl_3mf`, :2531).
         if full_fff_config.is_some() {
             crate::profiles::FullFffGroups::store(&mut merged);
-        } else {
+        } else if project.documents.bbl_family_3mf {
             mapped_prime_tower::disable_after_mapping(
                 &mut merged,
                 settings,
