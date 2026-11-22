@@ -14,9 +14,18 @@ test("Pages serves the production app, isolated WASM and module worker", async (
   const wasm = await wasmResponse;
   expect(wasm.ok()).toBe(true);
   expect(wasm.headers()["content-type"]).toContain("application/wasm");
-  await expect(page.getByRole("button", { name: "Import", exact: true })).toBeEnabled({ timeout: 60_000 });
+  const fileButton = page.getByRole("button", { name: "File", exact: true });
+  const importMenuItem = page.getByRole("menu", { name: "File", exact: true })
+    .getByRole("menuitem", { name: "Import", exact: true });
+  const importItem = page.getByRole("menu", { name: "Import", exact: true })
+    .getByRole("menuitem", { name: "Import 3MF/STL…", exact: true });
+  await fileButton.click();
+  await importMenuItem.click();
+  await expect(importItem).toBeEnabled({ timeout: 60_000 });
   await page.reload();
-  await expect(page.getByRole("button", { name: "Import", exact: true })).toBeEnabled();
+  await fileButton.click();
+  await importMenuItem.click();
+  await expect(importItem).toBeEnabled();
   for (const asset of readdirSync("app/dist/assets")) {
     expect(statSync(`app/dist/assets/${asset}`).size).toBeLessThanOrEqual(25 * 1024 * 1024);
     const result = await request.get(`/assets/${asset}`);
