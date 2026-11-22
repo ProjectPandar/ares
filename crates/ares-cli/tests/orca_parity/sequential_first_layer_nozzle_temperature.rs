@@ -1,7 +1,7 @@
 use crate::{OrcaRunner, runner::native_api_cli::NativeCase};
 use ares_core::GenerationMetadata;
 use serde_json::{Value, json};
-use std::{fs, io::Cursor};
+use std::io::Cursor;
 use zip::write::SimpleFileOptions;
 
 const SEQUENTIAL: &[u8] =
@@ -31,7 +31,7 @@ fn sequential_auto_for_flush_publishes_footer_maps_with_an_unused_tool() {
     let expected = restart_nozzle_commands(&case.native);
     assert_eq!(expected.len(), 1);
     assert!(expected[0].starts_with("G10 S") && expected[0].contains(" P1 "));
-    let (api, cli) = slice_plate(&case, SECOND_TOOL);
+    let (api, cli) = compare_used_tool_output(&case);
     assert_eq!(restart_nozzle_commands(&api), expected, "API restart");
     assert_eq!(restart_nozzle_commands(&cli), expected, "CLI restart");
     assert_footer_maps(&case.native, &api, &cli);
@@ -44,36 +44,15 @@ fn by_layer_auto_for_flush_publishes_footer_maps_with_an_unused_tool() {
     };
     let project = non_sequential_project();
     let case = NativeCase::slice(&runner, &project, "non-sequential-two-tool-footer-maps-");
-    let (api, cli) = slice_plate(&case, &project);
+    let (api, cli) = compare_used_tool_output(&case);
     assert_footer_maps(&case.native, &api, &cli);
 }
 
-fn slice_plate(case: &NativeCase, project: &[u8]) -> (String, String) {
-    let api = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(crate::runner::application::slice_project_plate_validated(
-            project,
-            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            Some(1),
-            &ares_core::ConfigOverrides::default(),
-            ares_core::SlicerContext::new(0),
-        ))
-        .unwrap();
-    fs::write(case.root.join("ares.api.gcode"), &api).unwrap();
-    let cli_path = case.root.join("ares.cli.gcode");
-    let cli = crate::runner::application::cli_command()
-        .args(["slice", "--plate", "1", "-o"])
-        .arg(&cli_path)
-        .arg(case.root.join("input.3mf"))
-        .output()
-        .unwrap();
-    fs::write(case.root.join("ares.cli.stdout"), cli.stdout).unwrap();
-    fs::write(case.root.join("ares.cli.stderr"), cli.stderr).unwrap();
-    assert!(cli.status.success(), "CLI at {:?}", case.root);
+fn compare_used_tool_output(case: &NativeCase) -> (String, String) {
+    let (api, cli) = case.compare(GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0));
     (
         String::from_utf8(api).unwrap(),
-        fs::read_to_string(cli_path).unwrap(),
+        String::from_utf8(cli).unwrap(),
     )
 }
 
