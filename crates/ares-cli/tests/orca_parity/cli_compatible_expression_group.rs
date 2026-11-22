@@ -115,6 +115,7 @@ const STOCK: &[u8] = include_bytes!("../../../../tests/parity/adaptive-cubic-bod
 fn installed_stock_slice_keeps_the_effective_filament_config() {
     let (root, native, ares) = run_installed_pair(
         STOCK,
+        &[],
         &["--slice", "1", "--outputdir", "out", "input.3mf"],
         Stage::Slice,
         "out/plate_1.gcode",
@@ -151,6 +152,7 @@ fn compare_saved_settings(project: &[u8]) {
 
     let (root, native, ares) = run_installed_pair(
         project,
+        &[],
         &["--export-settings", "settings.json", "input.3mf"],
         Stage::Export,
         "settings.json",
@@ -169,8 +171,13 @@ fn compare_saved_settings(project: &[u8]) {
 }
 
 #[cfg(unix)]
+#[path = "cli_compatible_expression_group/bbl_settings_export.rs"]
+mod bbl_settings_export;
+
+#[cfg(unix)]
 fn run_installed_pair(
     project: &[u8],
+    presets: &[(&str, &[u8])],
     argv: &[&str],
     stage: Stage,
     output: &str,
@@ -182,6 +189,9 @@ fn run_installed_pair(
         .unwrap()
         .keep();
     fs::write(root.join("input.3mf"), project).unwrap();
+    for (filename, bytes) in presets {
+        fs::write(root.join(filename), bytes).unwrap();
+    }
     stages::run(
         runner.bin(),
         argv.iter().map(|arg| (*arg).to_owned()),
