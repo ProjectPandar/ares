@@ -51,6 +51,17 @@ pub struct SlicedPlate {
     pub layer_height: f64,
     pub wall_loops: i32,
     pub sparse_infill_density: f64,
+    /// Requested object bounding-box dimensions for the selected plate in millimetres.
+    pub object_size: Option<[f64; 3]>,
+}
+
+impl SlicedPlate {
+    pub fn with_size(measure: bool) -> Self {
+        Self {
+            object_size: measure.then_some([0.0; 3]),
+            ..Self::default()
+        }
+    }
 }
 
 #[derive(Clone, Copy)]

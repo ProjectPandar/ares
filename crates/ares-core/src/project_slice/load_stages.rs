@@ -32,6 +32,10 @@ pub(super) fn prepare_post_closing(
             };
             if let Some(report) = report {
                 state::slice_report(&state.project, &state.resolved, report)?;
+                if let Some(size) = &mut report.object_size {
+                    let (min, max) = state.project.instances_world_bbox();
+                    *size = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
+                }
             }
             state
         }

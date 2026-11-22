@@ -29,6 +29,7 @@ pub(super) struct FamilyFailure {
     #[cfg(target_os = "linux")]
     error_string: String,
     upward_machines: Vec<String>,
+    downward_machines: Vec<String>,
     #[cfg(target_os = "linux")]
     warnings: Vec<crate::result_json::CliWarning>,
     #[cfg(target_os = "linux")]
@@ -89,6 +90,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: error_string.into(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -133,6 +135,7 @@ impl CliFailure {
             #[cfg(target_os = "linux")]
             error_string: "The input files to the slicer are not found.".to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]
@@ -150,6 +153,63 @@ impl CliFailure {
             family.upward_machines = upward;
         }
         self
+    }
+
+    pub(super) fn downward_missing(input: &Path, _output: &Path) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -3,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "The input files to the slicer are not found.".to_owned(),
+            upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            plate_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
+            stderr: format!(
+                "operator(): can not find setting file: {}\n",
+                input.display()
+            ),
+            #[cfg(target_os = "linux")]
+            output: _output.to_owned(),
+        }))
+    }
+
+    pub(super) fn downward_config(_output: &Path) -> Self {
+        Self::Family(Box::new(FamilyFailure {
+            return_code: -5,
+            #[cfg(target_os = "linux")]
+            plate_index: 0,
+            #[cfg(target_os = "linux")]
+            layer_height: 0.0,
+            #[cfg(target_os = "linux")]
+            wall_loops: 0,
+            #[cfg(target_os = "linux")]
+            sparse_infill_density: 0.0,
+            #[cfg(target_os = "linux")]
+            error_string: "The input preset file is invalid and can not be parsed.".to_owned(),
+            upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
+            #[cfg(target_os = "linux")]
+            warnings: Vec::new(),
+            #[cfg(target_os = "linux")]
+            plate_warning: None,
+            #[cfg(target_os = "linux")]
+            completed: Vec::new(),
+            stderr: String::new(),
+            #[cfg(target_os = "linux")]
+            output: _output.to_owned(),
+        }))
     }
 
     /// `cli_report_config_substitutions` (`OrcaSlicer.cpp:520-534`) after the 3MF load (`:1992`):

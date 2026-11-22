@@ -113,6 +113,7 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
         wall_loops: 0,
         sparse_infill_density: 0.0,
         upward_machines: &[],
+        downward_machines: &[],
         sliced_plates: &[],
         warnings: &[],
     }

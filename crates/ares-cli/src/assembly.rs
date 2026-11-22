@@ -261,6 +261,7 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
             plate_index: args.plate.unwrap_or(0),
             sliced_plate,
             upward_machines: &[],
+            downward_machines: &[],
         },
     );
     Ok(())

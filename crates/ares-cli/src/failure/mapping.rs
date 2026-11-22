@@ -31,6 +31,7 @@ pub(crate) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             error_string: error_string.to_owned(),
             upward_machines: Vec::new(),
+            downward_machines: Vec::new(),
             #[cfg(target_os = "linux")]
             warnings: Vec::new(),
             #[cfg(target_os = "linux")]

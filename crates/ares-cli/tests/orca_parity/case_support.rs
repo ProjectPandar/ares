@@ -229,3 +229,6 @@ mod cli_allow_mix_temp;
 
 #[path = "cli_allow_newer_file.rs"]
 mod cli_allow_newer_file;
+
+#[path = "cli_downward_machine_result.rs"]
+mod cli_downward_machine_result;
