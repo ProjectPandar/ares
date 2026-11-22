@@ -40,7 +40,7 @@ fn export_saved_settings(
     let upward = project.documents().bbl_family_3mf;
     project.initialize_cli_loaded_project_config(filament_count, upward);
     let documents = project.documents();
-    let mut raw = if documents.bbl_family_3mf
+    let raw = if documents.bbl_family_3mf
         && let Some(catalog) = catalog
     {
         let refreshed = catalog.refresh_direct_filaments(&documents.project_settings_raw)?;
@@ -54,6 +54,16 @@ fn export_saved_settings(
     } else {
         documents.project_settings_raw.clone()
     };
+    export_prepared_settings(&project, raw, &preparation, &overrides, filament_count)
+}
+
+pub(crate) fn export_prepared_settings(
+    project: &super::Project,
+    mut raw: ProjectSettingsRaw,
+    preparation: &flush_matrix::PreparationContext,
+    overrides: &ConfigOverrides,
+    filament_count: usize,
+) -> Result<Vec<u8>, SliceError> {
     // OrcaSlicer.cpp:3849–4023 prepares the missing matrix before default completion.
     if !raw.contains_key("flush_volumes_matrix") {
         let source = project.settings();
@@ -65,7 +75,7 @@ fn export_saved_settings(
             .filament_settings_id
             .0
             .truncate(filament_count);
-        flush_matrix::prepare(&mut settings, &raw, &preparation, &overrides)?;
+        flush_matrix::prepare(&mut settings, &raw, preparation, overrides)?;
         let colours = &settings.filament.gcode.filament_colour;
         if *colours != source.filament.gcode.filament_colour {
             raw.insert_strings("filament_colour", &colours.0);
