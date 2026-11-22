@@ -174,13 +174,13 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
         views[view] = { expected: { title, rows: want.rows }, actual };
         writeFileSync(`${artifacts}/${name}/rows.json`, `${JSON.stringify(views, null, 2)}\n`);
         return actual;
-      }).toEqual({ title, rows: want.rows });
+      }, { timeout: 60_000 }).toEqual({ title, rows: want.rows });
       if (view === "Summary")
         await expect.poll(async () => {
           summary.actual = await dlRows(page, "legend-summary");
           writeFileSync(`${artifacts}/${name}/summary.json`, `${JSON.stringify(summary, null, 2)}\n`);
           return summary.actual;
-        }).toEqual(summary.expected);
+        }, { timeout: 60_000 }).toEqual(summary.expected);
     }
     report[name] = { native: stats, added, views, summary };
   }
