@@ -38,11 +38,10 @@ formatter defect.
 ## Scope and relationship to existing publication
 
 For multi-object by-object printing, extend the existing entry condition
-only for non-BBL static automatic mapping on multi-head printers with one
-nozzle per head. This covers `Auto For Flush` and `Auto For Match`, which
-use the same static non-BBL branch. Keep the current single-head and
-one-object admission conditions unchanged. No new assignment policy or
-footer-specific logic is needed.
+only for non-BBL static `Auto For Flush` mapping on multi-head printers
+with one nozzle per head. Keep the current single-head and one-object
+admission conditions unchanged. `Auto For Match` is outside this change.
+No new assignment policy or footer-specific logic is needed.
 
 The change touches the same file and function (`recommend.rs::build_recommended`)
 as the non-BBL used-only map rewrite `971b136e4`, but not the line it added
@@ -69,7 +68,7 @@ rewrite or normalize the extra command. Do not commit Native outputs.
 
 Pair the test-only and implementation revisions with the official and
 seeded Native runners across filament-map, flush, tool-ordering,
-multi-tool and multi-nozzle families. Include both landed
+multi-tool, multi-nozzle, sequential and 3MF families. Include both landed
 `non_bbl_auto_map` cases explicitly: `non_bbl_auto_map_keeps_three_unused_filament_assignments`
 and `non_bbl_auto_map_changes_only_the_used_second_filament`. Previously
 passing cases must remain passing. Run formatting, strict workspace
