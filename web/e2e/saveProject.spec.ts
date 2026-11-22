@@ -7,6 +7,7 @@ import { expect, type Page } from "@playwright/test";
 import { strFromU8, unzipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { projectConfig, saveProjectFixture } from "./saveProjectFixture";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -74,12 +75,38 @@ function nativeExport(project: string, destination: string, leg: "official" | "s
 }
 
 test("Save Project downloads edited objects, plate assignments and settings that reopen", async ({ page, context }, info) => {
-  await openProject(page, saveProjectFixture());
+  // The headless executable checks compatibility against system presets; the GUI
+  // also accepts project-local presets when this vendor is missing.
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Printer preset", exact: true }).click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
+  const printers = page.getByRole("dialog", { name: "Printer Selection" });
+  await printers.getByRole("checkbox", { name: "Bambu Lab X1 Carbon", exact: true }).check();
+  await printers.getByRole("button", { name: "Confirm" }).click();
+  await expect(printers).toHaveCount(0, { timeout: 60_000 });
+  const opened = info.outputPath("opened", "Brackets.3mf");
+  mkdirSync(resolve(opened, ".."), { recursive: true });
+  const probe = presetSelectProbe();
+  let expectedConfig: string | undefined;
+  if (probe) {
+    const template = info.outputPath("template", "Brackets.3mf");
+    mkdirSync(resolve(template, ".."), { recursive: true });
+    writeFileSync(template, saveProjectFixture());
+    const { full_fff_config: config } = nativeSelection(probe, `${info.outputPath("native-unedited")}/`, template, ["BBL"]);
+    writeFileSync(opened, saveProjectFixture({ config }));
+    expectedConfig = nativeSelection(probe, `${info.outputPath("native-edited")}/`, opened, ["BBL"], {
+      process_edit: { layer_height: "0.27" },
+    }).full_fff_config;
+  } else {
+    writeFileSync(opened, saveProjectFixture());
+  }
+  await openProject(page, opened);
   await object(page).click();
   await commit(page, "Position X", "145.5");
   await expect(field(page, "Position X")).toHaveValue("145.50");
-  await commit(page, "Rotate (absolute) Z", "90");
-  await expect(field(page, "Rotate (absolute) Z")).toHaveValue("90.00");
+  await commit(page, "Rotate (absolute) Z", "60");
+  await expect(field(page, "Rotate (absolute) Z")).toHaveValue("60.00");
   await selectQuality(page);
   await commit(page, "layer_height", "0.27");
   await expect(field(page, "layer_height")).toHaveValue("0.27");
@@ -94,7 +121,15 @@ test("Save Project downloads edited objects, plate assignments and settings that
   expect(comparedMembers(repeat)).toEqual(comparedMembers(downloaded));
 
   const archive = unzipSync(readFileSync(downloaded));
-  expect(JSON.parse(strFromU8(archive[projectConfig])).layer_height).toBe("0.27");
+  const saved = JSON.parse(strFromU8(archive[projectConfig]));
+  expect(saved.layer_height).toBe("0.27");
+  if (expectedConfig !== undefined) {
+    const expected = JSON.parse(expectedConfig);
+    for (const key of ["filament_colour_type", "flush_volumes_matrix", "flush_volumes_vector"]) {
+      expect(expected[key], `Native ${key}`).toBeDefined();
+      expect(saved[key], `saved ${key}`).toEqual(expected[key]);
+    }
+  }
   expect(strFromU8(archive["Metadata/model_settings.config"])).not.toContain('key="gcode_file"');
   expect(Object.keys(archive).filter((name) => /\.gcode(?:\.md5)?$/.test(name))).toEqual([]);
 
@@ -114,8 +149,10 @@ test("Save Project downloads edited objects, plate assignments and settings that
   await expect(field(fresh, "layer_height")).toHaveValue("0.27");
   await fresh.close();
 
-  const reference = info.outputPath("reference.3mf");
-  writeFileSync(reference, saveProjectFixture({ edited: true }));
+  if (expectedConfig === undefined) return;
+  const reference = info.outputPath("reference", "Brackets.3mf");
+  mkdirSync(resolve(reference, ".."), { recursive: true });
+  writeFileSync(reference, saveProjectFixture({ config: expectedConfig, edited: true }));
   for (const leg of ["official", "seeded"] as const) {
     const fromWeb = info.outputPath(leg, "download", "exported.3mf");
     const fromReference = info.outputPath(leg, "reference", "exported.3mf");
