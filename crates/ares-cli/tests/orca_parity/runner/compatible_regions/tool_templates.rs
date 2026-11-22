@@ -37,6 +37,9 @@ mod pre_heating;
 #[path = "tool_templates/printer_columns.rs"]
 mod printer_columns;
 
+#[path = "tool_templates/retraction_options.rs"]
+mod retraction_options;
+
 #[test]
 fn printing_toolchange_restores_pressure_advance_after_filament_start() {
     if !crate::runner::reference_available() {
