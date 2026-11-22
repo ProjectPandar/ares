@@ -1,7 +1,10 @@
 //! Headless branch of `bbs_3mf.cpp:6418`, `_save_model_to_file`.
 mod geometry;
 mod project_settings;
+mod scene;
 mod xml;
+
+pub use scene::export_project_3mf;
 mod zip_records;
 
 use std::io::{Cursor, Seek, Write};
@@ -66,7 +69,7 @@ pub fn export_3mf(
     }
     let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
     let settings = project_settings::write(&presets)?;
-    write_package(&[object], &[], settings, None)
+    write_package(&[object], &[], settings, None, None)
 }
 
 pub fn export_sliced_3mf(
@@ -115,6 +118,7 @@ pub fn export_sliced_3mf(
             filament_sequence,
             orca_version: saved.orca_version,
         }),
+        None,
     )
 }
 
@@ -123,6 +127,7 @@ fn write_package(
     identify_ids: &[u32],
     settings: Vec<u8>,
     sliced: Option<SlicedMembers>,
+    scene: Option<&scene::SceneLayout<'_>>,
 ) -> Result<Vec<u8>, SliceError> {
     let mut next_id = 1;
     let objects = objects
@@ -142,7 +147,7 @@ fn write_package(
         })
         .collect::<Vec<_>>();
     let sliced_output = sliced.is_some();
-    let model_settings = xml::model_settings(&objects, sliced_output).into_bytes();
+    let model_settings = xml::model_settings(&objects, sliced_output, scene).into_bytes();
     let mut entries = vec![("[Content_Types].xml", xml::content_types().into_bytes())];
     if let Some(sliced) = &sliced {
         entries.push(("Metadata/plate_1.json", sliced.plate_json.clone()));
@@ -181,6 +186,11 @@ fn write_package(
             ),
         ]);
         (sliced.slice_info, sliced.filament_sequence)
+    } else if let Some(scene) = scene {
+        (
+            xml::slice_info_header().into_bytes(),
+            scene.filament_sequence(),
+        )
     } else {
         (
             xml::slice_info_header().into_bytes(),

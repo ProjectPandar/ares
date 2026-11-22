@@ -4,7 +4,9 @@ use super::super::{
     ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_xml::ModelDocument,
 };
 use super::{MODEL, deferred, invalid};
-use crate::SliceError;
+use crate::{Point3d, SliceError};
+
+use super::super::model_settings::{MeshStatistics, Metadata, PartSettings};
 
 pub(super) struct Mesh {
     pub name: String,
@@ -16,8 +18,24 @@ pub(super) struct Mesh {
 
 pub(super) struct Object {
     pub name: String,
-    pub placement: [f64; 3],
+    pub instances: Vec<Instance>,
     pub parts: Vec<Part>,
+    pub metadata: Vec<Metadata>,
+    pub auto_drop: bool,
+}
+
+pub(super) struct Instance {
+    pub transform: Transform3d,
+    pub printable: bool,
+}
+
+impl Instance {
+    fn at([x, y, z]: [f64; 3]) -> Self {
+        Self {
+            transform: Transform3d::IDENTITY.translated(Point3d::new(x, y, z)),
+            printable: true,
+        }
+    }
 }
 
 pub(super) struct Part {
@@ -27,6 +45,8 @@ pub(super) struct Part {
     pub source_file: String,
     pub source_object: i32,
     pub source_volume: i32,
+    pub metadata: Vec<Metadata>,
+    pub mesh_stat: Option<MeshStatistics>,
 }
 
 pub(super) struct SavedModel {
@@ -38,7 +58,9 @@ impl Object {
     pub(super) fn unsliced(mesh: Mesh, filename: &str) -> Self {
         Self {
             name: mesh.name.clone(),
-            placement: mesh.placement,
+            instances: vec![Instance::at(mesh.placement)],
+            metadata: cli_object_metadata(),
+            auto_drop: true,
             parts: vec![Part {
                 mesh,
                 transform: Transform3d::IDENTITY,
@@ -46,12 +68,21 @@ impl Object {
                 source_file: filename.to_owned(),
                 source_object: 0,
                 source_volume: 0,
+                metadata: Vec::new(),
+                mesh_stat: None,
             }],
         }
     }
 }
 
-fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
+fn cli_object_metadata() -> Vec<Metadata> {
+    vec![Metadata {
+        key: "extruder".into(),
+        value: "1".into(),
+    }]
+}
+
+pub(super) fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
     use quick_xml::events::Event;
 
     let mut reader = quick_xml::Reader::from_reader(model);
@@ -133,7 +164,9 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
             let offset = instance.transform().to_column_major();
             Ok(Object {
                 name: object.name().to_owned(),
-                placement: [offset[12], offset[13], offset[14]],
+                instances: vec![Instance::at([offset[12], offset[13], offset[14]])],
+                metadata: cli_object_metadata(),
+                auto_drop: true,
                 parts: object
                     .volumes()
                     .iter()
@@ -154,7 +187,7 @@ pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
 
 fn saved_part(
     volume: &crate::ProjectVolume,
-    settings: &[super::super::model_settings::PartSettings],
+    settings: &[PartSettings],
 ) -> Result<Part, SliceError> {
     let part = settings
         .iter()
@@ -163,13 +196,17 @@ fn saved_part(
     if volume.volume_type() != crate::ProjectVolumeType::ModelPart {
         return Err(deferred("expected ordinary model parts"));
     }
+    Ok(model_part(volume, Some(part)))
+}
+
+pub(super) fn model_part(volume: &crate::ProjectVolume, part: Option<&PartSettings>) -> Part {
     let metadata = |key| {
-        part.retained_metadata
-            .iter()
+        part.into_iter()
+            .flat_map(|part| &part.retained_metadata)
             .find(|entry| entry.key == key)
             .map_or("", |entry| entry.value.as_str())
     };
-    Ok(Part {
+    Part {
         mesh: Mesh {
             name: volume.name().to_owned(),
             vertices: volume
@@ -193,7 +230,9 @@ fn saved_part(
         source_file: metadata("source_file").to_owned(),
         source_object: metadata("source_object_id").parse().unwrap_or(-1),
         source_volume: metadata("source_volume_id").parse().unwrap_or(-1),
-    })
+        metadata: Vec::new(),
+        mesh_stat: None,
+    }
 }
 
 pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {

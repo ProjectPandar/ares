@@ -19,7 +19,7 @@ pub(crate) fn deserialize_object_model_field(
     value: String,
     object: &mut ObjectOptionOverrides,
     region: &mut RegionOptionOverrides,
-) -> Result<(), SliceError> {
+) -> Result<Option<(String, String)>, SliceError> {
     deserialize_model_field(key, value, Owners::Object { object, region })
 }
 
@@ -27,7 +27,7 @@ pub(crate) fn deserialize_region_model_field(
     key: String,
     value: String,
     region: &mut RegionOptionOverrides,
-) -> Result<(), SliceError> {
+) -> Result<Option<(String, String)>, SliceError> {
     deserialize_model_field(key, value, Owners::Region(region))
 }
 
@@ -43,9 +43,9 @@ fn deserialize_model_field(
     source: String,
     value: String,
     mut owners: Owners<'_>,
-) -> Result<(), SliceError> {
+) -> Result<Option<(String, String)>, SliceError> {
     let Some((target, value)) = normalize_model_field(&source, value)? else {
-        return Ok(());
+        return Ok(None);
     };
 
     let assigned = match &mut owners {
@@ -63,11 +63,11 @@ fn deserialize_model_field(
     .map_err(|error| legacy_error(&source, target, error))?;
 
     if assigned {
-        return Ok(());
+        return Ok(Some((target.to_owned(), value)));
     }
 
     validate_model_config_value(target, &value)
-        .map(drop)
+        .map(|_| None)
         .map_err(|error| legacy_error(&source, target, error))
 }
 

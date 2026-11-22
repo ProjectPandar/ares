@@ -4,7 +4,10 @@ use serde::Serialize;
 
 use super::{BAMBU_VERSION, ObjectEntry, PLATE_GCODE};
 use crate::ORCA_SLICER_COMPATIBILITY_VERSION as ORCA_VERSION;
-use crate::{ProcessedGCode, SlicedArchive};
+use crate::{ProcessedGCode, SlicedArchive, Transform3d};
+
+use super::scene::SceneLayout;
+use crate::project::model_settings::Metadata;
 
 const DECL: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 const MODEL_OPEN: &str = concat!(
@@ -14,7 +17,17 @@ const MODEL_OPEN: &str = concat!(
     "xmlns:p=\"http://schemas.microsoft.com/3dmanufacturing/production/2015/06\" requiredextensions=\"p\">\n"
 );
 const VERSION_METADATA: &str = " <metadata name=\"BambuStudio:3mfVersion\">1</metadata>\n";
-const IDENTITY: &str = "1 0 0 0 1 0 0 0 1";
+pub(super) fn transform_3mf(transform: Transform3d) -> String {
+    let column_major = transform.to_column_major();
+    numbers(
+        column_major
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .flat_map(|column| &column[..3])
+            .copied(),
+    )
+}
 
 pub(super) fn content_types() -> String {
     let mut out = format!(
@@ -108,15 +121,7 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
         let path = quick_xml::escape::escape(path);
         writeln!(out, "  <object id=\"{id}\" p:UUID=\"{backup_id:08x}-61cb-4c03-9d28-80fed5dfa1dc\" type=\"model\">\n   <components>").unwrap();
         for (id, prefix, part) in object.parts() {
-            let column_major = part.transform.to_column_major();
-            let transform = numbers(
-                column_major
-                    .as_chunks::<4>()
-                    .0
-                    .iter()
-                    .flat_map(|column| &column[..3])
-                    .copied(),
-            );
+            let transform = transform_3mf(part.transform);
             writeln!(out, "    <component p:path=\"/{path}\" objectid=\"{id}\" p:UUID=\"{prefix:08x}-b206-40ff-9872-83e8017abed1\" transform=\"{transform}\"/>").unwrap();
         }
         out.push_str("   </components>\n  </object>\n");
@@ -124,8 +129,11 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
     out.push_str(" </resources>\n <build p:UUID=\"2c7c17d8-22b5-4d84-8835-1976022ea369\">\n");
     for object in objects {
         let id = object.id;
-        let [x, y, z] = object.object.placement.map(number);
-        writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{IDENTITY} {x} {y} {z}\" printable=\"1\"/>").unwrap();
+        for instance in &object.object.instances {
+            let transform = transform_3mf(instance.transform);
+            let printable = u8::from(instance.printable);
+            writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{transform}\" printable=\"{printable}\"/>").unwrap();
+        }
     }
     out.push_str(" </build>\n</model>\n");
     out
@@ -148,12 +156,30 @@ pub(super) fn mesh_model(object: &ObjectEntry<'_>) -> String {
     out
 }
 
-pub(super) fn model_settings(objects: &[ObjectEntry<'_>], sliced: bool) -> String {
+pub(super) fn metadata(out: &mut String, indent: &str, key: &str, value: &str) {
+    let key = quick_xml::escape::escape(key);
+    let value = quick_xml::escape::escape(value);
+    writeln!(out, "{indent}<metadata key=\"{key}\" value=\"{value}\"/>").unwrap();
+}
+
+fn write_metadata(out: &mut String, indent: &str, records: &[Metadata]) {
+    for Metadata { key, value } in records {
+        metadata(out, indent, key, value);
+    }
+}
+
+pub(super) fn model_settings(
+    objects: &[ObjectEntry<'_>],
+    sliced: bool,
+    scene: Option<&SceneLayout>,
+) -> String {
     let mut out = format!("{DECL}<config>\n");
     for object in objects {
         let id = object.id;
-        let name = quick_xml::escape::escape(&object.object.name);
-        writeln!(out, "  <object id=\"{id}\" auto_drop=\"1\">\n    <metadata key=\"name\" value=\"{name}\"/>\n    <metadata key=\"extruder\" value=\"1\"/>").unwrap();
+        let auto_drop = u8::from(object.object.auto_drop);
+        writeln!(out, "  <object id=\"{id}\" auto_drop=\"{auto_drop}\">").unwrap();
+        metadata(&mut out, "    ", "name", &object.object.name);
+        write_metadata(&mut out, "    ", &object.object.metadata);
         for (id, _, part) in object.parts() {
             let name = quick_xml::escape::escape(&part.mesh.name);
             let filename = quick_xml::escape::escape(&part.source_file);
@@ -164,9 +190,21 @@ pub(super) fn model_settings(objects: &[ObjectEntry<'_>], sliced: bool) -> Strin
             if !filename.is_empty() {
                 writeln!(out, "      <metadata key=\"source_file\" value=\"{filename}\"/>\n      <metadata key=\"source_object_id\" value=\"{source_object}\"/>\n      <metadata key=\"source_volume_id\" value=\"{source_volume}\"/>\n      <metadata key=\"source_offset_x\" value=\"{x}\"/>\n      <metadata key=\"source_offset_y\" value=\"{y}\"/>\n      <metadata key=\"source_offset_z\" value=\"{z}\"/>").unwrap();
             }
-            out.push_str("      <mesh_stat edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n    </part>\n");
+            write_metadata(&mut out, "      ", &part.metadata);
+            let stats = part.mesh_stat.as_ref();
+            let edges = stats.map_or(0, |stat| stat.edges_fixed);
+            let degenerate = stats.map_or(0, |stat| stat.degenerate_facets);
+            let removed = stats.map_or(0, |stat| stat.facets_removed);
+            let reversed = stats.map_or(0, |stat| stat.facets_reversed);
+            let backwards = stats.map_or(0, |stat| stat.backwards_edges);
+            writeln!(out, "      <mesh_stat edges_fixed=\"{edges}\" degenerate_facets=\"{degenerate}\" facets_removed=\"{removed}\" facets_reversed=\"{reversed}\" backwards_edges=\"{backwards}\"/>\n    </part>").unwrap();
         }
         out.push_str("  </object>\n");
+    }
+    if let Some(scene) = scene {
+        scene.write_model_settings(&mut out, objects);
+        out.push_str("</config>\n");
+        return out;
     }
     let gcode_file = if sliced { PLATE_GCODE } else { "" };
     writeln!(out, "  <plate>\n    <metadata key=\"plater_id\" value=\"1\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"{gcode_file}\"/>").unwrap();
