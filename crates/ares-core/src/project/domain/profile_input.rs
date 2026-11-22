@@ -77,15 +77,20 @@ impl Project {
             .map_or(0, crate::project::raw_settings::RawConfigValue::len)
     }
 
-    pub(crate) fn initialize_cli_loaded_project_config(&mut self, filament_count: usize) {
-        // OrcaSlicer.cpp:1769: the CLI's 3MF import reads this dynamic option
-        // with create=true. STL --load-settings does not perform that read.
+    /// `upward_compatible_machine` says whether the route creates that key. The CLI's 3MF
+    /// import reads it with create=true only for a BBL-family 3MF (`OrcaSlicer.cpp:1759, 1894`);
+    /// STL --load-settings does not perform that read.
+    pub(crate) fn initialize_cli_loaded_project_config(
+        &mut self,
+        filament_count: usize,
+        upward_compatible_machine: bool,
+    ) {
         let raw = &mut self.documents.project_settings_raw;
         // OrcaSlicer.cpp:4243-4244: both arguments are loaded logical slots.
         if filament_count > 0 {
             resize_mixed_filament_metadata(raw, filament_count, filament_count);
         }
-        if !raw.contains_key("upward_compatible_machine") {
+        if upward_compatible_machine && !raw.contains_key("upward_compatible_machine") {
             raw.insert_strings(
                 "upward_compatible_machine",
                 &self.settings.printer.remaining.upward_compatible_machine.0,
