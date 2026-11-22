@@ -95,3 +95,14 @@ export function nativeSelection(probe: string, directory: string, project: strin
   execFileSync(probe, { cwd: directory, env: { ...process.env, ARES_PRESET_SELECT_REQUEST: `${directory}request.json` }, stdio: ["ignore", "pipe", "pipe"] });
   return JSON.parse(readFileSync(`${directory}native.json`, "utf8")).projects[0].result;
 }
+
+/**
+ * The GuideFrame "All LH models" check: every LH model with each nozzle variant, the model's `nozzle_diameter`
+ * entries (PresetBundle.cpp:8319-8327).
+ */
+export function lhModels() {
+  const profiles = `${orca}resources/profiles/`;
+  const vendor = JSON.parse(readFileSync(`${profiles}LH.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
+  return Object.fromEntries(vendor.machine_model_list.map(({ name, sub_path }) =>
+    [name, (JSON.parse(readFileSync(`${profiles}LH/${sub_path}`, "utf8")) as { nozzle_diameter: string }).nozzle_diameter.split(";")]));
+}

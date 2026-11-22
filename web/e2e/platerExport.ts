@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { expect } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { type NativeSelection, PROJECT_CONFIG } from "./presetSelectOracle";
+import { setConfigLine } from "./selectedPresetLines";
 
 /** The groups full_fff_config stores only when some entry is non-empty (PresetBundle.cpp:5826-5838). */
 const GROUPS = ["compatible_machine_expression_group", "compatible_process_expression_group", "inherits_group", "different_settings_to_system"];
@@ -27,17 +28,14 @@ function bedSize(config: Record<string, unknown>): [number, number, number] {
 
 /**
  * The plater export of `selection`, a session that switched the opened BBL 3MF `opened` to a never-used printer,
- * saved to `out` as the Native CLI leaves the project when it loads `opened` with that printer, process and
- * filaments (OrcaSlicer.cpp at 40ecc66f7), the route the web slice follows. Returns `selection` with that project
- * config. Each change is computed from `opened` and `selection`:
+ * saved to `out` with the CLI machine-switch steps the web slice still runs on the plater's full_fff_config
+ * (OrcaSlicer.cpp at 40ecc66f7). Returns `selection` with that project config. Each change is computed from
+ * `opened` and `selection`:
  * - the instances and wipe tower move onto the larger bed (shrink_to_new_bed 1, 1899-1909, 4371-4382,
  *   4414-4443, 4619-4685): by the difference of the bed centres;
  * - curr_bed_type is the printer's default_bed_type, which Sidebar::update_presets selects for a printer without a
  *   stored bed type (Plater.cpp:3880-3900, Preset.cpp:1140-1150), where the probe keeps the wizard's;
- * - nozzle_volume_type stays the 3MF's when it has one (filled only when absent, 6981-6985);
- * - filament_plugin_config_overrides, a scalar filament option the CLI skips (3715-3734), comes only from the 3MF;
- * - compatible_printers_condition is the loaded process's (every key applied, 3099-3102, 3405-3407), which
- *   full_fff_config erases;
+ * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216);
  * - one filament preset in every slot, of one colour, turns the prime tower off and records it in the process
  *   column of different_settings_to_system (2531-2535, 3880-3888, 4316-4343), sized filament count + 2 (3202-3205).
  */
@@ -57,16 +55,11 @@ export function cliSwitchedExport(selection: NativeSelection, opened: string, ou
   const moved = (values: string[], offset: number) => [String(Number(values[0]) + offset), ...values.slice(1)];
   const bedType = plater.default_bed_type as string;
   expect(bedType, "a default_bed_type (Preset.cpp:1142-1150)").not.toBe("");
-  const { filament_plugin_config_overrides: _, ...config } = plater;
-  Object.assign(config, {
+  const config = Object.assign({ ...plater }, {
     wipe_tower_x: moved(plater.wipe_tower_x as string[], x),
     wipe_tower_y: moved(plater.wipe_tower_y as string[], y),
     curr_bed_type: bedType,
-    compatible_printers_condition: selection.process.edited.config.compatible_printers_condition.serialized,
   });
-  for (const key of ["nozzle_volume_type", "filament_plugin_config_overrides"]) {
-    if (key in project) config[key] = project[key];
-  }
   // 4291-4320 keep the tower for wrapping detection, a mixed filament or a smooth timelapse.
   expect(plater.enable_wrapping_detection !== "1" && !(plater.filament_is_mixed as string[]).includes("1") && plater.timelapse_type !== "1",
     "no tower kept by 4291-4320").toBe(true);
@@ -109,4 +102,25 @@ export function withoutCliGroups(gcode: string, selection: NativeSelection) {
     expect(entries.every((entry) => entry === "" || entry === '""'), `every Native ${key} entry is empty`).toBe(true);
     return false;
   }).join("\n");
+}
+
+/**
+ * `gcode`, a Native --load-settings slice, with the config lines full_fff_config decides for the plater session
+ * `session`: the scalar `filament_plugin_config_overrides` from the first filament (PresetBundle.cpp:5726-5735), no
+ * `compatible_printers_condition` (PresetBundle.cpp:5790-5794), and only the groups `session` stores.
+ */
+export function withPlaterConfigLines(gcode: string, session: NativeSelection) {
+  const lines = gcode.split("\n");
+  setConfigLine(lines, "filament_plugin_config_overrides", session.filament.edited.config.filament_plugin_config_overrides?.serialized);
+  setConfigLine(lines, "compatible_printers_condition", undefined);
+  return withoutCliGroups(lines.join("\n"), session);
+}
+
+/**
+ * `session` with the plater keeping `different_settings_to_system`: the browser's 3MF slice still runs the CLI's
+ * one-colour prime-tower rule (OrcaSlicer.cpp:4323-4342), which records `enable_prime_tower`, and an edit dirties
+ * the process column as the plater's edited print does (PresetBundle.cpp:5586-5595).
+ */
+export function withDifferences(session: NativeSelection): NativeSelection {
+  return { ...session, full_fff_config: JSON.stringify({ different_settings_to_system: [], ...JSON.parse(session.full_fff_config) }) };
 }

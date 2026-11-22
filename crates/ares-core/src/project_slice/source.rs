@@ -76,6 +76,8 @@ pub(crate) struct ProfileInput<'a> {
     /// the catalog/profile paths.
     pub(crate) load_names: Option<&'a super::compatibility::LoadedPresetNames>,
     pub(crate) retained_refresh: Option<crate::profiles::ProjectPresetRefresh<'a>>,
+    /// The plater's `PresetBundle::full_fff_config` groups; `None` composes as the CLI.
+    pub(crate) full_fff_config: Option<&'a crate::profiles::FullFffGroups>,
     pub(crate) placement: crate::profiles::Placement,
     pub(crate) enable_timelapse: bool,
     /// CLI composite entries set this; the profile path checks the

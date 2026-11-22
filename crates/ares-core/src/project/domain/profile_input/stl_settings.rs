@@ -59,6 +59,9 @@ pub(super) fn compose(
     ] {
         raw.insert_strings(key, values);
     }
+    if let Some(groups) = profile.full_fff_config {
+        groups.apply(&mut raw);
+    }
     for (key, values) in [
         ("filament_map", &project.gcode.filament_map.0),
         ("filament_self_index", &project.preset.filament_self_index.0),
@@ -113,6 +116,9 @@ pub(super) fn compose(
             })?
             .resolve()
     };
+    if profile.full_fff_config.is_some() {
+        crate::profiles::FullFffGroups::store(&mut raw);
+    }
     // CLI:4243-4244 normalizes mixed metadata for the loaded logical slots.
     let filament_count = settings.project.preset.filament_settings_id.0.len();
     super::resize_mixed_filament_metadata(&mut raw, filament_count, filament_count);

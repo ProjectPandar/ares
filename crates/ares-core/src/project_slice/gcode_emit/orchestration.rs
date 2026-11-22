@@ -122,9 +122,12 @@ pub(in crate::project_slice) fn emit(
     let mut export_config = Vec::new();
     crate::options::write_config_block(
         &traversal.resolved.views,
-        archive_facts.as_ref().map_or(
-            &traversal.project.documents().project_settings_raw,
-            |facts| &facts.project_settings,
+        (
+            archive_facts.as_ref().map_or(
+                &traversal.project.documents().project_settings_raw,
+                |facts| &facts.project_settings,
+            ),
+            traversal.project.documents().config_composer,
         ),
         traversal.project.current_plate_index(),
         Some(initial_filaments.compat_temperatures(traversal)),

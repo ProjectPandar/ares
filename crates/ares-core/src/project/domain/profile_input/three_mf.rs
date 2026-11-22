@@ -28,6 +28,7 @@ impl Project {
             profile_raw,
             load_names,
             retained_refresh,
+            full_fff_config,
             ..
         } = profile;
         let (mut project, preparation) = match loaded {
@@ -108,6 +109,9 @@ impl Project {
                 machine_switch: switch,
             },
         )?;
+        if let Some(groups) = full_fff_config {
+            groups.apply(&mut merged);
+        }
         // `CLI::run:1820` only records the imported printer name for BBL-family 3MF.
         let original_printer = if project.documents.bbl_family_3mf
             && let Some(super::RawConfigValue::Text(name)) = embedded_raw.get("printer_settings_id")
@@ -119,11 +123,15 @@ impl Project {
         super::cli_machine_limits::apply(&mut merged, load_names, original_printer);
         // User overrides apply last (`Config.cpp:461`).
         overrides.apply(&mut merged)?;
+        if full_fff_config.is_some() {
+            crate::profiles::FullFffGroups::store(&mut merged);
+        }
         mapped_prime_tower::disable_after_mapping(
             &mut merged,
             settings,
             overrides,
             profile.enable_timelapse,
+            filament_count,
         );
         // `set_deserialize`/`handle_legacy` runs on every option token the
         // merged config carries — embedded base and profile overlay alike

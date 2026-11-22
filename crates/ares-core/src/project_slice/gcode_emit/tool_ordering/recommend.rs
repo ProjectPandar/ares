@@ -123,7 +123,10 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             // the sliced plate's tower entry.
             write_config_block(
                 &traversal.resolved.views,
-                &traversal.project.documents().project_settings_raw,
+                (
+                    &traversal.project.documents().project_settings_raw,
+                    traversal.project.documents().config_composer,
+                ),
                 traversal.project.current_plate_index(),
                 None,
                 &mut block,

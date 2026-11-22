@@ -317,6 +317,7 @@ fn model(objects: Vec<ProjectObject>, membership: Vec<Vec<u32>>, names: Vec<Stri
             bbl_family_3mf: false,
             preset_file_version: None,
             preset_selection: None,
+            config_composer: crate::project::domain::ConfigComposer::CliRun,
         },
     )
 }

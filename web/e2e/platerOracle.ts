@@ -6,6 +6,7 @@ import type { Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -133,7 +134,7 @@ export function orcaPlate(project: string, plate: number, leg: "official" | "see
   const gcode = readFileSync(`${work}plate_${plate}.gcode`, "utf8");
   writeFileSync(oracleGcode(project, plate, leg), gcode);
   const native = normalize(gcode, "OrcaSlicer");
-  return selection ? withSelectedPresets(native, selection) : native;
+  return selection ? withoutCliGroups(withSelectedPresets(native, selection), selection) : native;
 }
 
 /**

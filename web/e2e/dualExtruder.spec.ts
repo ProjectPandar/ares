@@ -6,6 +6,7 @@ import { expect, type Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
+import { flowOptions } from "./flowOptionsOracle";
 import { normalize } from "./orcaGcode";
 import { platerExport, withoutCliGroups } from "./platerExport";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
@@ -39,6 +40,13 @@ function orcaGcode(file: string) {
   return normalize(gcode, "OrcaSlicer");
 }
 
+/** The flow combos list the printer's upstream options; extruder 0 is the left nozzle (Plater.cpp:4111-4112). */
+async function expectFlowOptions(page: Page, printer: string) {
+  for (const [index, nozzle] of ["Left Nozzle", "Right Nozzle"].entries())
+    expect(await select(page, `${nozzle} flow`).locator("option").allTextContents(), `${printer} ${nozzle} flow options`)
+      .toEqual(flowOptions("BBL", printer, index));
+}
+
 const nozzleFilaments = (page: Page, nozzle: string) =>
   page.getByRole("group", { name: nozzle, exact: true }).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.textContent!.trim()));
 
@@ -69,10 +77,9 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await expect(select(page, "Nozzle diameter")).toHaveCount(0);
   for (const nozzle of ["Left Nozzle", "Right Nozzle"]) {
     await expect(select(page, `${nozzle} diameter`)).toHaveValue("0.4");
-    // H2D extruder_variant_list offers Direct Drive Standard and High Flow on both nozzles.
-    expect(await select(page, `${nozzle} flow`).locator("option").allTextContents()).toEqual(["Standard", "High Flow"]);
     await expect(select(page, `${nozzle} flow`)).toHaveValue("Standard");
   }
+  await expectFlowOptions(page, "Bambu Lab H2D 0.4 nozzle");
   const grouping = page.getByRole("radiogroup", { name: "Filament grouping" });
   await expect(grouping.getByRole("radio", { name: /Filament-Saving Mode/ })).toBeChecked();
   await expect(grouping.getByRole("radio", { name: /Convenience Mode/ })).toBeDisabled();
@@ -122,6 +129,7 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await question.getByRole("button", { name: "Left nozzle: 0.6mm" }).click();
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab H2D 0.6 nozzle", { timeout: 60_000 });
   await expect(select(page, "Right Nozzle diameter")).toHaveValue("0.6");
+  await expectFlowOptions(page, "Bambu Lab H2D 0.6 nozzle");
 
   // The selected printer keeps its volume types (AppConfig nozzle_volume_types) and the preferred
   // filament map mode across a reload.

@@ -7,6 +7,8 @@ import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
+import { withDifferences, withPlaterConfigLines } from "./platerExport";
+import { lhModels, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -20,6 +22,8 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
   const seeded = process.env.ARES_PARITY_SEEDED_REFERENCE === "1";
   const launcher = seeded ? process.env.ARES_ORCA_SEEDED_BIN : `${repositoryRoot}scripts/orca-parity.sh`;
   if (!launcher) throw new Error("Explicit seeded mode requires ARES_ORCA_SEEDED_BIN");
+  const probe = presetSelectProbe();
+  if (!probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is required for the plater session's full_fff_config lines");
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -48,9 +52,15 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
   expect(JSON.parse(readFileSync(`${work}result.json`, "utf8"))).toMatchObject({ native_repeat: "PASS" });
   const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8"));
   const model = [...readFileSync(`${work}cube10.stl`)];
-  const native = normalize(readFileSync(`${work}reference-first/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  // sliceWithProfiles composes the selected presets as the plater's full_fff_config: the session where the first-run
+  // app opens the override project, the GuideFrame wizard installs every LH model and the sidebar picks the presets.
+  const session = nativeSelection(probe, `${artifacts}plater-session/`, `${overrideWork}override.3mf`, [], {
+    wizard: { LH: lhModels() },
+    select: { printer: selection.machine, process: selection.process, filaments: selection.filaments },
+  });
+  const native = withPlaterConfigLines(normalize(readFileSync(`${work}reference-first/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
   const overrideProject = [...readFileSync(`${overrideWork}override.3mf`)];
-  const nativeOverride = normalize(readFileSync(`${overrideWork}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer");
+  const nativeOverride = withPlaterConfigLines(normalize(readFileSync(`${overrideWork}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), withDifferences(session));
 
   const root = `${web}e2e/profile-slice-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 } });

@@ -174,6 +174,7 @@ pub fn slice_cli_project_plates(
                     overrides,
                     placement: Placement::None,
                 },
+                crate::Composition::Cli,
                 run,
             ),
             CliPlatesSettings::Files {
