@@ -275,19 +275,20 @@ fn write_package(
     let (slice_info, filament_sequence) = if let Some(sliced) = sliced {
         let slice_info = xml::slice_info_many(&sliced).into_bytes();
         let filament_sequence = xml::filament_sequence(sliced.len());
-        // bbs_3mf.cpp:6327–6350: emit staged G-code in plate-index order.
-        let mut paths = Vec::with_capacity(sliced.len());
-        for member in sliced {
-            let path = format!("Metadata/plate_{}.gcode", member.plate);
-            paths.push(path);
+        // bbs_3mf.cpp:6789-6822 writes all checksums before any G-code.
+        for member in &sliced {
             entries.push((
                 format!("Metadata/plate_{}.gcode.md5", member.plate),
                 format!("{:X}", Md5::digest(&member.gcode)).into_bytes(),
             ));
-            entries.push((
-                format!("Metadata/plate_{}.gcode", member.plate),
-                member.gcode,
-            ));
+        }
+        // bbs_3mf.cpp:9005-9026 stages G-code in parallel. Keep plate-index
+        // order in Ares so the archive doesn't depend on scheduling.
+        let mut paths = Vec::with_capacity(sliced.len());
+        for member in sliced {
+            let path = format!("Metadata/plate_{}.gcode", member.plate);
+            paths.push(path.clone());
+            entries.push((path, member.gcode));
         }
         entries.push((
             "Metadata/_rels/model_settings.config.rels".to_owned(),
