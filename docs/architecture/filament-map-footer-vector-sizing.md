@@ -1,26 +1,25 @@
-# Configured filament map vector sizing
+# Sequential non-BBL automatic filament map publication
 
 ## Upstream boundary
 
-This slice rewrites the configured-filament vector sizing that precedes the
-`Print` map write-back and G-code config export in OrcaSlicer v2.5.0,
-revision `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
+This slice rewrites the static sequential automatic map publication in
+OrcaSlicer v2.5.0, revision `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
 
 | Upstream owner | Included behavior | Rust destination |
 |---|---|---|
-| `PresetBundle.cpp:3966–3970, 4129–4133` | Initialize `filament_map`, `filament_nozzle_map`, and `filament_volume_map` with one entry per configured filament when the project filament set is assembled. | `profiles/filament_slots.rs::FilamentSlotState::normalize` |
-| `PresetBundle.cpp:4328–4372` | `set_num_filaments` resizes all three maps whenever the configured filament count changes, preserving existing values and filling new entries with the upstream defaults. | The same normalization boundary, after the filament count is known. |
-| `PresetBundle.cpp:5534–5567` | Full FFF config keeps the filament map and volume map sized to `num_filaments` before variant expansion. | Existing full-config materialization consumes the normalized vectors; no footer-only substitution. |
-| `Print.cpp:3700–3743, 4661–4680` | Sequential map preparation and `update_filament_maps_to_config` retain configured entries for unused filaments, while writing the complete nozzle and volume vectors back before export. | Existing `project_slice::gcode_emit::tool_ordering` and config-view checkpoint path. |
-| `PrintConfig.cpp:3095–3100, 3118–3120, 3151–3153` | Registered defaults are filament extruder `1`, standard volume `0` (`nvtStandard`), and nozzle `1` at the config-definition layer; the selected project map initialization supplies the serialized nozzle value `0`. | `profiles/filament_slots.rs` keeps the selected/runtime defaults as map `1`, volume `0`, and nozzle `0`. |
-| `PrintConfig.cpp:11855–11903, 11979–12042` | Variant rebuilding uses the final filament map and accepts a volume map only when it is filament-count sized. | Existing `options/project_variants` refresh and variant materialization. |
-
-## Observed behavior
+| `Format/bbs_3mf.cpp:4674–4681`, `OrcaSlicer.cpp:6924–6926` | Deserialize the concrete plate filament map mode and apply the plate config over the project, before CLI extras. | Existing `project/plate_config.rs::apply_plate_config_overrides`; no change. |
+| `Print.cpp:3695–3739` | After collecting actual sequential print usage, compute the static group result and write its maps back in automatic modes, including on multi-head printers. The sequential Manual paths do not write back here. | `project_slice/gcode_emit/tool_ordering/recommend.rs::build_recommended`: extend entry to its existing publication block for static non-BBL, one-nozzle-per-head multi-head sequential automatic prints. |
+| `GCode/ToolOrdering.cpp:1752–1767, 1796–1805` | The non-BBL automatic grouping result gives each configured filament a nozzle entry, using the identity prefix and master-head default. | Existing `options/project_variants/filament_maps.rs::update_static_filament_maps`, unchanged. |
+| `Print.cpp:3725–3739, 4661–4680`; `FilamentGroupUtils.cpp:348–359` | Preserve the configured extruder and volume values for unused filaments; if their seed lengths differ from the derived count, first synthesize the original defaults. Publish the complete derived nozzle map. | Same existing static publisher and used-only merge; propagate its refreshed config views via the existing checkpoint. |
+| `GCode.cpp:8272–8305` | Export the full print config, including the applied variant index map. | Existing config-block reconstruction, unchanged. |
 
 `tests/parity/sequential-first-layer-nozzle-temperature/second-tool.3mf`
-contains two filament colors, two configured nozzles, and a two-entry manual
-`filament_map`, but omits the internal nozzle and volume map keys. Only the
-second tool is emitted in sequential by-object mode. Native exports:
+has project-level `filament_map_mode = Manual`, but plate 1 in
+`Metadata/model_settings.config` supplies `Auto For Flush`. OrcaSlicer
+reads the effective plate value at the import and overlay points above;
+`Print.cpp:3706, 3718` tests that effective mode at publication. Ares also
+exports `Auto For Flush`. The fixture configures two tools, emits only
+the second tool, and expects these four footer values:
 
 ```text
 filament_map = 1,2
@@ -29,69 +28,49 @@ filament_nozzle_map = 0,1
 filament_volume_map = 0,0
 ```
 
-Ares currently exports the first two lines correctly but emits one-entry
-`filament_nozzle_map = 1` and `filament_volume_map = 0`. The existing Rust
-normalizer resizes all three internal maps only when filament colors grow. A
-project whose colors already have the configured count therefore keeps the
-registered one-entry defaults. The existing sequential footer then serializes
-those stale vectors. This is a configuration-state sizing defect, not a
-footer formatting defect and not a change to filament assignment semantics.
+Ares currently publishes the complete values in the otherwise identical
+by-layer case. The multi-object by-object case with multiple heads never
+enters the existing publication block, leaving one-entry nozzle and
+volume defaults. Public 3MF slicing does not use `FilamentSlotState` for
+this path. The defect is missing publication, not a palette resize or a
+formatter defect.
 
-Main already contains the adjacent non-BBL automatic-map rewrite in squash
-commit `971b136e4` (`fix(cli): publish used filament slots for non-BBL maps`).
-That behavior derives a static identity recommendation after actual usage and
-publishes used-only extruder/volume assignments with a complete nozzle map.
-This residual is different: it is the sequential Manual/by-object path, where
-`FilamentSlotState::normalize` only resizes the three maps when filament colors
-are expanded (`filament_slots.rs:86–88`). It must not alter the 971b136e4 owner
-or broaden the FilamentGroup optimizer.
+## Scope and relationship to existing publication
 
-## Required behavior
+For multi-object by-object printing, extend the existing entry condition
+only for non-BBL static automatic mapping on multi-head printers with one
+nozzle per head. This covers `Auto For Flush` and `Auto For Match`, which
+use the same static non-BBL branch. Keep the current single-head and
+one-object admission conditions unchanged. No new assignment policy or
+footer-specific logic is needed.
 
-1. Once the configured filament count is known, all three internal maps have
-   exactly that length.
-2. Existing entries are preserved. Newly created entries use the upstream
-   defaults: `filament_map` extruder `1` from `PrintConfig.cpp:3095–3100`,
-   `filament_volume_map` standard volume `0` (`nvtStandard`) from
-   `PrintConfig.cpp:3118–3120`, and selected/runtime
-   `filament_nozzle_map` physical nozzle `0`, initialized by
-   `PresetBundle.cpp:3966–3970, 4129–4133` from the registered
-   `PrintConfig.cpp:3151–3153` definition.
-3. This sizing occurs before sequential and non-sequential config views are
-   materialized, so `Print` write-back and the existing footer exporter observe
-   the same full vectors.
-4. Used-filament assignment behavior remains unchanged. In particular, the
-   sequential two-tool fixture must retain `filament_map = 1,2` and emit
-   `filament_nozzle_map = 0,1` and `filament_volume_map = 0,0`.
-5. Manual, single-tool, automatic non-BBL, BBL, volume-type, and multi-nozzle
-   map paths retain their existing owners.
+The change touches the same file and function (`recommend.rs::build_recommended`)
+as the non-BBL used-only map rewrite `971b136e4`, but not the line it added
+(the `is_bbl` argument to `update_static_filament_maps`). It changes only
+eligibility for configurations previously excluded by `ByObject` with
+multiple objects. The existing by-layer call, the recommendation and its
+seed/used-only merge, and the BBL and multi-nozzle grouping dispatch are
+unchanged. Mixed-slot handling, dynamic per-layer reorder, sequential
+Manual and Nozzle Manual, and BBL multi-head sequential publication remain
+with their current source boundaries. No public API change is included.
 
 ## Verification seam
 
-Keep the existing restart-span comparison in the tool-qualified sequential
-case. Compare the complete `filament_map`, `filament_map_2`,
-`filament_nozzle_map`, and `filament_volume_map` values in the config footer
-from Native, the public API, and the CLI. A strict whole-file comparison is
-deferred: before the footer, Ares already emits an additional
-`G10 S207 P0` at the transition out of the first layer, while Native emits
-only `G10 S207 P1`. The comparison does not normalize that command.
+Name the two-tool test for its effective `Auto For Flush` mode. Check all
+four exact footer fields through the pinned Native CLI, the public Rust
+slicing API, and the Ares CLI on the same plate. Keep the original restart
+span assertion in the sequential case. Compare the same four fields in a
+non-sequential two-tool control built at runtime from the same project.
 
-Use a minimal non-sequential two-tool control built at runtime from the
-same public 3MF input. Both cases configure two filament slots and two
-physical nozzles, omit the internal map keys, and use only the second
-logical filament. Check all four fields for both cases in the official and
-seeded environments. No Native output is committed.
+Strict whole-file comparison is deferred because the first-to-second-layer
+transition already differs before the footer: Ares emits `G10 S207 P0`
+in addition to `G10 S207 P1`, while Native emits only the latter. Do not
+rewrite or normalize the extra command. Do not commit Native outputs.
 
-Run the existing filament-map, flush, and multi-tool inventories in both
-Native modes. Previously passing cases must remain passing. Run formatting,
-strict workspace/all-target Clippy, and the core/WASM check because the
-normalization boundary is shared by browser and native slicing.
-
-## Deferred behavior
-
-This slice does not change filament grouping, map recommendation, nozzle
-selection, flush matrix recomputation, printer admission, variant selection,
-footer key ordering, or any public API. It does not port undefined upstream
-behavior from malformed or internally inconsistent configurations. Existing
-multi-nozzle expansion and dynamic per-layer map publication remain deferred
-to their current source boundaries.
+Pair the test-only and implementation revisions with the official and
+seeded Native runners across filament-map, flush, tool-ordering,
+multi-tool and multi-nozzle families. Include both landed
+`non_bbl_auto_map` cases explicitly: `non_bbl_auto_map_keeps_three_unused_filament_assignments`
+and `non_bbl_auto_map_changes_only_the_used_second_filament`. Previously
+passing cases must remain passing. Run formatting, strict workspace
+all-target Clippy and core/WASM checks.
