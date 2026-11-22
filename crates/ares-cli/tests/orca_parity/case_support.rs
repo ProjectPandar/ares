@@ -223,3 +223,6 @@ mod fixed_surface_layer_direction;
 mod ironing_layer_direction;
 #[path = "pressure_equalizer_fractional_feedrate.rs"]
 mod pressure_equalizer_fractional_feedrate;
+
+#[path = "cli_allow_mix_temp.rs"]
+mod cli_allow_mix_temp;

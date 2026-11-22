@@ -148,7 +148,11 @@ pub(super) fn prepare_profile_slice(
         loaded,
         project.plate,
         Some(profile.printer_name()),
-        (project.validate_print, project.max_triangle_count),
+        (
+            project.validate_print,
+            project.max_triangle_count,
+            project.allow_mix_temp,
+        ),
         Some((&preparation, project.overrides)),
     )
 }

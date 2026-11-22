@@ -13,6 +13,7 @@ pub(crate) struct ProjectSource<'a> {
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
     pub(crate) normative_check: bool,
+    pub(crate) allow_mix_temp: bool,
     /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
@@ -226,6 +227,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
             normative_check: true,
+            allow_mix_temp: false,
             validate_config: true,
             skip_modified_gcodes: false,
             orient: false,
