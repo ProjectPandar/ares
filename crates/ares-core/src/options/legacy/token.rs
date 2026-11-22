@@ -313,18 +313,15 @@ fn strip_surrounding_quotes(token: &str) -> &str {
 /// order also sets `is_infill_first`. The derivation reads the source
 /// `key`/`value` tokens — `handle_legacy` itself only rewrites the pair.
 ///
-/// Returns the derived `(key, token)` if the source pair produces one.
-pub(crate) fn handle_legacy_derived(
-    opt_key: &str,
-    value: &str,
-) -> Option<(&'static str, &'static str)> {
+/// Returns the derived boolean assignment if the source pair produces one.
+pub(crate) fn handle_legacy_derived(opt_key: &str, value: &str) -> Option<(&'static str, bool)> {
     if opt_key == "wall_infill_order"
         && matches!(
             value,
             "infill/inner wall/outer wall" | "infill/outer wall/inner wall"
         )
     {
-        Some(("is_infill_first", "true"))
+        Some(("is_infill_first", true))
     } else {
         None
     }
