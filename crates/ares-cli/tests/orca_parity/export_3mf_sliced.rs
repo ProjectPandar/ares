@@ -4,6 +4,7 @@ use std::process::Command;
 
 use serde_json::{Value, json};
 
+use super::direct_stl_slice::square_stl;
 use crate::{OrcaRunner, presets::VendorProfiles, runner::repo_root};
 
 const SETTINGS: [&str; 4] = [
@@ -35,6 +36,79 @@ fn cli_sliced_3mf_from_saved_project_matches_native_archive() {
 #[test]
 fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
     sliced_archive_matches_native(Some(SavedShape::TwoObjects));
+}
+
+#[test]
+fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = runner.work_dir();
+    let native_cwd = root.join("native-arranged/cwd");
+    let ares_cwd = root.join("ares-arranged/cwd");
+    for dir in [&native_cwd, &ares_cwd] {
+        fs::create_dir_all(dir.join("out")).unwrap();
+    }
+    write_inputs(&native_cwd);
+    for (name, edge) in [("large.stl", 180.0), ("medium.stl", 102.0)] {
+        fs::write(native_cwd.join(name), square_stl([0.0, 0.0], edge, 1.2)).unwrap();
+    }
+    for file in [
+        "large.stl",
+        "medium.stl",
+        "machine.json",
+        "process.json",
+        "filament.json",
+    ] {
+        fs::copy(native_cwd.join(file), ares_cwd.join(file)).unwrap();
+    }
+    let argv = [
+        SETTINGS.as_slice(),
+        &[
+            "--slice",
+            "0",
+            "--arrange",
+            "1",
+            "--export-3mf",
+            "export.3mf",
+            "large.stl",
+            "medium.stl",
+        ],
+    ]
+    .concat();
+    assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
+    let native = read_members(&native_cwd.join("export.3mf"));
+    assert_eq!(native.len(), 17);
+    for plate in [1, 2] {
+        let gcode = format!("Metadata/plate_{plate}.gcode");
+        let md5 = format!("{gcode}.md5");
+        assert!(
+            !native
+                .iter()
+                .find(|entry| entry.name == gcode)
+                .unwrap()
+                .bytes
+                .is_empty()
+        );
+        assert_eq!(
+            native
+                .iter()
+                .find(|entry| entry.name == md5)
+                .unwrap()
+                .bytes
+                .len(),
+            32
+        );
+    }
+    let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
+    assert_eq!(
+        invoke(ares, &ares_cwd, &argv, false),
+        Some(0),
+        "arranged STL export failed in {}",
+        ares_cwd.display()
+    );
+    let actual = read_members(&ares_cwd.join("export.3mf"));
+    compare_members(native, actual);
 }
 
 #[test]
