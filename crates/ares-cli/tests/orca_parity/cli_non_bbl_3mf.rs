@@ -174,7 +174,7 @@ impl Fixture {
 
 /// Replaces the `Application` metadata with another slicer's and drops the `OrcaSlicer` version
 /// metadata, so the importer reads the project as a non-BBL 3MF.
-fn without_generator_tags(project: &[u8]) -> Vec<u8> {
+pub(super) fn without_generator_tags(project: &[u8]) -> Vec<u8> {
     let mut input = zip::ZipArchive::new(Cursor::new(project)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let application =
