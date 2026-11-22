@@ -190,6 +190,7 @@ fn slice_project_plates(
         .validate_cli_config()
         .and_then(|()| match settings {
             CliPlatesSettings::Embedded { system_catalog } => run(ProjectSource {
+                input: ProjectInput::SavedCliBytes(input),
                 max_triangle_count: 0,
                 plate: selected,
                 overrides,
