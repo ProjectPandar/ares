@@ -27,6 +27,7 @@ pub struct SlicerContext<'a> {
     thumbnail_images: Vec<ThumbnailData>,
     pub(crate) max_triangle_count: i32,
     pub(crate) no_check: bool,
+    pub(crate) cli_path_conflict_check: bool,
     pub(crate) enable_timelapse: bool,
     pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
 }
@@ -40,16 +41,24 @@ impl<'a> SlicerContext<'a> {
             thumbnail_images: Vec::new(),
             max_triangle_count: 0,
             no_check: false,
+            cli_path_conflict_check: false,
             enable_timelapse: false,
             custom_gcodes: None,
         }
     }
 
     /// Sets the print's action-local `no_check` flag (OrcaSlicer.cpp:6988).
-    /// Only the support-necessity check currently reads this flag in the core.
     #[must_use]
     pub fn with_no_check(mut self, no_check: bool) -> Self {
         self.no_check = no_check;
+        self
+    }
+
+    /// Enables the direct CLI's `Print::process` conflict check without a wipe tower
+    /// (`Print.cpp:3946–3964`) and reports a typed conflict to the CLI consumer.
+    #[must_use]
+    pub fn with_cli_path_conflict_check(mut self) -> Self {
+        self.cli_path_conflict_check = true;
         self
     }
 
