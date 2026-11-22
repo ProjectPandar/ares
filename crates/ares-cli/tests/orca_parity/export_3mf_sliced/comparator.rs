@@ -6,6 +6,8 @@ use md5::{Digest, Md5};
 use regex::bytes::Regex;
 use zip::{CompressionMethod, ZipArchive};
 
+use super::super::export_3mf_model_settings::object_record_permutation;
+
 pub(super) struct Member {
     pub(super) name: String,
     compression: CompressionMethod,
@@ -138,7 +140,7 @@ pub(super) fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
         normalize_plate_gcodes(members, &banner);
     }
     assert_eq!(native.len(), ares.len());
-    for (mut native, mut ares) in native.into_iter().zip(ares) {
+    for (native, ares) in native.into_iter().zip(ares) {
         assert_eq!(native.name, ares.name);
         assert_eq!(native.compression, ares.compression, "{}", native.name);
         assert_eq!(
@@ -159,50 +161,21 @@ pub(super) fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
         assert_eq!(native.extra, ares.extra, "{} extra fields", native.name);
         assert_eq!(native.comment, ares.comment, "{} comment", native.name);
 
-        if native.name == "Metadata/model_settings.config" && native.bytes != ares.bytes {
-            native.bytes = model_settings_in_object_id_order(&native.bytes);
-            ares.bytes = model_settings_in_object_id_order(&ares.bytes);
+        if native.bytes == ares.bytes
+            || object_record_permutation(&native.name, &native.bytes, &ares.bytes)
+        {
+            continue;
         }
         let mismatch = native
             .bytes
             .iter()
             .zip(&ares.bytes)
             .position(|(n, a)| n != a);
-        assert!(
-            mismatch.is_none() && native.bytes.len() == ares.bytes.len(),
+        panic!(
             "{} differs at byte {mismatch:?}: lengths Native {}, Ares {}",
             native.name,
             native.bytes.len(),
             ares.bytes.len(),
         );
     }
-}
-
-fn model_settings_in_object_id_order(bytes: &[u8]) -> Vec<u8> {
-    // bbs_3mf.cpp:6218,8306: Native iterates object records by model pointer.
-    // Reorder only the complete top-level records, without reserializing XML.
-    let object = Regex::new(r#"(?ms)^  <object id="([0-9]+)"[^>\n]*>\n.*?^  </object>\n"#).unwrap();
-    let mut records: Vec<_> = object
-        .captures_iter(bytes)
-        .map(|record| (record.get(1).unwrap().as_bytes(), record.get(0).unwrap()))
-        .collect();
-    if records.len() < 2 {
-        return bytes.to_vec();
-    }
-    assert!(
-        records
-            .windows(2)
-            .all(|pair| pair[0].1.end() == pair[1].1.start())
-    );
-    let start = records[0].1.start();
-    let end = records.last().unwrap().1.end();
-    records.sort_unstable_by_key(|record| record.0);
-    assert!(records.windows(2).all(|pair| pair[0].0 != pair[1].0));
-    let mut ordered = Vec::with_capacity(bytes.len());
-    ordered.extend_from_slice(&bytes[..start]);
-    for (_, record) in records {
-        ordered.extend_from_slice(record.as_bytes());
-    }
-    ordered.extend_from_slice(&bytes[end..]);
-    ordered
 }
