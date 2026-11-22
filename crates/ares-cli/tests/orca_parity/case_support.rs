@@ -17,6 +17,8 @@ mod adaptive_cubic_bodies;
 #[path = "arachne_top_wall_split.rs"]
 mod arachne_top_wall_split;
 
+#[path = "cli_compatible_expression_group.rs"]
+mod cli_compatible_expression_group;
 #[path = "cli_slice_plates.rs"]
 mod cli_slice_plates;
 #[path = "cli_uptodate_printable_size.rs"]
