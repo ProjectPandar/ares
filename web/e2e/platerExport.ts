@@ -130,7 +130,8 @@ function configEntries(value: string) {
  * prime tower. CLI::run alone turns the tower off for one mapped preset (OrcaSlicer.cpp:2531-2535, 4316-4343); the
  * plater applies full_fff_config as it is (Plater.cpp:11429-11442). With one filament the setting prints no tower
  * (Print.cpp:5205), so only two config lines differ, and `browser` must equal `expected` without them:
- * - enable_prime_tower takes the session's full_fff_config value;
+ * - enable_prime_tower stays 0: Print::apply runs normalize_fdm_2 on both routes, which clears it for one used
+ *   filament, no mixed filament, no smooth timelapse and no wrapping detection (PrintConfig.cpp:10478-10505);
  * - different_settings_to_system loses the enable_prime_tower the rule appends to the process column (4330-4340),
  *   and the line goes when every entry is empty, as the plater stores no empty group (PresetBundle.cpp:5826-5838).
  */
@@ -138,11 +139,12 @@ export function withPlaterTower(expected: string, browser: string, session: Nati
   expect(session.filament_presets, "one filament prints no tower (Print.cpp:5205)").toHaveLength(1);
   const others = (gcode: string) => gcode.split("\n").filter((line) => !TOWER_LINES.some((key) => line.startsWith(key))).join("\n");
   expect(others(browser) === others(expected), "the browser differs from the CLI reference only in the two tower lines").toBe(true);
-  const plater = JSON.parse(session.full_fff_config) as { enable_prime_tower: string };
+  const plater = JSON.parse(session.full_fff_config) as Record<string, unknown>;
+  expect((plater.filament_is_mixed as string[] | undefined) ?? [], "normalize_fdm_2: no mixed filament").not.toContain("1");
+  expect(plater.timelapse_type, "normalize_fdm_2: no smooth timelapse").not.toBe("1");
+  expect(plater.enable_wrapping_detection, "normalize_fdm_2: no wrapping detection").not.toBe("1");
   const lines = expected.split("\n");
-  const tower = lines.findIndex((line) => line.startsWith(TOWER_LINES[0]));
-  expect(lines[tower], "the CLI rule turns the tower off").toBe(`${TOWER_LINES[0]}0`);
-  lines[tower] = `${TOWER_LINES[0]}${plater.enable_prime_tower}`;
+  expect(lines.find((line) => line.startsWith(TOWER_LINES[0])), "normalize_fdm_2 prints the tower off").toBe(`${TOWER_LINES[0]}0`);
   const dirty = lines.findIndex((line) => line.startsWith(TOWER_LINES[1]));
   const columns = configEntries(lines[dirty].slice(TOWER_LINES[1].length));
   const keys = columns[0].split(";");
