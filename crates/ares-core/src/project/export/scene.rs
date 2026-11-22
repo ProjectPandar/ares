@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
-use crate::project::model_settings::{AssembleSettings, Metadata};
+use crate::project::model_settings::{AssembleSettings, Metadata, PartSettings};
 use crate::{Project, ProjectVolumeType, SliceError};
 
 use super::{ObjectEntry, geometry, invalid, project_settings, write_package, xml};
@@ -110,29 +110,7 @@ pub(crate) fn write(
                         .unwrap()
                         .to_owned();
                     if let Some(settings) = settings {
-                        part.metadata.extend(
-                            settings
-                                .options
-                                .iter()
-                                .filter(|item| item.key != "extruder")
-                                .cloned(),
-                        );
-                        part.metadata.extend(
-                            settings
-                                .retained_metadata
-                                .iter()
-                                .filter(|item| {
-                                    matches!(
-                                        item.key.as_str(),
-                                        "source_in_inches" | "source_in_meters"
-                                    )
-                                })
-                                .cloned(),
-                        );
-                        if settings.has_parametric_shape {
-                            return Err(unsupported("text or embossed shapes"));
-                        }
-                        part.mesh_stat = settings.mesh_stat.clone();
+                        retain_part_settings(&mut part, settings)?;
                     }
                     if let Some(extruder) = volume.region_overrides().extruder {
                         part.metadata
@@ -163,6 +141,31 @@ pub(crate) fn write(
     let scene = SceneLayout::new(project, plates);
     let settings = project_settings::write_secure(raw)?;
     write_package(&objects, settings, None, (None, None), Some(&scene))
+}
+
+fn retain_part_settings(
+    part: &mut geometry::Part,
+    settings: &PartSettings,
+) -> Result<(), SliceError> {
+    if settings.has_parametric_shape {
+        return Err(unsupported("text or embossed shapes"));
+    }
+    part.metadata.extend(
+        settings
+            .options
+            .iter()
+            .filter(|item| item.key != "extruder")
+            .cloned(),
+    );
+    part.metadata.extend(
+        settings
+            .retained_metadata
+            .iter()
+            .filter(|item| matches!(item.key.as_str(), "source_in_inches" | "source_in_meters"))
+            .cloned(),
+    );
+    part.mesh_stat = settings.mesh_stat.clone();
+    Ok(())
 }
 
 pub(super) fn unsupported(reason: &str) -> SliceError {
@@ -297,7 +300,8 @@ impl<'a> SceneLayout<'a> {
             xml::metadata(out, "    ", "plater_name", value("plater_name", ""));
             xml::metadata(out, "    ", "locked", value("locked", "false"));
             for &key in PLATE_FIELDS {
-                if let Some(item) = plate.metadata.iter().find(|item| item.key == key) {
+                let item = plate.metadata.iter().find(|item| item.key == key);
+                if let Some(item) = item {
                     xml::metadata(out, "    ", key, &item.value);
                 }
             }
@@ -316,17 +320,19 @@ impl<'a> SceneLayout<'a> {
             out.push_str("  </plate>\n");
         }
         out.push_str("  <assemble>\n");
-        if let Some(assemble) = self.assemble {
-            for item in &assemble.items {
-                let Some(instance) = self.instances.get(&(item.object_id, item.instance_id)) else {
-                    continue;
-                };
-                let id = objects[instance.object].id;
-                let ordinal = instance.ordinal;
-                let transform = quick_xml::escape::escape(&item.transform);
-                let offset = quick_xml::escape::escape(&item.offset);
-                writeln!(out, "   <assemble_item object_id=\"{id}\" instance_id=\"{ordinal}\" transform=\"{transform}\" offset=\"{offset}\" />").unwrap();
-            }
+        for item in self
+            .assemble
+            .into_iter()
+            .flat_map(|assemble| &assemble.items)
+        {
+            let Some(instance) = self.instances.get(&(item.object_id, item.instance_id)) else {
+                continue;
+            };
+            let id = objects[instance.object].id;
+            let ordinal = instance.ordinal;
+            let transform = quick_xml::escape::escape(&item.transform);
+            let offset = quick_xml::escape::escape(&item.offset);
+            writeln!(out, "   <assemble_item object_id=\"{id}\" instance_id=\"{ordinal}\" transform=\"{transform}\" offset=\"{offset}\" />").unwrap();
         }
         out.push_str("  </assemble>\n");
     }

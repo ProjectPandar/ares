@@ -18,18 +18,23 @@ impl ObjectSettings {
         let mut options = Vec::new();
         for entry in metadata {
             match entry.key.as_str() {
-                "name" => name = entry.value,
-                "module" => module = entry.value,
-                _ => {
-                    if let Some((key, value)) = deserialize_object_model_field(
-                        entry.key,
-                        entry.value,
-                        &mut overrides,
-                        &mut region_overrides,
-                    )? {
-                        options.push(Metadata { key, value });
-                    }
+                "name" => {
+                    name = entry.value;
+                    continue;
                 }
+                "module" => {
+                    module = entry.value;
+                    continue;
+                }
+                _ => {}
+            }
+            if let Some((key, value)) = deserialize_object_model_field(
+                entry.key,
+                entry.value,
+                &mut overrides,
+                &mut region_overrides,
+            )? {
+                options.push(Metadata { key, value });
             }
         }
         Ok(Self {
