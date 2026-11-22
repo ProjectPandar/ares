@@ -10,22 +10,49 @@ use crate::{
     args::DirectSliceArgs,
     failure::{CliFailure, slice_error_to_failure},
     preset_sources::read_preset_files,
+    slice_plates::{self, PlateOptions},
     split_native_list,
 };
 
 pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
-    let plate = u32::try_from(
-        args.selection
-            .expect("--slice is required without a subcommand"),
-    )
-    .ok()
-    .filter(|&plate| plate > 0)
-    .ok_or_else(|| {
+    let datadir = args
+        .datadir
+        .as_deref()
+        .filter(|path| !path.as_os_str().is_empty());
+    if let Some(datadir) = datadir
+        && !datadir.exists()
+        && fs::create_dir_all(datadir).is_err()
+    {
+        eprintln!(
+            "Could not create data directory: {}\nsetup params error",
+            datadir.display()
+        );
+        std::process::exit(-2);
+    }
+    let selection = args
+        .selection
+        .expect("--slice is required without a subcommand");
+    let plate = u32::try_from(selection).map_err(|_| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
             "select a project plate with --slice <n>",
         )
     })?;
+    if plate == 0
+        && let Some((_, flag)) = [
+            (args.strict, "--strict"),
+            (args.load_custom_gcodes.is_some(), "--load-custom-gcodes"),
+            (args.export_statistics, "--export-statistics"),
+        ]
+        .into_iter()
+        .find(|(present, _)| *present)
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("{flag} is not supported with --slice 0 for a saved project"),
+        )
+        .into());
+    }
     let presets = match (
         args.load_settings.as_deref(),
         args.load_filaments.as_deref(),
@@ -41,10 +68,11 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
     };
     let input = &args.inputs[0];
-    let output = args
+    let directory = args
         .outputdir
-        .expect("--outputdir is required without a subcommand")
-        .join(format!("plate_{plate}.gcode"));
+        .as_deref()
+        .expect("--outputdir is required without a subcommand");
+    let output = directory.join(format!("plate_{}.gcode", plate.max(1)));
     let bytes = match fs::read(input) {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
@@ -56,6 +84,27 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
+    if plate == 0 {
+        return slice_plates::run(
+            PlateOptions {
+                input,
+                directory: Some(directory),
+                datadir,
+                load_settings: args.load_settings.as_deref(),
+                load_filaments: args.load_filaments.as_deref(),
+                project_preset_catalog: None,
+                resources_dir: None,
+                uptodate: false,
+                orient: false,
+                #[cfg(target_os = "linux")]
+                report_plate: 1,
+            },
+            selection,
+            &bytes,
+            &ConfigOverrides::default(),
+            SlicerContext::new(0).with_no_check(args.no_check),
+        );
+    }
     enum ProjectPresets<'a> {
         Replace(&'a str, &'a str),
         Saved(Option<UpwardMachineSource>, Option<Vec<u8>>),
@@ -82,8 +131,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     let processed = match presets {
         ProjectPresets::Replace(settings, filaments) => {
             let processed = slice_with_replacement(
-                (input, &bytes, plate),
-                (settings, filaments),
+                (input, &bytes, plate, &output),
+                (settings, filaments, datadir),
                 context,
                 &mut sliced_plate,
                 args.export_statistics,
@@ -181,8 +230,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
 }
 
 async fn slice_with_replacement(
-    (input, bytes, plate): (&Path, &[u8], u32),
-    (settings, filaments): (&str, &str),
+    (input, bytes, plate, output): (&Path, &[u8], u32, &Path),
+    (settings, filaments, datadir): (&str, &str, Option<&Path>),
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
@@ -208,6 +257,17 @@ async fn slice_with_replacement(
             source_identity: source_identity.as_ref(),
         })
         .collect::<Vec<_>>();
+    let loaded_sources = datadir
+        .map(|datadir| {
+            slice_plates::sources_for_slice(
+                Some(datadir),
+                settings.iter().chain(&filaments).copied(),
+                output,
+                #[cfg(target_os = "linux")]
+                plate,
+            )
+        })
+        .transpose()?;
     let filename = input
         .file_name()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?
@@ -217,7 +277,7 @@ async fn slice_with_replacement(
         LoadSettingsSliceRequest {
             filename: &filename,
             catalog_json: None,
-            loaded_sources: None,
+            loaded_sources: loaded_sources.as_ref(),
             uptodate: false,
             settings: &settings,
             filaments: &filaments,
