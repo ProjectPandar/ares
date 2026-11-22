@@ -3,7 +3,7 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { CompatiblePresets, ConfigValue, DirectProjectSliceOptions, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
+import type { AresSlicerOptions, CompatiblePresets, ConfigValue, DirectProjectSliceOptions, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -12,15 +12,6 @@ export type * from "./configDef.js";
 export type * from "./types.js";
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; onStatus?: (status: SlicingStatus) => void };
-
-export interface AresSlicerOptions {
-  /** A module worker running `@ares-slicer/wasm/worker`. */
-  worker: Worker;
-  /** URL of `@ares-slicer/wasm/ares_wasm_bg.wasm`. */
-  wasmUrl: string | URL;
-  /** Called once with the HardCrash text when the module traps; every call fails with it from then on. */
-  onCrash?: (message: string) => void;
-}
 
 /**
  * Promise client for the Ares WebAssembly slicer. Every call runs in the
@@ -350,6 +341,11 @@ export class AresSlicer {
   async viewColors(viewType: string, visibleRoles: number, visibleOptions: number): Promise<ViewColors> {
     await this.#ready;
     return (await this.#call({ kind: "viewColors", viewType, visibleRoles, visibleOptions })) as ViewColors;
+  }
+
+  /** From now on the worker packs `Toolpaths.textures` of each slice result, in rows of up to `maxTextureSize` texels. */
+  async prepareViewerTextures(maxTextureSize: number): Promise<void> {
+    await this.#call({ kind: "prepareViewerTextures", maxTextureSize });
   }
 
   /**
