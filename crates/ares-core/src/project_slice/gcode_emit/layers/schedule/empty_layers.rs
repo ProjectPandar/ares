@@ -15,6 +15,8 @@ pub(super) fn collect(
     options: &[ObjectOptions],
 ) -> Vec<PrintWarning> {
     let (objects, support) = layers;
+    let printer = &traversal.resolved.views.full.printer.remaining;
+    let belt_printer = printer.belt_printer.0;
     let mut last: Vec<Option<(f64, bool)>> = vec![None; objects.len()];
     let mut ranges = vec![Vec::new(); objects.len()];
     for &(z, entry) in merged {
@@ -65,7 +67,8 @@ pub(super) fn collect(
         }
         let previous_z = last[object].map_or(0.0, |(z, _)| z);
         let maximal_print_z = previous_z + height + extra_gap.max(0.0);
-        if has_extrusions && z > maximal_print_z + 2.0 * super::EPSILON {
+        let belt_leading_gap = belt_printer && last[object].is_none();
+        if has_extrusions && !belt_leading_gap && z > maximal_print_z + 2.0 * super::EPSILON {
             ranges[object].push((previous_z, z));
         }
         if has_extrusions {
