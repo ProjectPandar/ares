@@ -49,7 +49,7 @@ pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRo
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
-    SlicedArchive,
+    SlicedArchive, SlicedArchiveObject,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,

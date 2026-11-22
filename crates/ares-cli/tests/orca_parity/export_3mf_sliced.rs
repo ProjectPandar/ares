@@ -23,15 +23,33 @@ const MD5: &str = "Metadata/plate_1.gcode.md5";
 #[test]
 #[ignore = "deferred until direct STL placement and slicing are available"]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
-    sliced_archive_matches_native(false);
+    sliced_archive_matches_native(None);
 }
 
 #[test]
 fn cli_sliced_3mf_from_saved_project_matches_native_archive() {
-    sliced_archive_matches_native(true);
+    sliced_archive_matches_native(Some(SavedShape::Single));
 }
 
-fn sliced_archive_matches_native(saved: bool) {
+#[test]
+fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
+    sliced_archive_matches_native(Some(SavedShape::TwoObjects));
+}
+
+#[test]
+fn cli_sliced_3mf_with_translated_model_part_matches_native_archive() {
+    sliced_archive_matches_native(Some(SavedShape::TwoObjectsWithParts));
+}
+
+#[derive(Clone, Copy)]
+enum SavedShape {
+    Single,
+    TwoObjects,
+    TwoObjectsWithParts,
+}
+
+fn sliced_archive_matches_native(shape: Option<SavedShape>) {
+    let saved = shape.is_some();
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -41,12 +59,19 @@ fn sliced_archive_matches_native(saved: bool) {
     for dir in [&native_cwd, &ares_cwd] {
         fs::create_dir_all(dir.join("out")).unwrap();
     }
-    if saved {
+    if let Some(shape) = shape {
         let source = root.join("source/cwd");
         fs::create_dir_all(source.join("out")).unwrap();
         write_saved_input(&runner, &source);
+        let mut input = fs::read(source.join("saved.3mf")).unwrap();
+        if !matches!(shape, SavedShape::Single) {
+            input = super::export_3mf_sliced_rejection::multiobject_project(
+                &input,
+                matches!(shape, SavedShape::TwoObjectsWithParts),
+            );
+        }
         for dir in [&native_cwd, &ares_cwd] {
-            fs::copy(source.join("saved.3mf"), dir.join("saved.3mf")).unwrap();
+            fs::write(dir.join("saved.3mf"), &input).unwrap();
         }
     } else {
         write_inputs(&native_cwd);
@@ -67,7 +92,8 @@ fn sliced_archive_matches_native(saved: bool) {
     ]);
     assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
-    assert_eq!(native.len(), 13);
+    let split_files = 1 + usize::from(saved && !matches!(shape, Some(SavedShape::Single)));
+    assert_eq!(native.len(), 12 + split_files);
     check_md5(&native);
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(
@@ -254,7 +280,7 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
             .bytes = digest.into_bytes();
     }
     assert_eq!(native.len(), ares.len());
-    for (native, ares) in native.into_iter().zip(ares) {
+    for (mut native, mut ares) in native.into_iter().zip(ares) {
         assert_eq!(native.name, ares.name);
         assert_eq!(native.compression, ares.compression, "{}", native.name);
         assert_eq!(
@@ -275,6 +301,10 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
         assert_eq!(native.extra, ares.extra, "{} extra fields", native.name);
         assert_eq!(native.comment, ares.comment, "{} comment", native.name);
 
+        if native.name == "Metadata/model_settings.config" && native.bytes != ares.bytes {
+            native.bytes = model_settings_in_object_id_order(&native.bytes);
+            ares.bytes = model_settings_in_object_id_order(&ares.bytes);
+        }
         let mismatch = native
             .bytes
             .iter()
@@ -288,4 +318,33 @@ fn compare_members(mut native: Vec<Member>, mut ares: Vec<Member>) {
             ares.bytes.len(),
         );
     }
+}
+
+fn model_settings_in_object_id_order(bytes: &[u8]) -> Vec<u8> {
+    // bbs_3mf.cpp:6218,8306: Native iterates object records by model pointer.
+    // Reorder only the complete top-level records, without reserializing XML.
+    let object = Regex::new(r#"(?ms)^  <object id="([0-9]+)"[^>\n]*>\n.*?^  </object>\n"#).unwrap();
+    let mut records: Vec<_> = object
+        .captures_iter(bytes)
+        .map(|record| (record.get(1).unwrap().as_bytes(), record.get(0).unwrap()))
+        .collect();
+    if records.len() < 2 {
+        return bytes.to_vec();
+    }
+    assert!(
+        records
+            .windows(2)
+            .all(|pair| pair[0].1.end() == pair[1].1.start())
+    );
+    let start = records[0].1.start();
+    let end = records.last().unwrap().1.end();
+    records.sort_unstable_by_key(|record| record.0);
+    assert!(records.windows(2).all(|pair| pair[0].0 != pair[1].0));
+    let mut ordered = Vec::with_capacity(bytes.len());
+    ordered.extend_from_slice(&bytes[..start]);
+    for (_, record) in records {
+        ordered.extend_from_slice(record.as_bytes());
+    }
+    ordered.extend_from_slice(&bytes[end..]);
+    ordered
 }
