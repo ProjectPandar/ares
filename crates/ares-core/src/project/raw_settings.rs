@@ -159,6 +159,7 @@ impl ProjectSettingsRaw {
     /// (matching `SliceOptions`' normalization, which does not drop them).
     pub(crate) fn handle_legacy(&mut self) {
         let mut normalized = BTreeMap::new();
+        let mut derived = Vec::new();
         for (mut key, value) in std::mem::take(&mut self.0) {
             let scalar = matches!(
                 value,
@@ -173,17 +174,13 @@ impl ProjectSettingsRaw {
             } else {
                 String::new()
             };
-            // `load_from_json`-level derived keys (`Config.cpp:937-945`): a
-            // string `key`/token can produce an extra entry (e.g.
-            // `is_infill_first` for `infill/…` wall orders) before
-            // `handle_legacy` rewrites the pair.
+            // Read the source pair before it is rewritten. Config.cpp:996–1005,
+            // 1072–1075 applies the derived value after the document's explicit fields.
             if scalar
-                && let Some((derived_key, derived_token)) =
+                && let Some(assignment) =
                     crate::options::legacy::handle_legacy_derived(&key, &token)
             {
-                normalized
-                    .entry(derived_key.to_owned())
-                    .or_insert_with(|| RawConfigValue::Text(derived_token.to_owned()));
+                derived.push(assignment);
             }
             crate::options::handle_legacy(&mut key, &mut token);
             if key.is_empty() {
@@ -201,6 +198,12 @@ impl ProjectSettingsRaw {
             };
             normalized.insert(key, stored);
         }
+        normalized.extend(derived.into_iter().map(|(key, value)| {
+            (
+                key.to_owned(),
+                RawConfigValue::Text(u8::from(value).to_string()),
+            )
+        }));
         self.0 = normalized;
     }
 
