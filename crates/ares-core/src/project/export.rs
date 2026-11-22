@@ -159,6 +159,7 @@ fn write_package(
             xml::main_model(
                 &objects,
                 sliced.as_ref().and_then(|s| s.orca_version.as_deref()),
+                scene.is_some(),
             )
             .into_bytes(),
         ),

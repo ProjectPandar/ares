@@ -61,7 +61,7 @@ mod update_single_to_multi;
 mod validation;
 mod vector_resize;
 pub(crate) use bed_temperature::first_layer_bed_temperature_key_for;
-pub(crate) use config_types::format_number;
+pub(crate) use config_types::{format_number, format_number_precision};
 mod arc_fitting;
 pub use arc_fitting::ArcFittingMode;
 pub use decode::{decode_config_value, decode_config_value_by_key};

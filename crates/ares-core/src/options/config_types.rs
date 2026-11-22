@@ -12,8 +12,8 @@ pub use opaque::{
     VariantStride,
 };
 pub use point::{Point2d, Point2dGroups, Point2dList};
-pub(crate) use scalar::format_number;
 pub use scalar::{FloatOrPercent, Millimeters, OrcaFloat, Percent};
+pub(crate) use scalar::{format_number, format_number_precision};
 pub use scalar_bool_int::{OrcaBool, OrcaInt, OrcaUInt};
 pub use scalar_nullable::Nullable;
 pub use vector::{
