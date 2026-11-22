@@ -22,6 +22,20 @@ pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceE
     write_raw(&raw, false)
 }
 
+pub(super) fn write_secure(
+    raw: &crate::project::raw_settings::ProjectSettingsRaw,
+) -> Result<Vec<u8>, SliceError> {
+    let mut raw = raw.clone();
+    // PresetBundle::full_config_secure (PresetBundle.cpp:5470–5482).
+    for def in option_definitions()
+        .iter()
+        .filter(|def| device_connection_field(def.key))
+    {
+        raw.remove(def.key);
+    }
+    write_raw(&raw, false)
+}
+
 pub(crate) fn direct_stl_settings(
     project: &crate::Project,
 ) -> crate::project::raw_settings::ProjectSettingsRaw {

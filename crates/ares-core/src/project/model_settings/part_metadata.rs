@@ -62,11 +62,14 @@ impl PartSettings {
     ) -> Result<Self, SliceError> {
         let mut region_overrides = RegionOptionOverrides::default();
         let mut retained_metadata = Vec::with_capacity(metadata.len());
+        let mut options = Vec::new();
         for entry in metadata {
             if is_part_structural_metadata(&entry.key) {
                 retained_metadata.push(entry);
-            } else {
-                deserialize_region_model_field(entry.key, entry.value, &mut region_overrides)?;
+            } else if let Some((key, value)) =
+                deserialize_region_model_field(entry.key, entry.value, &mut region_overrides)?
+            {
+                options.push(Metadata { key, value });
             }
         }
         Ok(Self {
@@ -74,6 +77,7 @@ impl PartSettings {
             subtype,
             region_overrides,
             retained_metadata,
+            options,
             mesh_stat,
         })
     }
