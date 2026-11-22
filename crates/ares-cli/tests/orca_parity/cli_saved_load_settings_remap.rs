@@ -165,7 +165,7 @@ fn replacement_preset(path: &str, edit: impl FnOnce(&mut Value)) -> String {
     replacement.into_os_string().into_string().unwrap()
 }
 
-fn repack_project(exported: &Path, project: &Path) {
+pub(super) fn repack_project(exported: &Path, project: &Path) {
     let mut source = ZipArchive::new(Cursor::new(fs::read(exported).unwrap())).unwrap();
     let mut archive = ZipWriter::new(Cursor::new(Vec::new()));
     let options = SimpleFileOptions::default();
