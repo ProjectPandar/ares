@@ -52,10 +52,14 @@ the cited upstream `GCode` and `GCodeWriter` boundaries.
    first-layer and ordinary nozzle targets. Compare Native and the public Ares
    slice in both configured parity modes. At the incoming object's first-layer
    restart, require the flavor-aware command and no hard-coded `M104`.
-2. Include a single-extruder case, a SEMM case that omits the tool argument,
-   and a multi-extruder case that exercises the formatter's tool parameter.
-   Keep the command witness at the sequential-object restart rather than
-   accepting startup commands as coverage.
+2. Compare the whole output for the single-extruder and SEMM cases, both of
+   which omit the tool argument. A third project configures two tools and
+   prints both objects with the second tool, exercising `P1` without a tool
+   change at the object boundary. Compare its restart-span nozzle commands
+   directly against the Native run. That project has a separate discrepancy
+   in the serialized maps for the unused tool (`filament_nozzle_map` and
+   `filament_volume_map`), outside this rewrite. All three command checks
+   use `printing_by_object_gcode` to locate the restart, not startup.
 3. Run the focused sequential/temperature parity families in both modes,
    followed by the broad paired run. Require zero new regressions, formatting,
    all-target Clippy, and the WASM check. Do not commit Native output or
