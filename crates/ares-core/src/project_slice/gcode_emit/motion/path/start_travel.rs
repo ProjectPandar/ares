@@ -109,6 +109,9 @@ pub(super) fn emit(
         .or(contour_z)
         .or(after_contour.then_some(state.layer_z));
     let target_z = travel_z.unwrap_or(state.layer_z);
+    let layer_travel_feedrate = state.travel_feedrate;
+    state.belt_travel_width = f64::from(properties.width);
+    state.travel_feedrate = state.pointwise_travel_feedrate([first_x, first_y, target_z]);
     // `GCode.cpp:9226-9227`: the writer's clear flag is not part of the condition, and the
     // change-layer flag counts whatever the writer position.
     let needs_travel = !state.last_position_defined
@@ -156,6 +159,8 @@ pub(super) fn emit(
     } else {
         (false, false, false)
     };
+    state.belt_travel_width = 0.;
+    state.travel_feedrate = layer_travel_feedrate;
     if let Some(z) = slope_start_z {
         state.scarf_z = Some(z);
     }

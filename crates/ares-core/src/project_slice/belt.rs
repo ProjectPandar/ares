@@ -90,7 +90,7 @@ pub(super) fn admit(
     }
     let axis = printer.belt_slice_rotation;
     let angle = printer.belt_slice_rotation_angle.0;
-    let (sin, cos) = angle.to_radians().sin_cos();
+    let sin = angle.to_radians().sin();
     if !matches!(axis, BeltRotationAxis::X | BeltRotationAxis::Y)
         || !angle.is_finite()
         || angle.abs() <= EPSILON
@@ -98,10 +98,7 @@ pub(super) fn admit(
     {
         return Err(unsupported("belt_slice_rotation"));
     }
-    // BeltTransform.cpp:94–108 and GCode.cpp:11629–11632.
-    if cos.abs() > EPSILON && (sin / cos).abs() >= EPSILON {
-        return Err(unsupported("first_layer_bands"));
-    }
+
     let [x, y, z] = remap_axes(printer).map(|(index, _)| index);
     if x == y || x == z || y == z {
         return Err(unsupported("gcode_remap"));
@@ -187,6 +184,20 @@ pub(super) struct BeltSlice {
     pub(super) height: f64,
     pub(super) centered_transform: Transform3d,
     pub(super) print_z_offset: f64,
+    pub(super) floor: Option<BeltFloor>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct BeltFloor {
+    axis: usize,
+    shear: f64,
+    shift: f64,
+}
+
+impl BeltFloor {
+    pub(super) fn height(self, xy: [f64; 2], z: f64, width: f64) -> f64 {
+        z - (self.shear * xy[self.axis] + self.shift) - 0.5 * width * self.shear.abs()
+    }
 }
 
 impl BeltSlice {
@@ -198,10 +209,12 @@ impl BeltSlice {
     ) -> Result<Self, SliceError> {
         let center = super::centering::center(source, group, scale)?;
         let center = Point3d::new(scale.unscale(center.x()), scale.unscale(center.y()), 0.);
+        // PrintApply.cpp:213–214 adds to Z using the one-based printable instance ordinal.
+        let instance_ordinal = 1.;
         let centered = group
             .transform
             .without_xy_translation()
-            .pretranslated(Point3d::new(-center.x, -center.y, 0.));
+            .pretranslated(Point3d::new(-center.x, -center.y, 1e-10 * instance_ordinal));
         let volume = &source.volumes()[0];
         let local = centered.then(volume.transform());
         let forward = rotation.forward();
@@ -209,24 +222,38 @@ impl BeltSlice {
         let rotated_volume = rotated.then(volume.transform());
         let mut lower = [f64::INFINITY; 3];
         let mut upper = [f64::NEG_INFINITY; 3];
-        let mut min_z: f64 = 0.;
+        let (axis, shear) = match rotation.axis {
+            BeltRotationAxis::X => (1, rotation.sin / rotation.cos),
+            BeltRotationAxis::Y => (0, -rotation.sin / rotation.cos),
+            _ => unreachable!("belt admission requires a tilted axis"),
+        };
+        let floor = (rotation.cos.abs() > EPSILON && shear.abs() >= EPSILON).then_some(BeltFloor {
+            axis,
+            shear,
+            shift: 0.,
+        });
+        let floor_z = |p: Point3d| floor.map_or(0., |floor| floor.shear * [p.x, p.y][floor.axis]);
+        let margin = floor.map_or(0., |floor| 10. * floor.shear.abs());
+        let mut min_z = f64::INFINITY;
         for &vertex in volume.mesh().vertices() {
             let point = local.transform_point(vertex);
             for (i, value) in [point.x, point.y, point.z].into_iter().enumerate() {
                 lower[i] = lower[i].min(value);
                 upper[i] = upper[i].max(value);
             }
-            min_z = min_z.min(rotated_volume.transform_point(vertex).z);
+            let rotated_point = rotated_volume.transform_point(vertex);
+            min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
         }
-        // BeltTransform.cpp:151–168: estimate the plan from the eight bbox corners,
-        // whereas BeltSliceStrategy.cpp:54–75 lifts the actual rotated mesh.
-        let (mut bottom, mut top) = (0.0_f64, f64::NEG_INFINITY);
+        let lift = (margin - min_z).max(0.);
+        // BeltTransform.cpp:151–168 estimates the below-footprint floor from
+        // the eight bbox corners, while BeltSliceStrategy.cpp scans the mesh.
+        let (mut bottom, mut top) = (f64::INFINITY, f64::NEG_INFINITY);
         let bounds = [lower, upper];
         for corner in 0..8 {
             let [x, y, z] = std::array::from_fn(|i| bounds[(corner >> i) & 1][i]);
-            let z = forward.transform_point(Point3d::new(x, y, z)).z;
-            bottom = bottom.min(z);
-            top = top.max(z);
+            let point = forward.transform_point(Point3d::new(x, y, z));
+            bottom = bottom.min(point.z).min(floor_z(point));
+            top = top.max(point.z);
         }
         // PrintObjectSlice.cpp:995–1038. The instance shift includes the center;
         // its contribution and the explicit centering correction sum to this.
@@ -235,10 +262,22 @@ impl BeltSlice {
             .transform_point(Point3d::new(0., 0., 0.));
         let placement =
             forward.transform_point(Point3d::new(placed.x + center.x, placed.y + center.y, 0.));
+        let correction = placement.z - lift;
+        let print_z_offset = if correction.abs() > EPSILON {
+            correction
+        } else {
+            0.
+        };
+        // PrintObjectSlice.cpp:910–921,1035–1041: lift the plane, then
+        // shift it by the same correction as Layer::print_z.
         Ok(Self {
-            height: top - bottom,
-            centered_transform: rotated.pretranslated(Point3d::new(0., 0., -min_z)),
-            print_z_offset: min_z + placement.z,
+            height: top - (bottom - margin),
+            centered_transform: rotated.pretranslated(Point3d::new(0., 0., lift)),
+            print_z_offset,
+            floor: floor.map(|floor| BeltFloor {
+                shift: lift + print_z_offset,
+                ..floor
+            }),
         })
     }
 }

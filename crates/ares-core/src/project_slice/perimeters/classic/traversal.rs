@@ -136,6 +136,13 @@ fn prepare_object(
 }
 
 impl PostClassicTraversalPrintObject {
+    pub(in crate::project_slice) fn belt_floor(
+        &self,
+    ) -> Option<crate::project_slice::belt::BeltFloor> {
+        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
+        input.object.as_parts().0.plan.belt_slice?.floor
+    }
+
     pub(in crate::project_slice) fn physical_layers(
         &self,
     ) -> &[crate::project_slice::layers::PlannedLayer] {
