@@ -10,12 +10,26 @@ use crate::{OrcaRunner, presets::VendorProfiles, runner::repo_root};
 
 #[test]
 fn export_x1c_stl_matches_native_unsliced_project_members() {
-    export_matches_native("BBL", "Bambu Lab X1 Carbon 0.4 nozzle", "3mf-export.stl");
+    export_matches_native(
+        "BBL",
+        "Bambu Lab X1 Carbon 0.4 nozzle",
+        "3mf-export.stl",
+        || fs::read(repo_root().join("tests/parity/cube10.stl")).unwrap(),
+    );
 }
 
 #[test]
 fn export_stinger_3mf_matches_native_unsliced_project_members() {
-    export_matches_native("LH", "LH Stinger 0.4 nozzle", "3mf-export.3mf");
+    export_matches_native("LH", "LH Stinger 0.4 nozzle", "3mf-export.3mf", || {
+        synthetic_3mf(false)
+    });
+}
+
+#[test]
+fn export_preserves_fractional_placement_of_a_rotated_mesh_like_native() {
+    export_matches_native("LH", "LH Stinger 0.4 nozzle", "rotated.3mf", || {
+        synthetic_3mf(true)
+    });
 }
 
 #[test]
@@ -47,7 +61,12 @@ fn export_rejects_slicing_and_does_not_create_an_archive() {
     assert!(!work.path().join("sliced.3mf").exists());
 }
 
-fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
+fn export_matches_native(
+    vendor: &str,
+    printer: &str,
+    filename: &str,
+    model: impl FnOnce() -> Vec<u8>,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -71,12 +90,7 @@ fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
         )
         .unwrap();
     }
-    let model = if filename.ends_with(".stl") {
-        fs::read(repo_root().join("tests/parity/cube10.stl")).unwrap()
-    } else {
-        synthetic_3mf()
-    };
-    fs::write(runner.work_dir().join(filename), model).unwrap();
+    fs::write(runner.work_dir().join(filename), model()).unwrap();
     let settings = [
         "--load-settings",
         "machine.json;process.json",
@@ -163,7 +177,7 @@ fn archive_members(path: &Path) -> Vec<(String, Vec<u8>)> {
         .collect()
 }
 
-fn synthetic_3mf() -> Vec<u8> {
+fn synthetic_3mf(rotated: bool) -> Vec<u8> {
     let members = [
         (
             "[Content_Types].xml",
@@ -181,7 +195,16 @@ fn synthetic_3mf() -> Vec<u8> {
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
     for (name, body) in members {
         zip.start_file(name, SimpleFileOptions::default()).unwrap();
-        zip.write_all(body.as_bytes()).unwrap();
+        if rotated && name == "3D/3dmodel.model" {
+            // Rotate the tetrahedron mesh by a 3-4-5 basis so vertex coordinates remain exact.
+            let body = body
+                .replace("x=\"10\" y=\"0\"", "x=\"6\" y=\"8\"")
+                .replace("x=\"0\" y=\"10\"", "x=\"-8\" y=\"6\"")
+                .replace(" 100 100 0", " 100.123456 100.234567 0");
+            zip.write_all(body.as_bytes()).unwrap();
+        } else {
+            zip.write_all(body.as_bytes()).unwrap();
+        }
     }
     zip.finish().unwrap().into_inner()
 }
