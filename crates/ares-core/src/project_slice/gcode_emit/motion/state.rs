@@ -30,6 +30,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) template_rng: super::super::value::TemplateRng,
     pub(in crate::project_slice::gcode_emit) template_context:
         super::super::template::ExportContext,
+    pub(in crate::project_slice::gcode_emit) writer_temperatures:
+        super::super::machine::WriterTemperatures,
     pub(in crate::project_slice::gcode_emit) hold_chamber_temp_for_flat_print: bool,
     pub(in crate::project_slice::gcode_emit) first_layer_hull: Vec<crate::geometry::Point>,
     pub(in crate::project_slice::gcode_emit) bed_printable_area: Option<crate::geometry::Polygon>,
