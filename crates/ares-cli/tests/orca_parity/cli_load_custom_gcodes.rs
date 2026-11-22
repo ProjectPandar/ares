@@ -1,5 +1,8 @@
 #![cfg(target_os = "linux")]
 
+#[path = "cli_load_custom_gcodes/toolchange.rs"]
+mod toolchange;
+
 use std::{
     ffi::OsString,
     fs,
@@ -40,6 +43,16 @@ fn cli_load_custom_gcodes_rejects_empty_json() {
 #[test]
 fn cli_load_custom_gcodes_reports_missing_file() {
     compare(false, None);
+}
+
+#[test]
+fn cli_load_custom_gcodes_multiasingle_toolchange_switches_filament() {
+    toolchange::compare_multiasingle_toolchange("MultiAsSingle", false, &[(0.4, 2)], &[0, 1]);
+}
+
+#[test]
+fn cli_load_custom_gcodes_single_filament_toolchange_keeps_object_filament() {
+    toolchange::compare_multiasingle_toolchange("MultiExtruder", true, &[(0.4, 2)], &[]);
 }
 
 fn compare(saved: bool, status: Option<i32>) {

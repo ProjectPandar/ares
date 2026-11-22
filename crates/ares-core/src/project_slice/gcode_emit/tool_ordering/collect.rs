@@ -34,6 +34,7 @@ pub(super) fn object(
     layer: &OrderedExtrusionLayer,
     traversal: &PreparedPostClassicTraversal,
     object: usize,
+    extruder_override: Option<usize>,
 ) {
     let regions = traversal.objects[object]
         .predecessor
@@ -79,10 +80,10 @@ pub(super) fn object(
             || (region_options.wall_loops.0 > 1
                 && soluble(region_options.inner_wall_filament_id.0.max(1) - 1));
         if usage.perimeters && (!by_layer || walls_nonoverriddable) {
-            target
-                .extruders
-                .push(region_options.outer_wall_filament_id.0 as usize);
-            if region_options.wall_loops.0 > 1 {
+            target.extruders.push(
+                extruder_override.unwrap_or(region_options.outer_wall_filament_id.0 as usize),
+            );
+            if extruder_override.is_none() && region_options.wall_loops.0 > 1 {
                 target
                     .extruders
                     .push(region_options.inner_wall_filament_id.0 as usize);
@@ -122,13 +123,18 @@ pub(super) fn object(
         let fills_nonoverriddable = categories
             .iter()
             .any(|&(present, overridable, id)| present && (!overridable || soluble(id.max(1) - 1)));
-        if fills_nonoverriddable || !by_layer {
-            target.extruders.extend(
+        let has_fill = categories.iter().any(|&(present, _, _)| present);
+        match extruder_override {
+            Some(extruder) if has_fill && (fills_nonoverriddable || !by_layer) => {
+                target.extruders.push(extruder);
+            }
+            None if fills_nonoverriddable || !by_layer => target.extruders.extend(
                 categories
                     .into_iter()
                     .filter(|&(present, _, _)| present)
                     .map(|(_, _, id)| id as usize),
-            );
+            ),
+            _ => {}
         }
         target.has_object |= usage.perimeters
             || usage.outer_wall_fill

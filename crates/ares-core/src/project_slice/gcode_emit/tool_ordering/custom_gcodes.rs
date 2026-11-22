@@ -9,6 +9,44 @@ use crate::{
     },
 };
 
+/// `ToolOrdering.cpp:584-600` and `CustomGCode.cpp:103-112`: collect
+/// one-based per-layer tool switches for MultiAsSingle by-layer ordering.
+pub(super) fn multi_as_single_switches(
+    traversal: &PreparedPostClassicTraversal,
+) -> Vec<(f64, usize)> {
+    let info = traversal.project.curr_plate_custom_gcodes();
+    let num_filaments = traversal
+        .resolved
+        .views
+        .full
+        .filament
+        .gcode
+        .filament_diameter
+        .0
+        .len();
+    if num_filaments <= 1
+        || object_extruder_count(traversal) != 1
+        || info.mode != CustomGCodeMode::MultiAsSingle
+    {
+        return Vec::new();
+    }
+    info.gcodes
+        .into_iter()
+        .filter(|item| item.kind == CustomGCodeType::ToolChange)
+        .map(|item| {
+            let extruder = item.extruder as usize;
+            (
+                item.print_z,
+                if extruder > num_filaments {
+                    1
+                } else {
+                    extruder
+                },
+            )
+        })
+        .collect()
+}
+
 impl ToolOrdering {
     /// By-layer orderings only: `GCode.cpp:2764-2767`. The sequential
     /// branch (`:2758-2760`) never assigns.

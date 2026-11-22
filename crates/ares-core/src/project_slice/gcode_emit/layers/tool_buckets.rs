@@ -51,14 +51,15 @@ pub(super) struct Input<'a> {
     /// are built, so the consuming adapter's clone/replay path keeps the
     /// last copy's in-place move for the phase that owns it.
     pub(super) copy_filter: Option<usize>,
-    pub(super) tools: &'a [usize],
-    pub(super) wiping: &'a super::super::tool_ordering::wiping::WipingExtrusions,
+    pub(super) layer_tools: &'a super::super::tool_ordering::LayerTools,
     pub(super) objects: &'a mut [Vec<OrderedExtrusionLayer>],
     pub(super) support: &'a [Vec<InstalledSupportLayer>],
     pub(super) raft: &'a mut [Vec<OrderedExtrusionLayer>],
 }
 
 pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::InstanceTour)> {
+    let tools = &input.layer_tools.extruders;
+    let wiping = &input.layer_tools.wiping;
     let mut buckets = BTreeMap::<usize, BTreeMap<usize, Entry>>::new();
     for (source, instance) in input.entries.iter().flat_map(|&source| {
         input.instances[source.object_index]
@@ -78,10 +79,10 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
                     .map(|entity| entity.role()),
                 options,
                 input.traversal,
-                input.tools,
+                tools,
                 [
-                    input.wiping.support_tool(source.object_index, false),
-                    input.wiping.support_tool(source.object_index, true),
+                    wiping.support_tool(source.object_index, false),
+                    wiping.support_tool(source.object_index, true),
                 ],
             ) {
                 let entry = buckets
@@ -90,8 +91,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
                     .entry(position)
                     .or_insert_with(|| Entry::new(source, instance));
                 entry.support_role = Some(role);
-                entry.support_wiping = input
-                    .wiping
+                entry.support_wiping = wiping
                     .support_tool(
                         source.object_index,
                         role == ExtrusionRole::SupportMaterialInterface,
@@ -108,7 +108,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
             } else {
                 layer
             };
-            object::raft(layer, options, input.traversal, input.tools)
+            object::raft(layer, options, input.traversal, tools)
                 .into_iter()
                 .map(|(tool, layer)| ((tool, false), layer))
                 .collect()
@@ -137,13 +137,9 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
             };
             object::split(
                 layer,
-                input.tools,
+                (tools, input.layer_tools.extruder_override),
                 |region| &regions[region].options,
-                |collection| {
-                    input
-                        .wiping
-                        .entity(source.object_index, collection, instance.copy)
-                },
+                |collection| wiping.entity(source.object_index, collection, instance.copy),
             )
         } else {
             BTreeMap::new()
@@ -167,7 +163,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
             // `layers[layer_id].original_object`, never islands. An object with
             // nothing on this filament is therefore still visited, with an empty
             // island list, and emits only its enter/exit markers.
-            for &tool in input.tools {
+            for &tool in tools {
                 buckets
                     .entry(tool)
                     .or_default()
@@ -176,8 +172,7 @@ pub(super) fn build(input: Input<'_>) -> Vec<(usize, super::island_visits::Insta
             }
         }
     }
-    input
-        .tools
+    tools
         .iter()
         .map(|&tool| {
             let entries = buckets.remove(&tool).unwrap_or_default();
