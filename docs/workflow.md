@@ -280,8 +280,9 @@ reads existing results and does not take `--plan`.
 | `check-ends` | Run `cargo check --workspace --all-targets` at every chain endpoint and the optional release endpoint. Retain every exit, including compiler failures. |
 | `static` | Run formatting, workspace/all-target Clippy with warnings denied, and the core/WASM target check on the exact tip. |
 | `incremental` | Select tests from actual inventories and run both base and candidate once in both parity modes. Count only entries whose filter status is `matches`. Never reuse an earlier base execution. |
+| `nonparity` | Run the default workspace selection excluding `orca_parity` once each on the base and tip, with the official Native environment and pinned suppliers. Use separate worktrees and CPU allocations disjoint from the `full` lanes. |
 | `prepare` | Build Native binaries and browser artifacts in separate worktrees. Retain dependency order within each lane, both parity inventories and artifact hashes. |
-| `full` | Require exact-tip endpoint, static and paired incremental results plus the prepared manifest hash. Consume that manifest once and run official, seeded and browser lanes on disjoint CPU allocations without retries. |
+| `full` | Require exact-tip endpoint, static, paired incremental and paired non-parity results plus the prepared manifest hash. Consume that manifest once and run official, seeded and browser lanes on disjoint CPU allocations without retries. |
 | `collect` | Compare inventories and results with the baselines. Write summary JSON, complete nonPASS frames and a report. Partial coverage cannot qualify. |
 | `land` | Require external approval bound to the tested tip. Create one local commit per chain with `git commit-tree`, followed by the optional release commit. Verify the final tree equals the tested tree. Print the push command without executing it. |
 
@@ -300,13 +301,14 @@ reads existing results and does not take `--plan`.
 After `restack`, use its generated linear configuration for `assemble`. Change only destination
 worktree and output paths when allocating the next stage. If `assemble` changes commit IDs,
 use its exact resulting tip and endpoints for subsequent stages. Any source restack invalidates
-previous endpoint, static, incremental and prepared results.
+previous endpoint, static, incremental, non-parity and prepared results.
 
 ```sh
 "$BATCH_SCRIPTS/assemble" linear.json --attempt assembly
 "$BATCH_SCRIPTS/check-ends" execution.json --attempt endpoints
 "$BATCH_SCRIPTS/static" execution.json --attempt static
 "$BATCH_SCRIPTS/incremental" execution.json --attempt paired
+"$BATCH_SCRIPTS/nonparity" execution.json --attempt workspace
 "$BATCH_SCRIPTS/prepare" execution.json --attempt artifacts
 "$BATCH_SCRIPTS/full" execution.json --attempt verification
 "$BATCH_SCRIPTS/collect" execution.json --attempt report
@@ -317,6 +319,19 @@ These commands show the order, not blanket authorization to run every stage. Fre
 prepared manifest path/hash and prerequisite result hashes in the execution configuration
 before `full`. Keep canonical environments and SHA-contract suppliers byte-identical. Do not
 wrap suppliers to set affinity. The outer runner supplies the replay CPU inside its lane.
+
+### Paired workspace results
+
+Use `cargo nextest run --workspace -E 'not binary(=orca_parity)'` with no retries. The overlap
+with Native probes and browser preparation fixtures is intentional. Freeze each revision's
+selected test IDs and check them against actual terminal results. Report new and removed IDs
+separately. Skips, missing or unexpected results, and regressions from PASS do not qualify.
+
+Both process exits must be 0 or 100 and agree with the reported outcomes. An inherited failure
+is eligible for an exception only when the ID, missing supplier and owner are in the policy
+frozen by hash before execution, and the failure message on both revisions identifies that
+exact missing supplier. A new failure, or a failure for any other reason, blocks progression.
+Report exceptions separately as failures; they do not count as coverage.
 
 ### Preparation requirements
 
