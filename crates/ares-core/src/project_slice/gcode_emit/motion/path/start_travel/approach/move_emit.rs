@@ -338,7 +338,7 @@ pub(super) fn emit_approach_move(
                 || state.writer_z.is_none()
                 || state.layer_change_travel_pending
                 || travel_will_move_z(state, leg_z));
-        let xy_feedrate = if split_position {
+        let xy_feedrate = if split_position && state.belt.is_none() {
             state.options.travel_feedrate
         } else {
             state.travel_feedrate
@@ -360,7 +360,7 @@ pub(super) fn emit_approach_move(
         );
         // The first extrusion still synchronizes Z in `restate` after XY-only travel.
         unclear_position_travel = first_position;
-        if split_position {
+        if split_position && state.belt.is_none() {
             let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
                 format!(

@@ -58,7 +58,7 @@ pub(super) fn emit_retracted_first_travel(
                 format!(
                     "G1 {} F{}{}\n",
                     state.z_words(raised_z),
-                    format_axis(travel::lift_z_feedrate(state)),
+                    format_axis(travel::lift_z_feedrate_at(state, raised_z)),
                     if state.options.gcode_comments {
                         " ; normal lift Z"
                     } else {

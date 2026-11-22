@@ -8,7 +8,7 @@ use crate::project_slice::gcode_emit::motion::{EmitState, format::axis as format
 /// (`GCodeWriter.cpp:824` callers): emits `G1 Z<z> F<lift feed>` plus
 /// the comment, latches the feedrate, and records the writer z.
 fn emit_z_restate(output: &mut Vec<u8>, state: &mut EmitState, z: f64, comment: &str) {
-    let z_feedrate = travel::lift_z_feedrate(state);
+    let z_feedrate = travel::lift_z_feedrate_at(state, z);
     output.extend_from_slice(
         format!(
             "G1 {} F{}{comment}\n",

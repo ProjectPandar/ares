@@ -161,6 +161,7 @@ pub(in crate::project_slice) fn emit(
     );
     let mut state = motion::EmitState {
         belt: motion::BeltWriter::new(&traversal.resolved.views.full.printer.remaining),
+        belt_fan_layers: motion::belt_fan_layers(traversal, initial_filaments.initial()),
         total_layer_count: tail_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
         current_seam_gap: traversal.resolved.views.full.process.region.seam_gap,

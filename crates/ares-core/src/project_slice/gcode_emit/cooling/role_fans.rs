@@ -5,18 +5,18 @@ use super::{
 };
 
 const FORCE_RESUME_FAN: &str = ";_FORCE_RESUME_FAN_SPEED\n";
-const BELT_FAN_LAYER: &str = ";__ARES_ROLE_FAN_BELT_LAYER__\n";
-const BELT_FAN_FIRST_LAYER: &str = ";__ARES_ROLE_FAN_BELT_FIRST_LAYER__\n";
+const BELT_BAND_START: &str = ";__ARES_ROLE_FAN_BELT_BAND_START__\n";
+const BELT_BAND_END: &str = ";__ARES_ROLE_FAN_BELT_BAND_END__\n";
 const BELT_FAN_CARRY: &str = ";__ARES_ROLE_FAN_BELT_CARRY__\n";
 
 pub(in crate::project_slice::gcode_emit) fn mark_belt_extrusion(
     output: &mut Vec<u8>,
-    first_layer: bool,
+    in_band: bool,
 ) {
-    output.extend_from_slice(if first_layer {
-        BELT_FAN_FIRST_LAYER.as_bytes()
+    output.extend_from_slice(if in_band {
+        BELT_BAND_START.as_bytes()
     } else {
-        BELT_FAN_LAYER.as_bytes()
+        BELT_BAND_END.as_bytes()
     });
 }
 
@@ -120,15 +120,10 @@ impl CoolingState {
                 .position(|byte| *byte == b'\n')
                 .map_or(output.len(), |offset| start + offset + 1);
             let marker = std::str::from_utf8(&output[start..end]).unwrap();
-            if matches!(
-                marker,
-                BELT_FAN_LAYER | BELT_FAN_FIRST_LAYER | BELT_FAN_CARRY
-            ) {
-                // GCode.hpp::effective_layer_index_for_point: the admitted
-                // zero-shear case uses layer ID rather than belt height.
+            if matches!(marker, BELT_BAND_START | BELT_BAND_END | BELT_FAN_CARRY) {
                 self.belt_fan_off = match marker {
-                    BELT_FAN_LAYER => !layer_open,
-                    BELT_FAN_FIRST_LAYER => self.ramp(tool).close_fan_first_layers() > 0,
+                    BELT_BAND_START => true,
+                    BELT_BAND_END => false,
                     _ => self.belt_fan_off,
                 };
                 let target = role_speed

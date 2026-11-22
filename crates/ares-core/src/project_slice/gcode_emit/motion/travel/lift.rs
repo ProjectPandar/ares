@@ -173,8 +173,14 @@ pub(super) fn enforce_allows_lift(state: &EmitState) -> bool {
 /// `travel_speed_z` when non-zero, else the first-layer or normal travel
 /// speed per `m_is_first_layer`. Every standalone `G1 Z` travel carries it.
 pub(in crate::project_slice::gcode_emit) fn z_feedrate(state: &EmitState) -> f64 {
+    z_feedrate_at(state, state.writer_z.unwrap_or(state.layer_z))
+}
+
+pub(in crate::project_slice::gcode_emit) fn z_feedrate_at(state: &EmitState, z: f64) -> f64 {
     if state.options.z_travel_feedrate > 0.0 {
         state.options.z_travel_feedrate
+    } else if state.belt_bands.is_some() {
+        state.pointwise_travel_feedrate([state.x, state.y, z])
     } else if state.layer_index == 0 {
         state.options.first_layer_travel_feedrate
     } else {
@@ -373,7 +379,7 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
 
 // GCodeWriter::_travel_to_z: the same normal lift serves both rejected-circle branches.
 fn append_normal(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64) {
-    let feedrate = z_feedrate(state);
+    let feedrate = z_feedrate_at(state, raised_z);
     let comment = if state.options.gcode_comments {
         " ; normal lift Z"
     } else {

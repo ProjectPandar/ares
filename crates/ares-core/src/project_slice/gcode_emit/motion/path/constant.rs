@@ -6,12 +6,29 @@ use crate::project_slice::gcode_emit::motion::{
 };
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
+pub(super) fn segment_lengths(
+    points: &[(i64, i64)],
+    scale: crate::geometry::CoordinateScale,
+) -> Vec<f64> {
+    // Line::length() * SCALING_FACTOR: subtract before converting to mm.
+    points
+        .windows(2)
+        .map(|pair| {
+            let dx = (pair[1].0 - pair[0].0) as f64;
+            let dy = (pair[1].1 - pair[0].1) as f64;
+            (dx * dx + dy * dy).sqrt() * scale.factor()
+        })
+        .collect()
+}
+
 pub(super) struct Emission<'a, 'b> {
     pub(super) output: &'a mut Vec<u8>,
     pub(super) points: &'a [(f64, f64)],
     pub(super) local_points: &'a [(f64, f64)],
     pub(super) timelapse_context: crate::project_slice::gcode_emit::timelapse::Context<'b>,
     pub(super) segment_lengths: &'a [f64],
+    pub(super) uncut_lengths: &'a [f64],
+    pub(super) scaled: (&'a [(i64, i64)], crate::geometry::CoordinateScale),
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
     pub(super) path_overhang_fan_active: bool,
@@ -28,6 +45,8 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
         timelapse_context,
 
         segment_lengths,
+        uncut_lengths,
+        scaled: (scaled_points, scale),
         fitting,
         last_scaled,
         path_overhang_fan_active,
@@ -93,7 +112,20 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
                 if force_no_extrusion {
                     extrusion::force_no_extrusion_segment(output, end, state);
                 } else {
-                    extrusion::linear_segment(output, end, length, properties, state);
+                    state.mark_belt_line(
+                        output,
+                        properties.width,
+                        (scaled_points[endpoint - 1], scaled_points[endpoint]),
+                        scale,
+                    );
+                    let uncut_length = uncut_lengths.get(endpoint - 1).copied().unwrap_or(length);
+                    extrusion::linear_segment(
+                        output,
+                        end,
+                        (length, uncut_length),
+                        properties,
+                        state,
+                    );
                 }
                 let (x, y) = local_points[endpoint];
                 crate::project_slice::gcode_emit::layers::farthest::check_and_insert(

@@ -1,5 +1,6 @@
 mod adaptive_pa;
 mod avoid_crossing;
+mod belt_split;
 mod constant;
 pub(super) mod contour;
 mod retraction;
@@ -92,8 +93,6 @@ fn emit_inner(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<Option<Vec<arc::Point>>, crate::SliceError> {
-    let role = role_id(properties.feature);
-    let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
     // Upstream clips the loop tail on `path.polyline`
     // (`GCode.cpp:5804`); for the skirt the caller pre-clips on the
@@ -102,24 +101,45 @@ fn emit_inner(
         &mut scaled_points,
         properties.end_clip / geometry.scale.factor(),
     );
+    if let Some(bands) = state.belt_bands
+        && scaled_points.len() > 1
+        && properties.slope.is_none()
+        && properties.contour.is_none()
+    {
+        return belt_split::emit(
+            output,
+            scaled_points,
+            (properties, requested_speed, force_no_extrusion),
+            geometry,
+            (bands, state),
+        );
+    }
+    emit_piece(
+        output,
+        scaled_points,
+        (properties, requested_speed, force_no_extrusion, &[]),
+        geometry,
+        state,
+    )
+}
+
+fn emit_piece(
+    output: &mut Vec<u8>,
+    scaled_points: Vec<(i64, i64)>,
+    (properties, requested_speed, force_no_extrusion, uncut_lengths): belt_split::PieceEmission<'_>,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<Option<Vec<arc::Point>>, crate::SliceError> {
+    let role = role_id(properties.feature);
+    let role_changed = state.last_extrusion_role != Some(role);
     let Some((&first_scaled, &last_scaled)) = scaled_points.first().zip(scaled_points.last())
     else {
         return Ok(None);
     };
-    // Upstream computes segment lengths from scaled integer coordinates
-    // (`Line::length() * SCALING_FACTOR`, `GCode.cpp:6997-6998`), not from
-    // the unscaled mm coordinates. Computing from mm loses precision through
-    // the double rounding of `unscale` before the distance.
-    let segment_lengths = scaled_points
-        .windows(2)
-        .map(|pair| {
-            let dx = (pair[1].0 - pair[0].0) as f64;
-            let dy = (pair[1].1 - pair[0].1) as f64;
-            (dx * dx + dy * dy).sqrt() * geometry.scale.factor()
-        })
-        .collect::<Vec<_>>();
+    let segment_lengths = constant::segment_lengths(&scaled_points, geometry.scale);
     let mut local_points = scaled_points
-        .into_iter()
+        .iter()
+        .copied()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
     // Upstream `clip_fitting_end` mutates `polyline.points.back()` to the
@@ -159,7 +179,7 @@ fn emit_inner(
         properties,
         geometry,
         options: &state.options,
-        on_first_layer: state.on_first_layer,
+        on_first_layer: state.path_on_first_layer(),
         object_layer_over_raft: state.object_layer_over_raft,
         original_speed,
     });
@@ -303,12 +323,6 @@ fn emit_inner(
         );
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
-    // Admission limits the inactive-floor belt to one object and one tool.
-    // Its fan gate can therefore change only at the first extrusion of a layer.
-    if state.belt.is_some() && state.belt_fan_marker_layer != Some(state.layer_index) {
-        state.belt_fan_marker_layer = Some(state.layer_index);
-        super::super::cooling::mark_belt_extrusion(output, state.on_first_layer);
-    }
     state.current_feedrate = state.extrusion_feedrate;
     // `GCode.cpp:7115`: sloped paths run through the same processed
     // `extrude_path` loop when `estimate` produced `new_points` — the
@@ -366,6 +380,8 @@ fn emit_inner(
             local_points: &local_points,
             timelapse_context: geometry.timelapse_context,
             segment_lengths: &segment_lengths,
+            uncut_lengths,
+            scaled: (&scaled_points, geometry.scale),
             fitting: &fitting,
             last_scaled,
             path_overhang_fan_active,
