@@ -20,6 +20,9 @@ const STL: &str = "3mf-export.stl";
 const GCODE: &str = "Metadata/plate_1.gcode";
 const MD5: &str = "Metadata/plate_1.gcode.md5";
 
+#[path = "export_3mf_sliced/comparison_tests.rs"]
+mod comparison_tests;
+
 #[test]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
     sliced_archive_matches_native(None);
