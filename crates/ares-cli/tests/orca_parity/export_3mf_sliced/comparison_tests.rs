@@ -6,7 +6,7 @@ use std::path::Path;
 use md5::{Digest, Md5};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use super::{compare_members, read_members};
+use super::comparator::{Member, compare_members, read_members};
 
 const OBJECT_A: &str = "3D/Objects/a_1.model";
 const OBJECT_B: &str = "3D/Objects/b_2.model";
@@ -169,10 +169,7 @@ fn assert_mismatch(reference: &Entries, actual: &Entries) {
     assert!(catch_unwind(AssertUnwindSafe(|| compare_members(reference, actual))).is_err());
 }
 
-fn read_archives(
-    reference: &Entries,
-    actual: &Entries,
-) -> (Vec<super::Member>, Vec<super::Member>) {
+fn read_archives(reference: &Entries, actual: &Entries) -> (Vec<Member>, Vec<Member>) {
     let dir = tempfile::tempdir().unwrap();
     let a = dir.path().join("reference.3mf");
     let b = dir.path().join("actual.3mf");
