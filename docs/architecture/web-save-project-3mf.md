@@ -32,6 +32,10 @@ Line ranges below refer to `bbs_3mf.cpp` unless specified otherwise.
 - Optional layer heights, CAD recipe, layer ranges, brim ear points, cut info and custom layer G-code documents: 6687–6719, 6746–6750, 6839–6842, 7883–8086, 9079–9134. SLA points and drain holes are commented out (6721–6740, 8088–8158).
 - Unsupported paint attributes, specialized modifiers and parametric SVG/emboss/text payload: 7743–7815, 8338–8347, 8395–8415, 9136–9189. Unknown object/part/plate metadata is not invented (8320–8326, 8395–8403, 8443–8536). Cross-part mesh deduplication is separate from sharing a resource across instances (7371–7397, 7658–7661, 7706–7740). Never write full source paths (8373–8393, `Plater.cpp:16324–16327`). Desktop backup and file replacement do not apply (6342–6360, `Plater.cpp:16328–16366`).
 
+## Shared transform precision
+
+The CLI calls the same `store_bbs_3mf` as Save Project (`src/OrcaSlicer.cpp:8390–8405`; `Plater.cpp:20632–20706`). Apply one precision in `ares-core::project::export::xml`: nine significant digits for root build and component transforms (`bbs_3mf.cpp:7143–7151,7433–7448,7844–7875`), and seventeen for the part matrices in model settings (`bbs_3mf.cpp:8296–8301,8362–8372`). This does not expand the CLI's accepted input types. Exercise the unchanged unsliced CLI contract with a synthetic non-axis-aligned mesh and a fractional build displacement. Compare every archive member with Native; the displacement distinguishes rounding at six from nine significant digits. The ordinary single-part path writes an identity part matrix and thus does not distinguish model-settings matrix precision.
+
 ## End-to-end checks
 
 Open a synthetic asymmetric model on multiple plates, move and rotate an instance, change a process value, and download it through the File menu. A fresh document reopens the same geometry, transforms, plate assignments and preset value. A project with an unsupported modifier, paint or parametric feature reports a save error. The pinned OrcaSlicer reads the download.
