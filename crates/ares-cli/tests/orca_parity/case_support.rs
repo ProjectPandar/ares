@@ -29,6 +29,8 @@ mod cli_uptodate_printable_size;
 mod cli_uptodate_refresh;
 #[path = "export_3mf.rs"]
 mod export_3mf;
+#[path = "export_3mf_saved_presets.rs"]
+mod export_3mf_saved_presets;
 
 #[path = "export_3mf_sliced.rs"]
 mod export_3mf_sliced;
