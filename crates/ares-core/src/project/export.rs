@@ -27,7 +27,6 @@ struct SlicedMembers {
     gcode: Vec<u8>,
     slice_info: Vec<u8>,
     filament_sequence: Vec<u8>,
-    orca_version: Option<String>,
 }
 
 struct ObjectEntry<'a> {
@@ -52,7 +51,7 @@ impl ObjectEntry<'_> {
     }
 }
 
-/// Export one ordinary mesh as a headless unsliced FFF project. The model and
+/// Export one ordinary mesh or saved project as a headless unsliced FFF project. The model and
 /// presets are already in memory; the filename is only a model/source label.
 pub fn export_3mf(
     input: &[u8],
@@ -64,9 +63,54 @@ pub fn export_3mf(
             "export requires a source filename without a directory",
         ));
     }
+    if filename.to_ascii_lowercase().ends_with(".3mf") {
+        let archive = super::ProjectArchive::open(input, super::ArchiveLimits::PROJECT)?;
+        if archive
+            .paths()
+            .any(|path| path.as_str() == "Metadata/model_settings.config")
+        {
+            return export_saved(archive, input, presets);
+        }
+    }
     let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
     let settings = project_settings::write(&presets)?;
-    write_package(&[object], &[], settings, None)
+    write_package(&[object], &[], settings, None, None)
+}
+
+fn export_saved(
+    archive: super::ProjectArchive<'_>,
+    input: &[u8],
+    presets: LoadSettingsRequest<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    project_settings::require_complete_selection(&presets)?;
+    let project = crate::profiles::project_for_3mf_export(input, &presets)?;
+    let [object] = project.objects() else {
+        return Err(deferred("expected one saved object"));
+    };
+    let [instance] = object.instances() else {
+        return Err(deferred("expected one saved instance"));
+    };
+    if project.plates().len() != 1 || object.volumes().len() != 1 {
+        return Err(deferred("expected one saved plate and ordinary part"));
+    }
+    let saved = geometry::from_saved_project(archive, &project)?;
+    let raw = &project.documents().project_settings_raw;
+    project_settings::require_single_nozzle(raw)?;
+    let settings = project_settings::write_raw(raw, false)?;
+    // Without a loaded ID the writer uses the instance's ObjectBase ID
+    // (bbs_3mf.cpp:8596–8601). Two Models allocate two IDs each; the object
+    // allocates three before the instance (Model.hpp:582–588,1562–1567,1704–1753).
+    let id = instance
+        .saved_identify_id()
+        .filter(|&id| id > 0)
+        .unwrap_or(8);
+    write_package(
+        &saved.objects,
+        &[id],
+        settings,
+        None,
+        saved.orca_version.as_deref(),
+    )
 }
 
 pub fn export_sliced_3mf(
@@ -113,8 +157,8 @@ pub fn export_sliced_3mf(
             gcode: processed.gcode,
             slice_info,
             filament_sequence,
-            orca_version: saved.orca_version,
         }),
+        saved.orca_version.as_deref(),
     )
 }
 
@@ -123,6 +167,7 @@ fn write_package(
     identify_ids: &[u32],
     settings: Vec<u8>,
     sliced: Option<SlicedMembers>,
+    orca_version: Option<&str>,
 ) -> Result<Vec<u8>, SliceError> {
     let mut next_id = 1;
     let objects = objects
@@ -148,14 +193,7 @@ fn write_package(
         entries.push(("Metadata/plate_1.json", sliced.plate_json.clone()));
     }
     entries.extend([
-        (
-            MODEL,
-            xml::main_model(
-                &objects,
-                sliced.as_ref().and_then(|s| s.orca_version.as_deref()),
-            )
-            .into_bytes(),
-        ),
+        (MODEL, xml::main_model(&objects, orca_version).into_bytes()),
         (
             "3D/_rels/3dmodel.model.rels",
             xml::relationships(objects.iter().map(|object| object.path.as_str())).into_bytes(),

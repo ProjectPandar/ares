@@ -4,29 +4,15 @@ use serde::Serialize;
 use serde_json::{Value, ser::PrettyFormatter};
 
 use crate::options::{format_number, json_deserialize::decode};
-use crate::project::raw_settings::RawConfigValue;
+use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
 use crate::{LoadSettingsRequest, OptionValueKind, SliceError, option_definitions};
 
 use super::{BAMBU_VERSION, deferred, invalid};
 
 pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceError> {
-    if request.settings.len() != 2 || request.filaments.len() != 1 {
-        return Err(deferred(
-            "expected one flattened machine, process, and filament preset",
-        ));
-    }
+    require_complete_selection(request)?;
     let mut raw = crate::profiles::export_settings(request)?;
-    if raw
-        .get("printer_technology")
-        .and_then(RawConfigValue::token)
-        .as_deref()
-        != Some("FFF")
-        || raw
-            .get("nozzle_diameter")
-            .is_some_and(|nozzles| nozzles.len() > 1)
-    {
-        return Err(deferred("expected a single-nozzle FFF machine"));
-    }
+    require_single_nozzle(&raw)?;
     // The load-settings CLI resizes the flush table to the logical
     // filament count squared per nozzle (OrcaSlicer.cpp:3944–3945).
     raw.insert_strings("flush_volumes_matrix", &["0".into()]);
@@ -38,6 +24,32 @@ pub(super) fn write(request: &LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceE
     // `CLI::run` overlays the dynamic config on `FullPrintConfig` and
     // applies it back (`OrcaSlicer.cpp:4252–4256`) before persisting JSON.
     write_raw(&raw, false)
+}
+
+pub(super) fn require_complete_selection(
+    request: &LoadSettingsRequest<'_>,
+) -> Result<(), SliceError> {
+    if request.settings.len() != 2 || request.filaments.len() != 1 {
+        return Err(deferred(
+            "expected one flattened machine, process, and filament preset",
+        ));
+    }
+    Ok(())
+}
+
+pub(super) fn require_single_nozzle(raw: &ProjectSettingsRaw) -> Result<(), SliceError> {
+    if raw
+        .get("printer_technology")
+        .and_then(RawConfigValue::token)
+        .as_deref()
+        != Some("FFF")
+        || raw
+            .get("nozzle_diameter")
+            .is_some_and(|nozzles| nozzles.len() > 1)
+    {
+        return Err(deferred("expected a single-nozzle FFF machine"));
+    }
+    Ok(())
 }
 
 pub(super) fn write_raw(

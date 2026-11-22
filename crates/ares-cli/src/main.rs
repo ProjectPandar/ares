@@ -21,12 +21,11 @@ mod settings_export;
 mod slice_plates;
 mod statistics;
 
+use args::{Commands, SliceArgs, require_single_input};
+use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 use std::fs;
 use std::io;
 use std::path::Path;
-
-use args::{Commands, SliceArgs, require_single_input};
-use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let (cli, export_before_slice) = args::parse();
@@ -37,13 +36,15 @@ async fn main() {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
                 export_stl::run(&args)
             } else if let Some(output) = args.export_3mf.as_ref() {
-                require_single_input(&args.inputs);
                 export_3mf::run(&args, output).await
             } else {
                 run_slice(args).await
             }
         }
-        None => direct_stl::run(cli.direct, export_before_slice).await,
+        None => match cli.direct.export_3mf.as_deref() {
+            Some(output) => export_3mf::run_direct(&cli.direct, output),
+            None => direct_stl::run(cli.direct, export_before_slice).await,
+        },
     };
     if let Err(failure) = result {
         failure.report(
@@ -52,7 +53,6 @@ async fn main() {
         );
     }
 }
-
 async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if assembly::requested(&args) {
         return assembly::slice(&args).await;
