@@ -266,7 +266,12 @@ fn append_template(
     }
     // Render or write-back failure emits only the inline report — the
     // rendered text is discarded (`GCode.cpp:3920-3933`).
-    let rendered = match template::render_for_filament(source, config, filament) {
+    let rendered = match template::render_for_filament(
+        source,
+        config,
+        filament,
+        &mut state.template_globals,
+    ) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
             let error = error.to_string();

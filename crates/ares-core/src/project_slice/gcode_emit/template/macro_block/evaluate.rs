@@ -8,7 +8,7 @@ use super::super::super::expression::{
 use super::super::super::value::{Config, Value};
 use super::super::offset_in;
 use super::rhs::{Reference, Rhs};
-use super::{Arm, Journal, Scope, Statement};
+use super::{Arm, Scope, Statement};
 
 mod vector;
 
@@ -33,12 +33,11 @@ fn assignment_index(
 }
 
 /// The evaluation state of one block: its body, for the offsets of failures, the config
-/// mutated by assignments and the journal of `local`/`global` output variables.
+/// and its writable dictionaries.
 pub(super) struct Block<'a> {
     pub(super) body: &'a str,
     pub(super) config: &'a mut Config,
     pub(super) filament: usize,
-    pub(super) journal: &'a mut Journal,
 }
 
 impl Block<'_> {
@@ -67,7 +66,7 @@ impl Block<'_> {
     /// `:1377-1380`). An initializer list and `repeat` fill a vector, a naked vector reference
     /// copies into a naked vector, and any other expression assigns a scalar or an element.
     fn assign(&mut self, name: &str, index: Option<&str>, rhs: &str) -> Result<(), PathError> {
-        if self.config.get(name).is_none() {
+        if self.config.resolve(name).is_none() {
             return Err(self.failure(name, "Not a variable name"));
         }
         let kind = self.vector_kind(name);
@@ -89,7 +88,7 @@ impl Block<'_> {
         index: Option<&str>,
         rhs: &str,
     ) -> Result<(), PathError> {
-        let value = match self.config.get(name) {
+        let value = match self.config.resolve(name) {
             Some(variable) if self.scope(name).is_some() => self.assigned(rhs, variable)?,
             _ => {
                 let value = self.value(rhs)?;
@@ -114,8 +113,7 @@ impl Block<'_> {
 
     /// `new_old_variable` (`:1529-1564`) checks the name before the right-hand side. A name
     /// declared before in the same scope is assigned in its type
-    /// (`scalar_variable_new_from_scalar_expression`, `:1577-1600`); a new name becomes an
-    /// output variable dropped after the render.
+    /// (`scalar_variable_new_from_scalar_expression`, `:1577-1600`).
     fn declare(&mut self, name: &str, rhs: &str, scope: Scope) -> Result<(), PathError> {
         let declared = self.scope(name);
         let conflict = match (declared, scope) {
@@ -150,8 +148,7 @@ impl Block<'_> {
                     return Ok(());
                 }
                 let value = self.value(rhs)?;
-                self.journal.push((name.to_owned(), scope, None));
-                self.config.assign(name, None, value);
+                self.config.declare(name, scope, None, value);
                 Ok(())
             }
         }
@@ -174,7 +171,7 @@ impl Block<'_> {
                 }
             },
             (Rhs::Expression, None) => {
-                let value = match self.config.get(name) {
+                let value = match self.config.resolve(name) {
                     Some(variable) => self.assigned(rhs, variable)?,
                     None => self.value(rhs)?,
                 };
@@ -184,11 +181,8 @@ impl Block<'_> {
         }
     }
 
-    /// The scope `name` was declared in during this render.
     fn scope(&self, name: &str) -> Option<Scope> {
-        self.journal
-            .iter()
-            .find_map(|(declared, scope, _)| (declared == name).then_some(*scope))
+        self.config.declaration(name).map(|(scope, _)| scope)
     }
 
     /// A failure at `name`, a slice of the block body.

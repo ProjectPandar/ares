@@ -1,20 +1,8 @@
 //! The vector option types a placeholder script copies and fills (`ConfigOptionType`,
 //! `PlaceholderParser.cpp:1428-1818`).
 
-use super::super::super::value::Value;
+use super::super::super::value::{Value, variables::VectorKind};
 use crate::options::registry::{OptionValueKind as Kind, option_definition};
-
-/// The type of a vector variable: the four a script creates, and those it only reads.
-#[derive(Clone, Copy, PartialEq)]
-pub(in super::super) enum VectorKind {
-    Floats,
-    Ints,
-    Strings,
-    Bools,
-    Percents,
-    /// `coFloatsOrPercents`, `coEnums`, `coPoints` and `coPointsGroups`.
-    Other,
-}
 
 impl VectorKind {
     /// The type of a system vector: its option type, or for a runtime value the type of its

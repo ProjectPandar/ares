@@ -3,7 +3,11 @@ use crate::{
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
-use super::{footprint::FirstLayerBounds, placeholders, template, value::TemplateRng};
+use super::{
+    footprint::FirstLayerBounds,
+    placeholders, template,
+    value::{TemplateRng, variables::Variables},
+};
 
 pub(super) struct FileStart<'a> {
     pub(super) traversal: &'a PreparedPostClassicTraversal,
@@ -11,6 +15,7 @@ pub(super) struct FileStart<'a> {
     pub(super) first_layer_bounds: Option<FirstLayerBounds>,
     pub(super) layer_count: usize,
     pub(super) template_rng: &'a TemplateRng,
+    pub(super) template_globals: &'a mut Variables,
 }
 
 /// `file_start_gcode` is rendered before every generated header
@@ -36,11 +41,12 @@ pub(super) fn append(output: &mut Vec<u8>, start: FileStart<'_>) -> Result<(), S
         Some(start.template_rng),
         start.layer_count,
     )?;
-    let rendered = template::render(source, &mut config).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "invalid project file-start G-code template: {error}"
-        ))
-    })?;
+    let rendered =
+        template::render(source, &mut config, start.template_globals).map_err(|error| {
+            SliceError::InvalidInput(format!(
+                "invalid project file-start G-code template: {error}"
+            ))
+        })?;
     if !rendered.is_empty() {
         output.extend_from_slice(rendered.as_bytes());
         if !rendered.ends_with('\n') {

@@ -319,7 +319,12 @@ fn append_filament(
         "filament_extruder_id",
         value::Value::Integer(template_filament),
     );
-    let rendered = match template::render_for_filament(source, &mut config, filament) {
+    let rendered = match template::render_for_filament(
+        source,
+        &mut config,
+        filament,
+        &mut state.template_globals,
+    ) {
         Ok(rendered) => match motion::apply_writer_state(name, &config, &rendered, state) {
             Ok(()) => Ok(rendered),
             Err(error) => Err(error),
