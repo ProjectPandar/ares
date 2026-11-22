@@ -96,32 +96,32 @@ impl Project {
                 &self.settings.printer.remaining.upward_compatible_machine.0,
             );
         }
-        // OrcaSlicer.cpp:3202-3205 resizes both CLI bookkeeping vectors
-        // on m_print_config to filament_count + 2 before the preset sync
-        // and GCode::append_full_config serialize them (`std::vector::
-        // resize` semantics: grow with empty strings, truncate longer
-        // vectors). `filament_count` is the embedded count the CLI loaded
-        // in `:1768`, never the post-overlay vector length.
-        for key in ["different_settings_to_system", "inherits_group"] {
-            let Some(value) = raw.get(key) else {
-                continue;
-            };
-            let mut strings: Vec<String> = match value {
-                crate::project::raw_settings::RawConfigValue::List(items) => items
-                    .iter()
-                    .map(|item| match item {
-                        crate::project::raw_settings::RawConfigValue::Text(text) => text.clone(),
-                        other => other.token().unwrap_or_default(),
-                    })
-                    .collect(),
-                crate::project::raw_settings::RawConfigValue::Text(token) => {
-                    token.split(';').map(str::to_owned).collect()
-                }
-                _ => continue,
-            };
-            strings.resize(filament_count + 2, String::new());
-            raw.insert_strings(key, &strings);
-        }
+        resize_cli_preset_groups(raw, filament_count + 2, false);
+    }
+
+    pub(crate) fn initialize_non_bbl_saved_cli_project_config(&mut self) {
+        // CLI::run:1893,2528-2529: neither import nor preset loading sets filament_count.
+        resize_cli_preset_groups(&mut self.documents.project_settings_raw, 2, true);
+    }
+}
+
+// CLI::run:3202-3205 grows with empty strings or truncates longer groups.
+fn resize_cli_preset_groups(raw: &mut ProjectSettingsRaw, columns: usize, create_missing: bool) {
+    for key in ["different_settings_to_system", "inherits_group"] {
+        let mut strings: Vec<String> = match raw.get(key) {
+            Some(RawConfigValue::List(items)) => items
+                .iter()
+                .map(|item| match item {
+                    RawConfigValue::Text(text) => text.clone(),
+                    other => other.token().unwrap_or_default(),
+                })
+                .collect(),
+            Some(RawConfigValue::Text(token)) => token.split(';').map(str::to_owned).collect(),
+            None if create_missing => Vec::new(),
+            _ => continue,
+        };
+        strings.resize(columns, String::new());
+        raw.insert_strings(key, &strings);
     }
 }
 
