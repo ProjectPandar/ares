@@ -193,11 +193,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             let metadata = ares_core::GenerationMetadata::default();
             let resources = installed_resources::resolve(args.resources_dir.as_deref())?;
             let (source, machine_full) = compatible_machine::load(&input, &resources)?;
-            let system_catalog = args
-                .resources_dir
-                .as_deref()
-                .map(project_presets::load_resources_catalog)
-                .transpose()?;
+            let system_catalog = Some(project_presets::load_resources_catalog(&resources)?);
             let mut upward_report = Vec::new();
             let mut sliced_plate =
                 ares_core::SlicedPlate::with_size(args.project_actions.has_downward_targets());
