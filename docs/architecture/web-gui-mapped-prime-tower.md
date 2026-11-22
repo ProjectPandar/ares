@@ -31,6 +31,14 @@ The plater has no such step:
   `enable_prime_tower` with more than one `filament_diameter` entry.
   - With one filament the setting changes no toolpath.
   - With several filaments of one preset the plater keeps the tower.
+- `Print::apply` normalizes the config before it prints it: `DynamicPrintConfig::normalize_fdm_2`
+  (`src/libslic3r/PrintConfig.cpp:10478-10505`) clears `enable_prime_tower` when one filament is
+  used, there is no mixed filament, the timelapse is not smooth and wrapping detection is off.
+  - `PrintApply.cpp:2045, 2231` re-slice on the changed key. Neither changes
+    `different_settings_to_system`.
+  - This runs on both routes. So with one used filament the printed `enable_prime_tower` line is
+    `0` on both, whatever `full_fff_config` says. The only visible difference the CLI rule makes
+    is `enable_prime_tower` in dirty column 0.
 - The saved project's config is `full_config_secure()` (`Plater::export_3mf`,
   `src/slic3r/GUI/Plater.cpp:20493`). A Native slice of it without `--load-filaments` never sets
   the flag (2531-2535).
@@ -95,13 +103,24 @@ Each reference follows the plater.
 - `presetSlice.spec.ts` 3MF legs and the `profileSlice.spec.ts` override leg: the Native CLI
   reference keeps its toolpaths. With one filament, `has_wipe_tower` is false
   (`Print.cpp:5205`).
-  - A new helper takes the CLI reference to the plater's config lines: `enable_prime_tower` from
-    the session's `full_fff_config`, and `enable_prime_tower` removed from dirty column 0.
-  - The helper first asserts that the session has exactly one filament, so it never claims a
-    toolpath it does not compare.
-  - The unedited presetSlice leg then passes `session` instead of `withDifferences(session)`. The
-    edited legs keep `withDifferences`, because the process edit dirties column 0
-    (`PresetBundle.cpp:5586-5595`).
+  - A new helper takes the CLI reference to the plater's config lines. It rewrites one line:
+    dirty column 0 loses the `enable_prime_tower` the rule appends last (4330-4340), and the line
+    goes when every entry is empty (PresetBundle.cpp:5826-5838).
+  - The `enable_prime_tower` line stays as it is: `normalize_fdm_2` prints `0` on the plater
+    route too. The helper asserts that the reference has `0`, and that the session's
+    `full_fff_config` meets every `normalize_fdm_2` condition: no mixed filament, timelapse not
+    smooth, wrapping detection off. If any condition fails, the helper fails and does not
+    rewrite.
+  - It first asserts that the session has exactly one filament (`Print.cpp:5205`), so it never
+    claims a toolpath it does not compare. It also asserts that the browser output differs from
+    the reference only in the two tower lines.
+  - An earlier version of this section took `enable_prime_tower` from the session's
+    `full_fff_config` (`1`). That is the value before `normalize_fdm_2`, so it was wrong.
+  - Every leg keeps `withDifferences(session)`, so the dirty line reaches the helper.
+    `withoutCliGroups` with plain `session` would fail its empty-group assertion on the
+    reference's `enable_prime_tower` entry before the helper runs. The helper's drop of an
+    all-empty line gives the unedited leg the plater's missing line. The edited legs keep
+    `layer_height`, because the process edit dirties column 0 (`PresetBundle.cpp:5586-5595`).
 - The doc comments of `withDifferences`, `cliSwitchedExport` and `platerExport` drop the rule. The
   saved-project citation changes from Plater.cpp:19779 (that line is in `export_published_3mf`)
   to 20493 (`Plater::export_3mf`).
