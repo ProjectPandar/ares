@@ -156,8 +156,8 @@ pub use project::{
     ConfigSubstitution, CustomGCodeInfo, CustomGCodeMode, ImportedStl, LayerConfigRange,
     PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
     ProjectVolume, ProjectVolumeType, StlUnit, Transform3d, UpwardMachineInput,
-    UpwardMachineSource, export_project_settings, load_project, project_config_substitutions,
-    validate_project_version,
+    UpwardMachineSource, export_project_settings, export_project_settings_with_catalog,
+    load_project, project_config_substitutions, validate_project_version,
 };
 pub use project::{
     StlExport, export_3mf, export_arranged_sliced_3mf, export_sliced_3mf, export_stl, export_stls,

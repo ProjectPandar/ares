@@ -15,7 +15,10 @@ pub(super) fn run(input: &Path, destination: &Path) -> Result<(), CliFailure> {
         .into());
     }
     let project = fs::read(input)?;
-    let json = ares_core::export_project_settings(&project).map_err(io::Error::other)?;
+    let resources = crate::installed_resources::resolve(None)?;
+    let catalog = crate::project_presets::load_resources_catalog(&resources)?;
+    let json = ares_core::export_project_settings_with_catalog(&project, &catalog)
+        .map_err(io::Error::other)?;
     let substitutions = crate::substitutions(&project);
     eprint!(
         "{}",

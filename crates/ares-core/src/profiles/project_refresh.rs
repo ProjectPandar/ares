@@ -130,7 +130,24 @@ pub(super) fn direct_refresh(
     catalog: &Catalog,
     raw: &ProjectSettingsRaw,
 ) -> Result<ProjectSettingsRaw, SliceError> {
-    preset::refresh(PresetLookup::Catalog(catalog), raw, false, None)
+    preset::refresh(
+        PresetLookup::Catalog(catalog),
+        raw,
+        false,
+        preset::RefreshScope::Project(None),
+    )
+}
+
+pub(super) fn direct_refresh_filaments(
+    catalog: &Catalog,
+    raw: &ProjectSettingsRaw,
+) -> Result<ProjectSettingsRaw, SliceError> {
+    preset::refresh(
+        PresetLookup::Catalog(catalog),
+        raw,
+        false,
+        preset::RefreshScope::Filaments,
+    )
 }
 
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
@@ -208,7 +225,12 @@ impl<'a> ProjectPresetRefresh<'a> {
             ProjectPresetPolicy::Cli { uptodate } => uptodate,
             ProjectPresetPolicy::Always => false,
         };
-        preset::refresh(self.lookup(), raw, uptodate, Some(selected))
+        preset::refresh(
+            self.lookup(),
+            raw,
+            uptodate,
+            preset::RefreshScope::Project(Some(selected)),
+        )
     }
 
     pub(crate) fn load(
@@ -247,7 +269,7 @@ impl<'a> ProjectPresetRefresh<'a> {
                     self.lookup(),
                     &project.documents().project_settings_raw,
                     uptodate,
-                    None,
+                    preset::RefreshScope::Project(None),
                 )?;
                 // CLI:3167-3200 fills initially missing keys from the resolved system
                 // preset before collection defaults can obscure their absence.
