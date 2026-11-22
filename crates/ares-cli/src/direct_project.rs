@@ -2,8 +2,8 @@ use std::{fs, io, path::Path};
 
 use ares_core::{
     CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides, GenerationMetadata,
-    LoadSettingsFile, LoadSettingsSliceRequest, Placement, ProcessedGCode, SliceError, SlicedPlate,
-    SlicerContext, UpwardMachineInput, UpwardMachineSource,
+    LoadSettingsFile, LoadSettingsSliceRequest, Placement, PresetCatalogHandle, ProcessedGCode,
+    SliceError, SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
 };
 
 use crate::{
@@ -58,14 +58,20 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
     };
     enum ProjectPresets<'a> {
         Replace(&'a str, &'a str),
-        Saved(Option<UpwardMachineSource>, Option<Vec<u8>>),
+        Saved(
+            Option<UpwardMachineSource>,
+            Option<Vec<u8>>,
+            &'a PresetCatalogHandle,
+        ),
     }
+    let catalog;
     let presets = match presets {
         Some((settings, filaments)) => ProjectPresets::Replace(settings, filaments),
         None => {
             let resources = crate::installed_resources::resolve(None)?;
             let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
-            ProjectPresets::Saved(source, machine)
+            catalog = crate::project_presets::load_resources_catalog(&resources)?;
+            ProjectPresets::Saved(source, machine, &catalog)
         }
     };
     let context = crate::custom_gcodes::load(
@@ -89,8 +95,8 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
             upward_machines = std::mem::take(&mut sliced_plate.upward_machines);
             processed
         }
-        ProjectPresets::Saved(source, machine) => {
-            ares_core::slice_cli_project_plate_validated(
+        ProjectPresets::Saved(source, machine, catalog) => {
+            ares_core::slice_cli_project_plate_validated_with_catalog(
                 &bytes,
                 CliProjectSliceRequest {
                     plate: Some(plate),
@@ -105,6 +111,7 @@ pub(super) async fn run(args: DirectSliceArgs) -> Result<(), CliFailure> {
                     sliced_plate: &mut sliced_plate,
                 },
                 GenerationMetadata::default(),
+                Some(catalog),
                 context,
             )
             .await
