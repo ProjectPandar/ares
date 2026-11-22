@@ -70,7 +70,12 @@ fn render(
         state.total_layer_count,
     )?;
     motion::refresh_writer_state(&mut config, state);
-    match template::render_for_filament(source, &mut config, state.extruders.active_id()) {
+    match template::render_for_filament(
+        source,
+        &mut config,
+        state.extruders.active_id(),
+        &mut state.template_globals,
+    ) {
         Ok(rendered) => {
             motion::invalidate_after_custom_gcode(&rendered, state);
             output.extend_from_slice(rendered.as_bytes());

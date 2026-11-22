@@ -127,6 +127,7 @@ pub(in crate::project_slice) fn emit(
     let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
+    let mut template_globals = super::value::variables::Variables::default();
     let mut output = Vec::new();
     file_start::append(
         &mut output,
@@ -136,6 +137,7 @@ pub(in crate::project_slice) fn emit(
             first_layer_bounds,
             layer_count: sliced_layer_count,
             template_rng: &template_rng,
+            template_globals: &mut template_globals,
         },
     )?;
     let tags = preamble::append(
@@ -190,6 +192,7 @@ pub(in crate::project_slice) fn emit(
             .brim_flow_ratio
             .0,
         template_rng: template_rng.clone(),
+        template_globals,
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
             skirt.as_ref(),

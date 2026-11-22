@@ -82,7 +82,7 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
             continue;
         }
         refresh_writer_state(&mut config, state);
-        match template::render(&template_source, &mut config) {
+        match template::render(&template_source, &mut config, &mut state.template_globals) {
             Ok(rendered) => {
                 if let Err(error) = apply_writer_state(name, &config, &rendered, state) {
                     // `GCode.cpp:3929-3932` verbatim: `err.what()` is

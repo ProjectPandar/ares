@@ -58,9 +58,12 @@ pub(super) fn append(
     }
     let source = std::str::from_utf8(&injected).expect("G-code commands and templates are UTF-8");
     let name = "change_filament_gcode";
-    let rendered = template::render_for_filament(source, &mut config, filament)
-        .map_err(|error| error.to_string())
-        .and_then(|text| motion::apply_writer_state(name, &config, &text, state).map(|()| text));
+    let rendered =
+        template::render_for_filament(source, &mut config, filament, &mut state.template_globals)
+            .map_err(|error| error.to_string())
+            .and_then(|text| {
+                motion::apply_writer_state(name, &config, &text, state).map(|()| text)
+            });
     let mut rendered = match rendered {
         Ok(text) => text,
         Err(error) => {

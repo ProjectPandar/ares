@@ -200,15 +200,19 @@ fn append(
     // Write-back validation precedes emission; render or validation
     // failure emits only the inline report (`GCode.cpp:3920-3933`).
     let mut failure_error = String::new();
-    let rendered =
-        match template::render_for_filament(source, &mut config, state.extruders.active_id()) {
-            Ok(rendered) => Some(rendered),
-            Err(error) => {
-                failure_error = error.to_string();
-                state.record_template_failure(NAME, &failure_error);
-                None
-            }
-        };
+    let rendered = match template::render_for_filament(
+        source,
+        &mut config,
+        state.extruders.active_id(),
+        &mut state.template_globals,
+    ) {
+        Ok(rendered) => Some(rendered),
+        Err(error) => {
+            failure_error = error.to_string();
+            state.record_template_failure(NAME, &failure_error);
+            None
+        }
+    };
     let last_z = rendered.as_deref().and_then(last_motion_z);
     let failed = rendered.as_deref().is_none_or(|text| {
         super::motion::apply_writer_state(NAME, &config, text, state)

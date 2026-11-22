@@ -1,22 +1,26 @@
 use super::{
     expression::{ParsePath, evaluate_condition, evaluate_path},
-    value::Config,
+    value::{Config, variables::Variables},
 };
-use macro_block::Journal;
 use parser::{Arm, Node, parse};
 
 mod error;
 mod macro_block;
 mod parser;
 
-pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
-    render_for_filament(template, config, 0)
+pub(super) fn render(
+    template: &str,
+    config: &mut Config,
+    globals: &mut Variables,
+) -> Result<String, String> {
+    render_for_filament(template, config, 0, globals)
 }
 
 pub(super) fn render_for_filament(
     template: &str,
     config: &mut Config,
     filament: usize,
+    globals: &mut Variables,
 ) -> Result<String, String> {
     // `process_macro` parses the template value byte-for-byte with no trim
     // and no prefix (`PlaceholderParser.cpp:2516-2526`); the ASCII
@@ -26,35 +30,24 @@ pub(super) fn render_for_filament(
     // report (`process_error_message` `:1731-1770`) — stay relative to the
     // untrimmed template, so a skipped blank line still counts.
     let nodes = parse(template)?;
-    // Output variables created by `local`/`global` live for this render
-    // only (`config_local`, `PlaceholderParser.cpp:889-906`): they are
-    // journaled and dropped afterwards.
-    let mut renderer = Renderer {
+    // One ContextData dictionary per export, but fresh config_local per call.
+    // GCode.cpp:3581-3588,5385-5389; PlaceholderParser.cpp:2688-2699.
+    std::mem::swap(&mut config.globals, globals);
+    let output = Renderer {
         template,
         config,
         filament,
-        journal: Vec::new(),
-    };
-    let output = renderer.render_nodes(&nodes);
-    drop_output_variables(renderer.config, &mut renderer.journal);
+    }
+    .render_nodes(&nodes);
+    config.locals.clear();
+    std::mem::swap(&mut config.globals, globals);
     output
 }
 
-/// Drops the output variables created during a render (`config_local` lifetime,
-/// `PlaceholderParser.cpp:889-906`).
-fn drop_output_variables(config: &mut Config, journal: &mut Journal) {
-    for (name, ..) in journal.drain(..) {
-        config.remove(&name);
-    }
-}
-
-/// Render state shared by node and text rendering: the config mutated by
-/// assignments and the journal of `local`/`global` output variables.
 struct Renderer<'a> {
     template: &'a str,
     config: &'a mut Config,
     filament: usize,
-    journal: Journal,
 }
 
 impl Renderer<'_> {
@@ -132,13 +125,8 @@ impl Renderer<'_> {
             if (delimiter == '{' && macro_block::is_macro_body(expression))
                 || assignment_parts(expression).is_some()
             {
-                let rendered = macro_block::evaluate_block(
-                    expression,
-                    self.config,
-                    self.filament,
-                    &mut self.journal,
-                )
-                .map_err(|error| error::describe(template, error, start))?;
+                let rendered = macro_block::evaluate_block(expression, self.config, self.filament)
+                    .map_err(|error| error::describe(template, error, start))?;
                 output.push_str(&rendered);
                 index = expression_start + relative_end + 1;
                 continue;

@@ -7,10 +7,17 @@ use super::super::deferred::{Deferred, Operand};
 use super::Parser;
 
 impl Parser<'_> {
+    pub(super) fn lookup(&self, name: &str) -> Option<&Value> {
+        match self.path {
+            ParsePath::Brace => self.config.resolve(name),
+            ParsePath::Legacy => self.config.get(name),
+        }
+    }
+
     /// Resolves the variable `name` at byte `offset`, with its optional indices, and marks a
     /// value that holds a deferred placeholder (`mark_deferred`, `:1499`).
     pub(super) fn variable(&mut self, name: &str, offset: usize) -> Result<Operand, String> {
-        let mut value = match self.config.get(name).cloned() {
+        let mut value = match self.lookup(name).cloned() {
             Some(value) => value,
             // Suppressed (inactive) branch: `variable_value` no-ops
             // while skipping (`PlaceholderParser.cpp:1348-1355`).

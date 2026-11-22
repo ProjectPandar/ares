@@ -5,20 +5,24 @@ use super::super::super::super::expression::{
     Operand, PathError, assigned_value, element_count, element_value, evaluate_operand,
 };
 use super::super::super::super::value::Value;
+use super::super::Scope;
 use super::super::rhs::Reference;
-use super::super::{Scope, VectorKind};
 use super::{Block, assignment_index};
+use crate::project_slice::gcode_emit::value::variables::VectorKind;
 
 const VECTOR_TO_SCALAR: &str = "Cannot assign a vector value to a scalar variable.";
 const NIL_ELEMENTS: &str =
     "Some elements of the right hand side vector variable of optional values are undefined (nil)";
 
 impl Block<'_> {
-    /// The vector type of `name`: as declared in this render, or of the system vector.
+    /// The vector type of a script declaration or a system vector.
     pub(super) fn vector_kind(&self, name: &str) -> Option<VectorKind> {
-        match self.journal.iter().find(|(declared, ..)| declared == name) {
-            Some((.., kind)) => *kind,
-            None => (self.config.get(name)).and_then(|value| VectorKind::of_config(name, value)),
+        match self.config.declaration(name) {
+            Some((_, kind)) => kind,
+            None => self
+                .config
+                .get(name)
+                .and_then(|value| VectorKind::of_config(name, value)),
         }
     }
 
@@ -36,7 +40,7 @@ impl Block<'_> {
             let [(operand, element)] = &operands[..] else {
                 return Err(self.failure(name, VECTOR_TO_SCALAR));
             };
-            let variable = self.config.get(name).cloned().unwrap_or(Value::Nil);
+            let variable = self.config.resolve(name).cloned().unwrap_or(Value::Nil);
             let value =
                 assigned_value(&variable, operand).map_err(|error| self.located(error, element))?;
             self.config.assign(name, None, value);
@@ -73,7 +77,7 @@ impl Block<'_> {
         kind: VectorKind,
         reference: &Reference<'_>,
     ) -> Result<(), PathError> {
-        let Some(source) = self.config.get(reference.name) else {
+        let Some(source) = self.config.resolve(reference.name) else {
             return Err(self.failure(reference.name, "Not a variable name"));
         };
         let values: Vec<Value> = source.iter_list().cloned().collect();
@@ -101,7 +105,7 @@ impl Block<'_> {
         &self,
         reference: &Reference<'_>,
     ) -> Result<Option<(VectorKind, Vec<Value>)>, PathError> {
-        let Some(source) = self.config.get(reference.name) else {
+        let Some(source) = self.config.resolve(reference.name) else {
             return Err(self.failure(reference.name, "Not a variable name"));
         };
         let Some(kind) = (!reference.indexed)
@@ -144,7 +148,7 @@ impl Block<'_> {
         };
         let size = self
             .config
-            .get(name)
+            .resolve(name)
             .map_or(0, |value| value.iter_list().len());
         if size == 0 {
             return Err(self.failure(name, "Indexing an empty vector variable"));
@@ -282,13 +286,10 @@ impl Block<'_> {
         (scope, kind): (Scope, Option<VectorKind>),
         values: Vec<Value>,
     ) {
-        self.journal.push((name.to_owned(), scope, kind));
-        self.store(name, values);
+        self.config.declare(name, scope, kind, Value::List(values));
     }
 
-    /// Replaces a vector whole, with the spread elements of the old one.
     fn store(&mut self, name: &str, values: Vec<Value>) {
-        self.config.remove(name);
-        self.config.insert(name, Value::List(values));
+        self.config.assign(name, None, Value::List(values));
     }
 }

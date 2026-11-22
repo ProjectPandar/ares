@@ -1,6 +1,8 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 mod random;
+pub(super) mod variables;
+use variables::{Scope, Variable, Variables, VectorKind};
 
 // PlaceholderParser.hpp:16-26: config copies share the execution context.
 pub(crate) type TemplateRng = Rc<RefCell<crate::slicer_context::Mt19937>>;
@@ -149,6 +151,8 @@ fn format_number(value: f64) -> String {
 pub(crate) struct Config {
     values: HashMap<String, Value>,
     pub(crate) random: Option<TemplateRng>,
+    pub(super) globals: Variables,
+    pub(super) locals: Variables,
 }
 
 impl Config {
@@ -181,10 +185,10 @@ impl Config {
     /// Stores an assignment target (`{var[idx] = value}`): lists grow with
     /// zero padding like the upstream per-extruder vectors.
     pub(crate) fn assign(&mut self, name: &str, index: Option<usize>, value: Value) {
-        match index {
-            None => self.insert(name, value),
+        let value = match index {
+            None => value,
             Some(index) => {
-                let mut values = match self.get(name) {
+                let mut values = match self.resolve(name) {
                     Some(Value::List(existing)) => existing.clone(),
                     Some(other) => vec![other.clone()],
                     None => Vec::new(),
@@ -193,8 +197,21 @@ impl Config {
                     values.resize(index + 1, Value::Integer(0));
                 }
                 values[index] = value;
-                self.insert(name, Value::List(values));
+                Value::List(values)
             }
+        };
+        if !self.values.contains_key(name)
+            && let Some(variable) = self
+                .globals
+                .get_mut(name)
+                .or_else(|| self.locals.get_mut(name))
+        {
+            variable.value = value;
+        } else {
+            if index.is_none() {
+                self.remove(name);
+            }
+            self.insert(name, value);
         }
     }
 
@@ -202,16 +219,44 @@ impl Config {
         self.values.get(key)
     }
 
-    /// Drops an output variable created during a template render
-    /// (upstream `config_local` lifetime, `PlaceholderParser.cpp:889-906`),
-    /// including the spread `key_index` entries of an assigned list.
-    pub(crate) fn remove(&mut self, key: &str) {
-        if let Some(Value::List(values)) = self.values.get(key).cloned() {
+    /// Brace resolution (`PlaceholderParser.cpp:992-1022`). Bracket expansion
+    /// continues to use `get`, excluding script declarations.
+    pub(super) fn resolve(&self, name: &str) -> Option<&Value> {
+        self.get(name)
+            .or_else(|| self.globals.get(name).map(|variable| &variable.value))
+            .or_else(|| self.locals.get(name).map(|variable| &variable.value))
+    }
+
+    pub(super) fn declaration(&self, name: &str) -> Option<(Scope, Option<VectorKind>)> {
+        if self.get(name).is_some() {
+            return None;
+        }
+        self.globals
+            .get(name)
+            .map(|var| (Scope::Global, var.kind))
+            .or_else(|| self.locals.get(name).map(|var| (Scope::Local, var.kind)))
+    }
+
+    pub(super) fn declare(
+        &mut self,
+        name: &str,
+        scope: Scope,
+        kind: Option<VectorKind>,
+        value: Value,
+    ) {
+        let variables = match scope {
+            Scope::Global => &mut self.globals,
+            Scope::Local => &mut self.locals,
+        };
+        variables.insert(name.to_owned(), Variable { value, kind });
+    }
+
+    fn remove(&mut self, key: &str) {
+        if let Some(Value::List(values)) = self.values.remove(key) {
             for index in 0..values.len() {
                 self.values.remove(&format!("{key}_{index}"));
             }
         }
-        self.values.remove(key);
     }
 }
 

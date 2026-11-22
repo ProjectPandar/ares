@@ -110,7 +110,7 @@ pub(in crate::project_slice::gcode_emit) fn append_print_preamble(
         // Render and write-back failures both emit only the inline
         // report (`GCode.cpp:3920-3933`).
         let mut failure_error = String::new();
-        let failed = match template::render(source, &mut config) {
+        let failed = match template::render(source, &mut config, &mut state.template_globals) {
             Err(error) => {
                 failure_error = error.to_string();
                 state.record_template_failure(name, &failure_error);
