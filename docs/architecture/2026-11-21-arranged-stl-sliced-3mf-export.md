@@ -15,18 +15,21 @@ v2.5.0:
 - `OrcaSlicer/src/slic3r/GUI/PartPlate.cpp:8422` owns
   `PartPlateList::store_to_3mf_structure`, which materializes the per-plate
   metadata after slicing.
-- `OrcaSlicer/src/libslic3r/Format/bbs_3mf.cpp:6327-6350` derives the
-  `WithGcode`/split-model export strategy and calls `_save_model_to_file`;
-  `:6789-6826` writes each plate's MD5 and G-code members; and `:9005-9068`
-  adds the valid `Metadata/plate_N.gcode` members. The public
+- `OrcaSlicer/src/libslic3r/Format/bbs_3mf.cpp:6789-6822` writes all
+  `Metadata/plate_N.gcode.md5` members sequentially before calling
+  `_add_gcode_file_to_archive` at `:6825`. That function collects valid plates
+  and starts a `tbb::parallel_for` at `:9005-9026`; each iteration appends its
+  `Metadata/plate_N.gcode` member under a mutex at `:9058-9061`. The public
   `store_bbs_3mf` boundary is at `:9723-9734`.
 
 Native's two arranged STL inputs produce one placed model with a plate list.
 For the witness geometry, `large.stl` is plate 1 and `medium.stl` is plate 2;
 each plate has its own `Metadata/plate_N.json`, MD5, and G-code member.
-Native's parallel staged G-code insertion can change the central-directory
-order of the `plate_N.gcode` members. This is an observed Native packaging
-property, not a reason to invent a second Ares writer.
+Native's central-directory order within the contiguous `plate_N.gcode`
+group depends on the scheduling of the parallel loop. All MD5 members
+precede that group in plate-index order. Ares writes both groups in
+plate-index order, which is one valid Native ordering and does not depend on
+core count.
 
 ## Rust destination
 
@@ -78,10 +81,9 @@ conversion and XML helpers should be reused for the arranged placed model.
 - Preserve existing one-STL sliced export, saved-project sliced export, and
   unsliced project export behavior.
 - Add public-API E2E parity coverage using identical argv for Native and Ares in
-  official and seeded environments. Compare member names and payloads, with a
-  documented treatment of the proven Native G-code member-order nondeterminism;
-  do not mask payload differences or sort away a difference without first
-  proving it is solely Native archive ordering.
+  official and seeded environments. Assert that Ares writes all checksums before
+  G-code. Use the shared sliced-3MF archive comparison rather than adding an
+  arranged-STL-specific rule for Native's parallel-written members.
 
 ## Deferred behavior
 
@@ -93,11 +95,8 @@ conversion and XML helpers should be reused for the arranged placed model.
 - New arrangement heuristics, a second direct-STL slicer, or a second ZIP
   writer. Arrangement remains the behavior already owned by
   `project_slice/cli_stl.rs` and its upstream `PartPlate`/arrangement boundary.
-- Native's incidental ZIP envelope fields and its nondeterministic order among
-  concurrently staged G-code members. The test may account for that order only
-  after repeated same-input Native runs establish the exact nondeterminism; all
-  member bytes, names, plate numbering, and non-G-code member order remain
-  strict.
+- Native's incidental ZIP envelope fields and its scheduling-dependent order
+  within the G-code group. Ares does not reproduce Native's thread scheduling.
 
 No independent Ares export pipeline is introduced. The existing arranged-STL
 slice path is extended only to carry its already placed model and per-plate
