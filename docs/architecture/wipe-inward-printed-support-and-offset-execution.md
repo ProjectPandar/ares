@@ -1,8 +1,8 @@
 # Wipe inward: printed support, atomic offset paths and execution
 
-Status: Accepted. The port matches all three complete wipe streams, including
-M73. The historical RED observations below describe the pre-port checkpoint;
-this does not claim complete family closure.
+This record describes the beta port. OrcaSlicer v2.5.0 stores the offset
+until retraction instead of executing an immediate zero-E wipe; see
+[deferred execution](wipe-inward-deferred-execution.md) for the current contract.
 
 Upstream: OrcaSlicer beta `345efec64c7b95a05ce5cf96df0dde66a158835c`.
 

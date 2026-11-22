@@ -8,7 +8,6 @@ struct Wipe {
     wall: Vec<(f64, f64)>,
     moves: Vec<(f64, f64)>,
     inner_before: bool,
-    nonzero_e: bool,
     negative_e: bool,
 }
 
@@ -80,7 +79,6 @@ impl<'a> Observer<'a> {
                     wall: self.wall.clone(),
                     moves: Vec::new(),
                     inner_before: self.inner_before,
-                    nonzero_e: false,
                     negative_e: false,
                 })
             }
@@ -104,9 +102,8 @@ impl<'a> Observer<'a> {
         self.position = (x.unwrap_or(self.position.0), y.unwrap_or(self.position.1));
         let moved = x.is_some() || y.is_some();
         if let Some(wipe) = &mut self.active {
-            wipe.nonzero_e |= e != 0.0;
-            wipe.negative_e |= e < 0.0;
             if moved {
+                wipe.negative_e |= e < 0.0;
                 wipe.moves.push(self.position);
             }
         } else if moved && e > 0.0 {
@@ -162,13 +159,14 @@ fn check(case: (&str, &[u8], &str), premise: Premise) {
                 "; wipe_inward = 1\n"
             }));
             let wipes = observe(native);
-            let accepted = |wipe: &Wipe| {
-                wipe.closed_outer() && wipe.inner_before && !wipe.nonzero_e && wipe.interior_move()
-            };
+            let inward =
+                |wipe: &Wipe| wipe.closed_outer() && wipe.inner_before && wipe.interior_move();
             match premise {
-                Premise::AcceptedOffset => assert!(wipes.iter().any(accepted)),
+                Premise::AcceptedOffset => {
+                    assert!(wipes.iter().any(|wipe| inward(wipe) && wipe.negative_e));
+                }
                 Premise::Disabled | Premise::NoEarlierAnchor => {
-                    assert!(!wipes.iter().any(accepted));
+                    assert!(!wipes.iter().any(inward));
                     assert!(wipes.iter().any(|wipe| wipe.closed_outer()
                         && wipe.negative_e
                         && wipe.ordinary_boundary_path()));

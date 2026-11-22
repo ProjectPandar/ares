@@ -1,8 +1,8 @@
-//! `GCode.cpp:8729-8801`: actual-width selection, pre-move and immediate zero-E wipe.
+//! `GCode.cpp:8766-8827`: store inward wipe geometry for the next retraction.
 
 use super::{Params, WipeInwardSupport, apply, offset_direction};
 use crate::geometry::Point;
-use crate::project_slice::gcode_emit::motion::{EmitState, LayerGeometry, arc, travel};
+use crate::project_slice::gcode_emit::motion::{EmitState, LayerGeometry, arc};
 use crate::project_slice::perimeters::classic::{
     chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
     materialize::{ExtrusionPath, ExtrusionRole},
@@ -22,20 +22,17 @@ pub(in crate::project_slice::gcode_emit::motion::loop_paths) fn finish_loop(
     let destination = super::super::inward::post_loop_destination(paths, clipping, geometry, state);
     let wipe_start = destination
         .unwrap_or_else(|| Point::new(state.last_scaled_position.0, state.last_scaled_position.1));
-    let applied = support.is_some_and(|support| {
+    if let Some(support) = support {
         replace_wipe_path(
             loop_,
             (&paths[..clipping.1], wipe_start),
             support,
             geometry,
             state,
-        )
-    });
+        );
+    }
     if let Some(point) = destination {
         super::super::inward::append_inward_move(output, point, geometry, state);
-    }
-    if applied {
-        travel::wipe_without_retraction(output, state);
     }
 }
 
@@ -45,7 +42,7 @@ fn replace_wipe_path(
     support: &WipeInwardSupport,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) -> bool {
+) {
     if !state.options.wipe
         || !state.options.wipe_inward
         || state.options.wipe_inward_distance.is_non_positive()
@@ -55,7 +52,7 @@ fn replace_wipe_path(
             .any(|path| path.role == ExtrusionRole::ExternalPerimeter)
         || state.wipe_path.len() < 2
     {
-        return false;
+        return;
     }
     let width = f64::from(paths[0].width);
     let requested = match state.options.wipe_inward_distance {
@@ -66,7 +63,7 @@ fn replace_wipe_path(
     let epsilon = super::super::super::path::SOURCE_EPSILON_MM / factor;
     let offset = requested.min(width) / factor;
     if offset <= epsilon {
-        return false;
+        return;
     }
     let first = paths[0].polyline.points[0];
     let params = Params {
@@ -93,7 +90,7 @@ fn replace_wipe_path(
         })
         .collect();
     if !apply(&mut path, support, params) {
-        return false;
+        return;
     }
     state.wipe_path = path
         .into_iter()
@@ -102,5 +99,4 @@ fn replace_wipe_path(
             y: geometry.scale.unscale(point.y()),
         })
         .collect();
-    true
 }

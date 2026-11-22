@@ -2,22 +2,8 @@
 
 use super::super::format::{axis as format_axis, extrusion as format_extrusion};
 use super::super::{extrusion, state::EmitState};
-use super::wipe_path::{WipePath, wipe_moves};
+use super::wipe_path::WipePath;
 use super::wipe_sequence::gcode_comment;
-
-pub(in crate::project_slice::gcode_emit::motion) fn without_retraction(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-) {
-    let path = wipe_moves(state);
-    let speed = if state.options.role_based_wipe_speed {
-        state.extrusion_feedrate / 60.0
-    } else {
-        state.options.wipe_speed
-    }
-    .max(10.0);
-    emit(output, state, path, (0.0, speed, true));
-}
 
 pub(super) fn emit(
     output: &mut Vec<u8>,
