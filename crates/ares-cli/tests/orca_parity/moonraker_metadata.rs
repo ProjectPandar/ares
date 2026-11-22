@@ -1,4 +1,4 @@
-//! GCode.cpp:4233-4242 producer syntax; Moonraker 4ba6fd228 PrusaSlicer metadata.
+//! GCode.cpp:4233-4242 producer syntax; Moonraker v0.9.3 and 4ba6fd228 metadata.
 //! Missing recognition/fields, null equality, variable producer dates, altered
 //! parser/footer bytes, nonrepeatable streams and changed BTT omission must fail.
 
@@ -8,14 +8,24 @@ use std::{fs, path::Path, process::Command};
 
 const INPUT: &[u8] =
     include_bytes!("../../../../tests/parity/klipper-separate-jerk-precision/integer-control.3mf");
-const PARSER_SHA: &str = "ae2488ff23e6ddcaf961b063506dad1a7141b38b92102bc174422ed244641d2e";
+const CURRENT_PARSER: (&str, &str) = (
+    "4ba6fd228f264564f6613197fd9abb18ec068cf4",
+    "ae2488ff23e6ddcaf961b063506dad1a7141b38b92102bc174422ed244641d2e",
+);
+const LEGACY_PARSER: (&str, &str) = (
+    "71f9e677b81afcc6b99dd5002f595025c38edc7b",
+    "871632a1c71aa066ecf3bc88f71c978e249e88568f75f2e46b622c91afb0051c",
+);
 
 #[test]
 fn moonraker_extracts_native_duration_and_filament_from_public_exports() {
     let Some(_) = OrcaRunner::from_env().unwrap() else {
         return;
     };
-    let Some(parser) = native_environment::binary("ARES_MOONRAKER_METADATA_PY") else {
+    let Some(current) = native_environment::binary("ARES_MOONRAKER_METADATA_PY") else {
+        return;
+    };
+    let Some(legacy) = native_environment::binary("ARES_MOONRAKER_LEGACY_METADATA_PY") else {
         return;
     };
     let Some(python) = native_environment::binary("ARES_MOONRAKER_PYTHON") else {
@@ -28,17 +38,24 @@ fn moonraker_extracts_native_duration_and_filament_from_public_exports() {
         Path::new(&pillow).is_dir(),
         "configured Pillow path is not a directory"
     );
-    assert_eq!(
-        sha(&fs::read(&parser).unwrap()),
-        PARSER_SHA,
-        "unmodified Moonraker parser"
-    );
+    let parsers = [
+        ("legacy", legacy, LEGACY_PARSER),
+        ("current", current, CURRENT_PARSER),
+    ];
+    for (_, parser, (revision, digest)) in &parsers {
+        assert_eq!(
+            sha(&fs::read(parser).unwrap()),
+            *digest,
+            "unmodified Moonraker parser {revision}"
+        );
+    }
     let (reference, _) = crate::runner::native_stream_case::qualify(
         (
             "moonraker-generated-at",
             &[
                 "GCode.cpp:4233-4242",
-                "Moonraker metadata.py 4ba6fd228f264564f6613197fd9abb18ec068cf4",
+                "Moonraker metadata.py 4ba6fd228:431-456",
+                "Moonraker metadata.py 71f9e677b:306-324",
             ],
         ),
         "klipper-integer-control",
@@ -67,38 +84,44 @@ fn moonraker_extracts_native_duration_and_filament_from_public_exports() {
         "ares.wasm.gcode",
     ]
     .map(|name| reference.root.join(name));
-    fs::write(
-        reference.root.join("extractor-command.json"),
-        serde_json::to_vec_pretty(&json!({
-            "python": python, "python_sha256": sha(&fs::read(&python).unwrap()),
-            "helper": helper, "parser": parser, "parser_sha256": PARSER_SHA,
-            "pillow_path": pillow, "exports": paths,
-            "moonraker_revision": "4ba6fd228f264564f6613197fd9abb18ec068cf4",
-            "gcode_sha256": {
-                "native": sha(reference.native.as_bytes()), "api": sha(&api),
-                "cli": sha(&cli), "wasm": sha(&wasm)
-            }
-        }))
-        .unwrap(),
-    )
-    .unwrap();
-    let result = Command::new(&python)
-        .arg("-I")
-        .arg(&helper)
-        .arg(env!("CARGO_PKG_VERSION"))
-        .arg(&parser)
-        .arg(&pillow)
-        .arg(&reference.root)
-        .args(&paths)
-        .output()
+    let python_sha = sha(&fs::read(&python).unwrap());
+    let gcode_sha = json!({
+        "native": sha(reference.native.as_bytes()), "api": sha(&api),
+        "cli": sha(&cli), "wasm": sha(&wasm)
+    });
+    let extractions = parsers.map(|(mode, parser, (revision, digest))| {
+        let output = reference.root.join(mode);
+        fs::create_dir_all(&output).unwrap();
+        fs::write(
+            output.join("extractor-command.json"),
+            serde_json::to_vec_pretty(&json!({
+                "python": python, "python_sha256": python_sha,
+                "helper": helper, "parser": parser, "parser_sha256": digest,
+                "pillow_path": pillow, "exports": paths, "mode": mode,
+                "moonraker_revision": revision, "gcode_sha256": gcode_sha
+            }))
+            .unwrap(),
+        )
         .unwrap();
-    fs::write(reference.root.join("extractor.stdout"), &result.stdout).unwrap();
-    fs::write(reference.root.join("extractor.stderr"), &result.stderr).unwrap();
-    fs::write(
-        reference.root.join("extractor-status.json"),
-        serde_json::to_vec_pretty(&json!({"exit_code": result.status.code()})).unwrap(),
-    )
-    .unwrap();
+        let result = Command::new(&python)
+            .args(["-I", "-B"])
+            .arg(&helper)
+            .args([mode, env!("CARGO_PKG_VERSION")])
+            .arg(&parser)
+            .arg(&pillow)
+            .arg(&output)
+            .args(&paths)
+            .output()
+            .unwrap();
+        fs::write(output.join("extractor.stdout"), &result.stdout).unwrap();
+        fs::write(output.join("extractor.stderr"), &result.stderr).unwrap();
+        fs::write(
+            output.join("extractor-status.json"),
+            serde_json::to_vec_pretty(&json!({"exit_code": result.status.code()})).unwrap(),
+        )
+        .unwrap();
+        (revision, output, result.status)
+    });
     let comparisons = [("api", &api), ("cli", &cli), ("wasm", &wasm)].map(|(label, bytes)| {
         (
             label,
@@ -115,11 +138,12 @@ fn moonraker_extracts_native_duration_and_filament_from_public_exports() {
         .unwrap(),
     )
     .unwrap();
-    assert!(
-        result.status.success(),
-        "Moonraker extraction at {:?}",
-        reference.root
-    );
+    for (revision, output, status) in extractions {
+        assert!(
+            status.success(),
+            "Moonraker {revision} extraction at {output:?}"
+        );
+    }
     for (label, comparison) in comparisons {
         comparison.unwrap_or_else(|error| {
             panic!("complete {label} stream at {:?}: {error}", reference.root)
