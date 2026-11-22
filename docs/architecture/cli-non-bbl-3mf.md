@@ -75,23 +75,28 @@ both; the non-BBL Native document has no such key, Ares writes `[]`.
 
 ## Change
 
-1. `initialize_cli_loaded_project_config` inserts `upward_compatible_machine` only when
-   `documents.bbl_family_3mf` is set, and cites `OrcaSlicer.cpp:1759, 1894`.
-2. `disable_after_mapping` returns early unless the project is a BBL-family 3MF; the caller in
-   `three_mf.rs` passes `project.documents.bbl_family_3mf`, and the comment cites 2531.
+Both conditions belong to `CLI::run` (`OrcaSlicer.cpp:1759-1923`, 2531). The browser routes follow
+the plater (`PresetBundle::full_fff_config`), so only the CLI call sites take the condition; every
+other route keeps its current behaviour.
 
-The plater route (`full_fff_config` is `Some`) does not call `disable_after_mapping`, so change 2
-does not touch it. Change 1 changes nothing for BBL-family 3MFs on any route.
+1. `initialize_cli_loaded_project_config` takes whether to create `upward_compatible_machine`
+   (`OrcaSlicer.cpp:1759, 1894`, replacing the stale `:1769` citation). The two CLI call sites
+   pass `documents.bbl_family_3mf`; every other call site passes `true`, as today.
+2. `three_mf.rs` calls `disable_after_mapping` only for a BBL-family 3MF (2531). The plater
+   route (`full_fff_config` is `Some`) never calls it.
 
 ### Callers of `initialize_cli_loaded_project_config`
 
-| Caller | Route | Coverage |
-|---|---|---|
-| `profile_input/three_mf.rs:181` | CLI `--load-settings` + `--load-filaments` on a 3MF | tests 1 and 2 |
-| `project/settings_export.rs:24` | `--export-settings` | test 3, key level (see below) |
-| `project_slice/state.rs:123` | direct 3MF slice without preset files | same line; checked by a key-level probe only |
-| `project/domain/preset_refresh.rs:46` | `--uptodate` refresh, plater selection, direct system-catalog route, STL model with overrides | not compared with Native for non-BBL input in this slice; the refreshed machine keys list `upward_compatible_machine` (`profiles/project_refresh/keys/machine.rs:77`), so a refreshed raw that carries it is unchanged. The existing web suite on the tip shows whether a plater or STL leg changes |
-| `print/validate.rs:89` | `validate_project_plate` | returns only the validation result; nothing reads the key |
+| Caller | Route | Creates the key | Coverage |
+|---|---|---|---|
+| `profile_input/three_mf.rs:181` | profile overlay of a 3MF; CLI when `full_fff_config` is `None` (`--load-settings` / `--load-filaments`), plater otherwise | CLI: `bbl_family_3mf`; plater: always | tests 1 and 2; the plater legs of the web suite |
+| `project/settings_export.rs:24` | `--export-settings` (CLI only; no wasm entry) | `bbl_family_3mf` | test 3, key level |
+| `project_slice/state.rs:123` | 3MF without a profile overlay: the CLI direct slice and the browser's direct 3MF loads share it | always (unchanged) | deferred, see below |
+| `project/domain/preset_refresh.rs:46` | `--uptodate` refresh, plater selection, system-catalog route, STL model with overrides | always (unchanged) | web suite |
+| `print/validate.rs:89` | `validate_project_plate` | always (unchanged) | nothing reads the key |
+
+Profile-overlay slices never reach `state.rs:123`: `slice_source` sends a source with a profile to
+`profile_entry::prepare_profile_slice`, which uses only the `three_mf.rs` initialization.
 
 ## Verification
 
@@ -117,8 +122,12 @@ Tests 1 and 3 fail before change 1; test 2 fails before both changes.
   all three keys, so no output changes.
 - Machine files with `inherits`: `resolve_preset` can complete defaults there. The unflattened
   Ender-3 machine file exits 251 on Native and Ares alike, so this route needs another fixture.
-- Whole-document comparison for the direct 3MF slice and `--export-settings` on non-BBL 3MFs:
-  blocked by the printer-key and filament-vector differences above.
+- The CLI direct 3MF slice without preset files (`state.rs:123`). Native omits the key there for a
+  non-BBL 3MF as well, but the call site is shared with the browser's direct 3MF loads and needs a
+  CLI-only signal; its whole-file comparison is also blocked by the printer-key and filament-vector
+  differences below.
+- Whole-document comparison of `--export-settings` on non-BBL 3MFs: on top of this key the two
+  documents differ in 16 printer keys and in one- versus two-value filament vectors.
 - `load_filament_count > 0` and the set of loaded file names in 2531: no observable difference on
   the Ares CLI today. A direct 3MF with only one of `--load-settings` / `--load-filaments` is still
   rejected by Ares.
