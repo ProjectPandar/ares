@@ -15,6 +15,9 @@ use super::{
 
 include!("profile_entry_3mf/load_settings.rs");
 
+#[path = "profile_entry_3mf/legacy_infill_first.rs"]
+mod legacy_infill_first;
+
 #[path = "profile_entry_3mf/explicit_machine_limits.rs"]
 mod explicit_machine_limits;
 
