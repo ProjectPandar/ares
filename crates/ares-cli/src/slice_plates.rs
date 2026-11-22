@@ -135,10 +135,7 @@ pub(super) fn run(
     } else {
         let resources = crate::installed_resources::resolve(args.resources_dir)?;
         let (source, machine) = crate::compatible_machine::load(input, &resources)?;
-        system_catalog = args
-            .resources_dir
-            .map(crate::project_presets::load_resources_catalog)
-            .transpose()?;
+        system_catalog = Some(crate::project_presets::load_resources_catalog(&resources)?);
         (
             CliPlatesSettings::Embedded {
                 system_catalog: system_catalog.as_ref(),
