@@ -29,6 +29,7 @@ use crate::gcode_processor::printable_area::PrintableAreaTracker;
 pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
+    pub(super) initial_layer_time: f32,
     pub(super) custom_gcode_times: Vec<crate::gcode_processor::CustomGCodeTime>,
     pub(super) stop_times: StopTimes,
     pub(super) print_statistics: crate::PrintEstimatedStatistics,
@@ -99,6 +100,7 @@ impl Estimate {
             ];
             recorder.machine(&state);
             recorder.line(index + 1, parsed, g1_line_id, line_start);
+            let first_layer = recorder.is_first_layer();
             if let Some(kind) = parsed
                 .custom
                 .and_then(|tag| tag.time_kind(filaments.current_filament()))
@@ -170,6 +172,7 @@ impl Estimate {
                         id: g1_line_id,
                         remaining: 0,
                         prepare: prepare_stage,
+                        first_layer,
                         eligible: false,
                     },
                     recorder,
@@ -208,6 +211,7 @@ impl Estimate {
                         id: g1_line_id,
                         remaining: 0,
                         prepare: prepare_stage,
+                        first_layer,
                         eligible: false,
                     },
                     recorder,
@@ -307,6 +311,7 @@ impl Estimate {
                         id: base_id + motion_id,
                         remaining: arc_internal.map_or(0, |internal| internal - motion.index),
                         prepare: prepare_stage,
+                        first_layer,
                         eligible: cache_eligible[segment],
                     },
                     recorder,
@@ -324,6 +329,7 @@ impl Estimate {
             custom_gcode_times: timing.custom_gcode_times,
             stop_times: timing.stop_times,
             prepare: f64::from(timing.prepare),
+            initial_layer_time: timing.initial_layer_time,
             print_statistics: crate::PrintEstimatedStatistics {
                 total_filament_changes: filaments.changes,
                 total_travel_distance: recorder.travel_distance(),

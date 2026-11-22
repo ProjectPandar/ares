@@ -13,6 +13,7 @@ pub(super) struct Metadata {
     pub(super) id: usize,
     pub(super) remaining: usize,
     pub(super) prepare: bool,
+    pub(super) first_layer: bool,
     pub(super) eligible: bool,
 }
 
@@ -21,6 +22,7 @@ pub(super) struct Timing {
     pending: VecDeque<Metadata>,
     pub(super) total: f64,
     pub(super) prepare: f32,
+    pub(super) initial_layer_time: f32,
     pub(super) cache: Vec<Entry>,
     pub(super) stop_times: StopTimes,
     custom: CustomTimes,
@@ -34,6 +36,7 @@ impl Timing {
             pending: VecDeque::new(),
             total: 0.0,
             prepare: 0.0,
+            initial_layer_time: 0.0,
             cache: Vec::new(),
             stop_times: StopTimes::default(),
             custom: CustomTimes::default(),
@@ -96,6 +99,9 @@ impl Timing {
             self.custom.add(time);
             if metadata.prepare {
                 self.prepare = (f64::from(self.prepare) + time) as f32;
+            }
+            if metadata.first_layer {
+                self.initial_layer_time = (f64::from(self.initial_layer_time) + time) as f32;
             }
             if !override_eligible.unwrap_or(metadata.eligible) {
                 continue;

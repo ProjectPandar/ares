@@ -102,6 +102,7 @@ fn marker_time_transport_preserves_native_bits_after_buffer_transfer() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let vertices = output.take_vertices();
     vertices.values_range(0, vertices.count() as u32).unwrap();

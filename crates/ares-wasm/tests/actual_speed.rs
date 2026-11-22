@@ -66,6 +66,7 @@ fn actual_speed_view_types_expose_processor_values_and_ranges() {
             ..Default::default()
         },
         print_statistics: Default::default(),
+        archive: None,
     });
     let mut vertices = output.take_vertices();
     let values = vertices.values_range(0, vertices.count() as u32).unwrap();

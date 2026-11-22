@@ -172,6 +172,8 @@ pub struct GCodeProcessorResult {
     pub custom_gcode_times: Vec<CustomGCodeTime>,
     /// `GCodeProcessorResult::print_statistics` (`GCodeProcessor.hpp:118`).
     pub print_statistics: PrintEstimatedStatistics,
+    /// Normal-mode estimate of blocks on layer 1 (`GCodeProcessor.cpp:654–655,4016`).
+    pub initial_layer_time: f32,
     /// `GCodeProcessorResult::extruder_colors` — `filament_colour`
     /// config values, padded to `filaments_count` and defaulted to
     /// `#FF8000` (`GCodeProcessor::apply_config`,
@@ -229,6 +231,22 @@ pub struct PrintStatistics {
 
 /// Exported G-code together with the processor result of the same pass.
 #[derive(Clone, Debug, PartialEq)]
+pub struct SlicedArchive {
+    pub object_name: String,
+    pub plate_id: u32,
+    pub identify_id: u32,
+    pub bounds: [f64; 4],
+    pub area: f32,
+    pub layer_height: f32,
+    pub layer_count: usize,
+    pub filament_color: String,
+    pub filament_type: String,
+    pub filament_id: String,
+    pub nozzle_diameter: f32,
+    pub project_settings: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct ProcessedGCode {
     pub gcode: Vec<u8>,
     /// PrintObject step warnings from the slice, not GCodeProcessor data.
@@ -236,4 +254,5 @@ pub struct ProcessedGCode {
     pub result: GCodeProcessorResult,
     /// `Print::print_statistics()` after export.
     pub print_statistics: PrintStatistics,
+    pub archive: Option<SlicedArchive>,
 }

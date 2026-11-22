@@ -168,6 +168,11 @@ impl<'a> MoveRecorder<'a> {
         self.machine = PreviewMachine::new(state);
     }
 
+    pub(super) fn is_first_layer(&self) -> bool {
+        // GCodeProcessor.cpp:5459,5879: startup moves also belong to layer one.
+        self.layer_id <= 1
+    }
+
     /// Tag comments and the non-motion state commands of one input line.
     /// `position` is the machine XYZE at the start of the line.
     pub(super) fn line(

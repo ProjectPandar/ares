@@ -26,6 +26,8 @@ mod cli_uptodate_refresh;
 #[path = "export_3mf.rs"]
 mod export_3mf;
 
+#[path = "export_3mf_sliced.rs"]
+mod export_3mf_sliced;
 #[path = "export_stl.rs"]
 mod export_stl;
 #[path = "export_stls_multi_input.rs"]
@@ -45,6 +47,9 @@ mod sparse_pattern_solid_anchor;
 
 #[path = "turning_bridge_boundary_sampling.rs"]
 mod turning_bridge_boundary_sampling;
+
+#[path = "export_3mf_sliced_rejection.rs"]
+mod export_3mf_sliced_rejection;
 
 #[path = "startup_fan_initial_tool.rs"]
 mod startup_fan_initial_tool;

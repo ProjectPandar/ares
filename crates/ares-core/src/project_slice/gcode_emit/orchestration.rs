@@ -1,14 +1,15 @@
 mod tower;
 
 use super::*;
+use crate::project_slice::ArchivePlate;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    (metadata, record_moves): (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
     let traversal = &prepared
         .predecessor
@@ -47,6 +48,10 @@ pub(in crate::project_slice) fn emit(
         &tower_exclusions,
         |index| &prepared.objects[index][0].tool_regions,
     )?;
+    let archive_facts = archive
+        .is_some()
+        .then(|| archive::facts(traversal, &schedule, &brim))
+        .transpose()?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         let [x, y] = wipe_tower::plate_position(traversal);
         let origin = traversal.project.plate_origin();
@@ -116,7 +121,10 @@ pub(in crate::project_slice) fn emit(
     let mut export_config = Vec::new();
     crate::options::write_config_block(
         &traversal.resolved.views,
-        &traversal.project.documents().project_settings_raw,
+        archive_facts.as_ref().map_or(
+            &traversal.project.documents().project_settings_raw,
+            |facts| &facts.project_settings,
+        ),
         traversal.project.current_plate_index(),
         Some(initial_filaments.compat_temperatures(traversal)),
         &mut export_config,
@@ -142,8 +150,11 @@ pub(in crate::project_slice) fn emit(
         &mut output,
         traversal,
         &schedule,
-        &export_config,
-        context.thumbnail_images(),
+        (
+            &export_config,
+            context.thumbnail_images(),
+            &archive::generator(archive_facts.is_some()),
+        ),
     )?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
@@ -373,11 +384,13 @@ pub(in crate::project_slice) fn emit(
         output.extend(adaptive_pa::process(layers, traversal, &state));
         output.extend(tail);
     }
-    super::orchestration_finish::finish(
+    let mut result = super::orchestration_finish::finish(
         output,
         &state,
         traversal,
         &nozzle_groups,
         (record_moves, tower_statistics),
-    )
+    )?;
+    result.archive = archive_facts.map(archive::sliced_archive).transpose()?;
+    Ok(result)
 }

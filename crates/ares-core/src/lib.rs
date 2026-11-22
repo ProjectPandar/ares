@@ -49,6 +49,7 @@ pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRo
 pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
+    SlicedArchive,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,
@@ -154,7 +155,7 @@ pub use project::{
     ProjectVolume, ProjectVolumeType, StlUnit, Transform3d, UpwardMachineInput,
     UpwardMachineSource, export_project_settings, load_project, project_config_substitutions,
 };
-pub use project::{StlExport, export_3mf, export_stl, export_stls};
+pub use project::{StlExport, export_3mf, export_sliced_3mf, export_stl, export_stls};
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
@@ -162,6 +163,7 @@ pub use project_slice::{
     slice_cli_project_plate_with_refresh, slice_cli_project_plates,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
     slice_project_plate_validated, slice_project_plate_validated_with_catalog,
+    slice_project_plate_with_archive,
 };
 pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,

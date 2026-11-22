@@ -6,11 +6,13 @@ use crate::{
 #[cfg(all(test, windows))]
 pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 1024;
 
+mod archive_plate;
 mod bounds;
 mod capabilities;
 mod closing;
 pub(crate) mod compatibility;
 mod compensation;
+pub(crate) use archive_plate::{ArchivePlate, slice_source, slice_source_with_archive};
 mod conical_overhang;
 mod contour_z;
 mod curl_estimation;
@@ -58,6 +60,7 @@ pub use validated::{
     slice_cli_project_plate_validated_with_catalog, slice_cli_project_plate_with_refresh,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
     slice_project_plate_validated, slice_project_plate_validated_with_catalog,
+    slice_project_plate_with_archive,
 };
 
 /// Loads the project for a selected-profile request without slicing it —
@@ -206,41 +209,11 @@ pub async fn slice_project_plate_processed_with_catalog(
     )
 }
 
-#[inline(never)]
-pub(crate) fn slice_source(
-    mut project: ProjectSource<'_>,
-    metadata: GenerationMetadata,
-    record_moves: bool,
-    mut context: crate::SlicerContext<'_>,
-) -> Result<ProcessedGCode, SliceError> {
-    let sliced_plate = project.sliced_plate.take();
-    slice_plate(
-        metadata,
-        record_moves,
-        &mut context,
-        sliced_plate,
-        |report, context| {
-            if let Some(profile) = project.profile.as_mut() {
-                profile.enable_timelapse = context.enable_timelapse;
-            }
-            perimeters::prepare_post_layer_region_perimeters(
-                ProjectSource {
-                    sliced_plate: report,
-                    max_triangle_count: context.max_triangle_count,
-                    custom_gcodes: context.custom_gcodes.take(),
-                    ..project
-                },
-                context,
-            )
-        },
-    )
-}
-
 fn slice_plate(
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext<'_>,
     mut sliced_plate: Option<&mut SlicedPlate>,
+    archive: Option<&mut Option<ArchivePlate>>,
     prepare: impl FnOnce(
         Option<&mut SlicedPlate>,
         &mut crate::SlicerContext<'_>,
@@ -311,7 +284,7 @@ fn slice_plate(
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
     let output =
-        consume_post_island_print_order(ordered, metadata, record_moves, context, &mut warnings);
+        consume_post_island_print_order(ordered, generation, context, &mut warnings, archive);
     if let Some(sliced_plate) = sliced_plate {
         sliced_plate.warnings.clone_from(&warnings);
     }
@@ -362,12 +335,12 @@ fn extract_top_surfaces(
 #[inline(never)]
 fn consume_post_island_print_order(
     mut prepared: island_print_order::PreparedPostIslandPrintOrder,
-    metadata: GenerationMetadata,
-    record_moves: bool,
+    generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
+    archive: Option<&mut Option<ArchivePlate>>,
 ) -> Result<ProcessedGCode, SliceError> {
-    let mut output = gcode_emit::emit(&mut prepared, metadata, record_moves, context, warnings)?;
+    let mut output = gcode_emit::emit(&mut prepared, generation, context, warnings, archive)?;
     output.result.apply_filament_config(prepared.filament());
     island_print_order::dispose(prepared);
     Ok(output)
