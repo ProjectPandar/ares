@@ -241,6 +241,19 @@ Record the verdict in the ledger, and tell the worker which batch the chain goes
    trees are identical, so this applies only the branch's own commits. A branch built on an earlier point of the
    stack uses that chain's squash commit and `<end>` instead.
 
+### Re-freeze and parallel verification
+
+When a tested tip is re-frozen after a source change:
+
+- Compare every endpoint commit SHA with the previous freeze. Reuse a `check-ends` result only when the endpoint
+  SHA is identical; any unexpected endpoint difference is a HOLD and must be investigated before proceeding.
+- Run `static` and `incremental` concurrently. Run the browser and core lanes in one stage after confirming that
+  their worktrees, targets, caches, application directories, and preview port are isolated.
+- `probe_coverage` accepts leading whitespace before an `artifacts:` line (`^\s*artifacts:`). A missing artifact
+  line or a Native receipt with a nonzero exit remains unverified and must block a PASS.
+- Before accepting a freeze, verify that the tested tip contains the required release commit and its version
+  update. A tip without that release commit is incomplete.
+
 ## Batch script entry points
 
 The batch scripts are installed outside the repository. Set `$BATCH_SCRIPTS` to their
