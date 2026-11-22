@@ -248,10 +248,17 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
             filament_map.0.get(filament).map_or(0, |value| value.0 - 1)
         }
     };
-    let first_layer_tools = ordering
-        .layers
-        .first()
-        .map_or_else(Vec::new, |layer| layer.extruders.clone());
+    let first_layer_tools = ordering.layers.first().map_or_else(Vec::new, |layer| {
+        // Print.cpp:3809–3813 queries the physical first layer, which
+        // ToolOrdering retains even when belt export skips its empty lead-in.
+        if settings.printer.remaining.belt_printer.0
+            && layer.print_z - traversal.objects[0].physical_layers()[0].print_z > 1e-4
+        {
+            Vec::new()
+        } else {
+            layer.extruders.clone()
+        }
+    });
     let initial_bed_temperature =
         super::temperature::first_layer_bed_temperature(traversal, initial, &first_layer_tools);
     InitialFilaments {

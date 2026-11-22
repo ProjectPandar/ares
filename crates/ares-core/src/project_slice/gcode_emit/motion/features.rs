@@ -4,8 +4,7 @@ use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
 fn is_first_layer_for_path(state: &EmitState) -> bool {
     if state.belt.is_some() {
-        // With no active floor, GCode.hpp::on_first_layer also checks bottom Z.
-        state.on_first_layer
+        state.path_on_first_layer()
     } else {
         state.layer_index == 0
     }
@@ -180,7 +179,10 @@ impl PathProperties<'_> {
                 options.initial_layer_infill_speed
             }
         } else {
-            self.slow_down_layer_ramp(options, state.layer_index, is_perimeter, base)
+            let layer = state
+                .belt_piece
+                .map_or(state.layer_index, |(_, layer)| layer);
+            self.slow_down_layer_ramp(options, layer, is_perimeter, base)
         };
         // `GCode.cpp:6599-6604`: a positive skirt speed overrides the role
         // default on every layer; zero keeps the layer default.

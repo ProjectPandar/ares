@@ -55,6 +55,12 @@ pub(super) fn emit(command: Emission<'_>) -> Result<(), crate::SliceError> {
             x: points[index].0,
             y: points[index].1,
         };
+        // GCode.cpp:10213 tags the band before role fan or speed commands.
+        state.mark_belt_segment(output, properties.width, || {
+            let a = processed[index - 1];
+            let b = processed[index];
+            [(a.x + b.x) * 0.5, (a.y + b.y) * 0.5]
+        });
         fan::update_for_variable_segment(
             output,
             properties,
@@ -126,7 +132,7 @@ pub(super) fn emit(command: Emission<'_>) -> Result<(), crate::SliceError> {
         } else if force_no_extrusion {
             extrusion::force_no_extrusion_segment(output, end, state);
         } else {
-            extrusion::linear_segment(output, end, length, properties, state);
+            extrusion::linear_segment(output, end, (length, length), properties, state);
         }
         // GCode.cpp:10321: the farthest-point check after each segmented emission.
         crate::project_slice::gcode_emit::layers::farthest::check_and_insert(

@@ -9,7 +9,12 @@ its `first_layer_bands` rejection, not its other admission conditions.
 
 `BeltTransform.cpp:89–118` derives the signed shear and the coordinate it
 acts on. `PrintObject::update_slicing_parameters` (`PrintObject.cpp:4468–4499`)
-stores those in `SlicingParameters` (`Slicing.hpp:117–122`). During slicing,
+stores those in `SlicingParameters` (`Slicing.hpp:117–122`). The rotated mesh
+and its footprint on the floor both contribute to the slicing origin;
+`BeltTransform.cpp:151–168` estimates that origin from the bounding box and
+`BeltSliceStrategy.cpp:39–75` scans the transformed mesh. Both include the
+margin in `BeltTransform.hpp:126`, so the physical layer grid can have empty
+leading layers. During slicing,
 `PrintObjectSlice.cpp:910–921,995–1041` sets the floor intercept from the clamped
 mesh lift, then applies the same placement correction as to `Layer::print_z`.
 `GCode::belt_height_above_floor` (`GCode.cpp:11615–11640`) obtains that plane
@@ -53,7 +58,11 @@ shear, retain Orca's layer-ID behavior (`GCode.hpp:991–1023`).
   defers the one-time temperature, power-loss recovery and motion-setting
   transition until the whole layer is past the band. Replace only the
   predicate in `gcode_emit/layers/boundary.rs`; preserve the existing
-  transition ordering and the fallback for an unknown plane.
+  transition ordering and the fallback for an unknown plane. Preserve the
+  distinction between the first physical tool-ordering entry and the first
+  emitted layer: `GCode/ToolOrdering.cpp:565–580`, `Print.cpp:3805–3813` and
+  `GCode.cpp:5532–5541` use the former for first-layer filament consumers
+  such as the highest-temperature bed formula, even if the entry is empty.
 - **Cooling.** `GCode.cpp:9582–9597,10082,10213` evaluates each emitted
   segment midpoint with its bead width. Emit a band transition marker only
   when the resulting band index crosses `close_fan_the_first_x_layers`.

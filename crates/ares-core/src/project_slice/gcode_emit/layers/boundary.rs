@@ -1,6 +1,8 @@
 //! `GCode.cpp::change_layer` boundary emission: the layer-change labels,
 //! retraction deferral and state advance that open every layer chunk.
 
+pub(super) mod belt;
+
 use super::super::{
     GenerationMetadata, PreparedPostClassicTraversal, SliceError, footprint,
     format_processor_float, layer_gcode, machine, motion, spiral_vase, timelapse,
@@ -73,6 +75,7 @@ pub(super) struct LayerBoundary<'a> {
     /// object/support/raft layer sitting on the plate — under sequential
     /// printing every object's layer 0 qualifies.
     pub(super) first_layer: bool,
+    pub(super) belt_past_first_layer: Option<bool>,
     pub(super) second_layer_done: &'a mut bool,
     /// The live writer bed-temperature cache
     /// (`GCodeWriter::m_last_bed_temperature`, GCodeWriter.cpp:168-175) —
@@ -103,6 +106,7 @@ pub(super) fn append<'a>(
         layer_z,
         layer_height,
         first_layer,
+        belt_past_first_layer,
         second_layer_done,
         bed_cache,
         custom_gcode,
@@ -282,7 +286,7 @@ pub(super) fn append<'a>(
     // `first_layer` (`GCode.cpp:4589`) — sequential printing resets the
     // flag at every object boundary (`GCode.cpp:3367`), so each object's
     // first non-first layer runs the block once, not just global chunk 1.
-    let second_layer_reset = !first_layer && !*second_layer_done;
+    let second_layer_reset = belt_past_first_layer.unwrap_or(!first_layer) && !*second_layer_done;
     // `GCode.cpp:4777-4779`: the second-layer block emits the configured
     // power-loss-recovery mode command (`GCodeWriter.cpp:505-522` —
     // `M1003` on BBL machines, `M413` on Marlin 2 firmware) before the

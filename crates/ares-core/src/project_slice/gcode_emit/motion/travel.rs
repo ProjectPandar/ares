@@ -24,7 +24,7 @@ pub(in crate::project_slice::gcode_emit) use lift::schedule_retract_tail;
 pub(super) use lift::{
     EPSILON, emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, schedule_normal, schedule_tower_approach,
-    z_feedrate as lift_z_feedrate,
+    z_feedrate as lift_z_feedrate, z_feedrate_at as lift_z_feedrate_at,
 };
 
 /// Firmware retraction substitutes a fixed `1.0` retract length

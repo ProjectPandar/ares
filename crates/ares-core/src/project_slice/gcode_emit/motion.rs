@@ -1,7 +1,9 @@
 mod acceleration;
 mod arc;
 pub(super) mod auto_lift;
+mod belt_bands;
 mod belt_writer;
+pub(super) use belt_bands::{BeltBands, belt_fan_layers};
 pub(super) mod clip;
 mod extruder_registry;
 mod extruder_state;

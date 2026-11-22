@@ -190,6 +190,7 @@
                     .flat_map(|(_, tour)| tour.instances.iter().map(|entry| entry.instance.label_id)),
             );
         }
+        let belt_past_first_layer = boundary::belt::prepare(traversal, &entries, state);
         let boundary = boundary::append(
             output,
             state,
@@ -207,6 +208,7 @@
                 layer_z,
                 layer_height,
                 first_layer,
+                belt_past_first_layer,
                 second_layer_done: &mut second_layer_done,
                 bed_cache: &mut bed_cache,
                 custom_gcode: tool_ordering.for_layer(group_z).custom_gcode.as_ref(),
