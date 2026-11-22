@@ -5,6 +5,7 @@ use crate::runner::{
 use std::{
     fs,
     io::{Cursor, Read, Write},
+    path::{Path, PathBuf},
     process::Command,
 };
 
@@ -57,16 +58,7 @@ fn run_case(project: &[u8], expect_process_group: bool) {
     )
     .unwrap_or_else(|error| panic!("Native slice: {error}; {directory:?}"));
 
-    let installation = directory.join("installation");
-    let bin_dir = installation.join("bin");
-    fs::create_dir_all(&bin_dir).unwrap();
-    let bin = bin_dir.join("ares");
-    fs::copy(env!("CARGO_BIN_EXE_ares"), &bin).unwrap();
-    std::os::unix::fs::symlink(
-        repo_root().join("OrcaSlicer/resources"),
-        installation.join("resources"),
-    )
-    .unwrap();
+    let bin = stage_installed_cli(&directory);
     let ares_output = directory.join("ares");
     fs::create_dir(&ares_output).unwrap();
     let status = Command::new(&bin)
@@ -98,6 +90,130 @@ fn run_case(project: &[u8], expect_process_group: bool) {
         "machine-group behavior is not part of this witness; {directory:?}"
     );
     assert_eq!(actual_lines, expected_lines, "see {directory:?}");
+}
+
+#[cfg(unix)]
+fn stage_installed_cli(directory: &Path) -> PathBuf {
+    let installation = directory.join("installation");
+    let bin_dir = installation.join("bin");
+    fs::create_dir_all(&bin_dir).unwrap();
+    let bin = bin_dir.join("ares");
+    fs::copy(env!("CARGO_BIN_EXE_ares"), &bin).unwrap();
+    std::os::unix::fs::symlink(
+        repo_root().join("OrcaSlicer/resources"),
+        installation.join("resources"),
+    )
+    .unwrap();
+    bin
+}
+
+#[cfg(unix)]
+const STOCK: &[u8] = include_bytes!("../../../../tests/parity/adaptive-cubic-bodies/k1-stock.3mf");
+
+#[cfg(unix)]
+#[test]
+fn installed_stock_slice_keeps_the_effective_filament_config() {
+    let (root, native, ares) = run_installed_pair(
+        STOCK,
+        &["--slice", "1", "--outputdir", "out", "input.3mf"],
+        Stage::Slice,
+        "out/plate_1.gcode",
+    );
+    crate::golden::compare_ordered_bytes_generator_only(&native, &ares)
+        .unwrap_or_else(|error| panic!("{error}; {root:?}"));
+}
+
+#[cfg(unix)]
+#[test]
+fn saved_settings_export_applies_the_stock_filament_preset() {
+    compare_saved_settings(STOCK);
+}
+
+#[cfg(unix)]
+#[test]
+fn saved_settings_export_populates_both_slots_of_a_repeated_preset() {
+    compare_saved_settings(include_bytes!(
+        "../../../../tests/parity/saved-settings-retained-filaments/repeated-filament.3mf"
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn saved_settings_export_keeps_slots_without_a_resolvable_preset() {
+    compare_saved_settings(include_bytes!(
+        "../../../../tests/parity/saved-settings-retained-filaments/unresolved-filaments.3mf"
+    ));
+}
+
+#[cfg(unix)]
+fn compare_saved_settings(project: &[u8]) {
+    use serde_json::{Map, Value};
+
+    let (root, native, ares) = run_installed_pair(
+        project,
+        &["--export-settings", "settings.json", "input.3mf"],
+        Stage::Export,
+        "settings.json",
+    );
+    let native: Map<String, Value> = serde_json::from_slice(&native).unwrap();
+    let ares: Map<String, Value> = serde_json::from_slice(&ares).unwrap();
+    let differences = native
+        .keys()
+        .chain(ares.keys())
+        .filter(|key| native.get(*key) != ares.get(*key))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        differences.is_empty(),
+        "different settings {differences:?}; {root:?}"
+    );
+}
+
+#[cfg(unix)]
+fn run_installed_pair(
+    project: &[u8],
+    argv: &[&str],
+    stage: Stage,
+    output: &str,
+) -> (PathBuf, Vec<u8>, Vec<u8>) {
+    let runner = OrcaRunner::from_env().unwrap().unwrap();
+    let root = tempfile::Builder::new()
+        .prefix("installed-saved-project-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    fs::write(root.join("input.3mf"), project).unwrap();
+    stages::run(
+        runner.bin(),
+        argv.iter().map(|arg| (*arg).to_owned()),
+        stage,
+        &root,
+    )
+    .unwrap_or_else(|error| panic!("{error}; {root:?}"));
+    let written = root.join(output);
+    let native = fs::read(&written).unwrap();
+    fs::rename(
+        &written,
+        root.join(if stage == Stage::Export {
+            "native.settings.json"
+        } else {
+            "native.gcode"
+        }),
+    )
+    .unwrap();
+    let bin = stage_installed_cli(&root);
+    let result = Command::new(bin)
+        .args(argv)
+        .current_dir(&root)
+        .output()
+        .unwrap();
+    fs::write(root.join("ares.stdout"), result.stdout).unwrap();
+    fs::write(root.join("ares.stderr"), result.stderr).unwrap();
+    assert!(
+        result.status.success(),
+        "Ares {:?}; {root:?}",
+        result.status
+    );
+    (root, native, fs::read(written).unwrap())
 }
 
 fn with_unknown_filament_id(source: &[u8]) -> Vec<u8> {
