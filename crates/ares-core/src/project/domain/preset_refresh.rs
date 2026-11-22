@@ -26,6 +26,16 @@ impl Project {
 
     pub(crate) fn apply_project_preset_refresh(
         &mut self,
+        raw: ProjectSettingsRaw,
+        overrides: &ConfigOverrides,
+    ) -> Result<(), SliceError> {
+        self.apply_project_config(raw, overrides)?;
+        self.initialize_cli_loaded_project_config(self.cli_filament_count(), true);
+        Ok(())
+    }
+
+    pub(crate) fn apply_project_config(
+        &mut self,
         mut raw: ProjectSettingsRaw,
         overrides: &ConfigOverrides,
     ) -> Result<(), SliceError> {
@@ -43,7 +53,6 @@ impl Project {
         })?
         .resolve();
         self.documents.project_settings_raw = raw;
-        self.initialize_cli_loaded_project_config(self.cli_filament_count(), true);
         Ok(())
     }
 }

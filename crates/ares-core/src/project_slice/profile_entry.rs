@@ -93,7 +93,7 @@ fn load_with_profile_preparation(
                 },
             )
         }
-        super::ProjectInput::Bytes(bytes)
+        super::ProjectInput::Bytes(bytes) | super::ProjectInput::SavedCliBytes(bytes)
             if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf =>
         {
             Project::from_3mf_with_profiles(
@@ -104,7 +104,7 @@ fn load_with_profile_preparation(
                 upward_report,
             )
         }
-        super::ProjectInput::Bytes(bytes) => {
+        super::ProjectInput::Bytes(bytes) | super::ProjectInput::SavedCliBytes(bytes) => {
             Project::from_stl_with_profiles(bytes, profile.filename, selected, project.overrides)
                 .map(|(mut loaded, preparation)| {
                     loaded.apply_plater_edits(project.edits);
