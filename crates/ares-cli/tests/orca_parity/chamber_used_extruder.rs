@@ -56,3 +56,35 @@ fn chamber_used_hot_control() {
 fn chamber_native_preflight() {
     preflight("chamber-used-extruder", UPSTREAM, &CASES);
 }
+
+const TEMPLATE_TEMPERATURE_SOURCES: &[&str] = &[
+    "GCode.cpp:4001-4013,4031-4034",
+    "GCode.cpp:4230-4231,4381,4461,4867-4878,6140-6142,6227,6698",
+    "Config.hpp:676-680",
+];
+
+#[test]
+fn templates_reduce_temperatures_over_used_tools() {
+    Witness {
+        label: "unused-slot",
+        sha: "bda1bb833a2afa578076f98b83d73b14bf8c7242564ca9f0e9b129d6da51cf08",
+        tool: "1",
+    }
+    .check(
+        "writer-temperature-placeholders",
+        TEMPLATE_TEMPERATURE_SOURCES,
+    );
+}
+
+#[test]
+fn templates_keep_zero_chamber_temperature() {
+    Witness {
+        label: "zero-chamber",
+        sha: "ff4139e6e62c2d5630fd8959945dba090b286d72063f65ca51040b04bbe67a9a",
+        tool: "1",
+    }
+    .check(
+        "writer-temperature-placeholders",
+        TEMPLATE_TEMPERATURE_SOURCES,
+    );
+}
