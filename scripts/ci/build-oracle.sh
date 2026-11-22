@@ -20,6 +20,14 @@ fi
 NIXPKGS_URL="github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce"
 nixpkgs="$(nix eval --raw --expr "(builtins.getFlake \"$NIXPKGS_URL\").outPath")"
 
+case "$variant" in
+  merged-oracle)
+    ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
+      exec nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
+      --file "$repo/tools/chain-probe/$variant.nix"
+    ;;
+esac
+
 # Fresh source tree from the pinned upstream tarball. Fetching the archive
 # keeps the nix src (and therefore the derivation hash) identical whether the
 # job checked out OrcaSlicer sparsely or not at all.
@@ -31,24 +39,6 @@ curl --proto '=https' --tlsv1.2 -fL --retry 3 \
 git -C "$src" init -q .
 
 case "$variant" in
-  merged-oracle)
-    git -C "$src" apply --unidiff-zero \
-      "$repo/scripts/orca-replay/seed-only.patch" \
-      "$repo/scripts/orca-replay/concentric-initialization.patch" \
-      "$repo/scripts/orca-replay/object-id-initialization.patch"
-    git -C "$src" apply \
-      "$repo/tools/chain-probe/procgcode.patch" \
-      "$repo/tools/chain-probe/procgcode-stable-options.patch" \
-      "$repo/tools/chain-probe/procgcode-dynamics.patch" \
-      "$repo/tools/chain-probe/marker-time.patch" \
-      "$repo/tools/chain-probe/print-statistics.patch"
-    cp "$repo/tools/chain-probe/marker-time-oracle.hpp" "$src/src/marker-time-oracle.hpp"
-    mkdir -p "$src/src/marker-time"
-    cp "$repo/tools/chain-probe/marker-time/kernel.hpp" "$src/src/marker-time/kernel.hpp"
-    ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
-      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/tools/chain-probe/merged-oracle.nix"
-    ;;
   seed-replay)
     # The approved seed-replay oracle carries all three initialization patches,
     # not just seed-only (verified byte-identical to the accepted source tree).
@@ -60,7 +50,7 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/scripts/orca-replay/build.nix"
     ;;
-  procgcode|procgcode-stable-options|procgcode-dynamics|marker-time|marker-time-stable-options|custom-gcode-overview|actual-speed-profile|role-times|segment-hw|segment-colors)
+  procgcode|procgcode-dynamics|marker-time|custom-gcode-overview|actual-speed-profile|role-times|segment-hw|segment-colors)
     ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
