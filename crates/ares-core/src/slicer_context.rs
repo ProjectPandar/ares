@@ -30,6 +30,7 @@ pub struct SlicerContext<'a> {
     pub(crate) cli_path_conflict_check: bool,
     pub(crate) enable_timelapse: bool,
     pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
+    normative_check: bool,
 }
 
 impl<'a> SlicerContext<'a> {
@@ -44,6 +45,7 @@ impl<'a> SlicerContext<'a> {
             cli_path_conflict_check: false,
             enable_timelapse: false,
             custom_gcodes: None,
+            normative_check: true,
         }
     }
 
@@ -82,6 +84,17 @@ impl<'a> SlicerContext<'a> {
     pub fn with_max_triangle_count(mut self, count: i32) -> Self {
         self.max_triangle_count = count;
         self
+    }
+
+    /// Controls admission of embedded post-processing settings on CLI slice paths.
+    #[must_use]
+    pub fn with_normative_check(mut self, enabled: bool) -> Self {
+        self.normative_check = enabled;
+        self
+    }
+
+    pub(crate) fn normative_check(&self) -> bool {
+        self.normative_check
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.

@@ -66,11 +66,12 @@ type Preparation = crate::options::flush_matrix::PreparationContext;
 pub(super) fn load_project_source(
     source: super::ProjectSource<'_>,
 ) -> Result<(Project, Preparation), SliceError> {
+    let check_post_process = source.validate_print && source.normative_check;
     let (mut project, preparation) = source.input.load(
         source.overrides,
         source.refresh,
         source.system_catalog,
-        source.validate_print,
+        check_post_process,
     )?;
     if let Some(custom_gcodes) = source.custom_gcodes {
         project.replace_plate_custom_gcodes(custom_gcodes);
@@ -79,7 +80,7 @@ pub(super) fn load_project_source(
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);
     }
-    if source.validate_print {
+    if check_post_process {
         super::validated::validate_post_process(&project)?;
     }
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate

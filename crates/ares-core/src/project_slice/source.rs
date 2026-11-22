@@ -12,6 +12,7 @@ pub(crate) struct ProjectSource<'a> {
     pub(crate) overrides: &'a ConfigOverrides,
     /// Adapter boundary: apply once, validate, then process (`Print.hpp:911,935`).
     pub(crate) validate_print: bool,
+    pub(crate) normative_check: bool,
     /// `DynamicPrintConfig::validate` of the loaded config, which the CLI rejects on
     /// (`OrcaSlicer.cpp:4277-4282`); the GUI only warns at load (`Plater.cpp:9466-9481`).
     pub(crate) validate_config: bool,
@@ -102,7 +103,7 @@ impl ProjectInput<'_> {
         overrides: &ConfigOverrides,
         refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
         system_catalog: Option<&crate::PresetCatalogHandle>,
-        validate_print: bool,
+        validate_post_process: bool,
     ) -> Result<
         (
             crate::Project,
@@ -113,7 +114,7 @@ impl ProjectInput<'_> {
         match self {
             Self::Bytes(bytes) => {
                 let (mut project, preparation) = match refresh {
-                    Some(refresh) => refresh.load(bytes, overrides, validate_print)?,
+                    Some(refresh) => refresh.load(bytes, overrides, validate_post_process)?,
                     None if system_catalog.is_some() => {
                         crate::project::load_project_for_profiles(bytes)?
                     }
@@ -138,7 +139,7 @@ impl ProjectInput<'_> {
                         overrides,
                         refresh,
                         system_catalog,
-                        validate_print,
+                        validate_post_process,
                     )?;
                     project.place_assembly_plates();
                     Ok((project, preparation))
@@ -223,6 +224,7 @@ impl<'a> From<&'a [u8]> for ProjectSource<'a> {
             system_catalog: None,
             overrides: &EMPTY_OVERRIDES,
             validate_print: false,
+            normative_check: true,
             validate_config: true,
             orient: false,
             upward: None,
