@@ -10,7 +10,7 @@ import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camer
 import { buildInstances, ModelMaterials } from "./models";
 import { buildOptionMarkers } from "./optionMarkers";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, segmentColorsProbe, segmentGeometryProbe, segmentSizesProbe, type ToolpathFilter } from "./toolpathMesh";
+import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -209,6 +209,11 @@ export class Viewport {
     this.render();
   }
 
+  /** Rows of the toolpath textures (`AresSlicer.prepareViewerTextures`). */
+  get maxTextureSize() {
+    return this.#renderer.capabilities.maxTextureSize;
+  }
+
   setToolpaths(toolpaths: Toolpaths | null) {
     if (this.#toolpaths) {
       this.#scene.remove(this.#toolpaths);
@@ -221,27 +226,28 @@ export class Viewport {
     delete this.container.dataset.segmentGeometry;
     delete this.container.dataset.segmentColors;
     if (toolpaths) {
-      this.#toolpaths = buildToolpathMesh(toolpaths, this.#renderer.capabilities.maxTextureSize);
+      this.#toolpaths = buildToolpathMesh(toolpaths);
       this.#toolpathColors = toolpaths.colors;
       const markers = buildOptionMarkers(toolpaths);
       this.#toolpaths.add(markers.mesh);
       this.#scene.add(this.#toolpaths);
       this.#placeToolpaths();
       this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
-      this.container.dataset.segmentSizes = segmentSizesProbe(this.#toolpaths);
-      this.container.dataset.segmentGeometry = segmentGeometryProbe(this.#toolpaths);
-      this.container.dataset.segmentColors = segmentColorsProbe(this.#toolpaths);
+      const { probes } = toolpaths.textures!;
+      this.container.dataset.segmentSizes = probes.sizes;
+      this.container.dataset.segmentGeometry = probes.geometry;
+      this.container.dataset.segmentColors = probes.colors;
     }
     if (this.#previewView) this.setPreviewView(this.#previewView);
     else this.render();
   }
 
-  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths. */
-  setToolpathColors(colors: Uint8Array) {
+  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its E2E probe (`ViewColors.colorsProbe`). */
+  setToolpathColors(colors: Uint8Array, probe: string) {
     if (!this.#toolpaths || colors === this.#toolpathColors) return;
     this.#toolpathColors = colors;
     applyVertexColors(this.#toolpaths, colors);
-    this.container.dataset.segmentColors = segmentColorsProbe(this.#toolpaths);
+    this.container.dataset.segmentColors = probe;
     this.render();
   }
 

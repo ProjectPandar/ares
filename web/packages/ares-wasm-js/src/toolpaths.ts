@@ -52,6 +52,27 @@ export interface Toolpaths {
   travelsTime: number;
   /** Normal-mode `ViewerImpl::get_estimated_time`, seconds (an f32). */
   estimatedTime: number;
+  /** Packed in the worker once `AresSlicer.prepareViewerTextures` has run. */
+  textures?: ToolpathTextures;
+}
+
+/** `w` of the heights/widths/angles texel of travels and wipes: this plus their `EOptionType` index, above the role ids. */
+export const KIND_OPTION = 32;
+
+/** Per-vertex toolpath textures in the libvgcode `TextureData` layout (`ViewerImpl.cpp:384-541`). */
+export interface ToolpathTextures {
+  /** libvgcode `width_height` (`ViewerImpl.cpp:352-361`): `[width, height]` texels, rows of up to the maximum texture size. */
+  extent: [width: number, height: number];
+  /** RGBA32F `[segment position xyz, layer id]` of each vertex. */
+  positions: Float32Array<ArrayBuffer>;
+  /** RGBA32F `[height, width, angle, kind]` of each vertex: the extrusion role, or `KIND_OPTION` + option index. */
+  heightsWidthsAngles: Float32Array<ArrayBuffer>;
+  /** Start vertex of each drawn segment: an extrude / travel / wipe vertex's predecessor at another position. */
+  segments: Uint32Array<ArrayBuffer>;
+  /** `[min xyz, max xyz]` of the extrusion segments other than Custom (GCodeViewer::load paths box); infinite when none. */
+  bounds: number[];
+  /** E2E probes of the drawn segments, `count:FNV-1a 32`: end sizes, geometry inputs and `Toolpaths.colors`. */
+  probes: { sizes: string; geometry: string; colors: string };
 }
 
 /** One item of the legend Custom G-code overview (GCodeViewer.cpp:4517-4544), computed by ares-vgcode. */
@@ -189,6 +210,8 @@ export interface ViewColors {
   /** RGB of vertex `i` at `3 * i`. */
   colors: Uint8Array<ArrayBuffer>;
   range: ColorRange | null;
+  /** E2E probe of `colors` over the drawn segments, as `ToolpathTextures.probes.colors`; with textures only. */
+  colorsProbe?: string;
 }
 
 /** Vertex indices `[first, last, current]` of the visible view range. */
@@ -240,6 +263,8 @@ export interface MovesView {
   options: Uint32Array<ArrayBuffer>;
   /** RGB of vertex `i` at `3 * i`, grayed below the top layer before the last stop. */
   colors: Uint8Array<ArrayBuffer>;
+  /** E2E probe of `colors`, as `ViewColors.colorsProbe`. */
+  colorsProbe?: string;
   /** The tool marker; `null` while hidden. */
   marker: ToolMarker | null;
 }

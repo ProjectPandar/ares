@@ -1,16 +1,11 @@
-import { EXTRUSION_ROLES, MOVE_TYPES, type Toolpaths, VERTEX_VALUES } from "@ares-slicer/wasm";
+import type { Toolpaths } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
-import { fragmentShader, KIND_OPTION, vertexShader } from "./segmentShader";
+import { fragmentShader, vertexShader } from "./segmentShader";
 
 /** The preview state the toolpath shaders filter by. */
 export type ToolpathFilter = Pick<PreviewView, "layers" | "hiddenRoles" | "visibleOptions">;
 
-const EXTRUDE = MOVE_TYPES.indexOf("Extrude");
-const TRAVEL = MOVE_TYPES.indexOf("Travel");
-const WIPE = MOVE_TYPES.indexOf("Wipe");
-const CUSTOM = EXTRUSION_ROLES.indexOf("Custom");
-const STRIDE = VERTEX_VALUES.length;
 /** libvgcode `SegmentTemplate.cpp:13-27`: 8 template vertex ids, 24 instanced triangle corners. */
 const VERTEX_DATA = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1, 5, 4, 7, 5, 7, 6];
 
@@ -25,49 +20,22 @@ function vertexTexture(data: Float32Array | Uint8Array, [width, height]: [number
  * Toolpath segments as instanced libvgcode segment templates, one per
  * extrude / travel / wipe vertex from its predecessor (`ViewerImpl` segments).
  * The vertices live in per-vertex textures (`TextureData::set_positions`,
- * `set_heights_widths_angles`, `set_colors`, `ViewerImpl.cpp:384-541`) and each
- * instance draws the segment from vertex `aSegment[n]`. Until `applyEnabled`
- * runs, the instances are every segment of the mesh. Layer range and visibility
+ * `set_heights_widths_angles`, `set_colors`, `ViewerImpl.cpp:384-541`), packed
+ * in the slicer worker (`Toolpaths.textures`), and each instance draws the
+ * segment from vertex `aSegment[n]`. Until `applyEnabled` runs, the
+ * instances are every segment of the mesh. Layer range and visibility
  * filtering also run in the vertex shader, so view changes only update uniforms.
  */
-export function buildToolpathMesh(toolpaths: Toolpaths, maxTextureSize: number): THREE.Mesh {
-  const { values, ids, tags, options, colors, heightsWidths, segmentPositions, segmentAngles, vertexCount } = toolpaths;
-  // libvgcode `width_height` (`ViewerImpl.cpp:352-361`): rows of up to the maximum texture size.
-  const width = Math.min(vertexCount, maxTextureSize);
-  const extent: [number, number] = [width, Math.ceil(vertexCount / width)];
+export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
+  const { extent, positions, heightsWidthsAngles, segments, bounds: [minX, minY, minZ, maxX, maxY, maxZ] } = toolpaths.textures!;
   const size = extent[0] * extent[1];
-  const positions = new Float32Array(size * 4);
-  const heightsWidthsAngles = new Float32Array(size * 4);
-  for (let v = 0; v < vertexCount; v++) {
-    positions.set(segmentPositions.subarray(3 * v, 3 * v + 3), 4 * v);
-    positions[4 * v + 3] = ids[2 * v + 1];
-    heightsWidthsAngles[4 * v] = heightsWidths[2 * v];
-    heightsWidthsAngles[4 * v + 1] = heightsWidths[2 * v + 1];
-    heightsWidthsAngles[4 * v + 2] = segmentAngles[v];
-    heightsWidthsAngles[4 * v + 3] = tags[4 * v + 1] === EXTRUDE ? tags[4 * v] : KIND_OPTION + options[v];
-  }
-  const vertex = new Uint32Array(vertexCount);
-  const segment = new Uint32Array(vertexCount);
-  // GCodeViewer::load paths box: every extrusion role except Custom (prime lines).
-  const bounds = new THREE.Box3();
-  const point = new THREE.Vector3();
-  let count = 0;
-  for (let i = 1; i < vertexCount; i++) {
-    const type = tags[4 * i + 1];
-    if (type !== EXTRUDE && type !== TRAVEL && type !== WIPE) continue;
-    const a = (i - 1) * STRIDE;
-    const b = i * STRIDE;
-    if (values[a] === values[b] && values[a + 1] === values[b + 1] && values[a + 2] === values[b + 2]) continue;
-    if (type === EXTRUDE && tags[4 * i] !== CUSTOM) bounds.expandByPoint(point.fromArray(values, a)).expandByPoint(point.fromArray(values, b));
-    vertex[count] = i;
-    segment[count] = i - 1;
-    count++;
-  }
+  const bounds = new THREE.Box3(new THREE.Vector3(minX, minY, minZ), new THREE.Vector3(maxX, maxY, maxZ));
 
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(new Uint8Array(VERTEX_DATA), 1));
-  geometry.setAttribute("aSegment", new THREE.InstancedBufferAttribute(segment.subarray(0, count), 1));
-  geometry.instanceCount = count;
+  // applyEnabled writes into this attribute: a copy keeps `Toolpaths.textures` for the next mesh of the same toolpaths.
+  geometry.setAttribute("aSegment", new THREE.InstancedBufferAttribute(segments.slice(), 1));
+  geometry.instanceCount = segments.length;
   geometry.boundingBox = bounds;
   // The template "position" holds vertex ids, not coordinates; the renderer's
   // depth sort must not derive a sphere from it.
@@ -96,9 +64,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths, maxTextureSize: number):
   material.addEventListener("dispose", () => textures.forEach((texture) => texture.dispose()));
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  mesh.userData.vertices = vertex.subarray(0, count);
-  mesh.userData.toolpaths = toolpaths;
-  writeColors(mesh, colors);
+  writeColors(mesh, toolpaths.colors);
   return mesh;
 }
 
@@ -113,7 +79,6 @@ function writeColors(mesh: THREE.Mesh, colors: Uint8Array) {
     data[4 * v + 3] = 255;
   }
   texture.needsUpdate = true;
-  mesh.userData.colors = colors;
 }
 
 /**
@@ -162,57 +127,6 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
     for (let n = 0; n < vertices.length; n++) enabled[n] = optionVertices[vertices[n]];
     flags.needsUpdate = true;
   }
-}
-
-/** FNV-1a 32 over `bytes[from, to)`, continuing `hash`. */
-function fnv(hash: number, bytes: Uint8Array, from: number, to: number) {
-  for (let i = from; i < to; i++) hash = Math.imul(hash ^ bytes[i], 0x01000193);
-  return hash;
-}
-
-const bytesOf = (array: Float32Array) => new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
-
-/** `count:hash` of the mesh segments, hashing `bytes[from(i), from(i) + length)` per segment ending at vertex `i`, pass by pass. */
-function probe(mesh: THREE.Mesh, passes: [Uint8Array, (i: number) => number, number][]) {
-  const vertices = mesh.userData.vertices as Uint32Array;
-  let hash = 0x811c9dc5;
-  for (const [bytes, from, length] of passes) {
-    for (const i of vertices) hash = fnv(hash, bytes, from(i), from(i) + length);
-  }
-  return `${vertices.length}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
-}
-
-/**
- * E2E probe of the segment end sizes: segment count and the FNV-1a 32 hash of
- * the f32 bits `[start height, start width, end height, end width]` per segment.
- */
-export function segmentSizesProbe(mesh: THREE.Mesh): string {
-  const { heightsWidths } = mesh.userData.toolpaths as Toolpaths;
-  return probe(mesh, [[bytesOf(heightsWidths), (i) => 8 * (i - 1), 16]]);
-}
-
-/**
- * E2E probe of the segment geometry inputs: segment count and the FNV-1a 32
- * hash of the f32 bytes of every start position, then every end position, then
- * every `[start angle, end angle]`.
- */
-export function segmentGeometryProbe(mesh: THREE.Mesh): string {
-  const { segmentPositions, segmentAngles } = mesh.userData.toolpaths as Toolpaths;
-  const positions = bytesOf(segmentPositions);
-  return probe(mesh, [
-    [positions, (i) => 12 * (i - 1), 12],
-    [positions, (i) => 12 * i, 12],
-    [bytesOf(segmentAngles), (i) => 4 * (i - 1), 8],
-  ]);
-}
-
-/**
- * E2E probe of the segment end colors: segment count and the FNV-1a 32 hash of
- * every start vertex RGB, then every end vertex RGB.
- */
-export function segmentColorsProbe(mesh: THREE.Mesh): string {
-  const colors = mesh.userData.colors as Uint8Array;
-  return probe(mesh, [[colors, (i) => 3 * (i - 1), 3], [colors, (i) => 3 * i, 3]]);
 }
 
 /** Sets the view on the toolpath mesh and its option markers (children). */

@@ -1,5 +1,4 @@
-/** `w` of the heights/widths/angles texel of travels and wipes: this plus their `EOptionType` index, above the role ids. */
-export const KIND_OPTION = 32;
+import { KIND_OPTION } from "@ares-slicer/wasm";
 
 // libvgcode `Segments_Vertex_Shader_ES` (`ShadersES.hpp:13-148`, POINTY_CAPS and
 // FIX_TWISTING): instance `n` is the enabled segment `id_a = aSegment[n]` to

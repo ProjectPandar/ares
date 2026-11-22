@@ -88,6 +88,7 @@ export type WorkerRequest =
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number }
   | { id: number; kind: "viewColors"; viewType: string; visibleRoles: number; visibleOptions: number }
+  | { id: number; kind: "prepareViewerTextures"; maxTextureSize: number }
   | { id: number; kind: "movesSlider"; layers: [number, number]; visibleRoles: number; visibleOptions: number; higher?: number }
   | { id: number; kind: "movesHigher"; higher: number; viewType: string; visibleRoles: number; visibleOptions: number };
 

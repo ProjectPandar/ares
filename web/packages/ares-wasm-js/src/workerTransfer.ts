@@ -25,7 +25,7 @@ export function readEnabled(vertices: VertexBuffers) {
   };
 }
 
-type VertexArrays = Pick<Toolpaths, "values" | "ids" | "tags" | "options" | "colors" | "heightsWidths" | "segmentPositions" | "segmentAngles">;
+export type VertexArrays = Pick<Toolpaths, "values" | "ids" | "tags" | "options" | "colors" | "heightsWidths" | "segmentPositions" | "segmentAngles">;
 
 export function readVertexArrays(vertices: VertexBuffers): VertexArrays {
   const count = vertices.count;

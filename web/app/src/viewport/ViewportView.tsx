@@ -1,4 +1,4 @@
-import type { MovesView, Scene, SceneInstance, Toolpaths } from "@ares-slicer/wasm";
+import type { MovesView, Scene, SceneInstance, Toolpaths, ViewColors } from "@ares-slicer/wasm";
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
@@ -6,6 +6,7 @@ import { selectObject } from "../state/actions";
 import { moveInstance, rotateInstance, rotationPivot, scaleInstance } from "../state/plates";
 import { placedScene } from "../state/presetSlice";
 import { presetSliceBlocker } from "../state/presets";
+import { slicer } from "../state/slicer";
 import { openStlSession } from "../state/stlSession";
 import { useApp } from "../state/store";
 import { takeSnapshot } from "../state/undoRedo";
@@ -64,8 +65,8 @@ function instancesProbe(scene: Scene | null) {
 
 export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
   toolpaths?: Toolpaths | null;
-  /** Per-vertex RGB of `toolpaths` (`ViewColors.colors`); `null` keeps `Toolpaths.colors`. */
-  colors?: Uint8Array | null;
+  /** Per-vertex RGB of `toolpaths` and its probe (`ViewColors`); `null` keeps `Toolpaths.colors`. */
+  colors?: Pick<ViewColors, "colors" | "colorsProbe"> | null;
   /** Enabled segments and option markers of `toolpaths`; `null` draws all. */
   enabled?: MovesView | null;
   view?: ToolpathFilter;
@@ -174,6 +175,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       };
       instance.onOrbit = () => setActive(null);
       window.addEventListener("keydown", onKey);
+      void slicer.prepareViewerTextures(instance.maxTextureSize);
       setViewport(instance);
     });
     return () => {
@@ -243,7 +245,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     if (view) viewport?.setPreviewView(view);
   }, [viewport, view]);
   useLayoutEffect(() => {
-    if (colors) viewport?.setToolpathColors(colors);
+    if (colors) viewport?.setToolpathColors(colors.colors, colors.colorsProbe!);
   }, [viewport, colors]);
   useLayoutEffect(() => {
     if (!enabled || !toolpaths) return;

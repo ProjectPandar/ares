@@ -28,7 +28,8 @@
     "!dist/platerEdit.d.ts",
     "!dist/workerPlaterSource.d.ts",
     "!dist/workerCrash.d.ts",
-    "!dist/workerTransfer.d.ts"
+    "!dist/workerTransfer.d.ts",
+    "!dist/toolpathTextures.d.ts"
   ],
   "exports": {
     ".": {
