@@ -44,7 +44,7 @@ fn h2c_auto_flush_rejects_detailed_multi_nozzle_inventory() {
         .unwrap()
         .expect("Native harness required");
     let case = prepare(
-        &runner.work_dir(),
+        runner.work_dir(),
         "reported-nozzles",
         PROJECT,
         json!({"extruder_nozzle_stats": ["Standard#1", "Standard#6"]}),
