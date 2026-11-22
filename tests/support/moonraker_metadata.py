@@ -33,7 +33,7 @@ result = {
 (output / "moonraker-metadata.json").write_text(json.dumps(result, indent=2))
 print(json.dumps(values, indent=2))
 for label, record in exports.items():
-    expected_name = "OrcaSlicer" if label == "native" else "Ares"
+    expected_name = "OrcaSlicer" if label == "native" else "OrcaSlicer-Ares"
     assert record.get("slicer") == expected_name, (label, "slicer", record.get("slicer"))
     expected_version = "2.5.0" if label == "native" else ares_version
     assert record.get("slicer_version") == expected_version, (label, "slicer_version")
