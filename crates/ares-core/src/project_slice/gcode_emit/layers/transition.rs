@@ -202,7 +202,8 @@ pub(in crate::project_slice::gcode_emit) fn emit(
     // the write, so the NEXT object's transition compares against the
     // live value (the native skips object 2's M140 because object 1's
     // second layer already wrote it).
-    let include_g10 = settings.printer.gcode.gcode_flavor == crate::GCodeFlavor::RepRapFirmware;
+    let flavor = settings.printer.gcode.gcode_flavor;
+    let include_g10 = flavor == crate::GCodeFlavor::RepRapFirmware;
     let bed_set_by_gcode = machine_sets_temperature(&rendered, &["M140", "M190"], false);
     let bed_temperature = super::super::machine::first_layer_bed_temperature(
         traversal,
@@ -237,9 +238,9 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         if single_extruder_multi_material || ooze_prevention {
             write_nozzle_temperature(
                 output,
-                initial_extruder,
+                flavor,
                 super::super::machine::initial_layer_nozzle_temperature(settings, initial_extruder),
-                multiple_extruders,
+                multiple_extruders.then_some(initial_extruder),
             );
         } else {
             for &tool in &printing_extruders {
@@ -250,7 +251,12 @@ pub(in crate::project_slice::gcode_emit) fn emit(
                     initial_extruder,
                     ooze_prevention,
                 );
-                write_nozzle_temperature(output, tool, temperature, multiple_extruders);
+                write_nozzle_temperature(
+                    output,
+                    flavor,
+                    temperature,
+                    multiple_extruders.then_some(tool),
+                );
             }
         }
     }
@@ -267,21 +273,13 @@ pub(in crate::project_slice::gcode_emit) fn emit(
 
 fn write_nozzle_temperature(
     output: &mut Vec<u8>,
-    tool: usize,
+    flavor: crate::GCodeFlavor,
     temperature: i32,
-    multiple_extruders: bool,
+    tool: Option<usize>,
 ) {
-    if temperature <= 0 {
-        return;
+    if temperature > 0 {
+        super::super::temperature::append(output, flavor, temperature as u32, false, tool);
     }
-    let tool_suffix = if multiple_extruders {
-        format!(" T{tool}")
-    } else {
-        String::new()
-    };
-    output.extend_from_slice(
-        format!("M104 S{temperature}{tool_suffix} ; set nozzle temperature\n").as_bytes(),
-    );
 }
 
 /// The ooze-prevention standby adjustment
