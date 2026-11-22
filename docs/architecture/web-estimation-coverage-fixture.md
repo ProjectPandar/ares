@@ -32,15 +32,19 @@ time row failed before it.
 ## The fixture
 
 `wipe-tower.3mf` in `tests/parity/summary/`, written by `tools/chain-probe/summary-fixtures.mjs`
-from the same source as `time-cost`. It takes the same density, cost and `time_cost` edits, plus:
+from the same source as `time-cost`. It takes the same density, cost and `time_cost` edits, plus
+`enable_prime_tower = 1`.
 
-| key | value | why |
-| --- | --- | --- |
-| `enable_prime_tower` | `1` | the tool changes purge into a tower |
-| `filament_map_mode` | `Manual` | the map below is used as given |
-| `filament_map` | `["1", "1"]` | both filaments on the left nozzle, so the slice changes filament there |
+The filament map is left alone. The source plate carries its own `filament_map_mode = Auto For Flush`
+in `Metadata/model_settings.config`. `PartPlate::get_real_filament_map_mode` (PartPlate.cpp:409-420)
+returns the plate mode whenever it is not Default, and the CLI reads it the same way
+(OrcaSlicer.cpp:6730-6734). A project-level `filament_map_mode` or `filament_map` edit therefore has
+no effect: the slice keeps `filament_map = 2,1`, one filament per nozzle. The tower comes from
+`enable_prime_tower = 1` alone, since the two-nozzle X2D still purges its two filaments into it.
 
-Measured Native PrintStatistics of the raw fixture with this probe, pinned to a single core, seed 0:
+Measured Native PrintStatistics of the raw fixture with this probe, pinned to a single core, seed 0
+(measured with project-level `filament_map_mode = Manual` and `filament_map = 1,1` edits, which the
+plate mode above makes inert):
 
 | map | value |
 | --- | --- |
