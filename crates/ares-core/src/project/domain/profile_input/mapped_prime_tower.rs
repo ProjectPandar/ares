@@ -7,6 +7,7 @@ pub(super) fn disable_after_mapping(
     raw: &mut ProjectSettingsRaw,
     settings: &ProjectSettings,
     overrides: &crate::ConfigOverrides,
+    enable_timelapse: bool,
 ) {
     let single_preset_mapping = settings
         .project
@@ -23,11 +24,6 @@ pub(super) fn disable_after_mapping(
                 .iter()
                 .all(|name| name == first)
         });
-    let enable_timelapse = match raw.get("enable_timelapse") {
-        Some(RawConfigValue::Text(value)) => value == "1",
-        Some(RawConfigValue::Flag(value)) => *value,
-        _ => false,
-    };
     let smooth_timelapse = enable_timelapse
         && matches!(raw.get("timelapse_type"), Some(RawConfigValue::Text(value)) if value == "1");
     if !single_preset_mapping || smooth_timelapse {

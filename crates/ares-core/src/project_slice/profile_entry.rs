@@ -50,6 +50,7 @@ fn load_with_profile_preparation(
         profile_raw: profile.raw,
         filament_raws: profile.filament_raws,
         validate_print: project.validate_print,
+        enable_timelapse: profile.enable_timelapse,
         load_names: profile.load_names,
         retained_refresh: profile.retained_refresh,
     };
