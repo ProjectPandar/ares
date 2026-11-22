@@ -8,6 +8,9 @@ use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 use crate::{OrcaRunner, presets::VendorProfiles, runner::repo_root};
 
+#[path = "export_3mf/comparison_tests.rs"]
+mod comparison_tests;
+
 #[test]
 fn export_x1c_stl_matches_native_unsliced_project_members() {
     export_matches_native("BBL", "Bambu Lab X1 Carbon 0.4 nozzle", "3mf-export.stl");
@@ -125,29 +128,36 @@ fn export_matches_native(vendor: &str, printer: &str, filename: &str) {
             String::from_utf8_lossy(&ares.stderr)
         );
         let path = runner.work_dir().join(output);
-        let actual = archive_members(&path);
-        assert_eq!(
-            expected.iter().map(|(name, _)| name).collect::<Vec<_>>(),
-            actual.iter().map(|(name, _)| name).collect::<Vec<_>>()
-        );
-        for ((name, expected), (_, actual)) in expected.iter().zip(actual) {
-            let mismatch = expected
-                .iter()
-                .zip(&actual)
-                .position(|(left, right)| left != right);
-            assert!(
-                mismatch.is_none() && expected.len() == actual.len(),
-                "{name} differs in {} at byte {mismatch:?} ({} != {} bytes)",
-                runner.work_dir().display(),
-                expected.len(),
-                actual.len()
-            );
-        }
+        compare_archive_members(&expected, &archive_members(&path), &path);
         let bytes = fs::read(path).unwrap();
         if let Some(first) = first {
             assert!(first == bytes, "repeat export changed ZIP bytes");
         }
         first = Some(bytes);
+    }
+}
+
+fn compare_archive_members(
+    expected: &[(String, Vec<u8>)],
+    actual: &[(String, Vec<u8>)],
+    path: &Path,
+) {
+    assert_eq!(
+        expected.iter().map(|(name, _)| name).collect::<Vec<_>>(),
+        actual.iter().map(|(name, _)| name).collect::<Vec<_>>()
+    );
+    for ((name, expected), (_, actual)) in expected.iter().zip(actual) {
+        let mismatch = expected
+            .iter()
+            .zip(actual)
+            .position(|(left, right)| left != right);
+        assert!(
+            mismatch.is_none() && expected.len() == actual.len(),
+            "{name} differs in {} at byte {mismatch:?} ({} != {} bytes)",
+            path.display(),
+            expected.len(),
+            actual.len()
+        );
     }
 }
 
