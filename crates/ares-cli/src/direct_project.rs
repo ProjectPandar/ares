@@ -86,6 +86,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 project_preset_catalog: None,
                 resources_dir: None,
                 uptodate: false,
+                uptodate_settings: None,
+                uptodate_filaments: None,
                 orient: false,
                 #[cfg(target_os = "linux")]
                 report_plate: 1,

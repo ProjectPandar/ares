@@ -14,6 +14,7 @@ pub enum CliPlatesSettings<'a> {
     Embedded {
         system_catalog: Option<&'a crate::PresetCatalogHandle>,
     },
+    RetainedRefresh(&'a crate::NativeRefreshPresets),
     Catalog {
         json: &'a str,
         uptodate: bool,
@@ -195,6 +196,13 @@ fn slice_project_plates(
                 plate: selected,
                 overrides,
                 system_catalog,
+                ..ProjectSource::from(input)
+            }),
+            CliPlatesSettings::RetainedRefresh(refresh) => run(ProjectSource {
+                input: ProjectInput::SavedCliBytes(input),
+                plate: selected,
+                overrides,
+                refresh: Some(crate::profiles::ProjectPresetRefresh::native(refresh)),
                 ..ProjectSource::from(input)
             }),
             CliPlatesSettings::Catalog { json, uptodate } => with_profile_source(
