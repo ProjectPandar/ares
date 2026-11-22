@@ -2,6 +2,8 @@
 
 #[path = "custom_gcode_line_endings.rs"]
 mod custom_gcode_line_endings;
+#[path = "second_layer_nozzle_temperature.rs"]
+mod second_layer_nozzle_temperature;
 #[path = "spiral_inset.rs"]
 mod spiral_inset;
 
