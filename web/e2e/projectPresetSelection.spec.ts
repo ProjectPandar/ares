@@ -67,6 +67,37 @@ test("a project slices with the presets the plater selects when it opens the pro
   expect(errors).toEqual([]);
 });
 
+test("an Ender-3 project opens with the installed Creality process settings", async ({ page }, info) => {
+  const project = `${repositoryRoot}tests/parity/validation/preset-json-ender3-0.2.3mf`;
+  const processName = "0.20mm Standard @Creality Ender3 0.2";
+  const probe = presetSelectProbe();
+  const native = probe ? nativeSelection(probe, `${info.outputPath("native")}/`, project, ["Creality"]) : null;
+  const infillFirst = native?.process.edited.config.is_infill_first.serialized ?? "0";
+  if (native) {
+    expect(native.process.selected.name).toBe(processName);
+    expect(infillFirst).toBe("0");
+  }
+
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  await combo(page, "Printer preset").click();
+  await page.getByRole("option", { name: "Select/Remove printers (system presets)" }).click();
+  const wizard = page.getByRole("dialog", { name: "Printer Selection" });
+  await wizard.getByRole("checkbox", { name: "Creality Ender-3", exact: true }).check();
+  await wizard.getByRole("button", { name: "Confirm" }).click();
+  await expect(wizard).toHaveCount(0, { timeout: 60_000 });
+  await page.getByTestId("import-input").setInputFiles(project);
+  await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
+  await expect(combo(page, "Process preset")).toHaveText(processName);
+  const modes = page.getByTestId("sidebar").getByRole("slider", { name: "Settings mode" });
+  await expect(modes).toBeVisible();
+  await modes.press("End");
+  const settings = page.getByTestId("process-settings");
+  await settings.getByRole("tab", { name: "Quality", exact: true }).click();
+  await expect(settings.getByRole("checkbox", { name: "is_infill_first", exact: true }))
+    .toBeChecked({ checked: infillFirst === "1" });
+});
+
 test("a project of a printer vendor that is not installed slices with the project-local presets the plater selects", async ({ page }) => {
   const probe = presetSelectProbe();
   test.setTimeout(300_000);
