@@ -15,12 +15,12 @@ const ARGS: [&str; 5] = ["--slice", "1", "--outputdir", "out", "input.3mf"];
 
 #[test]
 fn slices_in_the_tilted_frame_and_writes_machine_coordinates() {
-    compare("tilted", true, false);
+    compare("tilted", true, false, &[]);
 }
 
 #[test]
 fn preserves_belt_placement_after_translating_the_instance() {
-    compare("translated", true, true);
+    compare("translated", true, true, &[]);
 }
 
 #[cfg(target_os = "linux")]
@@ -73,13 +73,15 @@ fn rejects_a_gap_between_belt_extrusions_without_flagging_the_lead_in() {
 
 #[test]
 fn disabling_belt_mode_preserves_cartesian_output() {
-    compare("cartesian", false, false);
+    compare("cartesian", false, false, &[]);
 }
 
 #[test]
-fn rejects_an_active_belt_first_layer_band_without_gcode() {
-    rejects(
-        "first_layer_bands",
+fn emits_belt_first_layer_bands_with_no_slowdown_ramp() {
+    compare(
+        "first-layer-bands",
+        true,
+        false,
         &[
             ("belt_slice_rotation_angle", json!("45")),
             ("slow_down_layers", json!("0")),
@@ -195,7 +197,7 @@ fn run_ares(work: &Path) -> Output {
     result
 }
 
-fn compare(name: &str, belt: bool, shift: bool) {
+fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("belt coordinates require Native OrcaSlicer");
         return;
@@ -203,7 +205,7 @@ fn compare(name: &str, belt: bool, shift: bool) {
     let work = runner.work_dir().join(name);
     let out = work.join("out");
     fs::create_dir_all(&out).unwrap();
-    fs::write(work.join("input.3mf"), project(belt, shift, &[], false)).unwrap();
+    fs::write(work.join("input.3mf"), project(belt, shift, edits, false)).unwrap();
     stages::run(
         runner.bin(),
         ARGS.map(str::to_owned),
