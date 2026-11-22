@@ -19,6 +19,9 @@ All other member names, positions, payloads and metadata remain subject to the e
 
 ## Comparison sites
 
+The separate [model-settings record rule](ard-3mf-model-settings-object-record-order.md)
+applies within one member in both sliced and unsliced comparisons; it does not change these ZIP spans.
+
 Paths below are under `crates/ares-cli/tests/orca_parity/`.
 
 | Comparison | Scope |
