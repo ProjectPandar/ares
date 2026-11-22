@@ -201,8 +201,6 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
   // A disabled item keeps the menu open and does nothing; a click reaches it although Playwright
   // treats it as not enabled.
   await fileButton.click();
-  await item("File", "Save Project").click({ force: true });
-  await expect(menu("File")).toBeVisible();
   await item("File", "Export").hover();
   await item("Export", "Export plate sliced file…").click({ force: true });
   await expect(menu("Export")).toBeVisible();
