@@ -35,7 +35,6 @@ async fn main() {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
                 export_stl::run(&args)
             } else if let Some(output) = args.export_3mf.as_ref() {
-                require_single_input(&args.inputs);
                 export_3mf::run(&args, output).await
             } else {
                 run_slice(args).await

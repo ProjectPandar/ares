@@ -10,13 +10,12 @@ use md5::{Digest, Md5};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{LoadSettingsRequest, ProcessedGCode, SliceError};
-pub(crate) use geometry::Object;
+pub(crate) use geometry::{SavedModel, placed_stl_model};
 pub(crate) use project_settings::direct_stl_settings;
 
 const MODEL: &str = "3D/3dmodel.model";
 const SETTINGS: &str = "Metadata/project_settings.config";
 const BAMBU_VERSION: &str = "02.08.01.55";
-const PLATE_GCODE: &str = "Metadata/plate_1.gcode";
 
 pub(crate) fn write_project_settings_raw(
     raw: &crate::project::raw_settings::ProjectSettingsRaw,
@@ -26,10 +25,11 @@ pub(crate) fn write_project_settings_raw(
 }
 
 struct SlicedMembers {
+    plate: u32,
+    object_ids: Vec<(usize, u32)>,
     plate_json: Vec<u8>,
     gcode: Vec<u8>,
     slice_info: Vec<u8>,
-    filament_sequence: Vec<u8>,
     orca_version: Option<String>,
 }
 
@@ -38,7 +38,6 @@ struct ObjectEntry<'a> {
     id: u32,
     backup_id: u32,
     path: String,
-    identify_id: Option<u32>,
 }
 
 impl ObjectEntry<'_> {
@@ -69,7 +68,7 @@ pub fn export_3mf(
     }
     let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
     let settings = project_settings::write(&presets)?;
-    write_package(&[object], &[], settings, None)
+    write_package(&[object], settings, None)
 }
 
 pub fn export_sliced_3mf(
@@ -87,16 +86,13 @@ pub fn export_sliced_3mf(
         .archive
         .take()
         .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    let model = if let Some(object) = archive.stl_model.take() {
+    let model = if let Some(model) = archive.stl_model.take() {
         if archive.filament_color.is_empty()
             && let Some(color) = processed.result.extruder_colors.first()
         {
             archive.filament_color.clone_from(color);
         }
-        geometry::SavedModel {
-            objects: vec![object],
-            orca_version: None,
-        }
+        model
     } else {
         if !filename.to_ascii_lowercase().ends_with(".3mf") {
             return Err(deferred(
@@ -115,32 +111,113 @@ pub fn export_sliced_3mf(
             return Err(mismatch());
         }
     }
-    let identify_ids = identify_ids
-        .into_iter()
-        .collect::<Option<Vec<_>>>()
-        .ok_or_else(mismatch)?;
-    let plate_json = xml::plate_json(&archive, first_print_object_id);
-    let slice_info = xml::slice_info(&archive, &processed).into_bytes();
-    let filament_sequence = xml::filament_sequence();
+    if identify_ids.iter().any(Option::is_none) {
+        return Err(mismatch());
+    }
+    let sliced = SlicedMembers {
+        plate: 1,
+        object_ids: archive
+            .objects
+            .iter()
+            .map(|object| (object.model_index, object.identify_id))
+            .collect(),
+        plate_json: xml::plate_json(&archive, first_print_object_id),
+        slice_info: xml::slice_info(&archive, &processed, 1).into_bytes(),
+        gcode: processed.gcode,
+        orca_version: model.orca_version.clone(),
+    };
+    write_package(&model.objects, archive.project_settings, Some(vec![sliced]))
+}
+
+pub fn export_arranged_sliced_3mf(
+    mut plates: Vec<crate::SlicedStlPlate>,
+) -> Result<Vec<u8>, SliceError> {
+    let mut archives = Vec::with_capacity(plates.len());
+    let mut model: Option<SavedModel> = None;
+    for plate in &mut plates {
+        let mut archive = plate
+            .processed
+            .archive
+            .take()
+            .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
+        if archive.filament_color.is_empty()
+            && let Some(color) = plate.processed.result.extruder_colors.first()
+        {
+            archive.filament_color.clone_from(color);
+        }
+        if let Some(plate_model) = archive.stl_model.take() {
+            if let Some(model) = &mut model {
+                model.objects.extend(plate_model.objects);
+            } else {
+                model = Some(plate_model);
+            }
+        }
+        archives.push((plate.id, archive));
+    }
+    let model = model.ok_or_else(|| invalid("sliced export requires captured STL model"))?;
+    let mut identify_ids = vec![None; model.objects.len()];
+    for (_, archive) in &archives {
+        for object in &archive.objects {
+            let model_index = model
+                .objects
+                .iter()
+                .position(|candidate| candidate.name == object.name)
+                .ok_or_else(|| invalid("captured plate does not match model objects"))?;
+            let id = identify_ids
+                .get_mut(model_index)
+                .ok_or_else(|| invalid("captured plate does not match model objects"))?;
+            if id.replace(object.identify_id).is_some() {
+                return Err(invalid("captured plate does not match model objects"));
+            }
+        }
+    }
+    if identify_ids.iter().any(Option::is_none) {
+        return Err(invalid("captured plate does not match model objects"));
+    }
+    // PartPlate.cpp:8422 allocates PrintObject IDs after the final arranged
+    // ModelInstance; the copied STL object contributes object/config/volume/
+    // instance/profile IDs before the first PrintObject.
+    let first_print_object_id = identify_ids
+        .iter()
+        .flatten()
+        .max()
+        .copied()
+        .expect("arranged archive has model instances")
+        + 19;
+    let sliced = archives
+        .iter()
+        .zip(&plates)
+        .map(|((plate, archive), source)| SlicedMembers {
+            plate: *plate,
+            object_ids: archive
+                .objects
+                .iter()
+                .map(|object| {
+                    let model_index = model
+                        .objects
+                        .iter()
+                        .position(|candidate| candidate.name == object.name)
+                        .expect("captured plate object has a model geometry");
+                    (model_index, object.identify_id)
+                })
+                .collect(),
+            plate_json: xml::plate_json(archive, first_print_object_id + source.id - 1),
+            slice_info: xml::slice_info(archive, &source.processed, *plate).into_bytes(),
+            gcode: source.processed.gcode.clone(),
+            orca_version: model.orca_version.clone(),
+        })
+        .collect();
     write_package(
         &model.objects,
-        &identify_ids,
-        archive.project_settings,
-        Some(SlicedMembers {
-            plate_json,
-            gcode: processed.gcode,
-            slice_info,
-            filament_sequence,
-            orca_version: model.orca_version,
-        }),
+        archives[0].1.project_settings.clone(),
+        Some(sliced),
     )
 }
 
 fn write_package(
     objects: &[geometry::Object],
-    identify_ids: &[u32],
     settings: Vec<u8>,
-    sliced: Option<SlicedMembers>,
+    sliced: Option<Vec<SlicedMembers>>,
 ) -> Result<Vec<u8>, SliceError> {
     let mut next_id = 1;
     let objects = objects
@@ -155,50 +232,68 @@ fn write_package(
                 id,
                 backup_id,
                 path: format!("3D/Objects/{}_{backup_id}.model", object.name),
-                identify_id: identify_ids.get(index).copied(),
             }
         })
         .collect::<Vec<_>>();
     let sliced_output = sliced.is_some();
-    let model_settings = xml::model_settings(&objects, sliced_output).into_bytes();
-    let mut entries = vec![("[Content_Types].xml", xml::content_types().into_bytes())];
+    let model_settings = xml::model_settings(&objects, sliced.as_deref()).into_bytes();
+    let mut entries = vec![(
+        "[Content_Types].xml".to_owned(),
+        xml::content_types().into_bytes(),
+    )];
     if let Some(sliced) = &sliced {
-        entries.push(("Metadata/plate_1.json", sliced.plate_json.clone()));
+        entries.extend(sliced.iter().map(|member| {
+            (
+                format!("Metadata/plate_{}.json", member.plate),
+                member.plate_json.clone(),
+            )
+        }));
     }
     entries.extend([
         (
-            MODEL,
+            MODEL.to_owned(),
             xml::main_model(
                 &objects,
-                sliced.as_ref().and_then(|s| s.orca_version.as_deref()),
+                sliced
+                    .as_ref()
+                    .and_then(|members| members.first())
+                    .and_then(|member| member.orca_version.as_deref()),
             )
             .into_bytes(),
         ),
         (
-            "3D/_rels/3dmodel.model.rels",
+            "3D/_rels/3dmodel.model.rels".to_owned(),
             xml::relationships(objects.iter().map(|object| object.path.as_str())).into_bytes(),
         ),
     ]);
     entries.extend(
         objects
             .iter()
-            .map(|object| (object.path.as_str(), xml::mesh_model(object).into_bytes())),
+            .map(|object| (object.path.clone(), xml::mesh_model(object).into_bytes())),
     );
-    entries.push((SETTINGS, settings));
+    entries.push((SETTINGS.to_owned(), settings));
     let (slice_info, filament_sequence) = if let Some(sliced) = sliced {
-        let gcode = sliced.gcode;
-        entries.extend([
-            (
-                "Metadata/plate_1.gcode.md5",
-                format!("{:X}", Md5::digest(&gcode)).into_bytes(),
-            ),
-            (PLATE_GCODE, gcode),
-            (
-                "Metadata/_rels/model_settings.config.rels",
-                xml::gcode_relationship().into_bytes(),
-            ),
-        ]);
-        (sliced.slice_info, sliced.filament_sequence)
+        let slice_info = xml::slice_info_many(&sliced).into_bytes();
+        let filament_sequence = xml::filament_sequence(sliced.len());
+        // bbs_3mf.cpp:6327–6350: emit staged G-code in plate-index order.
+        let mut paths = Vec::with_capacity(sliced.len());
+        for member in sliced {
+            let path = format!("Metadata/plate_{}.gcode", member.plate);
+            paths.push(path);
+            entries.push((
+                format!("Metadata/plate_{}.gcode.md5", member.plate),
+                format!("{:X}", Md5::digest(&member.gcode)).into_bytes(),
+            ));
+            entries.push((
+                format!("Metadata/plate_{}.gcode", member.plate),
+                member.gcode,
+            ));
+        }
+        entries.push((
+            "Metadata/_rels/model_settings.config.rels".to_owned(),
+            xml::gcode_relationship(paths.iter().map(String::as_str)).into_bytes(),
+        ));
+        (slice_info, filament_sequence)
     } else {
         (
             xml::slice_info_header().into_bytes(),
@@ -207,10 +302,16 @@ fn write_package(
         )
     };
     entries.extend([
-        ("Metadata/model_settings.config", model_settings),
-        ("Metadata/slice_info.config", slice_info),
-        ("Metadata/filament_sequence.json", filament_sequence),
-        ("_rels/.rels", xml::relationships([MODEL]).into_bytes()),
+        ("Metadata/model_settings.config".to_owned(), model_settings),
+        ("Metadata/slice_info.config".to_owned(), slice_info),
+        (
+            "Metadata/filament_sequence.json".to_owned(),
+            filament_sequence,
+        ),
+        (
+            "_rels/.rels".to_owned(),
+            xml::relationships([MODEL]).into_bytes(),
+        ),
     ]);
     if sliced_output {
         let stream = write_members(ZipWriter::new_stream(Vec::new()), entries)?;
@@ -224,7 +325,7 @@ fn write_package(
 
 fn write_members<W: Write + Seek>(
     mut writer: ZipWriter<W>,
-    entries: Vec<(&str, Vec<u8>)>,
+    entries: Vec<(String, Vec<u8>)>,
 ) -> Result<W, SliceError> {
     // Native miniz supplies local wall time when absent; the ZIP epoch keeps
     // the envelope repeatable without changing a member payload.
