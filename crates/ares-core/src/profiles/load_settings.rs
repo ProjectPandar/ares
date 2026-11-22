@@ -11,6 +11,7 @@
 //! second composition exists.
 
 mod project;
+pub(crate) use project::project_for_3mf_export;
 
 use super::catalog::{Catalog, ComposedSelection, ProfileDocument};
 use super::{ProfileKind, ProfileSelection};

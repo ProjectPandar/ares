@@ -70,7 +70,7 @@ pub(crate) struct DirectSliceArgs {
     /// Slice all plates (0) or the given one-based plate number.
     #[arg(
         long = "slice",
-        required_unless_present = "export_settings",
+        required_unless_present_any = ["export_settings", "export_3mf"],
         requires = "outputdir",
         allow_negative_numbers = true
     )]
@@ -83,6 +83,12 @@ pub(crate) struct DirectSliceArgs {
     /// Export effective settings to FILE, or to stdout with '-'.
     #[arg(long, value_name = "FILE")]
     pub(crate) export_settings: Option<PathBuf>,
+    /// Export an unsliced 3MF project.
+    #[arg(long, value_name = "3MF", conflicts_with_all = ["selection", "export_settings"])]
+    pub(crate) export_3mf: Option<PathBuf>,
+    /// Preserve orientation (0) when exporting an unsliced project.
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) orient: Option<u8>,
 
     /// Maximum triangle count per plate for direct STL slicing (0 means unlimited).
     #[arg(long, allow_negative_numbers = true)]
