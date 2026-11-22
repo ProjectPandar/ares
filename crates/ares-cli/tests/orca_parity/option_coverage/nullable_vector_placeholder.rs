@@ -95,6 +95,10 @@ async fn nullable_vector_nil_reference_returns_slice_error() {
     for (label, template) in [
         ("brace", "; NIL_REF {filament_pre_cooling_temperature[0]}\n"),
         ("legacy", "; NIL_REF [filament_pre_cooling_temperature_0]\n"),
+        (
+            "legacy-out-of-range",
+            "; NIL_REF [filament_pre_cooling_temperature_999]\n",
+        ),
     ] {
         let input = reference_input(template);
         let root = tempfile::Builder::new()

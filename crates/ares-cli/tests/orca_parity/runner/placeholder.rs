@@ -18,6 +18,9 @@ mod placeholder_digits_rounding;
 mod placeholder_if_conditions;
 #[path = "placeholder_int_result.rs"]
 mod placeholder_int_result;
+#[cfg(target_os = "linux")]
+#[path = "placeholder_legacy_vector_suffix.rs"]
+mod placeholder_legacy_vector_suffix;
 #[path = "placeholder_max_print_z.rs"]
 mod placeholder_max_print_z;
 #[path = "placeholder_minmax_results.rs"]
