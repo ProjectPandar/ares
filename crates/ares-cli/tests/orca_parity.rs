@@ -377,8 +377,6 @@ mod semantic;
 #[path = "orca_parity/case_support.rs"]
 mod case_support;
 
-use std::collections::BTreeMap;
-
 pub(crate) use case_support::case_helpers::*;
 use case_support::smoke_overrides;
 use presets::VendorProfiles;
@@ -387,6 +385,7 @@ use serde_json::Value;
 pub(crate) use smoke_overrides::{
     normalize_filament_defaults, normalize_process_defaults, smoke_case_overrides, smoke_overrides,
 };
+use std::collections::BTreeMap;
 
 use crate::runner::{OrcaRunner as Runner, ParityCase};
 
