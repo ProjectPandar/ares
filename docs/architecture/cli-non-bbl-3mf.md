@@ -49,8 +49,9 @@ STL, assembly and multipart projects set it to `false`.
    `upward_compatible_machine` into any project raw that lacks it. Its comment cites
    `OrcaSlicer.cpp:1769`, the pre-v2.5.0 line; the v2.5.0 line is 1894. The registry entry has
    `full_config_default = false`
-   (`options/registry/definitions/table/tail_terminal_suffix.rs:66`), so this insertion is the only
-   reason the line is printed.
+   (`options/registry/definitions/table/tail_terminal_suffix.rs:66`), so on the `--load-settings`
+   route this insertion is the only reason the line is printed. Routes without preset files get the
+   key earlier from the retained preset fill (see Deferred).
 2. `mapped_prime_tower::disable_after_mapping`
    (`crates/ares-core/src/project/domain/profile_input/mapped_prime_tower.rs`) fires whenever every
    `filament_settings_id` entry names one preset. It does not read `bbl_family_3mf`.
@@ -90,7 +91,7 @@ other route keeps its current behaviour.
 | Caller | Route | Creates the key | Coverage |
 |---|---|---|---|
 | `profile_input/three_mf.rs:181` | profile overlay of a 3MF; CLI when `full_fff_config` is `None` (`--load-settings` / `--load-filaments`), plater otherwise | CLI: `bbl_family_3mf`; plater: always | tests 1 and 2; the plater legs of the web suite |
-| `project/settings_export.rs:24` | `--export-settings` (CLI only; no wasm entry) | `bbl_family_3mf` | test 3, key level |
+| `project/settings_export.rs:24` | `--export-settings` (CLI only; no wasm entry) | `bbl_family_3mf` | not observable yet: the retained preset fill adds the key earlier on this route (see Deferred) |
 | `project_slice/state.rs:123` | 3MF without a profile overlay: the CLI direct slice and the browser's direct 3MF loads share it | always (unchanged) | deferred, see below |
 | `project/domain/preset_refresh.rs:46` | `--uptodate` refresh, plater selection, system-catalog route, STL model with overrides | always (unchanged) | web suite |
 | `print/validate.rs:89` | `validate_project_plate` | always (unchanged) | nothing reads the key |
@@ -108,12 +109,7 @@ argv. The 3MF fixtures are exported by Native at test time as in the table above
    identical on both sides.
 2. Non-BBL 3MF, `--load-filaments A;A`, two used filaments: identical to Native, with the tower
    printed. This needs both changes. The BBL 3MF with the same argv is the control.
-3. `--export-settings` on the non-BBL 3MF: the Ares document has the same `upward_compatible_machine`
-   presence as Native's (absent), and the BBL document's value matches Native's (`[]`). This test
-   compares this one key, not the document: on a non-BBL 3MF the two documents also differ in 16
-   printer keys and in one- versus two-value filament vectors, which belong to a separate change.
-
-Tests 1 and 3 fail before change 1; test 2 fails before both changes.
+Test 1 fails before change 1; test 2 fails before both changes.
 
 ## Deferred
 
@@ -126,8 +122,16 @@ Tests 1 and 3 fail before change 1; test 2 fails before both changes.
   non-BBL 3MF as well, but the call site is shared with the browser's direct 3MF loads and needs a
   CLI-only signal; its whole-file comparison is also blocked by the printer-key and filament-vector
   differences below.
-- Whole-document comparison of `--export-settings` on non-BBL 3MFs: on top of this key the two
-  documents differ in 16 printer keys and in one- versus two-value filament vectors.
+- `--export-settings` on non-BBL 3MFs, including this key. The direct load behind it
+  (`load_project_with_preparation`) runs `apply_retained_preset_defaults`
+  (`project/load/settings.rs:11-12`), the counterpart of `load_project_preset`
+  (`OrcaSlicer.cpp:3164-3199`). That fill adds every printer key the project lacks from its system
+  machine preset, `upward_compatible_machine` among them, before
+  `initialize_cli_loaded_project_config` runs. Native skips the fill for a non-BBL 3MF:
+  `load_project_preset` returns on an empty system name, and `current_printer_system_name` is set
+  only inside the BBL block (1863, 1867, 1888). The same fill gives the non-BBL document 16 more
+  printer keys than Native's, and the filament vectors differ in length as well; all of this belongs
+  to the non-BBL retained preset change.
 - `load_filament_count > 0` and the set of loaded file names in 2531: no observable difference on
   the Ares CLI today. A direct 3MF with only one of `--load-settings` / `--load-filaments` is still
   rejected by Ares.
