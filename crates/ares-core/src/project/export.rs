@@ -274,7 +274,7 @@ fn write_package(
     entries.extend([
         (
             MODEL.to_owned(),
-            xml::main_model(&objects, orca_version, scene.is_some()).into_bytes(),
+            xml::main_model(&objects, orca_version).into_bytes(),
         ),
         (
             "3D/_rels/3dmodel.model.rels".to_owned(),
