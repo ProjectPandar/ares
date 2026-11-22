@@ -94,13 +94,13 @@ pub(crate) fn reject_incompatible_load_settings(
             Err(SliceError::ProcessNotCompatible)
         };
     }
-    let compatible = if let Some(embedded) = &names.embedded {
-        retained_process_compatible(embedded, machine_config, new_printer_system_name)?
-    } else if let Some(process) = &names.process {
+    let compatible = if let Some(process) = &names.process {
         process
             .compatible_printers
             .iter()
             .any(|entry| entry == new_printer_system_name)
+    } else if let Some(embedded) = &names.embedded {
+        retained_process_compatible(embedded, machine_config, new_printer_system_name)?
     } else {
         text_list(raw, "print_compatible_printers")
             .is_some_and(|list| list.iter().any(|entry| entry == new_printer_system_name))

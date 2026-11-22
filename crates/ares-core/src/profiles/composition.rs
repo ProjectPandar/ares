@@ -59,28 +59,35 @@ impl ProfileSelection {
         })
     }
 
-    pub(super) fn machine_for_project(
-        machine: String,
+    pub(super) fn for_project_without_filaments(
+        process: Option<String>,
+        machine: Option<String>,
         embedded: &crate::project::raw_settings::ProjectSettingsRaw,
     ) -> Result<Self, SliceError> {
         use crate::project::raw_settings::RawConfigValue;
         let nonempty_name = |value: &RawConfigValue| matches!(value, RawConfigValue::Text(name) if !name.is_empty());
-        let process = embedded
-            .get("print_settings_id")
-            .and_then(|value| value.element(0))
-            .is_some_and(nonempty_name);
+        let has_process = process.is_some()
+            || embedded
+                .get("print_settings_id")
+                .and_then(|value| value.element(0))
+                .is_some_and(nonempty_name);
         let filaments = embedded.get("filament_settings_id").is_some_and(|value| {
             value.len() > 0
                 && (0..value.len()).all(|index| nonempty_name(value.element(index).unwrap()))
         });
-        if machine.is_empty() || !process || !filaments {
+        if machine.as_ref().is_some_and(String::is_empty)
+            || process.as_ref().is_some_and(String::is_empty)
+            || !has_process
+            || !filaments
+        {
             return Err(SliceError::InvalidInput(
-                "machine-only settings require an embedded process and filaments".to_owned(),
+                "settings without filament files require a process and embedded filaments"
+                    .to_owned(),
             ));
         }
         Ok(Self {
-            process: None,
-            machine: Some(machine),
+            process,
+            machine,
             filaments: Vec::new(),
         })
     }
