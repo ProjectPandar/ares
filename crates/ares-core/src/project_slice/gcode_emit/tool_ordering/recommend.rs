@@ -61,8 +61,16 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
     let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;
     let single_head_auto = current.project.print.nozzle_diameter.0.len() == 1
         && current.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual;
-    // Print.cpp:3700–3734 also publishes single-head sequential auto maps.
-    if !sequential || traversal.objects.len() == 1 || single_head_auto {
+    // Print.cpp:3704–3739 publishes static automatic maps in by-object mode.
+    let non_bbl_multi_head_auto_for_flush = !is_bbl
+        && !multiple_nozzles
+        && current.project.print.nozzle_diameter.0.len() > 1
+        && current.project.gcode.filament_map_mode == ProjectFilamentMapMode::AutoForFlush;
+    if !sequential
+        || traversal.objects.len() == 1
+        || single_head_auto
+        || non_bbl_multi_head_auto_for_flush
+    {
         let changed = filament_map_recommend::apply_used_tpu_map(
             &mut traversal.resolved.views.full,
             &used,
