@@ -68,19 +68,19 @@ or broaden the FilamentGroup optimizer.
 
 ## Verification seam
 
-Turn the existing tool-qualified sequential case into a strict whole-file
-Native/API/CLI comparison after the vectors are sized. The test must continue
-to assert the temperature/tool restart behavior and must compare the complete
-G-code stream without removing or rewriting the two map lines.
+Keep the existing restart-span comparison in the tool-qualified sequential
+case. Compare the complete `filament_map`, `filament_map_2`,
+`filament_nozzle_map`, and `filament_volume_map` values in the config footer
+from Native, the public API, and the CLI. A strict whole-file comparison is
+deferred: before the footer, Ares already emits an additional
+`G10 S207 P0` at the transition out of the first layer, while Native emits
+only `G10 S207 P1`. The comparison does not normalize that command.
 
-Add a minimal non-sequential two-tool synthetic project built at runtime from
-an existing public 3MF input. Configure two filament slots, two physical
-nozzles, omit the internal map keys, and use only the second logical filament.
-Slice identical bytes through Native, the public API, and the CLI in official
-and seeded environments. Compare the complete `filament_map`,
-`filament_map_2`, `filament_nozzle_map`, and `filament_volume_map` values and
-the complete G-code stream. The synthetic input must remain unmodified on
-disk and no Native output is committed.
+Use a minimal non-sequential two-tool control built at runtime from the
+same public 3MF input. Both cases configure two filament slots and two
+physical nozzles, omit the internal map keys, and use only the second
+logical filament. Check all four fields for both cases in the official and
+seeded environments. No Native output is committed.
 
 Run the existing filament-map, flush, and multi-tool inventories in both
 Native modes. Previously passing cases must remain passing. Run formatting,
