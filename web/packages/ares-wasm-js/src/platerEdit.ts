@@ -22,6 +22,8 @@ export function applyEdit(session: PlaterSession, edit: PlaterEdit) {
       return session.mirror(edit.object, edit.instance, edit.axis);
     case "scaleToFit":
       return session.scaleToFit(edit.object, edit.instance);
+    case "setFilament":
+      return session.setFilament(JSON.stringify(edit.targets), edit.slot, edit.count);
     case "addPlate":
       return session.addPlate();
     case "deletePlate":

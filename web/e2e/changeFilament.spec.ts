@@ -48,7 +48,7 @@ function objectTools(gcode: string) {
     if (command) tool = Number(command[1]);
     if (line.startsWith("; printing object ")) object = line.match(/^; printing object ((?:coral|azure)\.stl) id:/)?.[1];
     if (line.startsWith("; stop printing object ")) object = undefined;
-    if (object && /^G1\b(?=.* [XY]-?\d)(?=.* E\d)/.test(line)) (tools[object] ??= new Set()).add(tool);
+    if (object && /^G1\b(?=.* [XY]-?\d)(?=.* E(?:\d|\.\d))/.test(line)) (tools[object] ??= new Set()).add(tool);
   }
   return Object.fromEntries(Object.entries(tools).map(([name, used]) => [name, [...used]]));
 }
@@ -56,16 +56,25 @@ function objectTools(gcode: string) {
 test("changing one object's filament changes its extrusion tool and the preview legend", async ({ page }, info) => {
   await setup(page, "Snapmaker");
   await openProject(page, initiallySameFilament());
-  await page.getByTestId("object-list").getByText("azure.stl", { exact: true }).click({ button: "right" });
+  const object = page.getByTestId("object-list").getByRole("treeitem").filter({ hasText: "azure.stl" });
+  await expect(object.getByRole("img", { name: "Filament 1" })).toBeVisible();
+  await object.getByText("azure.stl", { exact: true }).click({ button: "right" });
   await page.getByRole("menuitem", { name: "Change Filament", exact: true }).click();
   await page.getByRole("menuitem", { name: "Filament 2: Snapmaker J1 PLA", exact: true }).click();
+  await expect(object.getByRole("img", { name: "Filament 2" })).toBeVisible();
+  await page.keyboard.press("Control+z");
+  await expect(object.getByRole("img", { name: "Filament 1" })).toBeVisible();
+  await page.keyboard.press("Control+Shift+z");
+  await expect(object.getByRole("img", { name: "Filament 2" })).toBeVisible();
   const edited = await sliceDownload(page, info.outputPath("assigned-in-prepare.gcode"));
   expect(objectTools(edited.toString("utf8"))).toEqual({ "coral.stl": [0], "azure.stl": [1] });
+  await page.getByRole("link", { name: "Preview", exact: true }).click();
+  await page.getByRole("combobox", { name: "View type" }).selectOption("ColorPrint");
   const legend = page.getByRole("table", { name: "Filament usage" });
   await expect(legend.getByRole("cell", { name: "1", exact: true }).first()).toBeVisible();
   await expect(legend.getByRole("cell", { name: "2", exact: true }).first()).toBeVisible();
 
-  await page.reload();
+  await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await openProject(page, assigned);
   const direct = await sliceDownload(page, info.outputPath("assigned-in-project.gcode"));

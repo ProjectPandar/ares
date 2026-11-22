@@ -1,0 +1,14 @@
+.context-menu .assign-filament > button {
+  justify-content: space-between;
+}
+
+.assign-filament-choices {
+  margin-inline-start: 8px;
+  border-inline-start: 1px solid currentColor;
+  max-height: min(16rem, 36vh);
+  overflow-y: auto;
+}
+
+.assign-filament-choices .filament-swatch {
+  margin-inline-end: 6px;
+}

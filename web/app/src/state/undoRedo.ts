@@ -7,6 +7,7 @@
  * (`SnapshotType::ProjectSeparator`); the worker releases the old session's snapshots with it.
  */
 import type { SceneObject } from "@ares-slicer/wasm";
+import type { FilamentSelection } from "./filamentAssignment";
 import { applyLayout } from "./plates";
 import { useApp } from "./store";
 
@@ -15,6 +16,7 @@ interface Snapshot {
   currentPlate: number;
   selectedObject: number | null;
   selectedInstance: number | null;
+  filamentSelection: FilamentSelection[];
 }
 
 let snapshots: Snapshot[] = [];
@@ -34,8 +36,8 @@ useApp.subscribe(({ plater, scene }, previous) => {
 });
 
 function capture(): Snapshot {
-  const { plater, currentPlate, selectedObject, selectedInstance } = useApp.getState();
-  return { id: plater!.takeSnapshot(), currentPlate, selectedObject, selectedInstance };
+  const { plater, currentPlate, selectedObject, selectedInstance, filamentSelection } = useApp.getState();
+  return { id: plater!.takeSnapshot(), currentPlate, selectedObject, selectedInstance, filamentSelection };
 }
 
 /** Saves the plater before an edit (`Plater::TakeSnapshot`). */
@@ -64,8 +66,8 @@ export async function redo() {
 }
 
 async function load(index: number) {
-  const { id, currentPlate, selectedObject, selectedInstance } = snapshots[index];
+  const { id, currentPlate, selectedObject, selectedInstance, filamentSelection } = snapshots[index];
   const layout = await useApp.getState().plater!.loadSnapshot(id);
-  useApp.setState({ selectedObject, selectedInstance });
+  useApp.setState({ selectedObject, selectedInstance, filamentSelection });
   applyLayout(layout, currentPlate, loadedObjects);
 }

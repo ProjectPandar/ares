@@ -10,9 +10,11 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::profiles::{PresetCatalog, ProfileSliceOptions};
-use crate::scene::{self, SceneInstance, ScenePlate};
+use crate::scene::{self, ScenePlate};
 use crate::{SceneData, SliceOutput};
 
+mod filament;
+mod layout;
 mod snapshot;
 mod stl_files;
 mod transform;
@@ -28,23 +30,6 @@ pub struct PlaterSession {
     session: ares_core::PlaterSession,
     /// The loaded file's name, for preset slicing (`ProfileSliceRequest::filename`).
     filename: String,
-}
-
-/// Instance matrices and plates after an edit (the scene without meshes).
-#[derive(Serialize)]
-struct Layout {
-    objects: Vec<LayoutObject>,
-    plates: Vec<ScenePlate>,
-    /// `wipe_tower_x`, `wipe_tower_y`: the project config's tower position per plate.
-    #[serde(rename = "wipeTower")]
-    wipe_tower: (Vec<f64>, Vec<f64>),
-}
-
-/// An object's instances; the id follows an object an arrange sorts (`PartPlate.cpp:8389`).
-#[derive(Serialize)]
-struct LayoutObject {
-    id: u32,
-    instances: Vec<SceneInstance>,
 }
 
 /// `GLCanvas3D::ArrangeSettings` as the web passes it.
@@ -124,26 +109,6 @@ impl PlaterSession {
     /// The `loadScene` scene of the edited project, with the session's plates and origins.
     pub fn scene(&self) -> SceneData {
         scene::project_scene_with_plates(self.session.project(), self.plates())
-    }
-
-    /// The edited instance matrices, plates and tower positions as JSON
-    /// `{objects: [{instances}], plates, wipeTower: [x, y]}`.
-    pub fn layout(&self) -> String {
-        let layout = Layout {
-            objects: self
-                .session
-                .project()
-                .objects()
-                .iter()
-                .map(|object| LayoutObject {
-                    id: object.id(),
-                    instances: scene::scene_instances(object),
-                })
-                .collect(),
-            plates: self.plates(),
-            wipe_tower: self.session.tower_positions(),
-        };
-        serde_json::to_string(&layout).expect("plater layout serializes")
     }
 
     /// The installed system vendors (`PresetBundle::vendors`) the arrange job's vendor test reads.
