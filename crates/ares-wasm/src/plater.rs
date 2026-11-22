@@ -13,6 +13,7 @@ use crate::profiles::{PresetCatalog, ProfileSliceOptions};
 use crate::scene::{self, SceneInstance, ScenePlate};
 use crate::{SceneData, SliceOutput};
 
+mod save;
 mod snapshot;
 mod stl_files;
 mod transform;
