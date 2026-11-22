@@ -57,6 +57,25 @@ fresh separate caches.
 Same-label Ares RAW bytes/candidate-only failures and
 Native generator-only ND evidence required; no pass inferred from counts.
 
+## MK4 pause-template project metadata at OrcaSlicer v2.5.0
+
+`src/OrcaSlicer.cpp:1850-1887` expects `inherits_group` to have one entry
+for the process, one per `filament_settings_id` in order, then one for the
+printer. A length mismatch writes a warning to stderr and continues: fewer than
+two entries are ignored; otherwise the first and last entries still identify the
+process and printer parents, and unlisted filament parents default to their
+current preset names. The two-filament MK4 fixture needs four empty entries;
+adding the missing one preserves the preset identities and removes the warning.
+
+The rejection is independent of that warning. `GCode.cpp:5757-5769` renders
+`machine_pause_gcode` without a per-layer overlay, so `{layer_num}` is unresolved
+(`PlaceholderParser.cpp:1123-1134`). `GCode.cpp:5416-5423` records the failure;
+`:2967,5040-5048` throws `PlaceholderParserError` and `OrcaSlicer.cpp:7280-7285`
+reports it as `-100` (Unix exit 156). Only the synthetic 3MF metadata changes;
+keep the paired CLI exit, exact stdout/stderr, comparable result JSON and
+no-export checks in `smoke/custom_gcode_pause_vars.rs`. The parser and product
+behavior are unchanged.
+
 ## 2026-10-08 wall-clock comparison finding (seam prerequisite gates)
 
 The independent seam-radius candidate on production base `083cb1862` retained
