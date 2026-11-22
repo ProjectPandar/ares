@@ -30,7 +30,7 @@ fn h2c_auto_flush_uses_the_same_physical_nozzle_as_native() {
             ["2", "0", "1"],
         ),
     ] {
-        let case = prepare(&root, name, PROJECT, update);
+        let case = prepare(root, name, PROJECT, update);
         let native = slice(runner.bin(), &case, "native");
         let actual = slice(Path::new(env!("CARGO_BIN_EXE_ares")), &case, "ares");
         assert_eq!(maps(&native), expected, "{name}: Native assignment");

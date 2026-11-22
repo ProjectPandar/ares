@@ -17,20 +17,25 @@ pub(super) fn check_scope(
     objects: usize,
     multiple_nozzles: bool,
 ) -> Result<bool, SliceError> {
+    let nozzle_diameters = settings.project.print.nozzle_diameter.0.len();
+    let manual = settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::Manual;
+    let has_tpu = used.iter().any(|&id| {
+        settings
+            .filament
+            .gcode
+            .filament_type
+            .0
+            .get(id)
+            .unwrap_or(&settings.filament.gcode.filament_type.0[0])
+            == "TPU"
+    });
+    if multiple_nozzles && !manual && (nozzle_diameters != 2 || has_tpu) {
+        return Err(context::unsupported());
+    }
     let automatic = (is_bbl || multiple_nozzles)
-        && settings.project.print.nozzle_diameter.0.len() > 1
-        && (settings.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual
-            || multiple_nozzles)
-        && !used.iter().any(|&id| {
-            settings
-                .filament
-                .gcode
-                .filament_type
-                .0
-                .get(id)
-                .unwrap_or(&settings.filament.gcode.filament_type.0[0])
-                == "TPU"
-        });
+        && nozzle_diameters > 1
+        && (!manual || multiple_nozzles)
+        && !has_tpu;
     let sequential = settings.process.print.print_sequence == crate::ProcessPrintSequence::ByObject;
     if automatic
         && ((sequential && objects > 1) || settings.project.print.nozzle_diameter.0.len() != 2)
@@ -56,10 +61,12 @@ pub(super) fn apply(
     )?;
     let mut result = if context.manual_multi_nozzle {
         enumeration::solve_manual(&context)?
+    } else if context.auto_multi_nozzle {
+        vec![enumeration::solve_single_filament(&context)]
     } else {
         enumeration::solve(&context)
     };
-    if !context.manual_multi_nozzle {
+    if !context.manual_multi_nozzle && !context.auto_multi_nozzle {
         // Final2.5 ToolOrdering.cpp:1839–1856: [preferred, original] selection
         // keeps preferred first when inventory is empty, as in this static context.
         let master = context.master;
