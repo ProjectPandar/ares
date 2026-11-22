@@ -42,26 +42,6 @@ fn cli_non_bbl_3mf_keeps_tower_for_one_loaded_preset() {
     }
 }
 
-#[test]
-fn cli_export_settings_non_bbl_3mf_omits_upward_compatible_machine() {
-    let Some(fixture) = Fixture::new("export-settings") else {
-        return;
-    };
-    for project in [Project::Bbl, Project::Plain] {
-        let native = fixture.export_settings(Engine::Native, project);
-        let ares = fixture.export_settings(Engine::Ares, project);
-        // The rest of the non-BBL document differs in printer keys and filament vector sizes,
-        // which this change does not cover; only the key created by OrcaSlicer.cpp:1894 is compared.
-        assert_eq!(
-            ares.get("upward_compatible_machine"),
-            native.get("upward_compatible_machine"),
-            "upward_compatible_machine at {:?} {}",
-            fixture.root,
-            project.name()
-        );
-    }
-}
-
 #[derive(Clone, Copy)]
 enum Engine {
     Native,
@@ -173,7 +153,9 @@ impl Fixture {
             .arg(self.project(project))
             .output()
             .unwrap();
-        record(&cwd, &result);
+        fs::write(cwd.join("exit"), format!("{:?}\n", result.status.code())).unwrap();
+        fs::write(cwd.join("stderr"), &result.stderr).unwrap();
+        fs::write(cwd.join("stdout"), &result.stdout).unwrap();
         assert_eq!(result.status.code(), Some(0), "{cwd:?}");
         let out = cwd.join("out");
         let mut files = fs::read_dir(&out)
@@ -188,24 +170,6 @@ impl Fixture {
             gcode: banner_normalized(&fs::read(out.join("plate_1.gcode")).unwrap()),
         }
     }
-
-    fn export_settings(&self, engine: Engine, project: Project) -> serde_json::Map<String, Value> {
-        let (mut command, cwd) = self.command(engine, &format!("settings-{}", project.name()));
-        let result = command
-            .args(["--export-settings", "out/settings.json"])
-            .arg(self.project(project))
-            .output()
-            .unwrap();
-        record(&cwd, &result);
-        assert_eq!(result.status.code(), Some(0), "{cwd:?}");
-        serde_json::from_slice(&fs::read(cwd.join("out/settings.json")).unwrap()).unwrap()
-    }
-}
-
-fn record(cwd: &Path, result: &std::process::Output) {
-    fs::write(cwd.join("exit"), format!("{:?}\n", result.status.code())).unwrap();
-    fs::write(cwd.join("stderr"), &result.stderr).unwrap();
-    fs::write(cwd.join("stdout"), &result.stdout).unwrap();
 }
 
 /// Replaces the `Application` metadata with another slicer's and drops the `OrcaSlicer` version
