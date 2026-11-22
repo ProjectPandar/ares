@@ -1,12 +1,12 @@
-//! Print.cpp:1751-1781: current-bed compatibility of used logical filaments.
-use crate::{ProjectSettings, SliceError, options::ProjectBedType};
+//! Print.cpp:2779–2806: current-bed compatibility of used logical filaments.
+use crate::{PrintValidationKind, ProjectSettings, options::ProjectBedType};
 
 pub(super) fn validate(
     settings: &ProjectSettings,
     bbl: bool,
     used: &[usize],
     plate_number: u32,
-) -> Result<(), SliceError> {
+) -> Result<(), (PrintValidationKind, String)> {
     if !bbl && !settings.printer.gcode.support_multi_bed_types.0 {
         return Ok(());
     }
@@ -25,7 +25,8 @@ pub(super) fn validate(
         }
         // Accepted deviation: preserve the existing public diagnostic, not native UB.
         ProjectBedType::DefaultPlate => {
-            return Err(SliceError::InvalidInput(
+            return Err((
+                PrintValidationKind::Generic,
                 "curr_bed_type Default Plate has no first-layer temperature".to_owned(),
             ));
         }
@@ -33,10 +34,13 @@ pub(super) fn validate(
     // Print::extruders() supplies sorted/deduplicated logical indices. No map.
     for &filament in used {
         if values.0.get(filament).unwrap_or(&values.0[0]).0 == 0 {
-            return Err(SliceError::InvalidInput(format!(
-                "Plate {plate_number}: {bed} does not support filament {}\n",
-                filament + 1,
-            )));
+            return Err((
+                PrintValidationKind::FilamentNotMatchBedType,
+                format!(
+                    "Plate {plate_number}: {bed} does not support filament {}\n",
+                    filament + 1
+                ),
+            ));
         }
     }
     Ok(())

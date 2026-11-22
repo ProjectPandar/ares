@@ -174,7 +174,9 @@ pub use project_slice::{
 };
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
-pub use slice_error::{PresetAdmissionError, PresetAdmissionReason, SliceError};
+pub use slice_error::{
+    PresetAdmissionError, PresetAdmissionReason, PrintValidationKind, SliceError,
+};
 pub use slicer_context::{SlicerContext, SlicingStatus};
 pub use surface::{Surface, SurfaceType};
 
