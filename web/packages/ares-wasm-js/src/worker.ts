@@ -294,6 +294,15 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       keepPlateViewer(sessionId, plate);
       return result;
     }
+    case "platerSaveProject": {
+      const project = sessions.get(request.sessionId)!.saveProject(request.overrides);
+      return [project, [project.buffer]];
+    }
+    case "platerSaveProjectWithProfiles": {
+      const { sessionId, catalog, selection, options } = request;
+      const project = sessions.get(sessionId)!.saveProjectWithProfiles(catalog, selection, options);
+      return [project, [project.buffer]];
+    }
     case "platerPreview": {
       const plateViewer = plateViewers.get(`${request.sessionId}:${request.plate}`);
       if (plateViewer) replaceViewer(plateViewer);
