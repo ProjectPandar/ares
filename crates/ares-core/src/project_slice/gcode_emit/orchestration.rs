@@ -139,6 +139,20 @@ pub(in crate::project_slice) fn emit(
     let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
+    let extruders = motion::ExtruderRegistry::new(
+        schedule.tool_ordering.all_extruders().to_vec(),
+        &traversal.resolved.views.runtime_gcode,
+        traversal
+            .resolved
+            .views
+            .full
+            .project
+            .print
+            .nozzle_diameter
+            .0
+            .len(),
+    );
+    let writer_temperatures = machine::WriterTemperatures::new(traversal, extruders.ids());
     let mut output = Vec::new();
     file_start::append(
         &mut output,
@@ -147,6 +161,7 @@ pub(in crate::project_slice) fn emit(
             metadata,
             first_layer_bounds,
             layer_count: sliced_layer_count,
+            writer_temperatures,
             template_rng: &template_rng,
         },
     )?;
@@ -168,19 +183,6 @@ pub(in crate::project_slice) fn emit(
     let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
     let offset = (origin.0 - extruder_offset.0, origin.1 - extruder_offset.1);
     let extrusion_role_markers = options.extrusion_role_markers;
-    let extruders = motion::ExtruderRegistry::new(
-        schedule.tool_ordering.all_extruders().to_vec(),
-        &traversal.resolved.views.runtime_gcode,
-        traversal
-            .resolved
-            .views
-            .full
-            .project
-            .print
-            .nozzle_diameter
-            .0
-            .len(),
-    );
     let mut state = motion::EmitState {
         total_layer_count: tail_layer_count,
         // GCode.cpp:2533-2534 initializes the region state from defaults.
@@ -202,6 +204,7 @@ pub(in crate::project_slice) fn emit(
             .brim_flow_ratio
             .0,
         template_rng: template_rng.clone(),
+        writer_temperatures,
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
             skirt.as_ref(),
@@ -264,7 +267,7 @@ pub(in crate::project_slice) fn emit(
                         metadata,
                         first_layer_bounds,
                         Some(&template_rng),
-                        sliced_layer_count,
+                        (sliced_layer_count, writer_temperatures),
                     )
                 })
                 .transpose()?

@@ -21,13 +21,21 @@ pub(super) fn base_config(
     metadata: GenerationMetadata,
     first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
     rng: Option<&value::TemplateRng>,
-    layer_count: usize,
+    (layer_count, writer_temperatures): (usize, super::machine::WriterTemperatures),
 ) -> Result<value::Config, SliceError> {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
     config.random = rng.cloned();
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal, layer_count);
+    config.insert(
+        "min_vitrification_temperature",
+        Value::Integer(i64::from(writer_temperatures.minimum_vitrification)),
+    );
+    config.insert(
+        "overall_chamber_temperature",
+        Value::Integer(i64::from(writer_temperatures.overall_chamber)),
+    );
     for (names, tag) in super::processor::DEFERRED_PLACEHOLDERS {
         for &name in names {
             config.insert(name, Value::String(tag.to_owned()));
@@ -283,33 +291,6 @@ fn insert_runtime_placeholders(
         vendors.clone().next().is_some() && vendors.all(|vendor| vendor.as_string() == "Bambu Lab")
     });
     config.insert("is_all_bbl_filament", Value::option_bool(all_bbl));
-    if let Some(minimum) = config
-        .get("temperature_vitrification")
-        .into_iter()
-        .flat_map(Value::iter_list)
-        .filter_map(Value::as_number)
-        .reduce(f64::min)
-    {
-        config.insert(
-            "min_vitrification_temperature",
-            Value::Integer(minimum as i64),
-        );
-    }
-    // `GCode.cpp:3009-3037`: `overall_chamber_temperature` is the maximum
-    // `chamber_temperature` over the writer's extruders (the used
-    // filaments). Registered as an INT placeholder.
-    if let Some(value) = config.get("chamber_temperature") {
-        let overall = value
-            .iter_list()
-            .enumerate()
-            .filter(|(index, _)| used.contains(index))
-            .filter_map(|(_, item)| item.as_number())
-            .fold(0.0_f64, f64::max);
-        config.insert(
-            "overall_chamber_temperature",
-            Value::Integer(overall as i64),
-        );
-    }
     // `GCode.cpp:2729-2743,2871` + `ToolOrdering::cal_max_additional_fan`
     // (`ToolOrdering.cpp:983-996`): maximum `additional_cooling_fan_speed`
     // over the filaments used on any layer. Registered as a FLOAT

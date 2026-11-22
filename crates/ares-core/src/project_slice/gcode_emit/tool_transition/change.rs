@@ -37,7 +37,7 @@ pub(super) fn append(
         context.metadata,
         context.first_layer_bounds,
         Some(&state.template_rng),
-        state.total_layer_count,
+        (state.total_layer_count, state.writer_temperatures),
     )?;
     dynamic::insert(&mut config, state, old, filament, context);
     let mut injected = Vec::new();

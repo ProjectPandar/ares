@@ -10,6 +10,7 @@ pub(super) struct FileStart<'a> {
     pub(super) metadata: GenerationMetadata,
     pub(super) first_layer_bounds: Option<FirstLayerBounds>,
     pub(super) layer_count: usize,
+    pub(super) writer_temperatures: super::machine::WriterTemperatures,
     pub(super) template_rng: &'a TemplateRng,
 }
 
@@ -34,7 +35,7 @@ pub(super) fn append(output: &mut Vec<u8>, start: FileStart<'_>) -> Result<(), S
         start.metadata,
         start.first_layer_bounds,
         Some(start.template_rng),
-        start.layer_count,
+        (start.layer_count, start.writer_temperatures),
     )?;
     let rendered = template::render(source, &mut config).map_err(|error| {
         SliceError::InvalidInput(format!(

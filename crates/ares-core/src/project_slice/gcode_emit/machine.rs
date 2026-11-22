@@ -11,6 +11,43 @@ pub(super) mod first_filaments;
 mod start_config;
 mod temperature;
 
+#[derive(Clone, Copy)]
+pub(super) struct WriterTemperatures {
+    pub(super) minimum_vitrification: i32,
+    pub(super) overall_chamber: i32,
+}
+
+impl Default for WriterTemperatures {
+    fn default() -> Self {
+        Self {
+            minimum_vitrification: i32::MAX,
+            overall_chamber: 0,
+        }
+    }
+}
+
+impl WriterTemperatures {
+    /// The shared integer bindings set in `GCode.cpp:4001–4013,4031–4034`.
+    pub(super) fn new(traversal: &PreparedPostClassicTraversal, writer_ids: &[usize]) -> Self {
+        let vitrification = &traversal
+            .resolved
+            .views
+            .full
+            .filament
+            .gcode
+            .temperature_vitrification;
+        let mut temperatures = Self::default();
+        for &id in writer_ids {
+            temperatures.minimum_vitrification = temperatures
+                .minimum_vitrification
+                .min(temperature::filament_int(vitrification, id));
+        }
+        temperatures.overall_chamber =
+            temperature::overall_chamber_temperature(traversal, writer_ids);
+        temperatures
+    }
+}
+
 /// The first-layer nozzle temperature of one filament
 /// (`_print_first_layer_extruder_temperatures`, `GCode.cpp:3338`).
 pub(in crate::project_slice::gcode_emit) fn initial_layer_nozzle_temperature(
