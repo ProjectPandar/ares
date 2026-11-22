@@ -226,3 +226,6 @@ mod pressure_equalizer_fractional_feedrate;
 
 #[path = "cli_allow_mix_temp.rs"]
 mod cli_allow_mix_temp;
+
+#[path = "cli_allow_newer_file.rs"]
+mod cli_allow_newer_file;

@@ -3,6 +3,7 @@ mod colors;
 mod graph;
 mod mesh_prepare;
 mod metadata;
+mod previews;
 mod volume_metadata;
 
 use std::collections::BTreeSet;
@@ -11,18 +12,13 @@ use crate::SliceError;
 
 use super::{
     ArchiveLimits, PackagePath, ProjectArchive,
-    content_types::{
-        ContentTypes, MODEL_CONTENT_TYPE, PNG_CONTENT_TYPE, RELATIONSHIPS_CONTENT_TYPE,
-    },
+    content_types::{ContentTypes, MODEL_CONTENT_TYPE, RELATIONSHIPS_CONTENT_TYPE},
     domain::{Project, ProjectDocuments},
     filament_sequence::FilamentSequences,
     model_settings::ModelSettings,
     plate::PlateJson,
     raw_settings::ProjectSettingsRaw,
-    relationships::{
-        COVER_THUMBNAIL_MIDDLE_RELATIONSHIP_TYPE, COVER_THUMBNAIL_SMALL_RELATIONSHIP_TYPE,
-        MODEL_RELATIONSHIP_TYPE, Relationships, THUMBNAIL_RELATIONSHIP_TYPE,
-    },
+    relationships::{MODEL_RELATIONSHIP_TYPE, Relationships},
     slice_info::SliceInfo,
     xml::{JsonRole, XmlRole, deserialize_json, deserialize_xml},
 };
@@ -130,7 +126,7 @@ fn load_project_raw(
     let root_model =
         root_relationships.resolve_required(&PackagePath::root(), MODEL_RELATIONSHIP_TYPE)?;
     require_model_content_type(&content_types, &root_model)?;
-    validate_root_previews(&root_relationships, &content_types, &archive_paths)?;
+    previews::validate_root_previews(&root_relationships, &content_types, &archive_paths)?;
 
     let graph = graph::load(&mut archive, &content_types, &archive_paths, root_model)?;
 
@@ -138,7 +134,7 @@ fn load_project_raw(
         .map(|bytes| deserialize_xml(&bytes, XmlRole::ModelSettings))
         .transpose()?
         .unwrap_or_default();
-    validate_plate_previews(&model_settings, &content_types, &archive_paths)?;
+    previews::validate_plate_previews(&model_settings, &content_types, &archive_paths)?;
     content_types.validate_png_entries(&mut archive)?;
     let slice_info: SliceInfo = read_optional(&mut archive, SLICE_INFO_PATH)?
         .map(|bytes| deserialize_xml(&bytes, XmlRole::SliceInfo))
@@ -335,69 +331,6 @@ fn require_model_content_type(
     if content_types.content_type(path) != Some(MODEL_CONTENT_TYPE) {
         return Err(SliceError::InvalidInput(format!(
             "project model part {:?} has the wrong content type",
-            path.as_str()
-        )));
-    }
-    Ok(())
-}
-
-fn validate_root_previews(
-    relationships: &Relationships,
-    content_types: &ContentTypes,
-    archive_paths: &BTreeSet<PackagePath>,
-) -> Result<(), SliceError> {
-    for relationship in relationships.relationships.iter().filter(|entry| {
-        matches!(
-            entry.relationship_type.as_str(),
-            THUMBNAIL_RELATIONSHIP_TYPE
-                | COVER_THUMBNAIL_MIDDLE_RELATIONSHIP_TYPE
-                | COVER_THUMBNAIL_SMALL_RELATIONSHIP_TYPE
-        )
-    }) {
-        let path = PackagePath::root().resolve(&relationship.target)?;
-        validate_preview_path(&path, content_types, archive_paths)?;
-    }
-    Ok(())
-}
-
-fn validate_plate_previews(
-    settings: &ModelSettings,
-    content_types: &ContentTypes,
-    archive_paths: &BTreeSet<PackagePath>,
-) -> Result<(), SliceError> {
-    for value in settings
-        .plates
-        .iter()
-        .flat_map(|plate| &plate.metadata)
-        .filter(|metadata| {
-            matches!(
-                metadata.key.as_str(),
-                "thumbnail_file" | "thumbnail_no_light_file" | "top_file" | "pick_file"
-            ) && !metadata.value.is_empty()
-        })
-        .map(|metadata| metadata.value.as_str())
-    {
-        let path = PackagePath::root().resolve(value)?;
-        validate_preview_path(&path, content_types, archive_paths)?;
-    }
-    Ok(())
-}
-
-// OrcaSlicer writes thumbnail relationships unconditionally
-// (`3mf.cpp _add_relationships_file_to_archive`) and ignores referenced
-// preview parts missing from the archive; Ares only validates parts that
-// exist.
-fn validate_preview_path(
-    path: &PackagePath,
-    content_types: &ContentTypes,
-    archive_paths: &BTreeSet<PackagePath>,
-) -> Result<(), SliceError> {
-    if !archive_paths.contains(path) {
-        return Ok(());
-    }
-    if content_types.content_type(path) != Some(PNG_CONTENT_TYPE) {
-        return Err(SliceError::InvalidInput(format!(
-            "project preview {:?} has the wrong content type",
             path.as_str()
         )));
     }

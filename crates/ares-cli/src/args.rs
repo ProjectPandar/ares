@@ -245,6 +245,16 @@ pub(crate) struct SliceArgs {
     )]
     pub(crate) normative_check: bool,
     #[arg(
+        long,
+        action = clap::ArgAction::Set,
+        num_args = 0..=1,
+        require_equals = true,
+        default_missing_value = "true",
+        default_value_t = false,
+        value_parser = clap::builder::BoolishValueParser::new(),
+    )]
+    pub(crate) allow_newer_file: bool,
+    #[arg(
         short = 'o',
         required_unless_present_any = [
             "selection",

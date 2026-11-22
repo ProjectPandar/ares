@@ -7,6 +7,26 @@ use crate::{
     failure::{CliFailure, slice_error_to_failure},
 };
 
+pub(super) fn check_input_version(
+    args: &SliceArgs,
+    extension: Option<&str>,
+    input: &[u8],
+) -> Result<(), CliFailure> {
+    if args.selection.is_none()
+        && extension == Some("3mf")
+        && let Err(error @ ares_core::SliceError::FileVersionNotSupported) =
+            ares_core::validate_project_version(input, args.allow_newer_file)
+    {
+        return Err(slice_error_to_failure(
+            error,
+            args.output(),
+            #[cfg(target_os = "linux")]
+            args.plate.unwrap_or(1),
+        ));
+    }
+    Ok(())
+}
+
 fn resource_json(path: &Path) -> Result<Value, io::Error> {
     let bytes = fs::read(path)?;
     serde_json::from_slice(bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(&bytes))
