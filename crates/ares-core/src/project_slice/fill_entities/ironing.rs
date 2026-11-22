@@ -32,17 +32,12 @@ pub(super) struct Input<'a> {
     pub(super) region: &'a RegionOptions,
     pub(super) dont_alternate_fill_direction: bool,
     pub(super) object: &'a ObjectOptions,
-    /// `default_region_config()` — print-level process region options for
-    /// the meta-language B/T shell units (`Fill.cpp:125-127`).
-    pub(super) default_region: &'a ProcessRegionSourceOptions,
     pub(super) nozzles: &'a OrcaFloats,
     pub(super) filament_map: &'a OrcaInts,
     pub(super) is_bbl: bool,
     pub(super) layer: &'a PlannedLayer,
-    pub(super) layers: &'a [PlannedLayer],
     pub(super) last_layer: bool,
     pub(super) spiral_mode: bool,
-    pub(super) model_rotation_offset: f32,
     pub(super) scale: CoordinateScale,
 }
 
@@ -82,7 +77,7 @@ impl SpanSortKey {
 pub(super) fn span_sort_key(region: &RegionOptions, context: &SpanContext<'_>) -> SpanSortKey {
     let spacing = region.filament_ironing_spacing.0;
     let height = context.object.layer_height.0 * 0.01 * region.filament_ironing_flow.0;
-    let (angle, fixed_angle) = areas::ironing_span_angle(region, context);
+    let (angle, fixed_angle) = areas::ironing_angle(region, context);
     SpanSortKey {
         extruder: region.top_surface_filament_id.0,
         spacing,
@@ -99,13 +94,14 @@ pub(super) fn append_areas(
     output: &mut LayerFillEntities,
     input: &Input<'_>,
     ironing_areas: Vec<ExPolygon>,
+    (angle, fixed_angle): (f64, bool),
 ) -> Result<(), SliceError> {
     let spacing = input.region.filament_ironing_spacing.0;
     if spacing <= 0.0 {
         return Ok(());
     }
     let nozzle = areas::selected_nozzle(input);
-    let (angle, fixed_angle) = areas::ironing_angle(input);
+    let angle = angle as f32;
     let extrusion_height =
         input.object.layer_height.0 * 0.01 * input.region.filament_ironing_flow.0 * spacing
             / nozzle;
