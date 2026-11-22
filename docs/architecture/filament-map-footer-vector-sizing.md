@@ -12,6 +12,7 @@ revision `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`.
 | `PresetBundle.cpp:4328–4372` | `set_num_filaments` resizes all three maps whenever the configured filament count changes, preserving existing values and filling new entries with the upstream defaults. | The same normalization boundary, after the filament count is known. |
 | `PresetBundle.cpp:5534–5567` | Full FFF config keeps the filament map and volume map sized to `num_filaments` before variant expansion. | Existing full-config materialization consumes the normalized vectors; no footer-only substitution. |
 | `Print.cpp:3700–3743, 4661–4680` | Sequential map preparation and `update_filament_maps_to_config` retain configured entries for unused filaments, while writing the complete nozzle and volume vectors back before export. | Existing `project_slice::gcode_emit::tool_ordering` and config-view checkpoint path. |
+| `PrintConfig.cpp:3095–3100, 3118–3120, 3151–3153` | Registered defaults are filament extruder `1`, standard volume `0` (`nvtStandard`), and nozzle `1` at the config-definition layer; the selected project map initialization supplies the serialized nozzle value `0`. | `profiles/filament_slots.rs` keeps the selected/runtime defaults as map `1`, volume `0`, and nozzle `0`. |
 | `PrintConfig.cpp:11855–11903, 11979–12042` | Variant rebuilding uses the final filament map and accepts a volume map only when it is filament-count sized. | Existing `options/project_variants` refresh and variant materialization. |
 
 ## Observed behavior
@@ -49,8 +50,13 @@ or broaden the FilamentGroup optimizer.
 
 1. Once the configured filament count is known, all three internal maps have
    exactly that length.
-2. Existing entries are preserved. Newly created entries use upstream defaults:
-   extruder `1`, nozzle `0`, and standard volume `0`.
+2. Existing entries are preserved. Newly created entries use the upstream
+   defaults: `filament_map` extruder `1` from `PrintConfig.cpp:3095–3100`,
+   `filament_volume_map` standard volume `0` (`nvtStandard`) from
+   `PrintConfig.cpp:3118–3120`, and selected/runtime
+   `filament_nozzle_map` physical nozzle `0`, initialized by
+   `PresetBundle.cpp:3966–3970, 4129–4133` from the registered
+   `PrintConfig.cpp:3151–3153` definition.
 3. This sizing occurs before sequential and non-sequential config views are
    materialized, so `Print` write-back and the existing footer exporter observe
    the same full vectors.
