@@ -6,12 +6,10 @@ the `PrintStatistics` totals that the preview Summary legend reads.
 - `time-cost.3mf`, `unused-filament.3mf` and `wipe-tower.3mf` are written by
   `node tools/chain-probe/summary-fixtures.mjs`. The script takes existing
   fixtures and replaces only `filament_density`, `filament_cost` and
-  `time_cost`, plus the keys named for `wipe-tower`:
+  `time_cost`, plus `enable_prime_tower` for `wipe-tower`:
   - `time-cost` has two used filaments.
   - `unused-filament` has filament 2 configured but not used.
-  - `wipe-tower` is `time-cost` with both filaments on the left nozzle
-    (`filament_map_mode = Manual`, `filament_map = 1,1`) and
-    `enable_prime_tower = 1`.
+  - `wipe-tower` is `time-cost` with `enable_prime_tower = 1`.
 - No Native output is stored here. `crates/ares-cli/tests/orca_parity/print_estimated_stats.rs`
   produces it at test time through `OrcaRunner::print_statistics_reference`,
   cached under `ARES_ORCA_CACHE_DIR`:
