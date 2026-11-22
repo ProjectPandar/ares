@@ -30,9 +30,23 @@ impl<'de> Deserialize<'de> for SliceOptions {
 
 fn normalize_legacy_options(values: BTreeMap<String, Value>) -> BTreeMap<String, Value> {
     let mut normalized = BTreeMap::new();
+    let mut derived = Vec::new();
     for (key, value) in values {
-        normalize_legacy_option_into(&mut normalized, key, value);
+        if let Some(token) = value.as_str()
+            && let Some(assignment) = handle_legacy_derived(&key, token)
+        {
+            derived.push(assignment);
+        }
+        if let Some((key, value)) = normalize_legacy_option((key, value)) {
+            normalized.insert(key, value);
+        }
     }
+    // Config.cpp:1072–1075 applies this write after every explicit field.
+    normalized.extend(
+        derived
+            .into_iter()
+            .map(|(key, value)| (key.to_owned(), Value::Bool(value))),
+    );
     normalized
 }
 
@@ -49,23 +63,6 @@ fn normalize_legacy_composite_options(
         *value = serde_json::to_value(speed).map_err(|error| error.to_string())?;
     }
     Ok(values)
-}
-
-fn normalize_legacy_option_into(values: &mut BTreeMap<String, Value>, key: String, value: Value) {
-    // `load_from_json`-level derived keys (`Config.cpp:937-945`): a string
-    // source `key`/token can produce extra entries (e.g. `is_infill_first`)
-    // before `handle_legacy` rewrites the pair itself.
-    if let Some(token) = value.as_str()
-        && let Some((derived_key, derived_value)) =
-            crate::options::legacy::handle_legacy_derived(&key, token)
-    {
-        values
-            .entry(derived_key.to_owned())
-            .or_insert(Value::Bool(derived_value));
-    }
-    if let Some((key, value)) = normalize_legacy_option((key, value)) {
-        values.insert(key, value);
-    }
 }
 
 fn normalize_legacy_option((key, value): (String, Value)) -> Option<(String, Value)> {
