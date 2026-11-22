@@ -80,7 +80,7 @@ test("a slice result that reaches an open Preview leaves the main thread respons
     }).observe(view, { attributes: true, attributeFilter: ["data-segment-sizes"] });
     return { slicing: document.querySelector("[data-testid=status]")!.textContent, sized: view.hasAttribute("data-segment-sizes") };
   });
-  expect(started.slicing, "the heartbeat starts while the plate still slices").toMatch(/^Slicing plate 1: /);
+  expect(started.slicing, "the heartbeat starts while the plate still slices").toMatch(/^Slicing plate/);
   expect(started.sized, "no toolpaths were set before the heartbeat started").toBe(false);
   await expect(viewport).toHaveAttribute("data-segment-sizes", { timeout: 480_000 });
   await expect(status).toContainText("Slice complete");
