@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { exportAllGcode, exportGcode, importFile, importFiles, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
@@ -102,6 +102,12 @@ export function TabBar() {
   const slicing = slice.status === "slicing";
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   const multiPlate = (scene?.plates.length ?? 0) > 1;
+  const navigate = useNavigate();
+  // MainFrame.cpp:2411-2415: the button posts the slice event, then selects Preview at once.
+  const sliceAndPreview = (start: () => Promise<void>) => {
+    void start();
+    void navigate({ to: "/preview" });
+  };
   return (
     <nav className="tabbar">
       <div className="tabbar-tabs">
@@ -113,13 +119,13 @@ export function TabBar() {
         </Link>
       </div>
       <div className="tabbar-actions">
-        <button className="side-button" onClick={() => void slicePlate()}
+        <button className="side-button" onClick={() => sliceAndPreview(slicePlate)}
           disabled={!scene || slicing || engine !== "ready" || blocker !== null}
           title={blocker ?? undefined}>
           {slicing ? "Slicing…" : "Slice plate"}
         </button>
         {multiPlate && (
-          <button className="side-button" onClick={() => void sliceAllPlates()}
+          <button className="side-button" onClick={() => sliceAndPreview(sliceAllPlates)}
             disabled={slicing || engine !== "ready" || blocker !== null} title={blocker ?? undefined}>
             Slice all
           </button>
