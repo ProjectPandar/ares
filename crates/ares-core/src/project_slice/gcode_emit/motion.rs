@@ -1,6 +1,7 @@
 mod acceleration;
 mod arc;
 pub(super) mod auto_lift;
+mod belt_writer;
 pub(super) mod clip;
 mod extruder_registry;
 mod extruder_state;
@@ -33,6 +34,7 @@ mod writer_state;
 
 pub(super) use acceleration::{set_accel_and_jerk, set_layer_acceleration_and_jerk};
 pub(in crate::project_slice) use arc::{simplify_linear_points, simplify_points};
+pub(super) use belt_writer::BeltWriter;
 pub(super) use extruder_registry::ExtruderRegistry;
 pub(super) use layer::emit_layer;
 pub(super) use origin::set_origin;

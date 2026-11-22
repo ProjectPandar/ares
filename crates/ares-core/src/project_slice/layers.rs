@@ -29,6 +29,7 @@ pub(super) struct PlannedPrintObject {
     pub(super) transform_index: usize,
     pub(super) slicing_parameters: SlicingParameters,
     pub(super) layers: Vec<PlannedLayer>,
+    pub(super) belt_slice: Option<super::belt::BeltSlice>,
 }
 
 #[derive(Default)]
@@ -40,6 +41,7 @@ pub(super) struct LayerBudget {
 pub(super) struct LayerPlanOptions {
     pub(super) precise_z_height: bool,
     pub(super) zaa_min_z: Option<f64>,
+    pub(super) belt_slice: Option<super::belt::BeltSlice>,
 }
 
 impl LayerBudget {
@@ -262,6 +264,7 @@ pub(super) fn plan_print_object(
         transform_index,
         slicing_parameters: parameters.clone(),
         layers: planned_layers_with_zaa(&pairs, options.zaa_min_z, parameters)?,
+        belt_slice: options.belt_slice,
     })
 }
 

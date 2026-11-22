@@ -20,6 +20,8 @@ use super::shared_reversals::SharedEntityReversals;
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
+    pub(in crate::project_slice::gcode_emit) belt: Option<super::BeltWriter>,
+    pub(in crate::project_slice::gcode_emit) belt_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) emitted_brim_instances:
         std::collections::BTreeSet<(usize, usize)>,
     pub(in crate::project_slice::gcode_emit) contour_z_too_low: bool,

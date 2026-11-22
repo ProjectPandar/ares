@@ -1,6 +1,15 @@
-use super::{MotionOptions, options::helpers::rounded_acceleration};
+use super::{EmitState, MotionOptions, options::helpers::rounded_acceleration};
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
+
+fn is_first_layer_for_path(state: &EmitState) -> bool {
+    if state.belt.is_some() {
+        // With no active floor, GCode.hpp::on_first_layer also checks bottom Z.
+        state.on_first_layer
+    } else {
+        state.layer_index == 0
+    }
+}
 
 /// Feature string → the upstream `ExtrusionRole` discriminant used by the
 /// `;_EXTRUSION_ROLE:n` markers (`GCode.cpp:6774`,
@@ -73,19 +82,10 @@ fn is_internal_perimeter(feature: &str) -> bool {
 }
 
 impl PathProperties<'_> {
-    pub(super) fn kinematics(
-        self,
-        options: &MotionOptions,
-        layer_index: usize,
-        object_layer_over_raft: bool,
-        requested_speed: Option<f64>,
-    ) -> (u32, f64) {
-        let speed = self.speed(
-            options,
-            layer_index,
-            object_layer_over_raft,
-            requested_speed,
-        );
+    pub(super) fn kinematics(self, state: &EmitState, requested_speed: Option<f64>) -> (u32, f64) {
+        let options = &state.options;
+        let first_layer = is_first_layer_for_path(state);
+        let speed = self.speed(state, first_layer, requested_speed);
         // `GCode.cpp:6414`: default acceleration of zero disables all per-print
         // acceleration switches.
         if options.default_acceleration <= 0.0 {
@@ -94,7 +94,7 @@ impl PathProperties<'_> {
         // `GCode.cpp:6418-6438`: first layer uses its own value when set,
         // otherwise each role picks only an option above zero and every
         // remaining case falls back to the default.
-        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0.0 {
+        let acceleration = if first_layer && options.initial_layer_acceleration > 0.0 {
             options.initial_layer_acceleration
         } else {
             match self.feature {
@@ -126,11 +126,12 @@ impl PathProperties<'_> {
 }
 
 impl PathProperties<'_> {
-    pub(super) fn jerk(self, options: &MotionOptions, layer_index: usize) -> f64 {
+    pub(super) fn jerk(self, state: &EmitState) -> f64 {
+        let options = &state.options;
         if options.default_jerk <= 0.0 {
             return 0.0;
         }
-        if layer_index == 0 && options.initial_layer_jerk > 0.0 {
+        if is_first_layer_for_path(state) && options.initial_layer_jerk > 0.0 {
             return options.initial_layer_jerk;
         }
         match self.feature {
@@ -146,13 +147,8 @@ impl PathProperties<'_> {
         }
     }
 
-    fn speed(
-        &self,
-        options: &MotionOptions,
-        layer_index: usize,
-        object_layer_over_raft: bool,
-        requested_speed: Option<f64>,
-    ) -> f64 {
+    fn speed(&self, state: &EmitState, first_layer: bool, requested_speed: Option<f64>) -> f64 {
+        let options = &state.options;
         let is_perimeter = matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall");
         // `GCode.cpp:5896-5900,6516-6531`: a caller speed bypasses role
         // defaults; only inner/outer perimeter defaults receive the scarf cap.
@@ -176,7 +172,7 @@ impl PathProperties<'_> {
         // though its `layer->id()` is `raft_count`, not 0. Bottom surface
         // keeps its own role speed (`initial_layer_infill_speed` already).
         // Brim joins perimeters here, not in the slowdown ramp below.
-        let first_layer_like = layer_index == 0 || object_layer_over_raft;
+        let first_layer_like = first_layer || state.object_layer_over_raft;
         let speed = if first_layer_like && self.feature != "Bottom surface" {
             if is_perimeter || self.feature == "Brim" {
                 options.initial_layer_speed
@@ -184,7 +180,7 @@ impl PathProperties<'_> {
                 options.initial_layer_infill_speed
             }
         } else {
-            self.slow_down_layer_ramp(options, layer_index, is_perimeter, base)
+            self.slow_down_layer_ramp(options, state.layer_index, is_perimeter, base)
         };
         // `GCode.cpp:6599-6604`: a positive skirt speed overrides the role
         // default on every layer; zero keeps the layer default.

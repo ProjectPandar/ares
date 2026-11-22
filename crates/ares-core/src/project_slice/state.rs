@@ -158,6 +158,7 @@ pub(super) fn apply_plate(
         Some((context, overrides)) => crate::project::effective_config::phases::resolve_bounded_project_config_with_preparation(&project, context, overrides)?,
         None => resolve_bounded_project_config(&project)?,
     };
+    super::belt::admit(&project, &resolved)?;
     super::capabilities::validate_settings(&resolved.views.full)?;
     painted_fuzzy::validate(&project, &resolved)?;
     if validate_print {
@@ -213,12 +214,12 @@ impl AppliedPlate {
             &mut config_block,
         )?;
         let config_block = (!config_block.is_empty()).then_some(config_block);
-        let planned_objects = plan_project(&project, &resolved)?;
-        let projected_objects =
-            prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
         let scale = CoordinateScale::from_printable_area(
             &resolved.views.full.printer.remaining.printable_area,
         );
+        let planned_objects = plan_project(&project, &resolved, scale)?;
+        let projected_objects =
+            prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
         let looped_objects = slice_projected_objects(
             project.objects(),
             &resolved.objects,

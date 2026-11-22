@@ -37,18 +37,13 @@ pub(super) fn emit(
             let retract = extrusion::coordinate(state, -retraction);
             let comment = gcode_comment(state, " ; wipe and retract");
             format!(
-                "G1 X{} Y{} E{}{comment}\n",
-                format_axis(point.x - state.xy_offset.0),
-                format_axis(point.y - state.xy_offset.1),
+                "G1 {} E{}{comment}\n",
+                state.xy_words((point.x, point.y), None),
                 format_extrusion(retract)
             )
         } else {
             let comment = gcode_comment(state, " ; wipe and retract");
-            format!(
-                "G1 X{} Y{}{comment}\n",
-                format_axis(point.x - state.xy_offset.0),
-                format_axis(point.y - state.xy_offset.1)
-            )
+            format!("G1 {}{comment}\n", state.xy_words((point.x, point.y), None))
         };
         output.extend_from_slice(line.as_bytes());
         state.x = point.x;

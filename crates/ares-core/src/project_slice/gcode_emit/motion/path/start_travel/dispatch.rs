@@ -50,6 +50,36 @@ pub(super) fn emit_retracted_first_travel(
         dest_z
     };
     let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
+    // GCodeWriter.cpp:1063–1092: a coupled writer lifts in place only
+    // when the logical source is known, then approaches in all three axes.
+    if state.belt.is_some() {
+        if !never_positioned && raised_z > live_z {
+            output.extend_from_slice(
+                format!(
+                    "G1 {} F{}{}\n",
+                    state.z_words(raised_z),
+                    format_axis(travel::lift_z_feedrate(state)),
+                    if state.options.gcode_comments {
+                        " ; normal lift Z"
+                    } else {
+                        ""
+                    }
+                )
+                .as_bytes(),
+            );
+        }
+        travel_emit::xyz_with_comment(
+            output,
+            state,
+            crate::Point3d::new(travel_x, travel_y, raised_z),
+            state.travel_feedrate,
+            first_travel_comment,
+        );
+        state.current_feedrate = state.travel_feedrate;
+        state.lifted = raised_z > dest_z;
+        state.lifted_amount = (raised_z - dest_z).max(0.0);
+        return;
+    }
     // `travel_to_xyz` NormalLift emits the lift via
     // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:678`),
     // trailing the ` ; normal lift Z` comment under `gcode_comments`.

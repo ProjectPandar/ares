@@ -14,7 +14,11 @@ pub(crate) fn validate(
     let height = settings.printer.remaining.printable_height.0;
     // libslic3r.h:52; unlike BuildVolume's sentinel, zero stays literal here.
     const EPSILON: f64 = 1e-4;
-    for object in super::planning::plan_project(project, resolved)? {
+    super::belt::admit(project, resolved)?;
+    let scale = crate::geometry::CoordinateScale::from_printable_area(
+        &settings.printer.remaining.printable_area,
+    );
+    for object in super::planning::plan_project(project, resolved, scale)? {
         let Some(last) = object.layers.last() else {
             continue;
         };
