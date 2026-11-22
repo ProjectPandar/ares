@@ -8,7 +8,8 @@ use super::{
     raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 use crate::{
-    ORCA_SLICER_COMPATIBILITY_VERSION, OptionValueKind as Kind, SliceError, option_definitions,
+    ORCA_SLICER_COMPATIBILITY_VERSION, OptionValueKind as Kind, PresetCatalogHandle, SliceError,
+    option_definitions,
     options::{escape_scalar_string, format_number, json_deserialize},
     profiles::is_connection_option,
 };
@@ -17,13 +18,33 @@ use crate::{
 ///
 /// The project bytes are loaded and composed without selecting a plate or slicing.
 pub fn export_project_settings(input: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    export_saved_settings(input.as_ref(), None)
+}
+
+/// Export a saved project using a caller-supplied installation preset catalog.
+pub fn export_project_settings_with_catalog(
+    input: impl AsRef<[u8]>,
+    catalog: &PresetCatalogHandle,
+) -> Result<Vec<u8>, SliceError> {
+    export_saved_settings(input.as_ref(), Some(catalog))
+}
+
+fn export_saved_settings(
+    input: &[u8],
+    catalog: Option<&PresetCatalogHandle>,
+) -> Result<Vec<u8>, SliceError> {
     let mut project = load_project(input)?;
     let filament_count = project.cli_filament_count();
     project.initialize_cli_loaded_project_config(filament_count);
-    export_loaded_settings(
-        project.documents().project_settings_raw.clone(),
-        filament_count,
-    )
+    let documents = project.documents();
+    let raw = if documents.bbl_family_3mf
+        && let Some(catalog) = catalog
+    {
+        catalog.refresh_direct_filaments(&documents.project_settings_raw)?
+    } else {
+        documents.project_settings_raw.clone()
+    };
+    export_loaded_settings(raw, filament_count)
 }
 
 pub(crate) fn export_loaded_settings(

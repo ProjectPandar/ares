@@ -157,6 +157,13 @@ impl PresetCatalogHandle {
         super::project_refresh::direct_refresh(&self.catalog, raw)
     }
 
+    pub(crate) fn refresh_direct_filaments(
+        &self,
+        raw: &crate::project::raw_settings::ProjectSettingsRaw,
+    ) -> Result<crate::project::raw_settings::ProjectSettingsRaw, SliceError> {
+        super::project_refresh::direct_refresh_filaments(&self.catalog, raw)
+    }
+
     /// An Orca preset JSON or `.orca_*`/`.zip` import, reusing the bundle
     /// importer (`PresetBundle.cpp:1304-1549`).
     pub fn add_import(&mut self, input: &[u8], filename: &str) -> Result<(), SliceError> {
