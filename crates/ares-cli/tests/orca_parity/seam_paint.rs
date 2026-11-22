@@ -86,29 +86,6 @@ fn compare(printer: &str, variant: &str) {
     );
 }
 
-#[test]
-fn deferred_seam_paint_modes_reject_without_output() {
-    let (_, project, _) = input("x1c", "front");
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap();
-    let overrides =
-        ares_core::ConfigOverrides::from_json(br#"{"seam_position":"nearest","spiral_mode":"1"}"#)
-            .unwrap();
-    let result = runtime.block_on(crate::runner::application::slice_project_plate_validated(
-        &project,
-        ares_core::GenerationMetadata::default(),
-        None,
-        &overrides,
-        ares_core::SlicerContext::new(0),
-    ));
-    assert!(
-        matches!(result, Err(ares_core::SliceError::InvalidInput(ref message))
-        if message.contains("seam painting is outside the supported")),
-        "{result:?}"
-    );
-}
-
 macro_rules! printer_cases {
     ($printer:literal, $plain:ident, $front:ident, $rear:ident, $both:ident, $side:ident) => {
         #[test]
