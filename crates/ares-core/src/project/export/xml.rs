@@ -17,7 +17,8 @@ const MODEL_OPEN: &str = concat!(
     "xmlns:p=\"http://schemas.microsoft.com/3dmanufacturing/production/2015/06\" requiredextensions=\"p\">\n"
 );
 const VERSION_METADATA: &str = " <metadata name=\"BambuStudio:3mfVersion\">1</metadata>\n";
-fn transform_3mf(transform: Transform3d, use_f32: bool, digits: usize) -> String {
+// The model stream uses float::max_digits10 (bbs_3mf.cpp:7143–7151).
+fn transform_3mf(transform: Transform3d, use_f32: bool) -> String {
     let column_major = transform.to_column_major();
     let values = column_major
         .as_chunks::<4>()
@@ -28,7 +29,7 @@ fn transform_3mf(transform: Transform3d, use_f32: bool, digits: usize) -> String
     if use_f32 {
         numbers_f32(values)
     } else {
-        numbers(values, digits)
+        numbers(values, 9)
     }
 }
 
@@ -86,13 +87,7 @@ fn relationship<'a>(paths: impl IntoIterator<Item = &'a str>, media_type: &str) 
     out
 }
 
-pub(super) fn main_model(
-    objects: &[ObjectEntry<'_>],
-    loaded_orca_version: Option<&str>,
-    scene: bool,
-) -> String {
-    // The project model stream uses float::max_digits10 (bbs_3mf.cpp:7143–7151).
-    let digits = if scene { 9 } else { 6 };
+pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Option<&str>) -> String {
     let mut out = format!(
         "{DECL}{MODEL_OPEN} <metadata name=\"Application\">BambuStudio-{BAMBU_VERSION}</metadata>\n <metadata name=\"OrcaSlicer\">{ORCA_VERSION}</metadata>\n{VERSION_METADATA}"
     );
@@ -127,7 +122,7 @@ pub(super) fn main_model(
         let path = quick_xml::escape::escape(path);
         writeln!(out, "  <object id=\"{id}\" p:UUID=\"{backup_id:08x}-61cb-4c03-9d28-80fed5dfa1dc\" type=\"model\">\n   <components>").unwrap();
         for (id, prefix, part) in object.parts() {
-            let transform = transform_3mf(part.transform, part.use_f32_transform, digits);
+            let transform = transform_3mf(part.transform, part.use_f32_transform);
             writeln!(out, "    <component p:path=\"/{path}\" objectid=\"{id}\" p:UUID=\"{prefix:08x}-b206-40ff-9872-83e8017abed1\" transform=\"{transform}\"/>").unwrap();
         }
         out.push_str("   </components>\n  </object>\n");
@@ -136,7 +131,7 @@ pub(super) fn main_model(
     for object in objects {
         let id = object.id;
         for instance in &object.object.instances {
-            let transform = transform_3mf(instance.transform, false, digits);
+            let transform = transform_3mf(instance.transform, false);
             let printable = u8::from(instance.printable);
             writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{transform}\" printable=\"{printable}\"/>").unwrap();
         }
@@ -201,18 +196,18 @@ pub(super) fn model_settings(
             let name = quick_xml::escape::escape(&part.mesh.name);
             let filename = quick_xml::escape::escape(&part.source_file);
             // `_add_model_config_file_to_archive` uses double::max_digits10 (bbs_3mf.cpp:8301).
-            let digits = if scene.is_some() { 17 } else { 6 };
             let values = part.matrix.as_matrix().iter().flatten().copied();
             let matrix = if part.mesh.use_f32_vertices {
                 full_numbers(values)
             } else {
-                numbers(values, digits)
+                numbers(values, 17)
             };
             let [x, y, z] = if part.mesh.use_f32_vertices {
                 part.mesh.source_offset.map(f32_full_number)
             } else {
                 part.mesh.source_offset.map(f64::from).map(number)
             };
+
             let (source_object, source_volume) = (part.source_object, part.source_volume);
             writeln!(out, "    <part id=\"{id}\" subtype=\"normal_part\">\n      <metadata key=\"name\" value=\"{name}\"/>\n      <metadata key=\"matrix\" value=\"{matrix}\"/>").unwrap();
             if !filename.is_empty() {

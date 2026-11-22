@@ -269,7 +269,6 @@ fn write_package(
                     .as_ref()
                     .and_then(|members| members.first())
                     .and_then(|member| member.orca_version.as_deref()),
-                scene.is_some(),
             )
             .into_bytes(),
         ),
