@@ -20,12 +20,15 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
             path.into()
         },
     );
-    let sliced = args.selection == Some(1);
-    let direct_stl = args
-        .input()
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("stl"));
+    let direct_stl = args.inputs.iter().all(|input| {
+        input
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("stl"))
+    });
+    let arranged_stl =
+        args.inputs.len() > 1 && args.selection == Some(0) && args.arrange == Some(1) && direct_stl;
+    let sliced = args.selection == Some(1) || arranged_stl;
     let unsupported = [
         (args.selection.is_some() && !sliced, "--slice"),
         (sliced && args.outputdir.is_some(), "--outputdir"),
@@ -40,7 +43,10 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
         (args.min_save.is_some_and(|value| value != 0), "--min-save"),
         (args.load_slicedata.is_some(), "--load-slicedata"),
         (args.export_slicedata.is_some(), "--export-slicedata"),
-        (args.arrange.is_some_and(|value| value != 0), "--arrange"),
+        (
+            args.arrange.is_some_and(|value| value != 0) && !arranged_stl,
+            "--arrange",
+        ),
         (args.orient.is_some_and(|value| value != 0), "--orient"),
         (args.plate.is_some(), "--plate"),
         (args.dump_moves.is_some(), "--dump-moves"),
@@ -62,6 +68,14 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
         ));
     }
     let failed = |detail| CliFailure::project_export(&output, false, detail);
+    if arranged_stl {
+        return run_arranged_stl(args, &output).await;
+    }
+    if args.inputs.len() != 1 {
+        return Err(failed(
+            "3MF export requires exactly one input model".to_owned(),
+        ));
+    }
     let input = match fs::read(args.input()) {
         Ok(bytes) => bytes,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
@@ -71,6 +85,7 @@ pub(super) async fn run(args: &SliceArgs, output: &Path) -> Result<(), CliFailur
                 &output,
             ));
         }
+
         Err(err) => return Err(failed(err.to_string())),
     };
     let filename = args
@@ -226,4 +241,88 @@ fn sources(
             source_identity: source_identity.as_ref(),
         })
         .collect()
+}
+
+async fn run_arranged_stl(args: &SliceArgs, output: &Path) -> Result<(), CliFailure> {
+    let failed = |detail| CliFailure::project_export(output, false, detail);
+    let settings = read_preset_files(
+        &args
+            .load_settings
+            .as_deref()
+            .map_or_else(Vec::new, split_native_list),
+    )?;
+    let filaments = read_preset_files(
+        &args
+            .load_filaments
+            .as_deref()
+            .map_or_else(Vec::new, split_native_list),
+    )?;
+    let mut models = Vec::with_capacity(args.inputs.len());
+    for path in &args.inputs {
+        let name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| failed("invalid model filename".to_owned()))?;
+        let bytes = fs::read(path).map_err(|error| {
+            if error.kind() == std::io::ErrorKind::NotFound {
+                CliFailure::missing_input(
+                    path,
+                    #[cfg(target_os = "linux")]
+                    output,
+                )
+            } else {
+                failed(error.to_string())
+            }
+        })?;
+        let model = ares_core::load_model(&bytes).map_err(|error| failed(error.to_string()))?;
+        models.push((name, model));
+    }
+    let settings = settings
+        .iter()
+        .map(|(label, json, source_identity)| LoadSettingsFile {
+            label,
+            json,
+            source_identity: source_identity.as_ref(),
+        })
+        .collect::<Vec<_>>();
+    let filaments = filaments
+        .iter()
+        .map(|(label, json, source_identity)| LoadSettingsFile {
+            label,
+            json,
+            source_identity: source_identity.as_ref(),
+        })
+        .collect::<Vec<_>>();
+    let mut sliced_plate = SlicedPlate::default();
+    let filename = args.inputs[0]
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| failed("invalid model filename".to_owned()))?;
+    let overrides = ConfigOverrides::default();
+    let request = LoadSettingsSliceRequest {
+        filename,
+        catalog_json: None,
+        loaded_sources: None,
+        uptodate: false,
+        settings: &settings,
+        filaments: &filaments,
+        plate: None,
+        overrides: &overrides,
+        placement: Placement::Arrange,
+        orient: false,
+        sliced_plate: &mut sliced_plate,
+    };
+    let plates = ares_core::slice_stl_models_with_load_settings(
+        &models,
+        request,
+        0,
+        SlicerContext::new(0),
+        false,
+    )
+    .map_err(|failure| failed(failure.error.to_string()))?
+    .collect::<Result<Vec<_>, _>>()
+    .map_err(|failure| failed(failure.error.to_string()))?;
+    let bytes =
+        ares_core::export_arranged_sliced_3mf(plates).map_err(|error| failed(error.to_string()))?;
+    fs::write(output, bytes).map_err(|error| failed(error.to_string()))
 }

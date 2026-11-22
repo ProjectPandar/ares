@@ -2,7 +2,8 @@
 
 use crate::{
     GenerationMetadata, LoadSettingsSliceRequest, Model, ProcessedGCode, Project, SliceError,
-    SlicedPlate, SlicerContext, profiles::entry::load_settings::with_load_settings_source,
+    SlicedPlate, SlicerContext, profiles::Placement,
+    profiles::entry::load_settings::with_load_settings_source,
 };
 
 use super::{
@@ -52,6 +53,7 @@ pub fn slice_stl_models_with_load_settings<'a>(
     record_moves: bool,
 ) -> Result<impl Iterator<Item = Result<SlicedStlPlate, StlPlateFailure>> + use<'a>, StlPlateFailure>
 {
+    let capture_archive = request.placement == Placement::Arrange;
     if models.is_empty() {
         return Err(StlPlateFailure::before_process(
             SliceError::EmptyInput,
@@ -88,7 +90,7 @@ pub fn slice_stl_models_with_load_settings<'a>(
                     (GenerationMetadata::default(), record_moves),
                     &mut context,
                     Some(&mut report),
-                    None,
+                    capture_archive.then_some(super::ArchiveSource::DirectStl),
                     |_, context| {
                         perimeters::prepare_post_layer_region_perimeters(
                             PlateInput::Applied(Box::new(state)),

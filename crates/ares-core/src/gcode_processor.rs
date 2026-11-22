@@ -248,7 +248,7 @@ pub struct SlicedArchive {
     pub filament_id: String,
     pub nozzle_diameter: f32,
     pub project_settings: Vec<u8>,
-    pub(crate) stl_model: Option<crate::project::export::Object>,
+    pub(crate) stl_model: Option<crate::project::export::SavedModel>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
