@@ -100,6 +100,7 @@ export interface AppState {
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
   loadError?: string;
+  saveError?: string;
   /** The STL batch awaiting its multi-part answer; every import has its own id and dialog (Plater.cpp:10097-10102). */
   stlImport: { id: number; files: File[] } | null;
   /** The warning notification of a loaded project's invalid values (Plater.cpp:9466-9481). */

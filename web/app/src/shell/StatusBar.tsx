@@ -8,7 +8,7 @@ function formatBytes(bytes: number) {
 }
 
 export function StatusBar() {
-  const { engine, engineError, engineCrash, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, arranging, arrangeError } = useApp();
+  const { engine, engineError, engineCrash, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, arranging, arrangeError, saveError } = useApp();
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   const progress = slice.status === "slicing" ? slice.progress : undefined;
   let message: string;
@@ -17,6 +17,7 @@ export function StatusBar() {
   else if (engine === "error") message = `Engine failed: ${engineError}`;
   else if (loadingFile) message = "Loading model…";
   else if (loadError) message = `Import failed: ${loadError}`;
+  else if (saveError) message = `Save Project failed: ${saveError}`;
   // `PartPlate.cpp:5476-5480`: the running plate's latest slicing status.
   else if (progress) message = `Slicing plate ${currentPlate + 1}: ${progress.text}`;
   else if (slice.status === "slicing") message = "Slicing plate…";
@@ -27,7 +28,7 @@ export function StatusBar() {
     message = `Slice complete — ${formatBytes(slice.gcode.length)} G-code in ${(slice.elapsedMs / 1000).toFixed(2)} s`;
   else if (file) message = blocker ?? "Ready to slice";
   else message = "Import a 3MF project or STL model to begin";
-  const error = engine === "error" || !!loadError || (!arranging && !!arrangeError) || slice.status === "error";
+  const error = engine === "error" || !!loadError || !!saveError || (!arranging && !!arrangeError) || slice.status === "error";
   return (
     <footer className="statusbar">
       <span className={error ? "status-message error" : message === blocker ? "status-message warning" : "status-message"} data-testid="status">

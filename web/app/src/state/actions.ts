@@ -60,7 +60,7 @@ export async function importFile(file: File) {
     return;
   }
   const bytes = new Uint8Array(await file.arrayBuffer());
-  useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined });
+  useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined, saveError: undefined });
   try {
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure)
     // and its presets filled from the installed system presets.
@@ -128,6 +128,7 @@ export async function newProject() {
     filamentSelection: [],
     slice: { status: "idle" },
     loadError: undefined,
+    saveError: undefined,
     loadWarning: undefined,
   });
   void plater?.free();
@@ -203,8 +204,8 @@ export function gcodeFileName(index = useApp.getState().currentPlate): string {
   return `${stem}_plate_${scene?.plates[index]?.id ?? 1}.gcode`;
 }
 
-function download(gcode: Uint8Array<ArrayBuffer>, name: string) {
-  const url = URL.createObjectURL(new Blob([gcode], { type: "text/x-gcode" }));
+export function download(bytes: Uint8Array<ArrayBuffer>, name: string, type = "text/x-gcode") {
+  const url = URL.createObjectURL(new Blob([bytes], { type }));
   const link = document.createElement("a");
   link.href = url;
   link.download = name;
