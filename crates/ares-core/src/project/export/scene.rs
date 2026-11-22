@@ -27,12 +27,13 @@ pub(super) struct SceneLayout<'a> {
 
 /// Writes an unsliced project from the model and project options already in memory.
 pub fn export_project_3mf(project: &Project) -> Result<Vec<u8>, SliceError> {
-    write(project, &project.documents().project_settings_raw)
+    write(project, &project.documents().project_settings_raw, None)
 }
 
-pub(in crate::project::export) fn write(
+pub(crate) fn write(
     project: &Project,
     raw: &crate::project::raw_settings::ProjectSettingsRaw,
+    plates: Option<&[crate::PlaterPlate]>,
 ) -> Result<Vec<u8>, SliceError> {
     if !project.plates_custom_gcodes.is_empty() {
         return Err(unsupported("custom layer G-code"));
@@ -128,6 +129,9 @@ pub(in crate::project::export) fn write(
                                 })
                                 .cloned(),
                         );
+                        if settings.has_parametric_shape {
+                            return Err(unsupported("text or embossed shapes"));
+                        }
                         part.mesh_stat = settings.mesh_stat.clone();
                     }
                     if let Some(extruder) = volume.region_overrides().extruder {
@@ -156,7 +160,7 @@ pub(in crate::project::export) fn write(
             })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
-    let scene = SceneLayout::new(project);
+    let scene = SceneLayout::new(project, plates);
     let settings = project_settings::write_secure(raw)?;
     write_package(&objects, settings, None, (None, None), Some(&scene))
 }
@@ -173,7 +177,7 @@ fn field(key: &str, value: impl Into<String>) -> Metadata {
 }
 
 impl<'a> SceneLayout<'a> {
-    fn new(project: &'a Project) -> Self {
+    fn new(project: &'a Project, plater_plates: Option<&[crate::PlaterPlate]>) -> Self {
         let docs = &project.documents().model_settings;
         let instances: BTreeMap<_, _> = project
             .objects()
@@ -200,7 +204,30 @@ impl<'a> SceneLayout<'a> {
                     })
             })
             .collect();
-        let plates = if project.plates().is_empty() {
+        let metadata = |source: Option<usize>| {
+            source
+                .and_then(|index| docs.plates.get(index))
+                .map_or(&[][..], |settings| &settings.metadata)
+        };
+        let plates = if let Some(plates) = plater_plates {
+            plates
+                .iter()
+                .enumerate()
+                .map(|(index, plate)| ScenePlate {
+                    id: index as u32 + 1,
+                    metadata: metadata(plate.source),
+                    instances: plate
+                        .instances
+                        .iter()
+                        .filter_map(|&(object, ordinal)| {
+                            let object = &project.objects()[object];
+                            let item = object.instances().get(ordinal)?;
+                            instances.get(&(object.id(), item.instance_id())).copied()
+                        })
+                        .collect(),
+                })
+                .collect()
+        } else if project.plates().is_empty() {
             vec![ScenePlate {
                 id: 1,
                 metadata: &[],
@@ -220,7 +247,9 @@ impl<'a> SceneLayout<'a> {
                     instances: plate
                         .instances()
                         .iter()
-                        .map(|&[object, instance, _]| instances[&(object, instance)])
+                        .filter_map(|&[object, instance, _]| {
+                            instances.get(&(object, instance)).copied()
+                        })
                         .collect(),
                 })
                 .collect()
