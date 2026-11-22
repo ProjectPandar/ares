@@ -106,6 +106,8 @@ mod direct_stl_slice;
 mod export_statistics;
 #[path = "option_only_stl_exit_codes.rs"]
 mod option_only_stl_exit_codes;
+#[path = "preset_scalar_string_vectors.rs"]
+mod preset_scalar_string_vectors;
 
 #[path = "mk4_tree_support_base_connect.rs"]
 mod mk4_tree_support_base_connect;

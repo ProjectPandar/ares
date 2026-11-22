@@ -153,7 +153,7 @@ fn cli_saved_load_settings_remaps_one_filament_and_disables_prime_tower() {
     );
 }
 
-fn replacement_preset(path: &str, edit: impl FnOnce(&mut Value)) -> String {
+pub(super) fn replacement_preset(path: &str, edit: impl FnOnce(&mut Value)) -> String {
     let mut config: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
     edit(&mut config);
     let path = Path::new(path);
@@ -165,7 +165,7 @@ fn replacement_preset(path: &str, edit: impl FnOnce(&mut Value)) -> String {
     replacement.into_os_string().into_string().unwrap()
 }
 
-fn repack_project(exported: &Path, project: &Path) {
+pub(super) fn repack_project(exported: &Path, project: &Path) {
     let mut source = ZipArchive::new(Cursor::new(fs::read(exported).unwrap())).unwrap();
     let mut archive = ZipWriter::new(Cursor::new(Vec::new()));
     let options = SimpleFileOptions::default();

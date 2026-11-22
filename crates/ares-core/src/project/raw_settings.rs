@@ -112,6 +112,10 @@ impl ProjectSettingsRaw {
         Ok(())
     }
 
+    pub(crate) fn normalize_preset_string_vectors(&mut self) -> Result<(), String> {
+        crate::options::json_deserialize::normalize_preset_string_vectors(&mut self.0)
+    }
+
     /// The vector-shape normalizations without the wire substitutions,
     /// for a raw that already carries override values on top of the
     /// normalized embedded config.
