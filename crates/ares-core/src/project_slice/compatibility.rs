@@ -65,6 +65,8 @@ pub(crate) struct LoadedPresetNames {
     pub process: Option<PresetDescriptor>,
     pub embedded: Option<ProjectSettingsRaw>,
     pub direct_stl_machine: Option<ProjectSettingsRaw>,
+    /// Zero-based saved-project slots in file order when the selection has holes.
+    pub filament_indices: Vec<usize>,
 }
 
 /// Ports the retained-process and direct STL paths of `OrcaSlicer.cpp:2922–2945`.

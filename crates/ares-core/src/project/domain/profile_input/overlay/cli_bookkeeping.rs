@@ -1,12 +1,14 @@
 use crate::project::raw_settings::RawConfigValue;
 
+use super::FilamentSlots;
+
 /// One slot of the `different_settings_to_system` vector
 /// (`OrcaSlicer.cpp:2838,:2978,:3161`). Slot 0 accumulates the machine-switch
 /// `compatible_printers` marker before CLI overrides and mapped tower edits.
 pub(super) struct DifferentSettingsContext<'a> {
     pub(super) embedded: Option<&'a RawConfigValue>,
     pub(super) len: usize,
-    pub(super) selected: usize,
+    pub(super) slots: FilamentSlots<'a>,
     pub(super) switch_compatible_printers: bool,
 }
 
@@ -33,7 +35,7 @@ impl DifferentSettingsContext<'_> {
             }
             return RawConfigValue::Text(keys.join(";"));
         }
-        if index == self.len - 1 || index <= self.selected {
+        if index == self.len - 1 || self.slots.source(index - 1).is_some() {
             return RawConfigValue::Text(String::new());
         }
         self.embedded
@@ -50,11 +52,12 @@ pub(super) fn expression_group_slot(
     embedded: Option<&RawConfigValue>,
     index: usize,
     offset: usize,
-    selected: usize,
+    slots: FilamentSlots<'_>,
 ) -> RawConfigValue {
-    if index >= offset
-        && index - offset < selected
-        && let Some(value) = group.element(index)
+    if let Some(source) = index
+        .checked_sub(offset)
+        .and_then(|slot| slots.source(slot))
+        && let Some(value) = group.element(source + offset)
     {
         return value.clone();
     }

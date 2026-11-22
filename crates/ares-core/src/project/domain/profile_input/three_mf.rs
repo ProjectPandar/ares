@@ -93,6 +93,16 @@ impl Project {
             )));
         }
 
+        let filament_indices =
+            load_names.map_or(&[][..], |names| names.filament_indices.as_slice());
+        if let Some(&last) = filament_indices.last()
+            && last >= filament_count
+        {
+            return Err(SliceError::InvalidInput(format!(
+                "selection targets filament slot {} but the project embeds {embedded_count}",
+                last + 1
+            )));
+        }
         let switch = machine_switch(&embedded_raw, settings, project.documents.bbl_family_3mf);
         let mut merge_base = match retained_refresh {
             Some(refresh) => refresh.retained(&embedded_raw, settings)?,
@@ -104,7 +114,10 @@ impl Project {
             merge_base,
             &profile,
             OverlayContext {
-                selected,
+                slots: super::overlay::FilamentSlots {
+                    selected,
+                    filament_indices,
+                },
                 embedded_count: filament_count,
                 machine_switch: switch,
             },
