@@ -7,6 +7,14 @@ use ares_core::{NativeRefreshFile, NativeRefreshPresets, ProfileKind, UpwardMach
 
 use crate::{SliceArgs, failure::CliFailure, split_native_list};
 
+pub(super) struct RefreshInputs<'a> {
+    pub resources_dir: Option<&'a Path>,
+    pub settings: Option<&'a str>,
+    pub filaments: Option<&'a str>,
+    #[cfg(target_os = "linux")]
+    pub output: &'a Path,
+}
+
 pub(super) fn requested(args: &SliceArgs) -> bool {
     args.uptodate
         && args.project_preset_catalog.is_none()
@@ -29,29 +37,44 @@ pub(super) fn load_admitted(
     else {
         return Ok(None);
     };
-    let resources = crate::installed_resources::resolve(args.resources_dir.as_deref())?;
+    let inputs = RefreshInputs {
+        resources_dir: args.resources_dir.as_deref(),
+        settings: args.uptodate_settings.as_deref(),
+        filaments: args.uptodate_filaments.as_deref(),
+        #[cfg(target_os = "linux")]
+        output: args.output(),
+    };
+    load(&inputs, &source, load_filaments).map(Some)
+}
+
+pub(super) fn load(
+    inputs: &RefreshInputs<'_>,
+    source: &UpwardMachineSource,
+    load_filaments: &[&str],
+) -> Result<NativeRefreshPresets, CliFailure> {
+    let resources = crate::installed_resources::resolve(inputs.resources_dir)?;
     let bbl = resources.join("profiles/BBL");
     let mut presets = NativeRefreshPresets::default();
-    let settings = list(args.uptodate_settings.as_deref());
+    let settings = list(inputs.settings);
     if settings.is_empty() {
-        presets.machine = resource(args, &bbl, "machine_full", source.system_printer())?;
-        presets.process = resource(args, &bbl, "process_full", source.system_process())?;
+        presets.machine = resource(inputs, &bbl, "machine_full", source.system_printer())?;
+        presets.process = resource(inputs, &bbl, "process_full", source.system_process())?;
     } else {
         for path in settings {
-            let file = explicit(args, path)?;
+            let file = explicit(inputs, path)?;
             let (kind, name, target) = match file.kind() {
                 ProfileKind::Machine => ("machine", source.system_printer(), &mut presets.machine),
                 ProfileKind::Process => ("process", source.system_process(), &mut presets.process),
                 ProfileKind::Filament => {
                     return Err(config_error(
-                        args,
+                        inputs,
                         format!("found invalid config type filament from config {path}"),
                     ));
                 }
             };
             if file.name() != name {
                 return Err(config_error(
-                    args,
+                    inputs,
                     format!(
                         "wrong {kind} config file {} loaded, current {kind} config name {name}",
                         file.name()
@@ -63,7 +86,7 @@ pub(super) fn load_admitted(
     }
 
     if !load_filaments.iter().any(|label| !label.is_empty()) {
-        presets.filaments = load_retained_filaments(args, &bbl, source.system_filaments())?;
+        presets.filaments = load_retained_filaments(inputs, &bbl, source.system_filaments())?;
     }
     if (presets.machine.is_none()
         || presets.process.is_none()
@@ -72,25 +95,25 @@ pub(super) fn load_admitted(
     {
         presets.system_catalog = Some(crate::project_presets::load_resources_catalog(&resources)?);
     }
-    Ok(Some(presets))
+    Ok(presets)
 }
 
 fn load_retained_filaments(
-    args: &SliceArgs,
+    inputs: &RefreshInputs<'_>,
     bbl: &Path,
     names: &[String],
 ) -> Result<Vec<Option<NativeRefreshFile>>, CliFailure> {
-    let files = list(args.uptodate_filaments.as_deref());
+    let files = list(inputs.filaments);
     if files.is_empty() {
         return names
             .iter()
-            .map(|name| resource(args, bbl, "filament_full", name))
+            .map(|name| resource(inputs, bbl, "filament_full", name))
             .collect();
     }
     if files.len() != names.len() {
         return Err(CliFailure::invalid_parameters(
             #[cfg(target_os = "linux")]
-            args.output(),
+            inputs.output,
             format!(
                 "uptodate_filaments size {} not equal to filament_count {}\n",
                 files.len(),
@@ -100,10 +123,10 @@ fn load_retained_filaments(
     }
     let mut filaments = Vec::with_capacity(files.len());
     for (index, (path, name)) in files.into_iter().zip(names).enumerate() {
-        let file = explicit(args, path)?;
+        let file = explicit(inputs, path)?;
         if file.kind() != ProfileKind::Filament {
             return Err(config_error(
-                args,
+                inputs,
                 format!(
                     "unknown config type {} of file {path} in load-filaments",
                     type_name(file.kind())
@@ -112,7 +135,7 @@ fn load_retained_filaments(
         }
         if file.name() != name {
             return Err(config_error(
-                args,
+                inputs,
                 format!(
                     "wrong filament config file {} loaded, current filament config name {name}, index {index}",
                     file.name()
@@ -131,18 +154,18 @@ fn list(value: Option<&str>) -> Vec<&str> {
         .unwrap_or_default()
 }
 
-fn explicit(args: &SliceArgs, label: &str) -> Result<NativeRefreshFile, CliFailure> {
+fn explicit(inputs: &RefreshInputs<'_>, label: &str) -> Result<NativeRefreshFile, CliFailure> {
     let bytes = fs::read(label).map_err(|error| {
         config_error(
-            args,
+            inputs,
             format!("Loading setting file \"{label}\" failed: {error}"),
         )
     })?;
-    parse(args, &bytes, Path::new(label))
+    parse(inputs, &bytes, Path::new(label))
 }
 
 fn resource(
-    args: &SliceArgs,
+    inputs: &RefreshInputs<'_>,
     bbl: &Path,
     kind: &str,
     name: &str,
@@ -157,10 +180,10 @@ fn resource(
     let path = bbl.join(kind).join(format!("{name}.json"));
     match fs::read(&path) {
         Ok(bytes) => {
-            let file = parse(args, &bytes, &path)?;
+            let file = parse(inputs, &bytes, &path)?;
             if kind == "filament_full" && file.kind() != ProfileKind::Filament {
                 return Err(config_error(
-                    args,
+                    inputs,
                     format!(
                         "unknown config type {} of file {} in load-filaments",
                         type_name(file.kind()),
@@ -172,7 +195,7 @@ fn resource(
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(error) => Err(config_error(
-            args,
+            inputs,
             format!(
                 "Loading setting file \"{}\" failed: {error}",
                 path.display()
@@ -189,10 +212,14 @@ fn type_name(kind: ProfileKind) -> &'static str {
     }
 }
 
-fn parse(args: &SliceArgs, bytes: &[u8], path: &Path) -> Result<NativeRefreshFile, CliFailure> {
+fn parse(
+    inputs: &RefreshInputs<'_>,
+    bytes: &[u8],
+    path: &Path,
+) -> Result<NativeRefreshFile, CliFailure> {
     NativeRefreshFile::from_json(bytes).map_err(|error| {
         config_error(
-            args,
+            inputs,
             format!(
                 "Loading setting file \"{}\" failed: {error}",
                 path.display()
@@ -201,10 +228,12 @@ fn parse(args: &SliceArgs, bytes: &[u8], path: &Path) -> Result<NativeRefreshFil
     })
 }
 
-fn config_error(_args: &SliceArgs, message: String) -> CliFailure {
+fn config_error(inputs: &RefreshInputs<'_>, message: String) -> CliFailure {
+    #[cfg(not(target_os = "linux"))]
+    let _ = inputs;
     CliFailure::config_file_error(
         #[cfg(target_os = "linux")]
-        _args.output(),
+        inputs.output,
         format!("{message}\n"),
     )
 }
