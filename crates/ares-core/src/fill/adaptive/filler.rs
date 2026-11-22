@@ -215,7 +215,7 @@ pub(crate) fn fill_surface(
     let clip = expolygon_polygons(surface);
     all_polylines = crate::geometry::intersection_open_polylines(&all_polylines, &clip)?;
 
-    if all_polylines.len() <= 1 {
+    if all_polylines.is_empty() {
         return Ok(all_polylines);
     }
 
