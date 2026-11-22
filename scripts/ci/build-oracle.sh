@@ -21,7 +21,7 @@ NIXPKGS_URL="github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce"
 nixpkgs="$(nix eval --raw --expr "(builtins.getFlake \"$NIXPKGS_URL\").outPath")"
 
 case "$variant" in
-  merged-oracle|custom-gcode-overview)
+  merged-oracle|custom-gcode-overview|segment-colors)
     ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       exec nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
@@ -50,7 +50,7 @@ case "$variant" in
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/scripts/orca-replay/build.nix"
     ;;
-  procgcode|procgcode-dynamics|marker-time|actual-speed-profile|role-times|segment-hw|segment-colors)
+  procgcode|procgcode-dynamics|marker-time|actual-speed-profile|role-times|segment-hw)
     ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
