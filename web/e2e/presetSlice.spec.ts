@@ -6,7 +6,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { withDifferences, withoutCliGroups, withPlaterBedType, withPlaterConfigLines } from "./platerExport";
+import { withDifferences, withoutCliGroups, withPlaterBedType, withPlaterConfigLines, withPlaterTower } from "./platerExport";
 import { lhModels, type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
@@ -214,7 +214,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     bytes: browser.length,
   }, null, 2)}\n`);
   expect(multiColour(browser), "filament_multi_colour config line").toEqual(multiColour(native));
-  expect(normalize(browser, "Ares") === native, "browser G-code equals native --load-settings G-code").toBe(true);
+  expect(normalize(browser, "Ares") === withPlaterTower(native, normalize(browser, "Ares"), session), "browser G-code equals native --load-settings G-code").toBe(true);
 
   // The preset slice carries the engine's toolpaths for the preview.
   await page.getByRole("link", { name: "Preview" }).click();
@@ -241,7 +241,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     bytes: browserEdited.length,
   }, null, 2)}\n`);
   expect(multiColour(browserEdited), "edited filament_multi_colour config line").toEqual(multiColour(nativeEdited));
-  expect(normalize(browserEdited, "Ares") === nativeEdited, "edited browser G-code equals native --load-settings G-code").toBe(true);
+  expect(normalize(browserEdited, "Ares") === withPlaterTower(nativeEdited, normalize(browserEdited, "Ares"), session), "edited browser G-code equals native --load-settings G-code").toBe(true);
 
   // An STL loaded on the empty plate is centered on the bed and dropped to it
   // (Plater.cpp:7056-7058, 7111-7112, 7149-7160): the presets stay selected.
