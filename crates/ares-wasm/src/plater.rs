@@ -15,6 +15,7 @@ use crate::{SceneData, SliceOutput};
 
 mod filament;
 mod layout;
+mod save;
 mod snapshot;
 mod stl_files;
 mod transform;
