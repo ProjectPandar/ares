@@ -25,7 +25,7 @@ pub(crate) mod region_graph;
 mod relationships;
 mod settings_export;
 pub(crate) use settings_export::export_loaded_settings;
-pub use settings_export::export_project_settings;
+pub use settings_export::{export_project_settings, export_project_settings_with_catalog};
 mod slice_info;
 mod transform;
 mod upward_machine;
