@@ -49,12 +49,27 @@ jobs:
             resources/profiles
             src/libslic3r
             deps_src/glu-libtess
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Verify runtime GLU oracle prerequisites
         run: |
           command -v gcc
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+      - name: Prepare configuration metadata tests
+        run: |
+          set -euo pipefail
+          test "$(git -C OrcaSlicer rev-parse HEAD)" = "$ORCA_REF"
+          test -f OrcaSlicer/src/OrcaSlicer.cpp
+          for file in PrintConfig.cpp PrintConfig.hpp PrintConfigConstants.hpp MaterialType.cpp Preset.cpp; do
+            test -f "OrcaSlicer/src/libslic3r/$file"
+          done
+          context_artifacts=$(mktemp -d "$RUNNER_TEMP/configdef-context.XXXXXXXX")
+          enum_artifacts=$(mktemp -d "$RUNNER_TEMP/enum.XXXXXXXX")
+          printf 'ARES_CONFIGDEF_CONTEXT_ARTIFACTS=%s\nARES_ENUM_ARTIFACTS=%s\n' \
+            "$context_artifacts" "$enum_artifacts" >> "$GITHUB_ENV"
       - run: cargo nextest run --workspace --no-fail-fast -E 'not binary(orca_parity)'
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
