@@ -4,10 +4,7 @@
 //! duplicates), and the FINAL waypoint goes through `travel_to_xyz`
 //! carrying the scarf destination z when a z ratio applies.
 
-use crate::project_slice::gcode_emit::motion::{
-    EmitState, arc,
-    format::{axis as format_axis, z as format_z},
-};
+use crate::project_slice::gcode_emit::motion::{EmitState, arc, format::axis as format_axis};
 
 /// Emit `route[1..]` — the detour waypoints after the first approach
 /// move — and return whether the final leg already consumed the layer z.
@@ -41,9 +38,8 @@ pub(super) fn emit_detour_waypoints(
             if no_z_move {
                 output.extend_from_slice(
                     format!(
-                        "G1 X{} Y{} F{}\n",
-                        format_axis(point.x - state.xy_offset.0),
-                        format_axis(point.y - state.xy_offset.1),
+                        "G1 {} F{}\n",
+                        state.xy_words((point.x, point.y), None),
                         format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
@@ -51,10 +47,8 @@ pub(super) fn emit_detour_waypoints(
             } else {
                 output.extend_from_slice(
                     format!(
-                        "G1 X{} Y{} Z{} F{}{route_comment}\n",
-                        format_axis(point.x - state.xy_offset.0),
-                        format_axis(point.y - state.xy_offset.1),
-                        format_z(z),
+                        "G1 {} F{}{route_comment}\n",
+                        state.xy_words((point.x, point.y), Some(z)),
                         format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
@@ -72,9 +66,8 @@ pub(super) fn emit_detour_waypoints(
         } else {
             output.extend_from_slice(
                 format!(
-                    "G1 X{} Y{} F{}{route_comment}\n",
-                    format_axis(point.x - state.xy_offset.0),
-                    format_axis(point.y - state.xy_offset.1),
+                    "G1 {} F{}{route_comment}\n",
+                    state.xy_words((point.x, point.y), None),
                     format_axis(state.travel_feedrate)
                 )
                 .as_bytes(),

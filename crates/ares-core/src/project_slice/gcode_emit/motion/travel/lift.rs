@@ -121,6 +121,9 @@ pub(in crate::project_slice::gcode_emit) fn mode_for(
     state: &EmitState,
     layer_change: bool,
 ) -> LiftMode {
+    if state.belt.is_some() {
+        return LiftMode::Normal;
+    }
     match state.options.z_hop_type {
         crate::ZHopType::Auto if layer_change => LiftMode::Spiral,
         crate::ZHopType::Auto | crate::ZHopType::Slope => LiftMode::Slope,
@@ -355,7 +358,7 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     let feedrate = z_feedrate(state);
     let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
     output.extend_from_slice(
-        format!("G1 Z{} F{}\n", format_z(raised), format_axis(feedrate)).as_bytes(),
+        format!("G1 {} F{}\n", state.z_words(raised), format_axis(feedrate)).as_bytes(),
     );
     state.current_feedrate = feedrate;
     state.record_z(raised);
@@ -373,8 +376,8 @@ fn append_normal(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64) {
     };
     output.extend_from_slice(
         format!(
-            "G1 Z{} F{}{comment}\n",
-            format_z(raised_z),
+            "G1 {} F{}{comment}\n",
+            state.z_words(raised_z),
             format_axis(feedrate)
         )
         .as_bytes(),

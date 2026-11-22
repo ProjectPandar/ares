@@ -5,6 +5,36 @@ use super::{
 };
 
 const FORCE_RESUME_FAN: &str = ";_FORCE_RESUME_FAN_SPEED\n";
+const BELT_FAN_LAYER: &str = ";__ARES_ROLE_FAN_BELT_LAYER__\n";
+const BELT_FAN_FIRST_LAYER: &str = ";__ARES_ROLE_FAN_BELT_FIRST_LAYER__\n";
+const BELT_FAN_CARRY: &str = ";__ARES_ROLE_FAN_BELT_CARRY__\n";
+
+pub(in crate::project_slice::gcode_emit) fn mark_belt_extrusion(
+    output: &mut Vec<u8>,
+    first_layer: bool,
+) {
+    output.extend_from_slice(if first_layer {
+        BELT_FAN_FIRST_LAYER.as_bytes()
+    } else {
+        BELT_FAN_LAYER.as_bytes()
+    });
+}
+
+pub(super) fn mark_belt_fan_carry(layer: &mut Vec<u8>) {
+    // CoolingBuffer.cpp reapplies the retained gate after processing the
+    // first parsed command, even when the layer's new baseline is nonzero.
+    let mut end = 0;
+    for line in layer.split_inclusive(|&byte| byte == b'\n') {
+        end += line.len();
+        if [b"G0 ".as_slice(), b"G1 ", b"G2 ", b"G3 ", b"G92 "]
+            .iter()
+            .any(|prefix| line.starts_with(prefix))
+        {
+            layer.splice(end..end, BELT_FAN_CARRY.bytes());
+            break;
+        }
+    }
+}
 
 /// The flushing layer's fan context: computed baseline speed, layer id and
 /// the buffered tool id (`CoolingBuffer`'s `m_current_extruder`).
@@ -90,6 +120,26 @@ impl CoolingState {
                 .position(|byte| *byte == b'\n')
                 .map_or(output.len(), |offset| start + offset + 1);
             let marker = std::str::from_utf8(&output[start..end]).unwrap();
+            if matches!(
+                marker,
+                BELT_FAN_LAYER | BELT_FAN_FIRST_LAYER | BELT_FAN_CARRY
+            ) {
+                // GCode.hpp::effective_layer_index_for_point: the admitted
+                // zero-shear case uses layer ID rather than belt height.
+                self.belt_fan_off = match marker {
+                    BELT_FAN_LAYER => !layer_open,
+                    BELT_FAN_FIRST_LAYER => self.ramp(tool).close_fan_first_layers() > 0,
+                    _ => self.belt_fan_off,
+                };
+                let target = role_speed
+                    .or(support_speed)
+                    .or(ironing_speed)
+                    .unwrap_or(baseline);
+                let replacement = self.set_gated_part_fan(target);
+                cursor = start + replacement.len();
+                output.splice(start..end, replacement);
+                continue;
+            }
             if marker == FORCE_RESUME_FAN {
                 let replacement =
                     self.resume_fan_commands(role_speed, support_speed, ironing_speed);
@@ -157,7 +207,7 @@ impl CoolingState {
                     || marker.contains("_BASE__")
                     || marker.contains("_FORCE_"));
             let replacement = if emit {
-                self.set_part_fan(target)
+                self.set_gated_part_fan(target)
             } else {
                 Vec::new()
             };
@@ -262,11 +312,14 @@ impl CoolingState {
     }
 
     fn resume_fan_commands(
-        &self,
+        &mut self,
         role_speed: Option<u8>,
         support_speed: Option<u8>,
         ironing_speed: Option<u8>,
     ) -> Vec<u8> {
+        if self.belt_fan_off {
+            return self.set_part_fan(0);
+        }
         let mut replacement = Vec::new();
         // CoolingBuffer.cpp:890–898 sends auxiliary before the part fan.
         if self.auxiliary_fan
@@ -289,6 +342,10 @@ impl CoolingState {
             replacement.extend_from_slice(&self.part_fan_command(speed));
         }
         replacement
+    }
+
+    fn set_gated_part_fan(&mut self, target: u8) -> Vec<u8> {
+        self.set_part_fan(if self.belt_fan_off { 0 } else { target })
     }
 
     fn set_part_fan(&mut self, target: u8) -> Vec<u8> {

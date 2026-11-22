@@ -2,11 +2,7 @@
 //! retracted-path descent of an eager-lifted nozzle.
 
 use super::super::travel_emit;
-use crate::project_slice::gcode_emit::motion::{
-    EmitState,
-    format::{axis as format_axis, z as format_z},
-    travel,
-};
+use crate::project_slice::gcode_emit::motion::{EmitState, format::axis as format_axis, travel};
 
 /// `GCodeWriter::_travel_to_z` emission for the re-state lines
 /// (`GCodeWriter.cpp:824` callers): emits `G1 Z<z> F<lift feed>` plus
@@ -15,8 +11,8 @@ fn emit_z_restate(output: &mut Vec<u8>, state: &mut EmitState, z: f64, comment: 
     let z_feedrate = travel::lift_z_feedrate(state);
     output.extend_from_slice(
         format!(
-            "G1 Z{} F{}{comment}\n",
-            format_z(z),
+            "G1 {} F{}{comment}\n",
+            state.z_words(z),
             format_axis(z_feedrate)
         )
         .as_bytes(),

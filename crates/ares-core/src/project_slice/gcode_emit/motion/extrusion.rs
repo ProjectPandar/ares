@@ -1,7 +1,7 @@
 use super::{
     EmitState, arc,
     features::{PathProperties, feature_description, is_bridge_feature},
-    format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
+    format::{axis as format_axis, extrusion as format_extrusion},
 };
 
 pub(super) struct XyzEmission<'a> {
@@ -28,11 +28,10 @@ pub(super) fn extrude_to_xyz(
     let z_changed = state
         .writer_z
         .is_none_or(|previous| quantize(z) != quantize(previous));
-    let z_word = if z_changed {
-        format!(" Z{}", format_z(z))
-    } else {
-        String::new()
-    };
+    let xyz = state.xy_words(
+        (end.x, end.y),
+        (z_changed || state.belt.is_some()).then_some(z),
+    );
     let value = coordinate(state, delta);
     let comment = if state.options.gcode_comments {
         let bridge = if is_bridge_feature(properties.feature) {
@@ -44,16 +43,8 @@ pub(super) fn extrude_to_xyz(
     } else {
         String::new()
     };
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{}{} E{}{comment}\n",
-            format_axis(end.x - state.xy_offset.0),
-            format_axis(end.y - state.xy_offset.1),
-            z_word,
-            format_extrusion(value),
-        )
-        .as_bytes(),
-    );
+    output
+        .extend_from_slice(format!("G1 {xyz} E{}{comment}\n", format_extrusion(value),).as_bytes());
     state.x = end.x;
     state.y = end.y;
     state.scarf_z = Some(z);
@@ -73,12 +64,7 @@ pub(super) fn force_no_extrusion_segment(
         ""
     };
     output.extend_from_slice(
-        format!(
-            "G1 X{} Y{}{comment}\n",
-            format_axis(end.x - state.xy_offset.0),
-            format_axis(end.y - state.xy_offset.1)
-        )
-        .as_bytes(),
+        format!("G1 {}{comment}\n", state.xy_words((end.x, end.y), None)).as_bytes(),
     );
     state.x = end.x;
     state.y = end.y;
@@ -110,20 +96,14 @@ pub(super) fn linear_segment(
     };
     if extrusion.abs() <= f64::EPSILON {
         output.extend_from_slice(
-            format!(
-                "G1 X{} Y{}{comment}\n",
-                format_axis(end.x - state.xy_offset.0),
-                format_axis(end.y - state.xy_offset.1)
-            )
-            .as_bytes(),
+            format!("G1 {}{comment}\n", state.xy_words((end.x, end.y), None)).as_bytes(),
         );
     } else {
         let extrusion = coordinate(state, extrusion);
         output.extend_from_slice(
             format!(
-                "G1 X{} Y{} E{}{comment}\n",
-                format_axis(end.x - state.xy_offset.0),
-                format_axis(end.y - state.xy_offset.1),
+                "G1 {} E{}{comment}\n",
+                state.xy_words((end.x, end.y), None),
                 format_extrusion(extrusion)
             )
             .as_bytes(),

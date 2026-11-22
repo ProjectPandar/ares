@@ -144,6 +144,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         .predecessor
         .predecessor;
     let settings = &traversal.resolved.views.full;
+    let belt_printer = settings.printer.remaining.belt_printer.0;
     tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();
@@ -158,7 +159,9 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .iter()
             .map(|layer| layer.print_z)
             .collect::<Vec<_>>();
-        raw_zs.extend_from_slice(&object_z);
+        if !belt_printer {
+            raw_zs.extend_from_slice(&object_z);
+        }
         raw_zs.extend_from_slice(&support_z);
         skirt_layers.extend(
             object_z
@@ -185,6 +188,18 @@ pub(in crate::project_slice::gcode_emit) fn build(
             super::skirt_schedule::Layer::new(layer.print_z, false, has_extrusions)
         }));
         pair_layers(&mut merged, object_index, &object_z, &support_z);
+    }
+    if belt_printer {
+        // GCode.cpp:2301,2477–2484,3538: do not schedule an entry that prints nothing.
+        merged.retain(|(_, entry)| {
+            entry.object_layer.is_some_and(|layer| {
+                objects[entry.object_index][layer]
+                    .islands
+                    .iter()
+                    .any(|island| !island.entities.is_empty())
+            })
+        });
+        raw_zs.extend(merged.iter().map(|entry| entry.0));
     }
     if let Some(raft) = &raft {
         raw_zs.extend(raft.entries.iter().map(|entry| entry.0));

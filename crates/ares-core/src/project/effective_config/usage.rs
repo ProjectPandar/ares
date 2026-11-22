@@ -174,7 +174,8 @@ pub(crate) fn append_region_filaments(
 }
 
 pub(crate) fn has_wipe_tower(settings: &ProjectSettings, logical_filament_count: usize) -> bool {
-    settings.process.print.enable_prime_tower.0
+    !settings.printer.remaining.belt_printer.0
+        && settings.process.print.enable_prime_tower.0
         && ((settings.process.gcode.enable_wrapping_detection.0
             && settings.printer.gcode.wrapping_exclude_area.0.len() > 2)
             || settings.process.print.timelapse_type == ProcessTimelapseType::Smooth

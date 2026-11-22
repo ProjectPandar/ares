@@ -84,6 +84,7 @@ impl CoolingState {
             equalizer,
             part_speed: None,
             current_part_speed: None,
+            belt_fan_off: false,
             provisional_part_speed: 0,
             pending_layer_index: None,
             equalized_layer_result: None,

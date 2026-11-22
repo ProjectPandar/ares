@@ -321,6 +321,8 @@ mod filament_volume_oracle;
 mod flow_errors;
 #[path = "orca_parity/gcode_printable_area.rs"]
 mod gcode_printable_area;
+#[path = "stock_project_whole_file/golden.rs"]
+mod golden;
 #[path = "orca_parity/honeycomb_multiline.rs"]
 mod honeycomb_multiline;
 #[path = "orca_parity/infill_anchor_dont_connect.rs"]
@@ -369,8 +371,6 @@ mod stock_presets;
 mod sync_time;
 #[path = "orca_parity/vg1_flush_state.rs"]
 mod vg1_flush_state;
-#[path = "stock_project_whole_file/golden.rs"]
-mod golden;
 // Diagnostic-only semantic behavior tests; never a whole-output acceptance gate.
 #[path = "stock_project_whole_file/semantic.rs"]
 mod semantic;
