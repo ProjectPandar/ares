@@ -299,11 +299,11 @@ impl<'a> SceneLayout<'a> {
             xml::metadata(out, "    ", "plater_id", &plate.id.to_string());
             xml::metadata(out, "    ", "plater_name", value("plater_name", ""));
             xml::metadata(out, "    ", "locked", value("locked", "false"));
-            for &key in PLATE_FIELDS {
-                let item = plate.metadata.iter().find(|item| item.key == key);
-                if let Some(item) = item {
-                    xml::metadata(out, "    ", key, &item.value);
-                }
+            let fields = PLATE_FIELDS
+                .iter()
+                .filter_map(|&key| plate.metadata.iter().find(|item| item.key == key));
+            for item in fields {
+                xml::metadata(out, "    ", &item.key, &item.value);
             }
             for instance in &plate.instances {
                 out.push_str("    <model_instance>\n");
