@@ -49,7 +49,24 @@ OrcaSlicer v2.5.0 (`40ecc66f7`), GUI only; no `libslic3r` behaviour is involved.
 
 `TabBar` in `TopBar.tsx`: both Slice buttons call their action and then navigate to
 `/preview`, in the click handler, as Ctrl+R does. The navigation does not wait for the slice,
-as upstream selects the page right after posting the event. Nothing else changes.
+as upstream selects the page right after posting the event.
+
+### A canvas that mounts while its session opens
+
+Each canvas (Prepare, Preview) asks for the STL session of the current inputs when it mounts
+(`web/app/src/viewport/ViewportView.tsx:108-124`, `openStlSession` in
+`web/app/src/state/stlSession.ts`). The plater keeps a session it has finished opening for the
+same inputs, as switching tabs reloads nothing upstream. An opening that is still running is
+not kept: a second canvas starts another opening of the same inputs, which replaces the first.
+A slice waits for the opening it started under (`slicePlates`, `actions.ts:166-198`) and is
+discarded when another opening replaced it, as a preset switch during a slice does
+(Plater.cpp:11402-11466). With the tab switch, a click on Slice right after a preset change
+mounts Preview while the session for the new preset opens, and the slice ends with the plate
+unsliced.
+
+`openStlSession` also hands a canvas the opening in progress when its inputs are exactly the
+same (file, preset selection, vendor and imported preset sources). Any other input starts a new
+opening that replaces the running one, as before.
 
 ## Verification
 
@@ -62,6 +79,12 @@ repository:
    the URL is `/preview`, and the result is plate 2's.
 
 Both fail before the change, because the route stays `/prepare`.
+
+In `web/e2e/presetSwitchSlice.spec.ts`, with the existing worker relay of that spec: after a
+first slice, switch the process preset twice; the relay holds the second switch's session
+opening. Click "Slice plate" while it is held, then release it: the plate slices and the relay
+saw no further opening. The hold is ordered by events, not timing. Before the session change
+the Preview canvas starts a second opening and the slice ends unsliced.
 
 Existing specs that click a Slice button and then drive Prepare-only controls follow the tab
 switch. The whole web suite runs before and after the change. A spec that breaks only because
