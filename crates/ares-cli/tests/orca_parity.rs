@@ -146,6 +146,8 @@ mod auto_brim_object_speed;
 mod auto_brim_small_diagonal;
 #[path = "orca_parity/auto_brim_tables.rs"]
 mod auto_brim_tables;
+#[path = "orca_parity/belt_print.rs"]
+mod belt_print;
 #[path = "orca_parity/brim_ears_consumes_efc_outline.rs"]
 mod brim_ears_consumes_efc_outline;
 #[path = "orca_parity/config_float_header_serialization.rs"]
@@ -367,7 +369,6 @@ mod stock_presets;
 mod sync_time;
 #[path = "orca_parity/vg1_flush_state.rs"]
 mod vg1_flush_state;
-
 #[path = "stock_project_whole_file/golden.rs"]
 mod golden;
 // Diagnostic-only semantic behavior tests; never a whole-output acceptance gate.
