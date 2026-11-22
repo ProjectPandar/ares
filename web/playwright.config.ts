@@ -1,9 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 import { chromiumLaunch as chromium } from "./e2e/chromiumLaunch";
 
-// Touch-emulated phones and tablets run only the mobile flow.
+// Touch-emulated phones and tablets run the mobile flow and import interaction checks.
 const webkit = { executablePath: process.env.ARES_E2E_WEBKIT || undefined };
 const mobileSpecs = /mobile\.spec\.ts$/;
+const touchSpecs = [mobileSpecs, /importLoading\.spec\.ts$/];
 const streamingSpec = /\/gcodeProcessorStreaming\.spec\.ts$/;
 // Specs that pack a workspace package (`npm pack` runs `prepack`, which empties its dist) or build
 // a page that imports one from its dist: one at a time, so no pack empties a dist another spec is
@@ -41,18 +42,18 @@ export default defineConfig({
     {
       // Bundled WebKit; on NixOS run through e2e/webkit-env.sh.
       name: "iphone",
-      testMatch: mobileSpecs,
+      testMatch: touchSpecs,
       use: { ...devices["iPhone 15"], launchOptions: webkit, actionTimeout: 30_000 },
     },
     {
       name: "pixel",
-      testMatch: mobileSpecs,
+      testMatch: touchSpecs,
       use: { ...devices["Pixel 7"], launchOptions: chromium, actionTimeout: 30_000 },
     },
     {
       // 810px wide: the tablet layout (641-1024px).
       name: "ipad",
-      testMatch: mobileSpecs,
+      testMatch: touchSpecs,
       use: { ...devices["iPad (gen 7)"], launchOptions: webkit, actionTimeout: 30_000 },
     },
   ],
