@@ -94,7 +94,7 @@ pub(super) fn append_before_layer_change_gcode(
         context.metadata,
         context.first_layer_bounds,
         Some(&state.template_rng),
-        state.total_layer_count,
+        (state.total_layer_count, state.writer_temperatures),
     )?;
     // `ppi.update_from_gcodewriter(m_writer)` refreshes `position`/
     // E-counters before each template (`GCode.cpp:3896`).
@@ -161,22 +161,11 @@ pub(super) fn append_layer_change(
             context.metadata,
             context.first_layer_bounds,
             Some(&state.template_rng),
-            state.total_layer_count,
+            (state.total_layer_count, state.writer_temperatures),
         )?;
         super::motion::refresh_writer_state(&mut config, state);
         config.insert("layer_num", value::Value::Integer(layer_index as i64));
         config.insert("layer_z", value::Value::number(layer_z));
-        config.insert("overall_chamber_temperature", value::Value::Integer(0));
-        if let Some(value) = config
-            .get("temperature_vitrification")
-            .and_then(|value| value.index(0))
-            .and_then(value::Value::as_number)
-        {
-            config.insert(
-                "min_vitrification_temperature",
-                value::Value::Integer(value as i64),
-            );
-        }
         config.insert(
             "max_additional_fan",
             value::Value::number(context.max_additional_fan),
