@@ -120,3 +120,44 @@ test("a preset switch that replaces the STL session during a slice leaves the pl
   await page.screenshot({ path: info.outputPath("resliced.png") });
   expect(errors).toEqual([]);
 });
+
+// The Slice button selects Preview (MainFrame.cpp:2411-2415), whose canvas mounts while the session of a
+// preset switch is still opening. The canvas takes that opening, so the slice runs on it and completes.
+test("a slice started while a preset switch opens the STL session completes on that session", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await relaySliceResults(page);
+  await openWithPresets(page);
+  await page.getByTestId("import-input").setInputFiles({ name: "cube.stl", buffer: cube, mimeType: "model/stl" });
+  const status = page.getByTestId("status");
+  await expect(status).toHaveText("Ready to slice");
+  const relay = () => page.evaluate(() => {
+    const { sliced, openings, creates, results } = (window as unknown as { sliceRelay: SliceRelay }).sliceRelay;
+    return { sliced: sliced.length, openings, creates: creates.length, results: results.length };
+  });
+  const slicePlate = page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true });
+
+  // A first slice: from here on the relay lets one session opening through and holds the later ones.
+  await slicePlate.click();
+  await expect.poll(async () => (await relay()).results, { timeout: 120_000 }).toBe(1);
+  await page.evaluate(() => (window as unknown as { sliceRelay: SliceRelay }).sliceRelay.deliverResults());
+  await expect(status).toContainText("Slice complete");
+  await page.getByRole("link", { name: "Prepare", exact: true }).click();
+  await choose(page, "mouse", "Process preset", "System presets", SWITCHED_PROCESS);
+  await choose(page, "mouse", "Process preset", "System presets", PRESETS.process);
+  // The second switch's session opening is held.
+  await expect.poll(async () => (await relay()).creates).toBe(1);
+  const viewport = page.locator("[data-testid=viewport] canvas");
+  await viewport.evaluate((canvas) => canvas.setAttribute("data-prepare-canvas", ""));
+
+  await slicePlate.click();
+  await expect(page).toHaveURL(/#\/preview$/);
+  // The Preview canvas has mounted: its session request has been made.
+  await expect(page.locator("[data-testid=viewport] canvas:not([data-prepare-canvas])")).toBeVisible();
+  await page.evaluate(() => (window as unknown as { sliceRelay: SliceRelay }).sliceRelay.resume());
+  await expect.poll(async () => (await relay()).sliced, { timeout: 120_000 }).toBe(2);
+  await expect(status).not.toHaveText(/^Slicing/, { timeout: 240_000 });
+  await expect(status).toContainText("Slice complete");
+  expect((await relay()).openings, "the Preview canvas opened no second session").toBe(2);
+  expect(errors).toEqual([]);
+});
