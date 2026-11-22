@@ -251,6 +251,22 @@ export class PlaterSession {
     }, onStatus)) as SliceResult;
   }
 
+  /** Saves the edited scene with the project's own presets. */
+  async saveProject(overrides: Record<string, string | string[]> = {}): Promise<Uint8Array<ArrayBuffer>> {
+    return (await this.#call({ kind: "platerSaveProject", sessionId: this.#sessionId, overrides: JSON.stringify(overrides) })) as Uint8Array<ArrayBuffer>;
+  }
+
+  /** Saves the edited scene with the selected presets and option edits. */
+  async saveProjectWithProfiles(catalog: string, selection: ProfileSelection | ProjectPresetSelection, options: ProfileSliceOptions): Promise<Uint8Array<ArrayBuffer>> {
+    return (await this.#call({
+      kind: "platerSaveProjectWithProfiles",
+      sessionId: this.#sessionId,
+      catalog,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as Uint8Array<ArrayBuffer>;
+  }
+
   /**
    * Makes the latest slice of plate `plate` (1-based) the toolpaths `AresSlicer.viewRange` and the
    * other view calls apply to, as switching plates reloads that plate's G-code preview

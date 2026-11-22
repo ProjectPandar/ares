@@ -74,6 +74,8 @@ export type WorkerRequest =
   | { id: number; kind: "platerShownArrangeSettings"; sessionId: number; settings: ArrangeSettings }
   | { id: number; kind: "platerSlice"; sessionId: number; plate: number | undefined; overrides: string }
   | { id: number; kind: "platerSliceWithProfiles"; sessionId: number; plate: number | undefined; catalog: string; selection: string; options: string }
+  | { id: number; kind: "platerSaveProject"; sessionId: number; overrides: string }
+  | { id: number; kind: "platerSaveProjectWithProfiles"; sessionId: number; catalog: string; selection: string; options: string }
   | { id: number; kind: "platerPreview"; sessionId: number; plate: number }
   | { id: number; kind: "platerTakeSnapshot"; sessionId: number; snapshotId: number }
   | { id: number; kind: "platerLoadSnapshot"; sessionId: number; snapshotId: number }
