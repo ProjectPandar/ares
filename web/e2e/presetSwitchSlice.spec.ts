@@ -145,8 +145,10 @@ test("a slice started while a preset switch opens the STL session completes on t
   await page.getByRole("link", { name: "Prepare", exact: true }).click();
   await choose(page, "mouse", "Process preset", "System presets", SWITCHED_PROCESS);
   await choose(page, "mouse", "Process preset", "System presets", PRESETS.process);
-  // The second switch's session opening is held.
-  await expect.poll(async () => (await relay()).creates).toBe(1);
+  // Each switch changes the selection twice, the process and then its compatible filaments (selectProcess,
+  // updateCompatible): four openings, the first let through and three held, the last for the current selection.
+  await expect.poll(async () => (await relay()).creates).toBe(3);
+  const { openings } = await relay();
   const viewport = page.locator("[data-testid=viewport] canvas");
   await viewport.evaluate((canvas) => canvas.setAttribute("data-prepare-canvas", ""));
 
@@ -158,6 +160,6 @@ test("a slice started while a preset switch opens the STL session completes on t
   await expect.poll(async () => (await relay()).sliced, { timeout: 120_000 }).toBe(2);
   await expect(status).not.toHaveText(/^Slicing/, { timeout: 240_000 });
   await expect(status).toContainText("Slice complete");
-  expect((await relay()).openings, "the Preview canvas opened no second session").toBe(2);
+  expect((await relay()).openings, "the Preview canvas opened no second session").toBe(openings);
   expect(errors).toEqual([]);
 });
