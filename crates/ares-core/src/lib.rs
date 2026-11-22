@@ -160,7 +160,8 @@ pub use project::{
     validate_project_version,
 };
 pub use project::{
-    StlExport, export_3mf, export_arranged_sliced_3mf, export_sliced_3mf, export_stl, export_stls,
+    StlExport, export_3mf, export_arranged_sliced_3mf, export_project_3mf, export_sliced_3mf,
+    export_stl, export_stls,
 };
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,

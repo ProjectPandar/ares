@@ -1,8 +1,11 @@
 //! Headless branch of `bbs_3mf.cpp:6418`, `_save_model_to_file`.
 mod geometry;
 mod project_settings;
+mod scene;
 mod xml;
 mod zip_records;
+
+pub use scene::export_project_3mf;
 
 use std::io::{Cursor, Seek, Write};
 
@@ -68,7 +71,7 @@ pub fn export_3mf(
     }
     let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
     let settings = project_settings::write(&presets)?;
-    write_package(&[object], settings, None)
+    write_package(&[object], settings, None, None)
 }
 
 pub fn export_sliced_3mf(
@@ -126,7 +129,12 @@ pub fn export_sliced_3mf(
         gcode: processed.gcode,
         orca_version: model.orca_version.clone(),
     };
-    write_package(&model.objects, archive.project_settings, Some(vec![sliced]))
+    write_package(
+        &model.objects,
+        archive.project_settings,
+        Some(vec![sliced]),
+        None,
+    )
 }
 
 pub fn export_arranged_sliced_3mf(
@@ -211,6 +219,7 @@ pub fn export_arranged_sliced_3mf(
         &model.objects,
         archives[0].1.project_settings.clone(),
         Some(sliced),
+        None,
     )
 }
 
@@ -218,6 +227,7 @@ fn write_package(
     objects: &[geometry::Object],
     settings: Vec<u8>,
     sliced: Option<Vec<SlicedMembers>>,
+    scene: Option<&scene::SceneLayout<'_>>,
 ) -> Result<Vec<u8>, SliceError> {
     let mut next_id = 1;
     let objects = objects
@@ -236,7 +246,7 @@ fn write_package(
         })
         .collect::<Vec<_>>();
     let sliced_output = sliced.is_some();
-    let model_settings = xml::model_settings(&objects, sliced.as_deref()).into_bytes();
+    let model_settings = xml::model_settings(&objects, sliced.as_deref(), scene).into_bytes();
     let mut entries = vec![(
         "[Content_Types].xml".to_owned(),
         xml::content_types().into_bytes(),
@@ -295,6 +305,11 @@ fn write_package(
             xml::gcode_relationship(paths.iter().map(String::as_str)).into_bytes(),
         ));
         (slice_info, filament_sequence)
+    } else if let Some(scene) = scene {
+        (
+            xml::slice_info_header().into_bytes(),
+            scene.filament_sequence(),
+        )
     } else {
         (
             xml::slice_info_header().into_bytes(),

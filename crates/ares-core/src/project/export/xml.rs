@@ -1,10 +1,13 @@
 use std::fmt::Write;
 
-use serde::Serialize;
-
-use super::{BAMBU_VERSION, ObjectEntry, SlicedMembers};
+use super::{BAMBU_VERSION, ObjectEntry, SlicedMembers, scene::SceneLayout};
 use crate::ORCA_SLICER_COMPATIBILITY_VERSION as ORCA_VERSION;
-use crate::{ProcessedGCode, SlicedArchive};
+use crate::project::model_settings::Metadata;
+use crate::{ProcessedGCode, SlicedArchive, Transform3d};
+
+mod plate;
+
+pub(super) use plate::plate_json;
 
 const DECL: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 const MODEL_OPEN: &str = concat!(
@@ -14,7 +17,20 @@ const MODEL_OPEN: &str = concat!(
     "xmlns:p=\"http://schemas.microsoft.com/3dmanufacturing/production/2015/06\" requiredextensions=\"p\">\n"
 );
 const VERSION_METADATA: &str = " <metadata name=\"BambuStudio:3mfVersion\">1</metadata>\n";
-const IDENTITY: &str = "1 0 0 0 1 0 0 0 1";
+fn transform_3mf(transform: Transform3d, use_f32: bool) -> String {
+    let column_major = transform.to_column_major();
+    let values = column_major
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .flat_map(|column| &column[..3])
+        .copied();
+    if use_f32 {
+        numbers_f32(values)
+    } else {
+        numbers(values)
+    }
+}
 
 pub(super) fn content_types() -> String {
     let mut out = format!(
@@ -105,18 +121,7 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
         let path = quick_xml::escape::escape(path);
         writeln!(out, "  <object id=\"{id}\" p:UUID=\"{backup_id:08x}-61cb-4c03-9d28-80fed5dfa1dc\" type=\"model\">\n   <components>").unwrap();
         for (id, prefix, part) in object.parts() {
-            let column_major = part.transform.to_column_major();
-            let values = column_major
-                .as_chunks::<4>()
-                .0
-                .iter()
-                .flat_map(|column| &column[..3])
-                .copied();
-            let transform = if part.use_f32_transform {
-                numbers_f32(values)
-            } else {
-                numbers(values)
-            };
+            let transform = transform_3mf(part.transform, part.use_f32_transform);
             writeln!(out, "    <component p:path=\"/{path}\" objectid=\"{id}\" p:UUID=\"{prefix:08x}-b206-40ff-9872-83e8017abed1\" transform=\"{transform}\"/>").unwrap();
         }
         out.push_str("   </components>\n  </object>\n");
@@ -124,8 +129,11 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
     out.push_str(" </resources>\n <build p:UUID=\"2c7c17d8-22b5-4d84-8835-1976022ea369\">\n");
     for object in objects {
         let id = object.id;
-        let [x, y, z] = object.object.placement.map(number);
-        writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{IDENTITY} {x} {y} {z}\" printable=\"1\"/>").unwrap();
+        for instance in &object.object.instances {
+            let transform = transform_3mf(instance.transform, false);
+            let printable = u8::from(instance.printable);
+            writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{transform}\" printable=\"{printable}\"/>").unwrap();
+        }
     }
     out.push_str(" </build>\n</model>\n");
     out
@@ -159,15 +167,30 @@ pub(super) fn mesh_model(object: &ObjectEntry<'_>) -> String {
     out
 }
 
+pub(super) fn metadata(out: &mut String, indent: &str, key: &str, value: &str) {
+    let key = quick_xml::escape::escape(key);
+    let value = quick_xml::escape::escape(value);
+    writeln!(out, "{indent}<metadata key=\"{key}\" value=\"{value}\"/>").unwrap();
+}
+
+fn write_metadata(out: &mut String, indent: &str, records: &[Metadata]) {
+    for Metadata { key, value } in records {
+        metadata(out, indent, key, value);
+    }
+}
+
 pub(super) fn model_settings(
     objects: &[ObjectEntry<'_>],
     sliced: Option<&[SlicedMembers]>,
+    scene: Option<&SceneLayout<'_>>,
 ) -> String {
     let mut out = format!("{DECL}<config>\n");
     for object in objects {
         let id = object.id;
-        let name = quick_xml::escape::escape(&object.object.name);
-        writeln!(out, "  <object id=\"{id}\" auto_drop=\"1\">\n    <metadata key=\"name\" value=\"{name}\"/>\n    <metadata key=\"extruder\" value=\"1\"/>").unwrap();
+        let auto_drop = u8::from(object.object.auto_drop);
+        writeln!(out, "  <object id=\"{id}\" auto_drop=\"{auto_drop}\">").unwrap();
+        metadata(&mut out, "    ", "name", &object.object.name);
+        write_metadata(&mut out, "    ", &object.object.metadata);
         for (id, _, part) in object.parts() {
             let name = quick_xml::escape::escape(&part.mesh.name);
             let filename = quick_xml::escape::escape(&part.source_file);
@@ -186,9 +209,21 @@ pub(super) fn model_settings(
             if !filename.is_empty() {
                 writeln!(out, "      <metadata key=\"source_file\" value=\"{filename}\"/>\n      <metadata key=\"source_object_id\" value=\"{source_object}\"/>\n      <metadata key=\"source_volume_id\" value=\"{source_volume}\"/>\n      <metadata key=\"source_offset_x\" value=\"{x}\"/>\n      <metadata key=\"source_offset_y\" value=\"{y}\"/>\n      <metadata key=\"source_offset_z\" value=\"{z}\"/>").unwrap();
             }
-            out.push_str("      <mesh_stat edges_fixed=\"0\" degenerate_facets=\"0\" facets_removed=\"0\" facets_reversed=\"0\" backwards_edges=\"0\"/>\n    </part>\n");
+            write_metadata(&mut out, "      ", &part.metadata);
+            let stats = part.mesh_stat.as_ref();
+            let edges = stats.map_or(0, |stat| stat.edges_fixed);
+            let degenerate = stats.map_or(0, |stat| stat.degenerate_facets);
+            let removed = stats.map_or(0, |stat| stat.facets_removed);
+            let reversed = stats.map_or(0, |stat| stat.facets_reversed);
+            let backwards = stats.map_or(0, |stat| stat.backwards_edges);
+            writeln!(out, "      <mesh_stat edges_fixed=\"{edges}\" degenerate_facets=\"{degenerate}\" facets_removed=\"{removed}\" facets_reversed=\"{reversed}\" backwards_edges=\"{backwards}\"/>\n    </part>").unwrap();
         }
         out.push_str("  </object>\n");
+    }
+    if let Some(scene) = scene {
+        scene.write_model_settings(&mut out, objects);
+        out.push_str("</config>\n");
+        return out;
     }
     let plates = sliced.map_or_else(|| vec![None], |plates| plates.iter().map(Some).collect());
     for (index, plate) in plates.into_iter().enumerate() {
@@ -207,68 +242,6 @@ pub(super) fn model_settings(
     }
     out.push_str("  <assemble>\n  </assemble>\n</config>\n");
     out
-}
-
-pub(super) fn plate_json(archive: &SlicedArchive, first_print_object_id: u32) -> Vec<u8> {
-    #[derive(Serialize)]
-    struct Object<'a> {
-        area: f64,
-        bbox: [f64; 4],
-        id: u32,
-        layer_height: f64,
-        name: &'a str,
-    }
-    #[derive(Serialize)]
-    struct Plate<'a> {
-        bbox_all: [f64; 4],
-        bbox_objects: Vec<Object<'a>>,
-        bed_type: &'static str,
-        filament_colors: [String; 1],
-        filament_ids: [u32; 1],
-        first_extruder: u32,
-        first_layer_time: f32,
-        is_seq_print: bool,
-        nozzle_diameter: f64,
-        version: u32,
-    }
-    let bbox_all = archive
-        .objects
-        .iter()
-        .map(|object| object.bounds)
-        .reduce(|a, b| {
-            [
-                a[0].min(b[0]),
-                a[1].min(b[1]),
-                a[2].max(b[2]),
-                a[3].max(b[3]),
-            ]
-        })
-        .expect("sliced plate has objects");
-    let bbox_objects = archive
-        .objects
-        .iter()
-        .enumerate()
-        .map(|(index, object)| Object {
-            area: f64::from(object.area),
-            bbox: object.bounds,
-            id: first_print_object_id + index as u32,
-            layer_height: f64::from(object.layer_height),
-            name: &object.name,
-        })
-        .collect();
-    serde_json::to_vec(&Plate {
-        bbox_all,
-        bbox_objects,
-        bed_type: "cool_plate",
-        filament_colors: [archive.filament_color.clone()],
-        filament_ids: [0],
-        first_extruder: 0,
-        first_layer_time: 0.0,
-        is_seq_print: false,
-        nozzle_diameter: f64::from(archive.nozzle_diameter),
-        version: 2,
-    })
-    .expect("plate metadata is serializable")
 }
 
 pub(super) fn slice_info(

@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use super::super::{
-    ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_xml::ModelDocument,
+    ArchiveLimits, PackagePath, ProjectArchive, Transform3d,
+    model_settings::{MeshStatistics, Metadata},
+    model_xml::ModelDocument,
 };
 use super::{MODEL, deferred, invalid};
 use crate::SliceError;
@@ -19,8 +21,30 @@ pub(super) struct Mesh {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Object {
     pub name: String,
-    pub placement: [f64; 3],
+    pub(super) instances: Vec<Instance>,
     pub(super) parts: Vec<Part>,
+    pub(super) metadata: Vec<Metadata>,
+    pub(super) auto_drop: bool,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(super) struct Instance {
+    pub transform: Transform3d,
+    pub printable: bool,
+}
+
+impl Instance {
+    fn at([x, y, z]: [f64; 3]) -> Self {
+        Self {
+            transform: Transform3d::from_rows([
+                [1.0, 0.0, 0.0, x],
+                [0.0, 1.0, 0.0, y],
+                [0.0, 0.0, 1.0, z],
+                [0.0, 0.0, 0.0, 1.0],
+            ]),
+            printable: true,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -32,6 +56,8 @@ pub(super) struct Part {
     pub source_file: String,
     pub source_object: i32,
     pub source_volume: i32,
+    pub metadata: Vec<Metadata>,
+    pub mesh_stat: Option<MeshStatistics>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -79,11 +105,13 @@ impl Object {
         };
         Ok(Self {
             name: name.to_owned(),
-            placement: [
+            instances: vec![Instance::at([
                 instance_placement[12],
                 instance_placement[13],
                 instance_placement[14],
-            ],
+            ])],
+            metadata: cli_object_metadata(),
+            auto_drop: true,
             parts: vec![Part {
                 mesh,
                 transform: volume_transform,
@@ -92,6 +120,8 @@ impl Object {
                 source_file: name.to_owned(),
                 source_object: 0,
                 source_volume: 0,
+                metadata: Vec::new(),
+                mesh_stat: None,
             }],
         })
     }
@@ -99,7 +129,9 @@ impl Object {
     pub(super) fn unsliced(mesh: Mesh, filename: &str) -> Self {
         Self {
             name: mesh.name.clone(),
-            placement: mesh.placement,
+            instances: vec![Instance::at(mesh.placement)],
+            metadata: cli_object_metadata(),
+            auto_drop: true,
             parts: vec![Part {
                 mesh,
                 transform: Transform3d::IDENTITY,
@@ -108,9 +140,18 @@ impl Object {
                 source_file: filename.to_owned(),
                 source_object: 0,
                 source_volume: 0,
+                metadata: Vec::new(),
+                mesh_stat: None,
             }],
         }
     }
+}
+
+fn cli_object_metadata() -> Vec<Metadata> {
+    vec![Metadata {
+        key: "extruder".into(),
+        value: "1".into(),
+    }]
 }
 
 pub(crate) fn placed_stl_model(project: &crate::Project) -> Result<SavedModel, SliceError> {
@@ -127,6 +168,7 @@ pub(crate) fn placed_stl_model(project: &crate::Project) -> Result<SavedModel, S
 #[path = "saved.rs"]
 mod saved;
 pub(super) use saved::load_saved;
+pub(super) use saved::model_part;
 
 pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     if filename.to_ascii_lowercase().ends_with(".stl") {
