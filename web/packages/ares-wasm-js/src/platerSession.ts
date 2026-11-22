@@ -1,7 +1,7 @@
 import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
-import type { ArrangeSettings, ArrangeSettingsModel, PlaterLayout, OptionMap, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
+import type { FilamentTarget, ArrangeSettings, ArrangeSettingsModel, PlaterLayout, OptionMap, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
 
 type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -284,6 +284,11 @@ export class PlaterSession {
   /** Releases the worker's session. */
   async free(): Promise<void> {
     await this.#call({ kind: "platerFree", sessionId: this.#sessionId });
+  }
+
+  /** Applies a filament choice to the scene ids in selection order. */
+  setFilament(targets: readonly FilamentTarget[], slot: number, count: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "setFilament", targets, slot, count });
   }
 
   async #edit(edit: PlaterEdit): Promise<PlaterLayout> {

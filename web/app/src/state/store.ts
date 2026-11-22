@@ -1,4 +1,5 @@
 import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, StlFile, StlImportOptions, Toolpaths } from "@ares-slicer/wasm";
+import type { FilamentSelection } from "./filamentAssignment";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
 import { storedConfig } from "./persistence";
@@ -103,6 +104,7 @@ export interface AppState {
   stlImport: { id: number; files: File[] } | null;
   /** The warning notification of a loaded project's invalid values (Plater.cpp:9466-9481). */
   loadWarning?: string;
+  filamentSelection: FilamentSelection[];
   selectedObject: number | null;
   /** The selected object's selected instance item, by index (ObjectList's itInstance). */
   selectedInstance: number | null;
@@ -165,6 +167,7 @@ export const useApp = create<AppState>(() => ({
   stlImport: null,
   selectedObject: null,
   selectedInstance: null,
+  filamentSelection: [],
   overrides: {},
   slice: { status: "idle" },
   installedPrinters: storedConfig.installedPrinters,

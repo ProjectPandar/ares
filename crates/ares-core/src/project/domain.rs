@@ -1,6 +1,7 @@
 pub(crate) mod assembly;
 mod auto_orient;
 mod documents;
+mod filament;
 mod layer_height_profile;
 mod mesh;
 mod multipart;

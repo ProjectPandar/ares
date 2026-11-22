@@ -39,6 +39,7 @@ pub struct PlaterEdits {
     pub(crate) instances: Vec<InstanceChange>,
     /// The ids of the objects "Delete" removed.
     pub(crate) deleted_objects: Vec<u32>,
+    pub(crate) filament: super::FilamentEdits,
 }
 
 impl PlaterEdits {
@@ -49,6 +50,7 @@ impl PlaterEdits {
         wipe_tower: None,
         instances: Vec::new(),
         deleted_objects: Vec::new(),
+        filament: std::collections::BTreeMap::new(),
     };
 
     pub(crate) fn transform(&self, object_id: u32, instance_id: u32) -> Option<Transform3d> {

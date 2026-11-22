@@ -2,6 +2,8 @@ import type { SceneObject } from "@ares-slicer/wasm";
 import { useEffect, useRef } from "react";
 import { changeInstances, deleteInstance, deleteObject, mirrorInstance, scaleToFit } from "../state/plates";
 import { useApp } from "../state/store";
+import { sameTarget } from "../state/filamentAssignment";
+import { FilamentAssignment } from "./FilamentAssignment";
 
 /** MenuFactory::append_menu_item_transform's mirror items (GUI_Factories.cpp:1353-1363). */
 const MIRROR = [
@@ -32,16 +34,20 @@ const INSTANCE_ITEMS = [
  * transform submenu's "Mirror" items and "Scale to build volume" of the object menu (GUI_Factories.cpp:1765). They act on the object's first instance, as the object
  * panel does. Closes on a pick, Escape or a click elsewhere.
  */
-export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: {
+export function ObjectMenu({ objectId, instance, volume, position, onClose, onCopies }: {
   objectId: number;
   /** Opened on an instance item: "Delete" removes that instance. */
   instance?: number;
+  volume?: number;
   position: [number, number];
   onClose: () => void;
   /** Opens the "Set number of instances" dialog. */
   onCopies: () => void;
 }) {
   const menu = useRef<HTMLDivElement>(null);
+  const selected = useApp((state) => state.filamentSelection);
+  const target = { object: objectId, volume, instance };
+  const targets = selected.some((item) => sameTarget(item, target)) ? selected : [target];
   const object = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === objectId) ?? -1);
   const edits = instanceEdits(useApp((state) => state.scene?.objects.find(({ id }) => id === objectId)));
   const slicing = useApp((state) => state.slice.status === "slicing");
@@ -58,6 +64,8 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
   }, [onClose]);
   return (
     <div ref={menu} className="context-menu" role="menu" aria-label="Object menu" style={{ left: position[0], top: position[1] }}>
+      <FilamentAssignment targets={targets} onClose={onClose} />
+      {volume === undefined && targets.length === 1 && <>
       {/* MenuFactory::append_menu_item_delete (GUI_Factories.cpp:584-595). */}
       <button type="button" role="menuitem" title="Delete the selected object" aria-keyshortcuts="Delete Backspace"
         disabled={slicing || object < 0}
@@ -105,6 +113,7 @@ export function ObjectMenu({ objectId, instance, position, onClose, onCopies }: 
         }}>
         Scale to build volume
       </button>
+      </>}
     </div>
   );
 }

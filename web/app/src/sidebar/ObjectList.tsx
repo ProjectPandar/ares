@@ -5,7 +5,8 @@ import { CubeSmallIcon, OrcaIcon } from "../shell/icons";
 import { CopiesDialog } from "./CopiesDialog";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { PlateMenu } from "./PlateMenu";
-import { selectInstance, selectObject } from "../state/actions";
+import { chooseFilamentTarget, sameTarget } from "../state/filamentAssignment";
+import { FilamentBadge } from "./FilamentAssignment";
 import { arrange } from "../state/arrange";
 import { changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
@@ -22,9 +23,11 @@ const VOLUME_ICON: Record<VolumeType, string> = {
 /** ObjectDataViewModel object node; volumes become child nodes once there is more than one. */
 function ObjectNode({ object, name, selected, nested = false }: { object: SceneObject; name: string; selected: boolean; nested?: boolean }) {
   const [expanded, setExpanded] = useState(false);
-  const [menu, setMenu] = useState<{ at: [number, number]; instance?: number } | null>(null);
+  const [menu, setMenu] = useState<{ at: [number, number]; instance?: number; volume?: number } | null>(null);
   const [copies, setCopies] = useState(false);
-  const selectedInstance = useApp((state) => (selected ? state.selectedInstance : null));
+  const selection = useApp((state) => state.filamentSelection);
+  const selectedRow = (target: { volume?: number; instance?: number } = {}) => selection.some((item) => sameTarget(item, { object: object.id, ...target }));
+  const objectSelected = selectedRow() || (selection.length === 0 && selected);
   const index = useApp((state) => state.scene?.objects.findIndex(({ id }) => id === object.id) ?? -1);
   const parts = object.volumes.length > 1 ? object.volumes : [];
   const printable = object.instances.some((instance) => instance.printable);
@@ -32,13 +35,13 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
   const instances = object.instances.length > 1 ? object.instances : [];
   return (
     <>
-      <div role="treeitem" aria-selected={selected} aria-expanded={parts.length || instances.length ? expanded : undefined}
-        className={`object-row${nested ? " object-nested" : ""}${selected ? " selected" : ""}${printable ? "" : " unprintable"}`}
-        onClick={() => selectObject(selected ? null : object.id)}
+      <div role="treeitem" aria-selected={objectSelected} aria-expanded={parts.length || instances.length ? expanded : undefined}
+        className={`object-row${nested ? " object-nested" : ""}${objectSelected ? " selected" : ""}${printable ? "" : " unprintable"}`}
+        onClick={(event) => chooseFilamentTarget({ object: object.id }, cmdDown(event) || objectSelected ? "toggle" : "select")}
         onContextMenu={(event) => {
           // ObjectList's right click selects the item, then shows its menu.
           event.preventDefault();
-          selectObject(object.id);
+          chooseFilamentTarget({ object: object.id }, "context");
           setMenu({ at: [event.clientX, event.clientY] });
         }}>
         <button className={`object-expander${parts.length || instances.length ? "" : " hidden"}`} aria-label="Toggle parts" tabIndex={-1}
@@ -48,15 +51,24 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
           }} />
         <CubeSmallIcon />
         <span className="object-name">{name}</span>
+        <FilamentBadge slot={object.filament ?? 1} />
         {object.instances.length > 1 && <span className="object-count" title="Instances">×{object.instances.length}</span>}
       </div>
-      {menu && <ObjectMenu objectId={object.id} instance={menu.instance} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
+      {menu && <ObjectMenu objectId={object.id} instance={menu.instance} volume={menu.volume} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
       {copies && index >= 0 && <CopiesDialog object={index} count={object.instances.length} onClose={() => setCopies(false)} />}
       {expanded && parts.map((volume) => (
-        <div key={volume.id} role="treeitem" className="object-row object-part" title={volume.type}
-          onClick={() => selectObject(object.id)}>
+        <div key={volume.id} role="treeitem" aria-selected={selectedRow({ volume: volume.id })}
+          className={`object-row object-part${selectedRow({ volume: volume.id }) ? " selected" : ""}`} title={volume.type}
+          onClick={(event) => chooseFilamentTarget({ object: object.id, volume: volume.id }, cmdDown(event) ? "toggle" : "select")}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            chooseFilamentTarget({ object: object.id, volume: volume.id }, "context");
+            setMenu({ at: [event.clientX, event.clientY], volume: volume.id });
+          }}>
           <OrcaIcon name={VOLUME_ICON[volume.type]} />
           <span className="object-name">{volume.name || `Part ${volume.id}`}</span>
+          {volume.type === "ModelPart" && <FilamentBadge slot={volume.effectiveFilament} />}
+          {volume.type === "ParameterModifier" && <FilamentBadge slot={volume.filament ?? 0} />}
         </div>
       ))}
       {expanded && instances.length > 0 && (
@@ -65,12 +77,12 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
         </div>
       )}
       {expanded && instances.map((_, instance) => (
-        <div key={instance} role="treeitem" aria-selected={selectedInstance === instance}
-          className={`object-row object-part${selectedInstance === instance ? " selected" : ""}`}
-          onClick={() => selectInstance(object.id, instance)}
+        <div key={instance} role="treeitem" aria-selected={selectedRow({ instance })}
+          className={`object-row object-part${selectedRow({ instance }) ? " selected" : ""}`}
+          onClick={(event) => chooseFilamentTarget({ object: object.id, instance }, cmdDown(event) ? "toggle" : "select")}
           onContextMenu={(event) => {
             event.preventDefault();
-            selectInstance(object.id, instance);
+            chooseFilamentTarget({ object: object.id, instance }, "context");
             setMenu({ at: [event.clientX, event.clientY], instance });
           }}>
           <span className="object-name">{`Instance ${instance + 1}`}</span>

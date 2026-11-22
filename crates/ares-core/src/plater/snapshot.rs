@@ -11,6 +11,7 @@ use crate::project::ModelSnapshot;
 
 pub struct PlaterSnapshot {
     model: ModelSnapshot,
+    filament: super::FilamentEdits,
     plates: PlateList,
     arrange_orders: BTreeMap<(u32, u32), i32>,
     wipe_tower: Option<TowerPositions>,
@@ -21,6 +22,7 @@ impl PlaterSession {
     pub fn snapshot(&self) -> PlaterSnapshot {
         PlaterSnapshot {
             model: self.project.model_snapshot(),
+            filament: self.filament_edits.clone(),
             plates: self.plates.clone(),
             arrange_orders: self.arrange_orders.clone(),
             wipe_tower: self.wipe_tower.clone(),
@@ -30,6 +32,7 @@ impl PlaterSession {
 
     pub fn load_snapshot(&mut self, snapshot: &PlaterSnapshot) {
         self.project.load_model_snapshot(&snapshot.model);
+        self.filament_edits.clone_from(&snapshot.filament);
         self.plates.clone_from(&snapshot.plates);
         self.arrange_orders.clone_from(&snapshot.arrange_orders);
         self.wipe_tower.clone_from(&snapshot.wipe_tower);

@@ -31,7 +31,10 @@ export function applyLayout(layout: PlaterLayout, currentPlate: number, objects:
   useApp.setState(({ scene, slice }) => ({
     scene: {
       ...scene!,
-      objects: layout.objects.map(({ id, instances }) => ({ ...objects.find((object) => object.id === id)!, instances })),
+      objects: layout.objects.map(({ id, instances, filament, volumes }) => {
+        const object = objects.find((candidate) => candidate.id === id)!;
+        return { ...object, instances, filament, volumes: object.volumes.map((volume, index) => ({ ...volume, ...volumes[index] })) };
+      }),
       plates: layout.plates,
       wipeTower: layout.wipeTower,
     },
@@ -112,7 +115,7 @@ export async function deleteInstance(object: number, instance: number) {
   const { plater, currentPlate } = useApp.getState();
   takeSnapshot();
   const layout = await plater!.deleteInstance(object, instance);
-  useApp.setState({ selectedObject: null, selectedInstance: null });
+  useApp.setState({ selectedObject: null, selectedInstance: null, filamentSelection: [] });
   applyLayout(layout, currentPlate);
 }
 
@@ -132,7 +135,7 @@ export async function deletePlateObjects(index: number) {
   const { plater, currentPlate } = useApp.getState();
   takeSnapshot();
   const layout = await plater!.deletePlateObjects();
-  useApp.setState({ selectedObject: null, selectedInstance: null });
+  useApp.setState({ selectedObject: null, selectedInstance: null, filamentSelection: [] });
   applyLayout(layout, currentPlate);
 }
 

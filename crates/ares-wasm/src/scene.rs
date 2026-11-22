@@ -20,6 +20,7 @@ struct SceneMetadata<'a> {
 struct SceneObject<'a> {
     id: u32,
     name: &'a str,
+    filament: Option<i32>,
     volumes: Vec<SceneVolume<'a>>,
     instances: Vec<SceneInstance>,
 }
@@ -31,11 +32,30 @@ struct SceneVolume<'a> {
     name: &'a str,
     #[serde(rename = "type")]
     volume_type: &'static str,
+    #[serde(flatten)]
+    filaments: SceneVolumeFilaments,
     matrix: [f64; 16],
     vertex_offset: usize,
     vertex_count: usize,
     index_offset: usize,
     index_count: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SceneVolumeFilaments {
+    pub(crate) filament: Option<i32>,
+    pub(crate) effective_filament: i32,
+}
+
+pub(crate) fn volume_filaments(
+    object: &ProjectObject,
+    volume: &ares_core::ProjectVolume,
+) -> SceneVolumeFilaments {
+    SceneVolumeFilaments {
+        filament: volume.filament(),
+        effective_filament: volume.effective_filament(object),
+    }
 }
 
 #[derive(Serialize)]
@@ -151,6 +171,7 @@ pub(crate) fn project_scene_with_plates(project: &Project, plates: Vec<ScenePlat
                             id: volume.id(),
                             name: volume.name(),
                             volume_type: volume_type_name(volume.volume_type()),
+                            filaments: volume_filaments(object, volume),
                             matrix: column_major(volume.transform()),
                             vertex_offset,
                             vertex_count: mesh.vertices().len(),
@@ -163,6 +184,7 @@ pub(crate) fn project_scene_with_plates(project: &Project, plates: Vec<ScenePlat
                 id: object.id(),
                 name: object.name(),
                 volumes,
+                filament: object.filament(),
                 instances: scene_instances(object),
             }
         })
@@ -222,10 +244,15 @@ fn model_scene(model: &Model) -> SceneData {
         objects: vec![SceneObject {
             id: 1,
             name: "model",
+            filament: None,
             volumes: vec![SceneVolume {
                 id: 0,
                 name: "model",
                 volume_type: volume_type_name(ProjectVolumeType::ModelPart),
+                filaments: SceneVolumeFilaments {
+                    filament: None,
+                    effective_filament: 1,
+                },
                 matrix: identity,
                 vertex_offset: 0,
                 vertex_count,
