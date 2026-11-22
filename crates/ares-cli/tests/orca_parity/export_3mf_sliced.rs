@@ -108,6 +108,24 @@ fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
         ares_cwd.display()
     );
     let actual = read_members(&ares_cwd.join("export.3mf"));
+    let gcode_members = actual
+        .iter()
+        .map(|entry| entry.name.as_str())
+        .filter(|name| {
+            name.starts_with("Metadata/plate_")
+                && (name.ends_with(".gcode.md5") || name.ends_with(".gcode"))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        gcode_members,
+        [
+            "Metadata/plate_1.gcode.md5",
+            "Metadata/plate_2.gcode.md5",
+            "Metadata/plate_1.gcode",
+            "Metadata/plate_2.gcode",
+        ],
+        "arranged STL export must write all checksums before G-code"
+    );
     compare_members(native, actual);
 }
 
