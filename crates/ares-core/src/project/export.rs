@@ -6,6 +6,7 @@ mod xml;
 mod zip_records;
 
 pub use scene::export_project_3mf;
+pub(crate) use scene::write as write_plater_project;
 
 use std::io::{Cursor, Seek, Write};
 

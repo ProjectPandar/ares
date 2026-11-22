@@ -105,6 +105,7 @@ pub(crate) struct PartSettings {
     pub retained_metadata: Vec<Metadata>,
     pub options: Vec<Metadata>,
     pub mesh_stat: Option<MeshStatistics>,
+    pub has_parametric_shape: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
