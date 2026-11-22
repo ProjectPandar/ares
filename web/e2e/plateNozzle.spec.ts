@@ -94,7 +94,7 @@ function orcaGcode(project: string) {
 }
 
 async function sliceAndExport(page: Page, name: string) {
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
   await download.saveAs(`${artifacts}${name}`);
