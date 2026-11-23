@@ -7,7 +7,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { withoutCliGroups } from "./platerExport";
-import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -112,7 +112,7 @@ const oracleGcode = (project: string, plate: number, leg: "official" | "seeded")
 
 /**
  * Orca slicing plate `plate` of `project`: official, or the seeded replay with seed 0 as the browser slices. With
- * `opened`, the 3MF the app opened, the lines its preset selection decides are the probe's (selectedPresetLines.ts):
+ * `opened`, the 3MF the app opened, slice with its GUI project options and project the selected preset lines:
  * the plater's export of these first-run projects names project-local presets, which the Native CLI rejects with
  * -17 (OrcaSlicer.cpp:2575-2620).
  */
@@ -123,10 +123,11 @@ export function orcaPlate(project: string, plate: number, leg: "official" | "see
   const selection = opened === undefined ? undefined : openedSelection(opened, `${project.replace(/\.3mf$/, "")}-plate_${plate}-${leg}-selection/`);
   if (selection === null) throw new Error(`ARES_ORCA_PRESET_SELECT_BIN is unset while the ${leg} plater oracle is set: the comparison needs the plater's selected presets`);
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-plater-${leg}-`)}/`;
+  const input = selection ? withGuiProjectOptions(project, selection, work) : project;
   // The replay stays on this run's first allowed CPU.
   const cpu = /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync("/proc/self/status", "utf8"))![1];
   const script = leg === "official" ? "orca-parity.sh" : "orca-seeded-parity.sh";
-  execFileSync(`${repositoryRoot}scripts/${script}`, ["--slice", String(plate), "--outputdir", work, project], {
+  execFileSync(`${repositoryRoot}scripts/${script}`, ["--slice", String(plate), "--outputdir", work, input], {
     cwd: work,
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, ORCA_REPLAY_SEED: "0", ORCA_REPLAY_CPU: cpu },

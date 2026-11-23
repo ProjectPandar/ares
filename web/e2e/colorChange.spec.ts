@@ -8,7 +8,7 @@ import { aresGeneratorLine, normalize } from "./orcaGcode";
 import { oraclePath } from "./oracleEnv";
 import { presetSelectProbe } from "./presetSelectOracle";
 import { withoutCliGroups } from "./platerExport";
-import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
 import { canvasDigest } from "./toolpathPreview";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
@@ -42,7 +42,12 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   for (const name of ["normal", "stop-times", "zero-before"]) {
     const directory = `${artifacts}/${name}`;
-    await slice(page, `${directory}/project.3mf`);
+    const project = `${directory}/project.3mf`;
+    const selection = openedSelection(project, `${directory}/selection/`)!;
+    const comparison = withGuiProjectOptions(project, selection, `${directory}/reference/`);
+    const stdout = execFileSync(`${root}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", directory, comparison], { cwd: root, encoding: "utf8" });
+    writeFileSync(`${directory}/official-slice.log`, stdout);
+    await slice(page, project);
     const changes = page.getByTestId("color-print-details");
     await expect(changes).toBeVisible();
     const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
@@ -50,7 +55,6 @@ test("ColorChange shows source records, unavailable usage, view restoration and 
     await download.saveAs(path);
     const gcode = readFileSync(path, "utf8");
     const nativeGcode = readFileSync(`${directory}/plate_1.gcode`, "utf8");
-    const selection = openedSelection(`${directory}/project.3mf`, `${directory}/selection/`)!;
     expect(normalize(gcode, "Ares")).toBe(withoutCliGroups(withSelectedPresets(normalize(nativeGcode, "OrcaSlicer"), selection), selection));
     const m73 = (text: string) => text.split("\n").filter((line) => line.startsWith("M73 ")).join("\n");
     expect(m73(gcode).length).toBeGreaterThan(0);
