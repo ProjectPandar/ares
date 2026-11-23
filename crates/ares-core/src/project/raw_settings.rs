@@ -217,7 +217,11 @@ impl ProjectSettingsRaw {
     /// Consumes the raw view into its typed tree (`RawConfigValue::Object`),
     /// a serde `Deserializer` for the typed builders.
     pub(crate) fn into_object(self) -> RawConfigValue {
-        RawConfigValue::Object(self.0)
+        RawConfigValue::Object(self.into_entries())
+    }
+
+    pub(crate) fn into_entries(self) -> BTreeMap<String, RawConfigValue> {
+        self.0
     }
 
     /// Extends with another raw view; later keys win (`extend` semantics).

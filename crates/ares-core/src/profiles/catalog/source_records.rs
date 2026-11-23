@@ -1,7 +1,7 @@
 mod user;
 
 use super::{Catalog, ProfileDocument, Record, Scope, VendorInput, invalid};
-use crate::{ProfileKind, SliceError, SourceIdentity};
+use crate::{ProfileKind, SliceError, SourceIdentity, project::raw_settings::ProjectSettingsRaw};
 
 /// Loaded collection configs and host identities, separate from external file inputs.
 /// Identities are never part of the vendor JSON transport.
@@ -155,8 +155,20 @@ impl LoadedPresetSources {
             let record = &self.catalog.records[*position];
             let mut document = record.document.clone();
             let mut fields = super::super::project_refresh::default_preset_fields(record.kind)?;
-            for layer in self.catalog.resolved_layers(*position)? {
+            let layers = self.catalog.resolved_layers(*position)?;
+            document.preserve_default_thumbnails = record.kind == ProfileKind::Machine
+                && !layers
+                    .iter()
+                    .any(|layer| layer.fields.contains_key("thumbnails"));
+            for layer in layers {
                 fields.extend(layer.fields.clone());
+            }
+            if record.kind == ProfileKind::Machine {
+                // PresetBundle.cpp:7839–7849 completes machine vectors after all overlays.
+                let mut raw = ProjectSettingsRaw::default();
+                raw.extend(fields);
+                super::super::preset_normalization::extend_default_config_length(&mut raw)?;
+                fields = raw.into_entries();
             }
             document.fields = fields;
             target.source_records.push(Record {
