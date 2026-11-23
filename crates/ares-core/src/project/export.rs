@@ -1,5 +1,6 @@
 //! Headless branch of `bbs_3mf.cpp:6418`, `_save_model_to_file`.
 mod geometry;
+mod json_float;
 mod project_settings;
 mod saved_presets;
 mod scene;

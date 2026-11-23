@@ -13,7 +13,7 @@ that object. nlohmann's default `number_float_t` is `double`
 The archive must contain the spelling selected by Orca.
 
 The destination is `crates/ares-core/src/project/export`: a private number
-formatter used by `xml.rs::plate_json` for both single and arranged sliced
+formatter used by `xml/plate.rs::plate_json` for both single and arranged sliced
 exports. The default float spelling in `serde_json::to_vec` is the temporary
 substitute being replaced. Keep the typed `Serialize` structs, field order,
 string escaping, and compact layout. Serialize directly using
@@ -27,7 +27,7 @@ structure, or export a general-purpose serializer. The pinned `serde_json`
 
 | Upstream output and source | Rust counterpart and scope |
 | --- | --- |
-| Sliced plate JSON, `Format/bbs_3mf.cpp:7048–7053`; fields in `GCode/ThumbnailData.cpp:8–43` | `project/export/xml.rs::plate_json`; use the formatter for bounds, area, layer height, first-layer time and nozzle diameter. |
+| Sliced plate JSON, `Format/bbs_3mf.cpp:7048–7053`; fields in `GCode/ThumbnailData.cpp:8–43` | `project/export/xml/plate.rs::plate_json`; use the formatter for bounds, area, layer height, first-layer time and nozzle diameter. |
 | `Metadata/filament_sequence.json`, `Format/bbs_3mf.cpp:8664–8690` | `project/export/xml.rs::filament_sequence`; its sequences and assignments contain integers, so no float hook or output change is needed. |
 | Preset/settings JSON, `Config.cpp:1564–1604`, used by the archive writer at `Format/bbs_3mf.cpp:8203,8224` | `project/settings_export.rs`; config scalars are serialized strings and vectors contain serialized elements. Keep this representation unchanged. |
 | Statistics JSON, `GCode/GCodeStatistics.cpp:182–194`; CLI `result.json`, `src/OrcaSlicer.cpp:527–579` | `gcode_processor/statistics.rs::GCodeStatistics::to_json_bytes` and `ares-cli/src/result_json.rs`; separate CLI outputs, not 3MF members. Float spelling in those formats is deferred. |
