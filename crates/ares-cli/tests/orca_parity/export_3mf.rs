@@ -42,31 +42,41 @@ fn export_preserves_fractional_placement_of_a_rotated_mesh_like_native() {
 
 #[test]
 #[cfg(unix)]
-fn export_rejects_slicing_and_does_not_create_an_archive() {
-    let work = tempfile::tempdir().unwrap();
-    let output = Command::new(env!("CARGO_BIN_EXE_ares"))
-        .current_dir(work.path())
-        .args([
-            "slice",
-            "--export-3mf",
-            "sliced.3mf",
-            "--slice",
-            "0",
-            "input.stl",
-        ])
-        .output()
-        .unwrap();
-    assert_eq!(output.status.code(), Some(254));
-    let error = String::from_utf8_lossy(&output.stderr);
-    assert!(
-        error.contains("Invalid parameters to the slicer."),
-        "{error}"
+fn export_with_missing_stl_fails_like_native_without_an_archive() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let dir = runner.work_dir();
+    let missing = dir.join("missing.stl");
+    let argv = [
+        "--slice",
+        "0",
+        "--export-3mf",
+        "sliced.3mf",
+        missing.to_str().unwrap(),
+    ];
+    let invoke = |bin: &Path| {
+        let output = Command::new(bin)
+            .current_dir(dir)
+            .env_remove("DISPLAY")
+            .env_remove("WAYLAND_DISPLAY")
+            .args(argv)
+            .output()
+            .unwrap();
+        assert!(!dir.join("sliced.3mf").exists());
+        assert!(!dir.join("plate_1.gcode").exists());
+        output
+    };
+    let expected = invoke(runner.bin());
+    assert_eq!(expected.status.code(), Some(253));
+    let actual = invoke(Path::new(env!("CARGO_BIN_EXE_ares")));
+    assert_eq!(
+        actual.status.code(),
+        expected.status.code(),
+        "{}",
+        String::from_utf8_lossy(&actual.stderr),
     );
-    assert!(
-        error.contains("unsupported 3MF export option --slice"),
-        "{error}"
-    );
-    assert!(!work.path().join("sliced.3mf").exists());
+    assert_eq!(actual.stderr, expected.stderr, "stderr bytes differ");
 }
 
 fn export_matches_native(
@@ -105,50 +115,46 @@ fn export_matches_native(
         "--load-filaments",
         "filament.json",
     ];
-    let native = Command::new(runner.bin())
-        .current_dir(runner.work_dir())
-        .env_remove("DISPLAY")
-        .env_remove("WAYLAND_DISPLAY")
-        .args(settings)
-        .args([
-            "--arrange",
-            "0",
-            "--orient",
-            "0",
-            "--export-3mf",
-            "native.3mf",
-        ])
-        .arg(filename)
-        .output()
-        .unwrap();
+    let path = runner.work_dir().join("export.3mf");
+    let invoke = |bin: &Path| {
+        Command::new(bin)
+            .current_dir(runner.work_dir())
+            .env_remove("DISPLAY")
+            .env_remove("WAYLAND_DISPLAY")
+            .args(settings)
+            .args([
+                "--arrange",
+                "0",
+                "--orient",
+                "0",
+                "--export-3mf",
+                "export.3mf",
+            ])
+            .arg(filename)
+            .output()
+            .unwrap()
+    };
+    let native = invoke(runner.bin());
     assert!(
         native.status.success(),
         "Native export failed in {}: {}",
         runner.work_dir().display(),
         String::from_utf8_lossy(&native.stderr)
     );
-    let expected = archive_members(&runner.work_dir().join("native.3mf"));
+    let expected = archive_members(&path);
 
     let mut first = None;
-    for output in ["first.3mf", "second.3mf"] {
-        let ares = Command::new(env!("CARGO_BIN_EXE_ares"))
-            .current_dir(runner.work_dir())
-            .arg("slice")
-            .args(settings)
-            .arg("--export-3mf")
-            .arg(output)
-            .arg(filename)
-            .output()
-            .unwrap();
+    for _ in 0..2 {
+        fs::remove_file(&path).unwrap();
+        let ares = invoke(Path::new(env!("CARGO_BIN_EXE_ares")));
         assert!(
             ares.status.success(),
             "export failed in {}: {}",
             runner.work_dir().display(),
             String::from_utf8_lossy(&ares.stderr)
         );
-        let path = runner.work_dir().join(output);
         compare_archive_members(&expected, &archive_members(&path), &path);
-        let bytes = fs::read(path).unwrap();
+        let bytes = fs::read(&path).unwrap();
         if let Some(first) = first {
             assert!(first == bytes, "repeat export changed ZIP bytes");
         }

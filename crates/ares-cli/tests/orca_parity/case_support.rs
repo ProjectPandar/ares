@@ -39,6 +39,8 @@ mod export_3mf_model_settings;
 mod export_3mf_saved_presets;
 #[path = "export_3mf_sliced.rs"]
 mod export_3mf_sliced;
+#[path = "export_3mf_stl.rs"]
+mod export_3mf_stl;
 #[path = "export_stl.rs"]
 mod export_stl;
 #[path = "export_stls_multi_input.rs"]

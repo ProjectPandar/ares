@@ -49,7 +49,7 @@ fn cli_sliced_3mf_rejects_multiple_instances_of_one_object() {
 
     let argv = ["--slice", "1", "--export-3mf", "export.3mf", "saved.3mf"];
     assert_eq!(
-        invoke(Path::new(env!("CARGO_BIN_EXE_ares")), &cwd, &argv, false),
+        invoke(Path::new(env!("CARGO_BIN_EXE_ares")), &cwd, &argv),
         Some(243)
     );
     let stderr = fs::read_to_string(cwd.parent().unwrap().join("stderr.log")).unwrap();

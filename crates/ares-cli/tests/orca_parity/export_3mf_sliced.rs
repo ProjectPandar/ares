@@ -23,6 +23,10 @@ mod comparison_tests;
 
 use comparator::{compare_members, read_members};
 
+pub(super) fn compare_sliced_archives(native: &Path, ares: &Path) {
+    compare_members(read_members(native), read_members(ares));
+}
+
 #[test]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
     sliced_archive_matches_native(None);
@@ -76,7 +80,7 @@ fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
         ],
     ]
     .concat();
-    assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
+    assert_eq!(invoke(runner.bin(), &native_cwd, &argv), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
     assert_eq!(native.len(), 17);
     for plate in [1, 2] {
@@ -102,7 +106,7 @@ fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
     }
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(
-        invoke(ares, &ares_cwd, &argv, false),
+        invoke(ares, &ares_cwd, &argv),
         Some(0),
         "arranged STL export failed in {}",
         ares_cwd.display()
@@ -183,13 +187,13 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
         "export.3mf",
         if saved { "saved.3mf" } else { STL },
     ]);
-    assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
+    assert_eq!(invoke(runner.bin(), &native_cwd, &argv), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
     let split_files = 1 + usize::from(saved && !matches!(shape, Some(SavedShape::Single)));
     assert_eq!(native.len(), 12 + split_files);
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(
-        invoke(ares, &ares_cwd, &argv, false),
+        invoke(ares, &ares_cwd, &argv),
         Some(0),
         "slice and export failed in {}",
         ares_cwd.display()
@@ -222,7 +226,7 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
 pub(super) fn write_saved_input(runner: &OrcaRunner, dir: &Path) {
     write_inputs(dir);
     let argv = [SETTINGS.as_slice(), &["--export-3mf", "saved.3mf", STL]].concat();
-    assert_eq!(invoke(runner.bin(), dir, &argv, true), Some(0));
+    assert_eq!(invoke(runner.bin(), dir, &argv), Some(0));
 }
 
 fn write_inputs(dir: &Path) {
@@ -250,18 +254,14 @@ fn write_inputs(dir: &Path) {
     fs::copy(repo_root().join("tests/parity/cube10.stl"), dir.join(STL)).unwrap();
 }
 
-pub(super) fn invoke(bin: &Path, cwd: &Path, argv: &[&str], native: bool) -> Option<i32> {
+pub(super) fn invoke(bin: &Path, cwd: &Path, argv: &[&str]) -> Option<i32> {
     let artifacts = cwd.parent().unwrap();
     let tmp = artifacts.join("tmp");
     fs::create_dir(&tmp).unwrap();
     fs::write(artifacts.join("argv.nul"), argv.join("\0") + "\0").unwrap();
     fs::write(artifacts.join("cwd.txt"), cwd.display().to_string()).unwrap();
     fs::write(artifacts.join("tmpdir.txt"), tmp.display().to_string()).unwrap();
-    let mut command = Command::new(bin);
-    if !native {
-        command.arg("slice");
-    }
-    let output = command
+    let output = Command::new(bin)
         .current_dir(cwd)
         .env("TMPDIR", &tmp)
         .env_remove("DISPLAY")

@@ -77,9 +77,9 @@ fn cli_stl_export_rejects_deferred_actions_geometry_and_write_errors() {
             "--slice",
         ),
         (
-            &["--export-stl", "--export-3mf", "out.3mf", "Valid.stl"][..],
-            254,
-            "--export-3mf",
+            &["--export-3mf", "out.3mf", "Valid.stl"][..],
+            2,
+            "unexpected argument '--export-3mf'",
         ),
         (
             &["--export-stl", "--arrange", "1", "Valid.stl"][..],
