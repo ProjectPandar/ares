@@ -115,15 +115,53 @@ Change, in `web/app/src/viewport/`:
    `ViewerImpl` keeps its program ids. A result replaces only their textures, geometry and
    uniforms. The first Preview `Viewport` issues their compile and link with
    `renderer.compile` when it mounts, as `GCodeViewer::init` runs on the Preview canvas's
-   first render. Chrome queues the compile in the GPU process and three.js checks a program's
-   status on first use, so the mount does not wait for it. Every later result and every later
-   Preview mount uses the linked programs.
+   first render; three.js checks a program's status on first use, so the mount does not wait.
+   A browser with `KHR_parallel_shader_compile` links while the slice runs. Without it (the
+   e2e Chromium) ANGLE links on first use, so the first result frame of the application still
+   waits for the link, about 15 s under SwiftShader; every later result and Preview mount uses
+   the linked programs.
 4. Theme colours keep updating the shared materials (`setColors`). Only one `Viewport` exists at
    a time, because a route switch unmounts the other tab.
 
 Spreading the work across frames does not apply: the blocking calls are one context creation
 and one wait for a program, neither of which can be split. Moving rendering to a worker
 (`OffscreenCanvas`) has no upstream counterpart and is deferred.
+
+### One frame for a result
+
+The web draws a new result before its moves view exists. `setToolpaths` adds the mesh with
+every segment instanced (`toolpathMesh.ts`), and the enabled segments and view colours arrive
+later from the engine (`MovesSlider` `onMoves`, then `setEnabled` / `setToolpathColors`). The
+Legend and the sliders that appear with the result change the layout, and `#fitCanvas` calls
+`setSize` and draws on every `ResizeObserver` callback, even when the size has not changed.
+Under the e2e Chromium a full frame of the large `worker.mobile` result (562032 segments)
+takes about 15 s of GPU work, and one result draws three: two of all segments (the resize and
+the queued render) and one of the enabled segments. On WebKit each full frame blocks the main
+thread for 2-3 s.
+
+Upstream draws a loaded result once with its view applied:
+
+- `ViewerImpl::load` (`src/libvgcode/src/ViewerImpl.cpp:1121-1298`) ends with
+  `update_colors()` and `update_enabled_entities()` (`:1296-1297`), and `ViewerImpl::render`
+  applies pending updates before `render_segments` (`apply_pending_updates`, `:1496-1515`),
+  so the first frame of a result draws its enabled segments in its colours.
+  `GCodeViewer::load_as_gcode` sends the data with `m_viewer.load` (`GCodeViewer.cpp:1625`).
+- `GLCanvas3D::on_size` only marks the canvas dirty (`src/slic3r/GUI/GLCanvas3D.hpp:1278`),
+  and `GLCanvas3D::_resize` returns when the size is unchanged (`GLCanvas3D.cpp:7895-7902`).
+  The dirty canvas draws once on idle (`GLCanvas3D::on_idle`, `GLCanvas3D.cpp:4027-4056`).
+
+Change, in `web/app/src/viewport/`:
+
+1. A result's toolpath mesh is hidden until its first enabled view reaches the viewport
+   (`setEnabled`); that view and its colours arrive in one commit and draw in one frame. The
+   viewport sets a new result's toolpaths in the same commit, before that view, as a layout
+   effect.
+2. `#fitCanvas` with an unchanged drawing-buffer size neither calls `setSize` nor draws; a
+   changed aspect only updates the camera and queues a render.
+
+`web/e2e/worker.mobile.spec.ts` and its 30 s screenshot timeout stay. Under the e2e Chromium
+the first result frame of the application still waits for the segment program's link
+(above), so its screenshot follows one link and one full frame instead of a link and three.
 
 ## Verification
 
@@ -157,12 +195,16 @@ must pass on iphone, pixel and ipad: its 200 ms heartbeat now covers the Preview
 screenshot comes after the first frame of the result. `web/e2e/previewResultResponsive.spec.ts`
 keeps passing. The whole web suite is paired before and after the change.
 
+`presetSwitchSlice.spec.ts` ("a slice started while a preset switch opens the STL session")
+waited for the Preview canvas as a canvas the Prepare tab did not have. Both tabs now show the
+one canvas; the test waits for the canvas of the Preview viewport that holds the "Slice result"
+card. The canvas attaches after that viewport's mount effects, which request its session.
+
 ## Deferred
 
 - Rendering in a worker through `OffscreenCanvas`.
-- The cost of the segment program itself under SwiftShader (about 12 s, now once per
-  application). A result that arrives before that compile ends still waits for the rest on its
-  first frame.
+- The link of the segment program under SwiftShader without `KHR_parallel_shader_compile`
+  (about 15 s, once per application, on the first result frame).
 
 - The pre-slice filament-map dialog of BBL two-nozzle printers and its cancel path; the web
   has no such dialog yet.
