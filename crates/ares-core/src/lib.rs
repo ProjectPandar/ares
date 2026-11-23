@@ -34,6 +34,7 @@ mod print_apply;
 mod profiles;
 mod project;
 pub(crate) mod project_slice;
+mod scalar_math;
 mod segments;
 mod skirts;
 mod slice_error;
