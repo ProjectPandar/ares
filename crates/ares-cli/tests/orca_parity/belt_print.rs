@@ -23,6 +23,54 @@ fn preserves_belt_placement_after_translating_the_instance() {
     compare("translated", true, true);
 }
 
+#[cfg(target_os = "linux")]
+#[test]
+fn rejects_a_gap_between_belt_extrusions_without_flagging_the_lead_in() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        crate::native_environment::skipped("belt empty-layer warnings require Native OrcaSlicer");
+        return;
+    };
+    let work = runner.work_dir();
+    let out = work.join("out");
+    fs::create_dir(&out).unwrap();
+    fs::write(work.join("input.3mf"), project(true, false, &[], true)).unwrap();
+    let native = stages::run(
+        runner.bin(),
+        ARGS.map(str::to_owned),
+        stages::Stage::Slice,
+        work,
+    )
+    .unwrap_err();
+    assert_eq!(native.captured.unwrap().code, Some(156), "{work:?}");
+    fs::rename(&out, work.join("native")).unwrap();
+    fs::create_dir(&out).unwrap();
+    assert_eq!(run_ares(work).status.code(), Some(156), "{work:?}");
+
+    let report = |folder: &str| -> Value {
+        let folder = work.join(folder);
+        assert!(!folder.join("plate_1.gcode").exists(), "{folder:?}");
+        let result =
+            serde_json::from_slice::<Value>(&fs::read(folder.join("result.json")).unwrap())
+                .unwrap();
+        assert_eq!(result["return_code"], -100, "{folder:?}");
+        result
+    };
+    let native = report("native");
+    let ares = report("out");
+    let expected = &native["sliced_plates"][0]["warning_message"];
+    assert!(
+        expected
+            .as_str()
+            .unwrap()
+            .starts_with("The object has empty layers between 120 and 130.2 "),
+        "{work:?}: {expected}"
+    );
+    assert_eq!(
+        ares["sliced_plates"][0]["warning_message"], *expected,
+        "{work:?}"
+    );
+}
+
 #[test]
 fn disabling_belt_mode_preserves_cartesian_output() {
     compare("cartesian", false, false);
@@ -54,7 +102,7 @@ fn rejects_belt_purge_without_gcode() {
     rejects("belt_purge", &[("enable_belt_purge_tower", json!("1"))]);
 }
 
-fn project(belt: bool, shift: bool, edits: &[(&str, Value)]) -> Vec<u8> {
+fn project(belt: bool, shift: bool, edits: &[(&str, Value)], second_island: bool) -> Vec<u8> {
     let mut reader = ZipArchive::new(Cursor::new(CUBE)).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for i in 0..reader.len() {
@@ -91,6 +139,9 @@ fn project(belt: bool, shift: bool, edits: &[(&str, Value)]) -> Vec<u8> {
                     .replace("110 110 0\" printable", "110 130 0\" printable")
                     .into_bytes();
             }
+            "3D/Objects/cube10.stl_1.model" if second_island => {
+                bytes = duplicate_cube_along_belt(String::from_utf8(bytes).unwrap()).into_bytes();
+            }
             _ => {}
         }
         writer
@@ -99,6 +150,38 @@ fn project(belt: bool, shift: bool, edits: &[(&str, Value)]) -> Vec<u8> {
         writer.write_all(&bytes).unwrap();
     }
     writer.finish().unwrap().into_inner()
+}
+
+fn duplicate_cube_along_belt(model: String) -> String {
+    let section = |tag: &str| {
+        model
+            .split_once(&format!("<{tag}>"))
+            .unwrap()
+            .1
+            .split_once(&format!("</{tag}>"))
+            .unwrap()
+            .0
+    };
+    let vertices = section("vertices");
+    let triangles = section("triangles");
+    let count = vertices.matches("<vertex ").count();
+    let shifted = regex::Regex::new(r#"y="([0-9]+)""#)
+        .unwrap()
+        .replace_all(vertices, |cap: &regex::Captures<'_>| {
+            format!("y=\"{}\"", cap[1].parse::<u32>().unwrap() + 20)
+        });
+    let indexed = regex::Regex::new(r#"(v[123])="([0-9]+)""#)
+        .unwrap()
+        .replace_all(triangles, |cap: &regex::Captures<'_>| {
+            format!(
+                "{}=\"{}\"",
+                &cap[1],
+                cap[2].parse::<usize>().unwrap() + count
+            )
+        });
+    model
+        .replace(vertices, &format!("{vertices}{shifted}"))
+        .replace(triangles, &format!("{triangles}{indexed}"))
 }
 
 fn run_ares(work: &Path) -> Output {
@@ -120,7 +203,7 @@ fn compare(name: &str, belt: bool, shift: bool) {
     let work = runner.work_dir().join(name);
     let out = work.join("out");
     fs::create_dir_all(&out).unwrap();
-    fs::write(work.join("input.3mf"), project(belt, shift, &[])).unwrap();
+    fs::write(work.join("input.3mf"), project(belt, shift, &[], false)).unwrap();
     stages::run(
         runner.bin(),
         ARGS.map(str::to_owned),
@@ -150,7 +233,7 @@ fn rejects(reason: &str, edits: &[(&str, Value)]) {
         .keep();
     let out = work.join("out");
     fs::create_dir(&out).unwrap();
-    fs::write(work.join("input.3mf"), project(true, false, edits)).unwrap();
+    fs::write(work.join("input.3mf"), project(true, false, edits, false)).unwrap();
     let result = run_ares(&work);
     assert!(
         !result.status.success(),
