@@ -1,10 +1,12 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 
 const fixture = (path: string) => fileURLToPath(new URL(`../../tests/parity/${path}`, import.meta.url));
 
-async function openProject(page: Page, vendor: string, file: string) {
+async function openProject(page: Page, vendor: string, file: string | { name: string; mimeType: string; buffer: Buffer }) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
@@ -55,6 +57,37 @@ test("adding and merging physical filaments updates Prepare assignments and can 
   await page.getByRole("menuitem", { name: "Delete", exact: true }).click();
   await expect(page.getByTestId("filament-swatch-2")).toHaveCount(0);
   await expect(removeLast).toHaveCount(0);
+});
+
+test("the filament editor follows the surviving position even when both presets have the same name", async ({ page }) => {
+  const entries = unzipSync(readFileSync(fixture("modifier-feature-filament/control.3mf")));
+  const key = "Metadata/project_settings.config";
+  const settings = JSON.parse(strFromU8(entries[key]));
+  settings.filament_density = ["1.23", "1.45"];
+  entries[key] = strToU8(JSON.stringify(settings));
+  await openProject(page, "Bambu Lab", { name: "two-densities.3mf", mimeType: "application/octet-stream", buffer: Buffer.from(zipSync(entries)) });
+
+  const editor = page.getByRole("dialog", { name: "Filament settings", exact: true });
+  const density = editor.getByLabel("filament_density", { exact: true });
+  const actions = page.getByRole("button", { name: "Filament 1 actions", exact: true });
+  const editFirst = async () => {
+    await actions.click();
+    await page.getByRole("menuitem", { name: "Edit", exact: true }).click();
+    await editor.getByRole("slider", { name: "Settings mode" }).press("End");
+  };
+  await editFirst();
+  await expect(density).toHaveValue("1.23");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
+
+  await actions.click();
+  await page.getByRole("menuitem", { name: "Delete", exact: true }).click();
+  await page.getByRole("button", { name: "Edit filament 1 settings", exact: true }).click();
+  await expect(density).toHaveValue("1.45");
+  await editor.getByRole("button", { name: "Close", exact: true }).click();
+
+  await page.keyboard.press("Control+z");
+  await editFirst();
+  await expect(density).toHaveValue("1.23");
 });
 
 test("fixed-head slots can open the editor without showing count controls", async ({ page }) => {

@@ -166,6 +166,19 @@ fn merging_retargets_each_original_tool_change_without_moving_a_pause() {
 }
 
 #[test]
+fn merging_into_a_mix_that_uses_the_source_requires_confirmation() {
+    let mut session = PlaterSession::load(three_slots(true)).unwrap();
+    let before = session.filament_slots();
+    let result = session.edit_filament_slots(FilamentSlotEdit::Merge {
+        source: 1,
+        target: 3,
+    });
+    assert!(result.is_err());
+    assert_eq!(session.filament_slots(), before);
+    assert_eq!(session.project().objects()[0].filament(), Some(1));
+}
+
+#[test]
 fn fixed_heads_keep_their_slots_when_a_count_edit_is_requested() {
     let mut session = PlaterSession::load(TWO_TOOLS.to_vec()).unwrap();
     let before = session.filament_slots();
