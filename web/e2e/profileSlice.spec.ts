@@ -7,7 +7,7 @@ import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { withDifferences, withPlaterConfigLines } from "./platerExport";
+import { withDifferences, withPlaterConfigLines, withPlaterTower } from "./platerExport";
 import { lhModels, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
@@ -93,7 +93,7 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     }, null, 2)}\n`);
     expect(normalize(lh.gcode, "Ares") === native, "browser G-code equals native --load-settings G-code").toBe(true);
     expect(bbl.gcode).toBe(lh.gcode);
-    expect(normalize(edited.gcode, "Ares") === nativeOverride, "browser G-code with overrides equals native --load-settings G-code with the edit").toBe(true);
+    expect(normalize(edited.gcode, "Ares") === withPlaterTower(nativeOverride, normalize(edited.gcode, "Ares"), session), "browser G-code with overrides equals native --load-settings G-code with the edit").toBe(true);
   } finally {
     // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.
     await server.close();
