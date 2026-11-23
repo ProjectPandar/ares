@@ -23,6 +23,8 @@ mod cli_compatible_expression_group;
 mod cli_normative_check;
 #[path = "cli_project_plate_action_flags.rs"]
 mod cli_project_plate_action_flags;
+#[path = "cli_retained_preset_thumbnails.rs"]
+mod cli_retained_preset_thumbnails;
 #[path = "cli_skip_modified_gcodes.rs"]
 mod cli_skip_modified_gcodes;
 #[path = "cli_slice_plates.rs"]
