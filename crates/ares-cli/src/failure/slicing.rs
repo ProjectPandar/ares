@@ -10,14 +10,6 @@ fn is_empty_layer_warning(warning: &PrintWarning) -> bool {
         && warning.message_type == SlicingNotificationType::EmptyGcodeLayers
 }
 
-fn rejects_checked_slice(warning: &PrintWarning) -> bool {
-    warning.level == WarningLevel::Critical
-        && matches!(
-            warning.message_type,
-            SlicingNotificationType::EmptyGcodeLayers | SlicingNotificationType::GcodeOverlap
-        )
-}
-
 pub(crate) fn check(
     args: &crate::SliceArgs,
     plate: &ares_core::SlicedPlate,
@@ -62,23 +54,38 @@ pub(crate) fn critical_failure(
 }
 
 pub(crate) fn check_direct(
-    (diagnostics, no_check): (&mut crate::diagnostics::DiagnosticLog, bool),
+    (diagnostics, no_check, strict): (&mut crate::diagnostics::DiagnosticLog, bool, bool),
     #[cfg(target_os = "linux")] output: &Path,
     (plate_index, plate): (u32, &SlicedPlate),
     upward: &[String],
     project: Option<(&str, &[u8])>,
 ) -> Result<(), CliFailure> {
-    for warning in plate
-        .warnings
-        .iter()
-        .filter(|warning| warning.level == WarningLevel::Critical)
-    {
-        diagnostics.warning(format_args!(
-            "plate {plate_index}: found slicing warnings: {}, no_check={}",
-            warning.message,
-            u8::from(no_check),
-        ));
-        if no_check || !rejects_checked_slice(warning) {
+    let mut pending = plate.warnings.as_slice();
+    while let Some((warning, remaining)) = pending.split_first() {
+        pending = remaining;
+        let reject = match warning.level {
+            WarningLevel::NonCritical => {
+                diagnostics.warning(format_args!(
+                    "plate {plate_index}: found NON_CRITICAL slicing warnings: {}",
+                    warning.message,
+                ));
+                strict
+            }
+            WarningLevel::Critical => {
+                diagnostics.warning(format_args!(
+                    "plate {plate_index}: found slicing warnings: {}, no_check={}",
+                    warning.message,
+                    u8::from(no_check),
+                ));
+                !no_check
+                    && matches!(
+                        warning.message_type,
+                        SlicingNotificationType::EmptyGcodeLayers
+                            | SlicingNotificationType::GcodeOverlap
+                    )
+            }
+        };
+        if !reject {
             continue;
         }
         let mut failure = warning_failure(
@@ -96,12 +103,7 @@ pub(crate) fn check_direct(
         #[cfg(target_os = "linux")]
         let failure = failure.with_slicing_warnings(
             plate_index,
-            plate
-                .warnings
-                .iter()
-                .take_while(|warning| !rejects_checked_slice(warning))
-                .cloned()
-                .collect(),
+            plate.warnings[..plate.warnings.len() - pending.len()].to_vec(),
         );
         return Err(failure);
     }
@@ -149,37 +151,6 @@ pub(crate) fn path_conflict(
         #[cfg(target_os = "linux")]
         output: output.to_owned(),
     })))
-}
-
-pub(crate) fn check_strict(
-    #[cfg(target_os = "linux")] output: &std::path::Path,
-    plate_index: u32,
-    plate: &SlicedPlate,
-    upward: &[String],
-    project: Option<(&str, &[u8])>,
-) -> Result<(), CliFailure> {
-    let Some(warning) = plate
-        .warnings
-        .iter()
-        .find(|warning| warning.level == WarningLevel::NonCritical)
-    else {
-        return Ok(());
-    };
-    let mut failure = warning_failure(
-        #[cfg(target_os = "linux")]
-        output,
-        plate_index,
-        #[cfg(target_os = "linux")]
-        plate,
-        (warning, false),
-    )
-    .with_upward_report(upward.to_vec());
-    if let Some((file, bytes)) = project {
-        failure = failure.with_config_substitutions(file, crate::substitutions(bytes));
-    }
-    #[cfg(target_os = "linux")]
-    let failure = failure.with_slicing_warnings(plate_index, vec![warning.clone()]);
-    Err(failure)
 }
 
 fn warning_failure(
