@@ -98,15 +98,10 @@ pub(super) fn retained_printer_catalog(
     source: Option<&ares_core::UpwardMachineSource>,
     explicit: bool,
 ) -> Result<Option<ares_core::PresetCatalogHandle>, CliFailure> {
-    if explicit {
+    if explicit || (source.is_some() && resources.join("profiles").try_exists()?) {
         return load_resources_catalog(resources).map(Some);
     }
-    source
-        .filter(|source| source.refreshes_retained_printer())
-        .map(|_| {
-            load_resources_catalog(resources).map(|catalog| catalog.only_retained_thumbnails())
-        })
-        .transpose()
+    Ok(None)
 }
 
 pub(super) enum Entry<'a> {

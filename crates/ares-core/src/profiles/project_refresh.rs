@@ -133,29 +133,6 @@ pub(super) fn direct_refresh(
     preset::refresh(PresetLookup::Catalog(catalog), raw, false, None)
 }
 
-pub(super) fn retained_thumbnail_refresh(
-    catalog: &Catalog,
-    raw: &ProjectSettingsRaw,
-) -> Result<ProjectSettingsRaw, SliceError> {
-    let mut result = raw.clone();
-    let dirty = preset::strings(raw, "different_settings_to_system");
-    let slot = preset::strings(raw, "filament_settings_id").len() + 1;
-    if dirty.iter().all(String::is_empty)
-        || preset::dirty_keys(&dirty, slot)?.contains("thumbnails")
-    {
-        return Ok(result);
-    }
-    let printer = preset::strings(raw, "printer_settings_id");
-    let inherited = preset::strings(raw, "inherits_group");
-    let name = preset::system_name(printer.first().map_or("", String::as_str), &inherited, slot);
-    if let Some(system) = preset::system_config(catalog, super::ProfileKind::Machine, name)?
-        && let Some(thumbnails) = system.get("thumbnails")
-    {
-        result.insert("thumbnails".to_owned(), thumbnails.clone());
-    }
-    Ok(result)
-}
-
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
