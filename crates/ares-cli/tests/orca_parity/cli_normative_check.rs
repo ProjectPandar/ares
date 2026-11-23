@@ -7,7 +7,11 @@ use std::{
     process::Command,
 };
 
-use crate::{native_wall_clock::result_comparison_bytes, runner::OrcaRunner};
+use crate::{
+    golden::compare_ordered_bytes_generator_only,
+    native_wall_clock::result_comparison_bytes,
+    runner::{OrcaRunner, repo_root},
+};
 
 const INPUT: &str = "project.3mf";
 const GCODE: &str = "plate_1.gcode";
@@ -33,6 +37,73 @@ fn project_without_post_process_is_admitted_in_both_normative_modes() {
     compare(&[], [(None, 0), (Some("--normative-check=0"), 0)]);
 }
 
+#[test]
+fn installed_refresh_admits_post_process_from_retained_stock_process() {
+    compare_installed_refresh(&[], 0);
+}
+
+#[test]
+fn installed_refresh_rejects_post_process_embedded_in_project() {
+    compare_installed_refresh(&[""], 237);
+}
+
+fn compare_installed_refresh(post_process: &[&str], expected: i32) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = super::cli_uptodate_refresh::artifact_dir();
+    super::cli_uptodate_refresh::project(&root);
+    let input = root.join(INPUT);
+    let fixture = fs::read(root.join("retained.3mf")).unwrap();
+    fs::write(&input, project(&fixture, post_process)).unwrap();
+
+    let installation = root.join("installation");
+    let bin = installation.join("bin/ares");
+    fs::create_dir_all(bin.parent().unwrap()).unwrap();
+    fs::copy(env!("CARGO_BIN_EXE_ares"), &bin).unwrap();
+    std::os::unix::fs::symlink(
+        repo_root().join("OrcaSlicer/resources"),
+        installation.join("resources"),
+    )
+    .unwrap();
+
+    let native_work = root.join("native");
+    let ares_work = root.join("ares");
+    create_work(&native_work);
+    create_work(&ares_work);
+    let mut native = Command::new(runner.bin());
+    native
+        .args(["--slice", "1", "--outputdir", ".", "--uptodate"])
+        .env("ORCA_250_JOB_APPDIR", native_work.join("app"))
+        .env("ORCA_JOB_APPDIR", native_work.join("app"))
+        .env_remove("DISPLAY")
+        .env_remove("WAYLAND_DISPLAY");
+    let mut ares = Command::new(bin);
+    ares.args(["slice", "--uptodate", "-o", GCODE]);
+    let native = run(native, &native_work, &input, None, (expected, true));
+    let actual = run(ares, &ares_work, &input, None, (expected, false));
+    if expected == 0 {
+        let native = fs::read(native_work.join("out").join(GCODE)).unwrap();
+        let actual = fs::read(ares_work.join("out").join(GCODE)).unwrap();
+        assert!(
+            std::str::from_utf8(&native)
+                .unwrap()
+                .lines()
+                .any(|line| line == "; post_process = \"\""),
+            "Native did not use the retained stock option; {root:?}"
+        );
+        compare_ordered_bytes_generator_only(&native, &actual)
+            .unwrap_or_else(|error| panic!("{root:?}: {error}"));
+    } else {
+        assert_eq!(actual, native, "stderr or result.json: {root:?}");
+        assert_eq!(
+            fs::read(ares_work.join("stdout")).unwrap(),
+            fs::read(native_work.join("stdout")).unwrap(),
+            "stdout: {root:?}"
+        );
+    }
+}
+
 fn compare(post_process: &[&str], cases: impl IntoIterator<Item = (Option<&'static str>, i32)>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -43,7 +114,7 @@ fn compare(post_process: &[&str], cases: impl IntoIterator<Item = (Option<&'stat
         .unwrap()
         .keep();
     let input = root.join(INPUT);
-    fs::write(&input, project(post_process)).unwrap();
+    fs::write(&input, project(CONTROL, post_process)).unwrap();
     let mut native = Vec::new();
     for (index, (mode, expected)) in cases.into_iter().enumerate() {
         let work = root.join(format!("native-{index}"));
@@ -130,8 +201,8 @@ fn run(
     )
 }
 
-fn project(post_process: &[&str]) -> Vec<u8> {
-    let mut archive = zip::ZipArchive::new(Cursor::new(CONTROL)).unwrap();
+fn project(input: &[u8], post_process: &[&str]) -> Vec<u8> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(input)).unwrap();
     let mut config: serde_json::Value =
         serde_json::from_reader(archive.by_name(SETTINGS).unwrap()).unwrap();
     config["post_process"] = serde_json::json!(post_process);
