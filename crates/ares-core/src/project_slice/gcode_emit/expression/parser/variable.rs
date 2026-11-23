@@ -1,7 +1,7 @@
 //! Variable reads of `unary_expression` (`variable_value`, `PlaceholderParser.cpp:1492-1502`).
 
 use super::super::super::lexer::Token;
-use super::super::super::value::Value;
+use super::super::super::value::{Config, Value};
 use super::super::ParsePath;
 use super::super::deferred::{Deferred, Operand};
 use super::Parser;
@@ -17,7 +17,16 @@ impl Parser<'_> {
     /// Resolves the variable `name` at byte `offset`, with its optional indices, and marks a
     /// value that holds a deferred placeholder (`mark_deferred`, `:1499`).
     pub(super) fn variable(&mut self, name: &str, offset: usize) -> Result<Operand, String> {
-        let mut value = match self.lookup(name).cloned() {
+        let mut resolved = self.lookup(name).cloned();
+        if resolved.is_none() && self.path == ParsePath::Legacy && self.tokens.len() == 1 {
+            resolved = legacy_vector_suffix(self.config, name)
+                .map_err(|message| {
+                    self.scalar_failure = Some((offset, message));
+                    message.to_owned()
+                })?
+                .cloned();
+        }
+        let mut value = match resolved {
             Some(value) => value,
             // Suppressed (inactive) branch: `variable_value` no-ops
             // while skipping (`PlaceholderParser.cpp:1348-1355`).
@@ -96,4 +105,32 @@ impl Parser<'_> {
             None => Value::Bool(false),
         })
     }
+}
+
+// PlaceholderParser.cpp:1046-1076: the final underscore introduces an index
+// only when the standalone legacy identifier did not resolve as written.
+fn legacy_vector_suffix<'a>(
+    config: &'a Config,
+    name: &str,
+) -> Result<Option<&'a Value>, &'static str> {
+    let Some((base, suffix)) = name.rsplit_once('_') else {
+        return Ok(None);
+    };
+    if suffix.is_empty() || !suffix.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Ok(None);
+    }
+    let Some(value) = config.get(base) else {
+        return Ok(None);
+    };
+    if !matches!(value, Value::List(_)) {
+        return Err("Trying to index a scalar variable");
+    }
+    let index = suffix.parse().unwrap_or(usize::MAX);
+    let element = value
+        .index(index)
+        .ok_or("Indexing an empty vector variable")?;
+    if matches!(element, Value::Nil) {
+        return Err("Trying to reference an undefined (nil) element of vector of optional values");
+    }
+    Ok(Some(element))
 }
