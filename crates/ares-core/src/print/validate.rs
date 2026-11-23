@@ -16,36 +16,24 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 use crate::{
-    ConfigOverrides, GCodeFlavor, ProcessPrintSequence, Project, ProjectSettings, SliceError,
-    SliceOptions,
+    ConfigOverrides, GCodeFlavor, PrintValidationKind, ProcessPrintSequence, Project,
+    ProjectSettings, SliceError, SliceOptions,
     project::effective_config::{
         resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
     },
 };
 
 /// Applied nozzle, extruder-addressing and bed slices of `Print.hpp:935::Print::validate`.
-/// Returns the exact upstream diagnostic in the `Validate` family: the CLI
-/// adapter exits with `CLI_VALIDATE_ERROR` (-51, Utils.hpp:62) and the
+/// Returns the upstream diagnostic and kind in the `Validate` family. The
 /// result.json carries the `sliced_info` values populated at the validate
 /// point (`OrcaSlicer.cpp:5981-5987`) — the f32-stored layer height and
 /// density widen to f64 like upstream's ConfigOptionFloat/Percent reads.
 pub fn validate_print(settings: &ProjectSettings, bbl_printer: bool) -> Result<(), SliceError> {
-    let into_validate = |error: SliceError| match error {
-        SliceError::InvalidInput(message) => SliceError::Validate {
-            message,
-            plate_index: 1,
-            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
-            wall_loops: settings.process.region.wall_loops.0,
-            sparse_infill_density: f64::from(
-                settings.process.region.sparse_infill_density.0 as f32,
-            ),
-        },
-        other => other,
-    };
+    let into_validate = |error: SliceError| into_validate_message(error, settings);
     let usage = extrusion_width::flat(settings).map_err(into_validate)?;
     validate_layer_templates(settings, bbl_printer).map_err(into_validate)?;
     bed_filament::validate(settings, bbl_printer, &usage.supported_used_filaments, 1)
-        .map_err(into_validate)
+        .map_err(|(kind, message)| validation_error(settings, kind, message))
 }
 
 fn validate_layer_templates(
@@ -125,6 +113,7 @@ pub(crate) fn validate_applied_project(
             && settings.process.print.print_sequence != ProcessPrintSequence::ByObject
         {
             return Err(SliceError::Validate {
+                kind: PrintValidationKind::Generic,
                 message: "Please select \"By object\" print sequence to print multiple objects in spiral vase mode."
                     .to_owned(),
                 plate_index: plate_number,
@@ -151,26 +140,31 @@ pub(crate) fn validate_applied_project(
         &resolved.usage.supported_used_filaments,
         plate_number,
     )
-    .map_err(into_validate)?;
+    .map_err(|(kind, message)| validation_error(settings, kind, message))?;
     estimated_tower::validate(project, resolved, plate_number)
 }
 
-/// Wrap an `InvalidInput` rejection from the applied-project validation in
-/// the `Validate` family (`CLI_VALIDATE_ERROR`, -51, Utils.hpp:62): the
-/// CLI adapter's result.json carries the sliced_info values populated at
-/// the validate point (`OrcaSlicer.cpp:5981-5987`).
 fn into_validate_message(error: SliceError, settings: &ProjectSettings) -> SliceError {
     match error {
-        SliceError::InvalidInput(message) => SliceError::Validate {
-            message,
-            plate_index: 1,
-            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
-            wall_loops: settings.process.region.wall_loops.0,
-            sparse_infill_density: f64::from(
-                settings.process.region.sparse_infill_density.0 as f32,
-            ),
-        },
+        SliceError::InvalidInput(message) => {
+            validation_error(settings, PrintValidationKind::Generic, message)
+        }
         other => other,
+    }
+}
+
+fn validation_error(
+    settings: &ProjectSettings,
+    kind: PrintValidationKind,
+    message: String,
+) -> SliceError {
+    SliceError::Validate {
+        kind,
+        message,
+        plate_index: 1,
+        layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+        wall_loops: settings.process.region.wall_loops.0,
+        sparse_infill_density: f64::from(settings.process.region.sparse_infill_density.0 as f32),
     }
 }
 

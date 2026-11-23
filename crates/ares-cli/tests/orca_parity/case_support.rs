@@ -90,6 +90,8 @@ mod seam_paint_volumes;
 #[path = "absolute_e_reset_comment.rs"]
 mod absolute_e_reset_comment;
 
+#[path = "cli_bed_filament.rs"]
+mod cli_bed_filament;
 #[path = "cli_convert_unit.rs"]
 mod cli_convert_unit;
 #[path = "cli_debug_logfile.rs"]

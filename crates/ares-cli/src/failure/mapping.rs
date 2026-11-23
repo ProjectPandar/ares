@@ -1,5 +1,5 @@
 use super::{CliFailure, FamilyFailure};
-use ares_core::SliceError;
+use ares_core::{PrintValidationKind, SliceError};
 use std::{fs, path::Path};
 
 /// Exhaustive variant → CLI code mapping (`Utils.hpp:24-59`). The four
@@ -168,6 +168,7 @@ pub(crate) fn slice_error_to_failure(
             format!("Param values in 3mf/config error: \n{detail}\n"),
         ),
         SliceError::Validate {
+            kind,
             message,
             #[cfg(target_os = "linux")]
             plate_index,
@@ -178,20 +179,33 @@ pub(crate) fn slice_error_to_failure(
             #[cfg(target_os = "linux")]
             sparse_infill_density,
             ..
-        } => family(
-            -51,
-            #[cfg(target_os = "linux")]
-            plate_index,
-            #[cfg(target_os = "linux")]
-            layer_height,
-            #[cfg(target_os = "linux")]
-            wall_loops,
-            #[cfg(target_os = "linux")]
-            sparse_infill_density,
-            #[cfg(target_os = "linux")]
-            "There are some incorrect slicing parameters in the 3mf. Please verify the slicing of all plates in Orca Slicer before uploading.",
-            format!("{message}\n"),
-        ),
+        } => {
+            // OrcaSlicer.cpp:7012–7040 selects the exit family by validation kind.
+            let classification = match kind {
+                PrintValidationKind::Generic => (
+                    -51,
+                    "There are some incorrect slicing parameters in the 3mf. Please verify the slicing of all plates in Orca Slicer before uploading.",
+                ),
+                PrintValidationKind::FilamentNotMatchBedType => (
+                    -61,
+                    "Filaments are not compatible with the plate type. Please verify the slicing of all plates in Orca Slicer before uploading.",
+                ),
+            };
+            family(
+                classification.0,
+                #[cfg(target_os = "linux")]
+                plate_index,
+                #[cfg(target_os = "linux")]
+                layer_height,
+                #[cfg(target_os = "linux")]
+                wall_loops,
+                #[cfg(target_os = "linux")]
+                sparse_infill_density,
+                #[cfg(target_os = "linux")]
+                classification.1,
+                format!("{message}\n"),
+            )
+        }
         SliceError::FilamentsDifferentTemperature {
             message,
             #[cfg(target_os = "linux")]

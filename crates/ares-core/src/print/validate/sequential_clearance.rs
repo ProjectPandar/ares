@@ -1,7 +1,8 @@
 //! Print.cpp:613-930: sequential hull and vertical clearance validation.
 
 use crate::{
-    ProcessPrintSequence, ProcessTimelapseType, Project, ProjectVolumeType, SliceError,
+    PrintValidationKind, ProcessPrintSequence, ProcessTimelapseType, Project, ProjectVolumeType,
+    SliceError,
     geometry::{
         BoundingBox, CoordinateScale, JoinType, Point, Polygon, convex_hull,
         intersection_polygons_paths, offset_paths,
@@ -37,6 +38,7 @@ pub(super) fn validate(
     }
     if settings.process.print.timelapse_type == ProcessTimelapseType::Smooth {
         return Err(SliceError::Validate {
+            kind: PrintValidationKind::Generic,
             message:
                 "Smooth mode of timelapse is not supported when \"by object\" sequence is enabled."
                     .to_owned(),
@@ -50,6 +52,7 @@ pub(super) fn validate(
     }
     if settings.process.gcode.enable_wrapping_detection.0 {
         return Err(SliceError::Validate {
+            kind: PrintValidationKind::Generic,
             message: "Clumping detection is not supported when \"by object\" sequence is enabled."
                 .to_owned(),
             plate_index,
