@@ -138,29 +138,6 @@ pub(in crate::project_slice) fn emit(
     let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
-    let mut template_globals = super::value::variables::Variables::default();
-    let mut output = Vec::new();
-    file_start::append(
-        &mut output,
-        file_start::FileStart {
-            traversal,
-            metadata,
-            first_layer_bounds,
-            layer_count: sliced_layer_count,
-            template_rng: &template_rng,
-            template_globals: &mut template_globals,
-        },
-    )?;
-    let tags = preamble::append(
-        &mut output,
-        traversal,
-        &schedule,
-        &export_config,
-        context.thumbnail_images(),
-    )?;
-    output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
-    object::append_definitions(&mut output, traversal);
-    machine::append_first_line_m73(&mut output);
     let options = motion::MotionOptions::from_traversal(traversal, 0);
     let small_area_flow = small_area::from_traversal(traversal)?;
     // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
@@ -203,7 +180,7 @@ pub(in crate::project_slice) fn emit(
             .brim_flow_ratio
             .0,
         template_rng: template_rng.clone(),
-        template_globals,
+        template_context: template::ExportContext::new(traversal),
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
             skirt.as_ref(),
@@ -274,6 +251,27 @@ pub(in crate::project_slice) fn emit(
         ..Default::default()
     };
     state.apply_printable_area(&traversal.resolved.views.full)?;
+    let mut output = Vec::new();
+    let mode_gcode = file_start::append(
+        &mut output,
+        file_start::FileStart {
+            traversal,
+            metadata,
+            first_layer_bounds,
+            layer_count: sliced_layer_count,
+        },
+        &mut state,
+    )?;
+    let tags = preamble::append(
+        &mut output,
+        traversal,
+        &schedule,
+        &export_config,
+        context.thumbnail_images(),
+    )?;
+    output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
+    object::append_definitions(&mut output, traversal);
+    machine::append_first_line_m73(&mut output);
     // Writer registration precedes machine-start and its output-variable
     // refresh/write-back (`GCode.cpp:2791,2829,3118`). No extruder is selected yet.
     machine::append_limits(
@@ -287,7 +285,7 @@ pub(in crate::project_slice) fn emit(
         &mut state,
         traversal,
         metadata,
-        first_layer_bounds,
+        (first_layer_bounds, &mode_gcode),
     )?;
     let filtered_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle, fan_layers_end, fan_layers_start) = layers::append(

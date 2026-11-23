@@ -323,7 +323,7 @@ fn append_filament(
         source,
         &mut config,
         filament,
-        &mut state.template_globals,
+        &mut state.template_context,
     ) {
         Ok(rendered) => match motion::apply_writer_state(name, &config, &rendered, state) {
             Ok(()) => Ok(rendered),

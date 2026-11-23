@@ -270,7 +270,7 @@ fn append_template(
         source,
         config,
         filament,
-        &mut state.template_globals,
+        &mut state.template_context,
     ) {
         Ok(rendered) => Some(rendered),
         Err(error) => {

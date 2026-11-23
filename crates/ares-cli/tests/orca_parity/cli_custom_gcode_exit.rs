@@ -4,6 +4,8 @@
 
 #[path = "cli_custom_gcode_export_scope.rs"]
 mod cli_custom_gcode_export_scope;
+#[path = "cli_imex_start_gcode.rs"]
+mod cli_imex_start_gcode;
 
 use std::{fs, path::Path, process::Command};
 

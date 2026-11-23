@@ -1,3 +1,5 @@
+use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+
 use super::{
     expression::{ParsePath, evaluate_condition, evaluate_path},
     value::{Config, variables::Variables},
@@ -5,22 +7,42 @@ use super::{
 use parser::{Arm, Node, parse};
 
 mod error;
+mod imex;
 mod macro_block;
 mod parser;
+
+#[derive(Default)]
+pub(super) struct ExportContext {
+    globals: Variables,
+    mode: imex::Mode,
+}
+
+impl ExportContext {
+    pub(super) fn new(traversal: &PreparedPostClassicTraversal) -> Self {
+        Self {
+            mode: imex::Mode::resolve(traversal),
+            ..Self::default()
+        }
+    }
+
+    pub(super) fn mode_script(&self) -> &str {
+        &self.mode.script
+    }
+}
 
 pub(super) fn render(
     template: &str,
     config: &mut Config,
-    globals: &mut Variables,
+    context: &mut ExportContext,
 ) -> Result<String, String> {
-    render_for_filament(template, config, 0, globals)
+    render_for_filament(template, config, 0, context)
 }
 
 pub(super) fn render_for_filament(
     template: &str,
     config: &mut Config,
     filament: usize,
-    globals: &mut Variables,
+    context: &mut ExportContext,
 ) -> Result<String, String> {
     // `process_macro` parses the template value byte-for-byte with no trim
     // and no prefix (`PlaceholderParser.cpp:2516-2526`); the ASCII
@@ -30,9 +52,10 @@ pub(super) fn render_for_filament(
     // report (`process_error_message` `:1731-1770`) — stay relative to the
     // untrimmed template, so a skipped blank line still counts.
     let nodes = parse(template)?;
+    context.mode.insert(config);
     // One ContextData dictionary per export, but fresh config_local per call.
     // GCode.cpp:3581-3588,5385-5389; PlaceholderParser.cpp:2688-2699.
-    std::mem::swap(&mut config.globals, globals);
+    std::mem::swap(&mut config.globals, &mut context.globals);
     let output = Renderer {
         template,
         config,
@@ -40,7 +63,7 @@ pub(super) fn render_for_filament(
     }
     .render_nodes(&nodes);
     config.locals.clear();
-    std::mem::swap(&mut config.globals, globals);
+    std::mem::swap(&mut config.globals, &mut context.globals);
     output
 }
 
