@@ -31,6 +31,10 @@ impl<'a> CliPresetProject<'a> {
         self.input
     }
 
+    pub(crate) fn into_parts(self) -> (&'a [u8], Option<Box<LoadedProfileProject>>) {
+        (self.input, self.loaded)
+    }
+
     pub fn slice_with_profiles(
         self,
         request: CliProfileSliceRequest<'_>,
@@ -48,10 +52,27 @@ impl<'a> CliPresetProject<'a> {
         context: SlicerContext<'_>,
     ) -> Result<Vec<u8>, SliceError> {
         load_settings::slice_load_settings_source(
-            (self.input, self.loaded),
+            self.into_parts(),
             request,
             refresh,
-            metadata,
+            (metadata, false),
+            context,
+        )
+        .map(|processed| processed.gcode)
+    }
+
+    pub fn slice_with_load_settings_processed(
+        self,
+        request: LoadSettingsSliceRequest<'_>,
+        metadata: GenerationMetadata,
+        context: SlicerContext<'_>,
+        record_moves: bool,
+    ) -> Result<ProcessedGCode, SliceError> {
+        load_settings::slice_load_settings_source(
+            self.into_parts(),
+            request,
+            None,
+            (metadata, record_moves),
             context,
         )
     }

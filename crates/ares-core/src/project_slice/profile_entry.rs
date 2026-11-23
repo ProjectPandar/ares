@@ -151,9 +151,7 @@ pub(super) fn prepare_profile_slice(
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<ProjectSliceState, SliceError> {
-    let loaded = project.loaded.take();
-    let (loaded, preparation) =
-        load_profile_slice_with_import(project, profile, upward_report, loaded)?;
+    let (loaded, preparation) = load_profile_slice(project, profile, upward_report)?;
     crate::downward::check_project(&loaded, project.plate, project.downward.take());
     state::prepare_loaded_project_slice_with_validation(
         loaded,
@@ -174,21 +172,13 @@ pub(super) fn prepare_profile_slice(
 }
 
 pub(crate) fn load_profile_slice(
-    project: &ProjectSource<'_>,
+    project: &mut ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    load_profile_slice_with_import(project, profile, upward_report, None)
-}
-
-fn load_profile_slice_with_import(
-    project: &ProjectSource<'_>,
-    profile: ProfileInput<'_>,
-    upward_report: Option<&mut Vec<String>>,
-    loaded: Option<Box<crate::project::LoadedProfileProject>>,
-) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+    let imported = project.loaded.take();
     let (mut loaded, preparation) =
-        load_and_place_with_preparation(project, profile, upward_report, loaded)?;
+        load_and_place_with_preparation(project, profile, upward_report, imported)?;
     if let Some(custom_gcodes) = project.custom_gcodes.clone() {
         loaded.replace_plate_custom_gcodes(custom_gcodes);
     }

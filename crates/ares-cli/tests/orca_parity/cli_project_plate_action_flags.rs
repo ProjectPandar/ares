@@ -53,6 +53,31 @@ fn cli_project_plates_check_embedded_post_processing_unless_disabled() {
 }
 
 #[test]
+fn selected_plate_admits_the_saved_project_before_parsing_replacement_presets() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = root("selected-plate-preset-admission");
+    edit_project(&root, SETTINGS, |text| {
+        let mut settings: Value = serde_json::from_str(&text).unwrap();
+        settings["post_process"] = json!([""]);
+        settings.to_string()
+    });
+    let malformed = root.join("malformed.json");
+    fs::write(&malformed, "{").unwrap();
+    let file = malformed.to_str().unwrap();
+    let presets = ["--load-settings", file, "--load-filaments", file];
+    paired(&runner, &root, ("default", "1"), &presets, (237, &[], None));
+    paired(
+        &runner,
+        &root,
+        ("disabled", "1"),
+        &[presets.as_slice(), &["--normative-check=0"]].concat(),
+        (251, &[], None),
+    );
+}
+
+#[test]
 fn cli_project_plates_replace_saved_events_before_filtering_custom_events() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;

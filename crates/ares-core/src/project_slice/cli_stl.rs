@@ -115,16 +115,13 @@ pub fn slice_stl_models_with_load_settings<'a>(
 }
 
 fn precheck(
-    source: ProjectSource<'_>,
+    mut source: ProjectSource<'_>,
     selection: u32,
     context: &mut SlicerContext<'_>,
     (current, print_settings): (&mut u32, &mut Option<(f64, i32, f64)>),
 ) -> Result<Vec<(u32, state::AppliedPlate)>, SliceError> {
-    let (mut project, preparation) = profile_entry::load_profile_slice(
-        &source,
-        source.profile.expect("loaded settings supply a profile"),
-        None,
-    )?;
+    let profile = source.profile.expect("loaded settings supply a profile");
+    let (mut project, preparation) = profile_entry::load_profile_slice(&mut source, profile, None)?;
     let plates = project
         .plates()
         .iter()
