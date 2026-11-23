@@ -27,7 +27,10 @@ impl PlaterSession {
             (request, composition),
             &NO_EDITS,
             |source| {
-                let project = crate::project_slice::load_profile_project(&source)?;
+                let mut project = crate::project_slice::load_profile_project(&source)?;
+                if source.refresh.is_some() {
+                    project.replay_slot_options(&self.slot_changes)?;
+                }
                 self.save_with_config(project.documents().project_settings_raw.clone())
             },
         )
