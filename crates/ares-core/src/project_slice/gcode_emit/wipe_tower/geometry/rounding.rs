@@ -3,7 +3,7 @@
 use std::f64::consts::{PI, TAU};
 
 use crate::geometry::{CoordinateScale, Point, Polygon};
-use crate::scalar_math::sincosf;
+use crate::scalar_math::{acosf, sincosf};
 
 pub(super) fn round_polygon(polygon: &Polygon, scale: CoordinateScale) -> Polygon {
     let points = polygon.points();
@@ -31,7 +31,7 @@ pub(super) fn round_polygon(polygon: &Polygon, scale: CoordinateScale) -> Polygo
             b[0] + bc[0] * f64::from(distance),
             b[1] + bc[1] * f64::from(distance),
         ];
-        let half_angle = cosine.acos() / 2.0;
+        let half_angle = acosf::acos(cosine) / 2.0;
         let chord = [right[0] - left[0], right[1] - left[1]];
         let chord_length = norm(chord);
         let sign = if counterclockwise { 1.0 } else { -1.0 };
