@@ -4,6 +4,7 @@ mod explicit;
 mod external;
 mod groups;
 mod loaded;
+mod project_options;
 mod typed;
 mod variants;
 
@@ -153,6 +154,12 @@ pub(super) fn refresh(
         &selection.printer,
         &filament_states,
     )?;
+    project_options::normalize_filament_options(
+        raw,
+        &mut result,
+        &selection.printer.edited.config,
+        filament_states.len(),
+    );
     for (kind, state) in [
         (ProfileKind::Process, &selection.process),
         (ProfileKind::Machine, &selection.printer),

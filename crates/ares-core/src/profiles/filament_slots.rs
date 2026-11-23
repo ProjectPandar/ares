@@ -45,19 +45,8 @@ impl FilamentSlotState {
         if minimum == 0 {
             return Ok(());
         }
-        let old_nozzles = self.flush_multiplier.len();
-        if old_nozzles == 0 || !self.flush_volumes_vector.len().is_multiple_of(2) {
-            return Err(crate::SliceError::InvalidInput(
-                "flush multipliers must be nonempty and flush volumes must be load/unload pairs"
-                    .to_owned(),
-            ));
-        }
-        let old_count = ((self.flush_volumes_matrix.len() / old_nozzles) as f64).sqrt() as usize;
-        if old_count * old_count * old_nozzles != self.flush_volumes_matrix.len() {
-            return Err(crate::SliceError::InvalidInput(
-                "flush matrix must contain one square matrix per nozzle".to_owned(),
-            ));
-        }
+        let count = self.filaments.len().max(minimum);
+        self.resize_flush(count, nozzles)?;
         if self.filaments.len() < minimum {
             let last = self
                 .filaments
@@ -67,7 +56,6 @@ impl FilamentSlotState {
                 .to_owned();
             self.filaments.resize(minimum, last);
         }
-        let count = self.filaments.len();
         // v2.5.0 load_config_file_config, PresetBundle.cpp:6455-6459,
         // calls set_num_filaments (:4328-4372) after padding a short palette.
         if self.filament_colour.len() < count {
@@ -86,6 +74,27 @@ impl FilamentSlotState {
             self.filament_map.resize(count, 1);
             self.filament_nozzle_map.resize(count, 0);
             self.filament_volume_map.resize(count, 0);
+        }
+        Ok(())
+    }
+
+    pub(super) fn resize_flush(
+        &mut self,
+        count: usize,
+        nozzles: usize,
+    ) -> Result<(), crate::SliceError> {
+        let old_nozzles = self.flush_multiplier.len();
+        if old_nozzles == 0 || !self.flush_volumes_vector.len().is_multiple_of(2) {
+            return Err(crate::SliceError::InvalidInput(
+                "flush multipliers must be nonempty and flush volumes must be load/unload pairs"
+                    .to_owned(),
+            ));
+        }
+        let old_count = ((self.flush_volumes_matrix.len() / old_nozzles) as f64).sqrt() as usize;
+        if old_count * old_count * old_nozzles != self.flush_volumes_matrix.len() {
+            return Err(crate::SliceError::InvalidInput(
+                "flush matrix must contain one square matrix per nozzle".to_owned(),
+            ));
         }
         self.flush_multiplier.resize(nozzles, 1.0);
         if self.flush_volumes_matrix.len() == count * count * nozzles {
