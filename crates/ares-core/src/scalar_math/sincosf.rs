@@ -20,7 +20,7 @@
 // THE SOFTWARE.
 
 //! Arm optimized-routines `math/{sinf.c,cosf.c,sincosf.h,sincosf_data.c}` at
-//! `20859d3fd9e797dde592c489c8ef7d383f778620`, restricted to wrapped fillet angles.
+//! `20859d3fd9e797dde592c489c8ef7d383f778620`, for finite binary32 arguments.
 
 use std::{f32::consts::FRAC_PI_4, f64::consts::FRAC_PI_2};
 
@@ -38,6 +38,10 @@ const COSINE: [f64; 5] = [
     f64::from_bits(0x3ef9_9343_027b_f8c3),
 ];
 
+pub(crate) fn sin(angle: f32) -> f32 {
+    sample(angle, false)
+}
+
 pub(crate) fn sin_cos(angle: f32) -> (f32, f32) {
     (sample(angle, false), sample(angle, true))
 }
@@ -45,24 +49,34 @@ pub(crate) fn sin_cos(angle: f32) -> (f32, f32) {
 fn sample(angle: f32, cosine: bool) -> f32 {
     const MAGNITUDE_TOP: u32 = 0x7ff0_0000;
     const TINY: u32 = 0x3980_0000; // 2^-12
-    let top = angle.to_bits() & MAGNITUDE_TOP;
+    let bits = angle.to_bits();
+    let top = bits & MAGNITUDE_TOP;
     if top < TINY {
         return if cosine { 1.0 } else { angle };
     }
 
     let x = f64::from(angle);
-    let (x, quadrant) = if top < FRAC_PI_4.to_bits() & MAGNITUDE_TOP {
-        (x, 0)
-    } else {
+    let (x, quadrant, sign_quadrant) = if top < FRAC_PI_4.to_bits() & MAGNITUDE_TOP {
+        (x, 0, 0)
+    } else if top < 120.0_f32.to_bits() & MAGNITUDE_TOP {
         // Arm reduce_fast's scaled conversion and a single rounded subtraction.
         let quadrant = (((x * SCALED_INV_HALF_PI) as i32) + 0x80_0000) >> 24;
-        ((-f64::from(quadrant)).mul_add(FRAC_PI_2, x), quadrant)
+        (
+            (-f64::from(quadrant)).mul_add(FRAC_PI_2, x),
+            quadrant,
+            quadrant,
+        )
+    } else {
+        let (x, quadrant) = reduce_large(bits);
+        // Large reduction ignores the input sign; restore it only for sine.
+        let sign = if cosine { 0 } else { (bits >> 31) as i32 };
+        (x, quadrant, quadrant + sign)
     };
     let x2 = x * x;
-    let x = x * [1.0, -1.0, -1.0, 1.0][(quadrant & 3) as usize];
+    let x = x * [1.0, -1.0, -1.0, 1.0][(sign_quadrant & 3) as usize];
     let use_cosine = (quadrant & 1 != 0) ^ cosine;
     if use_cosine {
-        let sign = if quadrant & 2 == 0 { 1.0 } else { -1.0 };
+        let sign = if sign_quadrant & 2 == 0 { 1.0 } else { -1.0 };
         let [c0, c1, c2, c3, c4] = COSINE.map(|coefficient| sign * coefficient);
         let x4 = x2 * x2;
         let high = x2.mul_add(c4, c3);
@@ -78,4 +92,25 @@ fn sample(angle: f32, cosine: bool) -> f32 {
         let base = x3.mul_add(s1, x);
         x5.mul_add(high, base) as f32
     }
+}
+
+fn reduce_large(bits: u32) -> (f64, i32) {
+    // Overlapping words of 4/pi, indexed by exponent; Arm's reduce_large.
+    const INV_PIO4: [u32; 24] = [
+        0xa2, 0xa2f9, 0xa2f983, 0xa2f9836e, 0xf9836e4e, 0x836e4e44, 0x6e4e4415, 0x4e441529,
+        0x441529fc, 0x1529fc27, 0x29fc2757, 0xfc2757d1, 0x2757d1f5, 0x57d1f534, 0xd1f534dd,
+        0xf534ddc0, 0x34ddc0db, 0xddc0db62, 0xc0db6295, 0xdb629599, 0x6295993c, 0x95993c43,
+        0x993c4390, 0x3c439041,
+    ];
+    const PI_SCALED: f64 = f64::from_bits(0x3c19_21fb_5444_2d18); // pi * 2^-63
+
+    let index = ((bits >> 26) & 15) as usize;
+    let significand = ((bits & 0xff_ffff) | 0x80_0000) << ((bits >> 23) & 7);
+    let high = u64::from(significand.wrapping_mul(INV_PIO4[index]));
+    let middle = u64::from(significand) * u64::from(INV_PIO4[index + 4]);
+    let low = u64::from(significand) * u64::from(INV_PIO4[index + 8]);
+    let phase = ((high << 32) | (low >> 32)).wrapping_add(middle);
+    let quadrant = phase.wrapping_add(1 << 61) >> 62;
+    let residual = phase.wrapping_sub(quadrant << 62) as i64;
+    (residual as f64 * PI_SCALED, quadrant as i32)
 }
