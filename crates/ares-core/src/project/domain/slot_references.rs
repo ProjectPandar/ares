@@ -1,13 +1,15 @@
 use super::Project;
 use crate::{
     OrcaInt,
-    gcode_processor::CustomGCodeType,
+    gcode_processor::{CustomGCodeItem, CustomGCodeType},
     plater::SlotChange,
     project::{model_settings::Metadata, plate_config::parse_int_list},
 };
 
 impl Project {
     pub(crate) fn remap_slot_references(&mut self, change: SlotChange) {
+        let remap_paint =
+            |slot| u8::try_from(change.assignment(i32::from(slot), 0)).unwrap_or_default();
         for object in &mut self.objects {
             remap_assignment(&mut object.region_overrides.extruder, change);
             for selector in [
@@ -18,35 +20,38 @@ impl Project {
             }
             for volume in &mut object.volumes {
                 remap_assignment(&mut volume.region_overrides.extruder, change);
-                volume.mesh.mmu_segmentation_facets.remap_states(|slot| {
-                    u8::try_from(change.assignment(i32::from(slot), 0)).unwrap_or_default()
-                });
+                volume
+                    .mesh
+                    .mmu_segmentation_facets
+                    .remap_states(remap_paint);
             }
         }
         for info in self.plates_custom_gcodes.values_mut() {
-            info.gcodes.retain_mut(|item| {
-                if item.kind != CustomGCodeType::ToolChange {
-                    return true;
-                }
-                let Ok(slot) = i32::try_from(item.extruder) else {
-                    return true;
-                };
-                match change.surviving(slot).or_else(|| match change {
-                    SlotChange::Remove { replacement, .. } => replacement,
-                    SlotChange::Insert { .. } => None,
-                }) {
-                    Some(slot) => {
-                        item.extruder = slot as u32;
-                        true
-                    }
-                    None => false,
-                }
-            });
+            info.gcodes
+                .retain_mut(|item| remap_tool_change(item, change));
         }
         for plate in &mut self.documents.model_settings.plates {
             remap_plate_metadata(&mut plate.metadata, change);
         }
     }
+}
+
+fn remap_tool_change(item: &mut CustomGCodeItem, change: SlotChange) -> bool {
+    if item.kind != CustomGCodeType::ToolChange {
+        return true;
+    }
+    let Ok(slot) = i32::try_from(item.extruder) else {
+        return true;
+    };
+    let replacement = match change {
+        SlotChange::Remove { replacement, .. } => replacement,
+        SlotChange::Insert { .. } => None,
+    };
+    let Some(slot) = change.surviving(slot).or(replacement) else {
+        return false;
+    };
+    item.extruder = slot as u32;
+    true
 }
 
 fn remap_plate_metadata(metadata: &mut [Metadata], change: SlotChange) {

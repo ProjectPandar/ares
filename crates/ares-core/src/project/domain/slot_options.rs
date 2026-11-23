@@ -66,20 +66,13 @@ impl Project {
                     preset: names.get(index).cloned().unwrap_or_default(),
                     colour: colour.clone(),
                     is_mixed,
-                    components: if is_mixed {
-                        components
-                            .and_then(|values| values.element(index))
-                            .and_then(RawConfigValue::token)
-                            .map(|value| {
-                                value
-                                    .split(',')
-                                    .filter_map(|part| part.trim().parse().ok())
-                                    .collect()
-                            })
-                            .unwrap_or_default()
-                    } else {
-                        Vec::new()
-                    },
+                    components: components
+                        .filter(|_| is_mixed)
+                        .and_then(|values| values.element(index))
+                        .and_then(RawConfigValue::token)
+                        .as_deref()
+                        .map(parse_mixed_components)
+                        .unwrap_or_default(),
                 }
             })
             .collect()
@@ -171,16 +164,17 @@ impl Project {
             selection.compose_filament_device_options(&mut raw, &names)?;
         }
         for key in ["support_filament", "support_interface_filament"] {
-            if let Some(slot) = raw
+            let Some(slot) = raw
                 .get(key)
                 .and_then(RawConfigValue::token)
                 .and_then(|value| value.parse::<i32>().ok())
-            {
-                if let Some(new) = change.surviving(slot) {
-                    raw.insert(key.to_owned(), text(new));
-                } else {
-                    raw.remove(key);
-                }
+            else {
+                continue;
+            };
+            if let Some(new) = change.surviving(slot) {
+                raw.insert(key.to_owned(), text(new));
+            } else {
+                raw.remove(key);
             }
         }
         let ranges = raw
@@ -276,18 +270,7 @@ fn resize_option_vectors(
                     && let RawConfigValue::Text(components) = &value
                     && !components.is_empty()
                 {
-                    return text(
-                        components
-                            .split(',')
-                            .map(|item| {
-                                item.trim()
-                                    .parse::<i32>()
-                                    .map(|slot| change.surviving(slot).unwrap_or(0).to_string())
-                                    .unwrap_or_else(|_| item.to_owned())
-                            })
-                            .collect::<Vec<_>>()
-                            .join(","),
-                    );
+                    return remap_mixed_components(components, change);
                 }
                 value
             })
@@ -296,6 +279,28 @@ fn resize_option_vectors(
     }
     resize_preset_vectors(raw, (slots.len(), count), change);
     set_values(raw, "filament_colour", colours);
+}
+
+fn parse_mixed_components(components: &str) -> Vec<i32> {
+    components
+        .split(',')
+        .filter_map(|item| item.trim().parse().ok())
+        .collect()
+}
+
+fn remap_mixed_components(components: &str, change: SlotChange) -> RawConfigValue {
+    text(
+        components
+            .split(',')
+            .map(|item| {
+                item.trim()
+                    .parse::<i32>()
+                    .map(|slot| change.surviving(slot).unwrap_or(0).to_string())
+                    .unwrap_or_else(|_| item.to_owned())
+            })
+            .collect::<Vec<_>>()
+            .join(","),
+    )
 }
 
 // PresetBundle.cpp:5621–5774 concatenates filament preset vectors in slot order.
