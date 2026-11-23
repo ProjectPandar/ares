@@ -1,5 +1,9 @@
 use super::Project;
-use crate::{ConfigOverrides, SliceError, project::raw_settings::ProjectSettingsRaw};
+use crate::{
+    ConfigOverrides, SliceError,
+    options::json_deserialize::{deserialize_config_values, deserialize_refreshed_config},
+    project::raw_settings::ProjectSettingsRaw,
+};
 
 impl Project {
     pub fn preset_selection(&self) -> Option<&crate::profiles::PresetSelection> {
@@ -12,7 +16,7 @@ impl Project {
         selection: crate::profiles::PresetSelection,
         overrides: &ConfigOverrides,
     ) -> Result<(), SliceError> {
-        self.apply_project_preset_refresh(raw, overrides)?;
+        self.apply_project_preset_refresh(raw, overrides, false)?;
         crate::profiles::FullFffGroups::store(&mut self.documents.project_settings_raw);
         self.documents.preset_selection = Some(std::sync::Arc::new(selection));
         self.documents.config_composer = super::documents::ConfigComposer::FullFffConfig;
@@ -28,8 +32,9 @@ impl Project {
         &mut self,
         raw: ProjectSettingsRaw,
         overrides: &ConfigOverrides,
+        retained_thumbnails: bool,
     ) -> Result<(), SliceError> {
-        self.apply_project_config(raw, overrides)?;
+        self.apply_project_config(raw, overrides, retained_thumbnails)?;
         self.initialize_cli_loaded_project_config(self.cli_filament_count(), true);
         Ok(())
     }
@@ -38,6 +43,7 @@ impl Project {
         &mut self,
         mut raw: ProjectSettingsRaw,
         overrides: &ConfigOverrides,
+        retained_thumbnails: bool,
     ) -> Result<(), SliceError> {
         overrides.apply(&mut raw)?;
         raw.handle_legacy();
@@ -45,13 +51,17 @@ impl Project {
             .map_err(SliceError::InvalidInput)?;
         let mut materialized_raw = raw.clone();
         materialized_raw.complete_filament_variant_defaults()?;
-        self.settings = crate::options::json_deserialize::deserialize_refreshed_config(
-            materialized_raw.into_object(),
-        )
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("refreshed project settings are invalid: {error}"))
-        })?
-        .resolve();
+        // CLI:3193 copies the preset scalar after JSON-load composite conversion.
+        let deserialize = if retained_thumbnails && !overrides.contains_key("thumbnails") {
+            deserialize_config_values
+        } else {
+            deserialize_refreshed_config
+        };
+        self.settings = deserialize(materialized_raw.into_object())
+            .map_err(|error| {
+                SliceError::InvalidInput(format!("refreshed project settings are invalid: {error}"))
+            })?
+            .resolve();
         self.documents.project_settings_raw = raw;
         Ok(())
     }

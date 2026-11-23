@@ -2,9 +2,8 @@ use std::{fs, io, path::Path};
 
 use ares_core::{
     CliPresetProject, CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides,
-    GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement, PresetCatalogHandle,
-    ProcessedGCode, SliceError, SlicedPlate, SlicerContext, UpwardMachineInput,
-    UpwardMachineSource,
+    GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement, ProcessedGCode,
+    SliceError, SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
 };
 
 use crate::{
@@ -106,16 +105,19 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         Saved(
             Option<UpwardMachineSource>,
             Option<Vec<u8>>,
-            &'a PresetCatalogHandle,
+            Option<ares_core::PresetCatalogHandle>,
         ),
     }
-    let catalog;
     let presets = match files {
         (None, None) => {
             let resources = crate::installed_resources::resolve(None)?;
             let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
-            catalog = crate::project_presets::load_resources_catalog(&resources)?;
-            ProjectPresets::Saved(source, machine, &catalog)
+            let catalog = crate::project_presets::retained_printer_catalog(
+                &resources,
+                source.as_ref(),
+                false,
+            )?;
+            ProjectPresets::Saved(source, machine, catalog)
         }
         (settings, filaments) => ProjectPresets::Replace(settings, filaments),
     };
@@ -162,7 +164,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                     sliced_plate: &mut sliced_plate,
                 },
                 GenerationMetadata::default(),
-                Some(catalog),
+                catalog.as_ref(),
                 context,
             )
             .await
