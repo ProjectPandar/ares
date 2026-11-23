@@ -142,7 +142,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         context.set_status_callback(&mut print_status);
     }
     if let Some(selection) = args.selection {
-        return slice_plates::run(&args, selection, &input, &overrides, context);
+        return slice_plates::run((&args).into(), selection, &input, &overrides, context);
     }
     if let Some(catalog) = &args.project_preset_catalog
         && args.load_settings.is_none()

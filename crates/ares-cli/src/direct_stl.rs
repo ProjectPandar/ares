@@ -85,6 +85,13 @@ pub(super) async fn run(
         }
         return crate::direct_project::run(args).await;
     }
+    if args.datadir.is_some() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--datadir requires a saved 3MF project",
+        )
+        .into());
+    }
     let selection = u32::try_from(args.selection.unwrap_or_default()).map_err(|_| {
         io::Error::new(
             io::ErrorKind::InvalidInput,

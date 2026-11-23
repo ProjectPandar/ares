@@ -12,6 +12,9 @@ use crate::{
     runner::{OrcaRunner, application::cli_command, stages},
 };
 
+#[path = "cli_slice_plates/direct.rs"]
+mod direct;
+
 const PROJECT: &[u8] =
     include_bytes!("../../../../tests/parity/custom-gcode-overview/two-plates.3mf");
 
@@ -45,6 +48,10 @@ fn cli_slice_refuses_to_export_a_plate_with_critical_empty_layers() {
 
 #[test]
 fn cli_slice_all_plates_preflights_later_plates_before_export() {
+    verify("0", &nonprintable_second_plate(), true, 206, &[]);
+}
+
+fn nonprintable_second_plate() -> Vec<u8> {
     let mut source = zip::ZipArchive::new(Cursor::new(PROJECT)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..source.len() {
@@ -64,8 +71,7 @@ fn cli_slice_all_plates_preflights_later_plates_before_export() {
             output.raw_copy_file(entry).unwrap();
         }
     }
-    let changed = output.finish().unwrap().into_inner();
-    verify("0", &changed, true, 206, &[]);
+    output.finish().unwrap().into_inner()
 }
 
 fn verify(selection: &str, input: &[u8], outputdir: bool, exit: i32, names: &[&str]) {
