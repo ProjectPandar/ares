@@ -225,11 +225,11 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   useEffect(() => {
     if (viewport && !editable) viewport.compileToolpathPrograms();
   }, [viewport, editable]);
-  // A new scene or slice result is re-framed: Prepare the plate, Preview the print. A layout
-  // effect, so a result is set before its first enabled view below.
-  useLayoutEffect(() => {
+  // A layout effect: a result is set before its first enabled view below.
+  useLayoutEffect(() => viewport?.setToolpaths(toolpaths), [viewport, toolpaths]);
+  // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
+  useEffect(() => {
     if (!viewport) return;
-    viewport.setToolpaths(toolpaths);
     viewport.setModelsVisible(!toolpaths);
     viewport.setView("plate");
     viewport.zoomTo(frame ? fit : "plate");
