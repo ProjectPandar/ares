@@ -164,33 +164,118 @@ Change, in `web/app/src/viewport/`:
 the first result frame of the application still waits for the segment program's link
 (above), so its screenshot follows one link and one full frame instead of a link and three.
 
-### Proposed, not implemented: tabs that stay mounted
+### Tabs that stay mounted
 
 Each tab is a route, so a switch unmounts one page (its sidebar, viewport, scene and key
 handlers) and mounts the other. On WebKit a switch costs 80-120 ms of main-thread time with the
 shared context (157-174 ms before it), almost none of it in GL; when the switch coincides with a
-slice start under load it reaches 220 ms.
+slice start under load it reaches 208-220 ms, over the 200 ms limit of
+`web/e2e/worker.mobile.spec.ts`.
 
 Upstream builds the panels once and only shows and hides them:
 
 - `Plater::priv` creates one `Sidebar` (`src/slic3r/GUI/Plater.cpp:7876`) and the `View3D` and
-  `Preview` panels once (`:7935-7937`, `panels` at `:7948-7950`).
-- `Plater::priv::set_current_panel` (`:12564-12720`) shows the new panel first and then hides
+  `Preview` panels once, both on the one `Model` (`:7935-7937`, `panels` at `:7948-7950`).
+- `Plater::priv::set_current_panel` (`:12564-12865`) shows the new panel first and then hides
   the others (`:12702-12720`); it creates and destroys nothing.
+- It unbinds the old canvas's event handlers and binds the new one's (`:12740-12759`,
+  `:12781-12787`); `GLCanvas3D::bind_event_handlers` / `unbind_event_handlers`
+  (`src/slic3r/GUI/GLCanvas3D.cpp:3920-4025`) bind the canvas's size, idle, char, key and
+  mouse events. A hidden panel's canvas receives no key or mouse event.
+- Switching to Preview closes the open gizmo of the Prepare canvas
+  (`gizmos.reset_all_states()`, `:12789-12793`).
+- Each `GLCanvas3D` keeps its own state (selection, gizmos, the Preview layer and moves
+  sliders on the `Preview` panel) across switches. Zoom requests are flags that the next
+  render applies with the canvas's current size (`camera.requires_zoom_to_*`,
+  `GLCanvas3D.cpp:2574-2597`).
 
-Proposed change, in `web/app/src/`:
+Change, in `web/app/src/`:
 
-1. `Shell` renders one `Sidebar` and both tab pages; the route only selects the shown page
-   (`hidden` on the other). A page's key handlers act only while it is shown.
-2. Each page keeps its `Viewport` and scene. The shown page's `Viewport` holds the shared canvas;
-   a switch moves the canvas and draws once.
+1. `Shell` renders one `Sidebar` and both tab panes inside the one `.page`; the route only
+   selects the shown pane, and the other has `hidden`. A pane is `display: contents` while
+   shown, so the shown tab lays out exactly as the page does today. The route components
+   render nothing.
+2. The placement of the plate (`openStlSession` / `placedScene`, now in `ViewportView`) runs
+   once, in the shell, for both panes, as both panels use the one `Model`.
+3. Each pane keeps its `Viewport`. Showing a pane attaches the shared canvas to its viewport,
+   binds that viewport's canvas listeners and orbit controls, fits the canvas and draws once;
+   hiding it unbinds them (`bind_event_handlers` / `unbind_event_handlers`). A hidden
+   `Viewport` draws nothing; a zoom requested while hidden applies when it is next shown,
+   with the shown size.
+4. Key handlers of a pane (Prepare: undo, redo, Delete All; the viewport's zoom, gizmo and
+   camera keys; Preview: C, L and the moves-slider keys) are registered while the pane is
+   shown and removed when it is hidden. The shell's keys (Ctrl+O/I/R/G, ?, Esc, Tab) stay
+   global, as `MainFrame`'s accelerators are.
+5. Showing Preview closes the open gizmo, as `set_current_panel` does.
 
-Open before any implementation: 28 specs select the viewport by
-`getByTestId("viewport")` / `[data-testid=viewport]` (54 uses), and `slice-summary` and the view
-toolbar would exist on both pages. Playwright locators match hidden elements, so each of these
-selectors would need scoping to the shown page, or the hidden page would have to drop those test
-ids. The open gizmo, the camera and the Preview sliders keep their state across switches, as
-upstream does; specs that assume a reset would change.
+State kept across switches, as each upstream canvas keeps it: the selection, the camera of
+each tab, and the Preview layer range and moves thumb for the same result. A new scene or
+result still re-frames and resets as today. Upstream also shares one camera between `View3D`
+and `Preview` (`Plater::priv::camera`, `:7237`, handed across at `:12725-12737`); the web
+keeps one camera per tab, and sharing it is deferred.
+
+#### Test selectors
+
+Both panes now hold a `ViewportView`, so `getByTestId("viewport")`, `getByTestId("view-toolbar")`,
+`[data-testid=viewport]` and `.viewport` match two elements. One helper,
+`web/e2e/shownTab.ts`, scopes a locator to the shown pane
+(`page.locator(".tab-pane:not([hidden])")`). The hidden pane keeps its test ids and the DOM
+inside each pane is unchanged. Role queries already skip hidden elements and need no change.
+
+The only edit to each of these files is that scope, `page.<locator>` becoming
+`shownTab(page).<locator>`; no assertion, threshold, timeout or expected value changes.
+70 uses in 33 files:
+
+- Specs (25): `bundle` 2, `boundedViewerQueries` 1, `firstFrame` 4, `dragPreview` 4,
+  `multiPlate` 1, `import` 5, `plateArrangeVendors` 2, `mobile` 2, `presets` 1, `plateMove` 2,
+  `plateRotate` 2, `platerToolbar` 7, `viewportObjectMenu` 5, `slice` 1, `presetSlice` 2,
+  `undoRedo` 4, `viewportTheme` 3, `presetSwitchSlice` 1, `previewResultResponsive` 2,
+  `viewportResize` 3, `toolpathDrawWorkload` 1, `viewportRebuild` 1, `shortcuts` 2,
+  `sliceSelectsPreview` 1, `worker.mobile` 1.
+- Helpers (8): `arrangeOracle` 1, `failureDiagnostics` 1, `platerOracle` 1, `segmentGeometry` 1,
+  `segmentSizes` 1, `segmentColors` 1, `toolpathPreview` 3, `touch` 1.
+
+`toHaveCount(0)` checks of Preview-only test ids (`toolpaths-pending`, `legend-custom-gcode`,
+`color-print-details`, `gcode-panel`, `tool-position`) all run with Preview shown, so they are
+unaffected.
+
+#### Specs affected by kept state
+
+No spec changes for kept state. Every spec that switches tabs either re-frames on
+a new scene or result before it reads the camera, or reads only the sidebar, URL, status or
+Preview summary. The cases that rely on the upstream behaviour above, unchanged:
+
+- `undoRedo.spec.ts:176-181` and `plateDeleteAll.spec.ts:24-29` press Ctrl+Y / Ctrl+Shift+Z /
+  Ctrl+D on Preview and expect nothing to happen: Prepare's key handlers are unbound while it is
+  hidden (item 4).
+- `viewportObjectMenu.spec.ts:105-108` right-clicks the canvas on Preview and expects no object
+  menu: Prepare's canvas listeners are unbound (item 3).
+- `import.spec.ts:102-173` drops a project while Preview is shown, then expects Prepare framed
+  on the plate and Preview on the objects: the hidden viewports' zooms apply when shown (item 3).
+- `visual.spec.ts:29-37` changes the theme and switches tabs; the hidden viewport recolours its
+  plates and draws when shown.
+
+#### Memory
+
+Two `Viewport`s are resident instead of one:
+
+- WASM: none. The engine is in the worker and the placement runs once (item 2), one request
+  fewer per input change than two mounted canvases would make.
+- JS heap: the model geometry of each viewport views the scene's own `positions` / `indices`
+  (`subarray`, `models.ts:58-64`), so the second viewport adds only its three.js objects.
+- GPU: once both tabs have been shown, the scene's vertex and index buffers are uploaded twice
+  (12 bytes a vertex, 4 an index), plus a second bed. Toolpath textures stay Preview-only. For
+  the `worker.mobile` cylinder (2048 facets) that is under 0.1 MB. Upstream's `View3D` and
+  `Preview` canvases each hold their own volumes too.
+
+Measured with a diagnostic run, not committed, on base `facedcc79` and the change, Chromium
+(desktop, pixel), after "Slice complete" in the `worker.mobile` flow and in the
+`gcodeProcessorStreaming` cube200 flow: main-thread JS heap (`Runtime.getHeapUsage` after
+`HeapProfiler.collectGarbage`), live WebGL buffer and texture bytes (counted by wrapping
+`bufferData` / `texImage2D` / `texStorage2D` / `delete*`), and the worker's linear memory
+(`wasmMemory.ts`). The gates stay as they are and must pass: `worker.mobile` maxGap < 200 ms on
+iphone, pixel and ipad, and the cube200 linear-memory high-water ≤ 3 850 000 000 bytes. A tab
+switch on each mobile project is timed as in the earlier diagnosis.
 
 ## Verification
 
