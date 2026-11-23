@@ -9,6 +9,7 @@ import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { buildInstances, type ModelMaterials } from "./models";
 import { buildOptionMarkers } from "./optionMarkers";
+import { attachPicking } from "./picking";
 import { type SharedGl, sharedGl } from "./sharedGl";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
 import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, releaseToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
@@ -28,7 +29,7 @@ export interface ViewportColors {
 /**
  * Three.js plater canvas: bed (3DBed) plus object instances (GLVolumes),
  * orbit camera, picking. Renders on demand, after the task that changed it.
- * Draws with the application's one context (`sharedGl`), whose canvas it attaches.
+ * Draws with the application's one context (`sharedGl`), whose canvas it holds while its tab is shown.
  */
 export class Viewport {
   readonly #gl: SharedGl;
@@ -38,7 +39,6 @@ export class Viewport {
   readonly #controls: OrbitControls;
   readonly #resize: ResizeObserver;
   readonly #models = new THREE.Group();
-  readonly #raycaster = new THREE.Raycaster();
   #bed = new THREE.Group();
   #toolpaths: THREE.Mesh | null = null;
   readonly #toolMarker = buildToolMarker();
@@ -51,15 +51,17 @@ export class Viewport {
   /** The plate and instance materials of the context, kept so their shader programs stay compiled. */
   readonly #plateMaterials: PlateMaterials;
   readonly #modelMaterials: ModelMaterials;
-  /** Removes this viewport's listeners from the shared canvas. */
-  readonly #listeners = new AbortController();
+  /** This viewport's listeners on the shared canvas, while it holds the canvas. */
+  #listeners: AbortController | null = null;
+  #attached = false;
+  /** A zoom requested while hidden, applied with the shown size (`Camera::requires_zoom_to_*`). */
+  #pendingZoom: ZoomTarget | null = null;
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
   readonly #renderTask = new MessageChannel();
   #dirty = false;
   /** The container size the canvas was last fitted to. */
   #size: [number, number] = [0, 0];
   #selected: number | null = null;
-  #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
   /** A right click without a drag where instances can be edited, at its client position (GLCanvas3D::on_mouse RightUp). */
   onContextPick?: (objectId: number | null, at: [number, number]) => void;
@@ -74,13 +76,10 @@ export class Viewport {
   constructor(readonly container: HTMLElement, colors: ViewportColors) {
     this.#gl = sharedGl(colors);
     ({ renderer: this.#renderer, plateMaterials: this.#plateMaterials, modelMaterials: this.#modelMaterials } = this.#gl);
-    container.appendChild(this.#renderer.domElement);
     this.#renderTask.port1.onmessage = () => {
-      this.#dirty = false;
-      this.#renderer.render(this.#scene, this.#camera);
-      delete this.container.dataset.drawing;
+      if (this.#dirty) this.#draw();
     };
-    this.#controls = new OrbitControls(this.#camera, this.#renderer.domElement);
+    this.#controls = new OrbitControls(this.#camera);
     this.#controls.enableDamping = false;
     this.#controls.addEventListener("change", () => this.#placeGizmo());
     this.#controls.addEventListener("start", () => this.onOrbit?.());
@@ -92,28 +91,37 @@ export class Viewport {
     const fill = new THREE.DirectionalLight(0xffffff, 0.5);
     fill.position.set(1, 0.8, 0.6);
     this.#scene.add(hemisphere, key, fill, this.#models, this.#bed, this.#toolMarker);
-
-    const canvas = this.#renderer.domElement;
-    const { signal } = this.#listeners;
-    canvas.addEventListener("pointerdown", (event) => {
-      this.#pointerDown = { x: event.clientX, y: event.clientY };
-    }, { signal });
-    canvas.addEventListener("pointerup", (event) => {
-      const start = this.#pointerDown;
-      this.#pointerDown = null;
-      if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
-      if (event.button === 0) this.onPick?.(this.#pick(event));
-      else if (event.button === 2 && this.#edit) this.onContextPick?.(this.#pick(event), [event.clientX, event.clientY]);
-    }, { signal });
-    canvas.addEventListener("contextmenu", (event) => event.preventDefault(), { signal });
-
     this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
-    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit, signal);
-
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
-    this.#fitCanvas();
     this.setColors(colors);
+  }
+
+  /**
+   * Its tab is shown (`GLCanvas3D::bind_event_handlers`, Plater.cpp:12759, 12787): takes the shared
+   * canvas and its events, fits it and draws.
+   */
+  attach() {
+    const canvas = this.#renderer.domElement;
+    this.container.appendChild(canvas);
+    this.#controls.connect(canvas);
+    this.#listeners = new AbortController();
+    const { signal } = this.#listeners;
+    attachPicking(canvas, this.#camera, this.#models, {
+      onPick: (objectId) => this.onPick?.(objectId),
+      onContextPick: (objectId, at) => this.#edit && this.onContextPick?.(objectId, at),
+    }, signal);
+    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit, signal);
+    this.#attached = true;
+    this.#size = [0, 0];
+    this.#fitCanvas();
+  }
+
+  /** Its tab is hidden (`unbind_event_handlers`): the canvas's events leave it and it draws nothing. */
+  detach() {
+    this.#attached = false;
+    this.#listeners!.abort();
+    this.#controls.disconnect();
   }
 
   setColors(colors: ViewportColors) {
@@ -307,6 +315,15 @@ export class Viewport {
 
   /** GLCanvas3D::zoom_to_volumes / zoom_to_plate / zoom_to_bed. */
   zoomTo(target: ZoomTarget) {
+    if (!this.#attached) {
+      this.#pendingZoom = target;
+      return;
+    }
+    this.#zoom(target);
+    this.render();
+  }
+
+  #zoom(target: ZoomTarget) {
     const box = new THREE.Box3();
     if (target === "objects") {
       box.setFromObject(this.#models);
@@ -322,7 +339,6 @@ export class Viewport {
     if (!center) return;
     this.#controls.target.copy(center);
     this.#controls.update();
-    this.render();
   }
 
   /**
@@ -331,47 +347,43 @@ export class Viewport {
    * event, draw once when it ends.
    */
   render() {
-    if (this.#dirty) return;
+    if (this.#dirty || !this.#attached) return;
     this.#dirty = true;
     this.container.dataset.drawing = "";
     this.#renderTask.port2.postMessage(null);
   }
 
-  /** Frees this viewport's geometry and detaches the shared canvas; the context and its materials stay. */
+  #draw() {
+    this.#dirty = false;
+    this.#renderer.render(this.#scene, this.#camera);
+    delete this.container.dataset.drawing;
+  }
+
+  /** Frees this viewport's geometry; the context and its materials stay. */
   dispose() {
     this.#renderTask.port1.close();
     this.#resize.disconnect();
     this.#controls.dispose();
-    this.#listeners.abort();
     disposeGeometries(this.#models);
     disposeGeometries(this.#bed);
     disposeTree(this.#toolMarker);
     this.#gizmos.dispose();
     if (this.#toolpaths) releaseToolpathMesh(this.#toolpaths);
-    this.#renderer.domElement.remove();
   }
 
   #fitCanvas() {
     const { clientWidth: width, clientHeight: height } = this.container;
     // GLCanvas3D::_resize returns on an unchanged size (GLCanvas3D.cpp:7895-7902).
-    if (width === 0 || height === 0 || (width === this.#size[0] && height === this.#size[1])) return;
+    if (!this.#attached || width === 0 || height === 0 || (width === this.#size[0] && height === this.#size[1])) return;
     this.#size = [width, height];
     this.#renderer.setSize(width, height);
     this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
+    // The next render applies a requested zoom with the canvas size (GLCanvas3D.cpp:2574-2597).
+    if (this.#pendingZoom) this.#zoom(this.#pendingZoom);
+    this.#pendingZoom = null;
     // setSize clears the drawing buffer and resize observers run right before the frame is
     // painted: a render posted to the next task would leave that frame blank.
-    this.#renderer.render(this.#scene, this.#camera);
-  }
-
-  #pick(event: PointerEvent): number | null {
-    const rect = this.#renderer.domElement.getBoundingClientRect();
-    const pointer = new THREE.Vector2(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      -((event.clientY - rect.top) / rect.height) * 2 + 1,
-    );
-    this.#raycaster.setFromCamera(pointer, this.#camera);
-    const hit = this.#raycaster.intersectObject(this.#models, true)[0];
-    return (hit?.object.userData.objectId as number | undefined) ?? null;
+    this.#draw();
   }
 }

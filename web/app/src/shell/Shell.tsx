@@ -1,7 +1,11 @@
-import { Outlet, useRouter } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { type DragEvent, lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { exportGcode, importFiles, selectObject, slicePlate } from "../state/actions";
+import { PreparePage } from "../prepare/PreparePage";
+import { PreviewPage } from "../preview/PreviewPage";
+import { Sidebar } from "../sidebar/Sidebar";
 import { useApp } from "../state/store";
+import { usePlacedScene } from "../viewport/usePlacedScene";
 import { AboutDialog } from "./AboutDialog";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
@@ -26,6 +30,10 @@ export function Shell() {
   const importInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  // One Sidebar and both tab panes, built once; the route shows one (Plater::priv::set_current_panel,
+  // Plater.cpp:12564-12865).
+  const preview = useRouterState({ select: (state) => state.location.pathname }) === "/preview";
+  const placed = usePlacedScene();
   // Layout effect: CSS theme variables must be live before the viewport reads them.
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -79,7 +87,11 @@ export function Shell() {
           setDragging(false);
           importFiles([...event.dataTransfer.files]);
         }}>
-        <Outlet />
+        <div className="page">
+          <Sidebar />
+          <PreparePage shown={!preview} placed={placed} />
+          <PreviewPage shown={preview} placed={placed} />
+        </div>
         <LoadWarning />
         {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
       </main>

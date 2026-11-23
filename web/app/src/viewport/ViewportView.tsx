@@ -1,13 +1,10 @@
 import type { MovesView, Scene, SceneInstance, Toolpaths, ViewColors } from "@ares-slicer/wasm";
-import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
 import { moveInstance, rotateInstance, rotationPivot, scaleInstance } from "../state/plates";
-import { placedScene } from "../state/presetSlice";
-import { presetSliceBlocker } from "../state/presets";
 import { slicer } from "../state/slicer";
-import { openStlSession } from "../state/stlSession";
 import { useApp } from "../state/store";
 import { takeSnapshot } from "../state/undoRedo";
 import { CopiesDialog } from "../sidebar/CopiesDialog";
@@ -63,7 +60,11 @@ function instancesProbe(scene: Scene | null) {
   return JSON.stringify({ objects, plates: scene.plates.map((plate) => plate.instances.map(position)), wipeTower: scene.wipeTower });
 }
 
-export function ViewportView({ toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
+export function ViewportView({ scene, shown, toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
+  /** The placed scene (`usePlacedScene`). */
+  scene: Scene | null;
+  /** Its tab is shown: the canvas, its events and its keys are this view's. */
+  shown: boolean;
   toolpaths?: Toolpaths | null;
   /** Per-vertex RGB of `toolpaths` and its probe (`ViewColors`); `null` keeps `Toolpaths.colors`. */
   colors?: Pick<ViewColors, "colors" | "colorsProbe"> | null;
@@ -86,41 +87,12 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   const [copies, setCopies] = useState<number | null>(null);
   const theme = useApp((state) => state.theme);
   const loaded = useApp((state) => state.scene);
-  const file = useApp((state) => state.file);
-  const selection = useApp((state) => state.presetSelection);
-  const vendors = useApp((state) => state.vendors);
-  const presetImports = useApp((state) => state.presetImports);
   const selected = useApp((state) => state.selectedObject);
   const currentPlate = useApp((state) => state.currentPlate);
   const plater = useApp((state) => state.plater);
-  // GLCanvas3D::deselect_all closes the open gizmo (GLCanvas3D.cpp:3063-3071).
-  if (gizmo && selected === null) setGizmo(null);
-  // With presets selected the plate shows the model and bed the preset slice uses, re-placed on
-  // every printer switch (on_select_preset -> on_config_change -> set_bed_shape, Plater.cpp:9576-9580,
-  // 16754-16755). An STL becomes a plater session there; plater edits keep the placement.
-  const [placed, setPlaced] = useState<{ inputs: unknown[]; scene: Scene } | null>(null);
-  const inputs = [file, selection, vendors, presetImports];
-  const current = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : null;
-  // A plater session keeps its edited objects and plates; the placement supplies the composed bed.
-  const scene = useMemo(
-    () => (current && plater && loaded ? { ...loaded, settings: current.settings } : current ?? loaded),
-    [current, loaded, plater],
-  );
-  useEffect(() => {
-    const model = useApp.getState().scene;
-    if (!file || !model || !selection || presetSliceBlocker(selection, model)) return;
-    let stale = false;
-    const sources = { vendors, presetImports };
-    // A selection the engine cannot compose keeps the loaded plate; the process tab shows the
-    // same composition error (usePresetValues).
-    (model.format === "stl" ? openStlSession(file, model, selection, sources) : placedScene(file, model, selection, sources)).then(
-      (result) => !stale && setPlaced({ inputs: [file, selection, vendors, presetImports], scene: result }),
-      () => !stale && setPlaced(null),
-    );
-    return () => {
-      stale = true;
-    };
-  }, [file, selection, vendors, presetImports]);
+  // GLCanvas3D::deselect_all closes the open gizmo (GLCanvas3D.cpp:3063-3071), and so does switching
+  // to Preview (gizmos.reset_all_states, Plater.cpp:12789-12793).
+  if (gizmo && (selected === null || !shown)) setGizmo(null);
   // A new scene or slice result resets the camera to the plate view; plater edits keep the
   // session's settings and the camera.
   const frame = plater ? scene?.settings : scene;
@@ -134,8 +106,35 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
 
   useEffect(() => {
     let instance: Viewport | null = null;
+    let disposed = false;
+    void viewportModule.then(({ Viewport: ViewportClass }) => {
+      if (disposed) return;
+      instance = new ViewportClass(host.current!, themeColors());
+      instance.onPick = selectObject;
+      // A right click on an object selects it and, while no gizmo is open, shows the object menu at the
+      // cursor; elsewhere it deselects (GLCanvas3D::on_mouse RightUp, GLCanvas3D.cpp:5411-5471;
+      // Plater::priv::on_right_click, Plater.cpp:14201-14263).
+      instance.onContextPick = (objectId, at) => {
+        selectObject(objectId);
+        setMenu(objectId === null || gizmoOpen.current ? null : { objectId, at });
+      };
+      instance.onOrbit = () => setActive(null);
+      void slicer.prepareViewerTextures(instance.maxTextureSize);
+      setViewport(instance);
+    });
+    return () => {
+      disposed = true;
+      instance?.dispose();
+    };
+  }, []);
+
+  // set_current_panel binds the shown canvas's events and unbinds the hidden one's
+  // (GLCanvas3D::bind_event_handlers / unbind_event_handlers, Plater.cpp:12740-12787).
+  useEffect(() => {
+    if (!viewport || !shown) return;
+    const instance = viewport;
     const onKey = (event: KeyboardEvent) => {
-      if (!instance || !isShortcut(event) || event.altKey) return;
+      if (!isShortcut(event) || event.altKey) return;
       const key = event.key.toLowerCase();
       // GLCanvas3D::on_char without Ctrl: I / O zoom in / out; GLGizmosManager::open_gizmo_by_shortcut
       // (GLGizmosManager.cpp:548-568): M, R and S open or close a gizmo of the selection.
@@ -155,29 +154,9 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       if (preset === "plate") instance.zoomTo("bed");
       setActive(preset);
     };
-    let disposed = false;
-    void viewportModule.then(({ Viewport: ViewportClass }) => {
-      if (disposed) return;
-      instance = new ViewportClass(host.current!, themeColors());
-      instance.onPick = selectObject;
-      // A right click on an object selects it and, while no gizmo is open, shows the object menu at the
-      // cursor; elsewhere it deselects (GLCanvas3D::on_mouse RightUp, GLCanvas3D.cpp:5411-5471;
-      // Plater::priv::on_right_click, Plater.cpp:14201-14263).
-      instance.onContextPick = (objectId, at) => {
-        selectObject(objectId);
-        setMenu(objectId === null || gizmoOpen.current ? null : { objectId, at });
-      };
-      instance.onOrbit = () => setActive(null);
-      window.addEventListener("keydown", onKey);
-      void slicer.prepareViewerTextures(instance.maxTextureSize);
-      setViewport(instance);
-    });
-    return () => {
-      disposed = true;
-      window.removeEventListener("keydown", onKey);
-      instance?.dispose();
-    };
-  }, []);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [viewport, shown]);
 
   // `theme` switches the CSS variables that themeColors() reads.
   // oxlint-disable-next-line react/exhaustive-effect-dependencies
@@ -251,6 +230,12 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setEnabled(enabled.segments, enabled.options, toolpaths.vertexCount);
     viewport?.setToolMarker(toolpaths, enabled.marker?.vertex ?? null);
   }, [viewport, enabled, toolpaths]);
+  // After the layout effects above, so the shown tab draws its commit once.
+  useLayoutEffect(() => {
+    if (!viewport || !shown) return;
+    viewport.attach();
+    return () => viewport.detach();
+  }, [viewport, shown]);
 
   return (
     <div className="viewport" data-instances={instancesProbe(scene)}>

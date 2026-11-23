@@ -1,18 +1,20 @@
+import type { Scene } from "@ares-slicer/wasm";
 import { useEffect } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
-import { Sidebar } from "../sidebar/Sidebar";
 import { deleteAllObjects } from "../state/plates";
 import { useApp } from "../state/store";
 import { redo, undo } from "../state/undoRedo";
 import { ViewportView } from "../viewport/ViewportView";
 
-export function PreparePage() {
+/** The Prepare tab pane: mounted for the application, hidden while Preview is shown. */
+export function PreparePage({ shown, placed }: { shown: boolean; placed: Scene | null }) {
   const scene = useApp((state) => state.scene);
   // "Delete All" (Shortcut::DeleteAll, Ctrl+D, Shortcuts.cpp:80), enabled on the Prepare tab while the
   // model has objects (MainFrame::can_delete_all, MainFrame.cpp:2128-2131). Undo (Ctrl+Z) and redo
   // (Ctrl+Y, Shortcuts.cpp:74-75, and Ctrl+Shift+Z) act on the plater; a focused field keeps the
-  // browser's own undo.
+  // browser's own undo. The keys act while the tab is shown.
   useEffect(() => {
+    if (!shown) return;
     const onKey = (event: KeyboardEvent) => {
       if (!isShortcut(event) || !cmdDown(event) || event.altKey) return;
       const key = event.key.toLowerCase();
@@ -29,11 +31,10 @@ export function PreparePage() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [shown]);
   return (
-    <div className="page">
-      <Sidebar />
-      <ViewportView editable>
+    <div className="tab-pane" hidden={!shown}>
+      <ViewportView scene={placed} shown={shown} editable>
         {!scene && (
           <div className="canvas-hint">
             <div className="canvas-hint-title">Drag a 3MF project or STL model here</div>

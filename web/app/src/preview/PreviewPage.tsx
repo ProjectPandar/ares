@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { EXTRUSION_ROLES, type Toolpaths, type ViewColors } from "@ares-slicer/wasm";
+import { EXTRUSION_ROLES, type Scene, type Toolpaths, type ViewColors } from "@ares-slicer/wasm";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Sidebar } from "../sidebar/Sidebar";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { setPreview, slicePlate, stepLayers, stepTopLayer, toggleGcodeWindow, toggleOneLayer } from "../state/actions";
 import { slicer } from "../state/slicer";
@@ -59,7 +58,8 @@ function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRole
   return state?.toolpaths === toolpaths ? state.colors : null;
 }
 
-export function PreviewPage() {
+/** The Preview tab pane: mounted for the application, hidden while Prepare is shown. */
+export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene | null }) {
   const scene = useApp((state) => state.scene);
   const currentPlate = useApp((state) => state.currentPlate);
   const slice = useApp((state) => state.slice);
@@ -67,9 +67,10 @@ export function PreviewPage() {
   const toolpaths = slice.status === "done" ? slice.toolpaths : null;
   const gcodeWindow = useApp((state) => state.gcodeWindow);
   useEffect(() => {
+    if (!shown) return;
     window.addEventListener("keydown", onPreviewKey);
     return () => window.removeEventListener("keydown", onPreviewKey);
-  }, []);
+  }, [shown]);
   const options = useMemo(() => (toolpaths ? usedOptions(toolpaths) : []), [toolpaths]);
   const colors = useViewColors(toolpaths, view.viewType, view.hiddenRoles, view.visibleOptions);
   const [movesState, setMoves] = useState<MovesState | null>(null);
@@ -78,9 +79,8 @@ export function PreviewPage() {
   // GCodeViewer::render: the window frames the current vertex's line (`GCodeViewer.cpp:1601`).
   const currentLine = toolpaths && moves ? toolpaths.ids[2 * moves.range[2]] : 0;
   return (
-    <div className="page">
-      <Sidebar />
-      <ViewportView toolpaths={toolpaths} colors={moves ?? colors} enabled={moves} view={live?.filter ?? view} fit="objects">
+    <div className="tab-pane" hidden={!shown}>
+      <ViewportView scene={placed} shown={shown} toolpaths={toolpaths} colors={moves ?? colors} enabled={moves} view={live?.filter ?? view} fit="objects">
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (
@@ -116,7 +116,7 @@ export function PreviewPage() {
         )}
         {toolpaths && (
           <Suspense>
-            <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} steps={LAYER_STEPS} />
+            <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} steps={LAYER_STEPS} shown={shown} />
           </Suspense>
         )}
         {slice.status === "done" && gcodeWindow && currentLine !== 0 && (
