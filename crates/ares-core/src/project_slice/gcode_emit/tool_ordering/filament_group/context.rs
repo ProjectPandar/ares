@@ -27,6 +27,7 @@ pub(super) struct Context {
     pub manual_extruders: Vec<usize>,
     pub requested_volumes: Vec<i32>,
     pub manual_multi_nozzle: bool,
+    pub auto_multi_nozzle: bool,
 }
 
 impl Context {
@@ -73,9 +74,10 @@ impl Context {
             .iter()
             .map(|count| usize::try_from(*count).expect("validated nozzle count"))
             .collect::<Vec<_>>();
-        let manual_multi_nozzle = settings.project.gcode.filament_map_mode
-            == crate::ProjectFilamentMapMode::Manual
-            && nozzle_counts.iter().any(|count| *count > 1);
+        let multiple_nozzles = nozzle_counts.iter().any(|count| *count > 1);
+        let manual_multi_nozzle = multiple_nozzles
+            && settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::Manual;
+        let auto_multi_nozzle = multiple_nozzles && !manual_multi_nozzle;
         if (!manual_multi_nozzle
             && settings.project.gcode.filament_map_mode
                 != crate::ProjectFilamentMapMode::AutoForFlush)
@@ -86,12 +88,7 @@ impl Context {
                 .bools()
                 .iter()
                 .any(|v| *v)
-            || (!manual_multi_nozzle
-                && config
-                    .option("extruder_max_nozzle_count")
-                    .ints()
-                    .iter()
-                    .any(|v| *v != 1))
+            || (!multiple_nozzles && nozzle_counts.iter().any(|&count| count != 1))
             || print.nozzle_diameter.0.len() != 2
         {
             return Err(unsupported());
@@ -105,7 +102,7 @@ impl Context {
                 .get(head)
                 .map_or(0, |v| *v as i32)
         });
-        if manual_multi_nozzle
+        if multiple_nozzles
             && (settings
                 .project
                 .gcode
@@ -120,7 +117,7 @@ impl Context {
         {
             return Err(unsupported());
         }
-        if !manual_multi_nozzle {
+        if !multiple_nozzles {
             check_nozzle_stats(&config, &volumes)?;
         }
         let nozzle_groups = build_nozzle_groups(&nozzle_counts, &volumes, &print.nozzle_diameter);
@@ -150,7 +147,7 @@ impl Context {
             .iter()
             .map(|volume| volume.0)
             .collect();
-        if used.len() >= 14 {
+        if used.len() >= 14 || (auto_multi_nozzle && (total != 1 || used != [0])) {
             return Err(unsupported());
         }
         let matrices = prepare_flush_matrices(settings, total);
@@ -180,12 +177,14 @@ impl Context {
                 .collect()
         });
         let volume_limits = declaration_limits(settings, checkpoint, &used, total);
-        for head in 0..2 {
-            limits[head].extend(
-                used.iter()
-                    .copied()
-                    .filter(|id| volume_limits[*id].contains(&volumes[head])),
-            );
+        if !auto_multi_nozzle {
+            for head in 0..2 {
+                limits[head].extend(
+                    used.iter()
+                        .copied()
+                        .filter(|id| volume_limits[*id].contains(&volumes[head])),
+                );
+            }
         }
         remove_intersection(&mut limits);
         let mut capacity = [0; 2];
@@ -231,6 +230,7 @@ impl Context {
             manual_extruders,
             requested_volumes,
             manual_multi_nozzle,
+            auto_multi_nozzle,
         })
     }
 }

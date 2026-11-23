@@ -16,6 +16,8 @@ mod filament_group_flush_remembered_pair;
 mod filament_group_flush_restriction_pairs;
 #[path = "nullable_vectors/filament_group_flush_unused.rs"]
 mod filament_group_flush_unused;
+#[path = "nullable_vectors/filament_group_h2c_auto_flush.rs"]
+mod filament_group_h2c_auto_flush;
 #[path = "nullable_vectors/filament_group_nozzle_carry.rs"]
 mod filament_group_nozzle_carry;
 #[path = "nullable_vectors/filament_variant_members.rs"]

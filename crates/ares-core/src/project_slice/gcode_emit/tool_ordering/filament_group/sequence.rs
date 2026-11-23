@@ -97,7 +97,8 @@ pub(super) fn score_multi_nozzle(context: &Context, map: &[usize]) -> f64 {
 fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<usize>>) {
     let mut output = Vec::with_capacity(context.layers.len());
     // Ordinary maps use physical heads; multi-nozzle maps use nozzle-group IDs.
-    let matrix = if context.manual_multi_nozzle {
+    let multiple_nozzles = context.manual_multi_nozzle || context.auto_multi_nozzle;
+    let matrix = if multiple_nozzles {
         &context.matrices[context.nozzle_groups[head].extruder]
     } else {
         &context.matrices[head]
@@ -111,32 +112,29 @@ fn score_nozzle(context: &Context, map: &[usize], head: usize) -> (i32, Vec<Vec<
             .copied()
             .filter(|id| map[*id] == head)
             .collect::<Vec<_>>();
-        let sequence = if let Some(custom) = context
-            .custom
-            .get(&index)
-            .filter(|_| !context.manual_multi_nozzle)
-        {
-            let sequence = custom
-                .iter()
-                .copied()
-                .filter(|id| map[*id] == head)
-                .collect::<Vec<_>>();
-            cost = custom_cost(matrix, &sequence, previous, cost);
-            sequence
-        } else {
-            // Source uint128_t key; inter-layer forecast is disabled.
-            let mut key = current.iter().fold(0_u128, |bits, id| {
-                bits | 1_u128.checked_shl(*id as u32).unwrap_or(0)
-            });
-            if let Some(id) = previous {
-                key |= 1_u128.checked_shl((64 + id) as u32).unwrap_or(0);
-            }
-            let (volume, sequence) = cache
-                .entry(key)
-                .or_insert_with(|| order(matrix, &current, previous));
-            cost = (cost as f32 + *volume) as i32;
-            sequence.clone()
-        };
+        let sequence =
+            if let Some(custom) = context.custom.get(&index).filter(|_| !multiple_nozzles) {
+                let sequence = custom
+                    .iter()
+                    .copied()
+                    .filter(|id| map[*id] == head)
+                    .collect::<Vec<_>>();
+                cost = custom_cost(matrix, &sequence, previous, cost);
+                sequence
+            } else {
+                // Source uint128_t key; inter-layer forecast is disabled.
+                let mut key = current.iter().fold(0_u128, |bits, id| {
+                    bits | 1_u128.checked_shl(*id as u32).unwrap_or(0)
+                });
+                if let Some(id) = previous {
+                    key |= 1_u128.checked_shl((64 + id) as u32).unwrap_or(0);
+                }
+                let (volume, sequence) = cache
+                    .entry(key)
+                    .or_insert_with(|| order(matrix, &current, previous));
+                cost = (cost as f32 + *volume) as i32;
+                sequence.clone()
+            };
         if let Some(&last) = sequence.last() {
             previous = Some(last);
         }

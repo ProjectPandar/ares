@@ -135,6 +135,41 @@ fn calc_one_change_budget(context: &Context) -> f64 {
     f64::from(*median) * sequence::FLUSH_VOLUME_TO_SCORE * 1.2
 }
 
+// FilamentGroup.cpp:286-402: with one filament the candidate key reduces to
+// volume and whether the nozzle ID is nonzero. Every candidate fits the AMS limit.
+pub(super) fn solve_single_filament(context: &Context) -> usize {
+    let mut seen = BTreeSet::new();
+    let mut best = (false, f64::MAX, 0);
+    for nozzle in &context.nozzle_groups {
+        let id = nozzle.group_id;
+        if !seen.insert((nozzle.volume, id != 0)) {
+            continue;
+        }
+        let printable = !context.limits[nozzle.extruder].contains(&0)
+            && !context.volume_limits[0].contains(&nozzle.volume);
+        let mut score = sequence::score_multi_nozzle(context, &[id]);
+        if id != context.master {
+            score += 10.0;
+        }
+        if (printable && !best.0) || (printable == best.0 && score < best.1) {
+            best = (printable, score, id);
+        }
+    }
+
+    // ToolOrdering.cpp:1682-1745,1842-1856: in the absence of loaded
+    // filaments, keep the master-preferred candidate whenever the swap is legal.
+    if context.nozzle_groups[best.2].extruder != context.master
+        && !context.limits[context.master].contains(&0)
+        && let Some(nozzle) = context
+            .nozzle_groups
+            .iter()
+            .find(|nozzle| nozzle.extruder == context.master)
+    {
+        return nozzle.group_id;
+    }
+    best.2
+}
+
 pub(super) fn solve(context: &Context) -> Vec<usize> {
     let one_change_budget = calc_one_change_budget(context);
     let mut seen = BTreeSet::new();
