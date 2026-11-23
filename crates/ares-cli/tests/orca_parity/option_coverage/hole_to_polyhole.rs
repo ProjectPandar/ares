@@ -14,6 +14,8 @@
 
 #[path = "hole_to_polyhole/aligned_seam_wipe.rs"]
 mod aligned_seam_wipe;
+#[path = "hole_to_polyhole/denominator_width.rs"]
+mod denominator_width;
 #[path = "hole_to_polyhole/zero_threshold.rs"]
 mod zero_threshold;
 
