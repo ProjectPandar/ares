@@ -60,18 +60,17 @@ geometry, metadata fields, ZIP writing, CLI routing or configuration parsing.
 ## Public verification
 
 Use the existing sliced STL export route (`ares slice … --slice 1 --export-3mf`)
-with explicit presets and a synthetic binary STL pre-scaled to the dimensions
-of a converted one-inch cube. Confirm that both CLIs accept the same model and
-that the plate area or a bound exercises a differing float spelling before
-committing the regression test. Also use the converted inch STL through the
-top-level `--convert-unit --slice … --export-3mf` route once it supports sliced
-STL export. Neither route may patch a JSON member after writing it.
+with explicit presets and a synthetic chamfered STL. Its binary-exact mesh
+coordinates produce a fractional first-layer area while preserving integral
+bounds and center. Confirm that both CLIs accept the model and that the area
+exercises a differing float spelling before committing the regression test.
+Use the converted inch STL through the top-level `--convert-unit --slice …
+--export-3mf` route once it supports sliced STL export. Neither route may patch
+a JSON member after writing it.
 
 Run the CLI case against the pinned Orca release in official and seeded modes.
 Require byte equality of `Metadata/plate_<n>.json` without parsing or rewriting
-its numbers, and compare the whole raw 3MF byte-for-byte, without masks. Keep
-both original archives. The existing member comparator admits generator-banner
-and ZIP member-order differences; it is not a raw ZIP comparison. If the raw
-comparison exposes an independent difference (e.g. the generator banner or
-ZIP envelope), report it separately rather than changing the comparator,
-normalizing output, or treating member equality as raw archive equality.
+its numbers. Compare the complete set of archive members with the existing
+comparator and only its established generator-banner and member-order rules.
+Do not compare the raw ZIP envelopes or add exceptions. Keep both original
+archives.
