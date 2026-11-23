@@ -41,9 +41,9 @@ test("a plater session moves, rotates and replans plates, and slices the edited 
   mkdirSync(artifacts, { recursive: true });
   const root = `${web}e2e/plater-session-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 } });
-  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4178, strictPort: true } });
+  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 0, strictPort: true } });
   try {
-    await page.goto("http://127.0.0.1:4178/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
 
     const loaded = await call<Layout>(page, "load", [...readFileSync(`${repositoryRoot}${FIXTURE}`)], "two-plates.3mf");
