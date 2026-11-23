@@ -4,7 +4,7 @@ use std::{path::Path, process::Command};
 fn invoke(selector: &str, root: Option<&Path>, cwd: &Path) -> std::process::Output {
     let mut command = Command::new(std::env::current_exe().unwrap());
     command
-        .args(["--exact", selector, "--nocapture"])
+        .args(["--exact", selector, "--nocapture", "--include-ignored"])
         .current_dir(cwd)
         .env("ARES_ORCA_BIN", std::env::current_exe().unwrap())
         .env_remove("ARES_REQUIRE_ORCA")

@@ -368,6 +368,7 @@ mod sweep;
 /// Gated behind `ARES_PARITY_SWEEP=1` because slicing every vendor preset
 /// through both slicers takes hours.
 #[test]
+#[ignore = "full vendor parity matrix; run explicitly with ARES_PARITY_SWEEP=1"]
 fn printer_sweep() {
     sweep::run_printer_sweep();
 }

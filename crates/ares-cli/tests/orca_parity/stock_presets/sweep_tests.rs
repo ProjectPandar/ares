@@ -26,6 +26,7 @@ fn official_mode_marks_random_start_gcode_printers_skip() {
 }
 
 #[test]
+#[ignore = "full stock printer parity matrix; run explicitly with ARES_PARITY_STOCK_SWEEP=1"]
 fn stock_printer_sweep() {
     super::run();
 }
