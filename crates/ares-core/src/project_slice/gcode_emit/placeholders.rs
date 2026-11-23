@@ -1,8 +1,7 @@
 mod bounds;
 mod cut_retraction;
-
+mod retraction;
 mod timestamp;
-mod toolchange_retraction;
 
 pub(super) use cut_retraction::insert_aliases as refresh_filament_aliases;
 
@@ -77,18 +76,7 @@ pub(super) fn base_config(
     config.insert("first_layer_temperature", first_layer_temperatures.clone());
     config.insert("nozzle_temperature_initial_layer", first_layer_temperatures);
     insert_flush_placeholders(&mut config, traversal);
-    // `retract_length` is exposed to templates from the filament retraction
-    // length (`GCode.cpp:2898`).
-    let retract_length = &traversal.resolved.views.runtime_gcode.retraction_length;
-    let retract_length = value::Value::List(
-        retract_length
-            .0
-            .iter()
-            .map(|value| value::Value::number(value.0))
-            .collect(),
-    );
-    config.insert("retract_length", retract_length.clone());
-    config.insert("retraction_length", retract_length);
+    retraction::insert(&mut config, &traversal.resolved.views);
     insert_bed_temperature_placeholders(&mut config);
     bounds::insert_print_bed_bounds(&mut config);
     bounds::insert_first_layer_bounds(
@@ -239,7 +227,6 @@ fn insert_runtime_placeholders(
     config.insert("input_filename_base", Value::String(input_filename));
     config.insert("zhop", Value::number(0.0));
     cut_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
-    toolchange_retraction::insert(config, &traversal.resolved.views.runtime_gcode);
     refresh_filament_aliases(config, 0);
     config.insert(
         "position",
