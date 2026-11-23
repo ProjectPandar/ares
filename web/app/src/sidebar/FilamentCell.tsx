@@ -1,8 +1,8 @@
 import type { FilamentTarget } from "@ares-slicer/wasm";
 import { useId, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
-import { assignFilament, filamentPalette } from "../state/filamentAssignment";
+import { activeFilamentNames, assignFilament, filamentPalette } from "../state/filamentAssignment";
 import { useApp } from "../state/store";
-import { filamentNames } from "./options";
+
 import "./filamentAssignment.css";
 
 const slotLabel = (slot: number) => slot ? `Filament ${slot}` : "Default";
@@ -11,16 +11,16 @@ const slotLabel = (slot: number) => slot ? `Filament ${slot}` : "Default";
 export function FilamentCell({ name, target, slot, modifier = false }: {
   name: string; target: FilamentTarget; slot: number; modifier?: boolean;
 }) {
-  const settings = useApp((state) => state.scene?.settings ?? null);
+  const scene = useApp((state) => state.scene);
   const selection = useApp((state) => state.presetSelection);
   const available = useApp((state) => Boolean(state.plater) && !state.arranging && state.slice.status !== "slicing");
   const trigger = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const menuId = useId();
-  const count = selection?.filaments.length ?? filamentNames(settings).length;
+  const count = activeFilamentNames(selection, scene).length;
   if (count < 2) return null;
-  const palette = filamentPalette(selection, settings);
+  const palette = filamentPalette(selection, scene?.settings ?? null, scene?.filamentSlots);
   const choices = Array.from({ length: count + Number(modifier) }, (_, index) => index + Number(!modifier));
   const background = (value: number) => palette[value - 1] ?? "#888";
 

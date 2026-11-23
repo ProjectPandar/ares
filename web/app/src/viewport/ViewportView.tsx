@@ -192,7 +192,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setBed(bedFromSettings(scene?.settings ?? null), origins?.length ? origins : undefined, currentPlate);
   }, [viewport, scene, currentPlate]);
   useEffect(() => {
-    viewport?.setScene(scene, filamentPalette(selection, loaded?.settings ?? null));
+    viewport?.setScene(scene, filamentPalette(selection, loaded?.settings ?? null, loaded?.filamentSlots));
   }, [viewport, scene, loaded, selection]);
 
   // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it; the release

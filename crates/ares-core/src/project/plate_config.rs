@@ -154,7 +154,7 @@ fn parse_print_sequence(value: &str) -> Option<ProcessPrintSequence> {
     }
 }
 
-fn parse_int_list(value: &str) -> Option<Vec<i32>> {
+pub(super) fn parse_int_list(value: &str) -> Option<Vec<i32>> {
     let trimmed = value.trim().trim_matches(['[', ']']);
     if trimmed.is_empty() {
         return Some(Vec::new());

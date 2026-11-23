@@ -47,6 +47,9 @@ impl Project {
         if let Some(order) = &edits.object_order {
             self.order_objects(order);
         }
+        for &change in &edits.slot_changes {
+            self.remap_slot_references(change);
+        }
         self.replay_filament_edits(&edits.filament);
         for change in &edits.instances {
             let Some(object) = self.objects.iter().position(|o| o.id() == change.object_id) else {

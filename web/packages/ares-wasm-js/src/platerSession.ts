@@ -1,6 +1,7 @@
 import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
+import type { FilamentSlotEdit } from "./types.js";
 import type { FilamentTarget, ArrangeSettings, ArrangeSettingsModel, PlaterLayout, OptionMap, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
 
 type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
@@ -28,6 +29,10 @@ export class PlaterSession {
   /** The edited project as `loadScene` returns it, with every plate's `origin`. */
   async scene(): Promise<Scene> {
     return (await this.#call({ kind: "platerScene", sessionId: this.#sessionId })) as Scene;
+  }
+
+  editFilamentSlots(edit: FilamentSlotEdit): Promise<PlaterLayout> {
+    return this.#edit({ op: "editFilamentSlots", edit });
   }
 
   /**

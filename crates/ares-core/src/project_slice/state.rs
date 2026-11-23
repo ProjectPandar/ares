@@ -64,6 +64,7 @@ pub(super) fn load_project_source(
         project.replace_plate_custom_gcodes(custom_gcodes);
     }
     project.apply_plater_edits(source.edits);
+    project.replay_slot_options(source.edits)?;
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);
     }

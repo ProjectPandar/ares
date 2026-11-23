@@ -11,6 +11,8 @@ struct Layout {
     /// `wipe_tower_x`, `wipe_tower_y`: the project config's tower position per plate.
     #[serde(rename = "wipeTower")]
     wipe_tower: (Vec<f64>, Vec<f64>),
+    #[serde(rename = "filamentSlots")]
+    filament_slots: ares_core::FilamentSlots,
 }
 
 /// An object's instances; the id follows an object an arrange sorts (`PartPlate.cpp:8389`).
@@ -56,6 +58,7 @@ impl PlaterSession {
                 .collect(),
             plates: self.plates(),
             wipe_tower: self.session.tower_positions(),
+            filament_slots: self.session.filament_slots(),
         };
         serde_json::to_string(&layout).expect("plater layout serializes")
     }
