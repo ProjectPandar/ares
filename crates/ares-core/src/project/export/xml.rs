@@ -257,7 +257,8 @@ pub(super) fn plate_json(archive: &SlicedArchive, first_print_object_id: u32) ->
             name: &object.name,
         })
         .collect();
-    serde_json::to_vec(&Plate {
+    let mut bytes = Vec::new();
+    Plate {
         bbox_all,
         bbox_objects,
         bed_type: "cool_plate",
@@ -268,8 +269,13 @@ pub(super) fn plate_json(archive: &SlicedArchive, first_print_object_id: u32) ->
         is_seq_print: false,
         nozzle_diameter: f64::from(archive.nozzle_diameter),
         version: 2,
-    })
-    .expect("plate metadata is serializable")
+    }
+    .serialize(&mut serde_json::Serializer::with_formatter(
+        &mut bytes,
+        super::json_float::PlateJsonFormatter,
+    ))
+    .expect("plate metadata is serializable");
+    bytes
 }
 
 pub(super) fn slice_info(
