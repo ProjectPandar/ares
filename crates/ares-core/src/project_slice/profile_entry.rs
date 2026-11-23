@@ -112,7 +112,7 @@ fn load_with_profile_preparation(
                 })
         }
     }?;
-    loaded.replay_slot_options(project.edits)?;
+    loaded.replay_slot_options(&project.edits.slot_changes)?;
     if profile.full_fff_config.is_some() {
         loaded.compose_as_full_fff_config();
     }

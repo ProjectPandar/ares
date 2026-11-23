@@ -32,11 +32,8 @@ pub(crate) struct SlotOptionsSnapshot {
 }
 
 impl Project {
-    pub(crate) fn replay_slot_options(
-        &mut self,
-        edits: &crate::PlaterEdits,
-    ) -> Result<(), SliceError> {
-        for &change in &edits.slot_changes {
+    pub(crate) fn replay_slot_options(&mut self, changes: &[SlotChange]) -> Result<(), SliceError> {
+        for &change in changes {
             self.apply_slot_options(change)?;
         }
         Ok(())
