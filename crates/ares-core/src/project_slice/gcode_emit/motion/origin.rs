@@ -3,6 +3,10 @@
 use super::EmitState;
 
 pub(in crate::project_slice::gcode_emit) fn set_origin(state: &mut EmitState, origin: (f64, f64)) {
+    let origin = state
+        .belt
+        .as_ref()
+        .map_or(origin, |belt| belt.origin(origin));
     // Point3's double constructor rounds the scaled translation (`Point.hpp:280`).
     let translation = (
         ((state.origin.0 - origin.0) / state.scale_factor).round() as i64,

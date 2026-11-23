@@ -4,7 +4,7 @@ mod small_perimeter;
 pub(super) mod wipe_inward;
 use inward::{ccw_angle, loop_is_counter_clockwise, path_length};
 
-use super::{EmitState, LayerGeometry, format::axis as format_axis};
+use super::{EmitState, LayerGeometry};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoopRole,
     materialize::{ExtrusionPath, ExtrusionRole, Point3},

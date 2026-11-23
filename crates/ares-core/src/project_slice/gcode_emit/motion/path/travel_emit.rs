@@ -1,4 +1,3 @@
-use super::super::format::z as format_z;
 use super::format_axis;
 
 pub(super) fn quantize_axis(value: f64) -> f64 {
@@ -15,9 +14,8 @@ pub(super) fn xy_with_comment(
 ) {
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} F{}{comment}\n",
-            format_axis(x - state.xy_offset.0),
-            format_axis(y - state.xy_offset.1),
+            "G1 {} F{}{comment}\n",
+            state.xy_words((x, y), None),
             format_axis(feedrate)
         )
         .as_bytes(),
@@ -35,10 +33,8 @@ pub(super) fn xyz_with_comment(
 ) {
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} Z{} F{}{comment}\n",
-            format_axis(x - state.xy_offset.0),
-            format_axis(y - state.xy_offset.1),
-            format_z(z),
+            "G1 {} F{}{comment}\n",
+            state.xy_words((x, y), Some(z)),
             format_axis(feedrate)
         )
         .as_bytes(),

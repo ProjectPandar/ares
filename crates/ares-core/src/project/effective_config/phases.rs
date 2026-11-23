@@ -191,6 +191,23 @@ fn resolve_with_observer(
     // ToolOrdering::initialize re-derives the map before G-code export
     // (ToolOrdering.cpp:1288-1303; Print::update_filament_maps_to_config).
     crate::options::filament_map_recommend::apply_recommended_filament_map(&mut first);
+    // PrintApply.cpp:1379–1386 and BeltTransform.hpp::physical_tilt.
+    let printer = &mut first.printer.remaining;
+    if printer.belt_printer.0 {
+        let magnitude = printer.belt_slice_rotation_angle.0.abs();
+        printer.build_plate_tilt_x.0 = if printer.belt_slice_rotation == crate::BeltRotationAxis::X
+        {
+            magnitude
+        } else {
+            0.0
+        };
+        printer.build_plate_tilt_y.0 = if printer.belt_slice_rotation == crate::BeltRotationAxis::Y
+        {
+            magnitude
+        } else {
+            0.0
+        };
+    }
     observer.resolve_views(&first);
     let views = resolve_project_config_views(first)?;
 

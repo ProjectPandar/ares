@@ -43,8 +43,8 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             };
             output.extend_from_slice(
                 format!(
-                    "G1 Z{} F{}{comment}\n",
-                    format::z(raised),
+                    "G1 {} F{}{comment}\n",
+                    state.z_words(raised),
                     format::axis(feedrate)
                 )
                 .as_bytes(),
@@ -86,8 +86,8 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
         };
         output.extend_from_slice(
             format!(
-                "G1 Z{} F{}{comment}\n",
-                format::z(dest),
+                "G1 {} F{}{comment}\n",
+                state.z_words(dest),
                 format::axis(z_feedrate)
             )
             .as_bytes(),

@@ -1,7 +1,7 @@
 //! `GCodeWriter.cpp:1056–1094`: writer-only E restoration and unlift.
 use super::super::{
     EmitState, extrusion,
-    format::{axis, extrusion as format_extrusion, z},
+    format::{axis, extrusion as format_extrusion},
 };
 
 pub(in crate::project_slice::gcode_emit::motion) fn unlift(
@@ -17,7 +17,12 @@ pub(in crate::project_slice::gcode_emit::motion) fn unlift(
             ""
         };
         output.extend_from_slice(
-            format!("G1 Z{} F{}{comment}\n", z(target), axis(feedrate)).as_bytes(),
+            format!(
+                "G1 {} F{}{comment}\n",
+                state.z_words(target),
+                axis(feedrate)
+            )
+            .as_bytes(),
         );
         state.record_z(target);
         state.current_feedrate = feedrate;

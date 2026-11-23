@@ -121,6 +121,23 @@ pub(super) fn append_width_block(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
 ) -> Result<(), crate::SliceError> {
+    let printer = &traversal.resolved.views.full.printer.remaining;
+    if printer.belt_printer.0 {
+        let axis = match printer.belt_slice_rotation {
+            crate::BeltRotationAxis::X => 'x',
+            crate::BeltRotationAxis::Y => 'y',
+            _ => unreachable!("belt admission requires a tilted axis"),
+        };
+        output.extend_from_slice(
+            format!(
+                "; belt_slice_rotation = {axis}\n; belt_slice_rotation_angle = {:.1}\n; belt_frame_tilt_decouple = {}\n; belt_frame_tilt_angle = {:.1}\n",
+                printer.belt_slice_rotation_angle.0,
+                u8::from(printer.belt_frame_tilt_decouple.0),
+                printer.belt_frame_tilt_angle.0,
+            )
+            .as_bytes(),
+        );
+    }
     let first_source = traversal.objects[0]
         .predecessor
         .predecessor

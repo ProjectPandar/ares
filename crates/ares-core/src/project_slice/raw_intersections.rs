@@ -86,7 +86,7 @@ pub(super) fn slice_projected_objects(
         .expect("2 mm loop-repair radius must fit the selected coordinate scale");
     let mut looped_objects = Vec::with_capacity(projected_objects.len());
     for projected_object in projected_objects {
-        let (plan, projected_volumes) = projected_object.into_parts();
+        let (mut plan, projected_volumes) = projected_object.into_parts();
         let source = &source_objects[plan.source_object_index];
         let resolved = resolved_objects
             .iter()
@@ -103,14 +103,19 @@ pub(super) fn slice_projected_objects(
         });
         let center =
             super::centering::center(source, &resolved.print_objects[plan.transform_index], scale)?;
-        let centered_object_transform = resolved.print_objects[plan.transform_index]
-            .transform
-            .without_xy_translation()
-            .pretranslated(Point3d::new(
-                -scale.unscale(center.x()),
-                -scale.unscale(center.y()),
-                0.0,
-            ));
+        let centered_object_transform = plan.belt_slice.map_or_else(
+            || {
+                resolved.print_objects[plan.transform_index]
+                    .transform
+                    .without_xy_translation()
+                    .pretranslated(Point3d::new(
+                        -scale.unscale(center.x()),
+                        -scale.unscale(center.y()),
+                        0.0,
+                    ))
+            },
+            |slice| slice.centered_transform,
+        );
         let planes = plan
             .layers
             .iter()
@@ -192,6 +197,11 @@ pub(super) fn slice_projected_objects(
                 volume_type: source_volume.volume_type(),
                 layers,
             });
+        }
+        if let Some(slice) = plan.belt_slice {
+            for layer in &mut plan.layers {
+                layer.print_z += slice.print_z_offset;
+            }
         }
         looped_objects.push(LoopedPrintObject { plan, volumes });
     }

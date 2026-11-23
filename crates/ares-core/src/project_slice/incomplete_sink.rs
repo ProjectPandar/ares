@@ -357,6 +357,7 @@ fn consume_onion_object(object: perimeters::classic::PostClassicOnionPrintObject
         transform_index,
         slicing_parameters,
         layers,
+        ..
     } = plan;
     let _ = (source_object_index, transform_index, slicing_parameters);
     for layers::PlannedLayer {

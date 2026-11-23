@@ -3,6 +3,8 @@ mod initialize;
 mod markers;
 mod role_fans;
 
+pub(super) use role_fans::mark_belt_extrusion;
+
 use markers::strip_pressure_markers;
 
 use crate::options::PartCoolingFanRamp;
@@ -61,6 +63,7 @@ pub(super) struct CoolingState {
     gcode_comments: bool,
     equalizer: Option<crate::project_slice::pressure_equalizer::PressureEqualizerPass>,
     feedrate: feedrate::State,
+    belt_fan_off: bool,
 }
 
 impl CoolingState {
@@ -69,6 +72,7 @@ impl CoolingState {
         self.part_speed = None;
         self.additional_speed = None;
         self.current_part_speed = None;
+        self.belt_fan_off = false;
     }
 
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
@@ -156,6 +160,9 @@ impl CoolingState {
         // `m_current_extruder` at layer entry (the previous layer's last
         // tool), not the tool this layer's text ends on.
         let entry_tool = self.feedrate.current_tool();
+        if self.belt_fan_off {
+            role_fans::mark_belt_fan_carry(&mut layer);
+        }
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
         if equalized {
             let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));

@@ -7,6 +7,7 @@ use crate::{
 pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 1024;
 
 mod archive_plate;
+mod belt;
 mod bounds;
 mod capabilities;
 mod closing;

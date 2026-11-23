@@ -143,12 +143,7 @@ fn emit_inner(
         }
     }
 
-    let (acceleration, configured_speed) = properties.kinematics(
-        &state.options,
-        state.layer_index,
-        state.object_layer_over_raft,
-        requested_speed,
-    );
+    let (acceleration, configured_speed) = properties.kinematics(state, requested_speed);
     // GCode.cpp:6615-6617 caps against the same effective flow as extrusion.
     let capped_speed = if state.options.max_volumetric_speed > 0.0 {
         configured_speed.min(
@@ -225,7 +220,7 @@ fn emit_inner(
     // Acceleration/jerk emit BEFORE the custom role-change hooks
     // (`GCode.cpp:6460-6464` before `:6745-6770`) so a hook can
     // override them.
-    let jerk = properties.jerk(&state.options, state.layer_index);
+    let jerk = properties.jerk(state);
     set_accel_and_jerk(output, state, acceleration, jerk, false);
     // `_extrude`'s custom role-change gcode fires AFTER the approach
     // travel/unretract, before the marker block (`GCode.cpp:6745-6770`);
@@ -308,6 +303,12 @@ fn emit_inner(
         );
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
+    // Admission limits the inactive-floor belt to one object and one tool.
+    // Its fan gate can therefore change only at the first extrusion of a layer.
+    if state.belt.is_some() && state.belt_fan_marker_layer != Some(state.layer_index) {
+        state.belt_fan_marker_layer = Some(state.layer_index);
+        super::super::cooling::mark_belt_extrusion(output, state.on_first_layer);
+    }
     state.current_feedrate = state.extrusion_feedrate;
     // `GCode.cpp:7115`: sloped paths run through the same processed
     // `extrude_path` loop when `estimate` produced `new_points` — the
