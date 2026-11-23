@@ -38,7 +38,7 @@ const COSINE: [f64; 5] = [
     f64::from_bits(0x3ef9_9343_027b_f8c3),
 ];
 
-pub(super) fn sin_cos(angle: f32) -> (f32, f32) {
+pub(crate) fn sin_cos(angle: f32) -> (f32, f32) {
     (sample(angle, false), sample(angle, true))
 }
 
