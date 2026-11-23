@@ -41,6 +41,7 @@ write `Wn -> COORD: …`.
     - `parity-control-set.sh`;
     - the Orca launchers.
   - `parity-250.env` and `parity-seeded-250.env`, the official and seeded Native comparison environments.
+  - `moonraker-250.env`, including `ARES_MOONRAKER_LEGACY_METADATA_PY` for Moonraker v0.9.3 metadata extraction.
   - `gcroots/`, the Nix GC roots for every Native oracle build. A nightly GC deletes unrooted store paths.
   - `orca-cache/`, the shared persistent Native output cache.
   - `fulls/` and `evidence/`, the batch run roots.
