@@ -6,6 +6,7 @@ use super::super::{
 use super::{MODEL, deferred, invalid};
 use crate::SliceError;
 
+#[derive(Clone, Debug, PartialEq)]
 pub(super) struct Mesh {
     pub name: String,
     pub vertices: Vec<[f32; 3]>,
@@ -14,12 +15,14 @@ pub(super) struct Mesh {
     pub source_offset: [f32; 3],
 }
 
-pub(super) struct Object {
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Object {
     pub name: String,
     pub placement: [f64; 3],
-    pub parts: Vec<Part>,
+    pub(super) parts: Vec<Part>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub(super) struct Part {
     pub mesh: Mesh,
     pub transform: Transform3d,
@@ -35,6 +38,38 @@ pub(super) struct SavedModel {
 }
 
 impl Object {
+    pub(crate) fn from_placed_stl(project: &crate::Project) -> Result<Self, SliceError> {
+        let [object] = project.objects() else {
+            return Err(deferred("expected one STL object"));
+        };
+        let ([instance], [volume]) = (object.instances(), object.volumes()) else {
+            return Err(deferred("expected one STL instance and volume"));
+        };
+        let name = object.name();
+        let placement = instance
+            .transform()
+            .then(volume.transform())
+            .to_column_major();
+        let mesh = Mesh {
+            name: name.to_owned(),
+            vertices: volume
+                .mesh()
+                .vertices()
+                .iter()
+                .map(|p| [p.x as f32, p.y as f32, p.z as f32])
+                .collect(),
+            triangles: volume
+                .mesh()
+                .triangles()
+                .iter()
+                .map(|tri| tri.map(|i| i as usize))
+                .collect(),
+            placement: [placement[12], placement[13], placement[14]],
+            source_offset: [0.0; 3],
+        };
+        Ok(Self::unsliced(mesh, name))
+    }
+
     pub(super) fn unsliced(mesh: Mesh, filename: &str) -> Self {
         Self {
             name: mesh.name.clone(),

@@ -1,7 +1,7 @@
 mod tower;
 
 use super::*;
-use crate::project_slice::ArchivePlate;
+use crate::project_slice::ArchiveSource;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
 use crate::{GenerationMetadata, ProcessedGCode, SliceError};
 pub(in crate::project_slice) fn emit(
@@ -9,7 +9,7 @@ pub(in crate::project_slice) fn emit(
     (metadata, record_moves): (GenerationMetadata, bool),
     context: &mut crate::SlicerContext,
     warnings: &mut Vec<crate::PrintWarning>,
-    archive: Option<&mut Option<ArchivePlate>>,
+    archive: Option<ArchiveSource>,
 ) -> Result<ProcessedGCode, SliceError> {
     let traversal = &prepared
         .predecessor
@@ -49,8 +49,7 @@ pub(in crate::project_slice) fn emit(
         |index| &prepared.objects[index][0].tool_regions,
     )?;
     let archive_facts = archive
-        .is_some()
-        .then(|| archive::facts(traversal, &schedule, &brim))
+        .map(|source| archive::facts(traversal, &schedule, &brim, source))
         .transpose()?;
     let tower_corners = schedule.tower.as_ref().map_or_else(Vec::new, |tower| {
         let [x, y] = wipe_tower::plate_position(traversal);
@@ -123,10 +122,10 @@ pub(in crate::project_slice) fn emit(
     crate::options::write_config_block(
         &traversal.resolved.views,
         (
-            archive_facts.as_ref().map_or(
-                &traversal.project.documents().project_settings_raw,
-                |facts| &facts.project_settings,
-            ),
+            match (archive, &archive_facts) {
+                (Some(ArchiveSource::Saved), Some(facts)) => &facts.project_settings,
+                _ => &traversal.project.documents().project_settings_raw,
+            },
             traversal.project.documents().config_composer,
         ),
         traversal.project.current_plate_index(),

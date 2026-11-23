@@ -1,11 +1,12 @@
 use super::{brim, footprint, layers};
 use crate::SliceError;
-use crate::project_slice::ArchivePlate;
+use crate::project_slice::{ArchivePlate, ArchiveSource};
 
 pub(super) fn facts(
     traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     schedule: &layers::Schedule,
     brim: &[Option<brim::BrimPlan>],
+    source: ArchiveSource,
 ) -> Result<ArchivePlate, SliceError> {
     let objects = traversal
         .objects
@@ -49,6 +50,15 @@ pub(super) fn facts(
             .unwrap_or_default()
     };
     let nozzle_diameter = setting("nozzle_diameter").parse().unwrap_or(0.0);
+    let (project_settings, stl_model) = match source {
+        ArchiveSource::Saved => (saved_settings(settings), None),
+        ArchiveSource::DirectStl => (
+            crate::project::export::direct_stl_settings(&traversal.project),
+            Some(crate::project::export::Object::from_placed_stl(
+                &traversal.project,
+            )?),
+        ),
+    };
     Ok(ArchivePlate {
         objects,
         layer_count: schedule.layer_count(),
@@ -56,7 +66,8 @@ pub(super) fn facts(
         filament_type: setting("filament_type"),
         filament_id: setting("filament_ids"),
         nozzle_diameter,
-        project_settings: saved_settings(settings),
+        project_settings,
+        stl_model,
     })
 }
 
@@ -70,7 +81,9 @@ pub(super) fn sliced_archive(facts: ArchivePlate) -> Result<crate::SlicedArchive
         nozzle_diameter: facts.nozzle_diameter,
         project_settings: crate::project::export::write_project_settings_raw(
             &facts.project_settings,
+            facts.stl_model.is_none(),
         )?,
+        stl_model: facts.stl_model,
     })
 }
 
