@@ -1,5 +1,7 @@
 //! `WipeTower2.cpp::rounding_polygon` and `Circle.cpp` arc angle calculation.
 
+mod fillet_trig;
+
 use std::f64::consts::{PI, TAU};
 
 use crate::geometry::{CoordinateScale, Point, Polygon};
@@ -84,9 +86,10 @@ fn append_arc(
         } else if angle < 0.0 {
             angle = (f64::from(angle) + TAU) as f32;
         }
+        let (sin, cos) = fillet_trig::sin_cos(angle);
         output.push(Point::new(
-            center.x() + (radius as f64 * f64::from(angle.cos())).round() as i64,
-            center.y() + (radius as f64 * f64::from(angle.sin())).round() as i64,
+            center.x() + (radius as f64 * f64::from(cos)).round() as i64,
+            center.y() + (radius as f64 * f64::from(sin)).round() as i64,
         ));
     }
 }
