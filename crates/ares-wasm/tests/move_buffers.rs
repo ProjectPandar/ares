@@ -30,12 +30,15 @@ fn processed_buffers_preserve_ids_and_owned_data() {
     });
     assert_eq!(output.take_gcode(), b"G1 X1\n");
     assert!(output.take_gcode().is_empty());
+    let mut vertices = output.take_vertices();
     let mut moves = output.take_moves();
     assert_eq!(moves.count(), 2);
     assert_eq!(moves.take_ids(), [0, 0, 16777217, 0]);
     assert_eq!(&moves.take_values()[12..15], &[1.0, 2.0, 3.0]);
     assert_eq!(&moves.take_tags()[5..], &[10, 0, 0, 0, 1]);
-    let mut vertices = output.take_vertices();
+    assert!(moves.take_ids().is_empty());
+    assert!(moves.take_values().is_empty());
+    assert!(moves.take_tags().is_empty());
     let legend: serde_json::Value =
         serde_json::from_str(&vertices.filament_legend().unwrap()).unwrap();
     assert_eq!(legend["colorPrint"]["visible"], false);
@@ -57,7 +60,11 @@ fn processed_buffers_preserve_ids_and_owned_data() {
     assert_eq!(values[26], 7.0);
     assert_eq!(vertices.take_tool_colors(), [255, 48, 48]);
     assert_eq!(vertices.take_color_print_colors(), [255, 48, 48]);
-    assert!(output.take_moves().take_ids().is_empty());
+    let mut empty = output.take_moves();
+    assert_eq!(empty.count(), 0);
+    assert!(empty.take_ids().is_empty());
+    assert!(empty.take_values().is_empty());
+    assert!(empty.take_tags().is_empty());
 }
 
 #[test]
