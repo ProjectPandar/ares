@@ -121,7 +121,6 @@ pub(super) fn document_text(document: &ProfileDocument, key: &str) -> String {
 /// records without re-parsing vendor data per call.
 pub struct PresetCatalogHandle {
     catalog: Catalog,
-    retained_thumbnails_only: bool,
 }
 
 impl PresetCatalogHandle {
@@ -132,7 +131,6 @@ impl PresetCatalogHandle {
     pub fn new() -> Self {
         Self {
             catalog: Catalog::empty(),
-            retained_thumbnails_only: false,
         }
     }
 
@@ -140,7 +138,6 @@ impl PresetCatalogHandle {
     pub fn from_json(input: &str) -> Result<Self, SliceError> {
         Ok(Self {
             catalog: Catalog::from_json(input)?,
-            retained_thumbnails_only: false,
         })
     }
 
@@ -152,24 +149,11 @@ impl PresetCatalogHandle {
         self.catalog.push_vendor(vendor)
     }
 
-    /// Limit implicit CLI resource lookup to the retained printer's thumbnail option.
-    pub fn only_retained_thumbnails(mut self) -> Self {
-        self.retained_thumbnails_only = true;
-        self
-    }
-
-    pub(crate) fn retains_only_thumbnails(&self) -> bool {
-        self.retained_thumbnails_only
-    }
-
     /// CLI:2793–2817 refreshes resolvable system filaments without compacting slots.
     pub(crate) fn refresh_direct(
         &self,
         raw: &ProjectSettingsRaw,
     ) -> Result<ProjectSettingsRaw, SliceError> {
-        if self.retains_only_thumbnails() {
-            return super::project_refresh::retained_thumbnail_refresh(&self.catalog, raw);
-        }
         super::project_refresh::direct_refresh(&self.catalog, raw)
     }
 
