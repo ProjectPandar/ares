@@ -18,7 +18,7 @@ const MODEL_OPEN: &str = concat!(
 );
 const VERSION_METADATA: &str = " <metadata name=\"BambuStudio:3mfVersion\">1</metadata>\n";
 // The model stream uses float::max_digits10 (bbs_3mf.cpp:7143–7151).
-fn transform_3mf(transform: Transform3d, use_f32: bool) -> String {
+fn transform_3mf(transform: Transform3d) -> String {
     let column_major = transform.to_column_major();
     let values = column_major
         .as_chunks::<4>()
@@ -26,11 +26,7 @@ fn transform_3mf(transform: Transform3d, use_f32: bool) -> String {
         .iter()
         .flat_map(|column| &column[..3])
         .copied();
-    if use_f32 {
-        numbers_f32(values)
-    } else {
-        numbers(values, 9)
-    }
+    numbers(values, 9)
 }
 
 pub(super) fn content_types() -> String {
@@ -122,7 +118,7 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
         let path = quick_xml::escape::escape(path);
         writeln!(out, "  <object id=\"{id}\" p:UUID=\"{backup_id:08x}-61cb-4c03-9d28-80fed5dfa1dc\" type=\"model\">\n   <components>").unwrap();
         for (id, prefix, part) in object.parts() {
-            let transform = transform_3mf(part.transform, part.use_f32_transform);
+            let transform = transform_3mf(part.transform);
             writeln!(out, "    <component p:path=\"/{path}\" objectid=\"{id}\" p:UUID=\"{prefix:08x}-b206-40ff-9872-83e8017abed1\" transform=\"{transform}\"/>").unwrap();
         }
         out.push_str("   </components>\n  </object>\n");
@@ -131,7 +127,7 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
     for object in objects {
         let id = object.id;
         for instance in &object.object.instances {
-            let transform = transform_3mf(instance.transform, false);
+            let transform = transform_3mf(instance.transform);
             let printable = u8::from(instance.printable);
             writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{transform}\" printable=\"{printable}\"/>").unwrap();
         }
@@ -198,16 +194,8 @@ pub(super) fn model_settings(
             let filename = quick_xml::escape::escape(&part.source_file);
             // `_add_model_config_file_to_archive` uses double::max_digits10 (bbs_3mf.cpp:8301).
             let values = part.matrix.as_matrix().iter().flatten().copied();
-            let matrix = if part.mesh.use_f32_vertices {
-                full_numbers(values)
-            } else {
-                numbers(values, 17)
-            };
-            let [x, y, z] = if part.mesh.use_f32_vertices {
-                part.mesh.source_offset.map(f32_full_number)
-            } else {
-                part.mesh.source_offset.map(f64::from).map(number)
-            };
+            let matrix = numbers(values, 17);
+            let [x, y, z] = source_offsets(&part.mesh);
 
             let (source_object, source_volume) = (part.source_object, part.source_volume);
             writeln!(out, "    <part id=\"{id}\" subtype=\"normal_part\">\n      <metadata key=\"name\" value=\"{name}\"/>\n      <metadata key=\"matrix\" value=\"{matrix}\"/>").unwrap();
@@ -257,7 +245,13 @@ pub(super) fn slice_info(
     // PartPlate.cpp:8470–8481: integer seconds and std::to_string(float).
     let prediction = processed.result.print_statistics.normal_time as u32;
     let first_layer_time = format!("{:.6}", processed.result.initial_layer_time);
+    let label_object_enabled = archive.label_object_enabled;
     let weight = processed.print_statistics.total_weight;
+    let weight = if weight == 0.0 {
+        String::new()
+    } else {
+        format!("{weight:.2}")
+    };
     let used_m = processed.print_statistics.total_used_filament / 1000.0;
     let used_g = processed.print_statistics.total_weight;
     let last_layer = archive.layer_count.saturating_sub(1);
@@ -265,7 +259,7 @@ pub(super) fn slice_info(
     objects.sort_by_key(|object| object.model_index);
     let mut object_entries = String::new();
     for object in objects {
-        let name = quick_xml::escape::escape(&object.name);
+        let name = quick_xml::escape::escape(object.gcode_name.as_deref().unwrap_or(&object.name));
         let identify_id = object.identify_id;
         writeln!(
             object_entries,
@@ -274,7 +268,7 @@ pub(super) fn slice_info(
         .unwrap();
     }
     format!(
-        "{DECL}<config>\n  <header>\n    <header_item key=\"X-BBL-Client-Type\" value=\"slicer\"/>\n    <header_item key=\"X-BBL-Client-Version\" value=\"{BAMBU_VERSION}\"/>\n    <header_item key=\"OrcaSlicer-Version\" value=\"{ORCA_VERSION}\"/>\n  </header>\n  <plate>\n    <metadata key=\"index\" value=\"{plate}\"/>\n    <metadata key=\"extruder_type\" value=\"0\"/>\n    <metadata key=\"nozzle_volume_type\" value=\"0\"/>\n    <metadata key=\"printer_model_id\" value=\"\"/>\n    <metadata key=\"nozzle_diameters\" value=\"{:.1}\"/>\n    <metadata key=\"timelapse_type\" value=\"0\"/>\n    <metadata key=\"prediction\" value=\"{prediction}\"/>\n    <metadata key=\"weight\" value=\"{weight:.2}\"/>\n    <metadata key=\"first_layer_time\" value=\"{first_layer_time}\"/>\n    <metadata key=\"outside\" value=\"false\"/>\n    <metadata key=\"support_used\" value=\"false\"/>\n    <metadata key=\"label_object_enabled\" value=\"true\"/>\n    <metadata key=\"enable_filament_dynamic_map\" value=\"false\"/>\n    <metadata key=\"has_filament_switcher\" value=\"false\"/>\n    <metadata key=\"filament_maps\" value=\"1\"/>\n    <metadata key=\"limit_filament_maps\" value=\"0\"/>\n{object_entries}    <filament id=\"1\" tray_info_idx=\"{}\" type=\"{}\" color=\"{}\" used_m=\"{used_m:.2}\" used_g=\"{used_g:.2}\" group_id=\"0\" nozzle_diameter=\"{:.2}\" volume_type=\"Standard\" used_for_object=\"true\" used_for_support=\"false\"/>\n    <nozzle id=\"0\" extruder_id=\"1\" nozzle_diameter=\"{:.1}\" volume_type=\"Standard\"/>\n    <layer_filament_lists>\n      <layer_filament_list filament_list=\"0\" layer_ranges=\"0 {last_layer}\" />\n    </layer_filament_lists>\n  </plate>\n</config>\n",
+        "{DECL}<config>\n  <header>\n    <header_item key=\"X-BBL-Client-Type\" value=\"slicer\"/>\n    <header_item key=\"X-BBL-Client-Version\" value=\"{BAMBU_VERSION}\"/>\n    <header_item key=\"OrcaSlicer-Version\" value=\"{ORCA_VERSION}\"/>\n  </header>\n  <plate>\n    <metadata key=\"index\" value=\"{plate}\"/>\n    <metadata key=\"extruder_type\" value=\"0\"/>\n    <metadata key=\"nozzle_volume_type\" value=\"0\"/>\n    <metadata key=\"printer_model_id\" value=\"\"/>\n    <metadata key=\"nozzle_diameters\" value=\"{:.1}\"/>\n    <metadata key=\"timelapse_type\" value=\"0\"/>\n    <metadata key=\"prediction\" value=\"{prediction}\"/>\n    <metadata key=\"weight\" value=\"{weight}\"/>\n    <metadata key=\"first_layer_time\" value=\"{first_layer_time}\"/>\n    <metadata key=\"outside\" value=\"false\"/>\n    <metadata key=\"support_used\" value=\"false\"/>\n    <metadata key=\"label_object_enabled\" value=\"{label_object_enabled}\"/>\n    <metadata key=\"enable_filament_dynamic_map\" value=\"false\"/>\n    <metadata key=\"has_filament_switcher\" value=\"false\"/>\n    <metadata key=\"filament_maps\" value=\"1\"/>\n    <metadata key=\"limit_filament_maps\" value=\"0\"/>\n{object_entries}    <filament id=\"1\" tray_info_idx=\"{}\" type=\"{}\" color=\"{}\" used_m=\"{used_m:.2}\" used_g=\"{used_g:.2}\" group_id=\"0\" nozzle_diameter=\"{:.2}\" volume_type=\"Standard\" used_for_object=\"true\" used_for_support=\"false\"/>\n    <nozzle id=\"0\" extruder_id=\"1\" nozzle_diameter=\"{:.1}\" volume_type=\"Standard\"/>\n    <layer_filament_lists>\n      <layer_filament_list filament_list=\"0\" layer_ranges=\"0 {last_layer}\" />\n    </layer_filament_lists>\n  </plate>\n</config>\n",
         archive.nozzle_diameter,
         archive.filament_id,
         archive.filament_type,
@@ -331,43 +325,12 @@ fn numbers(values: impl Iterator<Item = f64>, digits: usize) -> String {
         .join(" ")
 }
 
-fn full_numbers(values: impl Iterator<Item = f64>) -> String {
-    values.map(full_number).collect::<Vec<_>>().join(" ")
-}
-
-fn numbers_f32(values: impl Iterator<Item = f64>) -> String {
-    values
-        .map(|value| f32_number(value as f32))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
 fn f32_number(value: f32) -> String {
-    let mut output = format!("{value:.9}");
-    while output.ends_with('0') {
-        output.pop();
-    }
-    if output.ends_with('.') {
-        output.pop();
-    }
-    output
+    crate::options::format_number_precision(f64::from(value), 9)
 }
 
-fn f32_full_number(value: f32) -> String {
-    full_number(f64::from(value))
-}
-
-fn full_number(value: f64) -> String {
-    let mut output = format!("{value:.17}");
-    while output.ends_with('0') {
-        output.pop();
-    }
-    if output.ends_with('.') {
-        output.pop();
-    }
-    output
-}
-
-fn number(value: f64) -> String {
-    crate::options::format_number(value)
+fn source_offsets(mesh: &super::geometry::Mesh) -> [String; 3] {
+    let digits = if mesh.use_f32_vertices { 17 } else { 6 };
+    mesh.source_offset
+        .map(|value| crate::options::format_number_precision(f64::from(value), digits))
 }

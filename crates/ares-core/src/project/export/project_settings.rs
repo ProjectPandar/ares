@@ -42,7 +42,7 @@ pub(crate) fn direct_stl_settings(
     let mut raw = project.documents().project_settings_raw.clone();
     let print = &project.settings().project.print;
     let count = project.cli_filament_count();
-    if !raw.contains_key("flush_volumes_matrix") {
+    if count != 0 && !raw.contains_key("flush_volumes_matrix") {
         // CLI resizes the table before computing transitions. For a single
         // filament, each nozzle contributes only its zero diagonal (OrcaSlicer.cpp:3944–3979).
         let matrix = if count == 1 {

@@ -36,6 +36,7 @@ pub(super) fn compose(
     } else {
         crate::profiles::loaded_filament_ordinary_values(profile.filament_raws)?
     };
+    let missing_filament = profile.load_names.is_some() && profile.filament_raws.is_empty();
     let mut raw = profile.profile_raw.clone();
     raw.extend_raw(&ordinary);
     let capped = super::cli_machine_limits::apply(&mut raw, profile.load_names, "");
@@ -44,7 +45,9 @@ pub(super) fn compose(
         ("print_settings_id", &project.preset.print_settings_id.0),
         ("printer_settings_id", &project.preset.printer_settings_id.0),
     ] {
-        raw.insert(key.to_owned(), RawConfigValue::Text(value.clone()));
+        if profile.load_names.is_none() || !value.is_empty() {
+            raw.insert(key.to_owned(), RawConfigValue::Text(value.clone()));
+        }
     }
     for (key, values) in [
         (
@@ -57,7 +60,9 @@ pub(super) fn compose(
             &project.preset.print_compatible_printers.0,
         ),
     ] {
-        raw.insert_strings(key, values);
+        if !missing_filament || key != "filament_settings_id" {
+            raw.insert_strings(key, values);
+        }
     }
     if let Some(groups) = profile.full_fff_config {
         groups.apply(&mut raw);
@@ -66,6 +71,9 @@ pub(super) fn compose(
         ("filament_map", &project.gcode.filament_map.0),
         ("filament_self_index", &project.preset.filament_self_index.0),
     ] {
+        if missing_filament {
+            continue;
+        }
         raw.insert(
             key.to_owned(),
             RawConfigValue::List(
@@ -81,6 +89,11 @@ pub(super) fn compose(
         // view (`Config.cpp:577-579` normalizes every loaded preset at
         // compose, before any overlay).
         let mut settings = profile.settings.clone();
+        if missing_filament {
+            let defaults = crate::ProjectRuntimeOptions::default();
+            settings.project.gcode.filament_map = defaults.gcode.filament_map;
+            settings.project.preset.filament_self_index = defaults.preset.filament_self_index;
+        }
         if !sparse {
             let (_, _, ordinary, _) =
                 crate::options::json_deserialize::deserialize_config_values(ordinary.into_object())
@@ -121,6 +134,16 @@ pub(super) fn compose(
     }
     // CLI:4243-4244 normalizes mixed metadata for the loaded logical slots.
     let filament_count = settings.project.preset.filament_settings_id.0.len();
-    super::resize_mixed_filament_metadata(&mut raw, filament_count, filament_count);
+    if missing_filament {
+        // OrcaSlicer.cpp:3202–3206 allocates the process and machine columns
+        // even with no loaded filament preset.
+        for key in ["inherits_group", "different_settings_to_system"] {
+            if !raw.contains_key(key) {
+                raw.insert_strings(key, &[String::new(), String::new()]);
+            }
+        }
+    } else {
+        super::resize_mixed_filament_metadata(&mut raw, filament_count, filament_count);
+    }
     Ok((settings, raw, preparation))
 }

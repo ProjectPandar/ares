@@ -7,7 +7,7 @@ mod stl_settings;
 mod three_mf;
 
 use super::{
-    Project, ProjectInstance, ProjectModel, ProjectObject, Transform3d,
+    Project, ProjectInstance, ProjectModel, ProjectObject,
     documents::{PlateMetadata, ProjectDocuments},
 };
 use crate::{

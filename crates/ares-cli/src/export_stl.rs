@@ -24,7 +24,6 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
             args.export_stl.is_some() && args.export_stls.is_some(),
             "--export-stl with --export-stls",
         ),
-        (args.export_3mf.is_some(), "--export-3mf"),
         (args.selection.is_some(), "--slice"),
         (args.min_save.is_some(), "--min-save"),
         (args.load_slicedata.is_some(), "--load-slicedata"),

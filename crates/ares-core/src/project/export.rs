@@ -3,11 +3,13 @@ mod geometry;
 mod project_settings;
 mod saved_presets;
 mod scene;
+mod stl;
 mod xml;
 mod zip_records;
 
 pub use scene::export_project_3mf;
 pub(crate) use scene::write as write_plater_project;
+pub use stl::export_imported_stl_3mf;
 
 use std::io::{Cursor, Seek, Write};
 
