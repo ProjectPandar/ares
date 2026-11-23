@@ -52,11 +52,14 @@ impl CliFailure {
         self
     }
 
-    pub(super) fn triangle_count_exceeds_limit(_output: &Path) -> Self {
+    pub(super) fn triangle_count_exceeds_limit(
+        _output: &Path,
+        #[cfg(target_os = "linux")] plate_index: u32,
+    ) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -59,
             #[cfg(target_os = "linux")]
-            plate_index: 1,
+            plate_index,
             #[cfg(target_os = "linux")]
             layer_height: 0.0,
             #[cfg(target_os = "linux")]

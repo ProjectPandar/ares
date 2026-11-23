@@ -5,6 +5,46 @@ use std::path::Path;
 use super::{CliFailure, FamilyFailure};
 use ares_core::{PrintWarning, SliceError, SlicedPlate, SlicingNotificationType, WarningLevel};
 
+impl CliFailure {
+    pub(crate) fn with_stl_reports(
+        self,
+        (_plate, _settings): (u32, Option<(f64, i32, f64)>),
+        _completed: Vec<(u32, SlicedPlate)>,
+    ) -> Self {
+        #[cfg(target_os = "linux")]
+        {
+            let Self::Family(mut family) = self else {
+                return self;
+            };
+            if _plate != 0 {
+                family.plate_index = _plate;
+            }
+            if let Some(settings) = _settings {
+                (
+                    family.layer_height,
+                    family.wall_loops,
+                    family.sparse_infill_density,
+                ) = settings;
+            }
+            let warnings = std::mem::take(&mut family.warnings);
+            for (id, report) in _completed {
+                family
+                    .completed
+                    .push(crate::result_json::SlicedPlateEntry::from_plate(
+                        id, &report,
+                    ));
+                family
+                    .warnings
+                    .extend(crate::result_json::slicing_warnings(id, report.warnings));
+            }
+            family.warnings.extend(warnings);
+            Self::Family(family)
+        }
+        #[cfg(not(target_os = "linux"))]
+        self
+    }
+}
+
 fn is_empty_layer_warning(warning: &PrintWarning) -> bool {
     warning.level == WarningLevel::Critical
         && warning.message_type == SlicingNotificationType::EmptyGcodeLayers

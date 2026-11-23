@@ -58,9 +58,11 @@ pub(crate) fn slice_error_to_failure(
             "Unsupported 3MF version. Please make sure the 3MF file was created with the official version of Bambu Studio, not a beta version.",
             String::new(),
         ),
-        SliceError::TriangleCountExceedsLimit { .. } => {
-            CliFailure::triangle_count_exceeds_limit(output)
-        }
+        SliceError::TriangleCountExceedsLimit { .. } => CliFailure::triangle_count_exceeds_limit(
+            output,
+            #[cfg(target_os = "linux")]
+            selected_plate_index,
+        ),
         // OrcaSlicer.cpp:5291–5295 rejects before slicing, with plate index 0.
         SliceError::MissingProjectPlate(_) => family(
             -2,
