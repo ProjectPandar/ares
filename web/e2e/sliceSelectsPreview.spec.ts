@@ -55,3 +55,24 @@ test("Slice all selects the Preview tab and ends on the last plate", async ({ pa
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
   await expectSwitchBeforeComplete(page);
 });
+
+// OpenGLManager::init_glcontext (OpenGLManager.cpp:352-378) creates one context and View3D and
+// Preview both draw with it (GUI_Preview.cpp:90, 289): the tab switch reuses the Prepare canvas's
+// context and the programs linked in it.
+test("the Preview canvas draws with the context of the Prepare canvas", async ({ page }) => {
+  type Marked = WebGL2RenderingContext & { prepareMark?: boolean };
+  const canvas = page.getByTestId("viewport").locator("canvas");
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}tests/parity/cube10.stl`);
+  await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
+  await canvas.evaluate((node: HTMLCanvasElement) => {
+    (node.getContext("webgl2") as Marked).prepareMark = true;
+  });
+
+  await action(page, "Slice plate").click();
+  await expect(page).toHaveURL(/#\/preview$/);
+  await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
+  const marked = await canvas.evaluate((node: HTMLCanvasElement) => (node.getContext("webgl2") as Marked).prepareMark === true);
+  expect(marked, "the Preview canvas has the Prepare canvas's WebGL context").toBe(true);
+});
