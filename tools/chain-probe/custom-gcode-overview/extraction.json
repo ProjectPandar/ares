@@ -6,7 +6,7 @@
   },
   "label": "native source-kernel oracle; not full native viewer execution",
   "adaptations": [
-    "GCodeViewer::get_layers_zs member to a free function over the viewer",
+    "GCodeViewer::get_layers_zs member to a free function over the viewer and its belt layer Zs",
     "the label strings and the overview loop wrapped in a function; locals, m_viewer and imgui supplied as parameters",
     "imgui.time records the accumulated float before the formatted text"
   ],
@@ -44,7 +44,7 @@
   ],
   "files": {
     "kernel.upstream.hpp": "b6ecc904d7eb828e709c96846e7ed98e73f9d5a12886a05d340280815742f10a",
-    "kernel.hpp": "58c6195ed5a8e017c71b585e32bccb9c07b30328817d71dd10ae2c70ecef7d1a",
-    "kernel.diff": "0f3ba85eedc9de4b7c365ec82cc48950ef1a2395b133f61dd19f9485df5f90a5"
+    "kernel.hpp": "9f83373a388917567a5948b3c8008e8d409fcc77c3b470b7d7b2ed51012f556a",
+    "kernel.diff": "ba2159040ac657d69d0440cbeb27ff66df58ba1097dd6e634daee12f8c0c386f"
   }
 }

@@ -1,0 +1,31 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -315,4 +315,4 @@ else ()
+-    if (NOT APPLE)
++    if (NOT APPLE AND NOT SLIC3R_FHS)
+         set(output_sos_Release "")
+         set(output_sos_Debug "")
+         add_custom_target(OrcaSlicerSosCopy ALL DEPENDS OrcaSlicer)
+@@ -363,6 +363,8 @@ else ()
+-    add_custom_command(TARGET OrcaSlicer POST_BUILD
+-        COMMAND ${CMAKE_COMMAND} -E rm -rf "${BIN_DIR}/python"
+-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/libpython" "${BIN_DIR}/python"
+-        COMMENT "Copying Python runtime into the build tree"
+-        VERBATIM)
++    if (NOT SLIC3R_FHS)
++        add_custom_command(TARGET OrcaSlicer POST_BUILD
++            COMMAND ${CMAKE_COMMAND} -E rm -rf "${BIN_DIR}/python"
++            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/libpython" "${BIN_DIR}/python"
++            COMMENT "Copying Python runtime into the build tree"
++            VERBATIM)
++    endif()
+     # Stage uv next to the binary for the build-tree/.app flows, which never
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1325,3 +1325,3 @@
+-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
++if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT SLIC3R_FHS)
+     set(LIBRARY_FILES
+     ${LIBDIR_BIN}/libavformat.so.61
