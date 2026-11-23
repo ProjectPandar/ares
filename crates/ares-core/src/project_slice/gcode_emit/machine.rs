@@ -100,17 +100,12 @@ pub(super) fn append_second_layer_transition(
 ) {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
-    // Nozzle temperature transition (`GCode.cpp:4800-4812`): M104 when the
-    // second-layer temperature differs from the first-layer one. The tool
-    // parameter is dropped for single-extruder printers
-    // (`GCodeWriter.cpp:155-164`); under SEMM (or ooze prevention) upstream
-    // sets the temperature for the CURRENT extruder only, skipping the
-    // rest (`GCode.cpp:4804-4807`).
+    // `GCode.cpp:6943-6955`: non-waiting nozzle temperatures at layer two.
+    // SEMM and ooze prevention update only the current extruder.
     let runtime = &traversal.resolved.views.runtime_gcode;
     let single_extruder_multi_material = runtime.single_extruder_multi_material.0;
-    // `GCodeWriter::multiple_extruders` (GCodeWriter.cpp:78) is true when a
-    // used extruder id exceeds zero — the writer then keeps the tool
-    // suffix (`GCodeWriter.cpp:159-164`).
+    // The writer omits the tool for single-extruder and SEMM prints
+    // (`GCodeWriter.cpp:359-372`).
     let multiple_extruders = state.extruders.multiple() && !single_extruder_multi_material;
     let ooze_prevention = settings.process.print.ooze_prevention.0;
     for tool in 0..traversal.resolved.logical_filament_count {
@@ -126,16 +121,12 @@ pub(super) fn append_second_layer_transition(
             tool,
         );
         if temperature > 0 && temperature != initial {
-            let tool_suffix = if multiple_extruders {
-                format!(" T{tool}")
-            } else {
-                String::new()
-            };
-            // `GCodeWriter::set_temperature` defaults the comment to "set
-            // nozzle temperature" for the non-waiting M104 emission
-            // (`GCodeWriter.cpp:133`).
-            output.extend_from_slice(
-                format!("M104 S{temperature}{tool_suffix} ; set nozzle temperature\n").as_bytes(),
+            super::temperature::append(
+                output,
+                settings.printer.gcode.gcode_flavor,
+                temperature as u32,
+                false,
+                multiple_extruders.then_some(tool),
             );
         }
     }
