@@ -98,6 +98,8 @@ export interface AppState {
   /** `scene.settings` options decoded for typed fields. */
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
+  /** The first plater session of a loaded STL is opening (`openStlSession`): the model is loaded once it is placed. */
+  openingStlSession: boolean;
   loadError?: string;
   /** The STL batch awaiting its multi-part answer; every import has its own id and dialog (Plater.cpp:10097-10102). */
   stlImport: { id: number; files: File[] } | null;
@@ -162,6 +164,7 @@ export const useApp = create<AppState>(() => ({
   plateSlices: {},
   typedSettings: null,
   loadingFile: false,
+  openingStlSession: false,
   stlImport: null,
   selectedObject: null,
   selectedInstance: null,
