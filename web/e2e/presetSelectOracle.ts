@@ -38,6 +38,7 @@ export interface SessionSteps {
   select?: { printer?: string; process?: string; filaments?: string[] };
   /** Process options the sidebar edits, serialized. */
   process_edit?: Record<string, string>;
+  filament_slot_edits?: [{ append: string }, { remove_last: true }];
 }
 
 /** The preset-select probe, or null where CI does not provision it. */
@@ -93,7 +94,11 @@ export function nativeSelection(probe: string, directory: string, project: strin
   };
   writeFileSync(`${directory}request.json`, JSON.stringify(request, null, 2));
   execFileSync(probe, { cwd: directory, env: { ...process.env, ARES_PRESET_SELECT_REQUEST: `${directory}request.json` }, stdio: ["ignore", "pipe", "pipe"] });
-  return JSON.parse(readFileSync(`${directory}native.json`, "utf8")).projects[0].result;
+  const replay = JSON.parse(readFileSync(`${directory}native.json`, "utf8")).projects[0];
+  if (steps.filament_slot_edits && replay.filament_slot_edits_applied !== steps.filament_slot_edits.length) {
+    throw new Error("The OrcaSlicer preset-select probe did not apply the requested filament slot edits");
+  }
+  return replay.result;
 }
 
 /**

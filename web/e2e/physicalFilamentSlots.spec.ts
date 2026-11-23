@@ -6,7 +6,7 @@ import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
 import { platerExport, withoutCliGroups } from "./platerExport";
 import { orcaPlate } from "./platerOracle";
-import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { nativeSelection, presetSelectProbe, PROJECT_CONFIG } from "./presetSelectOracle";
 import { withSelectedPresets } from "./selectedPresetLines";
 
 const fixture = (path: string) => fileURLToPath(new URL(`../../tests/parity/${path}`, import.meta.url));
@@ -129,7 +129,14 @@ test("merging into a physical slot changes object extrusion to the target and ma
   test.setTimeout(300_000);
   // The two-cube 3MF already represents the expected assignments after Merge. We
   // never use an Ares export as the input to the independent desktop route.
-  const expected = fixture("type1-compacted-exit/x1c-two-slots.3mf");
+  const entries = unzipSync(readFileSync(fixture("type1-compacted-exit/x1c-two-slots.3mf")));
+  const settings = JSON.parse(strFromU8(entries[PROJECT_CONFIG]));
+  // Test object material assignment without unrelated prime-tower arc quantization.
+  settings.enable_prime_tower = "0";
+  settings.different_settings_to_system[0] = "enable_prime_tower";
+  entries[PROJECT_CONFIG] = strToU8(JSON.stringify(settings));
+  const expected = info.outputPath("two-materials.3mf");
+  writeFileSync(expected, zipSync(entries));
   await openProject(page, "Bambu Lab", expected);
   const object = page.getByTestId("object-list").getByRole("treeitem").filter({ hasText: "colour0.stl" });
   await expect(object.getByRole("img", { name: "Filament 2", exact: true })).toBeVisible();
@@ -151,7 +158,9 @@ test("merging into a physical slot changes object extrusion to the target and ma
 
   const probe = presetSelectProbe();
   test.skip(probe === null, "OrcaSlicer preset selection probe unavailable");
-  const selection = nativeSelection(probe!, `${info.outputPath("preset-selection")}/`, expected, ["BBL"]);
+  const selection = nativeSelection(probe!, `${info.outputPath("preset-selection")}/`, expected, ["BBL"], {
+    filament_slot_edits: [{ append: "#008B00" }, { remove_last: true }],
+  });
   const config = JSON.parse(selection.full_fff_config);
   // PresetBundle.cpp:4375–4465, 8598–8671: removing the appended position
   // leaves both preset positions, colours and the original directed flush pair.
