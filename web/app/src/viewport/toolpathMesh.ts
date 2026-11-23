@@ -47,8 +47,9 @@ export function toolpathMaterial() {
  * The vertices live in per-vertex textures (`TextureData::set_positions`,
  * `set_heights_widths_angles`, `set_colors`, `ViewerImpl.cpp:384-541`), packed
  * in the slicer worker (`Toolpaths.textures`), and each instance draws the
- * segment from vertex `aSegment[n]`. Until `applyEnabled` runs, the
- * instances are every segment of the mesh. Layer range and visibility
+ * segment from vertex `aSegment[n]`. The mesh stays hidden until `applyEnabled`
+ * runs, as `ViewerImpl::load` applies the view before the first frame
+ * (`ViewerImpl.cpp:1296-1297`). Layer range and visibility
  * filtering also run in the vertex shader, so view changes only update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths, material: THREE.ShaderMaterial): THREE.Mesh {
@@ -76,9 +77,9 @@ export function buildToolpathMesh(toolpaths: Toolpaths, material: THREE.ShaderMa
   (uniforms.uLayers.value as THREE.Vector2).set(0, 0);
   uniforms.uHiddenRoles.value = 0;
   uniforms.uOptions.value = 0;
-  material.visible = true;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  mesh.visible = false;
   writeColors(mesh, toolpaths.colors);
   return mesh;
 }
@@ -133,6 +134,7 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
   const attribute = geometry.getAttribute("aSegment") as THREE.InstancedBufferAttribute;
   (attribute.array as Uint32Array).set(segments);
   geometry.instanceCount = segments.length;
+  mesh.visible = true;
   (mesh.material as THREE.Material).visible = segments.length > 0;
   if (segments.length > 0) {
     attribute.clearUpdateRanges();
