@@ -5,6 +5,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
 import { aboutX, aboutZ, guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-rotate/", import.meta.url));
@@ -41,8 +42,8 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   // the cube counter-clockwise about Z through its centre, leaving its offset and the other angles
   // alone. (A clockwise turn reads as X 180, Y 180: get_rotation_by_quaternion, Geometry.cpp:481-489.)
   await page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name: "Rotate" }).click();
-  const box = (await page.getByTestId("viewport").locator("canvas").boundingBox())!;
-  const gizmo = JSON.parse((await page.getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "z", [number, number]>;
+  const box = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
+  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "z", [number, number]>;
   const [cx, cy] = [box.x + gizmo.center[0], box.y + gizmo.center[1]];
   const [dx, dy] = [gizmo.z[0] - gizmo.center[0], gizmo.z[1] - gizmo.center[1]];
   await page.mouse.move(cx + dx, cy + dy);

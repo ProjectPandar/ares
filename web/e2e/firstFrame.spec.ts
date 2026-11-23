@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/first-frame/", import.meta.url));
@@ -8,7 +9,7 @@ const fixture = `${repositoryRoot}tests/parity/orca_cli_ender3.3mf`;
 
 /** Distinct colours of the WebGL canvas: 1 while nothing has been drawn. */
 function canvasColours(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 64;
     probe.height = 64;
@@ -50,8 +51,8 @@ test("the viewport draws without animation frames, once per change", async ({ pa
   await page.screenshot({ path: `${artifacts}prepare.png` });
 
   // A drag of the model at the canvas centre: each pointer move renders at most once.
-  const box = (await page.getByTestId("viewport").boundingBox())!;
-  const instances = () => page.locator(".viewport").getAttribute("data-instances");
+  const box = (await shownTab(page).getByTestId("viewport").boundingBox())!;
+  const instances = () => shownTab(page).locator(".viewport").getAttribute("data-instances");
   const before = await instances();
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
   await page.mouse.move(x, y);
@@ -65,7 +66,7 @@ test("the viewport draws without animation frames, once per change", async ({ pa
   expect(dragRenders).toBeLessThanOrEqual(moves);
   // The release commits the drag once (GLCanvas3D::do_move), and that change renders.
   await expect.poll(instances).not.toBe(before);
-  await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-drawing");
+  await expect(shownTab(page).getByTestId("viewport")).not.toHaveAttribute("data-drawing");
 
   // Nothing renders while nothing changes.
   const idle = await renders(page);

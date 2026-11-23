@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/undo-redo/", import.meta.url));
@@ -18,12 +19,12 @@ interface Shown {
 }
 
 async function shown(page: Page, png?: string): Promise<Shown> {
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport).not.toHaveAttribute("data-drawing");
   const pixels = await viewport.evaluate((container) => container.querySelector("canvas")!.toDataURL("image/png"));
   if (png) writeFileSync(`${artifacts}${png}.png`, Buffer.from(pixels.split(",")[1], "base64"));
   return {
-    instances: await page.locator(".viewport").getAttribute("data-instances"),
+    instances: await shownTab(page).locator(".viewport").getAttribute("data-instances"),
     plates: await viewport.getAttribute("data-plates"),
     tree: await page.getByTestId("object-list").getByRole("treeitem")
       .evaluateAll((items) => items.map((item) => `${item.getAttribute("aria-selected")} ${item.textContent}`)),
@@ -63,7 +64,7 @@ function withoutCanvas(state: Shown): Shown {
 
 /** Waits for an edit to show, then records the state as the next edit's undo snapshot sees it. */
 async function edited(page: Page, before: Shown, png: string) {
-  await expect.poll(async () => (await page.locator(".viewport").getAttribute("data-instances")) !== before.instances).toBe(true);
+  await expect.poll(async () => (await shownTab(page).locator(".viewport").getAttribute("data-instances")) !== before.instances).toBe(true);
   return shown(page, png);
 }
 
@@ -95,7 +96,7 @@ test("Ctrl+Z and Ctrl+Y step the plater back and forward through its edits", asy
   const last = () => states.at(-1)!;
 
   // A canvas drag of the selected cube ("Move Object").
-  const canvas = page.getByTestId("viewport").locator("canvas");
+  const canvas = shownTab(page).getByTestId("viewport").locator("canvas");
   const box = (await canvas.boundingBox())!;
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
   await page.mouse.move(x, y);

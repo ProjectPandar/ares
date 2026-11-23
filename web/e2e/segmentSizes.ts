@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
+import { shownTab } from "./shownTab";
 
 interface NativeVertex {
   type: number;
@@ -42,6 +43,6 @@ export async function checkSegmentSizes(page: Page, artifacts: string) {
   for (const byte of new Uint8Array(new Uint32Array(ends).buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
   const expected = `${ends.length / 4}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
   writeFileSync(`${out}expected.json`, `${JSON.stringify({ probe: expected, ends }, null, 0)}\n`);
-  await expect(page.getByTestId("viewport"), "instance end sizes (count:fnv32 of f32 bits)").toHaveAttribute("data-segment-sizes", expected);
+  await expect(shownTab(page).getByTestId("viewport"), "instance end sizes (count:fnv32 of f32 bits)").toHaveAttribute("data-segment-sizes", expected);
   return expected;
 }

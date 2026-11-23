@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
+import { shownTab } from "./shownTab";
 
 interface NativeVertex {
   type: number;
@@ -41,6 +42,6 @@ export async function checkSegmentGeometry(page: Page, artifacts: string) {
   for (const byte of new Uint8Array(new Uint32Array([...starts, ...ends, ...angles]).buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
   const expected = `${angles.length / 2}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
   writeFileSync(`${out}geometry-expected.json`, `${JSON.stringify({ probe: expected, starts, ends, angles }, null, 0)}\n`);
-  await expect(page.getByTestId("viewport"), "instance geometry (count:fnv32 of aStart, aEnd, aAngles f32 bits)").toHaveAttribute("data-segment-geometry", expected);
+  await expect(shownTab(page).getByTestId("viewport"), "instance geometry (count:fnv32 of aStart, aEnd, aAngles f32 bits)").toHaveAttribute("data-segment-geometry", expected);
   return expected;
 }

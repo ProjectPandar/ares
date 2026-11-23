@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { choose, PRESETS } from "./lhPresets";
+import { shownTab } from "./shownTab";
 
 const cube = readFileSync(fileURLToPath(new URL("../../tests/parity/cube10.stl", import.meta.url)));
 const SWITCHED_PROCESS = "0.20mm Quiet @LH Stinger";
@@ -153,7 +154,7 @@ test("a slice started while a preset switch opens the STL session completes on t
   await slicePlate.click();
   await expect(page).toHaveURL(/#\/preview$/);
   // The Preview 3D view shows its canvas after its mount effects, which request its session.
-  await expect(page.locator(".viewport", { has: page.getByTestId("slice-summary") }).locator("canvas")).toBeVisible();
+  await expect(shownTab(page).locator(".viewport", { has: page.getByTestId("slice-summary") }).locator("canvas")).toBeVisible();
   await page.evaluate(() => (window as unknown as { sliceRelay: SliceRelay }).sliceRelay.resume());
   await expect.poll(async () => (await relay()).sliced, { timeout: 120_000 }).toBe(2);
   await expect(status).not.toHaveText(/^Slicing/, { timeout: 240_000 });

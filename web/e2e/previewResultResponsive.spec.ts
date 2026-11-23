@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { choose, PRESETS } from "./lhPresets";
+import { shownTab } from "./shownTab";
 
 // A closed cylinder (binary STL), 512 facets around and 60 mm tall: its toolpaths have about a million vertices.
 function cylinder(radius: number, height: number, segments: number): Buffer {
@@ -58,7 +59,7 @@ test("a slice result that reaches an open Preview leaves the main thread respons
 
   await page.keyboard.press("ControlOrMeta+r");
   await expect(page).toHaveURL(/#\/preview$/);
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport.locator("canvas")).toBeVisible();
   // From the open Preview until the task that sets the toolpaths, which writes data-segment-sizes.
   const started = await page.evaluate(() => {
@@ -70,7 +71,7 @@ test("a slice result that reaches an open Preview leaves the main thread respons
       beat.last = now;
       beat.beats += 1;
     }, 16);
-    const view = document.querySelector("[data-testid=viewport]")!;
+    const view = document.querySelector(".tab-pane:not([hidden]) [data-testid=viewport]")!;
     new MutationObserver((_, observer) => {
       if (!view.hasAttribute("data-segment-sizes")) return;
       beat.maxGap = Math.max(beat.maxGap, performance.now() - beat.last);

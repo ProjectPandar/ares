@@ -4,6 +4,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
 import { guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/multi-plate/", import.meta.url));
@@ -19,7 +20,7 @@ const action = (page: Page, name: string) => page.getByRole("navigation").getByR
 
 /** Plate origins and the current plate as the canvas draws them; `-0` reads as `0`. */
 async function canvasPlates(page: Page) {
-  const probe = JSON.parse((await page.getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
+  const probe = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
   return { origins: probe.origins.map((origin) => origin.map((value) => value + 0)), current: probe.current };
 }
 

@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Browser, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/viewport-resize/", import.meta.url));
 
@@ -29,7 +30,7 @@ const sizes = [
  * reads is what that frame shows.
  */
 function observeFrames(page: Page) {
-  return page.getByTestId("viewport").evaluate((container) => {
+  return shownTab(page).getByTestId("viewport").evaluate((container) => {
     const samples: Sample[] = [];
     (window as unknown as { resizeSamples: Sample[] }).resizeSamples = samples;
     const probe = document.createElement("canvas");
@@ -107,12 +108,12 @@ test("a resized viewport paints the plate in the frame of the resize", async ({ 
   await observeFrames(page);
   await expect.poll(async () => (await samples(page)).length).toBe(1);
   await page.screenshot({ path: `${artifacts}before.png` });
-  const margins = await page.getByTestId("viewport").evaluate((container): Margins => {
+  const margins = await shownTab(page).getByTestId("viewport").evaluate((container): Margins => {
     const box = container.getBoundingClientRect();
     return { left: box.left, top: box.top, right: innerWidth - box.right, bottom: innerHeight - box.bottom };
   });
   // The brightness of the empty viewport: the corner of the canvas shows the scene background.
-  const background = await page.getByTestId("viewport").evaluate((container) => {
+  const background = await shownTab(page).getByTestId("viewport").evaluate((container) => {
     const probe = document.createElement("canvas").getContext("2d")!;
     probe.drawImage(container.querySelector("canvas")!, 0, 0, 1, 1, 0, 0, 1, 1);
     const [red, green, blue] = probe.getImageData(0, 0, 1, 1).data;
