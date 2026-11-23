@@ -14,8 +14,15 @@ const ADD_COLOURS: [&str; 16] = [
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum FilamentSlotEdit {
     Add,
-    Delete { slot: i32 },
-    Merge { source: i32, target: i32 },
+    Delete {
+        slot: i32,
+    },
+    Merge {
+        source: i32,
+        target: i32,
+        #[serde(default)]
+        confirmed: bool,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -24,6 +31,7 @@ pub struct FilamentSlot {
     pub preset: String,
     pub colour: String,
     pub is_mixed: bool,
+    pub components: Vec<i32>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -110,12 +118,21 @@ impl PlaterSession {
                     replacement: None,
                 }
             }
-            FilamentSlotEdit::Merge { source, target }
-                if view.can_remove
-                    && physical(source)
-                    && source != target
-                    && (1..=view.slots.len() as i32).contains(&target) =>
+            FilamentSlotEdit::Merge {
+                source,
+                target,
+                confirmed,
+            } if view.can_remove
+                && physical(source)
+                && source != target
+                && (1..=view.slots.len() as i32).contains(&target) =>
             {
+                // Plater.cpp:5897–5929 warns before removing a component of the target.
+                if !confirmed && view.slots[target as usize - 1].components.contains(&source) {
+                    return Err(SliceError::InvalidInput(
+                        "Merging would remove a component of the target mixed filament".into(),
+                    ));
+                }
                 SlotChange::Remove {
                     at: source,
                     replacement: Some(target - i32::from(target > source)),

@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 /// Instance matrices and plates after an edit (the scene without meshes).
 #[derive(Serialize)]
-struct Layout {
+struct Layout<'a> {
     objects: Vec<LayoutObject>,
     plates: Vec<ScenePlate>,
     /// `wipe_tower_x`, `wipe_tower_y`: the project config's tower position per plate.
@@ -13,6 +13,8 @@ struct Layout {
     wipe_tower: (Vec<f64>, Vec<f64>),
     #[serde(rename = "filamentSlots")]
     filament_slots: ares_core::FilamentSlots,
+    #[serde(rename = "filamentSettings", skip_serializing_if = "Option::is_none")]
+    filament_settings: Option<&'a ares_core::FilamentOptions>,
 }
 
 /// An object's instances; the id follows an object an arrange sorts (`PartPlate.cpp:8389`).
@@ -36,6 +38,7 @@ impl PlaterSession {
     /// The edited instance matrices, plates and tower positions as JSON
     /// `{objects: [{instances}], plates, wipeTower: [x, y]}`.
     pub fn layout(&self) -> String {
+        let filament_slots = self.session.filament_slots();
         let layout = Layout {
             objects: self
                 .session
@@ -58,7 +61,10 @@ impl PlaterSession {
                 .collect(),
             plates: self.plates(),
             wipe_tower: self.session.tower_positions(),
-            filament_slots: self.session.filament_slots(),
+            filament_settings: filament_slots
+                .edited
+                .then_some(&self.session.project().settings().filament),
+            filament_slots,
         };
         serde_json::to_string(&layout).expect("plater layout serializes")
     }

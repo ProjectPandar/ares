@@ -79,6 +79,7 @@ fn merging_an_empty_first_slot_into_a_later_slot_shifts_assignments_and_supports
         .edit_filament_slots(FilamentSlotEdit::Merge {
             source: 1,
             target: 3,
+            confirmed: false,
         })
         .unwrap();
     assert_eq!(
@@ -186,6 +187,7 @@ fn merging_retargets_each_original_tool_change_without_moving_a_pause() {
         .edit_filament_slots(FilamentSlotEdit::Merge {
             source: 1,
             target: 3,
+            confirmed: false,
         })
         .unwrap();
     let after = &session.project().plates_custom_gcodes()[&0].gcodes;
@@ -206,10 +208,20 @@ fn merging_into_a_mix_that_uses_the_source_requires_confirmation() {
     let result = session.edit_filament_slots(FilamentSlotEdit::Merge {
         source: 1,
         target: 3,
+        confirmed: false,
     });
     assert!(result.is_err());
     assert_eq!(session.filament_slots(), before);
     assert_eq!(session.project().objects()[0].filament(), Some(1));
+    let merged = session
+        .edit_filament_slots(FilamentSlotEdit::Merge {
+            source: 1,
+            target: 3,
+            confirmed: true,
+        })
+        .unwrap();
+    assert_eq!(merged.slots[1].components, [0, 1]);
+    assert_eq!(session.project().objects()[0].filament(), Some(2));
 }
 
 #[test]

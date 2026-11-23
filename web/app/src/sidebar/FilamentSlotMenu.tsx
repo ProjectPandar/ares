@@ -49,8 +49,13 @@ export function FilamentSlotMenu({ slot, slots, disabled, edit, openPreset }: {
       <button type="button" role="menuitem" aria-haspopup="menu" aria-expanded={merging}
         onClick={() => setMerging(!merging)}>Merge with <span aria-hidden="true">›</span></button>
       {merging && <div role="menu" aria-label="Merge with">
-        {slots.map(({ preset, colour }, index) => index + 1 !== slot && <button key={index} type="button" role="menuitem"
-          aria-label={`Filament ${index + 1}: ${preset}`} onClick={() => { close(); edit({ kind: "merge", source: slot, target: index + 1 }); }}>
+        {slots.map(({ preset, colour, components }, index) => index + 1 !== slot && <button key={index} type="button" role="menuitem"
+          aria-label={`Filament ${index + 1}: ${preset}`} onClick={() => {
+            close();
+            const confirmed = components.includes(slot);
+            if (confirmed && !window.confirm("The target mixed filament uses this filament as a component. Merging may invalidate the mix. Continue?")) return;
+            edit({ kind: "merge", source: slot, target: index + 1, confirmed });
+          }}>
           <span className="filament-swatch" aria-hidden="true" style={{ background: colour }}>{index + 1}</span>
           {preset || `Filament ${index + 1}`}
         </button>)}

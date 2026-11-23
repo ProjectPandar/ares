@@ -70,6 +70,7 @@ export interface ScenePlate {
 /** A plater session's instance matrices and plates after an edit: its `Scene` without meshes. */
 export interface PlaterLayout {
   filamentSlots: FilamentSlots;
+  filamentSettings?: OptionMap;
   /**
    * Per scene object in model order, by `SceneObject.id`. An arrange sorts the model's objects
    * (`PartPlateList::rebuild_plates_after_arrangement`), so this order can differ from the scene's.
@@ -134,6 +135,7 @@ export interface Scene {
   wipeTower?: [number[], number[]];
   settings: ProjectSettings | null;
   filamentSlots?: FilamentSlots;
+  filamentSettings?: OptionMap;
   /** xyz triples for every volume, addressed by `vertexOffset`. */
   positions: Float32Array<ArrayBuffer>;
   /** Triangle indices relative to each volume's `vertexOffset`. */
@@ -141,7 +143,7 @@ export interface Scene {
 }
 
 export interface FilamentSlots {
-  slots: { preset: string; colour: string; isMixed: boolean }[];
+  slots: { preset: string; colour: string; isMixed: boolean; components: number[] }[];
   canAdd: boolean;
   canRemove: boolean;
   edited: boolean;
@@ -150,7 +152,7 @@ export interface FilamentSlots {
 export type FilamentSlotEdit =
   | { kind: "add" }
   | { kind: "delete"; slot: number }
-  | { kind: "merge"; source: number; target: number };
+  | { kind: "merge"; source: number; target: number; confirmed?: boolean };
 
 /** Selected preset names (`ProfileSelection`); filament order is the extruder order. */
 export interface ProfileSelection {

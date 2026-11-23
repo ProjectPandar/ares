@@ -46,6 +46,10 @@ impl Project {
         let settings = self.settings();
         let names = &settings.project.preset.filament_settings_id.0;
         let flags = self.documents.project_settings_raw.get("filament_is_mixed");
+        let components = self
+            .documents
+            .project_settings_raw
+            .get("filament_mixed_components");
         settings
             .filament
             .gcode
@@ -62,6 +66,20 @@ impl Project {
                     preset: names.get(index).cloned().unwrap_or_default(),
                     colour: colour.clone(),
                     is_mixed,
+                    components: if is_mixed {
+                        components
+                            .and_then(|values| values.element(index))
+                            .and_then(RawConfigValue::token)
+                            .map(|value| {
+                                value
+                                    .split(',')
+                                    .filter_map(|part| part.trim().parse().ok())
+                                    .collect()
+                            })
+                            .unwrap_or_default()
+                    } else {
+                        Vec::new()
+                    },
                 }
             })
             .collect()
@@ -271,34 +289,86 @@ fn resize_option_vectors(
             .collect();
         set_values(raw, key, values);
     }
-    for &key in crate::filament_option_keys() {
-        if matches!(
-            key,
-            "default_filament_profile"
-                | "filament_settings_id"
-                | "filament_colour"
-                | "filament_multi_colour"
-                | "filament_colour_type"
-        ) || MAP_FIELDS
-            .iter()
-            .chain(MIXED_FIELDS.iter())
-            .any(|(configured, _)| *configured == key)
-        {
-            continue;
-        }
-        let Some(RawConfigValue::List(values)) = raw.get(key) else {
-            continue;
-        };
-        if values.is_empty() {
-            continue;
-        }
-        let values = (0..count)
-            .map(|index| {
-                let old = change.previous_index(index).unwrap_or(slots.len() - 1);
-                values.get(old).unwrap_or(&values[0]).clone()
-            })
-            .collect();
-        set_values(raw, key, values);
-    }
+    resize_preset_vectors(raw, (slots.len(), count), change);
     set_values(raw, "filament_colour", colours);
+}
+
+// PresetBundle.cpp:5621–5774 concatenates filament preset vectors in slot order.
+// Expanded filament options follow the variants of each slot, not the slot count.
+fn resize_preset_vectors(
+    raw: &mut ProjectSettingsRaw,
+    (old_count, count): (usize, usize),
+    change: SlotChange,
+) {
+    use crate::{ProfileKind, profiles::preset_owns_option};
+
+    let previous = |index| {
+        change
+            .previous_index(index)
+            .or_else(|| old_count.checked_sub(1))
+    };
+    let mut groups = vec![Vec::new(); old_count];
+    let mut variant_count = 0;
+    if let Some(RawConfigValue::List(ids)) = raw.get("filament_self_index") {
+        variant_count = ids.len();
+        for (variant, id) in ids.iter().enumerate() {
+            if let Some(slot) = id.token().and_then(|token| token.parse::<usize>().ok())
+                && (1..=old_count).contains(&slot)
+            {
+                groups[slot - 1].push(variant);
+            }
+        }
+    }
+    let has_groups = old_count != 0 && groups.iter().all(|group| !group.is_empty());
+    let variants: Vec<_> = (0..count)
+        .flat_map(|index| {
+            previous(index)
+                .into_iter()
+                .flat_map(|old| groups[old].iter())
+                .map(move |&old| (index + 1, old))
+        })
+        .collect();
+    let updates: Vec<_> = raw
+        .entries()
+        .filter_map(|(key, value)| {
+            let RawConfigValue::List(values) = value else {
+                return None;
+            };
+            if values.is_empty()
+                || (key != "filament_ids" && !preset_owns_option(ProfileKind::Filament, key))
+            {
+                return None;
+            }
+            let values = if has_groups
+                && values.len() == variant_count
+                && crate::filament_options_with_variant().contains(&key.as_str())
+            {
+                variants
+                    .iter()
+                    .map(|&(_, old)| values[old].clone())
+                    .collect()
+            } else {
+                (0..count)
+                    .map(|index| {
+                        previous(index)
+                            .and_then(|old| values.get(old))
+                            .unwrap_or(&values[0])
+                            .clone()
+                    })
+                    .collect()
+            };
+            Some((key.clone(), values))
+        })
+        .collect();
+    for (key, values) in updates {
+        set_values(raw, &key, values);
+    }
+    if raw.contains_key("filament_self_index") {
+        let ids = if has_groups {
+            variants.iter().map(|&(slot, _)| text(slot)).collect()
+        } else {
+            (1..=count).map(text).collect()
+        };
+        set_values(raw, "filament_self_index", ids);
+    }
 }
