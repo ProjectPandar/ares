@@ -1,6 +1,6 @@
 use std::io::{Cursor, Read, Write};
 
-use ares_core::{FilamentSlotEdit, FilamentTarget, PlaterSession};
+use ares_core::{ConfigOverrides, FilamentSlotEdit, FilamentTarget, PlaterSession};
 use serde_json::{Value, json};
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
@@ -8,6 +8,10 @@ const TWO_TOOLS: &[u8] =
     include_bytes!("../../../tests/parity/type2-tower-entry-z/j1-two-tools.3mf");
 
 fn three_slots(mixed: bool) -> Vec<u8> {
+    slot_archive(mixed, true)
+}
+
+fn slot_archive(mixed: bool, with_ticks: bool) -> Vec<u8> {
     let mut source = ZipArchive::new(Cursor::new(TWO_TOOLS)).unwrap();
     let mut output = ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..source.len() {
@@ -42,15 +46,16 @@ fn three_slots(mixed: bool) -> Vec<u8> {
             .write_all(&serde_json::to_vec(&settings).unwrap())
             .unwrap();
     }
-    output
-        .start_file(
-            "Metadata/custom_gcode_per_layer.xml",
-            SimpleFileOptions::default(),
-        )
-        .unwrap();
-    output
-        .write_all(
-            br##"<custom_gcodes_per_layer>
+    if with_ticks {
+        output
+            .start_file(
+                "Metadata/custom_gcode_per_layer.xml",
+                SimpleFileOptions::default(),
+            )
+            .unwrap();
+        output
+            .write_all(
+                br##"<custom_gcodes_per_layer>
   <plate>
     <plate_info id="1"/>
     <mode value="MultiAsSingle"/>
@@ -61,8 +66,9 @@ fn three_slots(mixed: bool) -> Vec<u8> {
     <layer top_z="1.2" extruder="1" color="" type="1" extra="wait"/>
   </plate>
 </custom_gcodes_per_layer>"##,
-        )
-        .unwrap();
+            )
+            .unwrap();
+    }
     output.finish().unwrap().into_inner()
 }
 
@@ -222,6 +228,51 @@ fn merging_into_a_mix_that_uses_the_source_requires_confirmation() {
         .unwrap();
     assert_eq!(merged.slots[1].components, [0, 1]);
     assert_eq!(session.project().objects()[0].filament(), Some(2));
+}
+
+#[test]
+fn reopening_a_saved_merge_keeps_the_surviving_slots_and_their_references() {
+    let mut session = PlaterSession::load(slot_archive(false, false)).unwrap();
+    let second = FilamentTarget {
+        object: session.project().objects()[1].id(),
+        volume: None,
+    };
+    session.set_filament(&[second], (3, 3)).unwrap();
+    session
+        .edit_filament_slots(FilamentSlotEdit::Merge {
+            source: 1,
+            target: 3,
+            confirmed: false,
+        })
+        .unwrap();
+
+    let saved = session.save_project(&ConfigOverrides::default()).unwrap();
+    let reopened = PlaterSession::load(saved).unwrap();
+    assert_eq!(
+        reopened
+            .filament_slots()
+            .slots
+            .into_iter()
+            .map(|slot| (slot.preset, slot.colour))
+            .collect::<Vec<_>>(),
+        [
+            ("Snapmaker J1 PLA".to_owned(), "#307CC0".to_owned()),
+            ("Snapmaker J1 PLA".to_owned(), "#123456".to_owned()),
+        ]
+    );
+    let project = reopened.project();
+    assert_eq!(
+        project
+            .objects()
+            .iter()
+            .map(|object| object.filament())
+            .collect::<Vec<_>>(),
+        [Some(2), Some(2)]
+    );
+    assert_eq!(
+        project.settings().project.print.flush_volumes_matrix.0,
+        [0.0, 105.0, 107.0, 0.0, 0.0, 205.0, 207.0, 0.0]
+    );
 }
 
 #[test]
