@@ -349,7 +349,8 @@ fn index_directory(dir: &Path) -> Result<BTreeMap<String, Map<String, Value>>, S
     for path in files {
         let text = std::fs::read_to_string(&path).map_err(|error| format!("{path:?}: {error}"))?;
         let Value::Object(fields) =
-            serde_json::from_str(&text).map_err(|error| format!("{path:?}: {error}"))?
+            serde_json::from_str(text.strip_prefix('\u{feff}').unwrap_or(&text))
+                .map_err(|error| format!("{path:?}: {error}"))?
         else {
             continue;
         };
