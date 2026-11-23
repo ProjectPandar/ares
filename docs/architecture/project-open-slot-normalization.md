@@ -1,0 +1,21 @@
+# Normalize the filament project options on 3MF open
+
+## Upstream boundary
+
+The reference is OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`).
+
+- `src/slic3r/GUI/Plater.cpp:16204–16233` opens an ordinary project with both model and config. `Plater::priv::load_files` overlays the archive's config on `FullPrintConfig::defaults()` (`:9451–9465`), then calls `PresetBundle::load_config_model` (`:9622`). This delegates to external `load_config_file_config` (`src/libslic3r/PresetBundle.hpp:588–591`).
+- In `src/libslic3r/PresetBundle.cpp:6187–6191,6322–6428`, `filament_colour` gives the input slot count. The loader selects the printer and filament presets and applies the project options (`:125–137,6434–6439`). After compatibility update it calls `update_multi_material_filament_presets` (`:6455–6459`). That uses the count of selected filament presets, at least one on a single-extruder multi-material printer and at least the edited printer's nozzle count otherwise (`:5402–5424,8598–8621`).
+- `update_multi_material_filament_presets` (`:8623–8669`) obtains the old number of nozzle tables from `flush_multiplier` before resizing it, with `1` for new entries. If the matrix size differs from `slots² × nozzles`, it resizes `flush_volumes_vector` in pairs and rebuilds the per-nozzle matrices. It retains overlapping entries and uses zero for a new diagonal or `vector[2*i] + vector[2*j+1]` for a new transition from slot `i` to `j`. It does not multiply stored volumes by the multiplier. The vector is not resized when the matrix size already matches. `PrintConfig.cpp:8267–8291` defines the defaults, including a four-slot matrix and vector.
+- `Plater.cpp:9755` then calls `sync_loaded_project_filament_config`. Its colour-type portion (`:8939–8949`) sizes the vector to the palette and supplies `"1"` for empty entries when resizing. A missing option in a fresh project bundle has the default `{"1"}` (`PrintConfig.cpp:3082–3084`, `PresetBundle.cpp:4118–4124`); do not replace supplied values at matching size. Colour type is a dynamic project option, not a field of static `FullPrintConfig`.
+- The project config supplies the saved values via `PresetBundle::full_fff_config(false)` (`PresetBundle.cpp:5470–5472,5534–5542`, `Plater.cpp:19779,20633–20639`). Neither Save nor the interactive nozzle-count handler (`Plater.cpp:21748–21785`) performs the import step.
+
+## Rust destination and scope
+
+`PlaterSession::load_with_profiles` enters `ProjectPresetRefresh::load` with `Always` from web `FROM_PROJECT`. Replace the pass-through of these project options in `crates/ares-core/src/profiles/project_selection.rs::refresh` with the project defaults and existing typed slot-state flush resize algorithm. Use the selected filament count and the edited printer, not the original profile name. Retain the normalized project options before caller overrides; the same composition is used when Save Project rebuilds the embedded project settings. Do not adjust the archive writer, the static default membership, the web selection flow, the existing multi-colour sync, or CLI refresh and flush reconstruction.
+
+This slice covers ordinary FFF projects whose imported palette already meets the selected printer's minimum and has numeric, rectangular old nozzle tables (square per nozzle) and complete volume pairs. Short fixed-head palettes requiring a new preset and palette entries (`PresetBundle.cpp:6457–6459,4328–4372`), remembered colour-type state across sessions, published archives, other map/device synchronization, malformed old table layouts, and interactive slot and flushing commands are separate. `flush_multiplier_fast` is unchanged.
+
+## Public verification
+
+Open an independent synthetic one-slot archive with a four-slot matrix/vector and missing colour type, then download it through Save Project without switching presets. Compare the saved colour type, matrix, vector and multiplier, exactly, with the pinned preset-select probe's independently loaded `full_fff_config(false)` and confirm the saved project settings through the official and seeded OrcaSlicer re-exports. Use a correct-size control with a supplied colour type to check retention. The existing Save Project comparisons remain unchanged.
