@@ -149,13 +149,11 @@ test("a slice started while a preset switch opens the STL session completes on t
   // updateCompatible): four openings, the first let through and three held, the last for the current selection.
   await expect.poll(async () => (await relay()).creates).toBe(3);
   const { openings } = await relay();
-  const viewport = page.locator("[data-testid=viewport] canvas");
-  await viewport.evaluate((canvas) => canvas.setAttribute("data-prepare-canvas", ""));
 
   await slicePlate.click();
   await expect(page).toHaveURL(/#\/preview$/);
-  // The Preview canvas has mounted: its session request has been made.
-  await expect(page.locator("[data-testid=viewport] canvas:not([data-prepare-canvas])")).toBeVisible();
+  // The Preview 3D view shows its canvas after its mount effects, which request its session.
+  await expect(page.locator(".viewport", { has: page.getByTestId("slice-summary") }).locator("canvas")).toBeVisible();
   await page.evaluate(() => (window as unknown as { sliceRelay: SliceRelay }).sliceRelay.resume());
   await expect.poll(async () => (await relay()).sliced, { timeout: 120_000 }).toBe(2);
   await expect(status).not.toHaveText(/^Slicing/, { timeout: 240_000 });
