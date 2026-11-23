@@ -25,17 +25,22 @@ use comparator::{compare_members, read_members};
 
 #[test]
 fn cli_sliced_3mf_from_stl_matches_native_archive() {
-    sliced_archive_matches_native(None);
+    sliced_archive_matches_native(SlicedInput::Stl);
+}
+
+#[test]
+fn cli_sliced_3mf_with_fractional_area_matches_native_plate_json() {
+    sliced_archive_matches_native(SlicedInput::ChamferedStl);
 }
 
 #[test]
 fn cli_sliced_3mf_from_saved_project_matches_native_archive() {
-    sliced_archive_matches_native(Some(SavedShape::Single));
+    sliced_archive_matches_native(SlicedInput::Saved(SavedShape::Single));
 }
 
 #[test]
 fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
-    sliced_archive_matches_native(Some(SavedShape::TwoObjects));
+    sliced_archive_matches_native(SlicedInput::Saved(SavedShape::TwoObjects));
 }
 
 #[test]
@@ -131,7 +136,13 @@ fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
 
 #[test]
 fn cli_sliced_3mf_with_translated_model_part_matches_native_archive() {
-    sliced_archive_matches_native(Some(SavedShape::TwoObjectsWithParts));
+    sliced_archive_matches_native(SlicedInput::Saved(SavedShape::TwoObjectsWithParts));
+}
+
+enum SlicedInput {
+    Stl,
+    ChamferedStl,
+    Saved(SavedShape),
 }
 
 #[derive(Clone, Copy)]
@@ -141,8 +152,9 @@ enum SavedShape {
     TwoObjectsWithParts,
 }
 
-fn sliced_archive_matches_native(shape: Option<SavedShape>) {
-    let saved = shape.is_some();
+fn sliced_archive_matches_native(input: SlicedInput) {
+    let saved = matches!(input, SlicedInput::Saved(_));
+    let chamfered = matches!(input, SlicedInput::ChamferedStl);
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -152,7 +164,7 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
     for dir in [&native_cwd, &ares_cwd] {
         fs::create_dir_all(dir.join("out")).unwrap();
     }
-    if let Some(shape) = shape {
+    if let SlicedInput::Saved(shape) = input {
         let source = root.join("source/cwd");
         fs::create_dir_all(source.join("out")).unwrap();
         write_saved_input(&runner, &source);
@@ -168,6 +180,9 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
         }
     } else {
         write_inputs(&native_cwd);
+        if chamfered {
+            fs::write(native_cwd.join(STL), chamfered_stl()).unwrap();
+        }
         for file in [STL, "machine.json", "process.json", "filament.json"] {
             fs::copy(native_cwd.join(file), ares_cwd.join(file)).unwrap();
         }
@@ -185,7 +200,10 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
     ]);
     assert_eq!(invoke(runner.bin(), &native_cwd, &argv, true), Some(0));
     let native = read_members(&native_cwd.join("export.3mf"));
-    let split_files = 1 + usize::from(saved && !matches!(shape, Some(SavedShape::Single)));
+    let split_files = 1 + usize::from(matches!(
+        input,
+        SlicedInput::Saved(SavedShape::TwoObjects | SavedShape::TwoObjectsWithParts)
+    ));
     assert_eq!(native.len(), 12 + split_files);
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(
@@ -212,11 +230,55 @@ fn sliced_archive_matches_native(shape: Option<SavedShape>) {
             " on 1980-01-01 at 00:00:00"
         )]
     );
+    let plate_json = |members: &[comparator::Member]| {
+        members
+            .iter()
+            .position(|member| member.name == "Metadata/plate_1.json")
+            .unwrap()
+    };
+    assert!(
+        native[plate_json(&native)].bytes == actual[plate_json(&actual)].bytes,
+        "plate JSON bytes differ in {}",
+        root.display()
+    );
     compare_members(native, actual);
     for cwd in [&native_cwd, &ares_cwd] {
         assert!(!cwd.join("plate_1.gcode").exists());
         assert_eq!(fs::read_dir(cwd.join("out")).unwrap().count(), 0);
     }
+}
+
+fn chamfered_stl() -> Vec<u8> {
+    // A chamfer with binary-exact endpoints gives a fractional first-layer area
+    // while keeping the mesh bounds and the center of its bounds integral.
+    let outline = [
+        [0.0_f32, 0.0_f32],
+        [26.0, 0.0],
+        [26.0, 26.0 - 635.0 / 128.0],
+        [26.0 - 301.0 / 64.0, 26.0],
+        [0.0, 26.0],
+    ];
+    let faces = (1..outline.len() - 1)
+        .flat_map(|i| [[0, i + 1, i], [5, 5 + i, 6 + i]])
+        .chain((0..outline.len()).flat_map(|i| {
+            let next = (i + 1) % outline.len();
+            [[i, next, next + 5], [i, next + 5, i + 5]]
+        }))
+        .collect::<Vec<_>>();
+    let mut bytes = vec![0; 80];
+    bytes.extend((faces.len() as u32).to_le_bytes());
+    for face in faces {
+        bytes.extend([0; 12]);
+        for vertex in face {
+            let [x, y] = outline[vertex % outline.len()];
+            let z: f32 = if vertex < outline.len() { 0.0 } else { 2.0 };
+            for coordinate in [x, y, z] {
+                bytes.extend(coordinate.to_le_bytes());
+            }
+        }
+        bytes.extend([0; 2]);
+    }
+    bytes
 }
 
 pub(super) fn write_saved_input(runner: &OrcaRunner, dir: &Path) {
