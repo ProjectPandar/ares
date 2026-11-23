@@ -72,7 +72,7 @@ pub(super) fn prepare_project_source(
 type Preparation = crate::options::flush_matrix::PreparationContext;
 
 pub(super) fn load_project_source(
-    source: super::ProjectSource<'_>,
+    mut source: super::ProjectSource<'_>,
 ) -> Result<(Project, Preparation), SliceError> {
     let check_post_process = source.validate_print && source.normative_check;
     let (mut project, preparation) = source.input.load(
@@ -125,6 +125,7 @@ pub(super) fn load_project_source(
     if source.skip_modified_gcodes {
         project.remove_custom_plate_gcodes();
     }
+    crate::downward::check_project(&project, source.plate, source.downward.take());
     if source.orient {
         crate::plater::apply_cli_orientation(&mut project, source.plate)?;
     }

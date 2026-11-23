@@ -30,6 +30,7 @@ pub struct SlicerContext<'a> {
     pub(crate) cli_path_conflict_check: bool,
     pub(crate) enable_timelapse: bool,
     pub(crate) custom_gcodes: Option<(i32, crate::CustomGCodeInfo)>,
+    pub(crate) downward: Option<crate::downward::ProjectCheck<'a>>,
     normative_check: bool,
     skip_modified_gcodes: bool,
     allow_mix_temp: bool,
@@ -47,6 +48,7 @@ impl<'a> SlicerContext<'a> {
             cli_path_conflict_check: false,
             enable_timelapse: false,
             custom_gcodes: None,
+            downward: None,
             normative_check: true,
             skip_modified_gcodes: false,
             allow_mix_temp: false,
@@ -81,6 +83,27 @@ impl<'a> SlicerContext<'a> {
     pub fn with_custom_gcodes(mut self, plate_index: i32, info: crate::CustomGCodeInfo) -> Self {
         self.custom_gcodes = Some((plate_index, info));
         self
+    }
+
+    /// Reports explicit target machines compatible with the imported saved plates.
+    #[must_use]
+    pub fn with_downward_check<'b>(
+        self,
+        targets: &'b [crate::DownwardMachine],
+        report: &'b mut Vec<String>,
+    ) -> SlicerContext<'b>
+    where
+        'a: 'b,
+    {
+        report.clear();
+        let status = self
+            .status
+            .map(|callback| callback as &mut dyn FnMut(&SlicingStatus<'_>));
+        SlicerContext {
+            status,
+            downward: (!targets.is_empty()).then_some((targets, report)),
+            ..self
+        }
     }
 
     /// Supplies the direct STL plate limit (`OrcaSlicer.cpp:6637`); zero is unlimited.

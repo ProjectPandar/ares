@@ -76,11 +76,19 @@ pub fn slice_cli_project_plates(
     let mut current = 0;
     let mut invalid_selection = false;
     let mut loaded_report = SlicedPlate::default();
+    let normative_check = context.normative_check();
+    let skip_modified_gcodes = context.skip_modified_gcodes();
+    let custom_gcodes = context.custom_gcodes.take();
+    let downward = context.downward.take();
     let run = |source_input: ProjectSource<'_>| {
         let source_input = ProjectSource {
             max_triangle_count: 0,
             orient,
             validate_print: true,
+            normative_check,
+            skip_modified_gcodes,
+            custom_gcodes,
+            downward: None,
             ..source_input
         };
         let selected_printer = source_input
@@ -99,6 +107,7 @@ pub fn slice_cli_project_plates(
                 ..source_input
             })?
         };
+        crate::downward::check_project(&project, selected, downward);
         let mut project = crate::plater::initialize_slice_plates(project);
         let plates = project
             .plates()

@@ -132,6 +132,7 @@ pub async fn slice_assembly(
                 sliced_plate: Some(request.sliced_plate),
                 max_triangle_count: 0,
                 custom_gcodes: None,
+                downward: None,
                 edits: &crate::plater::NO_EDITS,
             },
             metadata,
@@ -230,6 +231,7 @@ pub async fn slice_stl_models_with_load_settings(
                         upward: None,
                         sliced_plate: Some(&mut report),
                         custom_gcodes: None,
+                        downward: None,
                         ..source
                     },
                     GenerationMetadata::default(),
@@ -327,6 +329,7 @@ pub(crate) fn with_load_settings_source<T>(
         sliced_plate: Some(sliced_plate),
         max_triangle_count: 0,
         custom_gcodes: None,
+        downward: None,
         edits: &crate::plater::NO_EDITS,
     })
 }

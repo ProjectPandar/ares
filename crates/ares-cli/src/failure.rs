@@ -155,6 +155,13 @@ impl CliFailure {
         self
     }
 
+    pub(super) fn with_downward_report(mut self, downward: Vec<String>) -> Self {
+        if let Self::Family(family) = &mut self {
+            family.downward_machines = downward;
+        }
+        self
+    }
+
     pub(super) fn downward_missing(input: &Path, _output: &Path) -> Self {
         Self::Family(Box::new(FamilyFailure {
             return_code: -3,

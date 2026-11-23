@@ -61,9 +61,9 @@ impl ResultJson<'_> {
             )
         };
         let body = format!(
-            "{{\n\t\"error_string\": {},\n\t\"export_time\": 0,\n\t\"layer_height\": {:?},\n\t\
+            "{{\n{downward}\t\"error_string\": {},\n\t\"export_time\": 0,\n\t\"layer_height\": {:?},\n\t\
              \"plate_index\": {},\n\t\"prepare_time\": 0,\n\t\"return_code\": {},\n{}\t\
-             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": {},\n{downward}{upward}\t\
+             \"sparse_infill_density\": {:?},\n\t\"strict_mode\": {},\n{upward}\t\
              \"wall_loops\": {},\n\t\"warnings\": {}\n}}\n",
             serde_json::to_string(self.error_string)?,
             self.layer_height,
@@ -154,7 +154,7 @@ pub(super) fn write_plate_batch(
     output: &Path,
     (plate_index, strict_mode): (u32, bool),
     (file, substitutions): (&str, Vec<ares_core::ConfigSubstitution>),
-    upward_machines: &[String],
+    (upward_machines, downward_machines): (&[String], &[String]),
     completed: &[(u32, ares_core::SlicedPlate)],
 ) {
     let (layer_height, wall_loops, sparse_infill_density) =
@@ -190,7 +190,7 @@ pub(super) fn write_plate_batch(
         sparse_infill_density,
         strict_mode,
         upward_machines,
-        downward_machines: &[],
+        downward_machines,
         sliced_plates: &sliced_plates,
         warnings: &warnings,
     }
