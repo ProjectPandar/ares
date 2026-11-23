@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/drag-preview/", import.meta.url));
@@ -21,11 +22,11 @@ type Matrices = number[][][];
 type Drag = Awaited<ReturnType<typeof drag>>;
 
 const gizmoButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
-const handles = async (page: Page) => JSON.parse((await page.getByTestId("viewport").getAttribute("data-gizmo"))!) as Handles;
+const handles = async (page: Page) => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Handles;
 const probe = (page: Page) => page.evaluate(() => (window as unknown as { dragProbe: Probe }).dragProbe);
 
 async function matrices(page: Page): Promise<Matrices> {
-  const probed = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as { objects: { instances: { matrix: number[] }[] }[] };
+  const probed = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as { objects: { instances: { matrix: number[] }[] }[] };
   return probed.objects.map(({ instances }) => instances.map(({ matrix }) => matrix));
 }
 
@@ -59,7 +60,7 @@ async function open(page: Page, fixture: string) {
  * and per step the time to the next draw.
  */
 async function drag(page: Page, [from, to]: [Point, Point], steps: number) {
-  const canvas = page.getByTestId("viewport").locator("canvas");
+  const canvas = shownTab(page).getByTestId("viewport").locator("canvas");
   const box = (await canvas.boundingBox())!;
   const before = await matrices(page);
   const start = await handles(page);
@@ -76,7 +77,7 @@ async function drag(page: Page, [from, to]: [Point, Point], steps: number) {
   const previewMatrix = JSON.parse((await canvas.getAttribute("data-drag-matrix")) ?? "null") as number[] | null;
   await page.mouse.up();
   await expect.poll(() => matrices(page)).not.toEqual(before);
-  await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-drawing");
+  await expect(shownTab(page).getByTestId("viewport")).not.toHaveAttribute("data-drawing");
   const done = await probe(page);
   const moves = done.moves.slice(-steps);
   return {

@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plater-toolbar/", import.meta.url));
@@ -61,9 +62,9 @@ const SELECTED = UNSELECTED.map((item): Item => {
 const toolbar = (page: Page) => page.getByTestId("plater-toolbar");
 const gizmoButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
 const mainButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Main toolbar" }).getByRole("button", { name, exact: true });
-const instances = (page: Page) => page.locator(".viewport").getAttribute("data-instances");
-const plates = async (page: Page) => JSON.parse((await page.getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
-const gizmo = (page: Page) => page.getByTestId("viewport").getAttribute("data-gizmo");
+const instances = (page: Page) => shownTab(page).locator(".viewport").getAttribute("data-instances");
+const plates = async (page: Page) => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
+const gizmo = (page: Page) => shownTab(page).getByTestId("viewport").getAttribute("data-gizmo");
 
 /** The toolbar items in order, icons named without the `_dark` suffix the dark theme shows. */
 async function shownItems(page: Page, dark: boolean): Promise<Item[]> {
@@ -85,7 +86,7 @@ async function shownItems(page: Page, dark: boolean): Promise<Item[]> {
 }
 
 async function canvasPng(page: Page) {
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport).not.toHaveAttribute("data-drawing");
   return viewport.evaluate((container) => container.querySelector("canvas")!.toDataURL("image/png"));
 }
@@ -126,7 +127,7 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
 
   // [main] | [gizmos] | [assembly view] side by side, centred at the canvas top; the camera view
   // toolbar centred at its bottom.
-  const canvas = (await page.getByTestId("viewport").locator("canvas").boundingBox())!;
+  const canvas = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
   const bar = (await toolbar(page).boundingBox())!;
   expect(Math.abs(bar.x + bar.width / 2 - (canvas.x + canvas.width / 2))).toBeLessThanOrEqual(1);
   expect(bar.y - canvas.y).toBeGreaterThanOrEqual(0);
@@ -134,7 +135,7 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   const parts = await Promise.all(["Main toolbar", "Gizmos", "Assembly view"].map(async (name) => (await page.getByRole("toolbar", { name }).boundingBox())!));
   expect(parts[0].x + parts[0].width).toBeLessThanOrEqual(parts[1].x);
   expect(parts[1].x + parts[1].width).toBeLessThanOrEqual(parts[2].x);
-  const views = (await page.getByTestId("view-toolbar").boundingBox())!;
+  const views = (await shownTab(page).getByTestId("view-toolbar").boundingBox())!;
   expect(Math.abs(views.x + views.width / 2 - (canvas.x + canvas.width / 2))).toBeLessThanOrEqual(1);
   expect(canvas.y + canvas.height - (views.y + views.height)).toBeGreaterThanOrEqual(0);
   expect(canvas.y + canvas.height - (views.y + views.height)).toBeLessThanOrEqual(16);
@@ -251,7 +252,7 @@ const sizes = async (page: Page) => Promise.all((["X", "Y", "Z"] as const).map(a
 
 /** Drags from a grabber of the open scale gizmo away from the gizmo centre on screen by `factor` of their distance. */
 async function dragGrabber(page: Page, grabber: "x" | "y" | "z" | "uniform", factor: number) {
-  const canvas = (await page.getByTestId("viewport").locator("canvas").boundingBox())!;
+  const canvas = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
   const handles = JSON.parse((await gizmo(page))!) as Record<"center" | typeof grabber, [number, number]>;
   const [gx, gy] = [canvas.x + handles[grabber][0], canvas.y + handles[grabber][1]];
   const [dx, dy] = [handles[grabber][0] - handles.center[0], handles[grabber][1] - handles.center[1]];

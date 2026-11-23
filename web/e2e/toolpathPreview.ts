@@ -10,12 +10,13 @@ import { checkRoleTimes } from "./roleTimes";
 import { checkSegmentColors } from "./segmentColors";
 import { checkSegmentGeometry } from "./segmentGeometry";
 import { checkSegmentSizes } from "./segmentSizes";
+import { shownTab } from "./shownTab";
 
 /** Hash of the downscaled viewport canvas, to detect view changes, once the engine's moves view is current and drawn. */
 export async function canvasDigest(page: Page) {
   await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
-  await expect(page.locator("[data-testid=viewport][data-drawing]")).toHaveCount(0);
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  await expect(shownTab(page).locator("[data-testid=viewport][data-drawing]")).toHaveCount(0);
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 256;
     probe.height = 144;
@@ -258,7 +259,7 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
     await expect(row.locator(".legend-count")).toHaveText(option === "Travels" ? "" : String(counts.get(type)));
     await expect(row).toHaveAttribute("aria-pressed", String(option === "Seams"));
   }
-  const markers = JSON.parse((await page.getByTestId("viewport").getAttribute("data-option-markers"))!) as Record<string, number>;
+  const markers = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-option-markers"))!) as Record<string, number>;
   const expected = Object.fromEntries(Object.entries(MARKER_TYPES).flatMap(([option, type]) => (counts.has(type) ? [[option, counts.get(type)!]] : [])));
   expect(markers, "one marker per option move").toEqual(expected);
 

@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const action = (page: Page, name: string) => page.getByRole("navigation").getByRole("button", { name, exact: true });
@@ -61,7 +62,7 @@ test("Slice all selects the Preview tab and ends on the last plate", async ({ pa
 // context and the programs linked in it.
 test("the Preview canvas draws with the context of the Prepare canvas", async ({ page }) => {
   type Marked = WebGL2RenderingContext & { prepareMark?: boolean };
-  const canvas = page.getByTestId("viewport").locator("canvas");
+  const canvas = shownTab(page).getByTestId("viewport").locator("canvas");
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}tests/parity/cube10.stl`);

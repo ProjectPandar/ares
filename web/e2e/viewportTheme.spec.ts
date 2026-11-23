@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { seedFirstRun, test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/viewport-theme/", import.meta.url));
@@ -24,8 +25,8 @@ const links = (page: Page) => page.evaluate(() => (window as unknown as { links:
 
 /** The canvas pixels once Viewport.render has drawn (data-drawing is unset) and two reads agree. */
 async function settledFrame(page: Page) {
-  const viewport = page.getByTestId("viewport");
-  const read = () => page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL("image/png"));
+  const viewport = shownTab(page).getByTestId("viewport");
+  const read = () => shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL("image/png"));
   let frame = "";
   await expect.poll(async () => {
     if ((await viewport.getAttribute("data-drawing")) !== null) return false;
@@ -51,7 +52,7 @@ async function openProject(page: Page) {
 async function importProject(page: Page) {
   await page.getByTestId("import-input").setInputFiles(FIXTURE);
   await expect(page.getByRole("treeitem", { name: /^Plate 2\b/ })).toBeVisible({ timeout: 60_000 });
-  await expect.poll(async () => JSON.parse((await page.getByTestId("viewport").getAttribute("data-plates"))!).origins.length).toBe(2);
+  await expect.poll(async () => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!).origins.length).toBe(2);
 }
 
 const png = (frame: string) => Buffer.from(frame.slice(frame.indexOf(",") + 1), "base64");

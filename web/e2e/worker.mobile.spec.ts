@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { act, choose, PRESETS } from "./lhPresets";
+import { shownTab } from "./shownTab";
 
 // A closed cylinder (binary STL) whose slice takes seconds: 512 facets around, 60 mm tall.
 function cylinder(radius: number, height: number, segments: number): Buffer {
@@ -41,7 +42,7 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
 
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
-  const canvas = page.locator("[data-testid=viewport] canvas");
+  const canvas = shownTab(page).locator("[data-testid=viewport] canvas");
   const pixels = () => canvas.evaluate((element: HTMLCanvasElement) => ({
     devicePixelRatio,
     width: element.width,

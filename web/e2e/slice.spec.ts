@@ -13,6 +13,7 @@ import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 import { oracleMoves } from "./oracleMoves";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/", import.meta.url));
@@ -67,7 +68,7 @@ function orcaEditedGcode(project: string, edit: Record<string, string>): string 
 
 /** True when the WebGL canvas shows more than a flat background. */
 async function canvasHasContent(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 64;
     probe.height = 64;

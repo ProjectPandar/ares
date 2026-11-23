@@ -4,6 +4,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
 import { guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-move/", import.meta.url));
@@ -37,7 +38,7 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
 
   // GLCanvas3D::on_mouse: a press on the cube at the plate view's centre and a horizontal drag
   // move it along X on the plane through the pressed point.
-  const canvas = page.getByTestId("viewport").locator("canvas");
+  const canvas = shownTab(page).getByTestId("viewport").locator("canvas");
   const box = (await canvas.boundingBox())!;
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
   await page.mouse.move(x, y);
@@ -53,7 +54,7 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   // screen, moves the instance along X only.
   const dragged = await position(page, "X").inputValue();
   await page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name: "Move", exact: true }).click();
-  const gizmo = JSON.parse((await page.getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "x", [number, number]>;
+  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "x", [number, number]>;
   await page.mouse.move(box.x + gizmo.x[0], box.y + gizmo.x[1]);
   await page.mouse.down();
   await page.mouse.move(box.x + 2 * gizmo.x[0] - gizmo.center[0], box.y + 2 * gizmo.x[1] - gizmo.center[1], { steps: 10 });

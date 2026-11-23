@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { shownTab } from "./shownTab";
 
 type Point = { x: number; y: number };
 /** One gesture frame: the position of every finger. */
@@ -116,7 +117,7 @@ const OVERLAYS = ["view-toolbar", "preview-card", "legend", "moves-slider", "lay
  * `allowed` (`"over/under"` test ids), and nothing covers the 3D view centre, where gestures start.
  */
 export async function expectNoOverlap(page: Page, allowed: string[]) {
-  const viewport = (await page.locator(".viewport").boundingBox())!;
+  const viewport = (await shownTab(page).locator(".viewport").boundingBox())!;
   const boxes: { id: string; x: number; y: number; width: number; height: number }[] = [];
   for (const id of OVERLAYS) {
     const overlay = page.locator(`.viewport > .${id}`);

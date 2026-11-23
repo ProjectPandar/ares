@@ -2,6 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/viewport-object-menu/", import.meta.url));
@@ -9,10 +10,10 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/viewport-object-me
 const FIXTURE = "tests/parity/custom-gcode-overview/two-plates.3mf";
 
 const objectMenu = (page: Page) => page.getByRole("menu", { name: "Object menu" });
-const instances = (page: Page) => page.locator(".viewport").getAttribute("data-instances");
+const instances = (page: Page) => shownTab(page).locator(".viewport").getAttribute("data-instances");
 
 async function canvasPixels(page: Page) {
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport).not.toHaveAttribute("data-drawing");
   return viewport.evaluate((container) => container.querySelector("canvas")!.toDataURL("image/png"));
 }
@@ -36,7 +37,7 @@ test("a right click on an object in the canvas shows the object menu, a right dr
   const tree = page.getByTestId("object-list");
   const cube = tree.getByRole("treeitem").nth(1);
   await expect(cube).toHaveAttribute("aria-selected", "false");
-  const box = (await page.getByTestId("viewport").locator("canvas").boundingBox())!;
+  const box = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
 
   // Right click on the cube: selected, with the menu at the cursor.
@@ -74,13 +75,13 @@ test("a right click on an object in the canvas shows the object menu, a right dr
   // With a gizmo open a right click on the cube keeps it selected and shows no menu.
   await cube.click();
   await page.keyboard.press("m");
-  await expect(page.getByTestId("viewport")).toHaveAttribute("data-gizmo", /"mode":"move"/);
+  await expect(shownTab(page).getByTestId("viewport")).toHaveAttribute("data-gizmo", /"mode":"move"/);
   await page.mouse.click(x, y, { button: "right" });
   await page.waitForTimeout(500);
   await expect(objectMenu(page)).toHaveCount(0);
   await expect(cube).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("m");
-  await expect(page.getByTestId("viewport")).not.toHaveAttribute("data-gizmo");
+  await expect(shownTab(page).getByTestId("viewport")).not.toHaveAttribute("data-gizmo");
 
   // A right drag pans the camera and shows no menu.
   const unpanned = await canvasPixels(page);

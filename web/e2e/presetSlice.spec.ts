@@ -10,6 +10,7 @@ import { withDifferences, withoutCliGroups, withPlaterBedType, withPlaterConfigL
 import { lhModels, type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-slice/", import.meta.url));
@@ -29,7 +30,7 @@ async function choose(page: Page, combo: string, group: string, name: string) {
  * canvas-width fractions, with their count. The bed axes (ColorRGB::X/Y/Z) are excluded by hue.
  */
 function modelOffset(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     [probe.width, probe.height] = [400, Math.round((400 * canvas.height) / canvas.width)];
     const context = probe.getContext("2d")!;
@@ -255,7 +256,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // The Prepare viewport shows the model where the slice places it: framed on the selected printer's
   // plate and seen from the top, the plate centre - where --center puts the model
   // (OrcaSlicer.cpp:4376-4392, Model.cpp:704-722 around BuildVolume::bed_center) - is the canvas centre.
-  const viewToolbar = page.getByTestId("view-toolbar");
+  const viewToolbar = shownTab(page).getByTestId("view-toolbar");
   await viewToolbar.getByRole("button", { name: "Fit to plate" }).click();
   await viewToolbar.getByRole("button", { name: "Top", exact: true }).click();
   await expect.poll(async () => (await modelOffset(page)).count, "the model is drawn").toBeGreaterThan(50);

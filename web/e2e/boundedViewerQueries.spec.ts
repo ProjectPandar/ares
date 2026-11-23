@@ -8,6 +8,7 @@ import { checkSegmentSizes } from "./segmentSizes";
 import { checkSegmentGeometry } from "./segmentGeometry";
 import { checkSegmentColors } from "./segmentColors";
 import { wasmMemory } from "./wasmMemory";
+import { shownTab } from "./shownTab";
 
 // Failure inventory: full-sized getter staging returns on recolor, repeated
 // slider responses drift, or range assembly changes the Native geometry/RGB.
@@ -35,7 +36,7 @@ test("repeated small-model viewer queries preserve Native bytes within bounded l
   const geometry = await checkSegmentGeometry(page, directory);
   const colors = [];
   const slider = page.getByRole("slider", { name: "Moves" });
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   for (let repeat = 0; repeat < 6; repeat++) {
     colors.push(await checkSegmentColors(page, directory, false));
     await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);

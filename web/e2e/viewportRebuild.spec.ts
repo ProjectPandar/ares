@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { choose, PRESETS } from "./lhPresets";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/viewport-rebuild/", import.meta.url));
@@ -34,7 +35,7 @@ const counts = (page: Page) => page.evaluate(() => ({ ...(window as unknown as {
 async function quiet(page: Page) {
   let last = "";
   await expect.poll(async () => {
-    if ((await page.getByTestId("viewport").getAttribute("data-drawing")) !== null) return false;
+    if ((await shownTab(page).getByTestId("viewport").getAttribute("data-drawing")) !== null) return false;
     const [previous, next] = [last, JSON.stringify(await counts(page))];
     last = next;
     return previous === next;

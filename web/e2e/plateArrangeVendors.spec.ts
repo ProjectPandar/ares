@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { type Edit, editedProject } from "./arrangeOracle";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/arrange-vendors/", import.meta.url));
 /** A Bambu Lab X2D (two nozzles, automatic filament map) with one object on filament 1 at (138.25, 128). */
@@ -66,7 +67,7 @@ async function arrangeAll(page: Page): Promise<[number, number]> {
   await popup.getByRole("button", { name: "Arrange", exact: true }).click();
   await expect(page.getByTestId("status")).not.toContainText("Arranging", { timeout: 60_000 });
   await expect(page.getByTestId("status")).not.toContainText("Arrange failed");
-  const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as {
+  const probe = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as {
     objects: { instances: { matrix: number[] }[] }[];
   };
   const { matrix } = probe.objects[0].instances[0];
@@ -134,7 +135,7 @@ test("the arrange keeps a first-layer-scanning Bambu Lab printer's calibration r
     await popup.getByRole("button", { name: "Arrange", exact: true }).click();
     await expect(page.getByTestId("status")).not.toContainText("Arranging", { timeout: 60_000 });
     await expect(page.getByTestId("status")).not.toContainText("Arrange failed");
-    const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as {
+    const probe = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as {
       objects: { instances: { matrix: number[] }[] }[];
     };
     return probe.objects[0].instances[0].matrix[13] - 115;

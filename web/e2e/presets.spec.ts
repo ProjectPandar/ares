@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/presets/", import.meta.url));
@@ -85,7 +86,7 @@ test("preset combo boxes show the project's embedded presets", async ({ page }) 
 
   // Outside clicks close an open list as well.
   await page.getByRole("button", { name: "Printer preset" }).click();
-  await page.getByTestId("viewport").click({ position: { x: 20, y: 400 } });
+  await shownTab(page).getByTestId("viewport").click({ position: { x: 20, y: 400 } });
   await expect(page.getByRole("listbox")).toHaveCount(0);
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify(results, null, 2)}\n`);

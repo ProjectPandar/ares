@@ -8,6 +8,7 @@ import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -20,7 +21,7 @@ export type OracleTowers = readonly [readonly number[], readonly number[]];
 
 /** The app session's tower positions from the viewport probe (`PlaterLayout.wipeTower`). */
 export async function probedTowers(page: Page): Promise<OracleTowers> {
-  const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as { wipeTower: OracleTowers };
+  const probe = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as { wipeTower: OracleTowers };
   return probe.wipeTower;
 }
 

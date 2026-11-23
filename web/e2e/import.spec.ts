@@ -6,6 +6,7 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/import/", import.meta.url));
@@ -34,7 +35,7 @@ async function dropFiles(page: Page, files: { name: string; bytes: Buffer }[]) {
 
 /** Fraction of viewport pixels that are saturated, i.e. model colour rather than grey bed/background. */
 function modelCoverage(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const probe = document.createElement("canvas");
     probe.width = 320;
     probe.height = 180;
@@ -52,7 +53,7 @@ function modelCoverage(page: Page) {
 
 /** FNV-1a of the full-resolution canvas pixels: changes whenever a new frame differs. */
 function canvasFingerprint(page: Page) {
-  return page.locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
+  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
     const copy = document.createElement("canvas");
     copy.width = canvas.width;
     copy.height = canvas.height;
@@ -121,17 +122,17 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   // GLCanvas3D::on_char Ctrl+digit view keys: 1 top, 3 front, 0 plate. The Top button presses
   // before the top frame draws, so wait for a settled frame that differs from the fit one
   // (data-drawing marks a queued render, Viewport.render).
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport).not.toHaveAttribute("data-drawing");
   const fitFrame = await canvasFingerprint(page);
   await page.keyboard.press("ControlOrMeta+1");
-  await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true })).toBeVisible();
+  await expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true })).toBeVisible();
   await expect
     .poll(async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== fitFrame)
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
   await page.getByRole("button", { name: "Front" }).click();
-  await expect(page.getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true })).toBeVisible();
+  await expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true })).toBeVisible();
   await page.keyboard.press("ControlOrMeta+0");
   await expect.poll(() => modelCoverage(page)).toBeLessThan(fitCoverage / 4);
 

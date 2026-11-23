@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { canvasDigest } from "./toolpathPreview";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/shortcuts/", import.meta.url));
@@ -10,7 +11,7 @@ const fixture = `${repositoryRoot}tests/parity/orca_cli_ender3.3mf`;
 
 const blur = (page: Page) => page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 const pressed = (page: Page, view: string) =>
-  expect(page.getByTestId("view-toolbar").getByRole("button", { name: view, exact: true }))
+  expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: view, exact: true }))
     .toHaveAttribute("aria-pressed", "true");
 
 /** Preview shortcuts (KBShortcutsDialog "Preview"): layer slider keys, wheel, one-layer mode. */
@@ -106,7 +107,7 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   await page.keyboard.press("ControlOrMeta+6");
   await pressed(page, "Right");
   await page.keyboard.press("ControlOrMeta+0");
-  await expect(page.getByTestId("view-toolbar").locator("[aria-pressed=true]")).toHaveCount(0);
+  await expect(shownTab(page).getByTestId("view-toolbar").locator("[aria-pressed=true]")).toHaveCount(0);
 
   // I / O: camera zoom in / out.
   const framed = await canvasDigest(page);
