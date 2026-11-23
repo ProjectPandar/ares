@@ -133,7 +133,11 @@ test("merging into a physical slot changes object extrusion to the target and ma
   const settings = JSON.parse(strFromU8(entries[PROJECT_CONFIG]));
   // Test object material assignment without unrelated prime-tower arc quantization.
   settings.enable_prime_tower = "0";
+  // A single requested size avoids the CLI-only preset refresh's multi-size formatting.
+  const thumbnailSize = "48x48/PNG";
+  settings.thumbnails = thumbnailSize;
   settings.different_settings_to_system[0] = "enable_prime_tower";
+  settings.different_settings_to_system[settings.different_settings_to_system.length - 1] = "thumbnails";
   entries[PROJECT_CONFIG] = strToU8(JSON.stringify(settings));
   const expected = info.outputPath("two-materials.3mf");
   writeFileSync(expected, zipSync(entries));
@@ -176,6 +180,8 @@ test("merging into a physical slot changes object extrusion to the target and ma
   const actual = normalize(after, "Ares");
   writeFileSync(info.outputPath("native.normalized.gcode"), composed);
   writeFileSync(info.outputPath("browser.normalized.gcode"), actual);
+  expect(composed.split("\n")).toContain(`; thumbnails = ${thumbnailSize}`);
+  expect(actual.split("\n")).toContain(`; thumbnails = ${thumbnailSize}`);
   expect(actual === composed, `download equals ${leg} OrcaSlicer`).toBe(true);
 });
 
