@@ -126,13 +126,16 @@ impl Project {
         if full_fff_config.is_some() {
             crate::profiles::FullFffGroups::store(&mut merged);
         }
-        mapped_prime_tower::disable_after_mapping(
-            &mut merged,
-            settings,
-            overrides,
-            profile.enable_timelapse,
-            filament_count,
-        );
+        // CLI::run:2531 requires at least one loaded filament, not one embedded filament.
+        if load_names.is_none() || selected > 0 {
+            mapped_prime_tower::disable_after_mapping(
+                &mut merged,
+                settings,
+                overrides,
+                profile.enable_timelapse,
+                filament_count,
+            );
+        }
         // `set_deserialize`/`handle_legacy` runs on every option token the
         // merged config carries — embedded base and profile overlay alike
         // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
