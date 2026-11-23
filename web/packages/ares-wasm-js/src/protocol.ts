@@ -15,6 +15,7 @@ export type PlaterEdit =
   | { op: "mirror"; object: number; instance: number; axis: 0 | 1 | 2 }
   | { op: "scaleToFit"; object: number; instance: number }
   | { op: "setFilament"; targets: readonly FilamentTarget[]; slot: number; count: number }
+  | { op: "setFilamentCell"; target: FilamentTarget; slot: number; count: number }
   | { op: "addPlate" }
   | { op: "deletePlate"; index: number }
   | { op: "lockPlate"; index: number; locked: boolean }

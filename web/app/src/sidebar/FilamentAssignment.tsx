@@ -4,14 +4,6 @@ import { useApp } from "../state/store";
 import { filamentNames } from "./options";
 import "./filamentAssignment.css";
 
-export function FilamentBadge({ slot }: { slot: number }) {
-  const settings = useApp((state) => state.scene?.settings ?? null);
-  const selection = useApp((state) => state.presetSelection);
-  const palette = filamentPalette(selection, settings);
-  if ((selection?.filaments.length ?? filamentNames(settings).length) < 2) return null;
-  return <span className="filament-swatch" role="img" aria-label={slot ? `Filament ${slot}` : "Default"}
-    title={slot ? `Filament ${slot}` : "Default"} style={{ background: palette[slot - 1] ?? "#888" }}>{slot || "–"}</span>;
-}
 
 export function FilamentAssignment({ targets, onClose }: { targets: readonly FilamentSelection[]; onClose: () => void }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +21,7 @@ export function FilamentAssignment({ targets, onClose }: { targets: readonly Fil
   const label = targets.length === 1 ? "Change Filament" : "Set Filament for selected items";
   const choose = (slot: number) => {
     onClose();
-    void assignFilament(targets, slot);
+    void assignFilament({ targets }, slot);
   };
   return <div className="assign-filament" role="presentation">
     <button type="button" role="menuitem" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}
