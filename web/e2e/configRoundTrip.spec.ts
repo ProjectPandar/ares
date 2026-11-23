@@ -43,9 +43,9 @@ test("decodeConfigValues then encodeConfigValues in the browser returns the orig
 
   const root = `${web}e2e/config-page`;
   await build({ root, logLevel: "warn", build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022" } });
-  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 4178, strictPort: true } });
+  const server = await preview({ root, logLevel: "warn", build: { outDir: `${artifacts}page` }, preview: { host: "127.0.0.1", port: 0, strictPort: true } });
   try {
-    await page.goto("http://127.0.0.1:4178/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
     const encoded = await page.evaluate(
       (entries) => (window as unknown as { aresConfigRoundTrip: (entries: [string, string][]) => Promise<string[]> }).aresConfigRoundTrip(entries),
