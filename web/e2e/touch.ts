@@ -120,7 +120,7 @@ export async function expectNoOverlap(page: Page, allowed: string[]) {
   const viewport = (await shownTab(page).locator(".viewport").boundingBox())!;
   const boxes: { id: string; x: number; y: number; width: number; height: number }[] = [];
   for (const id of OVERLAYS) {
-    const overlay = page.locator(`.viewport > .${id}`);
+    const overlay = shownTab(page).locator(`.viewport > .${id}`);
     await expect.soft(overlay, `${id} is shown`).toBeVisible();
     if (!(await overlay.isVisible())) continue;
     const box = (await overlay.boundingBox())!;
