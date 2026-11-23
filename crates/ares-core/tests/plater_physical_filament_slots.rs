@@ -22,6 +22,9 @@ fn three_slots(mixed: bool) -> Vec<u8> {
         settings["single_extruder_multi_material"] = json!("1");
         settings["filament_colour"] = json!(["#CF3020", "#307CC0", "#123456"]);
         settings["filament_settings_id"] = json!(["", "Snapmaker J1 PLA", "Snapmaker J1 PLA"]);
+        settings["filament_density"] = json!(["1.11", "1.22", "1.33"]);
+        settings["filament_self_index"] = json!(["1", "1", "2", "2", "3", "3"]);
+        settings["filament_flow_ratio"] = json!(["0.91", "0.92", "0.93", "0.94", "0.95", "0.96"]);
         settings["filament_is_mixed"] = json!(["0", "0", if mixed { "1" } else { "0" }]);
         if mixed {
             settings["filament_mixed_components"] = json!(["", "", "1,2"]);
@@ -116,6 +119,37 @@ fn deleting_a_middle_slot_preserves_each_nozzles_directed_flush_transitions() {
         [0.0, 102.0, 106.0, 0.0, 0.0, 202.0, 206.0, 0.0]
     );
     assert_eq!(session.project().objects()[1].filament(), Some(1));
+}
+
+#[test]
+fn deleting_a_slot_keeps_each_surviving_preset_and_its_nozzle_variants() {
+    let mut session = PlaterSession::load(three_slots(false)).unwrap();
+    session
+        .edit_filament_slots(FilamentSlotEdit::Delete { slot: 1 })
+        .unwrap();
+    let filament = &session.project().settings().filament;
+    assert_eq!(
+        filament
+            .gcode
+            .filament_density
+            .0
+            .iter()
+            .map(|value| value.0)
+            .collect::<Vec<_>>(),
+        [1.22, 1.33]
+    );
+    assert_eq!(
+        filament
+            .gcode
+            .filament_flow_ratio
+            .iter()
+            .map(|value| match value {
+                ares_core::Nullable::Value(value) => value.0,
+                ares_core::Nullable::Nil => f64::NAN,
+            })
+            .collect::<Vec<_>>(),
+        [0.93, 0.94, 0.95, 0.96]
+    );
 }
 
 #[test]
