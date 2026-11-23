@@ -1,16 +1,17 @@
 import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { buildPlates, type PlateMaterials, plateMaterials, recolorPlates } from "./bed";
+import { buildPlates, type PlateMaterials, recolorPlates } from "./bed";
 import { disposeGeometries, disposeTree } from "./dispose";
 import { type GizmoMode, Gizmos } from "./gizmos";
 import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
-import { buildInstances, ModelMaterials } from "./models";
+import { buildInstances, type ModelMaterials } from "./models";
 import { buildOptionMarkers } from "./optionMarkers";
+import { type SharedGl, sharedGl } from "./sharedGl";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
+import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, releaseToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -27,8 +28,10 @@ export interface ViewportColors {
 /**
  * Three.js plater canvas: bed (3DBed) plus object instances (GLVolumes),
  * orbit camera, picking. Renders on demand, after the task that changed it.
+ * Draws with the application's one context (`sharedGl`), whose canvas it attaches.
  */
 export class Viewport {
+  readonly #gl: SharedGl;
   readonly #renderer: THREE.WebGLRenderer;
   readonly #scene = new THREE.Scene();
   readonly #camera = new THREE.PerspectiveCamera(35, 1, 0.5, 20000);
@@ -45,9 +48,11 @@ export class Viewport {
   /** Plate grid origins (PartPlateList::compute_origin) and the current plate's index. */
   #plateOrigins: readonly (readonly [number, number])[] = [[0, 0]];
   #currentPlate = 0;
-  /** The plate and instance materials, kept across rebuilds so their shader programs stay compiled. */
+  /** The plate and instance materials of the context, kept so their shader programs stay compiled. */
   readonly #plateMaterials: PlateMaterials;
-  readonly #modelMaterials = new ModelMaterials();
+  readonly #modelMaterials: ModelMaterials;
+  /** Removes this viewport's listeners from the shared canvas. */
+  readonly #listeners = new AbortController();
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
   readonly #renderTask = new MessageChannel();
   #dirty = false;
@@ -65,10 +70,8 @@ export class Viewport {
   onOrbit?: () => void;
 
   constructor(readonly container: HTMLElement, colors: ViewportColors) {
-    this.#plateMaterials = plateMaterials(colors);
-    this.#renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    // Phones report 2.6-3; above 2 the extra pixels cost fill rate without a visible gain.
-    this.#renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.#gl = sharedGl(colors);
+    ({ renderer: this.#renderer, plateMaterials: this.#plateMaterials, modelMaterials: this.#modelMaterials } = this.#gl);
     container.appendChild(this.#renderer.domElement);
     this.#renderTask.port1.onmessage = () => {
       this.#dirty = false;
@@ -89,20 +92,21 @@ export class Viewport {
     this.#scene.add(hemisphere, key, fill, this.#models, this.#bed, this.#toolMarker);
 
     const canvas = this.#renderer.domElement;
+    const { signal } = this.#listeners;
     canvas.addEventListener("pointerdown", (event) => {
       this.#pointerDown = { x: event.clientX, y: event.clientY };
-    });
+    }, { signal });
     canvas.addEventListener("pointerup", (event) => {
       const start = this.#pointerDown;
       this.#pointerDown = null;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
       if (event.button === 0) this.onPick?.(this.#pick(event));
       else if (event.button === 2 && this.#edit) this.onContextPick?.(this.#pick(event), [event.clientX, event.clientY]);
-    });
-    canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+    }, { signal });
+    canvas.addEventListener("contextmenu", (event) => event.preventDefault(), { signal });
 
     this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
-    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit);
+    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit, signal);
 
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
@@ -204,10 +208,24 @@ export class Viewport {
     return this.#renderer.capabilities.maxTextureSize;
   }
 
+  /**
+   * GCodeViewer::init on the Preview canvas's first render (GLCanvas3D.cpp:2558): sends the
+   * toolpath and option-marker programs to compile, once per context. Three.js reads their
+   * status on first use, so nothing here waits for the compile.
+   */
+  compileToolpathPrograms() {
+    if (this.#gl.toolpathsCompiled) return;
+    this.#gl.toolpathsCompiled = true;
+    const geometry = new THREE.InstancedBufferGeometry();
+    const meshes = new THREE.Group().add(new THREE.Mesh(geometry, this.#gl.toolpaths), new THREE.Mesh(geometry, this.#gl.optionMarkers));
+    this.#renderer.compile(meshes, this.#camera, this.#scene);
+    geometry.dispose();
+  }
+
   setToolpaths(toolpaths: Toolpaths | null) {
     if (this.#toolpaths) {
       this.#scene.remove(this.#toolpaths);
-      disposeTree(this.#toolpaths);
+      releaseToolpathMesh(this.#toolpaths);
     }
     this.#toolpaths = null;
     this.#toolMarker.visible = false;
@@ -216,9 +234,9 @@ export class Viewport {
     delete this.container.dataset.segmentGeometry;
     delete this.container.dataset.segmentColors;
     if (toolpaths) {
-      this.#toolpaths = buildToolpathMesh(toolpaths);
+      this.#toolpaths = buildToolpathMesh(toolpaths, this.#gl.toolpaths);
       this.#toolpathColors = toolpaths.colors;
-      const markers = buildOptionMarkers(toolpaths);
+      const markers = buildOptionMarkers(toolpaths, this.#gl.optionMarkers);
       this.#toolpaths.add(markers.mesh);
       this.#scene.add(this.#toolpaths);
       this.#placeToolpaths();
@@ -317,18 +335,17 @@ export class Viewport {
     this.#renderTask.port2.postMessage(null);
   }
 
+  /** Frees this viewport's geometry and detaches the shared canvas; the context and its materials stay. */
   dispose() {
     this.#renderTask.port1.close();
     this.#resize.disconnect();
     this.#controls.dispose();
+    this.#listeners.abort();
     disposeGeometries(this.#models);
     disposeGeometries(this.#bed);
-    this.#modelMaterials.dispose();
-    Object.values(this.#plateMaterials).flat().forEach((material) => material.dispose());
     disposeTree(this.#toolMarker);
     this.#gizmos.dispose();
-    if (this.#toolpaths) disposeTree(this.#toolpaths);
-    this.#renderer.dispose();
+    if (this.#toolpaths) releaseToolpathMesh(this.#toolpaths);
     this.#renderer.domElement.remove();
   }
 
