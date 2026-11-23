@@ -1,6 +1,4 @@
-// Same source project/user-template route as slice.spec.ts, without changing
-// either emitter. Native G-code is always the unmodified official slicer.
-import { execFileSync } from "node:child_process";
+// Build the source project and user-template variants for both slicers.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
@@ -21,6 +19,4 @@ for (const [name, overrides] of [["normal", { layer_change_gcode: template }], [
   entries[key] = strToU8(JSON.stringify({ ...JSON.parse(strFromU8(entries[key])), ...overrides }));
   writeFileSync(`${dir}/project.3mf`, zipSync(entries));
   writeFileSync(`${dir}/overrides.json`, JSON.stringify(overrides, null, 2));
-  const stdout = execFileSync(`${root}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", dir, `${dir}/project.3mf`], { cwd: root, encoding: "utf8" });
-  writeFileSync(`${dir}/official-slice.log`, stdout);
 }
