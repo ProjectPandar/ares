@@ -12,13 +12,13 @@ import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from 
  * scene, whose `settings` are the composed config.
  */
 export function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
-  // Each canvas (Prepare, Preview) places the model when it mounts; the plater keeps the session
-  // it holds for the same inputs, as switching tabs reloads nothing upstream.
+  // The shell places the model for both tabs; the plater keeps the session it holds for the same
+  // inputs, as switching tabs reloads nothing upstream.
   const held = openedSession;
   if (held && held.plater === useApp.getState().plater && sameInputs(held, file, selection, sources)) {
     return Promise.resolve(held.placed);
   }
-  // A canvas that mounts while the same inputs are still opening takes that opening.
+  // A request for the same inputs while they are still opening takes that opening.
   if (inFlight && sameInputs(inFlight, file, selection, sources)) return inFlight.placed;
   const opening = { file, selection, sources, placed: openSession(file, scene, selection, sources) };
   inFlight = opening;

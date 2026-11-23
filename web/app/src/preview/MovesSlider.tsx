@@ -93,11 +93,13 @@ function drain(ready: { current: Moves | null }, queue: Step[], steps: LayerStep
  * The tool position window of the engine's marker sits above it
  * (`SequentialView::render`, `GCodeViewer.cpp:957-963`).
  */
-export function MovesSlider({ toolpaths, view, onMoves, steps }: {
+export function MovesSlider({ toolpaths, view, onMoves, steps, shown }: {
   toolpaths: Toolpaths;
   view: PreviewView;
   onMoves: Dispatch<SetStateAction<MovesState | null>>;
   steps: LayerSteps;
+  /** The Preview tab is shown: only then the keys move the slider. */
+  shown: boolean;
 }) {
   const [slider, setSlider] = useState<SliderState | null>(null);
   const [applied, setApplied] = useState<Applied | null>(null);
@@ -152,6 +154,7 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
     drain(ready, queue.current, steps);
   });
   useEffect(() => {
+    if (!shown) return;
     const onKey = (event: KeyboardEvent) => {
       const step = navigationStep(event);
       if (!step) return;
@@ -161,7 +164,7 @@ export function MovesSlider({ toolpaths, view, onMoves, steps }: {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [steps]);
+  }, [steps, shown]);
   if (!live) return null;
   const marker = applied?.slider.toolpaths === toolpaths ? applied.marker : null;
   const { stops } = live;
