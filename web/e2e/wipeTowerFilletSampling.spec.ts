@@ -1,10 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { expect } from "@playwright/test";
+import { expect, type Page, type TestInfo } from "@playwright/test";
 import { strToU8, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { orcaPlate } from "./platerOracle";
 
-function twoBlocks() {
+function twoBlocks({ width = "36", rib = "8", x = "110", y = "80" } = {}) {
   const corners = [[0, 0, 0], [5, 0, 0], [5, 7, 0], [0, 7, 0], [0, 0, 1], [5, 0, 1], [5, 7, 1], [0, 7, 1]];
   const faces = [[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4],
     [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]];
@@ -18,9 +18,9 @@ function twoBlocks() {
     filament_type: ["PLA", "PLA"], filament_colour: ["#cc3322", "#2255cc"], filament_diameter: ["1.75", "1.75"],
     layer_height: "0.2", initial_layer_print_height: "0.2", print_sequence: "by layer",
     enable_prime_tower: "1", enable_arc_fitting: "enabled", wipe_tower_type: "type1",
-    wipe_tower_wall_type: "rib", wipe_tower_fillet_wall: "1", wipe_tower_rib_width: "8",
-    prime_tower_width: "36", prime_tower_brim_width: "3", prime_tower_skip_points: "1",
-    wipe_tower_x: ["110"], wipe_tower_y: ["80"], prime_tower_infill_gap: "150%",
+    wipe_tower_wall_type: "rib", wipe_tower_fillet_wall: "1", wipe_tower_rib_width: rib,
+    prime_tower_width: width, prime_tower_brim_width: "3", prime_tower_skip_points: "1",
+    wipe_tower_x: [x], wipe_tower_y: [y], prime_tower_infill_gap: "150%",
     flush_volumes_matrix: ["0", "205", "229", "0"], flush_volumes_vector: ["140", "140", "140", "140"],
     flush_multiplier: ["0.3"], filament_map: ["1", "1"],
   };
@@ -36,20 +36,18 @@ function twoBlocks() {
   });
 }
 
-function towerArcs(text: string) {
+function towerMoves(text: string, instructions: RegExp) {
   const spans = text.matchAll(/^; WIPE_TOWER_START\r?\n([\s\S]*?)^; WIPE_TOWER_END\r?$/gm);
-  return Array.from(spans, ([, span]) => span.match(/^G[23] [^\r\n]+/gm) ?? []).flat();
+  return Array.from(spans, ([, span]) => span.match(instructions) ?? []).flat();
 }
 
-test("rounded prime tower arcs match OrcaSlicer in the browser", async ({ page }, info) => {
+async function sliceTower(page: Page, info: TestInfo, archive: Uint8Array) {
   mkdirSync(info.outputDir, { recursive: true });
   const project = info.outputPath("two-blocks.3mf");
-  writeFileSync(project, twoBlocks());
+  writeFileSync(project, archive);
   const mode = process.env.ARES_PARITY_SEEDED_REFERENCE === "1" ? "seeded" : "official";
   const native = orcaPlate(project, 1, mode);
   test.skip(native === null, "OrcaSlicer is unavailable");
-  const expected = towerArcs(native!);
-  expect(expected.length).toBeGreaterThan(0);
 
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
@@ -64,5 +62,21 @@ test("rounded prime tower arcs match OrcaSlicer in the browser", async ({ page }
   ]);
   const output = info.outputPath("browser.gcode");
   await download.saveAs(output);
-  expect(towerArcs(readFileSync(output, "utf8"))).toEqual(expected);
+  return { browser: readFileSync(output, "utf8"), native: native! };
+}
+
+test("rounded prime tower arcs match OrcaSlicer in the browser", async ({ page }, info) => {
+  const { browser, native } = await sliceTower(page, info, twoBlocks());
+  const instructions = /^G[23] [^\r\n]+/gm;
+  const expected = towerMoves(native, instructions);
+  expect(expected.length).toBeGreaterThan(0);
+  expect(towerMoves(browser, instructions)).toEqual(expected);
+});
+
+test("rounded rib tower corner moves match OrcaSlicer in the browser", async ({ page }, info) => {
+  const { browser, native } = await sliceTower(page, info, twoBlocks({ width: "24.123", rib: "4.375", x: "110.0005", y: "81.013" }));
+  const instructions = /^G[0123] [^\r\n]+/gm;
+  const expected = towerMoves(native, instructions);
+  expect(expected.length).toBeGreaterThan(0);
+  expect(towerMoves(browser, instructions)).toEqual(expected);
 });
