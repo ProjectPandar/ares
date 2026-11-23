@@ -44,9 +44,7 @@ pub(super) fn write(path: &Path, bytes: &[u8]) -> Result<(), String> {
         .create_new(true)
         .open(path)
         .map_err(|e| format!("{path:?}: {e}"))?;
-    file.write_all(bytes)
-        .and_then(|()| file.sync_all())
-        .map_err(|e| format!("{path:?}: {e}"))
+    file.write_all(bytes).map_err(|e| format!("{path:?}: {e}"))
 }
 
 /// Summary outputs are per-run documents: unlike case artifacts they must
