@@ -163,6 +163,34 @@ Change, in `web/app/src/viewport/`:
 the first result frame of the application still waits for the segment program's link
 (above), so its screenshot follows one link and one full frame instead of a link and three.
 
+### Proposed, not implemented: tabs that stay mounted
+
+Each tab is a route, so a switch unmounts one page (its sidebar, viewport, scene and key
+handlers) and mounts the other. On WebKit a switch costs 80-120 ms of main-thread time with the
+shared context (157-174 ms before it), almost none of it in GL; when the switch coincides with a
+slice start under load it reaches 220 ms.
+
+Upstream builds the panels once and only shows and hides them:
+
+- `Plater::priv` creates one `Sidebar` (`src/slic3r/GUI/Plater.cpp:7876`) and the `View3D` and
+  `Preview` panels once (`:7935-7937`, `panels` at `:7948-7950`).
+- `Plater::priv::set_current_panel` (`:12564-12720`) shows the new panel first and then hides
+  the others (`:12702-12720`); it creates and destroys nothing.
+
+Proposed change, in `web/app/src/`:
+
+1. `Shell` renders one `Sidebar` and both tab pages; the route only selects the shown page
+   (`hidden` on the other). A page's key handlers act only while it is shown.
+2. Each page keeps its `Viewport` and scene. The shown page's `Viewport` holds the shared canvas;
+   a switch moves the canvas and draws once.
+
+Open before any implementation: 28 specs select the viewport by
+`getByTestId("viewport")` / `[data-testid=viewport]` (54 uses), and `slice-summary` and the view
+toolbar would exist on both pages. Playwright locators match hidden elements, so each of these
+selectors would need scoping to the shown page, or the hidden page would have to drop those test
+ids. The open gizmo, the camera and the Preview sliders keep their state across switches, as
+upstream does; specs that assume a reset would change.
+
 ## Verification
 
 New Playwright spec `web/e2e/sliceSelectsPreview.spec.ts`, synthetic fixtures already in the
