@@ -68,6 +68,63 @@ unsliced.
 same (file, preset selection, vendor and imported preset sources). Any other input starts a new
 opening that replaces the running one, as before.
 
+### One GL context and its shader programs for both tabs
+
+Each tab is a route that mounts its own `ViewportView`, and each `Viewport`
+(`web/app/src/viewport/Viewport.ts:69`) creates a `THREE.WebGLRenderer`, so a new WebGL
+context, and compiles its plate, model and gizmo programs on its first render. `dispose`
+destroys both. The toolpath and option-marker `ShaderMaterial`s are built for each result
+(`toolpathMesh.ts`, `optionMarkers.ts`); `setToolpaths` disposes the old ones first, and
+three.js releases a program when the last material that uses it is disposed, so every result
+in a newly mounted Preview compiles the segment program again. Before the change these costs
+fell on the user's own switch to Preview. With the tab switch they fall inside the slice:
+
+- When Preview mounts as the slice starts, the main thread is blocked for about 100 ms under
+  the e2e Chromium (SwiftShader). About a third of the CPU samples are the new context
+  (`getContext`) and about a quarter are program compiles and links on the first render. On
+  mobile emulation under load this reaches 200-320 ms, over the 200 ms limit of
+  `web/e2e/worker.mobile.spec.ts`.
+- When the result reaches the open Preview, the first frame waits about 12 s for the segment
+  program (`GetShaderiv`). That browser has no `KHR_parallel_shader_compile`.
+
+Upstream creates the context and the programs once for the application:
+
+- `OpenGLManager::init_glcontext` (`src/slic3r/GUI/OpenGLManager.cpp:352-378`) creates
+  `m_context` on the first call and returns it to every later canvas; `View3D::init` and
+  `Preview::init` (`src/slic3r/GUI/GUI_Preview.cpp:90`, `:289`) both take it through
+  `GUI_App::init_glcontext` (`src/slic3r/GUI/GUI_App.cpp:2643-2646`).
+- `GLShadersManager::init` (`src/slic3r/GUI/GLShadersManager.cpp:22`), called once from
+  `OpenGLManager.cpp:318`, compiles every program when OpenGL starts.
+- `ViewerImpl::init` (`src/libvgcode/src/ViewerImpl.cpp:790-867`) compiles the segment and
+  option programs once, through `GCodeViewer::init` (`src/slic3r/GUI/GCodeViewer.cpp:1201`),
+  from the Preview canvas's render and from `GLCanvas3D::load_gcode_preview`
+  (`src/slic3r/GUI/GLCanvas3D.cpp:2558`, `:3888`). A new result loads data into the existing
+  buffers and textures, never a program.
+- Switching tabs shows one panel and hides the others (`Plater::priv::set_current_panel`,
+  `src/slic3r/GUI/Plater.cpp:12564-12720`); no canvas is created or destroyed.
+
+Change, in `web/app/src/viewport/`:
+
+1. One `WebGLRenderer` for the application, created by the first `Viewport`. A `Viewport`
+   attaches the renderer's canvas to its container; `dispose` detaches it and releases the
+   viewport's own geometry, controls and listeners, never the renderer.
+2. The plate and model materials (now one set per `Viewport`) live with that renderer, as
+   `GLShadersManager` programs live with the context, so the Preview canvas reuses the
+   programs Prepare linked.
+3. One toolpath material and one option-marker material, also kept with the renderer, as
+   `ViewerImpl` keeps its program ids. A result replaces only their textures, geometry and
+   uniforms. The first Preview `Viewport` issues their compile and link with
+   `renderer.compile` when it mounts, as `GCodeViewer::init` runs on the Preview canvas's
+   first render. Chrome queues the compile in the GPU process and three.js checks a program's
+   status on first use, so the mount does not wait for it. Every later result and every later
+   Preview mount uses the linked programs.
+4. Theme colours keep updating the shared materials (`setColors`). Only one `Viewport` exists at
+   a time, because a route switch unmounts the other tab.
+
+Spreading the work across frames does not apply: the blocking calls are one context creation
+and one wait for a program, neither of which can be split. Moving rendering to a worker
+(`OffscreenCanvas`) has no upstream counterpart and is deferred.
+
 ## Verification
 
 New Playwright spec `web/e2e/sliceSelectsPreview.spec.ts`, synthetic fixtures already in the
@@ -92,7 +149,20 @@ it is now on Preview gets a test-side navigation step back to Prepare, or a sele
 the tab bar (Preview's "Plate not sliced" panel has its own "Slice plate" button). No
 screenshot or G-code reference changes.
 
+For the shared context: a new spec in `web/e2e/sliceSelectsPreview.spec.ts` marks the WebGL
+context of the Prepare canvas (`canvas.getContext("webgl2")` returns the context the renderer
+holds), clicks "Slice plate", and reads the mark from the Preview canvas's context. Before the
+change Preview has a new context without the mark. `web/e2e/worker.mobile.spec.ts`, unchanged,
+must pass on iphone, pixel and ipad: its 200 ms heartbeat now covers the Preview mount, and its
+screenshot comes after the first frame of the result. `web/e2e/previewResultResponsive.spec.ts`
+keeps passing. The whole web suite is paired before and after the change.
+
 ## Deferred
+
+- Rendering in a worker through `OffscreenCanvas`.
+- The cost of the segment program itself under SwiftShader (about 12 s, now once per
+  application). A result that arrives before that compile ends still waits for the rest on its
+  first frame.
 
 - The pre-slice filament-map dialog of BBL two-nozzle printers and its cancel path; the web
   has no such dialog yet.
