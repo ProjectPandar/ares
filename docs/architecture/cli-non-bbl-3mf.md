@@ -132,7 +132,8 @@ Test 1 fails before change 1; test 2 fails before both changes.
   only inside the BBL block (1863, 1867, 1888). The same fill gives the non-BBL document 16 more
   printer keys than Native's, and the filament vectors differ in length as well; all of this belongs
   to the non-BBL retained preset change.
-- `load_filament_count > 0` and the set of loaded file names in 2531: no observable difference on
-  the Ares CLI today. A direct 3MF with only one of `--load-settings` / `--load-filaments` is still
-  rejected by Ares.
+- The set of loaded filament names in 2531 (`load_filaments_set.size() == 1`): no observable
+  difference on the Ares CLI today. The `load_filament_count > 0` term of 2531 is implemented:
+  `three_mf.rs` combines it with `is_bbl_3mf` (`load_names.is_none() || selected > 0`), and a direct
+  3MF accepts `--load-settings` or `--load-filaments` alone (`cli-direct-project-partial-presets.md`).
 - `--export-3mf` with preset files on a 3MF input: Ares does not accept that argument combination.
