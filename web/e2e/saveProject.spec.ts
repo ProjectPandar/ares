@@ -49,9 +49,17 @@ async function geometry(page: Page): Promise<Geometry> {
   return { objects, plates };
 }
 
-function comparedMembers(path: string) {
-  const members = Object.entries(unzipSync(readFileSync(path))).map(([name, contents]) =>
-    [name, createHash("sha256").update(contents).digest("hex")] as const);
+function comparedMembers(path: string, nativeReExport = false) {
+  const members = Object.entries(unzipSync(readFileSync(path))).map(([name, contents]) => {
+    const hash = createHash("sha256").update(contents).digest("hex");
+    if (!nativeReExport || name !== "Metadata/model_settings.config") return [name, hash] as const;
+
+    // bbs_3mf.cpp iterates a pointer-keyed map when emitting this run of object records.
+    const parts = Buffer.from(contents).toString("latin1").split(/(?<=^  )(<object [^\n]*>\n[\s\S]*?^  <\/object>)(?=\n)/m);
+    const outside = parts.filter((_, index) => index % 2 === 0);
+    if (outside.slice(1, -1).some(gap => /[^\t\n\r ]/.test(gap))) return [name, hash] as const;
+    return [name, { outside, records: parts.filter((_, index) => index % 2 === 1).sort() }] as const;
+  });
   const objects = /^3D\/Objects\/[^/]+\.model$/;
   return {
     ordered: members.filter(([name]) => !objects.test(name)),
@@ -158,7 +166,7 @@ test("Save Project downloads edited objects, plate assignments and settings that
     const fromReference = info.outputPath(leg, "reference", "exported.3mf");
     if (!nativeExport(downloaded, fromWeb, leg)) continue;
     nativeExport(reference, fromReference, leg);
-    expect(comparedMembers(fromWeb), `${leg} OrcaSlicer re-export`).toEqual(comparedMembers(fromReference));
+    expect(comparedMembers(fromWeb, true), `${leg} OrcaSlicer re-export`).toEqual(comparedMembers(fromReference, true));
   }
 });
 
