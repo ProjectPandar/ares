@@ -67,7 +67,8 @@ pub(super) fn load_project_source(
     if let Some(refresh) = source.refresh {
         refresh.place(&mut project);
     }
-    if check_post_process {
+    // OrcaSlicer.cpp:1800–1809 checks the imported config, not the retained merge.
+    if check_post_process && !source.refresh.is_some_and(|refresh| refresh.is_native()) {
         super::validated::validate_post_process(&project)?;
     }
     // `OrcaSlicer.cpp:2653-2654`: the plain-3MF compatible-printers gate
