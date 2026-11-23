@@ -30,6 +30,33 @@ pub struct PresetSelection {
     pub filament: PresetCollectionState,
 }
 
+impl PresetSelection {
+    pub(crate) fn compose_filament_device_options(
+        &self,
+        raw: &mut ProjectSettingsRaw,
+        names: &[&str],
+    ) -> Result<(), SliceError> {
+        let filament = &self.filament;
+        let configs = names
+            .iter()
+            .map(|name| {
+                if *name == filament.selected.name {
+                    return Some(&filament.edited.config.0);
+                }
+                filament
+                    .records
+                    .iter()
+                    .find(|record| record.name == *name)
+                    .map(|record| &record.config.0)
+            })
+            .collect::<Option<Vec<_>>>();
+        if let Some(configs) = configs {
+            super::set_filament_dev_options(raw, configs.into_iter().map(Some), None)?;
+        }
+        Ok(())
+    }
+}
+
 // PresetBundle.cpp:6158-6365: ordinary FFF metadata split and single-filament Always.
 pub(super) fn refresh(
     catalog: &LoadedCatalog,

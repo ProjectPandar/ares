@@ -156,15 +156,20 @@ impl Project {
             .unwrap_or_default();
         let names = (0..count)
             .map(|index| {
-                text(
-                    change
-                        .previous_index(index)
-                        .map_or(last, |old| slots[old].preset.as_str()),
-                )
+                change
+                    .previous_index(index)
+                    .map_or(last, |old| slots[old].preset.as_str())
             })
-            .collect();
-        set_values(&mut raw, "filament_settings_id", names);
+            .collect::<Vec<_>>();
+        set_values(
+            &mut raw,
+            "filament_settings_id",
+            names.iter().map(text).collect(),
+        );
         resize_option_vectors(&mut raw, (&slots, count), change);
+        if let Some(selection) = self.preset_selection() {
+            selection.compose_filament_device_options(&mut raw, &names)?;
+        }
         for key in ["support_filament", "support_interface_filament"] {
             if let Some(slot) = raw
                 .get(key)
@@ -335,6 +340,7 @@ fn resize_preset_vectors(
                 return None;
             };
             if values.is_empty()
+                || crate::profiles::is_filament_dev_key(key)
                 || (key != "filament_ids" && !preset_owns_option(ProfileKind::Filament, key))
             {
                 return None;
