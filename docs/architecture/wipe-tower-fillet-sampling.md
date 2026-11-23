@@ -21,11 +21,10 @@ flow. This does not change the arc-fitting algorithm or I/J formatting.
 
 The input is the synthetic two-cube, two-slot X1C fixture
 `tests/parity/type1-compacted-exit/x1c-two-slots.3mf`, introduced in
-`5760bf7dea5c2ecf41dcce281856790f79351abb`. The physical filament slots
-scenario (`web/e2e/physicalFilamentSlots.spec.ts` at
-`2a2e48e55c5cda1dda1a4340e8ac8be960f06936`) builds `merged-reference.3mf`
-by replacing only the project settings with the pinned Orca preset-selection
-probe's resolved configuration. All other archive entries are unchanged.
+`5760bf7dea5c2ecf41dcce281856790f79351abb`. To construct the reference project,
+replace only `Metadata/project_settings.config` with the resolved configuration
+from the pinned Orca preset-selection probe. All other archive entries are
+byte-identical to the fixture.
 A `printf` build of the pinned Orca source sliced that synthetic reference
 project and emitted this G-code record:
 
