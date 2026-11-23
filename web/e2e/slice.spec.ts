@@ -150,6 +150,12 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   if (selection) {
     const expected = withoutCliGroups(withSelectedPresets(nativeGcode(project, "1").toString("utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
+    for (const key of ["flush_volumes_matrix", "flush_volumes_vector"]) {
+      const line = (output: string) => output.split("\n").find((entry) => entry.startsWith(`; ${key} = `));
+      const browserValue = line(text);
+      expect(browserValue, `the browser exports ${key}`).toBeDefined();
+      expect.soft(line(expected), `the CLI reference must slice with the GUI's ${key}`).toBe(browserValue);
+    }
     expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
   } else {
     test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
