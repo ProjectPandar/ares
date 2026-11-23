@@ -29,14 +29,40 @@ Persistent masks and cached input geometry are not mutated. The Rust
 materialization boundary is a compatibility shell around the cited upstream
 concept, not an independent fuzzy-wall pipeline or a new geometry kernel.
 
-The Classic polygon overload, `apply_fuzzy_skin:595-719`, notably601/662, also
-consumes `fuzzy_supported_area`, but that consumer is deferred here. Its shared
-Rust grouping constructor receives no support-area input, preserving Classic
-behavior. Classic apply and shared effect-merging/region-exclusion logic remain
-unchanged. Extrusion width floor, random kernels, Ripple arithmetic, generic
-clipping/order, wall chain/seam scoring, emission/cooling and caller sampling
-are outside the support-area boundary. Endpoint transfer and open-path mask
-expansion have separate source boundaries below.
+Extrusion width floor, random kernels, Ripple arithmetic, generic clipping and
+ordering, wall chain and seam scoring, emission and cooling remain outside the
+support-area boundary. Endpoint transfer and open-path mask expansion have
+separate source boundaries below.
+
+## Classic polygon support-area restriction
+
+In OrcaSlicer v2.5.0 `40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`,
+`PerimeterGenerator.cpp:179-233` applies the Classic Polygon overload before
+overhang clipping and path chaining. `FuzzySkin.cpp:480-488,501-517` builds the
+support area from the lower slices using the external flow width and largest
+eligible fuzzy thickness. The Polygon overload at `:587-628,655-717` only uses
+whole-polygon shortcuts without a support area. After making region masks
+exclusive, it restricts them to that area before cyclic line splitting: an
+unrestricted region takes the support area, others intersect it, and an empty
+result applies no fuzz. All-clipped polygons still use the closed kernel;
+partial coverage keeps the existing cyclic run and endpoint handling.
+
+The Rust destination is `perimeters/classic/traversal.rs` and
+`perimeters/classic/fuzzy_skin.rs::apply_regions`. Replace the older-source
+compatibility shell that supplies no lower slices and treats one region as
+unrestricted. Use the already aligned printable lower slices and existing
+`arachne/fuzzy.rs::Regions` support construction and restriction. Preserve
+region precedence and do not treat a restricted empty mask as whole coverage.
+This is a rewrite of Classic polygon application only. Arachne, Classic thin
+walls, winding, noise and random sampling, seam scoring, lift and timing are
+unchanged.
+
+The existing public `fuzzy_external_zero_area_orientation_matches_native`
+fixture exercises Classic Ripple at a bridge transition. Use the unchanged
+ordered Native comparison in both lanes, including progress records, with
+`fuzzy_none_sole_key_control` and the adjacent fuzzy, perimeter, overhang and
+bridge cases. Distinguish an earlier progress-record difference from the first
+motion difference if either remains.
 
 Failure modes include conflating restricted-empty and unrestricted masks;
 omitting support restriction on a fast path; constructing support from the

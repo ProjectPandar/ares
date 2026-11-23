@@ -7,7 +7,7 @@ use crate::{
     perimeters::FuzzySkinConfig,
 };
 
-use super::super::arachne::fuzzy::{Regions, make_exclusive};
+use super::super::arachne::fuzzy::{Regions, make_exclusive, restrict_to_supported};
 use crate::geometry::{Point, split_line};
 
 #[derive(Clone, Copy)]
@@ -40,23 +40,28 @@ pub(super) fn apply(
     )))
 }
 
-// FuzzySkin.cpp561–684: compatible effects, exclusive masks and cyclic LineSplit runs.
+// FuzzySkin.cpp:595–717: compatible effects, supported masks and cyclic LineSplit runs.
 pub(super) fn apply_regions(
     polygon: &Polygon,
     regions: &Regions,
     input: FuzzySkinInput,
     context: &mut crate::SlicerContext,
 ) -> Result<Polygon, SliceError> {
-    if regions.entries.len() == 1 {
+    let supported = regions.supported_area();
+    if regions.entries.len() == 1 && supported.is_none() {
         return apply(polygon, regions.entries[0].config.base, input, context);
     }
     let mut merged = regions.merged(input.layer_id, input.loop_index, input.is_contour)?;
-    if merged.len() == 1 && merged[0].mask.is_empty() {
+    if merged.len() == 1 && merged[0].mask.is_empty() && supported.is_none() {
         return apply(polygon, merged[0].config.base, input, context);
     }
     make_exclusive(&mut merged)?;
+    restrict_to_supported(&mut merged, supported)?;
     let mut polygon = polygon.clone();
     for region in merged {
+        if supported.is_some() && region.mask.is_empty() {
+            continue;
+        }
         let mut split =
             split_line(polygon.points(), &region.mask, true, input.scale).map_err(|_| {
                 SliceError::InvalidInput(
