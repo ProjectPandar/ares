@@ -9,7 +9,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
 import { aresGeneratorLine, normalize } from "./orcaGcode";
 import { withDifferences, withoutCliGroups } from "./platerExport";
-import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
 import { oracleMoves } from "./oracleMoves";
 import { checkToolPosition, expectNoToolPosition } from "./toolPosition";
@@ -147,8 +147,10 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   expect(text).not.toMatch(/^G[0-3] .*\b(?:NaN|inf)\b/m);
 
   const selection = openedSelection(project, `${artifacts}slice-selection/`);
+  let comparison = project;
   if (selection) {
-    const expected = withoutCliGroups(withSelectedPresets(nativeGcode(project, "1").toString("utf8"), selection), selection);
+    comparison = withGuiProjectOptions(project, selection, `${artifacts}slice-reference/`);
+    const expected = withoutCliGroups(withSelectedPresets(nativeGcode(comparison, "1").toString("utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
     for (const key of ["flush_volumes_matrix", "flush_volumes_vector"]) {
       const line = (output: string) => output.split("\n").find((entry) => entry.startsWith(`; ${key} = `));
@@ -206,7 +208,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   }
   if (orca) {
     if (!selection) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the project-edit comparison needs the plater's selected presets");
-    const nativeEdited = withoutCliGroups(withSelectedPresets(orcaEditedGcode(project, { layer_height: "0.12" }), selection), withDifferences(selection));
+    const nativeEdited = withoutCliGroups(withSelectedPresets(orcaEditedGcode(comparison, { layer_height: "0.12" }), selection), withDifferences(selection));
     writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
       oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
       evidence: "ordered_bytes_generator_only",

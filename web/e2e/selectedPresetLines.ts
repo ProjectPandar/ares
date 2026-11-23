@@ -1,11 +1,11 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { expect } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { type NativeSelection, nativeSelection, PROJECT_CONFIG, presetSelectProbe } from "./presetSelectOracle";
 
 /**
- * The G-code lines the plater's preset selection decides, by key; a CLI-route slice of the same project
- * differs from the plater's only in these:
+ * The G-code lines projected from the plater's preset selection after slicing its project options:
  * - `printer_settings_id`, `print_settings_id`, `filament_settings_id`: full_fff_config names the selected
  *   presets (PresetBundle.cpp:5818-5820);
  * - `filament_plugin_config_overrides`: a scalar filament option, taken from the first filament preset
@@ -85,6 +85,22 @@ export function openedSelection(opened: string, directory: string): NativeSelect
   return probe === null ? null : nativeSelection(probe, directory, opened, []);
 }
 
+/** Give the CLI the GUI's project options before slicing, keeping preset names and any archive edits. */
+export function withGuiProjectOptions(project: string, selection: NativeSelection, directory: string): string {
+  const entries = unzipSync(readFileSync(project));
+  const config = JSON.parse(strFromU8(entries[PROJECT_CONFIG])) as Record<string, unknown>;
+  const opened = JSON.parse(selection.full_fff_config) as Record<string, unknown>;
+  for (const key of ["flush_multiplier", "flush_volumes_matrix", "flush_volumes_vector", "filament_colour_type"]) {
+    expect(opened[key], `Native GUI project config contains ${key}`).toBeDefined();
+    config[key] = opened[key];
+  }
+  entries[PROJECT_CONFIG] = strToU8(JSON.stringify(config));
+  mkdirSync(directory, { recursive: true });
+  const out = join(directory, basename(project));
+  writeFileSync(out, zipSync(entries));
+  return out;
+}
+
 /**
  * `reference`, a CLI-route slice of the 3MF the browser opened, with the lines of SELECTED_PRESET_KEYS set from
  * `selection`, the preset-select probe's result for that 3MF: a config line the selected presets hold is replaced,
@@ -96,8 +112,7 @@ export function openedSelection(opened: string, directory: string): NativeSelect
  * The plater's own export is no reference here: the projects this serves open with no vendor installed besides
  * Custom, so the plater selects project-local presets "<name>(<file>.3mf)", and the Native CLI rejects their export
  * with CLI_PROCESS_NOT_COMPATIBLE, -17 (OrcaSlicer.cpp:2575-2620): the process lists the system printer name, not
- * the project-local one. Those presets hold the project's own config, so the CLI slice of the opened 3MF is the
- * closest reference.
+ * the project-local one. Slice a comparison archive with the GUI project options but the original preset names.
  */
 export function withSelectedPresets(reference: string, selection: NativeSelection): string {
   const values = selectedValues(selection);
