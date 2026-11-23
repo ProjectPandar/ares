@@ -1,8 +1,13 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { normalize } from "./orcaGcode";
+import { platerExport, withoutCliGroups } from "./platerExport";
+import { orcaPlate } from "./platerOracle";
+import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { withSelectedPresets } from "./selectedPresetLines";
 
 const fixture = (path: string) => fileURLToPath(new URL(`../../tests/parity/${path}`, import.meta.url));
 
@@ -89,6 +94,80 @@ test("the filament editor follows the surviving position after deleting a slot",
   await page.keyboard.press("Control+z");
   await editFirst();
   await expect(density).toHaveValue("1.23");
+});
+
+async function sliceDownload(page: Page, path: string) {
+  await page.getByRole("button", { name: "Slice plate", exact: true }).click();
+  await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code file", exact: true }).click(),
+  ]);
+  await download.saveAs(path);
+  return readFileSync(path, "utf8");
+}
+
+function modelTools(gcode: string) {
+  const tools = new Map<string, Set<number>>();
+  let tool = 0;
+  let object: string | undefined;
+  for (const line of gcode.split("\n")) {
+    const command = /^T(\d+)(?:\s|$)/.exec(line);
+    // GCodeProcessor.cpp:7128–7134 treats these BBL commands as special, not tool changes.
+    if (command && ![255, 1000, 1001, 1100, 65279, 65535].includes(Number(command[1]))) tool = Number(command[1]);
+    if (line.startsWith("; printing object ")) object = /^; printing object (colour[01]\.stl) id:/.exec(line)?.[1];
+    if (line.startsWith("; stop printing object ")) object = undefined;
+    if (object && /^G1\b(?=.* [XY]-?\d)(?=.* E(?:\d|\.\d))/.test(line)) {
+      if (!tools.has(object)) tools.set(object, new Set());
+      tools.get(object)!.add(tool);
+    }
+  }
+  return Object.fromEntries([...tools].map(([name, indices]) => [name, [...indices]]));
+}
+
+test("merging into a physical slot changes object extrusion to the target and matches OrcaSlicer", async ({ page }, info) => {
+  test.setTimeout(300_000);
+  // The two-cube 3MF already represents the expected assignments after Merge. We
+  // never use an Ares export as the input to the independent desktop route.
+  const expected = fixture("type1-compacted-exit/x1c-two-slots.3mf");
+  await openProject(page, "Bambu Lab", expected);
+  const object = page.getByTestId("object-list").getByRole("treeitem").filter({ hasText: "colour0.stl" });
+  await expect(object.getByRole("img", { name: "Filament 2", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Add one filament", exact: true }).click();
+  await expect(page.getByTestId("filament-swatch-3")).toBeVisible();
+  await object.getByRole("button", { name: "Edit filament for colour0.stl", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Filament 3", exact: true }).click();
+  const before = await sliceDownload(page, info.outputPath("before-merge.gcode"));
+  expect(modelTools(before)).toEqual({ "colour1.stl": [0], "colour0.stl": [2] });
+
+  await page.getByRole("button", { name: "Filament 3 actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Merge with", exact: true }).click();
+  await page.getByRole("menuitem", { name: /^Filament 2:/ }).click();
+  await expect(page.getByTestId("filament-swatch-3")).toHaveCount(0);
+  await expect(object.getByRole("img", { name: "Filament 2", exact: true })).toBeVisible();
+  const after = await sliceDownload(page, info.outputPath("after-merge.gcode"));
+  const expectedTools = { "colour1.stl": [0], "colour0.stl": [1] };
+  expect(modelTools(after)).toEqual(expectedTools);
+
+  const probe = presetSelectProbe();
+  test.skip(probe === null, "OrcaSlicer preset selection probe unavailable");
+  const selection = nativeSelection(probe!, `${info.outputPath("preset-selection")}/`, expected, ["BBL"]);
+  const config = JSON.parse(selection.full_fff_config);
+  // PresetBundle.cpp:4375–4465, 8598–8671: removing the appended position
+  // leaves both preset positions, colours and the original directed flush pair.
+  expect(selection.filament_presets).toEqual(["Bambu PLA Basic @BBL X1C", "Bambu PLA Basic @BBL X1C"]);
+  expect(config.filament_colour).toEqual(["#CF3020", "#307CC0"]);
+  expect(config.flush_volumes_matrix.map(Number)).toEqual([0, 205, 229, 0]);
+  const reference = platerExport(selection, expected, info.outputPath("merged-reference.3mf"));
+  const leg = process.env.ARES_PARITY_SEEDED_REFERENCE === "1" ? "seeded" : "official";
+  const native = orcaPlate(reference, 1, leg);
+  test.skip(native === null, `${leg} OrcaSlicer unavailable`);
+  expect(modelTools(native!)).toEqual(expectedTools);
+  const composed = withoutCliGroups(withSelectedPresets(native!, selection), selection);
+  const actual = normalize(after, "Ares");
+  writeFileSync(info.outputPath("native.normalized.gcode"), composed);
+  writeFileSync(info.outputPath("browser.normalized.gcode"), actual);
+  expect(actual === composed, `download equals ${leg} OrcaSlicer`).toBe(true);
 });
 
 test("fixed-head slots can open the editor without showing count controls", async ({ page }) => {
