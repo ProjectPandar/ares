@@ -54,7 +54,7 @@ pub(super) fn facts(
         ArchiveSource::Saved => (saved_settings(settings), None),
         ArchiveSource::DirectStl => (
             crate::project::export::direct_stl_settings(&traversal.project),
-            Some(crate::project::export::Object::from_placed_stl(
+            Some(crate::project::export::placed_stl_model(
                 &traversal.project,
             )?),
         ),

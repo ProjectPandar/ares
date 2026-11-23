@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use zip::ZipArchive;
 
-use super::{PLATE_GCODE, invalid};
+use super::invalid;
 use crate::SliceError;
 
 /// The ordinary memory members use miniz's UTF-8 flag; the ASCII staged
@@ -18,7 +18,7 @@ pub(super) fn write_native_fields(bytes: &mut [u8]) -> Result<(), SliceError> {
             Ok((
                 file.header_start() as usize,
                 file.central_header_start() as usize,
-                file.name() != PLATE_GCODE,
+                !file.name().starts_with("Metadata/plate_") || !file.name().ends_with(".gcode"),
             ))
         })
         .collect::<Result<Vec<_>, SliceError>>()?;

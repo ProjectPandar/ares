@@ -11,6 +11,7 @@ pub(super) struct Mesh {
     pub name: String,
     pub vertices: Vec<[f32; 3]>,
     pub triangles: Vec<[usize; 3]>,
+    pub use_f32_vertices: bool,
     pub placement: [f64; 3],
     pub source_offset: [f32; 3],
 }
@@ -27,29 +28,29 @@ pub(super) struct Part {
     pub mesh: Mesh,
     pub transform: Transform3d,
     pub matrix: Transform3d,
+    pub use_f32_transform: bool,
     pub source_file: String,
     pub source_object: i32,
     pub source_volume: i32,
 }
 
-pub(super) struct SavedModel {
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct SavedModel {
     pub objects: Vec<Object>,
     pub orca_version: Option<String>,
 }
 
 impl Object {
-    pub(crate) fn from_placed_stl(project: &crate::Project) -> Result<Self, SliceError> {
-        let [object] = project.objects() else {
-            return Err(deferred("expected one STL object"));
-        };
+    fn from_placed_stl_object(object: &crate::ProjectObject) -> Result<Self, SliceError> {
         let ([instance], [volume]) = (object.instances(), object.volumes()) else {
             return Err(deferred("expected one STL instance and volume"));
         };
         let name = object.name();
-        let placement = instance
-            .transform()
-            .then(volume.transform())
-            .to_column_major();
+        let instance_placement = instance.transform().to_column_major();
+        let volume_transform = Transform3d::from_rows(std::array::from_fn(|row| {
+            std::array::from_fn(|column| volume.transform().as_matrix()[row][column] as f32 as f64)
+        }));
+        let volume_placement = volume_transform.to_column_major();
         let mesh = Mesh {
             name: name.to_owned(),
             vertices: volume
@@ -64,10 +65,35 @@ impl Object {
                 .iter()
                 .map(|tri| tri.map(|i| i as usize))
                 .collect(),
-            placement: [placement[12], placement[13], placement[14]],
-            source_offset: [0.0; 3],
+            use_f32_vertices: true,
+            placement: [
+                volume_placement[12],
+                volume_placement[13],
+                volume_placement[14],
+            ],
+            source_offset: [
+                volume_placement[12] as f32,
+                volume_placement[13] as f32,
+                volume_placement[14] as f32,
+            ],
         };
-        Ok(Self::unsliced(mesh, name))
+        Ok(Self {
+            name: name.to_owned(),
+            placement: [
+                instance_placement[12],
+                instance_placement[13],
+                instance_placement[14],
+            ],
+            parts: vec![Part {
+                mesh,
+                transform: volume_transform,
+                matrix: volume_transform,
+                use_f32_transform: true,
+                source_file: name.to_owned(),
+                source_object: 0,
+                source_volume: 0,
+            }],
+        })
     }
 
     pub(super) fn unsliced(mesh: Mesh, filename: &str) -> Self {
@@ -78,6 +104,7 @@ impl Object {
                 mesh,
                 transform: Transform3d::IDENTITY,
                 matrix: Transform3d::IDENTITY,
+                use_f32_transform: false,
                 source_file: filename.to_owned(),
                 source_object: 0,
                 source_volume: 0,
@@ -86,150 +113,20 @@ impl Object {
     }
 }
 
-fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
-    use quick_xml::events::Event;
-
-    let mut reader = quick_xml::Reader::from_reader(model);
-    loop {
-        let element = match reader
-            .read_event()
-            .map_err(|err| invalid(err.to_string()))?
-        {
-            Event::Start(element) | Event::Empty(element) => element,
-            Event::Eof => return Ok(false),
-            _ => continue,
-        };
-        if element.local_name().as_ref() != b"triangle" {
-            continue;
-        }
-        // bbs_3mf.cpp:355–363: the writer does not preserve paint attributes.
-        for attribute in element.attributes() {
-            let attribute = attribute.map_err(|err| invalid(err.to_string()))?;
-            if attribute.key.local_name().as_ref().starts_with(b"paint_")
-                && !attribute.value.is_empty()
-            {
-                return Ok(true);
-            }
-        }
-    }
-}
-
-pub(super) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
-    let project = crate::load_project(input)?;
-    let paths: std::collections::BTreeSet<_> = project
-        .objects()
-        .iter()
-        .flat_map(|object| object.volumes().iter().map(|part| part.source_model_path()))
-        .collect();
-    let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-    if archive.paths().any(|path| {
-        !paths.contains(path.as_str())
-            && !matches!(
-                path.as_str(),
-                MODEL
-                    | "3D/_rels/3dmodel.model.rels"
-                    | "_rels/.rels"
-                    | "[Content_Types].xml"
-                    | "Metadata/project_settings.config"
-                    | "Metadata/model_settings.config"
-                    | "Metadata/slice_info.config"
-                    | "Metadata/filament_sequence.json"
-            )
-    }) {
-        return Err(deferred("additional saved archive members"));
-    }
-    for path in paths {
-        let bytes = archive.read(&PackagePath::entry(path.as_bytes())?)?;
-        if has_painted_triangles(&bytes)? {
-            return Err(deferred("painted saved mesh"));
-        }
-    }
-    let model_bytes = archive.read(&PackagePath::entry(MODEL.as_bytes())?)?;
-    let doc: ModelDocument = quick_xml::de::from_reader(model_bytes.as_slice())
-        .map_err(|err| invalid(err.to_string()))?;
-    let settings = &project.documents().model_settings.objects;
-    let objects = project
-        .objects()
-        .iter()
-        .map(|object| {
-            let [instance] = object.instances() else {
-                return Err(deferred("expected one saved instance per object"));
-            };
-            if !instance.printable()
-                || instance.transform().without_translation() != Transform3d::IDENTITY
-                || object.name().contains(['/', '\\', '\0'])
-            {
-                return Err(deferred("saved model metadata or transforms"));
-            }
-            let settings = settings
-                .iter()
-                .find(|entry| entry.id == object.id())
-                .ok_or_else(|| deferred("expected saved object settings"))?;
-            let offset = instance.transform().to_column_major();
-            Ok(Object {
-                name: object.name().to_owned(),
-                placement: [offset[12], offset[13], offset[14]],
-                parts: object
-                    .volumes()
-                    .iter()
-                    .map(|volume| saved_part(volume, &settings.parts))
-                    .collect::<Result<_, _>>()?,
-            })
-        })
-        .collect::<Result<_, SliceError>>()?;
+pub(crate) fn placed_stl_model(project: &crate::Project) -> Result<SavedModel, SliceError> {
     Ok(SavedModel {
-        objects,
-        orca_version: doc
-            .metadata
-            .into_iter()
-            .find(|m| m.name == "OrcaSlicer")
-            .map(|m| m.value),
+        objects: project
+            .objects()
+            .iter()
+            .map(Object::from_placed_stl_object)
+            .collect::<Result<_, _>>()?,
+        orca_version: None,
     })
 }
 
-fn saved_part(
-    volume: &crate::ProjectVolume,
-    settings: &[super::super::model_settings::PartSettings],
-) -> Result<Part, SliceError> {
-    let part = settings
-        .iter()
-        .find(|entry| entry.id == volume.id())
-        .ok_or_else(|| deferred("expected saved part settings"))?;
-    if volume.volume_type() != crate::ProjectVolumeType::ModelPart {
-        return Err(deferred("expected ordinary model parts"));
-    }
-    let metadata = |key| {
-        part.retained_metadata
-            .iter()
-            .find(|entry| entry.key == key)
-            .map_or("", |entry| entry.value.as_str())
-    };
-    Ok(Part {
-        mesh: Mesh {
-            name: volume.name().to_owned(),
-            vertices: volume
-                .mesh()
-                .vertices()
-                .iter()
-                .map(|p| [p.x as f32, p.y as f32, p.z as f32])
-                .collect(),
-            triangles: volume
-                .mesh()
-                .triangles()
-                .iter()
-                .map(|tri| tri.map(|i| i as usize))
-                .collect(),
-            placement: [0.0; 3],
-            source_offset: ["source_offset_x", "source_offset_y", "source_offset_z"]
-                .map(|key| metadata(key).parse().unwrap_or(0.0)),
-        },
-        transform: volume.transform(),
-        matrix: volume.transform().then(volume.source_transform()),
-        source_file: metadata("source_file").to_owned(),
-        source_object: metadata("source_object_id").parse().unwrap_or(-1),
-        source_volume: metadata("source_volume_id").parse().unwrap_or(-1),
-    })
-}
+#[path = "saved.rs"]
+mod saved;
+pub(super) use saved::load_saved;
 
 pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     if filename.to_ascii_lowercase().ends_with(".stl") {
@@ -247,6 +144,7 @@ fn stl(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
         name: filename.to_owned(),
         vertices: Vec::new(),
         triangles: Vec::with_capacity(model.triangles().len()),
+        use_f32_vertices: false,
         placement: [0.0; 3],
         source_offset: [0.0; 3],
     };
@@ -346,6 +244,7 @@ fn plain(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
             .iter()
             .map(|tri| [tri.v1 as usize, tri.v2 as usize, tri.v3 as usize])
             .collect(),
+        use_f32_vertices: false,
         placement: [offset[12], offset[13], offset[14]],
         source_offset: [0.0; 3],
     };

@@ -159,7 +159,9 @@ pub use project::{
     UpwardMachineSource, export_project_settings, load_project, project_config_substitutions,
     validate_project_version,
 };
-pub use project::{StlExport, export_3mf, export_sliced_3mf, export_stl, export_stls};
+pub use project::{
+    StlExport, export_3mf, export_arranged_sliced_3mf, export_sliced_3mf, export_stl, export_stls,
+};
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
