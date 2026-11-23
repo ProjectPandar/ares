@@ -233,6 +233,7 @@ pub struct PrintStatistics {
 pub struct SlicedArchiveObject {
     pub model_index: usize,
     pub name: String,
+    pub(crate) gcode_name: Option<String>,
     pub identify_id: u32,
     pub bounds: [f64; 4],
     pub area: f32,
@@ -249,6 +250,7 @@ pub struct SlicedArchive {
     pub nozzle_diameter: f32,
     pub project_settings: Vec<u8>,
     pub(crate) stl_model: Option<crate::project::export::SavedModel>,
+    pub(crate) label_object_enabled: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]

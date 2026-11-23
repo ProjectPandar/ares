@@ -140,6 +140,10 @@ fn load_and_place_with_preparation(
         let bed = bed_center(&profile.composed.settings().printer.remaining.printable_area);
         loaded.center_instances_around_point(bed);
         loaded.drop_instances_to_ground();
+    } else if profile.placement == Placement::Arrange
+        && matches!(project.input, super::ProjectInput::ImportedStl(_))
+    {
+        loaded = crate::plater::arrange_cli_stl(loaded)?;
     }
     Ok((loaded, preparation))
 }

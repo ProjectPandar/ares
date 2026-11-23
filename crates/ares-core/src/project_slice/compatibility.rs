@@ -103,6 +103,8 @@ pub(crate) fn reject_incompatible_load_settings(
             .any(|entry| entry == new_printer_system_name)
     } else if let Some(embedded) = &names.embedded {
         retained_process_compatible(embedded, machine_config, new_printer_system_name)?
+    } else if let Some(machine_config) = &names.direct_stl_machine {
+        retained_process_compatible(raw, machine_config, new_printer_system_name)?
     } else {
         text_list(raw, "print_compatible_printers")
             .is_some_and(|list| list.iter().any(|entry| entry == new_printer_system_name))

@@ -34,14 +34,12 @@ async fn main() {
         Some(Commands::Slice(args)) => {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
                 export_stl::run(&args)
-            } else if let Some(output) = args.export_3mf.as_ref() {
-                export_3mf::run(&args, output).await
             } else {
                 run_slice(args).await
             }
         }
         None => match cli.direct.export_3mf.as_deref() {
-            Some(output) => export_3mf::run_direct(&cli.direct, output),
+            Some(output) => export_3mf::run_direct(&cli.direct, output).await,
             None => direct_stl::run(cli.direct, export_before_slice).await,
         },
     };

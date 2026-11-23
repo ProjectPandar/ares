@@ -210,6 +210,23 @@ pub(super) fn write_entries(
         );
     }
     applied_filament_maps(settings, raw_settings, &mut lines);
+    // Print::apply also initializes preset identities absent from the CLI project.
+    if composer == crate::project::ConfigComposer::CliRun
+        && raw_settings.contains_key("filament_ids")
+    {
+        for key in ["filament_settings_id", "print_settings_id"] {
+            if !emitted_keys.contains(key) && !raw_settings.contains_key(key) {
+                let definition = registry::option_definition(key).unwrap();
+                emit(
+                    &mut lines,
+                    &mut emitted_keys,
+                    key,
+                    definition.default_wire_value.to_owned(),
+                    false,
+                );
+            }
+        }
+    }
     // The resize itself is `initialize_cli_loaded_project_config`
     // (OrcaSlicer.cpp:3202-3205) on the loaded raw; this loop only
     // creates an absent key at filament_count + 2 before

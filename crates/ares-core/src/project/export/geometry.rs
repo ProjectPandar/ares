@@ -52,7 +52,6 @@ pub(super) struct Part {
     pub mesh: Mesh,
     pub transform: Transform3d,
     pub matrix: Transform3d,
-    pub use_f32_transform: bool,
     pub source_file: String,
     pub source_object: i32,
     pub source_volume: i32,
@@ -73,9 +72,9 @@ impl Object {
         };
         let name = object.name();
         let instance_placement = instance.transform().to_column_major();
-        let volume_transform = Transform3d::from_rows(std::array::from_fn(|row| {
-            std::array::from_fn(|column| volume.transform().as_matrix()[row][column] as f32 as f64)
-        }));
+        // Model.cpp:1990–1998 scales vertices in float, but the
+        // scaled volume offset remains in the double-precision transform.
+        let volume_transform = volume.transform();
         let volume_placement = volume_transform.to_column_major();
         let mesh = Mesh {
             name: name.to_owned(),
@@ -97,12 +96,16 @@ impl Object {
                 volume_placement[13],
                 volume_placement[14],
             ],
-            source_offset: [
-                volume_placement[12] as f32,
-                volume_placement[13] as f32,
-                volume_placement[14] as f32,
-            ],
+            source_offset: volume.stl_source_offset(),
         };
+        let metadata = volume.converted_from().map(|unit| Metadata {
+            key: match unit {
+                crate::StlUnit::Meters => "source_in_meters",
+                crate::StlUnit::Inches => "source_in_inches",
+            }
+            .into(),
+            value: "1".into(),
+        });
         Ok(Self {
             name: name.to_owned(),
             instances: vec![Instance::at([
@@ -116,11 +119,10 @@ impl Object {
                 mesh,
                 transform: volume_transform,
                 matrix: volume_transform,
-                use_f32_transform: true,
                 source_file: name.to_owned(),
                 source_object: 0,
                 source_volume: 0,
-                metadata: Vec::new(),
+                metadata: metadata.into_iter().collect(),
                 mesh_stat: None,
             }],
         })
@@ -136,7 +138,6 @@ impl Object {
                 mesh,
                 transform: Transform3d::IDENTITY,
                 matrix: Transform3d::IDENTITY,
-                use_f32_transform: false,
                 source_file: filename.to_owned(),
                 source_object: 0,
                 source_volume: 0,

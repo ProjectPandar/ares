@@ -282,7 +282,7 @@ pub struct ProjectVolume {
     region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
     mesh_preparation: MeshPreparation,
-    converted_from: Option<StlUnit>,
+    stl_conversion: Option<(StlUnit, [f32; 3])>,
 }
 
 impl ProjectVolume {
@@ -302,7 +302,7 @@ impl ProjectVolume {
             source_model_path,
             id,
             mesh_preparation: MeshPreparation::new(&mesh, transform, id as i32),
-            converted_from: None,
+            stl_conversion: None,
             mesh,
             transform,
             name: metadata.0,
@@ -342,7 +342,17 @@ impl ProjectVolume {
 
     /// The original unit if this volume was converted to millimeters.
     pub fn converted_from(&self) -> Option<StlUnit> {
-        self.converted_from
+        self.stl_conversion.map(|(unit, _)| unit)
+    }
+
+    pub(crate) fn stl_source_offset(&self) -> [f32; 3] {
+        self.stl_conversion.map_or_else(
+            || {
+                let m = self.transform.to_column_major();
+                [m[12] as f32, m[13] as f32, m[14] as f32]
+            },
+            |(_, offset)| offset,
+        )
     }
 
     pub fn source_transform(&self) -> Transform3d {

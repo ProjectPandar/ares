@@ -8,6 +8,10 @@ pub(super) fn facts(
     brim: &[Option<brim::BrimPlan>],
     source: ArchiveSource,
 ) -> Result<ArchivePlate, SliceError> {
+    let settings = &traversal.resolved.views.full;
+    let bbl = super::tags::Tags::of(traversal).is_bbl();
+    let use_gcode_name =
+        !bbl && footprint::EXCLUDE_FLAVORS.contains(&settings.printer.gcode.gcode_flavor);
     let objects = traversal
         .objects
         .iter()
@@ -34,6 +38,13 @@ pub(super) fn facts(
             Ok(crate::SlicedArchiveObject {
                 model_index,
                 name: traversal.project.objects()[model_index].name().to_owned(),
+                gcode_name: use_gcode_name.then(|| {
+                    footprint::instance_name(
+                        traversal.project.objects()[model_index].name(),
+                        index as u32,
+                        0,
+                    )
+                }),
                 identify_id: schedule.instances[index][0].label_id,
                 bounds: footprint.bounds,
                 area: footprint.area,
@@ -41,17 +52,16 @@ pub(super) fn facts(
             })
         })
         .collect::<Result<_, SliceError>>()?;
-    let settings = &traversal.project.documents().project_settings_raw;
+    let raw = &traversal.project.documents().project_settings_raw;
     let setting = |key: &str| {
-        settings
-            .get(key)
+        raw.get(key)
             .and_then(|value| value.element(0))
             .and_then(crate::project::raw_settings::RawConfigValue::token)
             .unwrap_or_default()
     };
-    let nozzle_diameter = setting("nozzle_diameter").parse().unwrap_or(0.0);
+    let nozzle_diameter = settings.project.print.nozzle_diameter.0[0].0 as f32;
     let (project_settings, stl_model) = match source {
-        ArchiveSource::Saved => (saved_settings(settings), None),
+        ArchiveSource::Saved => (saved_settings(raw), None),
         ArchiveSource::DirectStl => (
             crate::project::export::direct_stl_settings(&traversal.project),
             Some(crate::project::export::placed_stl_model(
@@ -63,9 +73,10 @@ pub(super) fn facts(
         objects,
         layer_count: schedule.layer_count(),
         filament_color: setting("filament_colour"),
-        filament_type: setting("filament_type"),
+        filament_type: settings.filament.gcode.filament_type.0[0].clone(),
         filament_id: setting("filament_ids"),
         nozzle_diameter,
+        label_object_enabled: bbl || settings.process.print.exclude_object.0,
         project_settings,
         stl_model,
     })
@@ -79,6 +90,7 @@ pub(super) fn sliced_archive(facts: ArchivePlate) -> Result<crate::SlicedArchive
         filament_type: facts.filament_type,
         filament_id: facts.filament_id,
         nozzle_diameter: facts.nozzle_diameter,
+        label_object_enabled: facts.label_object_enabled,
         project_settings: crate::project::export::write_project_settings_raw(
             &facts.project_settings,
             facts.stl_model.is_none(),
