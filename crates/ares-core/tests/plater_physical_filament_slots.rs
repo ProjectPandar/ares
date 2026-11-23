@@ -39,6 +39,27 @@ fn three_slots(mixed: bool) -> Vec<u8> {
             .write_all(&serde_json::to_vec(&settings).unwrap())
             .unwrap();
     }
+    output
+        .start_file(
+            "Metadata/custom_gcode_per_layer.xml",
+            SimpleFileOptions::default(),
+        )
+        .unwrap();
+    output
+        .write_all(
+            br##"<custom_gcodes_per_layer>
+  <plate>
+    <plate_info id="1"/>
+    <mode value="MultiAsSingle"/>
+    <layer top_z="0.4" extruder="1" color="" type="2" extra=""/>
+    <layer top_z="0.6" extruder="2" color="" type="2" extra=""/>
+    <layer top_z="0.8" extruder="1" color="" type="2" extra=""/>
+    <layer top_z="1.0" extruder="3" color="" type="2" extra=""/>
+    <layer top_z="1.2" extruder="1" color="" type="1" extra="wait"/>
+  </plate>
+</custom_gcodes_per_layer>"##,
+        )
+        .unwrap();
     output.finish().unwrap().into_inner()
 }
 
@@ -121,6 +142,27 @@ fn adding_before_a_virtual_slot_keeps_its_material_and_flush_entries() {
         [matrix[3], matrix[12], matrix[19], matrix[28]],
         [102.0, 106.0, 202.0, 206.0]
     );
+}
+
+#[test]
+fn merging_retargets_each_original_tool_change_without_moving_a_pause() {
+    let mut session = PlaterSession::load(three_slots(false)).unwrap();
+    let before = session.project().plates_custom_gcodes()[&0].gcodes.clone();
+    session
+        .edit_filament_slots(FilamentSlotEdit::Merge {
+            source: 1,
+            target: 3,
+        })
+        .unwrap();
+    let after = &session.project().plates_custom_gcodes()[&0].gcodes;
+    assert_eq!(
+        after
+            .iter()
+            .map(|tick| (tick.print_z, tick.extruder))
+            .collect::<Vec<_>>(),
+        [(0.4, 2), (0.6, 1), (0.8, 2), (1.0, 2), (1.2, 1)]
+    );
+    assert_eq!(after.last(), before.last());
 }
 
 #[test]
