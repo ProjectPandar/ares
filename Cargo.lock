@@ -84,7 +84,7 @@ dependencies = [
 
 [[package]]
 name = "ares-cli"
-version = "0.1.62"
+version = "0.1.63"
 dependencies = [
  "ares-core",
  "ares-vgcode",
@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "ares-core"
-version = "0.1.62"
+version = "0.1.63"
 dependencies = [
  "boostvoronoi",
  "crc32fast",
@@ -130,7 +130,7 @@ dependencies = [
 
 [[package]]
 name = "ares-vgcode"
-version = "0.1.62"
+version = "0.1.63"
 dependencies = [
  "ares-core",
  "tempfile",
@@ -139,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "ares-wasm"
-version = "0.1.62"
+version = "0.1.63"
 dependencies = [
  "ares-core",
  "ares-vgcode",
