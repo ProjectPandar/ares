@@ -1,8 +1,8 @@
 use std::io::{Cursor, Read, Write};
 
 use ares_core::{
-    ConfigOverrides, FilamentSlotEdit, GenerationMetadata, Placement, PlaterSession,
-    ProfileSliceRequest, SlicerContext, slice_plater_with_profiles,
+    ConfigOverrides, FilamentSlotEdit, GenerationMetadata, GuiProfileSliceRequest, Placement,
+    PlaterSession, ProfileSliceRequest, SlicerContext, slice_plater_with_profiles,
 };
 use serde_json::{Value, json};
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
@@ -119,4 +119,33 @@ async fn editing_physical_slots_keeps_whole_device_vectors_with_their_presets() 
         emitted_temperatures(&session, request).await,
         "41,43,47,41,43,47"
     );
+}
+
+#[tokio::test]
+async fn reopening_a_project_saved_with_its_presets_keeps_only_surviving_filaments() {
+    let catalog = catalog();
+    let request = ProfileSliceRequest {
+        filename: "two-materials.3mf",
+        catalog_json: &catalog,
+        selection_json: r#"{"from_project":true,"load_and_select":"always"}"#,
+        plate: None,
+        overrides: &ConfigOverrides::default(),
+        placement: Placement::None,
+    };
+    let mut session = PlaterSession::load_with_profiles(project(), GuiProfileSliceRequest(request))
+        .await
+        .unwrap();
+    let before = session.filament_slots();
+    assert_eq!(before.slots.len(), 2);
+    assert_eq!(before.slots[0].preset, "First PLA");
+    assert_eq!(before.slots[1].preset, "Second PLA");
+    session
+        .edit_filament_slots(FilamentSlotEdit::Delete { slot: 1 })
+        .unwrap();
+
+    let bytes = session
+        .save_project_with_profiles(GuiProfileSliceRequest(request))
+        .unwrap();
+    let reopened = PlaterSession::load(bytes).unwrap();
+    assert_eq!(reopened.filament_slots().slots, &before.slots[1..]);
 }
