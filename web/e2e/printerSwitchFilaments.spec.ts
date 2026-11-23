@@ -7,7 +7,7 @@ import { strFromU8, unzipSync } from "fflate";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { cliSwitchedExport, withoutCliGroups } from "./platerExport";
+import { switchedPlaterExport, withoutCliGroups } from "./platerExport";
 import { type NativeSelection, nativeSelection, PROJECT_CONFIG, presetSelectProbe } from "./presetSelectOracle";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -140,10 +140,9 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
   // The plater's project config is full_fff_config, which takes one filament per selected filament preset
   // (PresetBundle.cpp:5545, 5651-5660), so the selection, not the project, decides the filament count.
   const session = platerSession(probe!, artifacts, ONE_FILAMENT, U1.printer);
-  // The plater saves full_config_secure() as the project config (Plater.cpp:19779); OrcaSlicer slices that 3MF after
-  // the CLI machine-switch steps the web slice still runs (cliSwitchedExport). The Native CLI itself crashes on the
-  // CLI route: a one-filament BBL 3MF loaded with four U1 filaments.
-  const exported = cliSwitchedExport(session, ONE_FILAMENT, `${artifacts}plater-export.3mf`);
+  // The plater saves full_config_secure() (Plater.cpp:19779) with the original instance transforms.
+  // OrcaSlicer slices that already-composed 3MF without loading a different machine.
+  const exported = switchedPlaterExport(session, ONE_FILAMENT, `${artifacts}plater-export.3mf`);
   const native = withoutCliGroups(orcaGcode(artifacts, `${artifacts}plater-export.3mf`), exported);
 
   await selectInBrowser(page, ONE_FILAMENT, session, U1);
@@ -156,7 +155,7 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
   await (await download).saveAs(path);
   const browser = normalize(readFileSync(path, "utf8"), "Ares");
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    oracle: "OrcaSlicer 2.5.0 slicing the plater's saved project after the preset-select probe's U1 session, after the CLI machine-switch steps",
+    oracle: "OrcaSlicer 2.5.0 slicing the plater's saved project with the original instance transforms after selecting the U1",
     printer: U1.printer,
     filaments: session.filament_presets,
     bytes: browser.length,
