@@ -2,6 +2,9 @@
 //! Fresh Native seed0 captured all five stock inputs with Unix156.
 #![cfg(target_os = "linux")]
 
+#[path = "cli_custom_gcode_export_scope.rs"]
+mod cli_custom_gcode_export_scope;
+
 use std::{fs, path::Path, process::Command};
 
 use crate::native_wall_clock::result_comparison_bytes;

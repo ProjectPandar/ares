@@ -182,7 +182,11 @@ pub(in crate::project_slice::gcode_emit) fn emit(
         super::super::value::Value::Integer(finished_objects as i64),
     );
     let name = "printing_by_object_gcode";
-    let rendered = match super::super::template::render(raw, &mut config) {
+    let rendered = match super::super::template::render(
+        raw,
+        &mut config,
+        &mut state.template_globals,
+    ) {
         Ok(rendered) => {
             motion::invalidate_after_custom_gcode(&rendered, state);
             rendered

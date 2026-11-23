@@ -19,7 +19,7 @@ impl Parser<'_> {
             if !self.take(Token::Right) {
                 return Err("parameter of size() is not a vector variable".to_owned());
             }
-            let value = match self.config.get(&variable) {
+            let value = match self.lookup(&variable) {
                 Some(Value::List(values)) => Value::Integer(values.len() as i64),
                 // Suppressed (inactive) branch: resolution no-ops
                 // while skipping; a non-identifier argument or a
