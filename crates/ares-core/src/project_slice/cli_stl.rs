@@ -1,7 +1,7 @@
 //! Native CLI's apply and process passes for arranged STL inputs.
 
 use crate::{
-    GenerationMetadata, LoadSettingsSliceRequest, Model, ProcessedGCode, Project, SliceError,
+    GenerationMetadata, ImportedStl, LoadSettingsSliceRequest, ProcessedGCode, Project, SliceError,
     SlicedPlate, SlicerContext, profiles::entry::load_settings::with_load_settings_source,
 };
 
@@ -45,7 +45,7 @@ impl StlPlateFailure {
 /// Arrange and precheck the requested plates before processing any of them.
 /// Pull each result in turn to process that plate and stop after the first error.
 pub fn slice_stl_models_with_load_settings<'a>(
-    models: &[(&str, Model)],
+    models: Vec<ImportedStl>,
     request: LoadSettingsSliceRequest<'_>,
     selection: u32,
     mut context: SlicerContext<'a>,

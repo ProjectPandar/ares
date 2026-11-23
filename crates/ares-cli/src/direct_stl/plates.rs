@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use ares_core::{
-    LoadSettingsSliceRequest, Model, SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
+    ImportedStl, LoadSettingsSliceRequest, SliceError, SlicedPlate, SlicedStlPlate, SlicerContext,
 };
 
 use crate::{
@@ -13,7 +13,7 @@ pub(super) fn slice_arranged(
     (input, output): (&Path, &Path),
     (diagnostics, no_check, strict, statistics): (&mut DiagnosticLog, bool, bool, bool),
     (models, request, selection, context): (
-        &[(&str, Model)],
+        Vec<ImportedStl>,
         LoadSettingsSliceRequest<'_>,
         u32,
         SlicerContext<'_>,
