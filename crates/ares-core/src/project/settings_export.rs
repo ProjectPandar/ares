@@ -48,7 +48,7 @@ fn export_saved_settings(
             refreshed
         } else {
             // OrcaSlicer.cpp:2775–2815 loads retained filaments before flush preparation.
-            project.apply_project_preset_refresh(refreshed, &overrides)?;
+            project.apply_project_preset_refresh(refreshed, &overrides, false)?;
             project.documents().project_settings_raw.clone()
         }
     } else {
