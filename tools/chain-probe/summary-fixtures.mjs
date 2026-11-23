@@ -21,6 +21,16 @@ const FIXTURES = [
     source: "tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf",
     edits: { filament_density: ["1.24", "1.31"], filament_cost: ["24.99", "31.7"], time_cost: "1.7" },
   },
+  {
+    // time-cost with a prime tower. The plate keeps its own filament map mode
+    // (PartPlate.cpp:409-420), so the map is not edited.
+    name: "wipe-tower",
+    source: "tests/parity/validation/multi-filament-bridge-anchor-narrowed.3mf",
+    edits: {
+      filament_density: ["1.24", "1.31"], filament_cost: ["24.99", "31.7"], time_cost: "1.7",
+      enable_prime_tower: "1",
+    },
+  },
 ];
 
 function zip(entries) {

@@ -3,12 +3,13 @@
 Inputs for `DoExport::update_print_estimated_stats` (`GCode.cpp:1904-1940`),
 the `PrintStatistics` totals that the preview Summary legend reads.
 
-- `time-cost.3mf` and `unused-filament.3mf` are written by
+- `time-cost.3mf`, `unused-filament.3mf` and `wipe-tower.3mf` are written by
   `node tools/chain-probe/summary-fixtures.mjs`. The script takes existing
   fixtures and replaces only `filament_density`, `filament_cost` and
-  `time_cost`:
+  `time_cost`, plus `enable_prime_tower` for `wipe-tower`:
   - `time-cost` has two used filaments.
   - `unused-filament` has filament 2 configured but not used.
+  - `wipe-tower` is `time-cost` with `enable_prime_tower = 1`.
 - No Native output is stored here. `crates/ares-cli/tests/orca_parity/print_estimated_stats.rs`
   produces it at test time through `OrcaRunner::print_statistics_reference`,
   cached under `ARES_ORCA_CACHE_DIR`:
