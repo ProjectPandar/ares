@@ -22,8 +22,13 @@ export function openStlSession(file: ModelFile, scene: Scene, selection: PresetS
   if (inFlight && sameInputs(inFlight, file, selection, sources)) return inFlight.placed;
   const opening = { file, selection, sources, placed: openSession(file, scene, selection, sources) };
   inFlight = opening;
+  // Plater::load_files places a loaded model before the plate is ready to slice; the status waits for
+  // the first session of a file.
+  useApp.setState({ openingStlSession: openedSession?.file !== file });
   const settled = () => {
-    if (inFlight === opening) inFlight = null;
+    if (inFlight !== opening) return;
+    inFlight = null;
+    useApp.setState({ openingStlSession: false });
   };
   opening.placed.then(settled, settled);
   stlSessionOpening = opening.placed.catch(() => undefined);

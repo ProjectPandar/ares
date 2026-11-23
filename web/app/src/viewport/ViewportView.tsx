@@ -87,6 +87,7 @@ export function ViewportView({ scene, shown, toolpaths = null, colors = null, en
   const [copies, setCopies] = useState<number | null>(null);
   const theme = useApp((state) => state.theme);
   const loaded = useApp((state) => state.scene);
+  const selection = useApp((state) => state.presetSelection);
   const selected = useApp((state) => state.selectedObject);
   const currentPlate = useApp((state) => state.currentPlate);
   const plater = useApp((state) => state.plater);
