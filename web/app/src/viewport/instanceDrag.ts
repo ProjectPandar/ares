@@ -65,6 +65,7 @@ export function attachInstanceDrag(
   camera: THREE.Camera,
   scene: DragScene,
   edit: () => EditHandlers | undefined,
+  signal: AbortSignal,
 ) {
   let drag: Drag | null = null;
   const raycaster = new THREE.Raycaster();
@@ -103,7 +104,7 @@ export function attachInstanceDrag(
         if (drag === current && current.started) preview(current);
       });
     }
-  }, { capture: true });
+  }, { capture: true, signal });
   canvas.addEventListener("pointermove", (event) => {
     const handlers = edit();
     if (!drag || !handlers || !step(drag, ray(event).ray, event.shiftKey)) return;
@@ -112,7 +113,7 @@ export function attachInstanceDrag(
       handlers.start(drag.target);
     }
     preview(drag);
-  });
+  }, { signal });
   const end = () => {
     if (!drag) return;
     const handlers = edit();
@@ -121,8 +122,8 @@ export function attachInstanceDrag(
     delete canvas.dataset.dragMatrix;
     controls.enabled = true;
   };
-  canvas.addEventListener("pointerup", end);
-  canvas.addEventListener("pointercancel", end);
+  canvas.addEventListener("pointerup", end, { signal });
+  canvas.addEventListener("pointercancel", end, { signal });
 }
 
 /**

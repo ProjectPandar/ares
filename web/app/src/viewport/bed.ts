@@ -38,7 +38,7 @@ export interface PlateMaterials {
 }
 
 /**
- * Built once per viewport and kept across plate rebuilds, as the bed and plates draw with the shader they
+ * Built once per context (`sharedGl`) and kept across plate rebuilds, as the bed and plates draw with the shader they
  * look up by name (Bed3D::render_default, 3DBed.cpp:820; PartPlate::render, PartPlate.cpp:5334) and
  * GLShadersManager::init compiles once (GLShadersManager.cpp:22); a new shape resets geometry only.
  */

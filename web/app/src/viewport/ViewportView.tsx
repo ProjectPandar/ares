@@ -227,6 +227,10 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   }, [gizmo]);
   const copiesIndex = loaded?.objects.findIndex(({ id }) => id === copies) ?? -1;
   useEffect(() => viewport?.setSelected(selected), [viewport, selected]);
+  // The Preview canvas (not editable) compiles the toolpath programs on mount, before a result arrives.
+  useEffect(() => {
+    if (viewport && !editable) viewport.compileToolpathPrograms();
+  }, [viewport, editable]);
   // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
   useEffect(() => {
     if (!viewport) return;

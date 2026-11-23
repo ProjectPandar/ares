@@ -17,7 +17,7 @@ const shade = (color: number, selected: boolean) => (selected ? new THREE.Color(
 
 /**
  * The instance materials, one per volume type and selection state, built on first use and kept for the
- * viewport's life: the objects draw with the shader GLCanvas3D::_render_objects looks up by name
+ * context's life (`sharedGl`): the objects draw with the shader GLCanvas3D::_render_objects looks up by name
  * (GLCanvas3D.cpp:9677-9679), which GLShadersManager::init compiles once (GLShadersManager.cpp:22).
  */
 export class ModelMaterials {
@@ -49,10 +49,6 @@ export class ModelMaterials {
 
   setFilaments(colours: readonly string[]) {
     this.#filaments = colours.map((colour) => new THREE.Color(colour || "#29b2a3").getHex());
-  }
-
-  dispose() {
-    for (const material of this.#materials.values()) material.dispose();
   }
 }
 

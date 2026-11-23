@@ -49,6 +49,16 @@ void main() {
 }
 `;
 
+/** The option-marker material, built once per context as `ViewerImpl::init` compiles the options program once. */
+export function optionMarkerMaterial() {
+  return new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    vertexShader,
+    fragmentShader,
+    uniforms: { uLayers: { value: new THREE.Vector2(0, 0) }, uOptions: { value: 0 } },
+  });
+}
+
 /**
  * libvgcode option markers: one `OptionTemplate` diamond (16 sides, unit
  * height and width, `OptionTemplate.cpp:16-18`, `ViewerImpl.cpp:798`) per
@@ -56,7 +66,7 @@ void main() {
  * but travels and wipes, which are segments). Returns the mesh and its marker
  * count by `EOptionType` name.
  */
-export function buildOptionMarkers({ values, ids, tags, options, optionTypes, colors, vertexCount }: Toolpaths) {
+export function buildOptionMarkers({ values, ids, tags, options, optionTypes, colors, vertexCount }: Toolpaths, material: THREE.ShaderMaterial) {
   const center = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
@@ -95,12 +105,8 @@ export function buildOptionMarkers({ values, ids, tags, options, optionTypes, co
   geometry.setAttribute("aEnabled", new THREE.InstancedBufferAttribute(new Uint8Array(count).fill(1), 1));
   geometry.instanceCount = count;
 
-  const material = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    vertexShader,
-    fragmentShader,
-    uniforms: { uLayers: { value: new THREE.Vector2(0, 0) }, uOptions: { value: 0 } },
-  });
+  (material.uniforms.uLayers.value as THREE.Vector2).set(0, 0);
+  material.uniforms.uOptions.value = 0;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   mesh.userData.vertices = vertex.subarray(0, count);
