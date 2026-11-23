@@ -67,7 +67,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   toolpaths?: Toolpaths | null;
   /** Per-vertex RGB of `toolpaths` and its probe (`ViewColors`); `null` keeps `Toolpaths.colors`. */
   colors?: Pick<ViewColors, "colors" | "colorsProbe"> | null;
-  /** Enabled segments and option markers of `toolpaths`; `null` draws all. */
+  /** Enabled segments and option markers of `toolpaths`; the toolpaths stay hidden until the first. */
   enabled?: MovesView | null;
   view?: ToolpathFilter;
   /** Initial framing when the scene loads. */
@@ -225,8 +225,9 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   useEffect(() => {
     if (viewport && !editable) viewport.compileToolpathPrograms();
   }, [viewport, editable]);
-  // A new scene or slice result is re-framed: Prepare the plate, Preview the print.
-  useEffect(() => {
+  // A new scene or slice result is re-framed: Prepare the plate, Preview the print. A layout
+  // effect, so a result is set before its first enabled view below.
+  useLayoutEffect(() => {
     if (!viewport) return;
     viewport.setToolpaths(toolpaths);
     viewport.setModelsVisible(!toolpaths);

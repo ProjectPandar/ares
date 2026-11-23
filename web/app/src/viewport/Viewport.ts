@@ -56,6 +56,8 @@ export class Viewport {
   /** Delivers the render after the requesting task; `#dirty` while one is queued. */
   readonly #renderTask = new MessageChannel();
   #dirty = false;
+  /** The container size the canvas was last fitted to. */
+  #size: [number, number] = [0, 0];
   #selected: number | null = null;
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
@@ -351,7 +353,9 @@ export class Viewport {
 
   #fitCanvas() {
     const { clientWidth: width, clientHeight: height } = this.container;
-    if (width === 0 || height === 0) return;
+    // GLCanvas3D::_resize returns on an unchanged size (GLCanvas3D.cpp:7895-7902).
+    if (width === 0 || height === 0 || (width === this.#size[0] && height === this.#size[1])) return;
+    this.#size = [width, height];
     this.#renderer.setSize(width, height);
     this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
