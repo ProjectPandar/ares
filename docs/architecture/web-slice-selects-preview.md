@@ -156,8 +156,9 @@ Change, in `web/app/src/viewport/`:
    (`setEnabled`); that view and its colours arrive in one commit and draw in one frame. The
    viewport sets a new result's toolpaths in the same commit, before that view, as a layout
    effect.
-2. `#fitCanvas` with an unchanged drawing-buffer size neither calls `setSize` nor draws; a
-   changed aspect only updates the camera and queues a render.
+2. `#fitCanvas` with an unchanged container size neither calls `setSize` nor draws, as
+   `_resize` returns. A changed size still resizes and draws at once: `setSize` clears the
+   drawing buffer before the frame is painted.
 
 `web/e2e/worker.mobile.spec.ts` and its 30 s screenshot timeout stay. Under the e2e Chromium
 the first result frame of the application still waits for the segment program's link
