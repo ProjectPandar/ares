@@ -18,7 +18,7 @@ fn clean_project_keeps_the_loaded_thumbnail_string() {
     compare(
         ["", "", ""],
         "48x48/PNG,300x300/PNG",
-        "48x48/PNG, 300x300/PNG",
+        ("48x48/PNG, 300x300/PNG", "5.2"),
         false,
     );
 }
@@ -28,7 +28,7 @@ fn dirty_process_uses_the_retained_printer_thumbnail_string() {
     compare(
         ["enable_prime_tower", "", ""],
         "32x32/PNG,64x64/PNG",
-        "48x48/PNG,300x300/PNG",
+        ("48x48/PNG,300x300/PNG", "4.2"),
         false,
     );
 }
@@ -38,7 +38,7 @@ fn dirty_printer_thumbnail_key_keeps_the_loaded_sizes() {
     compare(
         ["enable_prime_tower", "", "thumbnails"],
         "32x32/PNG,64x64/PNG",
-        "32x32/PNG, 64x64/PNG",
+        ("32x32/PNG, 64x64/PNG", "4.2"),
         false,
     );
 }
@@ -48,12 +48,17 @@ fn dirty_process_uses_the_installed_printer_thumbnail_string() {
     compare(
         ["enable_prime_tower", "", ""],
         "48x48/PNG,300x300/PNG",
-        "48x48/PNG,300x300/PNG",
+        ("48x48/PNG,300x300/PNG", "4.2"),
         true,
     );
 }
 
-fn compare(dirty: [&str; 3], thumbnails: &str, expected: &str, use_installed_resources: bool) {
+fn compare(
+    dirty: [&str; 3],
+    thumbnails: &str,
+    (expected_thumbnails, expected_nozzle_height): (&str, &str),
+    use_installed_resources: bool,
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
@@ -65,11 +70,17 @@ fn compare(dirty: [&str; 3], thumbnails: &str, expected: &str, use_installed_res
     write_project(&project, &input, dirty, thumbnails);
 
     let expected_lines = [
-        format!("; thumbnails = {expected}"),
+        format!("; thumbnails = {expected_thumbnails}"),
         "; enable_prime_tower = 0".into(),
+        format!("; nozzle_height = {expected_nozzle_height}"),
     ];
     let fields = |actual: &str| {
-        ["; thumbnails = ", "; enable_prime_tower = "].map(|prefix| {
+        [
+            "; thumbnails = ",
+            "; enable_prime_tower = ",
+            "; nozzle_height = ",
+        ]
+        .map(|prefix| {
             actual
                 .lines()
                 .find(|line| line.starts_with(prefix))
@@ -120,6 +131,7 @@ fn write_project(path: &Path, input: &[u8], dirty: [&str; 3], thumbnails: &str) 
     for (key, value) in [
         ("different_settings_to_system", json!(dirty)),
         ("enable_prime_tower", json!("0")),
+        ("nozzle_height", json!("5.2")),
         ("thumbnails", json!(thumbnails)),
         ("thumbnails_format", json!("PNG")),
     ] {
