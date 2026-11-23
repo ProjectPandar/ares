@@ -2,8 +2,9 @@
 use serde::Deserialize;
 
 use super::{
-    ArchiveLimits, PackagePath, ProjectArchive, model_identity::ModelIdentity,
-    raw_settings::ProjectSettingsRaw,
+    ArchiveLimits, PackagePath, ProjectArchive,
+    model_identity::ModelIdentity,
+    raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 use crate::SliceError;
 
@@ -14,6 +15,7 @@ pub struct UpwardMachineSource {
     system_process: String,
     system_filaments: Vec<String>,
     embedded: Vec<String>,
+    refresh_unlisted: bool,
 }
 
 /// Mutually exclusive upstream source branches. Public CLI refresh/overlay
@@ -36,6 +38,7 @@ struct MachineFields {
     filament_settings_id: Vec<String>,
     inherits_group: Option<Vec<String>>,
     upward_compatible_machine: Vec<String>,
+    different_settings_to_system: Option<RawConfigValue>,
 }
 
 impl UpwardMachineSource {
@@ -84,6 +87,13 @@ impl UpwardMachineSource {
             system_process,
             system_filaments,
             embedded: fields.upward_compatible_machine,
+            refresh_unlisted: match fields.different_settings_to_system {
+                Some(RawConfigValue::List(columns)) => columns
+                    .iter()
+                    .any(|column| matches!(column, RawConfigValue::Text(keys) if !keys.is_empty())),
+                Some(RawConfigValue::Text(keys)) => !keys.is_empty(),
+                _ => false,
+            },
         }))
     }
 
@@ -97,6 +107,11 @@ impl UpwardMachineSource {
 
     pub fn system_filaments(&self) -> &[String] {
         &self.system_filaments
+    }
+
+    /// `CLI::run` refreshes unlisted retained-printer keys even if another preset is dirty.
+    pub fn refreshes_retained_printer(&self) -> bool {
+        self.refresh_unlisted && !self.system_printer.is_empty()
     }
 
     /// CLI:1769/2301/2385/2534. Missing original-machine files keep the
@@ -187,6 +202,7 @@ fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
                         | "filament_settings_id"
                         | "inherits_group"
                         | "upward_compatible_machine"
+                        | "different_settings_to_system"
                 )
             })
             .map(|(key, value)| (key.clone(), value.clone())),

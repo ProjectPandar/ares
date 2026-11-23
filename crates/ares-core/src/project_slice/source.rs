@@ -131,10 +131,14 @@ impl ProjectInput<'_> {
                     Some(refresh) => {
                         refresh.load(bytes, overrides, validate_post_process, loaded)?
                     }
-                    None if system_catalog.is_some() => match loaded {
-                        Some(project) => project.into_profile_project()?,
-                        None => crate::project::load_project_for_profiles(bytes)?,
-                    },
+                    None if system_catalog
+                        .is_some_and(|catalog| !catalog.retains_only_thumbnails()) =>
+                    {
+                        match loaded {
+                            Some(project) => project.into_profile_project()?,
+                            None => crate::project::load_project_for_profiles(bytes)?,
+                        }
+                    }
                     None => match loaded {
                         Some(project) => project.into_direct_project(overrides)?,
                         None => crate::project::load_project_with_preparation(bytes, overrides)?,
@@ -183,6 +187,7 @@ impl ProjectInput<'_> {
                     project.apply_project_preset_refresh(
                         model.documents().project_settings_raw.clone(),
                         overrides,
+                        false,
                     )?;
                 }
                 Ok((project, preparation))
@@ -196,13 +201,18 @@ fn apply_direct_catalog(
     catalog: &crate::PresetCatalogHandle,
     overrides: &ConfigOverrides,
 ) -> Result<(), crate::SliceError> {
+    let embedded = &project.documents().project_settings_raw;
     let mut raw = if project.documents().bbl_family_3mf {
-        catalog.refresh_direct(&project.documents().project_settings_raw)?
+        catalog.refresh_direct(embedded)?
     } else {
-        project.documents().project_settings_raw.clone()
+        embedded.clone()
     };
+    let retained_thumbnails = raw.get("thumbnails") != embedded.get("thumbnails");
+    if catalog.retains_only_thumbnails() && !retained_thumbnails {
+        return Ok(());
+    }
     crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
-    project.apply_project_preset_refresh(raw, overrides)
+    project.apply_project_preset_refresh(raw, overrides, retained_thumbnails)
 }
 
 pub(super) enum PlateInput<'a> {
