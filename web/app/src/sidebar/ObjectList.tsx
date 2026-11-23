@@ -6,7 +6,7 @@ import { CopiesDialog } from "./CopiesDialog";
 import { instanceEdits, ObjectMenu } from "./ObjectMenu";
 import { PlateMenu } from "./PlateMenu";
 import { chooseFilamentTarget, sameTarget } from "../state/filamentAssignment";
-import { FilamentBadge } from "./FilamentAssignment";
+import { FilamentCell } from "./FilamentCell";
 import { arrange } from "../state/arrange";
 import { changeInstances, deleteInstance, deleteObject, deletePlate, lockPlate, selectPlate } from "../state/plates";
 import { useApp } from "../state/store";
@@ -51,7 +51,7 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
           }} />
         <CubeSmallIcon />
         <span className="object-name">{name}</span>
-        <FilamentBadge slot={object.filament ?? 1} />
+        <FilamentCell name={name} target={{ object: object.id }} slot={object.filament ?? 1} />
         {object.instances.length > 1 && <span className="object-count" title="Instances">×{object.instances.length}</span>}
       </div>
       {menu && <ObjectMenu objectId={object.id} instance={menu.instance} volume={menu.volume} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(true)} />}
@@ -67,8 +67,10 @@ function ObjectNode({ object, name, selected, nested = false }: { object: SceneO
           }}>
           <OrcaIcon name={VOLUME_ICON[volume.type]} />
           <span className="object-name">{volume.name || `Part ${volume.id}`}</span>
-          {volume.type === "ModelPart" && <FilamentBadge slot={volume.effectiveFilament} />}
-          {volume.type === "ParameterModifier" && <FilamentBadge slot={volume.filament ?? 0} />}
+          {(volume.type === "ModelPart" || volume.type === "ParameterModifier") &&
+            <FilamentCell name={volume.name || `Part ${volume.id}`} target={{ object: object.id, volume: volume.id }}
+              slot={volume.type === "ModelPart" ? volume.effectiveFilament : volume.filament ?? 0}
+              modifier={volume.type === "ParameterModifier"} />}
         </div>
       ))}
       {expanded && instances.length > 0 && (
