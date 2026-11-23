@@ -105,7 +105,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         Saved(
             Option<UpwardMachineSource>,
             Option<Vec<u8>>,
-            Option<ares_core::PresetCatalogHandle>,
+            Option<Box<ares_core::PresetCatalogHandle>>,
         ),
     }
     let presets = match files {
@@ -117,7 +117,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 source.as_ref(),
                 false,
             )?;
-            ProjectPresets::Saved(source, machine, catalog)
+            ProjectPresets::Saved(source, machine, catalog.map(Box::new))
         }
         (settings, filaments) => ProjectPresets::Replace(settings, filaments),
     };
@@ -164,7 +164,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                     sliced_plate: &mut sliced_plate,
                 },
                 GenerationMetadata::default(),
-                catalog.as_ref(),
+                catalog.as_deref(),
                 context,
             )
             .await
