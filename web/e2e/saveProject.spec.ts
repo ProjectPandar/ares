@@ -74,9 +74,7 @@ function nativeExport(project: string, destination: string, leg: "official" | "s
   return true;
 }
 
-test("Save Project downloads edited objects, plate assignments and settings that reopen", async ({ page, context }, info) => {
-  // The headless executable checks compatibility against system presets; the GUI
-  // also accepts project-local presets when this vendor is missing.
+async function installX1Carbon(page: Page) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
@@ -85,6 +83,12 @@ test("Save Project downloads edited objects, plate assignments and settings that
   await printers.getByRole("checkbox", { name: "Bambu Lab X1 Carbon", exact: true }).check();
   await printers.getByRole("button", { name: "Confirm" }).click();
   await expect(printers).toHaveCount(0, { timeout: 60_000 });
+}
+
+test("Save Project downloads edited objects, plate assignments and settings that reopen", async ({ page, context }, info) => {
+  // The headless executable checks compatibility against system presets; the GUI
+  // also accepts project-local presets when this vendor is missing.
+  await installX1Carbon(page);
   const opened = info.outputPath("opened", "Brackets.3mf");
   mkdirSync(resolve(opened, ".."), { recursive: true });
   const probe = presetSelectProbe();
@@ -161,6 +165,55 @@ test("Save Project downloads edited objects, plate assignments and settings that
     expect(comparedMembers(fromWeb), `${leg} OrcaSlicer re-export`).toEqual(comparedMembers(fromReference));
   }
 });
+
+for (const staleTables of [true, false]) {
+  const behavior = staleTables
+    ? "opening a one-filament project shrinks old purge tables and supplies the colour type"
+    : "opening a project retains a matching purge matrix and its supplied colour type";
+  test(behavior, async ({ page }, info) => {
+    const probe = presetSelectProbe();
+    test.skip(probe === null, "Requires the OrcaSlicer preset-select probe");
+    const fixture = (config?: string) => saveProjectFixture({ config, singleObject: true });
+    const input = JSON.parse(strFromU8(unzipSync(fixture())[projectConfig])) as Record<string, string | string[]>;
+    expect(input.filament_colour).toHaveLength(1);
+    input.flush_volumes_vector = ["94", "127", "140", "140", "152", "178", "194", "147"];
+    input.flush_volumes_matrix = staleTables
+      ? ["0", "181", "213", "221", "190", "0", "227", "240", "248", "252", "0", "273", "279", "283", "291", "0"]
+      : ["0"];
+    input.flush_multiplier = ["0.57"];
+    if (staleTables) delete input.filament_colour_type;
+    else input.filament_colour_type = ["0"];
+    const opened = info.outputPath("opened", "Brackets.3mf");
+    mkdirSync(resolve(opened, ".."), { recursive: true });
+    writeFileSync(opened, fixture(JSON.stringify(input)));
+
+    const { full_fff_config: config } = nativeSelection(probe!, `${info.outputPath("native-opened")}/`, opened, ["BBL"]);
+    const expected = JSON.parse(config) as Record<string, string | string[]>;
+    expect(expected.filament_colour_type).toEqual([staleTables ? "1" : "0"]);
+    expect(expected.flush_volumes_matrix).toHaveLength(1);
+    expect(expected.flush_volumes_vector).toHaveLength(staleTables ? 2 : 8);
+    await installX1Carbon(page);
+    await openProject(page, opened);
+    const downloaded = info.outputPath("saved", "Brackets.3mf");
+    await downloadProject(page, "Save Project", downloaded);
+    const saved = JSON.parse(strFromU8(unzipSync(readFileSync(downloaded))[projectConfig])) as typeof expected;
+
+    const reference = info.outputPath("reference", "Brackets.3mf");
+    mkdirSync(resolve(reference, ".."), { recursive: true });
+    writeFileSync(reference, fixture(config));
+    for (const key of ["filament_colour_type", "flush_volumes_matrix", "flush_volumes_vector", "flush_multiplier"]) {
+      expect(expected[key], `Native ${key}`).toBeDefined();
+      expect.soft(saved[key], `saved ${key}`).toEqual(expected[key]);
+    }
+    for (const leg of ["official", "seeded"] as const) {
+      const fromWeb = info.outputPath(leg, "download", "exported.3mf");
+      const fromReference = info.outputPath(leg, "reference", "exported.3mf");
+      if (!nativeExport(downloaded, fromWeb, leg)) continue;
+      nativeExport(reference, fromReference, leg);
+      expect.soft(comparedMembers(fromWeb), `${leg} OrcaSlicer re-export`).toEqual(comparedMembers(fromReference));
+    }
+  });
+}
 
 test("saving a project with an unsupported negative volume explains why it cannot be saved", async ({ page }) => {
   await openProject(page, saveProjectFixture({ modifier: true }));
