@@ -1,4 +1,4 @@
-use crate::project_slice::seam_candidates::PaintState;
+use crate::{project_slice::seam_candidates::PaintState, scalar_math::sincosf};
 
 use super::{LayerPlan, SeamPerimeter, Vec3, is_not_much_worse};
 
@@ -22,7 +22,8 @@ pub(super) fn apply(layers: &mut [LayerPlan]) {
 fn select(layer: &LayerPlan, perimeter_index: usize) -> (usize, Vec3) {
     let perimeter = &layer.candidates.perimeters[perimeter_index];
     let seed = layer.positions[perimeter.start_index];
-    let mut random = (seed.dot(Vec3::new(12.9898, 78.233, 133.3333)).sin() * 43_758.547).abs();
+    let mut random =
+        (sincosf::sin(seed.dot(Vec3::new(12.9898, 78.233, 133.3333))) * 43_758.547).abs();
     random -= random as i32 as f32;
     let viable = viable_edges(layer, perimeter);
     let mut picked = viable.iter().map(|edge| edge.length).sum::<f32>() * random;
