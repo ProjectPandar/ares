@@ -12,3 +12,24 @@
 .assign-filament-choices .filament-swatch {
   margin-inline-end: 6px;
 }
+
+.filament-cell {
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.filament-cell-menu {
+  inset: auto;
+  margin: 0;
+  min-width: 84px;
+  max-height: min(16rem, 50vh);
+  overflow-y: auto;
+}
+
+.filament-cell-menu:not(:popover-open) { display: none; }
+.filament-cell-menu button { padding: 4px 10px; }
+.filament-cell-menu button[aria-checked="true"] { background: var(--accent-checked); }
