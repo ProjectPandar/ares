@@ -59,11 +59,12 @@ test("adding and merging physical filaments updates Prepare assignments and can 
   await expect(removeLast).toHaveCount(0);
 });
 
-test("the filament editor follows the surviving position even when both presets have the same name", async ({ page }) => {
+test("the filament editor follows the surviving position after deleting a slot", async ({ page }) => {
   const entries = unzipSync(readFileSync(fixture("modifier-feature-filament/control.3mf")));
   const key = "Metadata/project_settings.config";
   const settings = JSON.parse(strFromU8(entries[key]));
   settings.filament_density = ["1.23", "1.45"];
+  settings.different_settings_to_system = ["", "filament_density", "filament_density", ""];
   entries[key] = strToU8(JSON.stringify(settings));
   await openProject(page, "Bambu Lab", { name: "two-densities.3mf", mimeType: "application/octet-stream", buffer: Buffer.from(zipSync(entries)) });
 
