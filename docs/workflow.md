@@ -356,6 +356,12 @@ Report exceptions separately as failures; they do not count as coverage.
 - Use `web/playwright.config.ts` from the tested repository. Override workers, retries, output
   directories and reporters through Playwright CLI flags. Do not generate an out-of-tree config.
   Keep the configured port consistent with the repository's baseURL and preview server URL.
+  The `full` browser lane defaults to `--workers 2` (configurable via CLI flags), while the
+  `packages` project remains at `workers: 1`.
+- Parity lanes default `ARES_ORCA_CACHE_DIR` to the shared read-through `$COORD_DIR/orca-cache`
+  directory with normalized `LC_ALL=C`. Cached outputs under `native-cache-v2` are verified
+  cryptographically against producer identity and request content digests on every hit; probe
+  suites and double-replay determinism checks stay live.
 - Before launching the browser lane and after its owned processes exit, run
   `ss -H -ltn 'sport = :<port>'`. The check passes only when the command succeeds and its output
   is empty. TIME_WAIT sockets are not listeners. Never kill unrelated processes to free a port.
