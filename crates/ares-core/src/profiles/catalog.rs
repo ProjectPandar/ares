@@ -153,7 +153,7 @@ impl PresetCatalogHandle {
     pub(crate) fn refresh_direct(
         &self,
         raw: &ProjectSettingsRaw,
-    ) -> Result<ProjectSettingsRaw, SliceError> {
+    ) -> Result<(ProjectSettingsRaw, bool), SliceError> {
         super::project_refresh::direct_refresh(&self.catalog, raw)
     }
 

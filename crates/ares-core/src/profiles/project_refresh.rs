@@ -129,7 +129,7 @@ pub(crate) struct ProjectPresetRefresh<'a> {
 pub(super) fn direct_refresh(
     catalog: &Catalog,
     raw: &ProjectSettingsRaw,
-) -> Result<ProjectSettingsRaw, SliceError> {
+) -> Result<(ProjectSettingsRaw, bool), SliceError> {
     preset::refresh(
         PresetLookup::Catalog(catalog),
         raw,
@@ -148,6 +148,7 @@ pub(super) fn direct_refresh_filaments(
         false,
         preset::RefreshScope::Filaments,
     )
+    .map(|(raw, _)| raw)
 }
 
 pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, SliceError> {
@@ -235,6 +236,7 @@ impl<'a> ProjectPresetRefresh<'a> {
             uptodate,
             preset::RefreshScope::Project(Some(selected)),
         )
+        .map(|(raw, _)| raw)
     }
 
     pub(crate) fn load(
@@ -269,7 +271,7 @@ impl<'a> ProjectPresetRefresh<'a> {
                 if uptodate {
                     self.reject_oversized_machine(&project)?;
                 }
-                let mut raw = preset::refresh(
+                let (mut raw, _) = preset::refresh(
                     self.lookup(),
                     &project.documents().project_settings_raw,
                     uptodate,

@@ -17,12 +17,13 @@ pub(super) fn refresh(
     project: &ProjectSettingsRaw,
     uptodate: bool,
     scope: RefreshScope<'_>,
-) -> Result<ProjectSettingsRaw, SliceError> {
+) -> Result<(ProjectSettingsRaw, bool), SliceError> {
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
     let dirty = strings(project, "different_settings_to_system");
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
+    let mut retained_thumbnails = false;
     // CLI:3167–3200: machine and process refresh, not replacement selection.
     let supplied = match scope {
         RefreshScope::Project(selected) => selected.map(|selected| &selected.project.preset),
@@ -64,6 +65,8 @@ pub(super) fn refresh(
             {
                 continue;
             }
+            // CLI:3188–3193 compares loaded options, not archive strings.
+            retained_thumbnails |= kind == ProfileKind::Machine && key == "thumbnails";
             result.insert(key.clone(), value.clone());
         }
     }
@@ -72,7 +75,7 @@ pub(super) fn refresh(
         (!p.printer_settings_id.0.is_empty() && matches!(lookup, PresetLookup::Catalog(_)))
             || !p.filament_settings_id.0.is_empty()
     }) {
-        return Ok(result);
+        return Ok((result, retained_thumbnails));
     }
     let filaments = names
         .iter()
@@ -88,7 +91,7 @@ pub(super) fn refresh(
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
     filament::apply(&mut result, project, &filaments, &dirty, refresh_unlisted)?;
-    Ok(result)
+    Ok((result, retained_thumbnails))
 }
 
 pub(super) fn system_config(

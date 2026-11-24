@@ -209,11 +209,10 @@ fn apply_direct_catalog(
     overrides: &ConfigOverrides,
 ) -> Result<(), crate::SliceError> {
     let embedded = &project.documents().project_settings_raw;
-    let mut raw = match catalog {
+    let (mut raw, retained_thumbnails) = match catalog {
         Some(catalog) => catalog.refresh_direct(embedded)?,
-        None => embedded.clone(),
+        None => (embedded.clone(), false),
     };
-    let retained_thumbnails = raw.get("thumbnails") != embedded.get("thumbnails");
     crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
     project.apply_project_preset_refresh(raw, overrides, retained_thumbnails)
 }
