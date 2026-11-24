@@ -37,6 +37,16 @@ windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Stora
 
 [profile.test]
 opt-level = 1
+debug = "line-tables-only"
+
+[profile.test.package.ares-core]
+opt-level = 2
+
+[profile.test.package.ares-vgcode]
+opt-level = 2
+
+[profile.test.package.boostvoronoi]
+opt-level = 2
 
 [profile.release]
 lto = true

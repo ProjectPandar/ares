@@ -65,12 +65,18 @@ fn test_script_nextest_default_profile_runs_tests_in_parallel() {
 fn workspace_test_profile_optimizes_cpu_bound_tests() {
     let manifest = fs::read_to_string(repo_root().join("Cargo.toml")).unwrap();
     let test_profile = nextest_profile(&manifest, "profile.test");
-
     assert!(
         test_profile
             .lines()
             .any(|line| line.trim() == "opt-level = 1")
     );
+    for package in ["ares-core", "ares-vgcode", "boostvoronoi"] {
+        let profile = nextest_profile(&manifest, &format!("profile.test.package.{package}"));
+        assert!(
+            profile.lines().any(|line| line.trim() == "opt-level = 2"),
+            "{package} must stay optimized under [profile.test]"
+        );
+    }
 }
 
 #[test]
