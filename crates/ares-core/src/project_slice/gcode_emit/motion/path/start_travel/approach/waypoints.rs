@@ -35,12 +35,14 @@ pub(super) fn emit_detour_waypoints(
             } else {
                 (z - live_z).abs() < 1e-4
             };
+            let point_z = if no_z_move { live_z } else { z };
+            let feedrate = state.pointwise_travel_feedrate([point.x, point.y, point_z]);
             if no_z_move {
                 output.extend_from_slice(
                     format!(
                         "G1 {} F{}\n",
                         state.xy_words((point.x, point.y), None),
-                        format_axis(state.travel_feedrate)
+                        format_axis(feedrate)
                     )
                     .as_bytes(),
                 );
@@ -49,7 +51,7 @@ pub(super) fn emit_detour_waypoints(
                     format!(
                         "G1 {} F{}{route_comment}\n",
                         state.xy_words((point.x, point.y), Some(z)),
-                        format_axis(state.travel_feedrate)
+                        format_axis(feedrate)
                     )
                     .as_bytes(),
                 );
@@ -68,7 +70,11 @@ pub(super) fn emit_detour_waypoints(
                 format!(
                     "G1 {} F{}{route_comment}\n",
                     state.xy_words((point.x, point.y), None),
-                    format_axis(state.travel_feedrate)
+                    format_axis(state.pointwise_travel_feedrate([
+                        point.x,
+                        point.y,
+                        state.writer_z.unwrap_or(state.layer_z),
+                    ]))
                 )
                 .as_bytes(),
             );

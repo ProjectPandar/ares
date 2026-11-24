@@ -10,7 +10,25 @@ pub(super) fn append(
     export_config: &[u8],
     images: &[ThumbnailData],
 ) -> Result<Tags, SliceError> {
-    let max_print_z = schedule.merged.last().map_or(0.0, |entry| entry.0);
+    let max_print_z = if traversal
+        .resolved
+        .views
+        .full
+        .printer
+        .remaining
+        .belt_printer
+        .0
+    {
+        // GCode.cpp:4280–4282 reads the last physical layer, before belt
+        // collection removes empty trailing layers from the export schedule.
+        traversal
+            .objects
+            .iter()
+            .filter_map(|object| object.physical_layers().last().map(|layer| layer.print_z))
+            .fold(-1.0, f64::max)
+    } else {
+        schedule.merged.last().map_or(0.0, |entry| entry.0)
+    };
     let tags = Tags::of(traversal);
     if header::enabled(traversal) {
         header::append_header(output, traversal, schedule, max_print_z);

@@ -10,7 +10,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn unlift(
 ) {
     if state.lifted_amount > 0.0 {
         let target = state.writer_z.expect("lift retains writer Z") - state.lifted_amount;
-        let feedrate = super::lift_z_feedrate(state);
+        let feedrate = super::lift_z_feedrate_at(state, target);
         let comment = if state.options.gcode_comments {
             " ; restore layer Z"
         } else {

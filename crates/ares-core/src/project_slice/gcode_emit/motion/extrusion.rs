@@ -74,7 +74,7 @@ pub(super) fn force_no_extrusion_segment(
 pub(super) fn linear_segment(
     output: &mut Vec<u8>,
     end: arc::Point,
-    length: f64,
+    (length, uncut_length): (f64, f64),
     properties: PathProperties<'_>,
     state: &mut EmitState,
 ) {
@@ -83,7 +83,7 @@ pub(super) fn linear_segment(
         effective_flow_at_emission(properties, state),
         state.options.filament_flow_ratio,
         state.options.filament_area,
-    ) * small_area_multiplier(state, properties.feature, length);
+    ) * small_area_multiplier(state, properties.feature, uncut_length);
     let comment = if state.options.gcode_comments {
         let bridge = if is_bridge_feature(properties.feature) {
             " (bridge)"
@@ -115,12 +115,15 @@ pub(super) fn linear_segment(
 }
 
 pub(super) fn small_area_multiplier(state: &EmitState, feature: &str, length: f64) -> f64 {
-    if !state.small_area_gate.needs(feature, state.on_first_layer) {
+    if !state
+        .small_area_gate
+        .needs(feature, state.path_on_first_layer())
+    {
         return 1.0;
     }
     state
         .small_area_flow
-        .multiplier_for_feature(feature, state.on_first_layer, length)
+        .multiplier_for_feature(feature, state.path_on_first_layer(), length)
 }
 
 pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
@@ -179,7 +182,7 @@ pub(super) fn effective_flow(
 
 /// GCode.cpp:6479-6480 applies the live object ratio after print/filament flow.
 pub(super) fn effective_flow_at_emission(properties: PathProperties<'_>, state: &EmitState) -> f64 {
-    let flow = effective_flow(properties, &state.options, state.on_first_layer);
+    let flow = effective_flow(properties, &state.options, state.path_on_first_layer());
     if properties.feature == "Brim" {
         flow * state.current_brim_flow_ratio
     } else {
