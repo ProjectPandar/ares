@@ -42,6 +42,7 @@ pub(crate) struct ObjectSettings {
     pub module: String,
     pub overrides: ObjectOptionOverrides,
     pub region_overrides: RegionOptionOverrides,
+    pub options: Vec<Metadata>,
     pub parts: Vec<PartSettings>,
 }
 
@@ -102,7 +103,9 @@ pub(crate) struct PartSettings {
     pub subtype: String,
     pub region_overrides: RegionOptionOverrides,
     pub retained_metadata: Vec<Metadata>,
+    pub options: Vec<Metadata>,
     pub mesh_stat: Option<MeshStatistics>,
+    pub has_parametric_shape: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]

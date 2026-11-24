@@ -19,8 +19,8 @@ const FILE_ROWS: Row[] = [
   ["New Project", "", ""],
   ["Open Project…", "O", ""],
   ["Recent files", "", "Recent files are not kept in the browser yet."],
-  ["Save Project", "", WRITER],
-  ["Save Project as…", "", WRITER],
+  ["Save Project", "", "Open or import a model to save a project."],
+  ["Save Project as…", "", "Open or import a model to save a project."],
   "-",
   ["Import", "", ""],
   ["Export", "", ""],
@@ -58,7 +58,7 @@ const expected = (rows: Row[], enabled: string[], mac: boolean) => rows.map((row
   enabled: enabled.includes(row[0]),
   shortcut: row[1] && `${mac ? "⌘+" : "Ctrl+"}${row[1]}`,
   keys: row[1] && `${mac ? "Meta" : "Control"}+${row[1]}`,
-  reason: row[2],
+  reason: enabled.includes(row[0]) ? "" : row[2],
   submenu: SUBMENUS.includes(row[0]),
 });
 
@@ -187,7 +187,7 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   expect(sliced).toEqual({
-    file: expected(FILE_ROWS, [...ENABLED, "Export G-code…"], mac),
+    file: expected(FILE_ROWS, [...ENABLED, "Save Project", "Save Project as…", "Export G-code…"], mac),
     import: expected(IMPORT_ROWS, ENABLED, mac),
     export: expected(EXPORT_ROWS, [...ENABLED, "Export G-code…"], mac),
   });
@@ -201,8 +201,6 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
   // A disabled item keeps the menu open and does nothing; a click reaches it although Playwright
   // treats it as not enabled.
   await fileButton.click();
-  await item("File", "Save Project").click({ force: true });
-  await expect(menu("File")).toBeVisible();
   await item("File", "Export").hover();
   await item("Export", "Export plate sliced file…").click({ force: true });
   await expect(menu("Export")).toBeVisible();

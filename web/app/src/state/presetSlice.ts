@@ -43,7 +43,7 @@ export async function overrideTokens(overrides: ConfigOverrides): Promise<Record
  * plate (Plater.cpp:7056-7058, 7111-7112, 7149-7160). Sidebar edits apply after
  * the presets, as an edit of the selected preset in a settings tab does.
  */
-export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
+export async function profileSliceRequest(scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number) {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState(), plate);
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
   // So are the dual-nozzle volume types and filament map.
@@ -52,7 +52,11 @@ export async function sliceWithPresets(file: ModelFile, scene: Scene, selection:
     ...selection.filamentProject,
     ...extruderOverrides(selection, selection.filaments.length),
   };
-  const request = { ...options, overrides: await overrideTokens({ ...overrides, ...project }) };
+  return { catalog, profiles, request: { ...options, overrides: await overrideTokens({ ...overrides, ...project }) } };
+}
+
+export async function sliceWithPresets(file: ModelFile, scene: Scene, selection: PresetSelection, overrides: ConfigOverrides, plate?: number, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
+  const { catalog, profiles, request } = await profileSliceRequest(scene, selection, overrides, plate);
   const { plater } = useApp.getState();
   if (file.kind === "stl-batch") return plater!.sliceWithProfiles(catalog, profiles, request, onStatus);
   return plater

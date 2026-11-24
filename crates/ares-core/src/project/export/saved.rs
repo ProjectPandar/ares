@@ -1,7 +1,8 @@
 use super::super::super::{
-    ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_xml::ModelDocument,
+    ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_settings::PartSettings,
+    model_xml::ModelDocument,
 };
-use super::{MODEL, deferred, invalid};
+use super::{Instance, MODEL, cli_object_metadata, deferred, invalid};
 use super::{Mesh, Object, Part, SavedModel};
 use crate::SliceError;
 
@@ -97,7 +98,9 @@ pub(crate) fn from_saved_project(
             let offset = instance.transform().to_column_major();
             Ok(Object {
                 name: object.name().to_owned(),
-                placement: [offset[12], offset[13], offset[14]],
+                instances: vec![Instance::at([offset[12], offset[13], offset[14]])],
+                metadata: cli_object_metadata(),
+                auto_drop: true,
                 parts: object
                     .volumes()
                     .iter()
@@ -118,7 +121,7 @@ pub(crate) fn from_saved_project(
 
 fn saved_part(
     volume: &crate::ProjectVolume,
-    settings: &[super::super::super::model_settings::PartSettings],
+    settings: &[PartSettings],
 ) -> Result<Part, SliceError> {
     let part = settings
         .iter()
@@ -127,13 +130,20 @@ fn saved_part(
     if volume.volume_type() != crate::ProjectVolumeType::ModelPart {
         return Err(deferred("expected ordinary model parts"));
     }
+    Ok(model_part(volume, Some(part)))
+}
+
+pub(in crate::project::export) fn model_part(
+    volume: &crate::ProjectVolume,
+    part: Option<&PartSettings>,
+) -> Part {
     let metadata = |key| {
-        part.retained_metadata
-            .iter()
+        part.into_iter()
+            .flat_map(|part| &part.retained_metadata)
             .find(|entry| entry.key == key)
             .map_or("", |entry| entry.value.as_str())
     };
-    Ok(Part {
+    Part {
         mesh: Mesh {
             name: volume.name().to_owned(),
             vertices: volume
@@ -159,5 +169,7 @@ fn saved_part(
         source_file: metadata("source_file").to_owned(),
         source_object: metadata("source_object_id").parse().unwrap_or(-1),
         source_volume: metadata("source_volume_id").parse().unwrap_or(-1),
-    })
+        metadata: Vec::new(),
+        mesh_stat: None,
+    }
 }

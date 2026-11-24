@@ -23,6 +23,8 @@ enum PartChild {
     Metadata(Metadata),
     #[serde(rename = "mesh_stat")]
     MeshStatistics(MeshStatistics),
+    #[serde(rename = "shape", alias = "text")]
+    ParametricShape,
     #[serde(other)]
     Other,
 }
@@ -39,6 +41,7 @@ impl<'de> Deserialize<'de> for PartSettings {
         } = PartSettingsWire::deserialize(deserializer)?;
         let mut metadata = Vec::new();
         let mut mesh_stat = None;
+        let mut has_parametric_shape = false;
         for child in children {
             match child {
                 PartChild::Metadata(entry) => metadata.push(entry),
@@ -46,10 +49,14 @@ impl<'de> Deserialize<'de> for PartSettings {
                     return Err(D::Error::duplicate_field("mesh_stat"));
                 }
                 PartChild::MeshStatistics(stat) => mesh_stat = Some(stat),
+                PartChild::ParametricShape => has_parametric_shape = true,
                 PartChild::Other => {}
             }
         }
-        Self::from_ordered_metadata(id, subtype, metadata, mesh_stat).map_err(D::Error::custom)
+        let mut part = Self::from_ordered_metadata(id, subtype, metadata, mesh_stat)
+            .map_err(D::Error::custom)?;
+        part.has_parametric_shape = has_parametric_shape;
+        Ok(part)
     }
 }
 
@@ -62,11 +69,14 @@ impl PartSettings {
     ) -> Result<Self, SliceError> {
         let mut region_overrides = RegionOptionOverrides::default();
         let mut retained_metadata = Vec::with_capacity(metadata.len());
+        let mut options = Vec::new();
         for entry in metadata {
             if is_part_structural_metadata(&entry.key) {
                 retained_metadata.push(entry);
-            } else {
-                deserialize_region_model_field(entry.key, entry.value, &mut region_overrides)?;
+            } else if let Some((key, value)) =
+                deserialize_region_model_field(entry.key, entry.value, &mut region_overrides)?
+            {
+                options.push(Metadata { key, value });
             }
         }
         Ok(Self {
@@ -74,7 +84,9 @@ impl PartSettings {
             subtype,
             region_overrides,
             retained_metadata,
+            options,
             mesh_stat,
+            has_parametric_shape: false,
         })
     }
 }

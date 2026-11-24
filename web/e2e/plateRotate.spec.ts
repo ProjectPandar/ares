@@ -1,4 +1,5 @@
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
@@ -19,6 +20,7 @@ async function setField(page: Page, group: string, axis: "X" | "Y" | "Z", value:
 
 async function importCube(page: Page, project: string) {
   await page.getByTestId("import-input").setInputFiles(project);
+  await expect(page.getByRole("contentinfo")).toContainText(basename(project), { timeout: 60_000 });
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
   await page.getByTestId("object-list").getByRole("treeitem").nth(1).click();
   await expect(field(page, "Rotate (absolute)", "Z")).toHaveValue("0.00");
@@ -57,7 +59,9 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
 
   // From the loaded cube again: a relative Z turn of 45° and an absolute X of 90°; the turned cube
   // stands on an edge-free face, its half height now 5√2, and do_rotate drops it onto the bed.
-  await importCube(page, project);
+  const reopened = `${artifacts}reopened-cube.3mf`;
+  copyFileSync(project, reopened);
+  await importCube(page, reopened);
   await setField(page, "Rotate (relative)", "Z", "45");
   await expect(field(page, "Rotate (absolute)", "Z")).toHaveValue("45.00");
   await expect(field(page, "Rotate (relative)", "Z")).toHaveValue("0.00");
@@ -79,7 +83,7 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   writeFileSync(oracle, guiExport(FIXTURE, [
     { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([aboutZ(45), aboutX(90)], [110, 110, 5 * Math.SQRT2]) }] },
   ], await probedTowers(page)));
-  const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
+  const legs = { official: orcaPlate(oracle, 1, "official", reopened), seeded: orcaPlate(oracle, 1, "seeded", reopened) };
   const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
     [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

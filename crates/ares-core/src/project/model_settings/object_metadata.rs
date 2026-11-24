@@ -15,18 +15,26 @@ impl ObjectSettings {
         let mut module = String::new();
         let mut overrides = ObjectOptionOverrides::default();
         let mut region_overrides = RegionOptionOverrides::default();
+        let mut options = Vec::new();
         for entry in metadata {
             match entry.key.as_str() {
-                "name" => name = entry.value,
-                "module" => module = entry.value,
-                _ => {
-                    deserialize_object_model_field(
-                        entry.key,
-                        entry.value,
-                        &mut overrides,
-                        &mut region_overrides,
-                    )?;
+                "name" => {
+                    name = entry.value;
+                    continue;
                 }
+                "module" => {
+                    module = entry.value;
+                    continue;
+                }
+                _ => {}
+            }
+            if let Some((key, value)) = deserialize_object_model_field(
+                entry.key,
+                entry.value,
+                &mut overrides,
+                &mut region_overrides,
+            )? {
+                options.push(Metadata { key, value });
             }
         }
         Ok(Self {
@@ -35,6 +43,7 @@ impl ObjectSettings {
             module,
             overrides,
             region_overrides,
+            options,
             parts,
         })
     }
