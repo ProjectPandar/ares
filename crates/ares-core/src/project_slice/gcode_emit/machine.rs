@@ -145,7 +145,7 @@ pub(super) fn append_second_layer_transition(
     // (`GCodeWriter.cpp:359-372`).
     let multiple_extruders = state.extruders.multiple() && !single_extruder_multi_material;
     let ooze_prevention = settings.process.print.ooze_prevention.0;
-    for tool in 0..traversal.resolved.logical_filament_count {
+    for &tool in state.extruders.ids() {
         if (single_extruder_multi_material || ooze_prevention)
             && tool != state.extruders.active_id()
         {
