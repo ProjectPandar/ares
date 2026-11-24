@@ -55,7 +55,7 @@ export class Viewport {
   #pointerDown: { x: number; y: number } | null = null;
   onPick?: (objectId: number | null) => void;
   /** A right click without a drag where instances can be edited, at its client position (GLCanvas3D::on_mouse RightUp). */
-  onContextPick?: (objectId: number | null, at: [number, number]) => void;
+  onContextPick?: (target: { object: number; volume: number } | null, at: [number, number]) => void;
   /** Where instances can be edited: drags and gizmo moves and turns of one instance. */
   #edit?: EditHandlers;
   readonly #gizmos: Gizmos;
@@ -96,7 +96,7 @@ export class Viewport {
       const start = this.#pointerDown;
       this.#pointerDown = null;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) return;
-      if (event.button === 0) this.onPick?.(this.#pick(event));
+      if (event.button === 0) this.onPick?.(this.#pick(event)?.object ?? null);
       else if (event.button === 2 && this.#edit) this.onContextPick?.(this.#pick(event), [event.clientX, event.clientY]);
     });
     canvas.addEventListener("contextmenu", (event) => event.preventDefault());
@@ -141,12 +141,22 @@ export class Viewport {
     this.#toolpaths.updateMatrix();
   }
 
-  setScene(scene: Scene | null, filamentColour: string) {
-    if (scene && scene.positions === this.#positions && this.#moveInstances(scene)) return;
+  setScene(scene: Scene | null, colours: readonly string[]) {
+    this.#modelMaterials.setFilaments(colours);
+    if (scene && scene.positions === this.#positions && this.#moveInstances(scene)) {
+      const objects = new Map(scene.objects.map((object) => [object.id, object]));
+      this.#models.traverse((node) => {
+        if (!(node instanceof THREE.Mesh)) return;
+        const object = objects.get(node.userData.objectId as number);
+        const volume = object?.volumes.find(({ id }) => id === node.userData.volumeId);
+        if (volume) node.userData.filament = volume.effectiveFilament;
+      });
+      this.setSelected(this.#selected);
+      return;
+    }
     disposeGeometries(this.#models);
     this.#models.clear();
     this.#positions = scene?.positions ?? null;
-    this.#modelMaterials.setFilament(filamentColour);
     if (scene) {
       for (const group of buildInstances(scene, this.#modelMaterials)) this.#models.add(group);
     }
@@ -194,7 +204,7 @@ export class Viewport {
     this.#selected = objectId;
     this.#placeGizmo();
     this.#models.traverse((node) => {
-      if (node instanceof THREE.Mesh) node.material = this.#modelMaterials.get(node.userData.volumeType as VolumeType, node.userData.objectId === objectId);
+      if (node instanceof THREE.Mesh) node.material = this.#modelMaterials.get(node.userData.volumeType as VolumeType, node.userData.objectId === objectId, node.userData.filament as number);
     });
     this.render();
   }
@@ -337,7 +347,7 @@ export class Viewport {
     this.#renderer.render(this.#scene, this.#camera);
   }
 
-  #pick(event: PointerEvent): number | null {
+  #pick(event: PointerEvent): { object: number; volume: number } | null {
     const rect = this.#renderer.domElement.getBoundingClientRect();
     const pointer = new THREE.Vector2(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -345,6 +355,6 @@ export class Viewport {
     );
     this.#raycaster.setFromCamera(pointer, this.#camera);
     const hit = this.#raycaster.intersectObject(this.#models, true)[0];
-    return (hit?.object.userData.objectId as number | undefined) ?? null;
+    return hit ? { object: hit.object.userData.objectId as number, volume: hit.object.userData.volumeId as number } : null;
   }
 }

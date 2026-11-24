@@ -11,7 +11,7 @@ import { useApp } from "../state/store";
 import { takeSnapshot } from "../state/undoRedo";
 import { CopiesDialog } from "../sidebar/CopiesDialog";
 import { ObjectMenu } from "../sidebar/ObjectMenu";
-import { firstString } from "../sidebar/options";
+import { chooseFilamentTarget, filamentPalette, sameTarget } from "../state/filamentAssignment";
 import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
 import type { GizmoMode } from "./gizmos";
@@ -81,7 +81,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
   // The open gizmo (GLGizmosManager::m_current), none at first.
   const [gizmo, setGizmo] = useState<GizmoMode | null>(null);
   const gizmoOpen = useRef(false);
-  const [menu, setMenu] = useState<{ objectId: number; at: [number, number] } | null>(null);
+  const [menu, setMenu] = useState<{ objectId: number; volume?: number; at: [number, number] } | null>(null);
   const [copies, setCopies] = useState<number | null>(null);
   const theme = useApp((state) => state.theme);
   const loaded = useApp((state) => state.scene);
@@ -162,9 +162,15 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       // A right click on an object selects it and, while no gizmo is open, shows the object menu at the
       // cursor; elsewhere it deselects (GLCanvas3D::on_mouse RightUp, GLCanvas3D.cpp:5411-5471;
       // Plater::priv::on_right_click, Plater.cpp:14201-14263).
-      instance.onContextPick = (objectId, at) => {
-        selectObject(objectId);
-        setMenu(objectId === null || gizmoOpen.current ? null : { objectId, at });
+      instance.onContextPick = (hit, at) => {
+        if (!hit) {
+          selectObject(null);
+          setMenu(null);
+          return;
+        }
+        const volume = useApp.getState().filamentSelection.some((item) => sameTarget(item, hit)) ? hit.volume : undefined;
+        chooseFilamentTarget({ object: hit.object, volume }, "context");
+        setMenu(gizmoOpen.current ? null : { objectId: hit.object, volume, at });
       };
       instance.onOrbit = () => setActive(null);
       window.addEventListener("keydown", onKey);
@@ -186,8 +192,8 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
     viewport?.setBed(bedFromSettings(scene?.settings ?? null), origins?.length ? origins : undefined, currentPlate);
   }, [viewport, scene, currentPlate]);
   useEffect(() => {
-    viewport?.setScene(scene, firstString(loaded?.settings?.filament, "filament_colour") ?? "#29b2a3");
-  }, [viewport, scene, loaded]);
+    viewport?.setScene(scene, filamentPalette(selection, loaded?.settings ?? null));
+  }, [viewport, scene, loaded, selection]);
 
   // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it; the release
   // commits the drag after its undo snapshot (GLCanvas3D::do_move / do_rotate / do_scale).
@@ -270,7 +276,7 @@ export function ViewportView({ toolpaths = null, colors = null, enabled = null, 
       </div>
       {editable && plater && <PlaterToolbar gizmo={gizmo} onGizmo={setGizmo} />}
       {menu && (
-        <ObjectMenu objectId={menu.objectId} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(menu.objectId)} />
+        <ObjectMenu objectId={menu.objectId} volume={menu.volume} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(menu.objectId)} />
       )}
       {copiesIndex >= 0 && (
         <CopiesDialog object={copiesIndex} count={loaded!.objects[copiesIndex].instances.length} onClose={() => setCopies(null)} />

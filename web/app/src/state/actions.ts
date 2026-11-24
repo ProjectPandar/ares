@@ -85,6 +85,7 @@ export async function importFile(file: File) {
       typedSettings,
       selectedObject: null,
       selectedInstance: null,
+      filamentSelection: [],
       overrides: {},
       slice: { status: "idle" },
       loadWarning,
@@ -124,6 +125,7 @@ export async function newProject() {
     typedSettings: null,
     selectedObject: null,
     selectedInstance: null,
+    filamentSelection: [],
     slice: { status: "idle" },
     loadError: undefined,
     loadWarning: undefined,
@@ -141,12 +143,7 @@ function invalidValuesWarning(values: Record<string, string>) {
 }
 
 export function selectObject(id: number | null) {
-  useApp.setState({ selectedObject: id, selectedInstance: null });
-}
-
-/** Selects one instance item of the object `id`. */
-export function selectInstance(id: number, instance: number) {
-  useApp.setState({ selectedObject: id, selectedInstance: instance });
+  useApp.setState({ selectedObject: id, selectedInstance: null, filamentSelection: id === null ? [] : [{ object: id }] });
 }
 
 /** Slices the current plate ("Slice plate", BackgroundSlicingProcess::start in the worker). */

@@ -18,6 +18,7 @@ pub(super) use input::SessionInput;
 pub struct PlaterSession {
     input: SessionInput,
     pub(super) project: Project,
+    pub(super) filament_edits: super::FilamentEdits,
     pub(super) plates: PlateList,
     /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
     pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
@@ -145,6 +146,7 @@ impl PlaterSession {
             project,
             plates,
             arrange_orders: BTreeMap::new(),
+            filament_edits: BTreeMap::new(),
             wipe_tower: None,
             vendor_type: crate::profiles::VendorType::Unknown,
             // The plater selects plate 0 after loading (`Plater.cpp:10222, 10229`).
@@ -350,6 +352,7 @@ impl PlaterSession {
             wipe_tower: self.wipe_tower.clone(),
             instances: self.instance_changes(),
             deleted_objects: self.deleted_objects(),
+            filament: self.filament_edits.clone(),
         }
     }
 

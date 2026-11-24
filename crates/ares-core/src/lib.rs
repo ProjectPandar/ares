@@ -111,8 +111,8 @@ pub use perimeters::{
 };
 pub use planning::{Layer, plan_layers};
 pub use plater::{
-    ArrangeScope, ArrangeSettings, PlaterEdits, PlaterPlate, PlaterSession, PlaterSlice,
-    PlaterSnapshot, ScaleEdit, StlFile, StlImportOptions, slice_plater_plate,
+    ArrangeScope, ArrangeSettings, FilamentTarget, PlaterEdits, PlaterPlate, PlaterSession,
+    PlaterSlice, PlaterSnapshot, ScaleEdit, StlFile, StlImportOptions, slice_plater_plate,
     slice_plater_with_profiles,
 };
 pub use print::validate::{validate_print, validate_project_plate, validate_stl};

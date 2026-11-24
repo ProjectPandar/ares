@@ -22,13 +22,17 @@ const shade = (color: number, selected: boolean) => (selected ? new THREE.Color(
  */
 export class ModelMaterials {
   readonly #materials = new Map<string, THREE.MeshStandardMaterial>();
-  #filament = 0;
+  #filaments: number[] = [];
 
-  get(type: VolumeType, selected: boolean) {
-    const key = `${type}:${selected}`;
+  get(type: VolumeType, selected: boolean, slot: number) {
+    const color = this.#filaments[slot - 1] ?? this.#filaments[0] ?? 0x29b2a3;
+    const [tint, opacity] = type === "ModelPart" ? [color, 1] : VOLUME_STYLE[type];
+    const key = `${type}:${selected}:${type === "ModelPart" ? slot : 0}`;
     const kept = this.#materials.get(key);
-    if (kept) return kept;
-    const [color, opacity] = type === "ModelPart" ? [this.#filament, 1] : VOLUME_STYLE[type];
+    if (kept) {
+      kept.color.copy(shade(tint, selected));
+      return kept;
+    }
     const material = new THREE.MeshStandardMaterial({
       opacity,
       transparent: opacity < 1,
@@ -38,15 +42,13 @@ export class ModelMaterials {
       metalness: 0.05,
       side: THREE.DoubleSide,
     });
-    material.color.copy(shade(color, selected));
+    material.color.copy(shade(tint, selected));
     this.#materials.set(key, material);
     return material;
   }
 
-  /** The model-part colour, from the first filament. */
-  setFilament(colour: string) {
-    this.#filament = new THREE.Color(colour).getHex();
-    for (const selected of [false, true]) this.#materials.get(`ModelPart:${selected}`)?.color.copy(shade(this.#filament, selected));
+  setFilaments(colours: readonly string[]) {
+    this.#filaments = colours.map((colour) => new THREE.Color(colour || "#29b2a3").getHex());
   }
 
   dispose() {
@@ -77,11 +79,13 @@ export function buildInstances(scene: Scene, materials: ModelMaterials): THREE.G
       group.userData.objectId = object.id;
       group.userData.ref = { object: objectIndex, instance: instanceIndex } satisfies InstanceRef;
       for (const { volume, geometry } of geometries) {
-        const mesh = new THREE.Mesh(geometry, materials.get(volume.type, false));
+        const mesh = new THREE.Mesh(geometry, materials.get(volume.type, false, volume.effectiveFilament));
         mesh.matrixAutoUpdate = false;
         mesh.matrix.fromArray(volume.matrix);
         mesh.userData.objectId = object.id;
         mesh.userData.volumeType = volume.type;
+        mesh.userData.volumeId = volume.id;
+        mesh.userData.filament = volume.effectiveFilament;
         group.add(mesh);
       }
       groups.push(group);

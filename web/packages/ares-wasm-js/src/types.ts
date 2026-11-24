@@ -25,7 +25,14 @@ export type VolumeType =
 /** Column-major 4x4 affine matrix (Three.js `Matrix4.fromArray` order). */
 export type Matrix4 = readonly number[];
 
+export interface FilamentTarget {
+  object: number;
+  volume?: number;
+}
+
 export interface SceneVolume {
+  filament: number | null;
+  effectiveFilament: number;
   id: number;
   name: string;
   type: VolumeType;
@@ -44,6 +51,7 @@ export interface SceneInstance {
 }
 
 export interface SceneObject {
+  filament: number | null;
   id: number;
   name: string;
   volumes: SceneVolume[];
@@ -65,7 +73,7 @@ export interface PlaterLayout {
    * Per scene object in model order, by `SceneObject.id`. An arrange sorts the model's objects
    * (`PartPlateList::rebuild_plates_after_arrangement`), so this order can differ from the scene's.
    */
-  objects: { id: number; instances: SceneInstance[] }[];
+  objects: (Pick<SceneObject, "id" | "filament" | "instances"> & { volumes: Pick<SceneVolume, "id" | "filament" | "effectiveFilament">[] })[];
   plates: ScenePlate[];
   /** `[wipe_tower_x, wipe_tower_y]` of the project config: the prime tower position per plate. */
   wipeTower: [number[], number[]];
