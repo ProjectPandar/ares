@@ -11,6 +11,8 @@ use sha2::{Digest, Sha256};
 
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
+#[path = "support/orca_job_appdir.rs"]
+mod orca_job_appdir;
 
 type Facet = [[f32; 3]; 3];
 
@@ -135,7 +137,7 @@ fn compare_import(case: &str, input: Vec<u8>, admitted: bool) {
     let output = directory.join("output");
     fs::create_dir(&exported).unwrap();
     fs::create_dir(&output).unwrap();
-    let appdir = directory.join("AppDir");
+    let appdir = orca_job_appdir::job_appdir(directory.join("AppDir"));
     let mut command = Command::new(&native);
     command
         .args(["--debug", "5", "--datadir"])

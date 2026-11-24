@@ -139,11 +139,12 @@ pub(super) fn run(
     let tmp = run.join("tmp");
     fs::create_dir_all(cwd.join("out")).unwrap();
     fs::create_dir_all(&tmp).unwrap();
+    let appdir = crate::orca_job_appdir::job_appdir(run.join("app"));
     let output = Command::new(bin)
         .current_dir(&cwd)
         .env("TMPDIR", tmp)
-        .env("ORCA_250_JOB_APPDIR", run.join("app"))
-        .env("ORCA_JOB_APPDIR", run.join("app"))
+        .env("ORCA_250_JOB_APPDIR", &appdir)
+        .env("ORCA_JOB_APPDIR", &appdir)
         .args(argv)
         .output()
         .unwrap();

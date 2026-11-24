@@ -8,6 +8,27 @@ use serde_json::Value;
 
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
+#[path = "support/orca_job_appdir.rs"]
+mod orca_job_appdir;
+
+#[test]
+fn prefers_nonempty_job_appdir_then_versioned_job_appdir_then_fallback() {
+    for (primary, versioned, expected) in [
+        (Some("primary"), Some("versioned"), "primary"),
+        (Some("primary"), None, "primary"),
+        (None, Some("versioned"), "versioned"),
+        (Some(""), Some("versioned"), "versioned"),
+        (Some(""), Some(""), "fallback"),
+        (None, None, "fallback"),
+    ] {
+        let selected = orca_job_appdir::select_job_appdir(
+            primary.map(Into::into),
+            versioned.map(Into::into),
+            "fallback".into(),
+        );
+        assert_eq!(selected, Path::new(expected), "{primary:?}, {versioned:?}");
+    }
+}
 
 #[test]
 fn exports_complete_project_settings_to_a_file_without_stdout() {
@@ -51,11 +72,12 @@ fn compare(destination: &str, spiral: bool) {
     fs::create_dir(&temp).unwrap();
     fs::create_dir(&native_dir).unwrap();
     fs::create_dir(&ares_dir).unwrap();
+    let appdir = orca_job_appdir::job_appdir(native_dir.join("app"));
     let native = Command::new(binary)
         .current_dir(&native_dir)
         .env("TMPDIR", temp)
-        .env("ORCA_250_JOB_APPDIR", native_dir.join("app"))
-        .env("ORCA_JOB_APPDIR", native_dir.join("app"))
+        .env("ORCA_250_JOB_APPDIR", &appdir)
+        .env("ORCA_JOB_APPDIR", &appdir)
         .arg("--datadir")
         .arg(native_dir.join("data"))
         .args(["--export-settings", destination])

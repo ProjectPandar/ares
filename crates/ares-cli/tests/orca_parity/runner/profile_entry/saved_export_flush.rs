@@ -77,11 +77,12 @@ fn compare(case: &str, archive: &[u8], slots: usize, supplied: Option<Value>) {
         fs::create_dir_all(work.join("out")).unwrap();
         let tmp = work.join("tmp");
         fs::create_dir(&tmp).unwrap();
+        let appdir = crate::orca_job_appdir::job_appdir(work.join("app"));
         let output = Command::new(bin)
             .current_dir(&work)
             .env("TMPDIR", tmp)
-            .env("ORCA_250_JOB_APPDIR", work.join("app"))
-            .env("ORCA_JOB_APPDIR", work.join("app"))
+            .env("ORCA_250_JOB_APPDIR", &appdir)
+            .env("ORCA_JOB_APPDIR", &appdir)
             .args(args)
             .output()
             .unwrap();
