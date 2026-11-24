@@ -7,8 +7,9 @@ import { fragmentShader, vertexShader } from "./segmentShader";
 /** The preview state the toolpath shaders filter by. */
 export type ToolpathFilter = Pick<PreviewView, "layers" | "hiddenRoles" | "visibleOptions">;
 
-/** libvgcode `SegmentTemplate.cpp:13-27`: 8 template vertex ids, 24 instanced triangle corners. */
-const VERTEX_DATA = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1, 5, 4, 7, 5, 7, 6];
+/** libvgcode `SegmentTemplate.cpp:13-37`: eight vertex IDs shared by eight triangles. */
+const VERTEX_DATA = [0, 1, 2, 3, 4, 5, 6, 7];
+const INDEX_DATA = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1, 5, 4, 7, 5, 7, 6];
 
 /** Per-vertex RGBA texture of `width` x `height` texels. */
 function vertexTexture(data: Float32Array | Uint8Array, [width, height]: [number, number], type: THREE.TextureDataType) {
@@ -59,6 +60,7 @@ export function buildToolpathMesh(toolpaths: Toolpaths, material: THREE.ShaderMa
 
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(new Uint8Array(VERTEX_DATA), 1));
+  geometry.setIndex(INDEX_DATA);
   // applyEnabled writes into this attribute: a copy keeps `Toolpaths.textures` for the next mesh of the same toolpaths.
   geometry.setAttribute("aSegment", new THREE.InstancedBufferAttribute(segments.slice(), 1));
   geometry.instanceCount = segments.length;
