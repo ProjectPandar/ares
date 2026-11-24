@@ -10,6 +10,9 @@ use std::{
 
 use serde_json::{Value, json};
 
+#[path = "cli_uptodate_refresh/machine_gcodes.rs"]
+mod machine_gcodes;
+
 use crate::{
     load_settings_3mf::load_settings_3mf_fixture,
     load_settings_cli::{banner_normalized, stages_run},
@@ -201,22 +204,7 @@ pub(crate) fn project(root: &Path) {
     {
         saved.insert(key.to_owned(), value);
     }
-    let mut zip = zip::ZipArchive::new(Cursor::new(input)).unwrap();
-    let mut output = zip::ZipWriter::new(fs::File::create(root.join("retained.3mf")).unwrap());
-    for index in 0..zip.len() {
-        let file = zip.by_index(index).unwrap();
-        if file.name() == "Metadata/project_settings.config" {
-            output
-                .start_file(file.name(), zip::write::SimpleFileOptions::default())
-                .unwrap();
-            output
-                .write_all(&serde_json::to_vec(&saved).unwrap())
-                .unwrap();
-        } else {
-            output.raw_copy_file(file).unwrap();
-        }
-    }
-    output.finish().unwrap();
+    write_project(root, input, &saved);
     for (kind, name, key, value) in [
         ("machine", MACHINE, KEYS[0], json!("45")),
         ("process", PROCESS, KEYS[1], json!("8")),
@@ -284,6 +272,25 @@ pub(crate) fn project(root: &Path) {
         preset["name"] = json!(format!("Other {kind}"));
         fs::write(root.join(format!("wrong-{kind}.json")), preset.to_string()).unwrap();
     }
+}
+
+fn write_project(root: &Path, input: Vec<u8>, saved: &serde_json::Map<String, Value>) {
+    let mut zip = zip::ZipArchive::new(Cursor::new(input)).unwrap();
+    let mut output = zip::ZipWriter::new(fs::File::create(root.join("retained.3mf")).unwrap());
+    for index in 0..zip.len() {
+        let file = zip.by_index(index).unwrap();
+        if file.name() == "Metadata/project_settings.config" {
+            output
+                .start_file(file.name(), zip::write::SimpleFileOptions::default())
+                .unwrap();
+            output
+                .write_all(&serde_json::to_vec(saved).unwrap())
+                .unwrap();
+        } else {
+            output.raw_copy_file(file).unwrap();
+        }
+    }
+    output.finish().unwrap();
 }
 
 pub(crate) fn native_gcode(
