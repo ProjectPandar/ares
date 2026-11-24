@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { orcaPlate } from "./platerOracle";
+import { systemPresetCatalog } from "./systemPresetCatalog";
 
 const ramp = new URL("../../tests/parity/organic-branch-circle/ramp.3mf", import.meta.url);
 
@@ -28,8 +29,8 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
     section.split(/^;(?: FEATURE: |TYPE:)/m, 1)[0],
   )), "Native extrudes the ramp's support").toBe(true);
 
-  const catalog = process.env.ARES_PARITY_PROJECT_PRESET_CATALOG;
-  if (!catalog) throw new Error("ARES_PARITY_PROJECT_PRESET_CATALOG must name the canonical preset catalog");
+  const catalogPath = process.env.ARES_PARITY_PROJECT_PRESET_CATALOG;
+  const catalog = catalogPath ? readFileSync(catalogPath, "utf8") : await systemPresetCatalog();
   const origin = "http://slicer.test";
   const pkg = new URL("../packages/ares-wasm-js/src/wasm/", import.meta.url);
   await page.route(`${origin}/`, (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html>" }));
@@ -37,10 +38,10 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
     ["ares_wasm.js", fileURLToPath(new URL("ares_wasm.js", pkg)), "text/javascript"],
     ["ares_wasm_bg.wasm", fileURLToPath(new URL("ares_wasm_bg.wasm", pkg)), "application/wasm"],
     ["ramp.3mf", project, "application/octet-stream"],
-    ["catalog.json", catalog, "application/json"],
   ]) {
     await page.route(`${origin}/${name}`, (route) => route.fulfill({ path, contentType }));
   }
+  await page.route(`${origin}/catalog.json`, (route) => route.fulfill({ contentType: "application/json", body: catalog }));
   await page.goto(origin);
   const bytes = await page.evaluate(async (modulePath) => {
     const wasm: typeof import("../packages/ares-wasm-js/src/wasm/ares_wasm") = await import(modulePath);
