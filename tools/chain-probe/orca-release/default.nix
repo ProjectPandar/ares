@@ -6,6 +6,7 @@ let
   src = pkgs.fetchzip {
     name = revision;
     url = "https://codeload.github.com/SoftFever/OrcaSlicer/tar.gz/${revision}";
+    extension = "tar.gz";
     hash = "sha256-WL3tXUkj/XIltcUSSnHGbOXWWLuYZ/hEeZ6L94w72c0=";
   };
 
