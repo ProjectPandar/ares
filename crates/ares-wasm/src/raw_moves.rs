@@ -1,4 +1,4 @@
-use ares_core::gcode_processor::MoveVertex;
+use ares_core::gcode_processor::{ChunkedMoves, MoveVertex};
 use wasm_bindgen::prelude::*;
 
 /// Raw moves in record order, including the dummy and internal split vertices.
@@ -12,14 +12,18 @@ pub struct MoveBuffers {
 }
 
 impl MoveBuffers {
-    pub(crate) fn new(count: usize) -> Self {
-        Self {
-            count,
+    pub(crate) fn from_chunks(moves: ChunkedMoves) -> Self {
+        let mut buffers = Self {
+            count: moves.len(),
             ..Self::default()
+        };
+        for chunk in moves.into_chunks() {
+            buffers.extend(&chunk);
         }
+        buffers
     }
 
-    pub(crate) fn extend(&mut self, moves: &[MoveVertex]) {
+    fn extend(&mut self, moves: &[MoveVertex]) {
         self.values.reserve_exact(12 * moves.len());
         self.ids.reserve_exact(2 * moves.len());
         self.tags.reserve_exact(5 * moves.len());

@@ -1,5 +1,4 @@
 use super::{SliceOutput, VertexBuffers};
-use crate::MoveBuffers;
 use ares_core::ProcessedGCode;
 use ares_vgcode::{
     ViewerImpl,
@@ -10,17 +9,14 @@ use ares_vgcode::{
 impl SliceOutput {
     /// Tool colors are the result's `extruder_colors`: the `filament_colour`
     /// GUI_Preview passes (`GUI_Preview.cpp:680`, `Plater.cpp:16889-16901`).
-    pub fn from_processed(mut output: ProcessedGCode) -> Self {
+    pub fn from_processed(output: ProcessedGCode) -> Self {
         let result = &output.result;
         let move_type_counts = move_type_counts(&result.moves).to_vec();
         let mut conversion = ProcessorConversion::new(result);
-        let mut moves = MoveBuffers::new(result.moves.len());
-        for chunk in std::mem::take(&mut output.result.moves).into_chunks() {
-            conversion.extend(&chunk);
-            moves.extend(&chunk);
+        for chunk in result.moves.chunks() {
+            conversion.extend(chunk);
         }
         let data = conversion.finish();
-        let result = &output.result;
         let palettes = (
             data.spiral_vase_mode,
             data.tools_colors.as_flattened().to_vec(),
@@ -40,7 +36,7 @@ impl SliceOutput {
         vertices.filament_legend = filament_legend;
         Self {
             gcode: output.gcode,
-            moves,
+            moves: output.result.moves,
             vertices,
             print_statistics,
             estimation,

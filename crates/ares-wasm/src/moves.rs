@@ -1,4 +1,5 @@
 use crate::MoveBuffers;
+use ares_core::gcode_processor::ChunkedMoves;
 use ares_vgcode::{
     CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, MovesSlider, OptionType,
     SequentialView, ViewerImpl,
@@ -9,7 +10,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub struct SliceOutput {
     gcode: Vec<u8>,
-    moves: MoveBuffers,
+    moves: ChunkedMoves,
     pub(crate) vertices: VertexBuffers,
     print_statistics: Vec<u8>,
     estimation: String,
@@ -31,7 +32,7 @@ impl SliceOutput {
 
     #[wasm_bindgen(js_name = takeMoves)]
     pub fn take_moves(&mut self) -> MoveBuffers {
-        std::mem::take(&mut self.moves)
+        MoveBuffers::from_chunks(std::mem::take(&mut self.moves))
     }
 
     #[wasm_bindgen(js_name = takeVertices)]
