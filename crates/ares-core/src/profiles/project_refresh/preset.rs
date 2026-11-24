@@ -7,11 +7,16 @@ use crate::{
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
 
+pub(super) enum RefreshScope<'a> {
+    Project(Option<&'a crate::ProjectSettings>),
+    Filaments,
+}
+
 pub(super) fn refresh(
     lookup: PresetLookup<'_>,
     project: &ProjectSettingsRaw,
     uptodate: bool,
-    selected: Option<&crate::ProjectSettings>,
+    scope: RefreshScope<'_>,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
@@ -19,7 +24,10 @@ pub(super) fn refresh(
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
     // CLI:3167–3200: machine and process refresh, not replacement selection.
-    let supplied = selected.map(|selected| &selected.project.preset);
+    let supplied = match scope {
+        RefreshScope::Project(selected) => selected.map(|selected| &selected.project.preset),
+        RefreshScope::Filaments => None,
+    };
     for (kind, key, slot, replaced) in [
         (
             ProfileKind::Machine,
@@ -34,7 +42,7 @@ pub(super) fn refresh(
             supplied.is_some_and(|p| !p.print_settings_id.0.is_empty()),
         ),
     ] {
-        if replaced {
+        if replaced || matches!(scope, RefreshScope::Filaments) {
             continue;
         }
         let identity = strings(project, key);
