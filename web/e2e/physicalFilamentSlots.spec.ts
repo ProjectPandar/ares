@@ -97,7 +97,7 @@ test("the filament editor follows the surviving position after deleting a slot",
 });
 
 async function sliceDownload(page: Page, path: string) {
-  await page.getByRole("button", { name: "Slice plate", exact: true }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
   const [download] = await Promise.all([
     page.waitForEvent("download"),

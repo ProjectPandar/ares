@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 // The reference project assigns coral.stl to T0 and azure.stl to T1.
 const assigned = readFileSync(new URL("../../tests/parity/type2-tower-entry-z/j1-two-tools.3mf", import.meta.url));
@@ -32,7 +33,7 @@ async function openProject(page: Page, buffer: Buffer) {
 }
 
 async function sliceDownload(page: Page, path: string) {
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
   await download.saveAs(path);
@@ -152,7 +153,7 @@ test("part and modifier filament cells offer row-specific choices and object edi
 
   const partCell = part.getByRole("button", { name: "Edit filament for cube10.stl" });
   const partMenu = page.getByRole("menu", { name: "Filament for cube10.stl" });
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   await expect(viewport.locator("canvas")).toBeVisible();
   await expect(viewport).not.toHaveAttribute("data-drawing", "");
   const beforeCancel = await viewport.screenshot();
