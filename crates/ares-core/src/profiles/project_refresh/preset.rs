@@ -4,8 +4,26 @@ use super::super::{ProfileKind, catalog::Catalog};
 use super::{PresetLookup, filament, keys};
 use crate::{
     SliceError,
+    options::overrides::dirty_columns,
     project::raw_settings::{ProjectSettingsRaw, RawConfigValue},
 };
+
+// `OrcaSlicer.cpp:668–669`: filament members require their own merge branch.
+const GCODES_KEY_SET: [&str; 12] = [
+    "machine_start_gcode",
+    "machine_end_gcode",
+    "machine_pause_gcode",
+    "change_filament_gcode",
+    "before_layer_change_gcode",
+    "layer_change_gcode",
+    "template_custom_gcode",
+    "printing_by_object_gcode",
+    "time_lapse_gcode",
+    "wrapping_detection_gcode",
+    "filament_start_gcode",
+    "filament_end_gcode",
+];
+const MACHINE_GCODES: &[&str] = GCODES_KEY_SET.split_at(10).0;
 
 pub(super) enum RefreshScope<'a> {
     Project(Option<&'a crate::ProjectSettings>),
@@ -52,19 +70,55 @@ pub(super) fn refresh(
             continue;
         }
         // CLI:3182-3185: a resolver miss keeps the project's values.
-        let Some(system) = lookup.system(kind, name, slot)? else {
+        let Some(mut system) = lookup.system(kind, name, slot)? else {
             continue;
         };
-        let protected = dirty_keys(&dirty, slot)?;
+        let skip_machine_gcodes = uptodate
+            && kind == ProfileKind::Machine
+            && matches!(
+                lookup,
+                PresetLookup::Native { presets, skip_modified_gcodes: true }
+                    if presets.file(kind, slot).is_some()
+            );
+        let mut protected = dirty_keys(&dirty, slot)?;
+        // `load_default_gcodes_to_config` (CLI:671–704,3240) supplies
+        // definition defaults for absent scripts in nonempty Native config.
+        // Only the protected scripts need them for this keep-set exception.
+        let defaultable_scripts = if skip_machine_gcodes && system.entries().next().is_some() {
+            MACHINE_GCODES
+        } else {
+            &[]
+        };
+        for &key in defaultable_scripts {
+            if protected.contains(key)
+                && !system.contains_key(key)
+                && let Some(value) = keys::default_value(key)?
+            {
+                system.insert(key.to_owned(), value);
+            }
+        }
+        let mut released = false;
         for (key, value) in system.entries() {
-            if bookkeeping(key)
-                || connection(key)
-                || (project.contains_key(key)
-                    && (!refresh_unlisted || protected.contains(key.as_str())))
+            if bookkeeping(key) || connection(key) {
+                continue;
+            }
+            if skip_machine_gcodes && MACHINE_GCODES.contains(&key.as_str()) {
+                released |= protected.remove(key);
+            }
+            if project.contains_key(key) && (!refresh_unlisted || protected.contains(key.as_str()))
             {
                 continue;
             }
             result.insert(key.clone(), value.clone());
+        }
+        if released {
+            // CLI:3244–3253 serializes the remaining authored set, not the
+            // synthetic identity protections used by the merge.
+            let mut remaining = authored_dirty_keys(&dirty, slot)?;
+            remaining.retain(|key| protected.contains(key));
+            let mut columns = dirty.clone();
+            columns[slot] = dirty_columns::encode(remaining.into_iter().collect())?;
+            result.insert_strings("different_settings_to_system", &columns);
         }
     }
     // CLI:2295,2793: a supplied named machine skips retained filament refresh.
@@ -194,15 +248,18 @@ pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<S
     }
 }
 
+fn authored_dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<String>, SliceError> {
+    let token = dirty.get(slot).map(String::as_str).unwrap_or("");
+    crate::options::unescape_strings_cstyle(token)
+        .map(|keys| keys.into_iter().collect())
+        .map_err(SliceError::InvalidInput)
+}
+
 pub(in crate::profiles) fn dirty_keys(
     dirty: &[String],
     slot: usize,
 ) -> Result<BTreeSet<String>, SliceError> {
-    let token = dirty.get(slot).map(String::as_str).unwrap_or("");
-    let mut keys = crate::options::unescape_strings_cstyle(token)
-        .map_err(SliceError::InvalidInput)?
-        .into_iter()
-        .collect::<BTreeSet<_>>();
+    let mut keys = authored_dirty_keys(dirty, slot)?;
     // PresetBundle::project_different_keys: identity is never refreshed.
     keys.extend(
         [

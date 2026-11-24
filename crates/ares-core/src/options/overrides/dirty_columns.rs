@@ -132,9 +132,13 @@ fn add_to_column(column: &mut String, key: &str) -> Result<(), SliceError> {
     let mut keys = unescape_strings_cstyle(column).map_err(SliceError::InvalidInput)?;
     if !keys.iter().any(|existing| existing == key) {
         keys.push(key.to_owned());
-        *column = serialize_config_value(&OrcaStrings(keys))
-            .map_err(|error| SliceError::InvalidInput(error.to_string()))?
-            .token;
+        *column = encode(keys)?;
     }
     Ok(())
+}
+
+pub(crate) fn encode(keys: Vec<String>) -> Result<String, SliceError> {
+    serialize_config_value(&OrcaStrings(keys))
+        .map(|value| value.token)
+        .map_err(|error| SliceError::InvalidInput(error.to_string()))
 }

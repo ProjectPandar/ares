@@ -86,7 +86,10 @@ pub(crate) enum ProjectPresetPolicy {
 #[derive(Clone, Copy)]
 pub(super) enum PresetLookup<'a> {
     Catalog(&'a Catalog),
-    Native(&'a NativeRefreshPresets),
+    Native {
+        presets: &'a NativeRefreshPresets,
+        skip_modified_gcodes: bool,
+    },
 }
 
 impl PresetLookup<'_> {
@@ -98,11 +101,14 @@ impl PresetLookup<'_> {
     ) -> Result<Option<ProjectSettingsRaw>, SliceError> {
         let catalog = match self {
             Self::Catalog(catalog) => Some(catalog),
-            Self::Native(files) => {
-                if let Some(file) = files.file(kind, slot) {
+            Self::Native { presets, .. } => {
+                if let Some(file) = presets.file(kind, slot) {
                     return Ok(Some(file.raw.clone()));
                 }
-                files.system_catalog.as_ref().map(|handle| handle.catalog())
+                presets
+                    .system_catalog
+                    .as_ref()
+                    .map(|handle| handle.catalog())
             }
         };
         match catalog {
@@ -115,7 +121,10 @@ impl PresetLookup<'_> {
 #[derive(Clone, Copy)]
 pub(super) enum RefreshSource<'a> {
     Catalog(&'a LoadedCatalog),
-    Native(&'a NativeRefreshPresets),
+    Native {
+        presets: &'a NativeRefreshPresets,
+        skip_modified_gcodes: bool,
+    },
 }
 
 #[derive(Clone, Copy)]
@@ -195,9 +204,12 @@ pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, Slic
 }
 
 impl<'a> ProjectPresetRefresh<'a> {
-    pub(crate) fn native(presets: &'a NativeRefreshPresets) -> Self {
+    pub(crate) fn native(presets: &'a NativeRefreshPresets, skip_modified_gcodes: bool) -> Self {
         Self {
-            source: RefreshSource::Native(presets),
+            source: RefreshSource::Native {
+                presets,
+                skip_modified_gcodes,
+            },
             policy: ProjectPresetPolicy::Cli { uptodate: true },
             filename: "",
             placement: Placement::None,
@@ -205,13 +217,19 @@ impl<'a> ProjectPresetRefresh<'a> {
     }
 
     pub(crate) fn is_native(self) -> bool {
-        matches!(self.source, RefreshSource::Native(_))
+        matches!(self.source, RefreshSource::Native { .. })
     }
 
     fn lookup(self) -> PresetLookup<'a> {
         match self.source {
             RefreshSource::Catalog(catalog) => PresetLookup::Catalog(&catalog.catalog),
-            RefreshSource::Native(native) => PresetLookup::Native(native),
+            RefreshSource::Native {
+                presets,
+                skip_modified_gcodes,
+            } => PresetLookup::Native {
+                presets,
+                skip_modified_gcodes,
+            },
         }
     }
 

@@ -2,7 +2,7 @@ use super::Placement;
 use crate::{
     GenerationMetadata, SliceError, SlicerContext,
     profiles::{
-        ProjectPresetPolicy,
+        ProjectPresetPolicy, ProjectPresetRefresh,
         load_settings::{LoadSettingsFile, LoadSettingsRequest, compose_project_load_settings},
     },
     project_slice::{
@@ -108,7 +108,8 @@ pub(super) fn slice_load_settings_source(
     with_load_settings_source(
         (ProjectInput::Bytes(input), input),
         request,
-        refresh,
+        refresh
+            .map(|presets| ProjectPresetRefresh::native(presets, context.skip_modified_gcodes())),
         |source| {
             slice_source(
                 ProjectSource { loaded, ..source },
@@ -222,7 +223,7 @@ pub async fn slice_imported_stl_with_load_settings_processed(
 pub(crate) fn with_load_settings_source<T>(
     (input, bytes): (ProjectInput<'_>, &[u8]),
     request: LoadSettingsSliceRequest<'_>,
-    refresh: Option<&crate::NativeRefreshPresets>,
+    refresh: Option<ProjectPresetRefresh<'_>>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
 ) -> Result<T, SliceError> {
     let LoadSettingsSliceRequest {
@@ -268,20 +269,16 @@ pub(crate) fn with_load_settings_source<T>(
             filament_raws: &composed.filament_raws,
             full_fff_config: None,
             load_names: Some(&load_names),
-            retained_refresh: refresh
-                .map(crate::profiles::ProjectPresetRefresh::native)
-                .or_else(|| {
-                    catalog
-                        .as_ref()
-                        .map(|catalog| crate::profiles::ProjectPresetRefresh {
-                            source: crate::profiles::project_refresh::RefreshSource::Catalog(
-                                catalog,
-                            ),
-                            policy: ProjectPresetPolicy::Cli { uptodate },
-                            filename,
-                            placement,
-                        })
-                }),
+            retained_refresh: refresh.or_else(|| {
+                catalog
+                    .as_ref()
+                    .map(|catalog| crate::profiles::ProjectPresetRefresh {
+                        source: crate::profiles::project_refresh::RefreshSource::Catalog(catalog),
+                        policy: ProjectPresetPolicy::Cli { uptodate },
+                        filename,
+                        placement,
+                    })
+            }),
             placement,
             enable_timelapse: false,
             validate_print,
