@@ -1,5 +1,7 @@
 //! Single-wall top-surface regeneration (`PerimeterGenerator.cpp:2751–2877`).
 
+mod inset_depth;
+
 use crate::{
     SliceError,
     arachne::{ExtrusionLine, wall_toolpaths},
@@ -105,6 +107,24 @@ pub(in crate::project_slice) fn regenerate(
         for line in inner.toolpaths.iter_mut().flatten() {
             line.inset_index += 1;
         }
+    }
+    // PerimeterGenerator.cpp:2862–2867: the non-clipping solve also
+    // grows walls from the top boundary, not just from the outer wall.
+    if !config.top_fill_replaces_inner_walls
+        && let [outer] = toolpaths.as_slice()
+    {
+        let inner_touch = r.spacings.perimeter_spacing;
+        let outer_touch = if config.precise_outer_wall {
+            spacing + inner_touch / 2
+        } else {
+            (spacing + inner_touch) / 2
+        };
+        let rounding = r.scale.checked_scale(0.001).unwrap() as f64;
+        inset_depth::renumber_inner_walls_by_depth(
+            outer,
+            &mut inner.toolpaths,
+            (outer_touch as f64 + rounding, inner_touch as f64 + rounding),
+        );
     }
     toolpaths.extend(inner.toolpaths);
     let infill_contour = union_expolygons(

@@ -35,6 +35,7 @@ pub(in crate::project_slice) struct ArachneRecordConfig {
     pub(in crate::project_slice) is_topmost_layer: bool,
     pub(in crate::project_slice) only_one_wall_first_layer: bool,
     pub(in crate::project_slice) only_one_wall_top: bool,
+    pub(in crate::project_slice) top_fill_replaces_inner_walls: bool,
     pub(in crate::project_slice) raft_layers: i32,
     pub(in crate::project_slice) precise_outer_wall: bool,
     pub(in crate::project_slice) outer_wall_first: bool,
@@ -100,6 +101,10 @@ pub(in crate::project_slice) fn validate_record(
             && region.bottom_shell_layers.0 > 0,
         // v2.5.0-beta PerimeterGenerator.cpp:619-622,2681,2713-2716,2735-2739.
         only_one_wall_top: region.only_one_wall_top.0 && region.top_shell_layers.0 > 0,
+        // PerimeterGenerator.cpp:637–640.
+        top_fill_replaces_inner_walls: region.top_shell_layers.0 > 0
+            && region.top_surface_density.0 > 0.0
+            && region.top_surface_expansion.0 > 0.0,
         raft_layers: object.raft_layers.0,
         precise_outer_wall: region.precise_outer_wall.0
             && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
