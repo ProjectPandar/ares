@@ -23,8 +23,7 @@ pub(super) fn discretize_circle(
     points.reserve(steps);
     let mut angle = 0.0_f32;
     for _ in 0..steps {
-        let cosine = angle.cos();
-        let sine = angle.sin();
+        let (sine, cosine) = crate::scalar_math::sincosf::sin_cos(angle);
         points.push(std::array::from_fn(|axis| {
             (center[axis] + x[axis] * cosine) + y[axis] * sine
         }));
