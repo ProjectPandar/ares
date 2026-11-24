@@ -37,6 +37,9 @@ impl NativeRefreshFile {
         options
             .normalize_wire_vector_shapes()
             .map_err(SliceError::InvalidInput)?;
+        if kind == ProfileKind::Machine {
+            super::preset::normalize_authored_thumbnails(&mut options)?;
+        }
         Ok(Self {
             kind,
             name,

@@ -117,6 +117,9 @@ pub(super) fn system_config(
                 .map(|(key, value)| (key.clone(), value.clone())),
         );
         fragment.handle_legacy();
+        if kind == ProfileKind::Machine {
+            normalize_authored_thumbnails(&mut fragment)?;
+        }
         for (key, value) in fragment.entries() {
             if membership.contains(key.as_str()) {
                 raw.insert(key.clone(), value.clone());
@@ -129,6 +132,29 @@ pub(super) fn system_config(
         super::super::preset_normalization::normalize_machine(&mut raw)?;
     }
     Ok(Some(raw))
+}
+
+// Config.cpp:1149 converts authored JSON before preset defaults and inheritance.
+pub(super) fn normalize_authored_thumbnails(
+    raw: &mut ProjectSettingsRaw,
+) -> Result<(), SliceError> {
+    let Some(value) = raw.get("thumbnails") else {
+        return Ok(());
+    };
+    let mut authored = ProjectSettingsRaw::default();
+    authored.insert("thumbnails".to_owned(), value.clone());
+    if let Some(format) = raw.get("thumbnails_format") {
+        authored.insert("thumbnails_format".to_owned(), format.clone());
+    }
+    authored
+        .normalize_scalar_arrays()
+        .and_then(|()| authored.normalize_loaded_composites())
+        .map_err(SliceError::InvalidInput)?;
+    raw.insert(
+        "thumbnails".to_owned(),
+        authored.get("thumbnails").unwrap().clone(),
+    );
+    Ok(())
 }
 
 pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usize) -> &'a str {

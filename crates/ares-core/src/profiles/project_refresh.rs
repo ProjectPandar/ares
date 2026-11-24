@@ -271,7 +271,7 @@ impl<'a> ProjectPresetRefresh<'a> {
                 if uptodate {
                     self.reject_oversized_machine(&project)?;
                 }
-                let (mut raw, _) = preset::refresh(
+                let (mut raw, retained_thumbnails) = preset::refresh(
                     self.lookup(),
                     &project.documents().project_settings_raw,
                     uptodate,
@@ -280,7 +280,7 @@ impl<'a> ProjectPresetRefresh<'a> {
                 // CLI:3167-3200 fills initially missing keys from the resolved system
                 // preset before collection defaults can obscure their absence.
                 apply_retained_preset_defaults(&mut raw, None)?;
-                project.apply_project_preset_refresh(raw, overrides, false)?;
+                project.apply_project_preset_refresh(raw, overrides, retained_thumbnails)?;
             }
         }
         Ok((project, preparation.for_overrides(overrides)))
