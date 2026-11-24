@@ -12,8 +12,8 @@ use crate::{
 };
 
 use cli_bookkeeping::{DifferentSettingsContext, expression_group_slot};
-use identity_slots::{inherits_slot, name_slot};
-use variant::{filament_self_index, variant_values};
+use identity_slots::{inherits_group, name_slot};
+use variant::{SparseVariants, filament_self_index, variant_values};
 
 /// The selected profile's composed pieces shared by the STL and 3MF
 /// entries: resolved typed settings, the chain-expanded presence view, and
@@ -92,17 +92,33 @@ pub(super) fn machine_switch(
 
 /// The counts and machine-switch state the overlay needs beyond the
 /// selected profile itself.
-pub(super) struct OverlayContext {
-    pub(super) selected: usize,
+pub(super) struct OverlayContext<'a> {
+    pub(super) slots: FilamentSlots<'a>,
     pub(super) embedded_count: usize,
     pub(super) machine_switch: Option<MachineSwitch>,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct FilamentSlots<'a> {
+    pub(super) selected: usize,
+    pub(super) filament_indices: &'a [usize],
+}
+
+impl FilamentSlots<'_> {
+    fn source(self, slot: usize) -> Option<usize> {
+        if self.filament_indices.is_empty() {
+            (slot < self.selected).then_some(slot)
+        } else {
+            self.filament_indices.binary_search(&slot).ok()
+        }
+    }
 }
 
 pub(super) fn merged_profile_raw(
     embedded_raw: &ProjectSettingsRaw,
     mut merged: ProjectSettingsRaw,
     profile: &SelectedProfile<'_>,
-    context: OverlayContext,
+    context: OverlayContext<'_>,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     let SelectedProfile {
         settings,
@@ -111,10 +127,13 @@ pub(super) fn merged_profile_raw(
         ..
     } = profile;
     let OverlayContext {
-        selected,
+        slots,
         embedded_count,
         machine_switch,
     } = context;
+    let selected = slots.selected;
+    let sparse_variants = (!slots.filament_indices.is_empty())
+        .then(|| SparseVariants::new(embedded_raw, filament_raws, embedded_count, slots));
     let filament_keys: std::collections::BTreeSet<&String> = filament_raws
         .iter()
         .flat_map(|raw| raw.entries().map(|(key, _)| key))
@@ -147,14 +166,29 @@ pub(super) fn merged_profile_raw(
         }
         let values =
             if crate::options::registry::filament_options_with_variant().contains(&key.as_str()) {
-                variant_values(embedded_raw, filament_raws, key, selected)
+                match &sparse_variants {
+                    Some(variants) => variants.values(embedded_raw, key),
+                    None => variant_values(embedded_raw, filament_raws, key, selected),
+                }
             } else {
                 let embedded_len = embedded_raw
                     .get(key.as_str())
                     .map_or(0, RawConfigValue::len);
-                let len = embedded_len.max(selected);
+                let loaded_len = if slots.filament_indices.is_empty() {
+                    selected
+                } else {
+                    let source = filament_raws
+                        .iter()
+                        .rposition(|raw| raw.get(key).is_some())
+                        .expect("each filament key comes from at least one loaded file");
+                    slots.filament_indices[source] + 1
+                };
+                let len = embedded_len.max(loaded_len);
                 (0..len)
-                    .map(|index| filament_slot(embedded_raw, filament_raws, key, index, selected))
+                    .map(|index| {
+                        let loaded = slots.source(index).map(|source| &filament_raws[source]);
+                        filament_slot(embedded_raw, loaded, key, index)
+                    })
                     .collect::<Result<Vec<_>, _>>()?
             };
         inserts.push(((*key).clone(), RawConfigValue::List(values)));
@@ -183,7 +217,7 @@ pub(super) fn merged_profile_raw(
         // retained embedded process preset with the `"(auto)"` suffix and
         // writes it into the config (`:2700-2702`).
         let renamed = (0..embedded_count)
-            .map(|index| name_slot(embedded_raw, "print_settings_id", &[], index))
+            .map(|index| name_slot(embedded_raw, "print_settings_id", None, index))
             .map(|slot| match slot {
                 RawConfigValue::Text(name) if !name.is_empty() => {
                     RawConfigValue::Text(format!("{name}(auto)"))
@@ -208,7 +242,10 @@ pub(super) fn merged_profile_raw(
         let embedded_len = embedded_raw.get(key).map_or(0, RawConfigValue::len);
         let len = embedded_len.max(embedded_count);
         let values = (0..len)
-            .map(|index| name_slot(embedded_raw, key, loaded, index))
+            .map(|index| {
+                let name = slots.source(index).and_then(|source| loaded.get(source));
+                name_slot(embedded_raw, key, name, index)
+            })
             .collect();
         inserts.push((key.to_owned(), RawConfigValue::List(values)));
     }
@@ -256,51 +293,17 @@ pub(super) fn merged_profile_raw(
     // The selected CLI filament path rebuilds this index after variant replacement
     // (`OrcaSlicer.cpp:3510–3545`, final reconstruction at `3823–3845`).
     if selected > 0 {
+        let indices = match &sparse_variants {
+            Some(variants) => variants.self_index(),
+            None => filament_self_index(embedded_raw, filament_raws, embedded_count, selected),
+        };
         inserts.push((
             "filament_self_index".to_owned(),
-            RawConfigValue::List(filament_self_index(
-                embedded_raw,
-                filament_raws,
-                embedded_count,
-                selected,
-            )),
+            RawConfigValue::List(indices),
         ));
     }
-
-    // `:2817-2818`: group vectors are embedded_count + 2, indexed
-    // process | filaments | machine; only the loaded slots are written.
-    let inherits: Vec<String> = (0..selected + 2)
-        .filter_map(|index| {
-            match profile_raw
-                .get("inherits_group")
-                .and_then(|value| value.element(index))
-            {
-                Some(RawConfigValue::Text(text)) => Some(text.clone()),
-                _ => None,
-            }
-        })
-        .collect();
-    if !inherits.is_empty() {
-        let len = embedded_count + 2;
-        let values = (0..len)
-            .map(|index| {
-                if index == 0 && selected == 0 {
-                    return embedded_raw
-                        .get("inherits_group")
-                        .and_then(|group| group.element(0))
-                        .cloned()
-                        .unwrap_or_else(|| RawConfigValue::Text(String::new()));
-                }
-                inherits_slot(
-                    &inherits,
-                    embedded_raw.get("inherits_group"),
-                    index,
-                    len,
-                    selected,
-                )
-            })
-            .collect();
-        inserts.push(("inherits_group".to_owned(), RawConfigValue::List(values)));
+    if let Some(group) = inherits_group(profile_raw, embedded_raw, embedded_count, slots) {
+        inserts.push(("inherits_group".to_owned(), group));
     }
     // `:2838,:2978,:3161`: the process slot, loaded filament slots, and the
     // machine slot are cleared; unloaded filament slots stay embedded.
@@ -309,7 +312,7 @@ pub(super) fn merged_profile_raw(
         let context = DifferentSettingsContext {
             embedded: embedded_raw.get("different_settings_to_system"),
             len,
-            selected,
+            slots,
             switch_compatible_printers: machine_switch.is_some(),
         };
         let values = (0..len).map(|index| context.slot(index)).collect();
@@ -340,9 +343,7 @@ pub(super) fn merged_profile_raw(
             continue;
         };
         let values = (0..len)
-            .map(|index| {
-                expression_group_slot(group, embedded_raw.get(key), index, offset, selected)
-            })
+            .map(|index| expression_group_slot(group, embedded_raw.get(key), index, offset, slots))
             .collect();
         inserts.push((key.to_owned(), RawConfigValue::List(values)));
     }
@@ -369,14 +370,11 @@ const SKIPPED_BY_SET_AT: [&str; 5] = [
 /// One slot of a non-variant filament-vector overlay (`OrcaSlicer.cpp:3293–3301` `set_at`).
 fn filament_slot(
     embedded_raw: &ProjectSettingsRaw,
-    filament_raws: &[ProjectSettingsRaw],
+    loaded: Option<&ProjectSettingsRaw>,
     key: &str,
     index: usize,
-    selected: usize,
 ) -> Result<RawConfigValue, SliceError> {
-    if index < selected
-        && let Some(value) = filament_raws[index].get(key)
-    {
+    if let Some(value) = loaded.and_then(|raw| raw.get(key)) {
         // `set_at(src, index - 1, 0)` throws when the source vector is
         // empty (`Config.hpp:432-441`); upstream aborts on the uncaught
         // exception while Ares returns the same message as `InvalidInput`

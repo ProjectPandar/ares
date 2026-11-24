@@ -48,7 +48,9 @@ pub(crate) fn export_settings(
 ) -> Result<crate::project::raw_settings::ProjectSettingsRaw, SliceError> {
     use crate::project::raw_settings::RawConfigValue;
 
-    let mut raw = compose_with_project(request, None, loaded_catalog(request)?, false)?.raw;
+    let mut raw = compose_with_project(request, None, loaded_catalog(request)?, false)?
+        .0
+        .raw;
     // CLI::run inserts selected machine/process identity and the process's
     // compatibility list separately from update_full_config (:2304,:2344-2346,:3381).
     for file in request.settings {
@@ -159,9 +161,13 @@ pub(crate) fn compose_project_load_settings(
     let stl = names.embedded.is_none()
         && direct_stl
         && request.filaments.iter().any(|file| file.label.is_empty());
-    let mut composed = compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
-    if crate::InputFormat::detect(input) == crate::InputFormat::ThreeMf {
+    let (mut composed, loaded_indices) =
+        compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
+    if !direct_stl {
         project::decode_filament_string_vectors(&mut composed.filament_raws)?;
+        if loaded_indices.iter().copied().ne(0..loaded_indices.len()) {
+            names.filament_indices = loaded_indices;
+        }
     }
     Ok((composed, names))
 }
@@ -180,7 +186,7 @@ fn compose_with_project(
     embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
     mut catalog: Catalog,
     stl: bool,
-) -> Result<ComposedSelection, SliceError> {
+) -> Result<(ComposedSelection, Vec<usize>), SliceError> {
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
     for file in request.settings {
@@ -262,7 +268,7 @@ fn compose_with_project(
             ids[if sparse { *slot } else { index }] = authored;
         }
     }
-    Ok(composed)
+    Ok((composed, loaded_indices))
 }
 
 /// Extracts the adjudication inputs of the `--load-settings` file loop
@@ -345,6 +351,7 @@ fn load_settings_preset_names(
         process,
         embedded: None,
         direct_stl_machine,
+        filament_indices: Vec::new(),
     })
 }
 

@@ -1,4 +1,78 @@
+use std::ops::Range;
+
 use crate::project::raw_settings::{ProjectSettingsRaw, RawConfigValue};
+
+use super::FilamentSlots;
+
+/// Embedded variant segments in filament slot order (OrcaSlicer.cpp:3512-3561).
+pub(super) struct SparseVariants<'a>(Vec<(Range<usize>, Option<&'a ProjectSettingsRaw>)>);
+
+impl<'a> SparseVariants<'a> {
+    pub(super) fn new(
+        embedded: &ProjectSettingsRaw,
+        loaded: &'a [ProjectSettingsRaw],
+        count: usize,
+        slots: FilamentSlots<'_>,
+    ) -> Self {
+        let mut counts = vec![0; count];
+        let ids = embedded
+            .get("filament_self_index")
+            .into_iter()
+            .flat_map(|ids| (0..ids.len()).filter_map(|index| ids.element(index)));
+        for id in ids {
+            if let Some(slot_count) = id
+                .token()
+                .and_then(|token| token.parse::<usize>().ok())
+                .and_then(|id| id.checked_sub(1))
+                .and_then(|slot| counts.get_mut(slot))
+            {
+                *slot_count += 1;
+            }
+        }
+        let mut start = 0;
+        Self(
+            counts
+                .into_iter()
+                .enumerate()
+                .map(|(slot, len)| {
+                    let range = start..start + len;
+                    start = range.end;
+                    (range, slots.source(slot).map(|source| &loaded[source]))
+                })
+                .collect(),
+        )
+    }
+
+    pub(super) fn values(&self, embedded: &ProjectSettingsRaw, key: &str) -> Vec<RawConfigValue> {
+        let embedded = embedded.get(key);
+        let mut values = Vec::new();
+        for (segment, loaded) in &self.0 {
+            if let Some(value) = loaded.and_then(|raw| raw.get(key)) {
+                values.extend((0..value.len()).filter_map(|index| value.element(index).cloned()));
+            } else if let Some(value) = embedded {
+                values.extend(
+                    segment
+                        .clone()
+                        .filter_map(|index| value.element(index).cloned()),
+                );
+            }
+        }
+        values
+    }
+
+    pub(super) fn self_index(&self) -> Vec<RawConfigValue> {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(slot, (segment, loaded))| {
+                let count = loaded
+                    .and_then(|raw| raw.get("filament_extruder_variant"))
+                    .map_or_else(|| segment.len(), RawConfigValue::len);
+                std::iter::repeat_n(RawConfigValue::Text((slot + 1).to_string()), count)
+            })
+            .collect()
+    }
+}
 
 /// Compose selected per-filament variant segments for the CLI refresh layout.
 /// The corresponding Native path derives variant indices and applies each

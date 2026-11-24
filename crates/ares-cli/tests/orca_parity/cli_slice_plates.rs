@@ -14,6 +14,8 @@ use crate::{
 
 #[path = "cli_slice_plates/direct.rs"]
 mod direct;
+#[path = "cli_slice_plates/filament_slots.rs"]
+mod filament_slots;
 #[path = "cli_slice_plates/partial_presets.rs"]
 mod partial_presets;
 
