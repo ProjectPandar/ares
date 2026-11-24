@@ -47,8 +47,8 @@ pub(crate) fn qualify(
 ) -> (NativeCase, NativeCase) {
     let runner = OrcaRunner::from_env().unwrap().unwrap();
     assert_eq!(sha(project), expected_sha, "frozen input SHA for {label}");
-    let reference = NativeCase::slice(&runner, project, &format!("{namespace}-{label}-"));
-    let replay = NativeCase::slice(&runner, project, &format!("{namespace}-{label}-replay-"));
+    let reference = NativeCase::slice_live(&runner, project, &format!("{namespace}-{label}-"));
+    let replay = NativeCase::slice_live(&runner, project, &format!("{namespace}-{label}-replay-"));
     let first_native = golden::normalize_one_generator_line(
         reference.native.as_bytes(),
         golden::GeneratorKind::Orca,

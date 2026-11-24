@@ -151,7 +151,9 @@ fn direct_content_cache_child() {
         let data = work.join("data/nested/value");
         let modified = fs::metadata(&data).unwrap().modified().unwrap();
         for (name, reused) in [("unchanged", true), ("mutated", false)] {
-            if !reused {
+            if reused {
+                super::super::command_cache::reset_thread_repeat_for_cache_test();
+            } else {
                 fs::write(&data, b"modified").unwrap();
                 fs::File::options()
                     .write(true)

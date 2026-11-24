@@ -10,16 +10,22 @@ mod request;
 mod storage;
 
 use super::{
+    cache_identity,
     command::{self, Limits},
     stages::{self, Captured, FailureKind, StageError},
 };
 use serde_json::{Value, json};
 use std::{
+    collections::HashSet,
     fs,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, Mutex, OnceLock},
     time::Instant,
 };
+
+pub(super) fn identify_producer(bin: &Path) -> Result<cache_identity::Producer, StageError> {
+    producer::identify(bin)
+}
 
 pub(super) fn run(
     bin: &Path,
@@ -37,13 +43,23 @@ pub(super) fn run(
     let normalization = Instant::now();
     let request = request::normalize(&args, envs, limits.stage, limits.work, &mut profile);
     profile.normalize_us = normalization.elapsed().as_micros();
-    let Some(request) = request else {
+    let Some(mut request) = request else {
         trace(
             limits.work,
             json!({"outcome":"bypass-request","profile":profile}),
         );
         return command::run_exact(bin, args, envs, limits);
     };
+    // Keep repeated same-thread requests live across work directories so double-replay checks stay genuine.
+    if record_in_process_repeat(&request.digest)
+        || (request.isolated_cwd && prior_request_digest(limits.work, &request.digest))
+    {
+        trace(
+            limits.work,
+            json!({"outcome":"bypass-repeat","request_digest":request.digest,"profile":profile}),
+        );
+        return command::run_exact(bin, args, envs, limits);
+    }
     let producer = match timed(&mut profile.producer_us, || {
         producer::identify(bin).map(Arc::new)
     }) {
@@ -72,6 +88,20 @@ pub(super) fn run(
     })();
     let Ok(_lock) = lock else {
         return command::run_exact(bin, args, envs, limits);
+    };
+    let isolated_dir = if request.isolated_cwd {
+        let dir = tempfile::Builder::new()
+            .prefix("cache-cwd-")
+            .tempdir_in(limits.work)
+            .map_err(|error| StageError::new(limits.stage, FailureKind::Io, error))?;
+        for output in &mut request.outputs {
+            if output.cwd {
+                output.path = dir.path().to_owned();
+            }
+        }
+        Some(dir)
+    } else {
+        None
     };
     if let Some((packet, captured)) = timed(&mut profile.verify_us, || {
         storage::load(&entry, &request, &producer.digest)
@@ -107,7 +137,13 @@ pub(super) fn run(
     }
     let stage = limits.stage;
     let work = limits.work;
-    let result = command::run_recorded(bin, args, envs, limits);
+    let kept_cwd = isolated_dir.map(tempfile::TempDir::keep);
+    let run_limits = Limits {
+        stage,
+        work: kept_cwd.as_deref().unwrap_or(work),
+        timeout: limits.timeout,
+    };
+    let result = command::run_recorded(bin, args, envs, run_limits);
     let captured = match &result {
         Ok(directory) => read_capture(directory),
         Err(error) if error.kind == FailureKind::Process => error
@@ -183,6 +219,39 @@ fn deterministic_rejection(captured: &Captured) -> bool {
             "timelapse_type",
         ])
         .any(|key| stages::attributable(captured, key))
+}
+
+fn seen_thread_requests() -> &'static Mutex<HashSet<(std::thread::ThreadId, String)>> {
+    static SEEN: OnceLock<Mutex<HashSet<(std::thread::ThreadId, String)>>> = OnceLock::new();
+    SEEN.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+fn record_in_process_repeat(digest: &str) -> bool {
+    !seen_thread_requests()
+        .lock()
+        .unwrap()
+        .insert((std::thread::current().id(), digest.to_owned()))
+}
+
+pub(super) fn reset_thread_repeat_for_cache_test() {
+    let thread = std::thread::current().id();
+    seen_thread_requests()
+        .lock()
+        .unwrap()
+        .retain(|(seen_thread, _)| *seen_thread != thread);
+}
+
+fn prior_request_digest(work: &Path, digest: &str) -> bool {
+    let Ok(entries) = fs::read_dir(work) else {
+        return false;
+    };
+    entries.flatten().any(|entry| {
+        let path = entry.path().join("cache.json");
+        fs::read(path)
+            .ok()
+            .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
+            .is_some_and(|trace| trace["request_digest"].as_str() == Some(digest))
+    })
 }
 
 fn trace(work: &Path, value: Value) {

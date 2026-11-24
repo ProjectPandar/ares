@@ -158,12 +158,12 @@ fn official_fuzzy_allwalls_oracle_is_explicitly_unstable() {
         "frozen input SHA for the official instability witness"
     );
     assert_shared_k1_settings(project, "allwalls");
-    let first = crate::runner::native_api_cli::NativeCase::slice(
+    let first = crate::runner::native_api_cli::NativeCase::slice_live(
         &runner,
         project,
         "fuzzy-allwalls-official-1-",
     );
-    let second = crate::runner::native_api_cli::NativeCase::slice(
+    let second = crate::runner::native_api_cli::NativeCase::slice_live(
         &runner,
         project,
         "fuzzy-allwalls-official-2-",

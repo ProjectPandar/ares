@@ -19,6 +19,44 @@ pub(super) struct Request {
     pub(super) digest: String,
     pub(super) components: Value,
     pub(super) outputs: Vec<Output>,
+    pub(super) isolated_cwd: bool,
+}
+
+fn cli_option_flag(arg: &str) -> Option<(&str, Option<&str>)> {
+    use ares_core::OptionValueKind as Kind;
+    let rest = arg.strip_prefix("--")?;
+    let (name, inline) = match rest.split_once('=') {
+        Some((name, value)) => (name, Some(value)),
+        None => (rest, None),
+    };
+    let definition = ares_core::option_definition(&name.replace('-', "_"))?;
+    match definition.kind {
+        Kind::Float
+        | Kind::FloatOrPercent
+        | Kind::FloatsOrPercents
+        | Kind::Percent
+        | Kind::Percents
+        | Kind::PercentsNullable
+        | Kind::Int
+        | Kind::Ints
+        | Kind::IntsNullable
+        | Kind::Floats
+        | Kind::FloatsNullable
+        | Kind::Enum
+        | Kind::Enums
+        | Kind::EnumsNullable => Some((name, inline)),
+        // Bare boolean flags may toggle without consuming a value; only cache explicit `=value`.
+        Kind::Bool | Kind::Bools | Kind::BoolsNullable if inline.is_some() => Some((name, inline)),
+        // Bypass bare bools, string/path/script options (e.g. post_process, bed_custom_*), and geometry lists.
+        Kind::Bool
+        | Kind::Bools
+        | Kind::BoolsNullable
+        | Kind::String
+        | Kind::Strings
+        | Kind::Point
+        | Kind::Points
+        | Kind::PointsGroups => None,
+    }
 }
 
 pub(super) fn normalize(
@@ -28,9 +66,10 @@ pub(super) fn normalize(
     work: &Path,
     profile: &mut Profile,
 ) -> Option<Request> {
-    if !matches!(stage, Stage::Slice | Stage::Export) || !eligible(args, work) {
+    if !matches!(stage, Stage::Slice | Stage::Export) {
         return None;
     }
+    let isolated_cwd = eligible(args, work)?;
     let path = |value: &str| {
         let path = Path::new(value);
         if path.is_absolute() {
@@ -64,11 +103,7 @@ pub(super) fn normalize(
             }
             "--datadir" => {
                 let directory = path(args.next()?);
-                profile.datadir_hashes += 1;
-                let digest = timed(&mut profile.datadir_hash_us, || {
-                    cache_identity::directory_digest(&directory)
-                })
-                .ok()?;
+                let digest = datadir_digest(&directory, profile)?;
                 normalized.push(json!({"flag":arg,"tree":digest}));
             }
             "--load-settings" | "--load-filaments" => {
@@ -82,7 +117,14 @@ pub(super) fn normalize(
             "--slice" | "--arrange" | "--debug" => {
                 normalized.push(json!({"flag":arg,"value":args.next()?}));
             }
-            value if value.starts_with('-') => return None,
+            value if value.starts_with('-') => {
+                let (name, inline) = cli_option_flag(value)?;
+                let option_value = match inline {
+                    Some(inline) => inline,
+                    None => args.next()?.as_str(),
+                };
+                normalized.push(json!({"flag": format!("--{name}"), "value": option_value}));
+            }
             value => normalized.push(file(&path(value), profile)?),
         }
     }
@@ -108,6 +150,7 @@ pub(super) fn normalize(
         digest,
         components,
         outputs,
+        isolated_cwd,
     })
 }
 
@@ -121,48 +164,78 @@ pub(super) fn cwd_output(name: &std::ffi::OsStr) -> bool {
         })
 }
 
-fn eligible(args: &[String], work: &Path) -> bool {
-    // Existing diagnostics may be appended to or replaced by Native, so keep them live.
-    if !fs::read_dir(work).is_ok_and(|entries| {
-        entries
-            .into_iter()
-            .all(|entry| entry.is_ok_and(|entry| !cwd_output(&entry.file_name())))
-    }) {
-        return false;
+fn eligible(args: &[String], work: &Path) -> Option<bool> {
+    let entries = fs::read_dir(work).ok()?;
+    let mut has_cwd = false;
+    for entry in entries {
+        let entry = entry.ok()?;
+        if cwd_output(&entry.file_name()) {
+            has_cwd = true;
+        }
     }
     let mut args = args.iter();
     let mut output = false;
     let mut outputdir = false;
     let mut slice = false;
+    let mut all_paths_absolute = true;
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--outputdir" | "--export-3mf" => {
-                let Some(value) = args.next() else {
-                    return false;
-                };
+                let value = args.next()?;
+                all_paths_absolute &= Path::new(value).is_absolute();
                 let target = work.join(value);
                 if target.exists()
                     && (arg != "--outputdir"
                         || !fs::read_dir(target).is_ok_and(|mut entries| entries.next().is_none()))
                 {
-                    return false;
+                    return None;
                 }
                 output = true;
                 outputdir |= arg == "--outputdir";
             }
-            "--datadir" | "--load-settings" | "--load-filaments" | "--slice" | "--arrange"
-            | "--debug" => {
+            "--datadir" => {
+                let value = args.next()?;
+                all_paths_absolute &= Path::new(value).is_absolute();
+            }
+            "--load-settings" | "--load-filaments" => {
+                let value = args.next()?;
+                all_paths_absolute &= value.split(';').all(|item| Path::new(item).is_absolute());
+            }
+            "--slice" | "--arrange" | "--debug" => {
                 slice |= arg == "--slice";
-                if args.next().is_none() {
-                    return false;
+                args.next()?;
+            }
+            value if value.starts_with('-') => {
+                let (_, inline) = cli_option_flag(value)?;
+                if inline.is_none() {
+                    args.next()?;
                 }
             }
-            value if value.starts_with('-') => return false,
-            _ => {}
+            value => {
+                all_paths_absolute &= Path::new(value).is_absolute();
+            }
         }
     }
     // Without outputdir Native keeps sliced G-code at PartPlate's temporary path.
-    output && (!slice || outputdir)
+    if !output || (slice && !outputdir) {
+        return None;
+    }
+    // Existing diagnostics in work require explicit --outputdir and absolute paths for isolated cwd.
+    if has_cwd && (!outputdir || !all_paths_absolute) {
+        return None;
+    }
+    Some(has_cwd)
+}
+
+fn datadir_digest(directory: &Path, profile: &mut Profile) -> Option<String> {
+    if let Some(result) = super::producer::immutable_datadir_digest(directory) {
+        return result.ok();
+    }
+    profile.datadir_hashes += 1;
+    timed(&mut profile.datadir_hash_us, || {
+        cache_identity::directory_digest(directory)
+    })
+    .ok()
 }
 
 fn file(path: &Path, profile: &mut Profile) -> Option<Value> {
