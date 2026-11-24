@@ -43,7 +43,7 @@ impl Project {
         })?
         .resolve();
         self.documents.project_settings_raw = raw;
-        self.initialize_cli_loaded_project_config(self.cli_filament_count());
+        self.initialize_cli_loaded_project_config(self.cli_filament_count(), true);
         Ok(())
     }
 }

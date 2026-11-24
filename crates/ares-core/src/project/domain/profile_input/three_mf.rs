@@ -125,9 +125,10 @@ impl Project {
         overrides.apply(&mut merged)?;
         // The one-colour prime-tower rule is CLI::run's alone (OrcaSlicer.cpp:2531-2535,
         // 4316-4343); the plater applies full_fff_config as it is (Plater.cpp:11429-11442).
+        // It needs a BBL-family 3MF (`is_bbl_3mf`, :2531).
         if full_fff_config.is_some() {
             crate::profiles::FullFffGroups::store(&mut merged);
-        } else if load_names.is_none() || selected > 0 {
+        } else if project.documents.bbl_family_3mf && (load_names.is_none() || selected > 0) {
             // CLI::run:2531 requires at least one loaded filament, not one embedded filament.
             mapped_prime_tower::disable_after_mapping(
                 &mut merged,
@@ -181,7 +182,9 @@ impl Project {
 
         project.settings = resolved;
         project.documents.project_settings_raw = merged;
-        project.initialize_cli_loaded_project_config(filament_count);
+        // The plater keeps the key; the CLI creates it only for a BBL-family 3MF.
+        let upward = full_fff_config.is_some() || project.documents.bbl_family_3mf;
+        project.initialize_cli_loaded_project_config(filament_count, upward);
         Ok((project, preparation))
     }
 }

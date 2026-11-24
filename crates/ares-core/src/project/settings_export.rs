@@ -36,7 +36,9 @@ fn export_saved_settings(
     let overrides = ConfigOverrides::default();
     let (mut project, preparation) = load_project_with_preparation(input, &overrides)?;
     let filament_count = project.cli_filament_count();
-    project.initialize_cli_loaded_project_config(filament_count);
+    // OrcaSlicer.cpp:1894 creates upward_compatible_machine only for a BBL-family 3MF.
+    let upward = project.documents().bbl_family_3mf;
+    project.initialize_cli_loaded_project_config(filament_count, upward);
     let documents = project.documents();
     let mut raw = if documents.bbl_family_3mf
         && let Some(catalog) = catalog
