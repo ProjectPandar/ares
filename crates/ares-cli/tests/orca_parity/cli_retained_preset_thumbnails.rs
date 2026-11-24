@@ -8,10 +8,14 @@ use std::{
     process::Command,
 };
 
-use serde_json::json;
+use serde_json::{Map, Value, json};
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-use crate::runner::{OrcaRunner, application::settings, repo_root};
+use super::cli_uptodate_refresh::{ares, native_gcode, project};
+use crate::{
+    load_settings_cli::banner_normalized,
+    runner::{OrcaRunner, application::settings, repo_root},
+};
 
 #[test]
 fn clean_project_keeps_the_loaded_thumbnail_string() {
@@ -53,6 +57,53 @@ fn dirty_process_uses_the_installed_printer_thumbnail_string() {
     );
 }
 
+#[test]
+fn dirty_project_preserves_a_retained_thumbnail_string_equal_to_the_archive() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = runner.work_dir();
+    project(root);
+    let path = root.join("retained.3mf");
+    let input = fs::read(&path).unwrap();
+    let mut saved = settings(&input).unwrap();
+    saved["thumbnails"] = json!("160x120/PNG");
+    saved["post_process"] = json!([]);
+    saved["different_settings_to_system"] = json!([
+        "bottom_color_penetration_layers;post_process",
+        "",
+        "extruder_clearance_dist_to_rod;machine_start_gcode"
+    ]);
+    write_project(&path, &input, &saved);
+
+    let native = native_gcode((&runner, root), "native", &[]);
+    let resources = repo_root().join("OrcaSlicer/resources");
+    let result = ares(
+        (root, "ares"),
+        &["--resources-dir", resources.to_str().unwrap()],
+    );
+    assert!(
+        result.status.success(),
+        "Ares failed in {root:?}: {:?}",
+        result.stderr
+    );
+    let actual = fs::read(root.join("ares/plate_1.gcode")).unwrap();
+    let thumbnail = |bytes: &[u8]| {
+        std::str::from_utf8(bytes)
+            .unwrap()
+            .lines()
+            .find(|line| line.starts_with("; thumbnails = "))
+            .unwrap()
+            .to_owned()
+    };
+    assert_eq!(thumbnail(&native), "; thumbnails = 160x120/PNG");
+    assert_eq!(thumbnail(&actual), thumbnail(&native), "{root:?}");
+    assert!(
+        banner_normalized(&actual) == banner_normalized(&native),
+        "whole G-code differs in {root:?}"
+    );
+}
+
 fn compare(
     dirty: [&str; 3],
     thumbnails: &str,
@@ -67,7 +118,17 @@ fn compare(
     let resources = repo.join("OrcaSlicer/resources");
     let input = fs::read(repo.join("tests/parity/adaptive-cubic-bodies/x1c-stock.3mf")).unwrap();
     let project = root.join("one-filament.3mf");
-    write_project(&project, &input, dirty, thumbnails);
+    let mut config = settings(&input).unwrap();
+    for (key, value) in [
+        ("different_settings_to_system", json!(dirty)),
+        ("enable_prime_tower", json!("0")),
+        ("nozzle_height", json!("5.2")),
+        ("thumbnails", json!(thumbnails)),
+        ("thumbnails_format", json!("PNG")),
+    ] {
+        config.insert(key.to_owned(), value);
+    }
+    write_project(&project, &input, &config);
 
     let expected_lines = [
         format!("; thumbnails = {expected_thumbnails}"),
@@ -126,17 +187,7 @@ fn slice(mut command: Command, (input, out): (&Path, &Path)) -> String {
     fs::read_to_string(out.join("plate_1.gcode")).unwrap()
 }
 
-fn write_project(path: &Path, input: &[u8], dirty: [&str; 3], thumbnails: &str) {
-    let mut config = settings(input).unwrap();
-    for (key, value) in [
-        ("different_settings_to_system", json!(dirty)),
-        ("enable_prime_tower", json!("0")),
-        ("nozzle_height", json!("5.2")),
-        ("thumbnails", json!(thumbnails)),
-        ("thumbnails_format", json!("PNG")),
-    ] {
-        config.insert(key.to_owned(), value);
-    }
+fn write_project(path: &Path, input: &[u8], config: &Map<String, Value>) {
     let mut source = ZipArchive::new(Cursor::new(input)).unwrap();
     let mut project = ZipWriter::new(fs::File::create(path).unwrap());
     for index in 0..source.len() {
@@ -146,7 +197,7 @@ fn write_project(path: &Path, input: &[u8], dirty: [&str; 3], thumbnails: &str) 
                 .start_file(file.name(), SimpleFileOptions::default())
                 .unwrap();
             project
-                .write_all(&serde_json::to_vec(&config).unwrap())
+                .write_all(&serde_json::to_vec(config).unwrap())
                 .unwrap();
         } else {
             project.raw_copy_file(file).unwrap();
