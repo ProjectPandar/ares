@@ -183,22 +183,25 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
         }, { timeout: 60_000 }).toEqual(summary.expected);
     }
     report[name] = { native: stats, added, views, summary };
+    if (name === "time-cost") {
+      // Capture legend screenshots on the smallest fixture before loading heavier models.
+      await page.getByTestId("view-type").selectOption("FeatureType");
+      for (const theme of ["dark", "light"] as const) {
+        if (await page.locator("html").getAttribute("data-theme") !== theme)
+          await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-estimation-${theme}.png` });
+      }
+      await page.getByTestId("view-type").selectOption("Summary");
+      for (const theme of ["light", "dark"] as const) {
+        if (await page.locator("html").getAttribute("data-theme") !== theme)
+          await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-summary-${theme}.png` });
+      }
+    }
   }
   // Model Filament must differ from Total Filament on some fixture.
   expect(excluded, "a fixture with support, flushed or wipe-tower filament").toBe(true);
-  await page.getByTestId("view-type").selectOption("FeatureType");
-  for (const theme of ["dark", "light"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
-      await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-estimation-${theme}.png` });
-  }
-  await page.getByTestId("view-type").selectOption("Summary");
-  for (const theme of ["light", "dark"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
-      await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-summary-${theme}.png` });
-  }
   writeFileSync(`${artifacts}/result.json`, `${JSON.stringify(report, null, 2)}\n`);
 });
