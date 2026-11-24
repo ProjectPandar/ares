@@ -37,7 +37,10 @@ The Native CLI path is:
    and `;` in the process group.
 3. The surrounding loaded-filament loop identifies the source config and
    applies each source key at `src/OrcaSlicer.cpp:3509-3517` and
-   `:3658-3663`.
+   `:3658-3663`. The application block runs under the condition at
+   `src/OrcaSlicer.cpp:3509-3510`:
+   `load_filament_count > 0 || up_config_to_date ||
+   !load_filaments_config.empty()`.
 
 This is the J1 owner to reproduce. `OrcaSlicer.cpp` is a CLI-specific part of
 the source contract and must be called out separately from the core profile
@@ -65,23 +68,34 @@ not written there.
 
 ## Ares destination boundary
 
-The Ares implementation boundary is the shared profile metadata-to-raw
-assembly followed by full-config emission:
+The CLI passes its resolved installation catalog into the existing core
+project refresh. `src/OrcaSlicer.cpp:2793-2817` adds resolved system filament
+presets by slot using `PresetBundle::resolve_system_preset`
+(`src/libslic3r/PresetBundle.cpp:724-756`), retaining unresolved slots.
+
+- `crates/ares-cli/src/direct_project.rs` handles top-level `--slice` of a
+  saved project. `main.rs` and `slice_plates.rs` handle the corresponding
+  `slice` subcommand routes. Each passes the same resource catalog used to
+  look up the retained system presets, without changing explicit replacement.
+- `crates/ares-core/src/project_slice/source.rs:113-126` applies the direct
+  catalog only when `system_catalog` is present.
+- `crates/ares-core/src/profiles/project_refresh/preset.rs:8-82` resolves
+  project filament IDs and delegates to filament refresh; its
+  `filaments.iter().all(Option::is_none)` no-op in
+  `project_refresh/filament.rs:11-18` prevents mapping when no filament
+  preset resolves. This is the Ares equivalent of Native's loaded-filament
+  trigger for this route; `--uptodate` remains an explicit policy and is not
+  enabled merely by loading resources.
 
 - `crates/ares-core/src/profiles/composition/metadata.rs:23-55` builds the
   positional groups from process, filament, and machine metadata. Its
   `positional_group` helper at `:57-63` intentionally returns `None` when all
   values are empty, matching `add_if_some_non_empty` for composed preset data.
-- `crates/ares-core/src/profiles/catalog/cli_metadata.rs:5-39` is the loaded
-  filament application seam. It resizes each destination only when empty and
-  writes each filament's actual scalar condition at the Native slot: the
-  one-based `filament_index` for the machine group and `filament_index - 1`
-  for the process group.
-- `crates/ares-core/src/options/config_export/full_config.rs:212-227` is the
-  final applied full-config emission seam. It currently synthesizes only
-  `different_settings_to_system` and `inherits_group` there; this slice must
-  decide how the two expression groups reach the same applied raw/output
-  boundary without inventing a separate transport path.
+- `crates/ares-core/src/profiles/project_refresh/filament/slot.rs` already
+  writes the scalar conditions from resolved presets into the expression
+  groups. The process group does not depend on resolving a process preset.
+  The existing config writer serializes the applied raw entries; it does not
+  create expression groups.
 - `crates/ares-core/src/options/config_export/writer.rs:13-30` frames the
   config block, while `full_config.rs:228-234` emits the sorted entries. The
   two target lines must be emitted by this existing full-config writer path.
@@ -97,9 +111,22 @@ assembly followed by full-config emission:
    loaded-filament path. Non-empty source conditions must be copied into the
    corresponding slots rather than replaced by empty placeholders.
 3. Preserve empty entries and positional order once a group is materialized.
-4. Use the existing J1 fixture at runtime. Compare only the two exact config
-   block lines against Native in official and seeded modes. Do not store Native
-   values as fixture data; the Native run is the reference.
+4. Enable the installed resources catalog for the ordinary 3MF CLI route, but
+   preserve the upstream trigger semantics. The refresh/mapping must only have
+   an effect when the equivalent loaded-filament/refresh condition is true;
+   loading a catalog must not unconditionally create either group.
+5. Explicitly check the machine group before and after the change. Current
+   Meltingplot and BenFab representatives contain no
+   `compatible_printers_condition`, and Native, plain Ares, and catalog Ares
+   all omit `compatible_machine_expression_group`; this slice leaves that
+   behavior unchanged and does not modify the machine-group implementation.
+6. Catalog refresh may change other plain-CLI output when Native also refreshes
+   filament or other preset values. Those changes are included behavior, not
+   normalized away. WASM and web routes are explicitly out of scope and remain
+   untouched.
+7. For the ordinary CLI, slice a saved project whose filament resolves from
+   installation resources, and a project whose filament does not resolve.
+   Compare the exact expression-group lines against the live Native result.
 
 ## Deferred behavior
 
@@ -116,8 +143,10 @@ This slice does not change or claim:
   `extruder_variant_list`, `print_extruder_id`, scalar/vector width changes,
   or other multi-extruder config differences;
 - `Preset.cpp:301-362` `extend_default_config_length`;
-- non-CLI API/WASM transport behavior, typed-build normalization, or duration
-  estimates.
+- non-CLI API/WASM transport behavior, browser/web routes, typed-build
+  normalization, or duration estimates;
+- any change to the already matching/absent `compatible_machine_expression_group`
+  behavior in the Meltingplot and BenFab representatives.
 
 ## Failure modes
 
@@ -140,11 +169,12 @@ source-checked coverage gap rather than a claimed runtime test result.
 
 ## Verification plan
 
-Run two focused parity tests using the existing J1 fixture: one with the
-fixture's empty compatibility conditions and one deriving two temporary
-filament profiles from an existing repository profile while setting non-empty
-compatibility conditions. Run the Native/Ares runtime pair in official and
-seeded modes, extract only the two target config-block lines, and compare the
-complete lines exactly. The tests must not store Native values as expected
-fixtures. Run the focused tests, `cargo fmt --check`, and strict workspace
-all-target Clippy.
+1. Compare the ordinary CLI footer for resolvable and unresolvable filament
+   presets in both official and seeded modes.
+2. Run the wider CLI, preset refresh, and stock project comparisons in both
+   modes to check for regressions outside the two footer fields.
+3. **Route boundary.** Confirm the WASM/web route tests and source remain
+   unchanged; this fix is limited to the native Ares CLI's ordinary 3MF path.
+4. Run the focused tests, `cargo fmt --check`, strict all-target Clippy, and
+   `cargo nextest run`. The tests must not store Native values as expected
+   fixtures; the Native run is the reference.
