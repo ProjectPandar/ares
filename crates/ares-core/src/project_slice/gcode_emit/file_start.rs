@@ -42,7 +42,7 @@ pub(super) fn append(
         start.metadata,
         start.first_layer_bounds,
         Some(&state.template_rng),
-        start.layer_count,
+        (start.layer_count, state.writer_temperatures),
     )?;
     let rendered =
         template::render(source, &mut config, &mut state.template_context).map_err(|error| {

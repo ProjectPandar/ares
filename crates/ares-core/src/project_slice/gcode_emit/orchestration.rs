@@ -138,14 +138,6 @@ pub(in crate::project_slice) fn emit(
     let template_rng = std::rc::Rc::new(std::cell::RefCell::new(
         crate::slicer_context::Mt19937::new(context.seed()),
     ));
-    let options = motion::MotionOptions::from_traversal(traversal, 0);
-    let small_area_flow = small_area::from_traversal(traversal)?;
-    // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
-    // accumulate the numeric generator cursor's local-frame translations.
-    let origin = (0.0, 0.0);
-    let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
-    let offset = (origin.0 - extruder_offset.0, origin.1 - extruder_offset.1);
-    let extrusion_role_markers = options.extrusion_role_markers;
     let extruders = motion::ExtruderRegistry::new(
         schedule.tool_ordering.all_extruders().to_vec(),
         &traversal.resolved.views.runtime_gcode,
@@ -159,6 +151,15 @@ pub(in crate::project_slice) fn emit(
             .0
             .len(),
     );
+    let writer_temperatures = machine::WriterTemperatures::new(traversal, extruders.ids());
+    let options = motion::MotionOptions::from_traversal(traversal, 0);
+    let small_area_flow = small_area::from_traversal(traversal)?;
+    // `GCode.hpp:185-187`: origin starts at zero; real set_origin calls
+    // accumulate the numeric generator cursor's local-frame translations.
+    let origin = (0.0, 0.0);
+    let extruder_offset = offset::extruder(traversal, initial_filaments.initial());
+    let offset = (origin.0 - extruder_offset.0, origin.1 - extruder_offset.1);
+    let extrusion_role_markers = options.extrusion_role_markers;
     let mut state = motion::EmitState {
         belt: motion::BeltWriter::new(&traversal.resolved.views.full.printer.remaining),
         total_layer_count: tail_layer_count,
@@ -182,6 +183,7 @@ pub(in crate::project_slice) fn emit(
             .0,
         template_rng: template_rng.clone(),
         template_context: template::ExportContext::new(traversal),
+        writer_temperatures,
         first_layer_hull: footprint::first_layer_convex_hull(
             traversal,
             skirt.as_ref(),
@@ -244,7 +246,7 @@ pub(in crate::project_slice) fn emit(
                         metadata,
                         first_layer_bounds,
                         Some(&template_rng),
-                        sliced_layer_count,
+                        (sliced_layer_count, writer_temperatures),
                     )
                 })
                 .transpose()?

@@ -3,7 +3,7 @@
 //! (`GCode.cpp:3002-3040`, `PrintConfig` machine-limit keys).
 
 use super::super::{placeholders, value};
-use super::{footprint, temperature};
+use super::footprint;
 use crate::{
     GenerationMetadata, SliceError,
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
@@ -20,17 +20,10 @@ pub(super) fn self_start_config(
         metadata,
         first_layer_bounds,
         Some(&state.template_rng),
-        state.total_layer_count,
+        (state.total_layer_count, state.writer_temperatures),
     )?;
     config.insert("next_extruder", value::Value::Integer(0));
     config.insert("next_hotend", value::Value::Integer(-1));
-    config.insert(
-        "overall_chamber_temperature",
-        value::Value::Integer(i64::from(temperature::overall_chamber_temperature(
-            traversal,
-            state.extruders.ids(),
-        ))),
-    );
     let max_z = traversal
         .objects
         .first()

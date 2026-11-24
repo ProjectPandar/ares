@@ -17,7 +17,7 @@ pub(super) fn config(
         context.metadata,
         context.first_layer_bounds,
         Some(&state.template_rng),
-        state.total_layer_count,
+        (state.total_layer_count, state.writer_temperatures),
     )?;
     motion::refresh_writer_state(&mut config, state);
     Ok(config)
