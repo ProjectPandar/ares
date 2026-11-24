@@ -1,0 +1,192 @@
+# Builds and publishes the versioned GHCR OCI image containing the pinned
+# OrcaSlicer v2.5.0 Nix oracle closure and preset catalog. Daily PR and merge
+# queue jobs pull this image without installing Nix.
+name: Build CI Oracles
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_versions:
+        description: Number of tagged GHCR oracle versions to retain
+        type: string
+        default: "3"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/ci/build-oracle.sh"
+      - "scripts/ci/oracle-image.env"
+      - "scripts/ci/oracle-image.sh"
+      - "scripts/create-project-preset-catalog.mjs"
+      - "tools/chain-probe/**"
+      - ".github/workflows/oracles-build.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oracles-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: echo "tag=$(bash scripts/ci/oracle-image.sh tag)" >> "$GITHUB_OUTPUT"
+
+  build-variant:
+    name: build-${{ matrix.variant }}
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - merged-oracle
+          - seed-replay
+          - plate-custom-gcodes
+          - preheat-move-durations
+          - segment-colors
+          - preset-select
+    steps:
+      - name: Free disk space for OrcaSlicer build
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - uses: actions/checkout@v4
+      - uses: NixOS/nix-installer-action@main
+      - name: Build and export custom oracle store path
+        run: |
+          set -euo pipefail
+          out="$(ORCA_BUILD_CORES=4 bash scripts/ci/build-oracle.sh "${{ matrix.variant }}")"
+          echo "Built ${{ matrix.variant }} -> $out"
+          mkdir -p "$RUNNER_TEMP/export"
+          printf '%s\n' "$out" > "$RUNNER_TEMP/export/store-path.txt"
+          # Split runtime closure into upstream cache.nixos.org paths vs custom oracle paths.
+          nix path-info -r "$out" > "$RUNNER_TEMP/export/all-paths.txt"
+          grep -E 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$RUNNER_TEMP/export/all-paths.txt" > "$RUNNER_TEMP/export/custom-paths.txt"
+          grep -vE 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$RUNNER_TEMP/export/all-paths.txt" > "$RUNNER_TEMP/export/upstream-paths.txt"
+          xargs -a "$RUNNER_TEMP/export/custom-paths.txt" nix-store --export | zstd -3 -T0 -o "$RUNNER_TEMP/export/custom.nar.zst"
+          ls -lh "$RUNNER_TEMP/export/custom.nar.zst"
+      - uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/export
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.variant }}
+
+  package-image:
+    needs: [plan, build-variant]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Free disk space for OCI staging
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: SoftFever/OrcaSlicer
+          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+          path: OrcaSlicer
+          sparse-checkout: resources/profiles
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: NixOS/nix-installer-action@main
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/merged-oracle
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-merged-oracle
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/seed-replay
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-seed-replay
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/plate-custom-gcodes
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-plate-custom-gcodes
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/preheat-move-durations
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-preheat-move-durations
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/segment-colors
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-segment-colors
+          fail-on-cache-miss: true
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/imports/preset-select
+          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-preset-select
+          fail-on-cache-miss: true
+      - name: Import custom oracles, substitute nixpkgs deps, and stage OCI rootfs
+        run: |
+          set -euo pipefail
+          # 1. Realise upstream cache.nixos.org runtime deps first so nix-store --import validates references.
+          sort -u "$RUNNER_TEMP"/imports/*/upstream-paths.txt | xargs -r nix-store --realise >/dev/null
+          # 2. Import the 6 custom oracle derivations (plus custom OCCT/slvs/wxInspector).
+          for v in merged-oracle seed-replay plate-custom-gcodes preheat-move-durations segment-colors preset-select; do
+            zstd -d -c "$RUNNER_TEMP/imports/$v/custom.nar.zst" | nix-store --import >/dev/null
+          done
+          export ORACLE_SUBSTITUTE_ONLY=1
+          gdb_path="$(bash scripts/ci/build-oracle.sh gdb | tail -1)"
+          patchelf_path="$(bash scripts/ci/build-oracle.sh patchelf | tail -1)"
+          locales_path="$(bash scripts/ci/build-oracle.sh glibcLocales | tail -1)"
+          mapfile -t official_libs < <(bash scripts/ci/build-oracle.sh official-libs)
+
+          python3 - "$RUNNER_TEMP/imports" "$gdb_path" "$patchelf_path" "$locales_path" "${official_libs[@]}" <<'PYEOF' > "$RUNNER_TEMP/variants.json"
+          import json, sys
+          from pathlib import Path
+          imports, gdb, patchelf, locales, *libs = sys.argv[1:]
+          variants = {
+              "gdb": gdb,
+              "patchelf": patchelf,
+              "glibcLocales": locales,
+          }
+          for name in ("merged-oracle", "seed-replay", "plate-custom-gcodes", "preheat-move-durations", "segment-colors", "preset-select"):
+              variants[name] = (Path(imports) / name / "store-path.txt").read_text().strip()
+          print(json.dumps({"variants": variants, "official_libs": libs}, indent=2))
+          PYEOF
+
+          bash scripts/ci/oracle-image.sh stage \
+            --variants-json "$RUNNER_TEMP/variants.json" \
+            --profiles "$PWD/OrcaSlicer/resources/profiles" \
+            --out "$RUNNER_TEMP/oci-staging"
+      - name: Build and push GHCR oracle image
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          IMAGE_TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          set -euo pipefail
+          source scripts/ci/oracle-image.env
+          image="${ORACLE_IMAGE_REPO}:${IMAGE_TAG}"
+          bash scripts/ci/oracle-image.sh build \
+            --staging "$RUNNER_TEMP/oci-staging" \
+            --image "$image" \
+            --source-url "https://github.com/${GITHUB_REPOSITORY}"
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          docker push "$image"
+          digest="$(docker inspect --format='{{index .RepoDigests 0}}' "$image")"
+          echo "Published $digest"
+      - name: Prune stale GHCR oracle versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          bash scripts/ci/oracle-image.sh prune \
+            --owner "$owner" \
+            --package "${repo_name}/ci-oracles" \
+            --keep "${{ inputs.keep_versions || '3' }}" \
+            --keep-tag "${{ needs.plan.outputs.tag }}"
