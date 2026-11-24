@@ -1,0 +1,23 @@
+# Native headless 3MF export with explicit project presets
+
+## Boundary
+
+In OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`), `CLI::run` imports the first 3MF with configuration and plate data (`src/OrcaSlicer.cpp:1740–1768`), selects explicit machine/process/filament files (`2280–2470`), and applies the selections to the project's existing `DynamicPrintConfig` (`3099–3256`, `3353–3411`, `3509–3728`). The resulting config is applied over `FullPrintConfig` and normalized (`4252–4259`) before `CLI::export_project` hands the loaded model, config and plate data to `store_bbs_3mf` (`8081–8086`, `8376–8405`). Whether the input is BBL is an archive marker predicate, not a printer vendor predicate (`src/libslic3r/Format/bbs_3mf.cpp:4160–4187`).
+
+The writer boundary is `_BBS_3MF_Exporter::_save_model_to_file` (`bbs_3mf.cpp:6418`, `6755–6769`, `6823–6836`). `_add_project_config_file_to_archive` saves the effective config using `ConfigBase::save_to_json` (`8199–8205`, `src/libslic3r/Config.cpp:1546–1557`). The writer emits loaded instance records using the exported object IDs (`bbs_3mf.cpp:8574–8610`), independently of whether fresh G-code was sliced. Plate bounding-box JSON is not synthesized for the unsliced inputs in this slice (`6660–6667`). The main model follows the writer's application/version metadata branches (`7240–7311`).
+
+## Included
+
+Extend the unsliced export in [Native CLI headless 3MF project export](cli-export-3mf.md) from one plain mesh to one saved single-nozzle FFF project: one plate, one printable, translation-only instance of one ordinary unpainted part, no cached slice or auxiliary assets, no explicit arrangement or orientation. Cover BBL-marked and unmarked 3MF input with one flattened system machine, process and filament supplied through `--load-settings` and `--load-filaments`. Retain the loaded model, source and plate instance identity, apply explicit selections over the embedded configuration, and serialize the resulting normalized config and metadata rather than copying the old members or treating the project as a geometry-only input.
+
+The current plain-mesh restrictions in `ares-core/src/project/export/geometry.rs` and the unsliced `export_3mf` branch are compatibility boundaries for pristine inputs, not the importer for saved archives. Reuse the saved-project admission in `geometry.rs` and send the imported geometry and effective config through the existing `project/export.rs`, `project/export/project_settings.rs` and `project/export/xml.rs` serialization path. Compose the effective project configuration with the existing `profiles/load_settings.rs` machinery. Use the shared BBL-family initialization and single-colour tower decisions when composing the configuration. Keep filesystem operations and diagnostic mapping in `ares-cli/src/export_3mf.rs`; no new core API or slicer invocation is needed.
+
+`src/libslic3r/PrintConfig.cpp:12734–12739` defines the native top-level, path-valued `--export-3mf` action; `CLI::run` selects it at `src/OrcaSlicer.cpp:6423–6426`. Native treats a `slice` prefix as an input filename. Add the top-level action to `ares-cli/src/args.rs` and dispatch through the existing unsliced export in `main.rs` and `export_3mf.rs`. Keep the existing `ares slice --export-3mf` spelling working, but invoke both executables with the same top-level argv for parity.
+
+## Deferred
+
+An independent `--load-settings` or `--load-filaments` list over a saved project is a separate extension of this scope: omission must reuse saved-project preset composition, not add another implementation in the archive exporter. Up-to-date preset refresh, resources and user-data discovery, inherited external presets, slicing plus export, minimum saves, G-code or thumbnail assets, plate overrides, extra instances and nonordinary parts are outside this slice. Keep the STL and plain geometry-only 3MF entry behavior unchanged.
+
+## Public verification
+
+Drive both executables with the same top-level `--export-3mf` argv, including the same model, lists, transform flags, and output name. Generate a synthetic BBL-marked saved project and an unmarked control, then change distinct process and filament values through the explicit files. Assert successful export and compare all uncompressed ZIP members by byte content and order, with only the existing allowance for relative order of `3D/Objects/*.model`. In particular check `Metadata/project_settings.config`, `Metadata/model_settings.config`, the model version metadata, and absence of a plate bounding-box JSON when Native has none. Compare two repeated Ares exports for ZIP-byte determinism. Run the CLI cases with official and seeded references; register under the case grouping module.

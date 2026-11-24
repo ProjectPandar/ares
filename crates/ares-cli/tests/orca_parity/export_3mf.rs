@@ -165,7 +165,7 @@ fn compare_archive_members(
     }
 }
 
-fn archive_members(path: &Path) -> Vec<(String, Vec<u8>)> {
+pub(super) fn archive_members(path: &Path) -> Vec<(String, Vec<u8>)> {
     let mut zip = ZipArchive::new(fs::File::open(path).unwrap()).unwrap();
     (0..zip.len())
         .map(|index| {
@@ -177,7 +177,7 @@ fn archive_members(path: &Path) -> Vec<(String, Vec<u8>)> {
         .collect()
 }
 
-fn synthetic_3mf() -> Vec<u8> {
+pub(super) fn synthetic_3mf() -> Vec<u8> {
     let members = [
         (
             "[Content_Types].xml",

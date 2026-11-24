@@ -40,7 +40,10 @@ async fn main() {
                 run_slice(args).await
             }
         }
-        None => direct_stl::run(cli.direct, export_before_slice).await,
+        None => match cli.direct.export_3mf.as_deref() {
+            Some(output) => export_3mf::run_direct(&cli.direct, output),
+            None => direct_stl::run(cli.direct, export_before_slice).await,
+        },
     };
     if let Err(failure) = result {
         failure.report(

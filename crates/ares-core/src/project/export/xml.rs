@@ -162,6 +162,7 @@ pub(super) fn mesh_model(object: &ObjectEntry<'_>) -> String {
 pub(super) fn model_settings(
     objects: &[ObjectEntry<'_>],
     sliced: Option<&[SlicedMembers]>,
+    saved_instance_id: Option<u32>,
 ) -> String {
     let mut out = format!("{DECL}<config>\n");
     for object in objects {
@@ -197,11 +198,11 @@ pub(super) fn model_settings(
             .map(|_| format!("Metadata/plate_{plate_id}.gcode"))
             .unwrap_or_default();
         writeln!(out, "  <plate>\n    <metadata key=\"plater_id\" value=\"{plate_id}\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"{gcode_file}\"/>").unwrap();
-        if let Some(plate) = plate {
-            for &(model_index, identify_id) in &plate.object_ids {
-                let id = objects[model_index].id;
-                writeln!(out, "    <model_instance>\n      <metadata key=\"object_id\" value=\"{id}\"/>\n      <metadata key=\"instance_id\" value=\"0\"/>\n      <metadata key=\"identify_id\" value=\"{identify_id}\"/>\n    </model_instance>").unwrap();
-            }
+        let saved_object = saved_instance_id.map(|id| (0, id));
+        let object_ids = plate.map_or(saved_object.as_slice(), |plate| plate.object_ids.as_slice());
+        for &(model_index, identify_id) in object_ids {
+            let id = objects[model_index].id;
+            writeln!(out, "    <model_instance>\n      <metadata key=\"object_id\" value=\"{id}\"/>\n      <metadata key=\"instance_id\" value=\"0\"/>\n      <metadata key=\"identify_id\" value=\"{identify_id}\"/>\n    </model_instance>").unwrap();
         }
         out.push_str("  </plate>\n");
     }

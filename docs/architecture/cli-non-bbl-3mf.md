@@ -136,4 +136,6 @@ Test 1 fails before change 1; test 2 fails before both changes.
   difference on the Ares CLI today. The `load_filament_count > 0` term of 2531 is implemented:
   `three_mf.rs` combines it with `is_bbl_3mf` (`load_names.is_none() || selected > 0`), and a direct
   3MF accepts `--load-settings` or `--load-filaments` alone (`cli-direct-project-partial-presets.md`).
-- `--export-3mf` with preset files on a 3MF input: Ares does not accept that argument combination.
+- `--export-3mf` accepts both preset lists for unsliced saved 3MF projects within the scope of
+  [saved 3MF export with explicit presets](cli-export-3mf-saved-presets.md). Partial preset lists
+  and slicing plus export with explicit presets on a saved 3MF remain unsupported.

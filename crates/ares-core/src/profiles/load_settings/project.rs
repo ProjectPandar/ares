@@ -3,14 +3,40 @@
 
 use super::{LoadSettingsRequest, invalid};
 use crate::{
-    InputFormat, OptionValueKind, SliceError,
+    ConfigOverrides, InputFormat, OptionValueKind, Project, SliceError,
     options::{json_deserialize, registry::option_definition},
     project::{
-        ArchiveLimits, PackagePath, ProjectArchive,
+        ArchiveLimits, PackagePath, ProjectArchive, SelectedProfile,
         raw_settings::{ProjectSettingsRaw, RawConfigValue},
     },
     project_slice::compatibility::LoadedPresetNames,
 };
+
+pub(crate) fn project_for_3mf_export(
+    input: &[u8],
+    request: &LoadSettingsRequest<'_>,
+) -> Result<Project, SliceError> {
+    super::validate_stl_export_presets(request)?;
+    let (composed, names) = super::compose_project_load_settings(input, request)?;
+    let profile = SelectedProfile {
+        settings: composed.profile.settings(),
+        profile_raw: &composed.raw,
+        filament_raws: &composed.filament_raws,
+        validate_post_process: true,
+        enable_timelapse: false,
+        load_names: Some(&names),
+        retained_refresh: None,
+        full_fff_config: None,
+    };
+    Project::from_3mf_with_profiles(
+        (input, None),
+        profile,
+        &ConfigOverrides::default(),
+        (None, &crate::plater::NO_EDITS),
+        None,
+    )
+    .map(|(project, _)| project)
+}
 
 pub(super) fn retained_config(
     input: &[u8],

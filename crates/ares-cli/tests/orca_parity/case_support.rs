@@ -35,6 +35,8 @@ mod cli_uptodate_refresh;
 mod export_3mf;
 #[path = "export_3mf_model_settings.rs"]
 mod export_3mf_model_settings;
+#[path = "export_3mf_saved_presets.rs"]
+mod export_3mf_saved_presets;
 #[path = "export_3mf_sliced.rs"]
 mod export_3mf_sliced;
 #[path = "export_stl.rs"]

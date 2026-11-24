@@ -35,12 +35,22 @@ fn has_painted_triangles(model: &[u8]) -> Result<bool, SliceError> {
 
 pub(crate) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
     let project = crate::load_project(input)?;
+    from_saved_project(
+        ProjectArchive::open(input, ArchiveLimits::PROJECT)?,
+        &project,
+    )
+}
+
+pub(crate) fn from_saved_project(
+    mut archive: ProjectArchive<'_>,
+    project: &crate::Project,
+) -> Result<SavedModel, SliceError> {
     let paths: std::collections::BTreeSet<_> = project
         .objects()
         .iter()
         .flat_map(|object| object.volumes().iter().map(|part| part.source_model_path()))
         .collect();
-    let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+
     if archive.paths().any(|path| {
         !paths.contains(path.as_str())
             && !matches!(
