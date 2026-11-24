@@ -1,0 +1,78 @@
+name: Setup Web E2E Shard
+description: Restore prebuilt web/WASM bundle, Playwright browsers, and pinned GHCR v2.5.0 oracles
+inputs:
+  bundle-key:
+    description: Actions cache key for prebuilt web and release CLI assets
+    required: true
+  browsers:
+    description: Playwright browsers to install (e.g. "chromium" or "chromium webkit")
+    required: true
+  ghcr-token:
+    description: GitHub token for GHCR login
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: SoftFever/OrcaSlicer
+        ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+        path: OrcaSlicer
+        sparse-checkout: |
+          resources/profiles
+          src/libslic3r
+          deps_src/glu-libtess
+          src/libvgcode
+          src/slic3r/GUI/LibVGCode
+        persist-credentials: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: web/package-lock.json
+    - run: npm ci --prefix web
+      shell: bash
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/web-bundle
+        key: ${{ inputs.bundle-key }}
+        fail-on-cache-miss: true
+    - name: Unpack prebuilt web and release CLI bundle
+      shell: bash
+      run: tar --zstd -xf "$RUNNER_TEMP/web-bundle/web-dist.tar.zst" -C "$GITHUB_WORKSPACE"
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ inputs.browsers }}-${{ hashFiles('web/package-lock.json') }}
+    - name: Install Playwright browsers
+      shell: bash
+      run: npm exec --prefix web -- playwright install --with-deps ${{ inputs.browsers }}
+    - name: Cache official OrcaSlicer v2.5.0 AppImage
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ares-orca-appimage
+        key: orca-appimage-v2.5.0-d13eb0a9cd61
+    - name: Fetch official OrcaSlicer v2.5.0 AppImage
+      shell: bash
+      run: |
+        bash scripts/ci/fetch-orca-appimage.sh \
+          "$RUNNER_TEMP/orca-appdir" \
+          "$HOME/.cache/ares-orca-appimage/orca-v2.5.0.AppImage"
+    - name: Restore pinned GHCR v2.5.0 oracles
+      shell: bash
+      env:
+        GHCR_TOKEN: ${{ inputs.ghcr-token }}
+      run: |
+        set -euo pipefail
+        echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+        bash scripts/ci/restore-oracles.sh \
+          --mode web \
+          --appdir "$RUNNER_TEMP/orca-appdir" \
+          --job-appdir "$RUNNER_TEMP/orca-job-appdir" \
+          --env-file "$GITHUB_ENV"
+        {
+          echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer/"
+          echo "ORCA_REPLAY_CPU=0"
+          echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+        } >> "$GITHUB_ENV"

@@ -1,42 +1,42 @@
 name: Tier 1
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
-  actions: read
+  packages: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  ORCA_REF: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19 # OrcaSlicer v2.5.0
+  ORCA_REF: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+  CARGO_INCREMENTAL: "0"
 
 jobs:
-  native:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - self-hosted
+  format:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
+          components: rustfmt
+      - run: cargo fmt --check
+
+  native-nonparity:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
           components: clippy
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
@@ -49,18 +49,18 @@ jobs:
             resources/profiles
             src/libslic3r
             deps_src/glu-libtess
+            src/OrcaSlicer.cpp
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify runtime GLU oracle prerequisites
+      - name: Verify runtime GLU and configuration metadata prerequisites
         run: |
+          set -euo pipefail
           command -v gcc
           command -v g++
           test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
           test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - name: Prepare configuration metadata tests
-        run: |
-          set -euo pipefail
           test "$(git -C OrcaSlicer rev-parse HEAD)" = "$ORCA_REF"
           test -f OrcaSlicer/src/OrcaSlicer.cpp
           for file in PrintConfig.cpp PrintConfig.hpp PrintConfigConstants.hpp MaterialType.cpp Preset.cpp; do
@@ -70,58 +70,117 @@ jobs:
           enum_artifacts=$(mktemp -d "$RUNNER_TEMP/enum.XXXXXXXX")
           printf 'ARES_CONFIGDEF_CONTEXT_ARTIFACTS=%s\nARES_ENUM_ARTIFACTS=%s\n' \
             "$context_artifacts" "$enum_artifacts" >> "$GITHUB_ENV"
-      - run: cargo nextest run --workspace --no-fail-fast -E 'not binary(orca_parity)'
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Verify generated PrintConfigDef source is in sync
+        run: node scripts/gen-configdef.mjs --check
+      - name: Check wasm32 targets
+        run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
+      - name: Run non-parity workspace tests without compiling orca_parity
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, subprocess
+          meta = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version", "1"], text=True))
+          other_pkgs = []
+          cli_args = ["-p", "ares-cli"]
+          for pkg in meta["packages"]:
+              if pkg["name"] != "ares-cli":
+                  other_pkgs.extend(["-p", pkg["name"]])
+              else:
+                  kinds = {k for t in pkg["targets"] for k in t["kind"]}
+                  if "lib" in kinds:
+                      cli_args.append("--lib")
+                  if "bin" in kinds:
+                      cli_args.append("--bins")
+                  for target in pkg["targets"]:
+                      if "test" in target["kind"] and target["name"] != "orca_parity":
+                          cli_args.extend(["--test", target["name"]])
+          if other_pkgs:
+              subprocess.check_call(["cargo", "nextest", "run", "--no-fail-fast", *other_pkgs])
+          if len(cli_args) > 2:
+              subprocess.check_call(["cargo", "nextest", "run", "--no-fail-fast", *cli_args])
+          PYEOF
+      - name: Workspace Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
-  format:
-    runs-on: self-hosted
+  build-parity:
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: taiki-e/install-action@nextest
+      - uses: Swatinem/rust-cache@v2
+      - name: Build and archive orca_parity test binary
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/parity-archive"
+          cargo nextest archive -p ares-cli --test orca_parity \
+            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+          ls -lh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+      - uses: actions/cache/save@v4
         with:
-          components: rustfmt
-      - run: cargo fmt --check
+          path: ${{ runner.temp }}/parity-archive
+          key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
 
-  native-oracle-build:
-    name: oracle-${{ matrix.variant }}
-    runs-on: self-hosted
+  parity-official:
+    name: parity-official (${{ matrix.shard }}/8)
+    needs: build-parity
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        variant:
-          - merged-oracle
-          - ksr-initialized
-          - seed-replay
-          - procgcode
-          - procgcode-dynamics
-          - print-statistics
-          - plate-custom-gcodes
-          - custom-gcode-overview
-          - actual-speed-profile
-          - role-times
-          - segment-hw
-          - segment-colors
-          - patchelf
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-parity-shard
         with:
-          repository: SoftFever/OrcaSlicer
-          ref: ${{ env.ORCA_REF }}
-          path: OrcaSlicer
-      - uses: NixOS/nix-installer-action@main
-      - uses: Mic92/hestia@v3
-        with:
-          upstream-cache-filter: true
-      - run: bash scripts/ci/build-oracle.sh ${{ matrix.variant }}
+          mode: official
+          archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
+          ghcr-token: ${{ github.token }}
+      - name: Run parity-official shard ${{ matrix.shard }}/8
+        run: |
+          cargo nextest run \
+            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" \
+            --workspace-remap "$GITHUB_WORKSPACE" \
+            --no-fail-fast --test-threads 4 \
+            --profile parity-official \
+            --partition "hash:${{ matrix.shard }}/8"
 
-  web:
-    runs-on: self-hosted
-    needs: native-oracle-build
+  parity-seeded:
+    name: parity-seeded (${{ matrix.shard }}/8)
+    needs: build-parity
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - uses: ./.github/actions/setup-parity-shard
+        with:
+          mode: seeded
+          archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
+          ghcr-token: ${{ github.token }}
+      - name: Run parity-seeded shard ${{ matrix.shard }}/8
+        run: |
+          cargo nextest run \
+            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" \
+            --workspace-remap "$GITHUB_WORKSPACE" \
+            --no-fail-fast --test-threads 4 \
+            --profile parity-seeded \
+            --partition "hash:${{ matrix.shard }}/8"
+
+  web-build:
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
@@ -133,6 +192,7 @@ jobs:
             deps_src/glu-libtess
             src/libvgcode
             src/slic3r/GUI/LibVGCode
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -141,238 +201,167 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           targets: wasm32-unknown-unknown
-          components: rustfmt
       - uses: taiki-e/install-action@nextest
-      # wasm-bindgen-cli must match the crate's schema version exactly.
       - name: Install wasm-bindgen-cli matching Cargo.lock
         run: |
           version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
           cargo install wasm-bindgen-cli --version "$version" --locked
       - uses: Swatinem/rust-cache@v2
-      - uses: NixOS/nix-installer-action@main
-      - uses: Mic92/hestia@v3
-        with:
-          upstream-cache-filter: true
-      - name: Substitute Native oracles
-        run: |
-          set -euo pipefail
-          export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview actual-speed-profile role-times segment-hw segment-colors patchelf; do
-            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
-            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
-            echo "$v -> $out"
-          done
-      - name: Fetch official OrcaSlicer AppImage
-        run: bash scripts/ci/fetch-orca-appimage.sh "$RUNNER_TEMP/orca-appdir"
-      - name: Export oracle env
-        run: |
-          set -euo pipefail
-          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
-          ksr="$ORACLE_ksr_initialized"
-          {
-            echo "NIX_PATH=nixpkgs=$nixpkgs"
-            echo "ORCA_SLICER_DIR=$PWD/OrcaSlicer/"
-            echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
-            echo "ORCA_JOB_APPDIR=$RUNNER_TEMP/orca-patched-appdir"
-            echo "ORCA_PATCHELF=$ORACLE_patchelf/bin/patchelf"
-            echo "ORCA_REPLAY_SEED=0"
-            echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
-            echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
-            echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_WASM_PKG=$PWD/target/wasm-browser"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
-            echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
-            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
-            echo "ARES_ACTUAL_SPEED_PROFILE_BIN=$ORACLE_actual_speed_profile/bin/orca-slicer"
-            echo "ARES_ROLE_TIMES_BIN=$ORACLE_role_times/bin/orca-slicer"
-            echo "ARES_SEGMENT_HW_BIN=$ORACLE_segment_hw/bin/orca-slicer"
-            echo "ARES_SEGMENT_COLOR_BIN=$ORACLE_segment_colors/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_MARKER_TIME_STABLE_BIN=$ORACLE_merged_oracle/bin/orca-slicer"
-            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
-            echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
-          } >> "$GITHUB_ENV"
-      - name: Verify generated PrintConfigDef metadata is in sync with upstream
+      - run: npm ci --prefix web
+      - name: Build release CLI and print_config_def in one Cargo invocation
+        run: cargo build --release -p ares-cli --bin ares -p ares-core --example print_config_def
+      - name: Verify generated PrintConfigDef metadata
         run: |
           node scripts/gen-configdef.mjs --check
-          mkdir -p target
-          cargo run -p ares-core --release --example print_config_def > target/print-config-def.json
+          ./target/release/examples/print_config_def > target/print-config-def.json
           node scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
-      - run: cargo check -p ares-core --target wasm32-unknown-unknown
-      - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
-      - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release --target-dir target/wasm-browser
-      - run: wasm-bindgen target/wasm-browser/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
-      - uses: actions/cache@v4
+      - name: Generate ares-wasm E2E fixtures and panic probe
+        run: |
+          cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip
+          node web/scripts/build-panic-probe.mjs
+      - name: Build WASM package, web app, lint, and typecheck
+        run: |
+          npm run build:wasm --prefix web
+          npm run build --prefix web
+          npm run lint --prefix web
+          npm run typecheck --prefix web
+      - name: Pack prebuilt web and release CLI bundle
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/web-bundle"
+          tar --zstd -cf "$RUNNER_TEMP/web-bundle/web-dist.tar.zst" \
+            target/release/ares \
+            target/release/examples/print_config_def \
+            target/web-e2e \
+            web/packages/ares-wasm-js/dist \
+            web/packages/ares-profiles/dist \
+            web/app/dist
+          ls -lh "$RUNNER_TEMP/web-bundle/web-dist.tar.zst"
+      - uses: actions/cache/save@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
-      - run: npm ci --prefix web
-      - run: npm exec --prefix web -- playwright install --with-deps chromium webkit
-      - run: npm run lint --prefix web
-      - run: npm run build:wasm --prefix web/packages/ares-wasm-js
-      - run: npm run build --prefix web
-      - run: npm run typecheck --prefix web
-      - uses: ./.github/actions/web-e2e
+          path: ${{ runner.temp }}/web-bundle
+          key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
 
-  parity-seeded:
-    runs-on: self-hosted
-    needs: native-oracle-build
-    env:
-      ARES_REQUIRE_ORCA: "1"
-      ARES_PARITY_LANE: seeded
-      ARES_PARITY_SEEDED_REFERENCE: "1"
-      ARES_ROLE_ORACLE_LIVE: "1"
-      ARES_PARITY_HONEYCOMB_MULTILINE: "1"
-      ORCA_REPLAY_SEED: "0"
+  web-streaming:
+    needs: web-build
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-web-shard
         with:
-          fetch-depth: 0
-      - uses: actions/checkout@v4
+          bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+          browsers: chromium
+          ghcr-token: ${{ github.token }}
+      - name: Run desktop-streaming E2E
+        run: |
+          npm exec --prefix web -- playwright test \
+            --config web/playwright.config.ts \
+            --project desktop-streaming \
+            --workers 1 --retries 0 \
+            --output "$RUNNER_TEMP/web-results/streaming"
+
+  web-desktop:
+    name: web-desktop (${{ matrix.shard }}/2)
+    needs: web-build
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: ./.github/actions/setup-web-shard
         with:
-          repository: SoftFever/OrcaSlicer
-          ref: ${{ env.ORCA_REF }}
-          path: OrcaSlicer
-          sparse-checkout: |
-            resources/profiles
-            src/libslic3r
-            deps_src/glu-libtess
-      - uses: ./.github/actions/parity-profile-input
+          bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+          browsers: chromium
+          ghcr-token: ${{ github.token }}
+      - name: Run desktop E2E shard ${{ matrix.shard }}/2
+        run: |
+          npm exec --prefix web -- playwright test \
+            --config web/playwright.config.ts \
+            --project desktop \
+            --workers 2 --retries 0 \
+            --shard="${{ matrix.shard }}/2" \
+            --output "$RUNNER_TEMP/web-results/desktop-${{ matrix.shard }}"
+
+  web-packages-mobile:
+    needs: web-build
+    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    runs-on: ubuntu-latest
+    env:
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
+    steps:
+      - uses: ./.github/actions/setup-web-shard
+        with:
+          bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+          browsers: chromium webkit
+          ghcr-token: ${{ github.token }}
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
-      - uses: NixOS/nix-installer-action@main
-      - uses: Mic92/hestia@v3
-        with:
-          upstream-cache-filter: true
-      - name: Substitute Native oracles
+      - name: Prebuild orca_parity fixture binary for package specs
+        run: cargo nextest run --no-run -p ares-cli --test orca_parity
+      - name: Run packages E2E (workers=1)
         run: |
-          set -euo pipefail
-          export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview; do
-            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
-            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
-            echo "$v -> $out"
-          done
-      - name: Export oracle env
+          npm exec --prefix web -- playwright test \
+            --config web/playwright.config.ts \
+            --project packages \
+            --workers 1 --retries 0 \
+            --output "$RUNNER_TEMP/web-results/packages"
+      - name: Run mobile E2E (iphone, pixel, ipad)
         run: |
-          set -euo pipefail
-          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
-          ksr="$ORACLE_ksr_initialized"
-          python3="$(command -v python3)"
-          {
-            echo "NIX_PATH=nixpkgs=$nixpkgs"
-            echo "ARES_PYTHON_BIN=$python3"
-            echo "ARES_ORCA_BIN=$PWD/scripts/orca-seeded-parity.sh"
-            echo "ORCA_REPLAY_BIN=$ORACLE_seed_replay/bin/orca-slicer"
-            echo "ARES_ORCA_REFERENCE_BINARY=$ORACLE_seed_replay/bin/.orca-slicer-wrapped"
-            echo "ARES_ORCA_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
-            echo "ARES_ORCA_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
-            echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
-            echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
-            echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
-            echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
-            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
-            echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
-            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
-            echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
-            echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
-          } >> "$GITHUB_ENV"
-      - name: Verify runtime GLU oracle prerequisites
-        run: |
-          command -v gcc
-          command -v g++
-          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
-          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - name: Verify profile input fail-closed boundary
-        run: python3 tests/parity/profile-inputs/check.py
-      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8 --profile parity-seeded
+          npm exec --prefix web -- playwright test \
+            --config web/playwright.config.ts \
+            --project iphone --project pixel --project ipad \
+            --workers 2 --retries 0 \
+            --output "$RUNNER_TEMP/web-results/mobile"
 
-  parity-official:
-    runs-on: self-hosted
-    needs: native-oracle-build
-    env:
-      ARES_REQUIRE_ORCA: "1"
-      ARES_PARITY_LANE: official
-      ARES_ROLE_ORACLE_LIVE: "1"
-      ARES_PARITY_HONEYCOMB_MULTILINE: "1"
+  tier1-gate:
+    name: tier1-gate
+    if: always()
+    needs:
+      - format
+      - native-nonparity
+      - build-parity
+      - parity-official
+      - parity-seeded
+      - web-build
+      - web-streaming
+      - web-desktop
+      - web-packages-mobile
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/checkout@v4
-        with:
-          repository: SoftFever/OrcaSlicer
-          ref: ${{ env.ORCA_REF }}
-          path: OrcaSlicer
-          sparse-checkout: |
-            resources/profiles
-            src/libslic3r
-            deps_src/glu-libtess
-      - uses: ./.github/actions/parity-profile-input
-      - uses: dtolnay/rust-toolchain@1.99.0
-      - uses: taiki-e/install-action@nextest
-      - uses: Swatinem/rust-cache@v2
-      - uses: NixOS/nix-installer-action@main
-      - uses: Mic92/hestia@v3
-        with:
-          upstream-cache-filter: true
-      - name: Substitute Native oracles
+      - name: Evaluate required Tier 1 checks
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_COMPLETE_SUITE: ${{ github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity') }}
+          RES_FORMAT: ${{ needs.format.result }}
+          RES_NONPARITY: ${{ needs.native-nonparity.result }}
+          RES_BUILD_PARITY: ${{ needs.build-parity.result }}
+          RES_OFFICIAL: ${{ needs.parity-official.result }}
+          RES_SEEDED: ${{ needs.parity-seeded.result }}
+          RES_WEB_BUILD: ${{ needs.web-build.result }}
+          RES_WEB_STREAM: ${{ needs.web-streaming.result }}
+          RES_WEB_DESKTOP: ${{ needs.web-desktop.result }}
+          RES_WEB_PKGS: ${{ needs.web-packages-mobile.result }}
         run: |
           set -euo pipefail
-          export ORACLE_SUBSTITUTE_ONLY=1
-          for v in merged-oracle ksr-initialized gdb seed-replay procgcode procgcode-dynamics print-statistics plate-custom-gcodes custom-gcode-overview patchelf; do
-            out="$(bash scripts/ci/build-oracle.sh "$v" | tail -1)"
-            name="ORACLE_${v//-/_}"; echo "$name=$out" >> "$GITHUB_ENV"
-            echo "$v -> $out"
-          done
-      - name: Fetch official OrcaSlicer AppImage
-        run: bash scripts/ci/fetch-orca-appimage.sh "$RUNNER_TEMP/orca-appdir"
-      - name: Export oracle env
-        run: |
-          set -euo pipefail
-          nixpkgs="$(nix eval --raw --expr '(builtins.getFlake "github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce").outPath')"
-          ksr="$ORACLE_ksr_initialized"
-          python3="$(command -v python3)"
-          {
-            echo "NIX_PATH=nixpkgs=$nixpkgs"
-            echo "ARES_PYTHON_BIN=$python3"
-            echo "ARES_ORCA_BIN=$PWD/scripts/orca-parity.sh"
-            echo "ORCA_APPDIR=$RUNNER_TEMP/orca-appdir"
-            echo "ORCA_JOB_APPDIR=$RUNNER_TEMP/orca-patched-appdir"
-            echo "ARES_ORCA_NATIVE_BIN=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
-            echo "ARES_ORCA_REFERENCE_BINARY=$RUNNER_TEMP/orca-appdir/bin/orca-slicer"
-            echo "ARES_ORCA_RESOURCES_DIR=$RUNNER_TEMP/orca-appdir/resources"
-            echo "ORCA_PATCHELF=$ORACLE_patchelf/bin/patchelf"
-            echo "ARES_KSR_INITIALIZED_BIN=$ksr/bin/orca-slicer"
-            echo "ARES_KSR_INITIALIZED_NATIVE_BIN=$ksr/bin/.orca-slicer-wrapped"
-            echo "ARES_KSR_INITIALIZED_RESOURCES_DIR=$ksr/share/OrcaSlicer"
-            echo "ARES_PROCGCODE_BIN=$ORACLE_procgcode/bin/orca-slicer"
-            echo "ARES_PROCGCODE_DYNAMICS_BIN=$ORACLE_procgcode_dynamics/bin/orca-slicer"
-            echo "ARES_PROCGCODE_NATIVE_BIN=$ORACLE_procgcode/bin/.orca-slicer-wrapped"
-            echo "ARES_PRINT_STATISTICS_BIN=$ORACLE_print_statistics/bin/orca-slicer"
-            echo "ARES_PLATE_CUSTOM_GCODES_BIN=$ORACLE_plate_custom_gcodes/bin/orca-slicer"
-            echo "ARES_CUSTOM_GCODE_OVERVIEW_BIN=$ORACLE_custom_gcode_overview/bin/orca-slicer"
-            echo "ARES_GDB_BIN=$ORACLE_gdb/bin/gdb"
-            echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
-            echo "LC_ALL=C.UTF-8"
-            echo "LOCALE_ARCHIVE=$( NIX_PATH=nixpkgs=$nixpkgs nix eval --impure --raw --expr '(import <nixpkgs> { system = "x86_64-linux"; }).glibcLocales.outPath')/lib/locale/locale-archive"
-            echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
-          } >> "$GITHUB_ENV"
-      - name: Verify runtime GLU oracle prerequisites
-        run: |
-          command -v gcc
-          command -v g++
-          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
-          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-      - name: Verify profile input fail-closed boundary
-        run: python3 tests/parity/profile-inputs/check.py
-      - run: cargo nextest run -p ares-cli --test orca_parity --no-fail-fast --test-threads 8 --profile parity-official
+          check_success() {
+            if [ "$2" != "success" ]; then
+              echo "FAILED: $1 = $2" >&2
+              return 1
+            fi
+            echo "OK: $1 = $2"
+          }
+          check_success format "$RES_FORMAT"
+          check_success native-nonparity "$RES_NONPARITY"
+          if [ "$RUN_COMPLETE_SUITE" = "true" ]; then
+            check_success build-parity "$RES_BUILD_PARITY"
+            check_success parity-official "$RES_OFFICIAL"
+            check_success parity-seeded "$RES_SEEDED"
+            check_success web-build "$RES_WEB_BUILD"
+            check_success web-streaming "$RES_WEB_STREAM"
+            check_success web-desktop "$RES_WEB_DESKTOP"
+            check_success web-packages-mobile "$RES_WEB_PKGS"
+          fi

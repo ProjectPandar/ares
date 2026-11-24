@@ -1,0 +1,73 @@
+name: Setup Parity Shard
+description: Restore nextest archive, pinned GHCR v2.5.0 oracles (no Nix), and parity environment
+inputs:
+  mode:
+    description: Parity mode (official or seeded)
+    required: true
+  archive-key:
+    description: Actions cache key for the prebuilt orca-parity nextest archive
+    required: true
+  ghcr-token:
+    description: GitHub token for GHCR login
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: SoftFever/OrcaSlicer
+        ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+        path: OrcaSlicer
+        sparse-checkout: |
+          resources/profiles
+          src/libslic3r
+          deps_src/glu-libtess
+        persist-credentials: false
+    - uses: ./.github/actions/parity-profile-input
+    - uses: taiki-e/install-action@nextest
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/parity-archive
+        key: ${{ inputs.archive-key }}
+        fail-on-cache-miss: true
+    - name: Cache official OrcaSlicer v2.5.0 AppImage
+      if: inputs.mode == 'official'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ares-orca-appimage
+        key: orca-appimage-v2.5.0-d13eb0a9cd61
+    - name: Fetch official OrcaSlicer v2.5.0 AppImage
+      if: inputs.mode == 'official'
+      shell: bash
+      run: |
+        bash scripts/ci/fetch-orca-appimage.sh \
+          "$RUNNER_TEMP/orca-appdir" \
+          "$HOME/.cache/ares-orca-appimage/orca-v2.5.0.AppImage"
+    - name: Restore pinned GHCR v2.5.0 oracles
+      shell: bash
+      env:
+        GHCR_TOKEN: ${{ inputs.ghcr-token }}
+      run: |
+        set -euo pipefail
+        echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+        extra=()
+        if [ "${{ inputs.mode }}" = "official" ]; then
+          extra=(--appdir "$RUNNER_TEMP/orca-appdir" --job-appdir "$RUNNER_TEMP/orca-job-appdir")
+        fi
+        bash scripts/ci/restore-oracles.sh --mode "${{ inputs.mode }}" "${extra[@]}" --env-file "$GITHUB_ENV"
+        {
+          cat scripts/ci/parity-flags.env | grep -E '^[A-Z0-9_]+='
+          echo "ARES_PYTHON_BIN=$(command -v python3)"
+          echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+          echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
+        } >> "$GITHUB_ENV"
+    - name: Verify runtime GLU and profile input boundaries
+      shell: bash
+      run: |
+        set -euo pipefail
+        command -v gcc
+        command -v g++
+        test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
+        test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
+        python3 tests/parity/profile-inputs/check.py
