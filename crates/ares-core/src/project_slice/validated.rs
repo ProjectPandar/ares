@@ -119,7 +119,12 @@ fn slice_cli_project(
             input: crate::project_slice::ProjectInput::Bytes(input),
             plate,
             profile: None,
-            refresh: refresh.map(crate::profiles::ProjectPresetRefresh::native),
+            refresh: refresh.map(|presets| {
+                crate::profiles::ProjectPresetRefresh::native(
+                    presets,
+                    context.skip_modified_gcodes(),
+                )
+            }),
             overrides,
             validate_print: true,
             normative_check: true,
