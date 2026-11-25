@@ -210,7 +210,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.screenshot({ path: `${artifacts}prepare.png` });
 
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const gcodePath = await exportGcode(page, artifacts);
   const browser = readFileSync(gcodePath, "utf8");
@@ -237,7 +237,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await field.press("Enter");
   await expect(page.getByTestId("process-edited")).toContainText("1 modified option");
   await page.getByTestId("sidebar").screenshot({ path: `${artifacts}edited/sidebar.png` });
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const editedPath = await exportGcode(page, `${artifacts}edited/`);
   const browserEdited = readFileSync(editedPath, "utf8");
@@ -283,7 +283,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   expect(offset.matching, "the model uses the colour shown in its filament slot").toBeGreaterThan(50);
   await page.keyboard.press("Control+z");
   await expect(model).toBeVisible();
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
   writeFileSync(`${artifacts}result-stl.json`, `${JSON.stringify({

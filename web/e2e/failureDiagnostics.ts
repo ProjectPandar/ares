@@ -55,7 +55,7 @@ export const test = base.extend<{ failureDiagnostics: void; firstRunConfig: bool
     if (info.status === info.expectedStatus) return;
     try {
       const browser = await page.evaluate(async () => {
-        const canvas = document.querySelector<HTMLCanvasElement>("[data-testid=viewport] canvas");
+        const canvas = document.querySelector<HTMLCanvasElement>(".tab-pane:not([hidden]) [data-testid=viewport] canvas");
         const sample = () => {
           if (!canvas) return null;
           const probe = document.createElement("canvas");

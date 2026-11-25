@@ -9,6 +9,7 @@ import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { projectConfig, saveProjectFixture } from "./saveProjectFixture";
+import { shownTab } from "./shownTab";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const status = (page: Page) => page.getByTestId("status");
@@ -45,7 +46,7 @@ type Geometry = {
   plates: number[][][];
 };
 async function geometry(page: Page): Promise<Geometry> {
-  const { objects, plates } = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as Geometry;
+  const { objects, plates } = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as Geometry;
   return { objects, plates };
 }
 
