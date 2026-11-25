@@ -12,6 +12,8 @@ use serde_json::json;
 
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
+#[path = "support/orca_job_appdir.rs"]
+mod orca_job_appdir;
 
 const MACHINE: &str = r#"{"type":"machine","name":"Acme A1 0.4 nozzle","from":"system","instantiation":"true","printer_model":"A1","printer_variant":"0.4","nozzle_diameter":["0.4"],"printable_area":["0x0","256x0","256x256","0x256"],"layer_change_gcode":"G92 E0"}"#;
 const PROCESS: &str = r#"{"type":"process","name":"0.20mm Standard @A1","from":"system","instantiation":"true","layer_height":"0.2","compatible_printers":["Acme A1 0.4 nozzle"]}"#;
@@ -62,6 +64,7 @@ async fn compare_slice(case: &str) {
     }
     let output = directory.join("output");
     fs::create_dir(&output).unwrap();
+    let appdir = orca_job_appdir::job_appdir(directory.join("AppDir"));
     let mut command = Command::new(native);
     command
         .args(["--debug", "5", "--datadir"])
@@ -77,7 +80,7 @@ async fn compare_slice(case: &str) {
         .args(["--arrange", "0", "--slice", "0", "--outputdir"])
         .arg(&output)
         .arg(&model_path)
-        .env("ORCA_JOB_APPDIR", directory.join("AppDir"))
+        .env("ORCA_JOB_APPDIR", &appdir)
         .env("OMP_NUM_THREADS", "1")
         .env("OPENBLAS_NUM_THREADS", "1")
         .current_dir(&directory)
@@ -89,7 +92,7 @@ async fn compare_slice(case: &str) {
             "program": command.get_program().to_string_lossy(),
             "argv": command.get_args().map(|arg| arg.to_string_lossy()).collect::<Vec<_>>(),
             "cwd": directory,
-            "environment": {"ORCA_JOB_APPDIR": directory.join("AppDir"), "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"},
+            "environment": {"ORCA_JOB_APPDIR": appdir, "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"},
         })).unwrap(),
     ).unwrap();
     let status = command.status().unwrap();

@@ -71,11 +71,12 @@ fn compare_installed_refresh(post_process: &[&str], expected: i32) {
     let ares_work = root.join("ares");
     create_work(&native_work);
     create_work(&ares_work);
+    let appdir = crate::orca_job_appdir::job_appdir(native_work.join("app"));
     let mut native = Command::new(runner.bin());
     native
         .args(["--slice", "1", "--outputdir", ".", "--uptodate"])
-        .env("ORCA_250_JOB_APPDIR", native_work.join("app"))
-        .env("ORCA_JOB_APPDIR", native_work.join("app"))
+        .env("ORCA_250_JOB_APPDIR", &appdir)
+        .env("ORCA_JOB_APPDIR", &appdir)
         .env_remove("DISPLAY")
         .env_remove("WAYLAND_DISPLAY");
     let mut ares = Command::new(bin);
@@ -119,11 +120,12 @@ fn compare(post_process: &[&str], cases: impl IntoIterator<Item = (Option<&'stat
     for (index, (mode, expected)) in cases.into_iter().enumerate() {
         let work = root.join(format!("native-{index}"));
         create_work(&work);
+        let appdir = crate::orca_job_appdir::job_appdir(work.join("app"));
         let mut command = Command::new(runner.bin());
         command
             .args(["--slice", "0", "--outputdir", "."])
-            .env("ORCA_250_JOB_APPDIR", work.join("app"))
-            .env("ORCA_JOB_APPDIR", work.join("app"))
+            .env("ORCA_250_JOB_APPDIR", &appdir)
+            .env("ORCA_JOB_APPDIR", &appdir)
             .env_remove("DISPLAY")
             .env_remove("WAYLAND_DISPLAY");
         let observed = run(command, &work, &input, mode, (expected, true));
@@ -142,7 +144,6 @@ fn compare(post_process: &[&str], cases: impl IntoIterator<Item = (Option<&'stat
 
 fn create_work(work: &Path) {
     fs::create_dir_all(work.join("out")).unwrap();
-    fs::create_dir(work.join("app")).unwrap();
 }
 
 fn run(

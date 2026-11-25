@@ -176,11 +176,12 @@ fn run(bin: &Path, root: &Path, engine: &str, args: &[&str]) -> Artifacts {
     let tmp = work.join("tmp");
     fs::create_dir_all(&out).unwrap();
     fs::create_dir(&tmp).unwrap();
+    let appdir = crate::orca_job_appdir::job_appdir(work.join("app"));
     let result = Command::new(bin)
         .current_dir(&cwd)
         .env("TMPDIR", tmp)
-        .env("ORCA_250_JOB_APPDIR", work.join("app"))
-        .env("ORCA_JOB_APPDIR", work.join("app"))
+        .env("ORCA_250_JOB_APPDIR", &appdir)
+        .env("ORCA_JOB_APPDIR", &appdir)
         .args(args)
         .arg("--load-settings")
         .arg(format!(

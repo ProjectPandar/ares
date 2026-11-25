@@ -9,11 +9,12 @@
 mod gcode_regression_cases;
 #[path = "../../../tests/support/native_environment.rs"]
 mod native_environment;
-#[path = "orca_parity/standalone_thin_gap_fill.rs"]
-mod standalone_thin_gap_fill;
-
 #[path = "orca_parity/object_emission_cases.rs"]
 mod object_emission_cases;
+#[path = "support/orca_job_appdir.rs"]
+mod orca_job_appdir;
+#[path = "orca_parity/standalone_thin_gap_fill.rs"]
+mod standalone_thin_gap_fill;
 
 #[path = "orca_parity/chamber_used_extruder.rs"]
 mod chamber_used_extruder;

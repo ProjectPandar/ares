@@ -281,11 +281,12 @@ fn run(
     if let Some(path) = existing {
         fs::write(cwd.join(path), b"previous invocation\n").unwrap();
     }
+    let appdir = crate::orca_job_appdir::job_appdir(work.join("app"));
     let result = Command::new(bin)
         .current_dir(&cwd)
         .env("TMPDIR", tmp)
-        .env("ORCA_250_JOB_APPDIR", work.join("app"))
-        .env("ORCA_JOB_APPDIR", work.join("app"))
+        .env("ORCA_250_JOB_APPDIR", &appdir)
+        .env("ORCA_JOB_APPDIR", &appdir)
         .args(argv)
         .output()
         .unwrap();
