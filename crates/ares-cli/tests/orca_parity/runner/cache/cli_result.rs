@@ -277,6 +277,7 @@ impl OrcaRunner {
             let components = json!({
                 "input":cache_identity::raw_digest(&stages::read(&project, stage)?),
                 "input_name":project.file_name(),
+                "input_path":project,
             });
             (project, components)
         };

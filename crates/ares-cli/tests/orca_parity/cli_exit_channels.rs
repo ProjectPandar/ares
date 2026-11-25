@@ -170,11 +170,7 @@ fn cli_exit_empty_plate_reports_a_substituted_value_like_native() {
         .tempdir()
         .unwrap()
         .keep();
-    // The report names the input path, and the Native reference is cached by content and file
-    // name: the project needs a path that is the same on every run.
-    let directory = std::env::temp_dir().join("ares-cli-exit-substituted");
-    fs::create_dir_all(&directory).unwrap();
-    let project = directory.join("empty-plate-cross-zag.3mf");
+    let project = artifacts.join("empty-plate-cross-zag.3mf");
     fs::write(
         &project,
         substituted(&fs::read(fixture("empty-plate.3mf")).unwrap()),
@@ -186,6 +182,56 @@ fn cli_exit_empty_plate_reports_a_substituted_value_like_native() {
         &artifacts,
         EarlyExit::EmptyPlate,
     );
+}
+
+#[test]
+fn cli_exit_substitution_cache_distinguishes_identical_inputs_at_different_paths() {
+    let Some(runner) = crate::runner::OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let artifacts = tempfile::Builder::new()
+        .prefix("cli-substitution-cache-path-")
+        .tempdir()
+        .unwrap()
+        .keep();
+    let input = substituted(&fs::read(fixture("empty-plate.3mf")).unwrap());
+    let cases = ["first", "second"].map(|label| {
+        let dir = artifacts.join(label);
+        fs::create_dir(&dir).unwrap();
+        let project = dir.join("empty-plate-cross-zag.3mf");
+        fs::write(&project, &input).unwrap();
+        let project = project.canonicalize().unwrap();
+        let reference = runner
+            .early_cli_reference(&project, EarlyExit::EmptyPlate)
+            .unwrap();
+        (project, reference)
+    });
+    assert_ne!(
+        cases[0].1.directory, cases[1].1.directory,
+        "identical projects at different paths must not share a cache entry: {artifacts:?}"
+    );
+    for (project, reference) in cases {
+        let path = project.to_str().unwrap();
+        let stderr = std::str::from_utf8(&reference.stderr).unwrap();
+        assert!(
+            stderr.contains(&format!(
+                r#"warning: {path}: value "cross-zag" for support_ironing_pattern is not valid, using "rectilinear" instead"#
+            )),
+            "expected substitution diagnostic for {path}, got {stderr:?}"
+        );
+        let result: serde_json::Value = serde_json::from_slice(&reference.result_json).unwrap();
+        assert_eq!(
+            result["warnings"],
+            serde_json::json!([{
+                "class": "config_value_substituted",
+                "file": path,
+                "key": "support_ironing_pattern",
+                "new_value": "rectilinear",
+                "old_value": "cross-zag",
+            }]),
+            "substitution warning for {path}"
+        );
+    }
 }
 
 /// `input` with `support_ironing_pattern` set to the unknown key `cross-zag`.
