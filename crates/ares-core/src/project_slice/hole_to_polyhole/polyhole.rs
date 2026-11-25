@@ -43,7 +43,7 @@ pub(super) fn create_polyholes(
         };
         // (:175) circumscribed radius — `radius` is coord_t, widened
         // through float exactly as upstream `radius / cos(...)`.
-        let new_radius = radius as f32 / (std::f32::consts::PI / nb_edges as f32).cos();
+        let new_radius = radius as f32 / (std::f64::consts::PI / nb_edges as f64).cos() as f32;
         let mut points = Vec::with_capacity(nb_edges);
         for i_edge in 0..nb_edges {
             // (:177-179) float angle math; `Point(double,double)` rounds.
