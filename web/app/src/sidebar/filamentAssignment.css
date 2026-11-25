@@ -30,6 +30,12 @@
   overflow-y: auto;
 }
 
-.filament-cell-menu:not(:popover-open) { display: none; }
-.filament-cell-menu button { padding: 4px 10px; }
-.filament-cell-menu button[aria-checked="true"] { background: var(--accent-checked); }
+.filament-cell-menu:not(:popover-open) {
+  display: none;
+}
+.filament-cell-menu button {
+  padding: 4px 10px;
+}
+.filament-cell-menu button[aria-checked="true"] {
+  background: var(--accent-checked);
+}

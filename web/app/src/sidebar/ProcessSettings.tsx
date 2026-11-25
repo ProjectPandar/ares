@@ -43,8 +43,12 @@ export function ProcessSettings({ values, empty }: { values: OptionMap | null; e
     <div className="process" data-testid="process-settings">
       {editedCount > 0 && (
         <div className="process-edited" data-testid="process-edited">
-          <span>{editedCount} modified {editedCount === 1 ? "option" : "options"}</span>
-          <button className="link-button" onClick={resetOverrides}>Reset all</button>
+          <span>
+            {editedCount} modified {editedCount === 1 ? "option" : "options"}
+          </span>
+          <button className="link-button" onClick={resetOverrides}>
+            Reset all
+          </button>
         </div>
       )}
       <SettingsPages pages={PROCESS_PAGES} empty={empty} context={values && { values, overrides }} />

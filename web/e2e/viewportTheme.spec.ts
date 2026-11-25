@@ -26,14 +26,22 @@ const links = (page: Page) => page.evaluate(() => (window as unknown as { links:
 /** The canvas pixels once Viewport.render has drawn (data-drawing is unset) and two reads agree. */
 async function settledFrame(page: Page) {
   const viewport = shownTab(page).getByTestId("viewport");
-  const read = () => shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL("image/png"));
+  const read = () =>
+    shownTab(page)
+      .locator("[data-testid=viewport] canvas")
+      .evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL("image/png"));
   let frame = "";
-  await expect.poll(async () => {
-    if ((await viewport.getAttribute("data-drawing")) !== null) return false;
-    const [previous, next] = [frame, await read()];
-    frame = next;
-    return previous === next;
-  }, { timeout: 30_000 }).toBe(true);
+  await expect
+    .poll(
+      async () => {
+        if ((await viewport.getAttribute("data-drawing")) !== null) return false;
+        const [previous, next] = [frame, await read()];
+        frame = next;
+        return previous === next;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(true);
   return frame;
 }
 
@@ -52,12 +60,19 @@ async function openProject(page: Page) {
 async function importProject(page: Page) {
   await page.getByTestId("import-input").setInputFiles(FIXTURE);
   await expect(page.getByRole("treeitem", { name: /^Plate 2\b/ })).toBeVisible({ timeout: 60_000 });
-  await expect.poll(async () => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!).origins.length).toBe(2);
+  await expect
+    .poll(
+      async () =>
+        JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!).origins.length,
+    )
+    .toBe(2);
 }
 
 const png = (frame: string) => Buffer.from(frame.slice(frame.indexOf(",") + 1), "base64");
 
-test("a theme change recolours the plates without compiling shaders, as GLCanvas3D::on_change_color_mode only sets the colour mode", async ({ browser }) => {
+test("a theme change recolours the plates without compiling shaders, as GLCanvas3D::on_change_color_mode only sets the colour mode", async ({
+  browser,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -85,7 +100,10 @@ test("a theme change recolours the plates without compiling shaders, as GLCanvas
   await importProject(built);
   const builtLight = await settledFrame(built);
   writeFileSync(`${artifacts}built-light.png`, png(builtLight));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ links: { before, afterLight, afterDark }, lightEqualsBuilt: light === builtLight }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ links: { before, afterLight, afterDark }, lightEqualsBuilt: light === builtLight }, null, 2)}\n`,
+  );
 
   expect(afterLight - before, "programs linked by the switch to light").toBe(0);
   expect(afterDark - before, "programs linked by the switch back to dark").toBe(0);

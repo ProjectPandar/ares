@@ -35,35 +35,39 @@ async function dropFiles(page: Page, files: { name: string; bytes: Buffer }[]) {
 
 /** Fraction of viewport pixels that are saturated, i.e. model colour rather than grey bed/background. */
 function modelCoverage(page: Page) {
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
-    const probe = document.createElement("canvas");
-    probe.width = 320;
-    probe.height = 180;
-    const context = probe.getContext("2d")!;
-    context.drawImage(canvas, 0, 0, 320, 180);
-    const pixels = context.getImageData(0, 0, 320, 180).data;
-    let saturated = 0;
-    for (let index = 0; index < pixels.length; index += 4) {
-      const [r, g, b] = [pixels[index], pixels[index + 1], pixels[index + 2]];
-      if (Math.max(r, g, b) - Math.min(r, g, b) > 60) saturated++;
-    }
-    return saturated / (pixels.length / 4);
-  });
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate((canvas: HTMLCanvasElement) => {
+      const probe = document.createElement("canvas");
+      probe.width = 320;
+      probe.height = 180;
+      const context = probe.getContext("2d")!;
+      context.drawImage(canvas, 0, 0, 320, 180);
+      const pixels = context.getImageData(0, 0, 320, 180).data;
+      let saturated = 0;
+      for (let index = 0; index < pixels.length; index += 4) {
+        const [r, g, b] = [pixels[index], pixels[index + 1], pixels[index + 2]];
+        if (Math.max(r, g, b) - Math.min(r, g, b) > 60) saturated++;
+      }
+      return saturated / (pixels.length / 4);
+    });
 }
 
 /** FNV-1a of the full-resolution canvas pixels: changes whenever a new frame differs. */
 function canvasFingerprint(page: Page) {
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
-    const copy = document.createElement("canvas");
-    copy.width = canvas.width;
-    copy.height = canvas.height;
-    const context = copy.getContext("2d")!;
-    context.drawImage(canvas, 0, 0);
-    const pixels = context.getImageData(0, 0, copy.width, copy.height).data;
-    let hash = 0x811c9dc5;
-    for (let index = 0; index < pixels.length; index++) hash = Math.imul(hash ^ pixels[index], 0x01000193);
-    return hash >>> 0;
-  });
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate((canvas: HTMLCanvasElement) => {
+      const copy = document.createElement("canvas");
+      copy.width = canvas.width;
+      copy.height = canvas.height;
+      const context = copy.getContext("2d")!;
+      context.drawImage(canvas, 0, 0);
+      const pixels = context.getImageData(0, 0, copy.width, copy.height).data;
+      let hash = 0x811c9dc5;
+      for (let index = 0; index < pixels.length; index++) hash = Math.imul(hash ^ pixels[index], 0x01000193);
+      return hash >>> 0;
+    });
 }
 
 test("drag-drop import, object list, camera views", async ({ page }) => {
@@ -86,7 +90,9 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     { name: "a.stl", bytes: readFileSync(cube) },
     { name: "b.stl", bytes: readFileSync(cube) },
   ]);
-  await expect(page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true }),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
@@ -126,13 +132,20 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   await expect(viewport).not.toHaveAttribute("data-drawing");
   const fitFrame = await canvasFingerprint(page);
   await page.keyboard.press("ControlOrMeta+1");
-  await expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true })).toBeVisible();
+  await expect(
+    shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Top", pressed: true }),
+  ).toBeVisible();
   await expect
-    .poll(async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== fitFrame)
+    .poll(
+      async () =>
+        (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== fitFrame,
+    )
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
   await page.getByRole("button", { name: "Front" }).click();
-  await expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true })).toBeVisible();
+  await expect(
+    shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true }),
+  ).toBeVisible();
   await page.keyboard.press("ControlOrMeta+0");
   await expect.poll(() => modelCoverage(page)).toBeLessThan(fitCoverage / 4);
 
@@ -144,7 +157,10 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   await rows.filter({ hasText: "neck.stl" }).click();
   await expect(rows.filter({ hasText: "neck.stl" })).toHaveAttribute("aria-selected", "true");
   await expect
-    .poll(async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== unselected)
+    .poll(
+      async () =>
+        (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== unselected,
+    )
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-selected.png` });
 
@@ -165,9 +181,15 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", nativePath, comparison]);
     const expected = withoutCliGroups(withSelectedPresets(readFileSync(nativePath, "utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
-    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
+    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(
+      sha256(Buffer.from(expected)),
+    );
   } else {
-    test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
+    test.info().annotations.push({
+      type: "skip",
+      description:
+        "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run",
+    });
   }
 
   // Preview opens fitted to the objects. Viewport.setToolpaths sets data-segment-sizes in the task that requests the

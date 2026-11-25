@@ -51,11 +51,9 @@ export function zoomToBox(camera: THREE.PerspectiveCamera, box: THREE.Box3, targ
   let distance = 0;
   const corner = new THREE.Vector3();
   for (let index = 0; index < 8; index++) {
-    corner.set(
-      index & 1 ? box.max.x : box.min.x,
-      index & 2 ? box.max.y : box.min.y,
-      index & 4 ? box.max.z : box.min.z,
-    ).sub(center);
+    corner
+      .set(index & 1 ? box.max.x : box.min.x, index & 2 ? box.max.y : box.min.y, index & 4 ? box.max.z : box.min.z)
+      .sub(center);
     // Corner at depth `z` behind the target needs (distance + z) * tan >= extent.
     const depth = corner.dot(forward) * margin;
     distance = Math.max(

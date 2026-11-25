@@ -9,14 +9,19 @@ const settingsPath = "Metadata/model_settings.config";
 export const projectConfig = "Metadata/project_settings.config";
 
 /** A hand-authored scene and preset edit, independent of the project's save API. */
-export function saveProjectFixture(
-  { config, edited = false, modifier = false, singleObject = false }: { config?: string; edited?: boolean; modifier?: boolean; singleObject?: boolean } = {},
-): Buffer {
+export function saveProjectFixture({
+  config,
+  edited = false,
+  modifier = false,
+  singleObject = false,
+}: { config?: string; edited?: boolean; modifier?: boolean; singleObject?: boolean } = {}): Buffer {
   const input = unzipSync(readFileSync(new URL(`../../${CUBE_FIXTURE}`, import.meta.url)));
   const sourceModel = "3D/Objects/cube10.stl_1.model";
   const metadata = (key: string, value: string | number) => `<metadata key="${key}" value="${value}"/>`;
-  const transform = (x: number, y: number, degrees = 0) => matrix([aboutZ(degrees)], [x, y, 5])
-    .filter((_, at) => at % 4 !== 3).join(" ");
+  const transform = (x: number, y: number, degrees = 0) =>
+    matrix([aboutZ(degrees)], [x, y, 5])
+      .filter((_, at) => at % 4 !== 3)
+      .join(" ");
   const object = (id: number, part: number, path: string) =>
     `<object id="${id}" type="model"><components><component p:path="/${path}" objectid="${part}"/></components></object>`;
   const item = (id: number, placement: string) => `<item objectid="${id}" transform="${placement}" printable="1"/>`;
@@ -37,14 +42,30 @@ export function saveProjectFixture(
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
  <Relationship Target="/${modelPath}" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
 </Relationships>`);
-  input["3D/_rels/3dmodel.model.rels"] = strToU8(strFromU8(input["3D/_rels/3dmodel.model.rels"])
-    .replace(/<Relationship [^>]*\/>/, (relation) => relation.replace(sourceModel, first) + (singleObject ? "" : relation.replace(sourceModel, second).replace("rel-1", "rel-2"))));
-  input[modelPath] = strToU8(strFromU8(input[modelPath])
-    .replace(/<metadata name="Thumbnail_(Middle|Small)">[^<]*<\/metadata>[\t ]*\n?/g, "")
-    .replace(/<metadata name="OrcaSlicer">[^<]+<\/metadata>/, '<metadata name="OrcaSlicer">2.5.0</metadata>')
-    .replace(/<resources>[\s\S]*?<\/resources>/, `<resources>${object(2, 1, first)}${singleObject ? "" : object(4, 3, second)}</resources>`)
-    .replace(/<build[^>]*>[\s\S]*?<\/build>/, `<build>${item(2, edited ? transform(145.5, 110, 60) : transform(110, 110))}${singleObject ? "" : item(4, transform(417.2, 110)) + item(4, transform(428.2, 121))}</build>`));
-  input[settingsPath] = strToU8(`<config>${settings(2, 1, "Bracket", modifier ? "negative_part" : "normal_part")}${singleObject ? "" : settings(4, 3, "Shim", "normal_part")}${plate(1, "Bracket plate", instance(2, 0, 14))}${singleObject ? "" : plate(2, "Shim plate", instance(4, 0, 15) + instance(4, 1, 16))}</config>`);
+  input["3D/_rels/3dmodel.model.rels"] = strToU8(
+    strFromU8(input["3D/_rels/3dmodel.model.rels"]).replace(
+      /<Relationship [^>]*\/>/,
+      (relation) =>
+        relation.replace(sourceModel, first) +
+        (singleObject ? "" : relation.replace(sourceModel, second).replace("rel-1", "rel-2")),
+    ),
+  );
+  input[modelPath] = strToU8(
+    strFromU8(input[modelPath])
+      .replace(/<metadata name="Thumbnail_(Middle|Small)">[^<]*<\/metadata>[\t ]*\n?/g, "")
+      .replace(/<metadata name="OrcaSlicer">[^<]+<\/metadata>/, '<metadata name="OrcaSlicer">2.5.0</metadata>')
+      .replace(
+        /<resources>[\s\S]*?<\/resources>/,
+        `<resources>${object(2, 1, first)}${singleObject ? "" : object(4, 3, second)}</resources>`,
+      )
+      .replace(
+        /<build[^>]*>[\s\S]*?<\/build>/,
+        `<build>${item(2, edited ? transform(145.5, 110, 60) : transform(110, 110))}${singleObject ? "" : item(4, transform(417.2, 110)) + item(4, transform(428.2, 121))}</build>`,
+      ),
+  );
+  input[settingsPath] = strToU8(
+    `<config>${settings(2, 1, "Bracket", modifier ? "negative_part" : "normal_part")}${singleObject ? "" : settings(4, 3, "Shim", "normal_part")}${plate(1, "Bracket plate", instance(2, 0, 14))}${singleObject ? "" : plate(2, "Shim plate", instance(4, 0, 15) + instance(4, 1, 16))}</config>`,
+  );
   const preset = unzipSync(readFileSync(new URL(`../../${PRESET_FIXTURE}`, import.meta.url)));
   const base = JSON.parse(strFromU8(preset[projectConfig]));
   base.print_settings_id = "0.20mm Standard @BBL X1C";
@@ -52,9 +73,11 @@ export function saveProjectFixture(
   base.wipe_tower_x = Array(singleObject ? 1 : 2).fill(base.wipe_tower_x[0]);
   base.wipe_tower_y = Array(singleObject ? 1 : 2).fill(base.wipe_tower_y[0]);
   input[projectConfig] = strToU8(config ?? JSON.stringify(base));
-  input["Metadata/filament_sequence.json"] = strToU8(JSON.stringify({
-    plate_1: { nozzle_sequence: [], optimal_assignment: [], sequence: [] },
-    ...(!singleObject && { plate_2: { nozzle_sequence: [], optimal_assignment: [], sequence: [] } }),
-  }));
+  input["Metadata/filament_sequence.json"] = strToU8(
+    JSON.stringify({
+      plate_1: { nozzle_sequence: [], optimal_assignment: [], sequence: [] },
+      ...(!singleObject && { plate_2: { nozzle_sequence: [], optimal_assignment: [], sequence: [] } }),
+    }),
+  );
   return Buffer.from(zipSync(input));
 }

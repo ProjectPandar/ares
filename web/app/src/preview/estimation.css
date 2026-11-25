@@ -1,16 +1,68 @@
-.legend-estimation { border-top: 1px solid var(--border); margin-top: 6px; padding: 6px 4px 0; font-variant-numeric: tabular-nums; }
-.legend-estimation h3 { margin: 0 0 4px; font: inherit; font-weight: 600; }
-.legend-estimation dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin: 0; }
-.legend-estimation dl > div { display: contents; }
-.legend-estimation dd { margin: 0; text-align: right; white-space: pre; }
-:is(.legend-estimation, .legend-summary) dt { color: var(--text-dim); }
+.legend-estimation {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding: 6px 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+.legend-estimation h3 {
+  margin: 0 0 4px;
+  font: inherit;
+  font-weight: 600;
+}
+.legend-estimation dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  margin: 0;
+}
+.legend-estimation dl > div {
+  display: contents;
+}
+.legend-estimation dd {
+  margin: 0;
+  text-align: right;
+  white-space: pre;
+}
+:is(.legend-estimation, .legend-summary) dt {
+  color: var(--text-dim);
+}
 /* Summary rows are label then value on one line (`ImGui::SameLine`, GCodeViewer.cpp:4006-4023). */
-.legend-summary { padding: 2px 4px; font-variant-numeric: tabular-nums; }
-.legend-summary dl { display: grid; gap: 3px; margin: 0; }
-.legend-summary dl > div { display: flex; gap: 6px; white-space: nowrap; }
-.legend-summary dd { margin: 0; }
-.legend-custom-gcode { border-top: 1px solid var(--border); margin-top: 6px; padding: 6px 4px 0; font-variant-numeric: tabular-nums; }
-.legend-custom-gcode table { border-collapse: collapse; width: 100%; }
-.legend-custom-gcode :is(th, td) { padding: 1px 10px 1px 0; text-align: left; white-space: nowrap; }
-.legend-custom-gcode th { font-weight: 600; padding-bottom: 4px; }
-.legend-custom-gcode td:first-child { color: var(--text-dim); }
+.legend-summary {
+  padding: 2px 4px;
+  font-variant-numeric: tabular-nums;
+}
+.legend-summary dl {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+.legend-summary dl > div {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+.legend-summary dd {
+  margin: 0;
+}
+.legend-custom-gcode {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding: 6px 4px 0;
+  font-variant-numeric: tabular-nums;
+}
+.legend-custom-gcode table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.legend-custom-gcode :is(th, td) {
+  padding: 1px 10px 1px 0;
+  text-align: left;
+  white-space: nowrap;
+}
+.legend-custom-gcode th {
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+.legend-custom-gcode td:first-child {
+  color: var(--text-dim);
+}

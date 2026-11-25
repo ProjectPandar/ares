@@ -48,15 +48,14 @@ export function Shell() {
         const key = event.key.toLowerCase();
         if (event.shiftKey || !["o", "i", "r", "g"].includes(key)) return;
         event.preventDefault();
-        if (key === "o" && status === "ready" && !loadingFile && slice.status !== "slicing") projectInput.current!.click();
+        if (key === "o" && status === "ready" && !loadingFile && slice.status !== "slicing")
+          projectInput.current!.click();
         else if (key === "i" && status === "ready" && !loadingFile) importInput.current!.click();
         else if (key === "r" && status === "ready" && scene) {
           void slicePlate();
           void router.navigate({ to: "/preview" });
-        }
-        else if (key === "g") exportGcode();
-      }
-      else if (event.key === "?") setShortcutsOpen(true);
+        } else if (key === "g") exportGcode();
+      } else if (event.key === "?") setShortcutsOpen(true);
       else if (event.key === "Escape") selectObject(null);
       // GLCanvas3D::on_key: plain Tab on the canvas, i.e. while no control has focus.
       else if (event.key === "Tab" && !event.shiftKey && event.target === document.body) {
@@ -70,9 +69,16 @@ export function Shell() {
 
   return (
     <div className="shell">
-      <TitleBar importInput={importInput} projectInput={projectInput} onShortcuts={() => setShortcutsOpen(true)} onAbout={() => setAboutOpen(true)} />
+      <TitleBar
+        importInput={importInput}
+        projectInput={projectInput}
+        onShortcuts={() => setShortcutsOpen(true)}
+        onAbout={() => setAboutOpen(true)}
+      />
       <TabBar />
-      <main className="workspace" data-testid="workspace"
+      <main
+        className="workspace"
+        data-testid="workspace"
         onDragOver={(event) => {
           if (!hasFiles(event) || engine !== "ready") return;
           event.preventDefault();
@@ -86,27 +92,39 @@ export function Shell() {
           event.preventDefault();
           setDragging(false);
           importFiles([...event.dataTransfer.files]);
-        }}>
+        }}
+      >
         <div className="page">
           <Sidebar />
           <PreparePage shown={!preview} placed={placed} />
           <PreviewPage shown={preview} placed={placed} />
         </div>
         <LoadWarning />
-        {dragging && <div className="drop-overlay" data-testid="drop-overlay">Drop a 3MF project or STL model to import</div>}
+        {dragging && (
+          <div className="drop-overlay" data-testid="drop-overlay">
+            Drop a 3MF project or STL model to import
+          </div>
+        )}
       </main>
       <StatusBar />
       {stlImport && (
         // A replaced dialog's late close event must not clear the import that replaced it.
-        <MultipartDialog key={stlImport.id} files={stlImport.files}
-          onClose={() => useApp.setState((state) => (state.stlImport?.id === stlImport.id ? { stlImport: null } : {}))} />
+        <MultipartDialog
+          key={stlImport.id}
+          files={stlImport.files}
+          onClose={() => useApp.setState((state) => (state.stlImport?.id === stlImport.id ? { stlImport: null } : {}))}
+        />
       )}
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <EngineCrashDialog />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
       {wizard && (
         <Suspense>
-          <SetupWizard key={wizard} firstRun={wizard === "first-run"} onClose={() => useApp.setState({ wizard: null })} />
+          <SetupWizard
+            key={wizard}
+            firstRun={wizard === "first-run"}
+            onClose={() => useApp.setState({ wizard: null })}
+          />
         </Suspense>
       )}
     </div>

@@ -16,8 +16,15 @@ const SNAP_STEP = 0.05;
  * (4, the bottom centre, is disabled), the uniform 6-9 on the bottom corners.
  */
 const GRABBERS: [number, [number, number, number]][] = [
-  [0, [-1, 0, -1]], [1, [1, 0, -1]], [2, [0, -1, -1]], [3, [0, 1, -1]], [5, [0, 0, 1]],
-  [6, [-1, -1, -1]], [7, [1, -1, -1]], [8, [1, 1, -1]], [9, [-1, 1, -1]],
+  [0, [-1, 0, -1]],
+  [1, [1, 0, -1]],
+  [2, [0, -1, -1]],
+  [3, [0, 1, -1]],
+  [5, [0, 0, 1]],
+  [6, [-1, -1, -1]],
+  [7, [1, -1, -1]],
+  [8, [1, 1, -1]],
+  [9, [-1, 1, -1]],
 ];
 
 /** A press on a scale grabber (`m_hover_id`): its world centre and the box's bottom centre (`m_grabbers[4]`). */
@@ -42,9 +49,14 @@ export function buildScaleGizmo(box: THREE.Box3, pixel: number) {
   const offsets = new Map(GRABBERS.map(([id, signs]) => [id, new THREE.Vector3(...signs).multiply(half)]));
   for (const [id, offset] of offsets) {
     const color = id >= 6 ? UNIFORM_COLOR : AXIS_COLORS[Math.floor(id / 2)];
-    const cube = new THREE.Mesh(new THREE.BoxGeometry(GRABBER_PX * pixel, GRABBER_PX * pixel, GRABBER_PX * pixel),
-      new THREE.MeshBasicMaterial({ color, depthTest: false }));
-    const sleeve = new THREE.Mesh(new THREE.SphereGeometry(SLEEVE_PX * pixel, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(GRABBER_PX * pixel, GRABBER_PX * pixel, GRABBER_PX * pixel),
+      new THREE.MeshBasicMaterial({ color, depthTest: false }),
+    );
+    const sleeve = new THREE.Mesh(
+      new THREE.SphereGeometry(SLEEVE_PX * pixel, 12, 8),
+      new THREE.MeshBasicMaterial({ visible: false }),
+    );
     for (const mesh of [cube, sleeve]) {
       mesh.position.copy(offset);
       mesh.userData.grabber = id;
@@ -52,9 +64,16 @@ export function buildScaleGizmo(box: THREE.Box3, pixel: number) {
     }
     gizmo.add(cube, sleeve);
   }
-  for (const [from, to, axis] of [[6, 7, 1], [7, 8, 1], [8, 9, 0], [9, 6, 0]]) {
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([offsets.get(from)!, offsets.get(to)!]),
-      new THREE.LineBasicMaterial({ color: AXIS_COLORS[axis], depthTest: false }));
+  for (const [from, to, axis] of [
+    [6, 7, 1],
+    [7, 8, 1],
+    [8, 9, 0],
+    [9, 6, 0],
+  ]) {
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([offsets.get(from)!, offsets.get(to)!]),
+      new THREE.LineBasicMaterial({ color: AXIS_COLORS[axis], depthTest: false }),
+    );
     line.renderOrder = 1;
     gizmo.add(line);
   }

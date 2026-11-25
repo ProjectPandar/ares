@@ -2,7 +2,15 @@
 import { firstString } from "../sidebar/options";
 import { setOverride } from "./actions";
 import { saveSelection, presetCatalog, selectPrinter } from "./presets";
-import { accordBedType, bedTypeOptions, diameterString, PANEL_KEYS, type PrinterPanel, printerPanel, showsBedTypes } from "./printerPanel";
+import {
+  accordBedType,
+  bedTypeOptions,
+  diameterString,
+  PANEL_KEYS,
+  type PrinterPanel,
+  printerPanel,
+  showsBedTypes,
+} from "./printerPanel";
 import { invalidatedSlices, useApp } from "./store";
 import { slicer } from "./slicer";
 
@@ -19,7 +27,10 @@ export async function updatePrinterPanel() {
     return;
   }
   const info = await catalog.printerModelInfo(firstString(values, "printer_model") ?? "");
-  const defaultBedType = await slicer.resolveDefaultBedType(firstString(values, "default_bed_type") ?? "", info.model_id);
+  const defaultBedType = await slicer.resolveDefaultBedType(
+    firstString(values, "default_bed_type") ?? "",
+    info.model_id,
+  );
   // PresetBundle::is_bbl_vendor: the model's vendor is the one installed from BBL.json.
   const bbl = info.vendor === "BBL";
   const { presetSelection, scene: current } = useApp.getState();
@@ -62,13 +73,19 @@ export function selectBedType(bedType: string) {
  * unless Bambu tool diameters differ.
  */
 export async function selectDiameter(panel: PrinterPanel, diameter: string) {
-  const nozzlesApart = panel.bbl && panel.nozzleDiameters.length > 1
-    && panel.nozzleDiameters.some((value) => diameterString(value) !== diameter);
+  const nozzlesApart =
+    panel.bbl &&
+    panel.nozzleDiameters.length > 1 &&
+    panel.nozzleDiameters.some((value) => diameterString(value) !== diameter);
   if (panel.printerVariant === diameter && !nozzlesApart) return;
   if (panel.printerVariant === "" && diameterString(panel.nozzleDiameters[0]) === diameter) return;
   const { presetSelection: selection, scene } = useApp.getState();
   const current = {
-    name: selection?.printer ?? firstString(scene?.settings?.printer, "printer_settings_id") ?? firstString(scene?.settings?.project, "printer_settings_id") ?? "",
+    name:
+      selection?.printer ??
+      firstString(scene?.settings?.printer, "printer_settings_id") ??
+      firstString(scene?.settings?.project, "printer_settings_id") ??
+      "",
     printer_variant: panel.printerVariant,
   };
   const printer = await (await presetCatalog()).similarPrinterPreset(panel.printerModel, diameter, current);

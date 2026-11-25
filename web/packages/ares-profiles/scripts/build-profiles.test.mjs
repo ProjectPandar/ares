@@ -28,12 +28,16 @@ function build(root, source, sourceKind) {
   const script = join(root, "package/scripts/build-profiles.mjs");
   assert.equal(sha256(readFileSync(script)), sha256(readFileSync(new URL("./build-profiles.mjs", import.meta.url))));
   const result = spawnSync(process.execPath, [script], {
-    env: { ...process.env, ORCA_SLICER_DIR: source }, maxBuffer: 64 * 1024 * 1024,
+    env: { ...process.env, ORCA_SLICER_DIR: source },
+    maxBuffer: 64 * 1024 * 1024,
   });
   writeFileSync(join(root, "stdout"), result.stdout, { flag: "wx" });
   writeFileSync(join(root, "stderr"), result.stderr, { flag: "wx" });
   save(join(root, "RESULT.json"), {
-    source, sourceKind, status: result.status, signal: result.signal,
+    source,
+    sourceKind,
+    status: result.status,
+    signal: result.signal,
     builderSha256: sha256(readFileSync(script)),
   });
   return result;
@@ -66,9 +70,12 @@ test("unchanged release resources build and expose Snapmaker U1 multi-bed suppor
   const snapmaker = await catalog.loadVendor("Snapmaker");
   assert.equal(snapmaker.files["machine/fdm_U1.json"].support_multi_bed_types, "1");
   save(join(root, "CATALOG-ASSERTIONS.json"), {
-    commit: catalog.ORCA_SLICER_COMMIT, vendors: catalog.vendors.length,
-    originalBenFabDocuments: provenance.inputs.length, supportMultiBedTypes: "1",
-    benfab, snapmaker,
+    commit: catalog.ORCA_SLICER_COMMIT,
+    vendors: catalog.vendors.length,
+    originalBenFabDocuments: provenance.inputs.length,
+    supportMultiBedTypes: "1",
+    benfab,
+    snapmaker,
   });
 });
 
@@ -78,22 +85,48 @@ async function controlled(name, prefix, succeeds) {
   mkdirSync(join(source, "resources/profiles/Fixture/process"), { recursive: true });
   const index = { name: "Fixture", process_list: [{ sub_path: "process/fixture.json" }] };
   const document = {
-    type: "process", name: "Fixture", version: "2.5.0", instantiation: "true",
-    layer_height: "0.27", description: "\uFEFFkeep", inherits: "parent",
+    type: "process",
+    name: "Fixture",
+    version: "2.5.0",
+    instantiation: "true",
+    layer_height: "0.27",
+    description: "\uFEFFkeep",
+    inherits: "parent",
   };
   const bytes = Buffer.concat([prefix, Buffer.from(JSON.stringify(document))]);
-  writeFileSync(join(source, "resources/profiles/Fixture.json"),
-    Buffer.concat([prefix.equals(bom) ? bom : Buffer.alloc(0), Buffer.from(JSON.stringify(index))]), { flag: "wx" });
+  writeFileSync(
+    join(source, "resources/profiles/Fixture.json"),
+    Buffer.concat([prefix.equals(bom) ? bom : Buffer.alloc(0), Buffer.from(JSON.stringify(index))]),
+    { flag: "wx" },
+  );
   writeFileSync(join(source, "resources/profiles/Fixture/process/fixture.json"), bytes, { flag: "wx" });
   execFileSync("git", ["init", "--quiet"], { cwd: source });
   execFileSync("git", ["add", "resources"], { cwd: source });
-  execFileSync("git", ["-c", "core.hooksPath=/dev/null", "-c", "user.name=Profile fixture",
-    "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "--no-gpg-sign",
-    "-m", "test: record JSON byte fixture", "-m", "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"], { cwd: source });
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "core.hooksPath=/dev/null",
+      "-c",
+      "user.name=Profile fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "--quiet",
+      "--no-gpg-sign",
+      "-m",
+      "test: record JSON byte fixture",
+      "-m",
+      "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+    ],
+    { cwd: source },
+  );
   const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: source, encoding: "utf8" });
   save(join(root, "INPUTS.json"), {
     sourceKind: "synthetic controlled JSON fixture, not an upstream release producer",
-    commit, prefixHex: prefix.toString("hex"), profileSha256: sha256(bytes),
+    commit,
+    prefixHex: prefix.toString("hex"),
+    profileSha256: sha256(bytes),
   });
   const result = build(root, source, "synthetic controlled JSON fixture");
   assert.equal(sha256(readFileSync(join(source, "resources/profiles/Fixture/process/fixture.json"))), sha256(bytes));

@@ -1,10 +1,19 @@
 import type { VertexBuffers } from "./wasm/ares_wasm.js";
-import type { EXTRUSION_ROLES, KIND_OPTION as KindOption, MOVE_TYPES, ToolpathTextures, VERTEX_VALUES } from "./toolpaths.js";
+import type {
+  EXTRUSION_ROLES,
+  KIND_OPTION as KindOption,
+  MOVE_TYPES,
+  ToolpathTextures,
+  VERTEX_VALUES,
+} from "./toolpaths.js";
 import type { VertexArrays } from "./workerTransfer.js";
 
 /** Index of `name` in the `as const` list `T`. */
-type IndexOf<T extends readonly string[], name extends T[number]> =
-  { [K in keyof T]: T[K] extends name ? K : never }[number] extends `${infer N extends number}` ? N : never;
+type IndexOf<T extends readonly string[], name extends T[number]> = {
+  [K in keyof T]: T[K] extends name ? K : never;
+}[number] extends `${infer N extends number}`
+  ? N
+  : never;
 
 // The worker bundle shares no runtime module with the client bundle; the types tie these values to the client constants.
 const EXTRUDE: IndexOf<typeof MOVE_TYPES, "Extrude"> = 10;
@@ -79,7 +88,11 @@ export function packTextures(vertices: VertexBuffers, arrays: VertexArrays): Too
     heightsWidthsAngles,
     segments: segment.subarray(0, count),
     bounds,
-    probes: { sizes: segmentSizesProbe(ends, heightsWidths), geometry: segmentGeometryProbe(ends, segmentPositions, segmentAngles), colors: segmentColorsProbe(ends, colors) },
+    probes: {
+      sizes: segmentSizesProbe(ends, heightsWidths),
+      geometry: segmentGeometryProbe(ends, segmentPositions, segmentAngles),
+      colors: segmentColorsProbe(ends, colors),
+    },
   };
 }
 
@@ -133,5 +146,8 @@ function segmentGeometryProbe(vertices: Uint32Array, segmentPositions: Float32Ar
  * every start vertex RGB, then every end vertex RGB.
  */
 function segmentColorsProbe(vertices: Uint32Array, colors: Uint8Array) {
-  return probe(vertices, [[colors, (i) => 3 * (i - 1), 3], [colors, (i) => 3 * i, 3]]);
+  return probe(vertices, [
+    [colors, (i) => 3 * (i - 1), 3],
+    [colors, (i) => 3 * i, 3],
+  ]);
 }

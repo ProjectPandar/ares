@@ -7,15 +7,20 @@ import { stringList } from "./options";
 const MODE_LABELS: Record<MapMode, { label: string; detail: string }> = {
   "Auto For Flush": {
     label: "Filament-Saving Mode",
-    detail: "Generates filament grouping for the left and right nozzles based on the most filament-saving principles to minimize waste.",
+    detail:
+      "Generates filament grouping for the left and right nozzles based on the most filament-saving principles to minimize waste.",
   },
   "Auto For Match": {
     label: "Convenience Mode",
-    detail: "Generates filament grouping for the left and right nozzles based on the printer's actual filament status, reducing the need for manual filament adjustment.",
+    detail:
+      "Generates filament grouping for the left and right nozzles based on the printer's actual filament status, reducing the need for manual filament adjustment.",
   },
   Manual: { label: "Custom Mode", detail: "Manually assign filament to the left or right nozzle" },
 };
-const NOZZLES = [["1", "Left Nozzle", "right"], ["2", "Right Nozzle", "left"]] as const;
+const NOZZLES = [
+  ["1", "Left Nozzle", "right"],
+  ["2", "Right Nozzle", "left"],
+] as const;
 
 /**
  * Filament grouping of a dual-nozzle printer: the FilamentGroupPopup modes, Convenience Mode
@@ -36,8 +41,13 @@ export function FilamentMapPanel({ settings }: { settings: ProjectSettings | nul
       <div role="radiogroup" aria-label="Filament grouping" className="filament-map-modes">
         {MAP_MODES.map((value) => (
           <label key={value} className="filament-map-mode" title={MODE_LABELS[value].detail}>
-            <input type="radio" name="filament-map-mode" checked={mode === value} disabled={value === "Auto For Match"}
-              onChange={() => setFilamentMapMode(value)} />
+            <input
+              type="radio"
+              name="filament-map-mode"
+              checked={mode === value}
+              disabled={value === "Auto For Match"}
+              onChange={() => setFilamentMapMode(value)}
+            />
             {MODE_LABELS[value].label}
             {value === "Auto For Match" && <span className="filament-map-note">(Sync with printer)</span>}
           </label>
@@ -48,13 +58,23 @@ export function FilamentMapPanel({ settings }: { settings: ProjectSettings | nul
           {NOZZLES.map(([nozzle, title, other]) => (
             <div key={nozzle} role="group" aria-label={title} className="filament-map-nozzle">
               <div className="combo-group-title">{title}</div>
-              {map.map((value, index) => value === nozzle && (
-                <button key={index} className="filament-map-chip" title={`Move filament ${index + 1} to the ${other} nozzle`}
-                  aria-label={`Move filament ${index + 1} to the ${other} nozzle`} onClick={() => moveFilament(index)}>
-                  <span className="filament-swatch" style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
-                  <span>{types[index]}</span>
-                </button>
-              ))}
+              {map.map(
+                (value, index) =>
+                  value === nozzle && (
+                    <button
+                      key={index}
+                      className="filament-map-chip"
+                      title={`Move filament ${index + 1} to the ${other} nozzle`}
+                      aria-label={`Move filament ${index + 1} to the ${other} nozzle`}
+                      onClick={() => moveFilament(index)}
+                    >
+                      <span className="filament-swatch" style={{ background: colours[index] ?? "#888" }}>
+                        {index + 1}
+                      </span>
+                      <span>{types[index]}</span>
+                    </button>
+                  ),
+              )}
             </div>
           ))}
         </div>

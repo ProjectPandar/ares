@@ -6,19 +6,70 @@ import { wasmMemory } from "./wasmMemory";
 function cube200Stl() {
   const scale = (point: number[]) => point.map((coordinate) => coordinate * 200);
   const quads: [number[][], number[]][] = [
-    [[[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]], [0, 0, -1]],
-    [[[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], [0, 0, 1]],
-    [[[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]], [0, -1, 0]],
-    [[[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]], [0, 1, 0]],
-    [[[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]], [-1, 0, 0]],
-    [[[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], [1, 0, 0]],
+    [
+      [
+        [0, 0, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+        [1, 0, 0],
+      ],
+      [0, 0, -1],
+    ],
+    [
+      [
+        [0, 0, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+        [0, 1, 1],
+      ],
+      [0, 0, 1],
+    ],
+    [
+      [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+      ],
+      [0, -1, 0],
+    ],
+    [
+      [
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 1, 1],
+        [1, 1, 0],
+      ],
+      [0, 1, 0],
+    ],
+    [
+      [
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 1],
+        [0, 1, 0],
+      ],
+      [-1, 0, 0],
+    ],
+    [
+      [
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 1, 1],
+        [1, 0, 1],
+      ],
+      [1, 0, 0],
+    ],
   ];
   const buffer = Buffer.alloc(84 + 12 * 50);
   buffer.write("cube200", 0, "ascii");
   buffer.writeUInt32LE(12, 80);
   let offset = 84;
   for (const [quad, normal] of quads) {
-    for (const triangle of [[quad[0], quad[1], quad[2]], [quad[0], quad[2], quad[3]]]) {
+    for (const triangle of [
+      [quad[0], quad[1], quad[2]],
+      [quad[0], quad[2], quad[3]],
+    ]) {
       for (const coordinate of normal) {
         buffer.writeFloatLE(coordinate, offset);
         offset += 4;

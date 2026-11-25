@@ -22,7 +22,8 @@ function probePanic() {
 }
 
 /** SlicingProcessCompletedEvent::format_error_message of a HardCrash (BackgroundSlicingProcess.cpp:110-112). */
-const hardCrash = (what: string) => `A fatal error occurred: "${what}"\nPlease save your project and restart the application.`;
+const hardCrash = (what: string) =>
+  `A fatal error occurred: "${what}"\nPlease save your project and restart the application.`;
 
 const combo = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 
@@ -53,7 +54,9 @@ test("the shipped wasm, the package and the app carry no panic probe", () => {
   expect(shipped.filter((file) => readFileSync(file).includes("panicProbe"))).toEqual([]);
 });
 
-test("a wasm panic reports the HardCrash text and the engine restarts on the same file and presets", async ({ page }) => {
+test("a wasm panic reports the HardCrash text and the engine restarts on the same file and presets", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -63,7 +66,11 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   // The client's worker, for a request sent past the client.
   await page.addInitScript(() => {
     const post = Worker.prototype.postMessage;
-    Worker.prototype.postMessage = function (this: Worker, message: unknown, transfer?: Transferable[] | StructuredSerializeOptions) {
+    Worker.prototype.postMessage = function (
+      this: Worker,
+      message: unknown,
+      transfer?: Transferable[] | StructuredSerializeOptions,
+    ) {
       (window as unknown as { aresWorker: Worker }).aresWorker = this;
       post.call(this, message, transfer as StructuredSerializeOptions);
     };
@@ -87,14 +94,20 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   // A system printer over the project's presets and another process: the import alone restores neither.
   await combo(page, "Printer preset").click();
   // The combo lists printer models; picking one selects its preset (Plater::priv::on_select_preset).
-  await page.getByRole("listbox", { name: "Printer preset", exact: true }).getByRole("group", { name: "System presets" })
-    .getByRole("option", { name: "Generic Klipper Printer", exact: true }).click();
+  await page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "System presets" })
+    .getByRole("option", { name: "Generic Klipper Printer", exact: true })
+    .click();
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", FIRST_RUN_CONFIG.printer, { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   // Another system process than the printer's default.
   const process = await combo(page, "Process preset").textContent();
   await combo(page, "Process preset").click();
-  const processes = page.getByRole("listbox", { name: "Process preset", exact: true }).getByRole("group", { name: "System presets" }).getByRole("option");
+  const processes = page
+    .getByRole("listbox", { name: "Process preset", exact: true })
+    .getByRole("group", { name: "System presets" })
+    .getByRole("option");
   await expect(processes.first()).toBeVisible();
   const other = (await processes.allTextContents()).find((name) => name !== process);
   expect(other, `a system process besides ${process}`).toBeDefined();
@@ -114,13 +127,16 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   await page.screenshot({ path: `${artifacts}crash.png` });
 
   // A later request fails with the same text without entering the module.
-  const later = await page.evaluate(() => new Promise<unknown>((resolve) => {
-    const worker = (window as unknown as { aresWorker: Worker }).aresWorker;
-    worker.addEventListener("message", ({ data }: MessageEvent<{ id: number }>) => {
-      if (data.id === -1) resolve(data);
-    });
-    worker.postMessage({ id: -1, kind: "printConfigDef" });
-  }));
+  const later = await page.evaluate(
+    () =>
+      new Promise<unknown>((resolve) => {
+        const worker = (window as unknown as { aresWorker: Worker }).aresWorker;
+        worker.addEventListener("message", ({ data }: MessageEvent<{ id: number }>) => {
+          if (data.id === -1) resolve(data);
+        });
+        worker.postMessage({ id: -1, kind: "printConfigDef" });
+      }),
+  );
   expect(later).toEqual({ id: -1, ok: false, error: expected });
   await expect(page.locator("body")).not.toContainText(TRAP_AFTERMATH);
 
@@ -132,19 +148,26 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   const after = await selection(page);
   expect(after).toEqual(before);
   expect(fetched).toEqual({ worker: ["probe", "shipped"], wasm: ["probe", "shipped"] });
-  const recoveryRecords = await page.evaluate((name) => new Promise<number>((resolve, reject) => {
-    const open = indexedDB.open(name);
-    open.onerror = () => reject(open.error);
-    open.onsuccess = () => {
-      const count = open.result.transaction("recovery").objectStore("recovery").count();
-      count.onsuccess = () => resolve(count.result);
-    };
-  }), RECOVERY_DB);
+  const recoveryRecords = await page.evaluate(
+    (name) =>
+      new Promise<number>((resolve, reject) => {
+        const open = indexedDB.open(name);
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const count = open.result.transaction("recovery").objectStore("recovery").count();
+          count.onsuccess = () => resolve(count.result);
+        };
+      }),
+    RECOVERY_DB,
+  );
   expect(recoveryRecords).toBe(0);
 
   await page.getByRole("navigation").getByRole("button", { name: "Slice plate" }).click();
   await expect(status).toContainText("Slice complete", { timeout: 240_000 });
   await page.screenshot({ path: `${artifacts}recovered.png` });
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ message: expected, before, after, fetched, recoveryRecords }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ message: expected, before, after, fetched, recoveryRecords }, null, 2)}\n`,
+  );
   expect(logs.filter((text) => TRAP_AFTERMATH.test(text))).toEqual([]);
 });

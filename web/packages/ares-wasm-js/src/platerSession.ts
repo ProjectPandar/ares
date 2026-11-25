@@ -2,7 +2,20 @@ import type { PresetCatalog } from "./presetCatalog.js";
 import type { PlaterEdit, RequestBody } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
 import type { FilamentSlotEdit } from "./types.js";
-import type { FilamentTarget, ArrangeSettings, ArrangeSettingsModel, PlaterLayout, OptionMap, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, ScaleAndSize, ScaleEdit, Scene, SlicingStatus } from "./types.js";
+import type {
+  FilamentTarget,
+  ArrangeSettings,
+  ArrangeSettingsModel,
+  PlaterLayout,
+  OptionMap,
+  ProfileSelection,
+  ProfileSliceOptions,
+  ProjectPresetSelection,
+  ScaleAndSize,
+  ScaleEdit,
+  Scene,
+  SlicingStatus,
+} from "./types.js";
 
 type Call = (body: RequestBody, onStatus?: (status: SlicingStatus) => void) => Promise<unknown>;
 type Vec3 = [number, number, number];
@@ -44,9 +57,18 @@ export class PlaterSession {
   }
 
   /** Selected-profile settings composed from the session's complete original model. */
-  async profileSettings(catalog: string, selection: ProfileSelection, options: ProfileSliceOptions): Promise<OptionMap> {
-    return (await this.#call({ kind: "platerProfileSettings", sessionId: this.#sessionId, catalog,
-      selection: JSON.stringify(selection), options: JSON.stringify(options) })) as OptionMap;
+  async profileSettings(
+    catalog: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<OptionMap> {
+    return (await this.#call({
+      kind: "platerProfileSettings",
+      sessionId: this.#sessionId,
+      catalog,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
+    })) as OptionMap;
   }
 
   /**
@@ -115,7 +137,12 @@ export class PlaterSession {
 
   /** The instance's Scale (percent) and Size (mm) fields in world coordinates (`GizmoObjectManipulation`). */
   async scaleAndSize(object: number, instance: number): Promise<ScaleAndSize> {
-    return (await this.#call({ kind: "platerScaleAndSize", sessionId: this.#sessionId, object, instance })) as ScaleAndSize;
+    return (await this.#call({
+      kind: "platerScaleAndSize",
+      sessionId: this.#sessionId,
+      object,
+      instance,
+    })) as ScaleAndSize;
   }
 
   /**
@@ -230,39 +257,66 @@ export class PlaterSession {
 
   /** `settings` as the arrange popup leaves them (`GLCanvas3D::_render_arrange_menu`). */
   async shownArrangeSettings(settings: ArrangeSettings): Promise<ArrangeSettings> {
-    return (await this.#call({ kind: "platerShownArrangeSettings", sessionId: this.#sessionId, settings })) as ArrangeSettings;
+    return (await this.#call({
+      kind: "platerShownArrangeSettings",
+      sessionId: this.#sessionId,
+      settings,
+    })) as ArrangeSettings;
   }
 
   /**
    * Slices plate `plate` (1-based, the first when omitted) as `AresSlicer.sliceProject` slices a project.
    * `onStatus` receives each status of the slice, in order, while it runs.
    */
-  async slice(plate?: number, overrides: Record<string, string | string[]> = {}, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
-    return (await this.#call({ kind: "platerSlice", sessionId: this.#sessionId, plate, overrides: JSON.stringify(overrides) }, onStatus)) as SliceResult;
+  async slice(
+    plate?: number,
+    overrides: Record<string, string | string[]> = {},
+    onStatus?: (status: SlicingStatus) => void,
+  ): Promise<SliceResult> {
+    return (await this.#call(
+      { kind: "platerSlice", sessionId: this.#sessionId, plate, overrides: JSON.stringify(overrides) },
+      onStatus,
+    )) as SliceResult;
   }
 
   /**
    * Slices plate `options.plate` with selected presets, as `AresSlicer.sliceWithProfiles` slices the loaded file.
    * `onStatus` receives each status of the slice, in order, while it runs.
    */
-  async sliceWithProfiles(catalogJson: string, selection: ProfileSelection | ProjectPresetSelection, options: ProfileSliceOptions, onStatus?: (status: SlicingStatus) => void): Promise<SliceResult> {
-    return (await this.#call({
-      kind: "platerSliceWithProfiles",
-      sessionId: this.#sessionId,
-      plate: options.plate,
-      catalog: catalogJson,
-      selection: JSON.stringify(selection),
-      options: JSON.stringify(options),
-    }, onStatus)) as SliceResult;
+  async sliceWithProfiles(
+    catalogJson: string,
+    selection: ProfileSelection | ProjectPresetSelection,
+    options: ProfileSliceOptions,
+    onStatus?: (status: SlicingStatus) => void,
+  ): Promise<SliceResult> {
+    return (await this.#call(
+      {
+        kind: "platerSliceWithProfiles",
+        sessionId: this.#sessionId,
+        plate: options.plate,
+        catalog: catalogJson,
+        selection: JSON.stringify(selection),
+        options: JSON.stringify(options),
+      },
+      onStatus,
+    )) as SliceResult;
   }
 
   /** Saves the edited scene with the project's own presets. */
   async saveProject(overrides: Record<string, string | string[]> = {}): Promise<Uint8Array<ArrayBuffer>> {
-    return (await this.#call({ kind: "platerSaveProject", sessionId: this.#sessionId, overrides: JSON.stringify(overrides) })) as Uint8Array<ArrayBuffer>;
+    return (await this.#call({
+      kind: "platerSaveProject",
+      sessionId: this.#sessionId,
+      overrides: JSON.stringify(overrides),
+    })) as Uint8Array<ArrayBuffer>;
   }
 
   /** Saves the edited scene with the selected presets and option edits. */
-  async saveProjectWithProfiles(catalog: string, selection: ProfileSelection | ProjectPresetSelection, options: ProfileSliceOptions): Promise<Uint8Array<ArrayBuffer>> {
+  async saveProjectWithProfiles(
+    catalog: string,
+    selection: ProfileSelection | ProjectPresetSelection,
+    options: ProfileSliceOptions,
+  ): Promise<Uint8Array<ArrayBuffer>> {
     return (await this.#call({
       kind: "platerSaveProjectWithProfiles",
       sessionId: this.#sessionId,

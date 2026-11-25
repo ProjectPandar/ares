@@ -26,7 +26,9 @@ async function shown(page: Page, png?: string): Promise<Shown> {
   return {
     instances: await shownTab(page).locator(".viewport").getAttribute("data-instances"),
     plates: await viewport.getAttribute("data-plates"),
-    tree: await page.getByTestId("object-list").getByRole("treeitem")
+    tree: await page
+      .getByTestId("object-list")
+      .getByRole("treeitem")
       .evaluateAll((items) => items.map((item) => `${item.getAttribute("aria-selected")} ${item.textContent}`)),
     canvas: await page.evaluate(async (data) => {
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(data));
@@ -45,12 +47,19 @@ function withoutTower(state: Shown) {
 }
 
 /** Expects the shown state to be `expected`, the loaded state 0 with the tower positions edits report. */
-async function expectShown(page: Page, expected: Shown, states: Shown[], message: string, view = (state: Shown) => state) {
+async function expectShown(
+  page: Page,
+  expected: Shown,
+  states: Shown[],
+  message: string,
+  view = (state: Shown) => state,
+) {
   if (expected !== states[0]) {
     await expect.poll(async () => view(await shown(page)), message).toEqual(view(expected));
     return;
   }
-  await expect.poll(async () => withoutTower(view(await shown(page))), message)
+  await expect
+    .poll(async () => withoutTower(view(await shown(page))), message)
     .toEqual({ state: withoutTower(view(expected)).state, wipeTower: withoutTower(states[1]).wipeTower });
 }
 
@@ -64,7 +73,9 @@ function withoutCanvas(state: Shown): Shown {
 
 /** Waits for an edit to show, then records the state as the next edit's undo snapshot sees it. */
 async function edited(page: Page, before: Shown, png: string) {
-  await expect.poll(async () => (await shownTab(page).locator(".viewport").getAttribute("data-instances")) !== before.instances).toBe(true);
+  await expect
+    .poll(async () => (await shownTab(page).locator(".viewport").getAttribute("data-instances")) !== before.instances)
+    .toBe(true);
   return shown(page, png);
 }
 
@@ -189,11 +200,18 @@ test("Ctrl+Z and Ctrl+Y step the plater back and forward through its edits", asy
   await page.waitForTimeout(500);
   expect((await shown(page)).instances).toBe(reloaded.instances);
 
-  writeFileSync(`${artifacts}states.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["canvas drag", "+ (Add instance)", "Position X = 60", "A (Arrange)", "Delete"],
-    states,
-    branched,
-    gcode: { loaded: loaded.length, undone: undone.length, identical: undone.equals(loaded) },
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}states.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: ["canvas drag", "+ (Add instance)", "Position X = 60", "A (Arrange)", "Delete"],
+        states,
+        branched,
+        gcode: { loaded: loaded.length, undone: undone.length, identical: undone.equals(loaded) },
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });

@@ -5,1821 +5,1821 @@ import type { LayoutPage } from "./layoutTypes";
 
 export const PROCESS_PAGES: LayoutPage[] = [
   {
-    "title": "Quality",
-    "groups": [
+    title: "Quality",
+    groups: [
       {
-        "title": "Layer height",
-        "icon": "param_layer_height",
-        "rows": [
+        title: "Layer height",
+        icon: "param_layer_height",
+        rows: [
           {
-            "kind": "option",
-            "key": "layer_height"
+            kind: "option",
+            key: "layer_height",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_print_height"
+            kind: "option",
+            key: "initial_layer_print_height",
           },
           {
-            "kind": "option",
-            "key": "enable_mixed_color_sublayer"
-          }
-        ]
+            kind: "option",
+            key: "enable_mixed_color_sublayer",
+          },
+        ],
       },
       {
-        "title": "Line width",
-        "icon": "param_line_width",
-        "rows": [
+        title: "Line width",
+        icon: "param_line_width",
+        rows: [
           {
-            "kind": "option",
-            "key": "line_width"
+            kind: "option",
+            key: "line_width",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_line_width"
+            kind: "option",
+            key: "initial_layer_line_width",
           },
           {
-            "kind": "option",
-            "key": "outer_wall_line_width"
+            kind: "option",
+            key: "outer_wall_line_width",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_line_width"
+            kind: "option",
+            key: "inner_wall_line_width",
           },
           {
-            "kind": "option",
-            "key": "top_surface_line_width"
+            kind: "option",
+            key: "top_surface_line_width",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_line_width"
+            kind: "option",
+            key: "sparse_infill_line_width",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_infill_line_width"
+            kind: "option",
+            key: "internal_solid_infill_line_width",
           },
           {
-            "kind": "option",
-            "key": "support_line_width"
+            kind: "option",
+            key: "support_line_width",
           },
           {
-            "kind": "option",
-            "key": "bridge_line_width"
-          }
-        ]
+            kind: "option",
+            key: "bridge_line_width",
+          },
+        ],
       },
       {
-        "title": "Seam",
-        "icon": "param_seam",
-        "rows": [
+        title: "Seam",
+        icon: "param_seam",
+        rows: [
           {
-            "kind": "option",
-            "key": "seam_position"
+            kind: "option",
+            key: "seam_position",
           },
           {
-            "kind": "option",
-            "key": "staggered_inner_seams"
+            kind: "option",
+            key: "staggered_inner_seams",
           },
           {
-            "kind": "option",
-            "key": "seam_gap"
+            kind: "option",
+            key: "seam_gap",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_type"
+            kind: "option",
+            key: "seam_slope_type",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_conditional"
+            kind: "option",
+            key: "seam_slope_conditional",
           },
           {
-            "kind": "option",
-            "key": "scarf_angle_threshold"
+            kind: "option",
+            key: "scarf_angle_threshold",
           },
           {
-            "kind": "option",
-            "key": "scarf_overhang_threshold"
+            kind: "option",
+            key: "scarf_overhang_threshold",
           },
           {
-            "kind": "option",
-            "key": "scarf_joint_speed"
+            kind: "option",
+            key: "scarf_joint_speed",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_start_height"
+            kind: "option",
+            key: "seam_slope_start_height",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_entire_loop"
+            kind: "option",
+            key: "seam_slope_entire_loop",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_min_length"
+            kind: "option",
+            key: "seam_slope_min_length",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_steps"
+            kind: "option",
+            key: "seam_slope_steps",
           },
           {
-            "kind": "option",
-            "key": "scarf_joint_flow_ratio"
+            kind: "option",
+            key: "scarf_joint_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "seam_slope_inner_walls"
+            kind: "option",
+            key: "seam_slope_inner_walls",
           },
           {
-            "kind": "option",
-            "key": "role_based_wipe_speed"
+            kind: "option",
+            key: "role_based_wipe_speed",
           },
           {
-            "kind": "option",
-            "key": "wipe_speed"
+            kind: "option",
+            key: "wipe_speed",
           },
           {
-            "kind": "option",
-            "key": "wipe_on_loops"
+            kind: "option",
+            key: "wipe_on_loops",
           },
           {
-            "kind": "option",
-            "key": "wipe_inward"
+            kind: "option",
+            key: "wipe_inward",
           },
           {
-            "kind": "option",
-            "key": "wipe_inward_distance"
+            kind: "option",
+            key: "wipe_inward_distance",
           },
           {
-            "kind": "option",
-            "key": "wipe_before_external_loop"
-          }
-        ]
+            kind: "option",
+            key: "wipe_before_external_loop",
+          },
+        ],
       },
       {
-        "title": "Precision",
-        "icon": "param_precision",
-        "rows": [
+        title: "Precision",
+        icon: "param_precision",
+        rows: [
           {
-            "kind": "option",
-            "key": "slice_closing_radius"
+            kind: "option",
+            key: "slice_closing_radius",
           },
           {
-            "kind": "option",
-            "key": "resolution"
+            kind: "option",
+            key: "resolution",
           },
           {
-            "kind": "option",
-            "key": "enable_arc_fitting"
+            kind: "option",
+            key: "enable_arc_fitting",
           },
           {
-            "kind": "option",
-            "key": "xy_hole_compensation"
+            kind: "option",
+            key: "xy_hole_compensation",
           },
           {
-            "kind": "option",
-            "key": "xy_contour_compensation"
+            kind: "option",
+            key: "xy_contour_compensation",
           },
           {
-            "kind": "option",
-            "key": "elefant_foot_compensation"
+            kind: "option",
+            key: "elefant_foot_compensation",
           },
           {
-            "kind": "option",
-            "key": "elefant_foot_layers_density"
+            kind: "option",
+            key: "elefant_foot_layers_density",
           },
           {
-            "kind": "option",
-            "key": "elefant_foot_compensation_layers"
+            kind: "option",
+            key: "elefant_foot_compensation_layers",
           },
           {
-            "kind": "option",
-            "key": "precise_outer_wall"
+            kind: "option",
+            key: "precise_outer_wall",
           },
           {
-            "kind": "option",
-            "key": "precise_z_height"
+            kind: "option",
+            key: "precise_z_height",
           },
           {
-            "kind": "option",
-            "key": "hole_to_polyhole"
+            kind: "option",
+            key: "hole_to_polyhole",
           },
           {
-            "kind": "option",
-            "key": "hole_to_polyhole_threshold"
+            kind: "option",
+            key: "hole_to_polyhole_threshold",
           },
           {
-            "kind": "option",
-            "key": "hole_to_polyhole_twisted"
+            kind: "option",
+            key: "hole_to_polyhole_twisted",
           },
           {
-            "kind": "option",
-            "key": "hole_to_polyhole_max_edges"
-          }
-        ]
+            kind: "option",
+            key: "hole_to_polyhole_max_edges",
+          },
+        ],
       },
       {
-        "title": "Ironing",
-        "icon": "param_ironing",
-        "rows": [
+        title: "Ironing",
+        icon: "param_ironing",
+        rows: [
           {
-            "kind": "option",
-            "key": "ironing_type"
+            kind: "option",
+            key: "ironing_type",
           },
           {
-            "kind": "option",
-            "key": "ironing_pattern"
+            kind: "option",
+            key: "ironing_pattern",
           },
           {
-            "kind": "option",
-            "key": "ironing_flow"
+            kind: "option",
+            key: "ironing_flow",
           },
           {
-            "kind": "option",
-            "key": "ironing_spacing"
+            kind: "option",
+            key: "ironing_spacing",
           },
           {
-            "kind": "option",
-            "key": "ironing_inset"
+            kind: "option",
+            key: "ironing_inset",
           },
           {
-            "kind": "option",
-            "key": "ironing_angle"
+            kind: "option",
+            key: "ironing_angle",
           },
           {
-            "kind": "option",
-            "key": "ironing_angle_fixed"
-          }
-        ]
+            kind: "option",
+            key: "ironing_angle_fixed",
+          },
+        ],
       },
       {
-        "title": "Z contouring",
-        "icon": "param_z_contouring",
-        "rows": [
+        title: "Z contouring",
+        icon: "param_z_contouring",
+        rows: [
           {
-            "kind": "option",
-            "key": "zaa_enabled"
+            kind: "option",
+            key: "zaa_enabled",
           },
           {
-            "kind": "option",
-            "key": "zaa_minimize_perimeter_height"
+            kind: "option",
+            key: "zaa_minimize_perimeter_height",
           },
           {
-            "kind": "option",
-            "key": "zaa_min_z"
+            kind: "option",
+            key: "zaa_min_z",
           },
           {
-            "kind": "option",
-            "key": "zaa_dont_alternate_fill_direction"
-          }
-        ]
+            kind: "option",
+            key: "zaa_dont_alternate_fill_direction",
+          },
+        ],
       },
       {
-        "title": "Wall generator",
-        "icon": "param_wall_generator",
-        "rows": [
+        title: "Wall generator",
+        icon: "param_wall_generator",
+        rows: [
           {
-            "kind": "option",
-            "key": "wall_generator"
+            kind: "option",
+            key: "wall_generator",
           },
           {
-            "kind": "option",
-            "key": "wall_transition_angle"
+            kind: "option",
+            key: "wall_transition_angle",
           },
           {
-            "kind": "option",
-            "key": "wall_transition_filter_deviation"
+            kind: "option",
+            key: "wall_transition_filter_deviation",
           },
           {
-            "kind": "option",
-            "key": "wall_transition_length"
+            kind: "option",
+            key: "wall_transition_length",
           },
           {
-            "kind": "option",
-            "key": "wall_distribution_count"
+            kind: "option",
+            key: "wall_distribution_count",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_min_bead_width"
+            kind: "option",
+            key: "initial_layer_min_bead_width",
           },
           {
-            "kind": "option",
-            "key": "min_bead_width"
+            kind: "option",
+            key: "min_bead_width",
           },
           {
-            "kind": "option",
-            "key": "min_feature_size"
+            kind: "option",
+            key: "min_feature_size",
           },
           {
-            "kind": "option",
-            "key": "min_length_factor"
+            kind: "option",
+            key: "min_length_factor",
           },
           {
-            "kind": "option",
-            "key": "wall_maximum_resolution"
+            kind: "option",
+            key: "wall_maximum_resolution",
           },
           {
-            "kind": "option",
-            "key": "wall_maximum_deviation"
-          }
-        ]
+            kind: "option",
+            key: "wall_maximum_deviation",
+          },
+        ],
       },
       {
-        "title": "Walls and surfaces",
-        "icon": "param_wall_surface",
-        "rows": [
+        title: "Walls and surfaces",
+        icon: "param_wall_surface",
+        rows: [
           {
-            "kind": "option",
-            "key": "wall_sequence"
+            kind: "option",
+            key: "wall_sequence",
           },
           {
-            "kind": "option",
-            "key": "is_infill_first"
+            kind: "option",
+            key: "is_infill_first",
           },
           {
-            "kind": "option",
-            "key": "wall_direction"
+            kind: "option",
+            key: "wall_direction",
           },
           {
-            "kind": "option",
-            "key": "print_flow_ratio"
+            kind: "option",
+            key: "print_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "top_solid_infill_flow_ratio"
+            kind: "option",
+            key: "top_solid_infill_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "bottom_solid_infill_flow_ratio"
+            kind: "option",
+            key: "bottom_solid_infill_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "set_other_flow_ratios"
+            kind: "option",
+            key: "set_other_flow_ratios",
           },
           {
-            "kind": "option",
-            "key": "first_layer_flow_ratio"
+            kind: "option",
+            key: "first_layer_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "outer_wall_flow_ratio"
+            kind: "option",
+            key: "outer_wall_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_flow_ratio"
+            kind: "option",
+            key: "inner_wall_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "overhang_flow_ratio"
+            kind: "option",
+            key: "overhang_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_flow_ratio"
+            kind: "option",
+            key: "sparse_infill_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_infill_flow_ratio"
+            kind: "option",
+            key: "internal_solid_infill_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "gap_fill_flow_ratio"
+            kind: "option",
+            key: "gap_fill_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "support_flow_ratio"
+            kind: "option",
+            key: "support_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "support_interface_flow_ratio"
+            kind: "option",
+            key: "support_interface_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "only_one_wall_first_layer"
+            kind: "option",
+            key: "only_one_wall_first_layer",
           },
           {
-            "kind": "option",
-            "key": "only_one_wall_top"
+            kind: "option",
+            key: "only_one_wall_top",
           },
           {
-            "kind": "option",
-            "key": "min_width_top_surface"
+            kind: "option",
+            key: "min_width_top_surface",
           },
           {
-            "kind": "option",
-            "key": "reduce_crossing_wall"
+            kind: "option",
+            key: "reduce_crossing_wall",
           },
           {
-            "kind": "option",
-            "key": "max_travel_detour_distance"
+            kind: "option",
+            key: "max_travel_detour_distance",
           },
           {
-            "kind": "option",
-            "key": "small_area_infill_flow_compensation"
+            kind: "option",
+            key: "small_area_infill_flow_compensation",
           },
           {
-            "kind": "option",
-            "key": "small_area_infill_flow_compensation_model",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "small_area_infill_flow_compensation_model",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Bridging",
-        "icon": "param_bridge",
-        "rows": [
+        title: "Bridging",
+        icon: "param_bridge",
+        rows: [
           {
-            "kind": "option",
-            "key": "bridge_flow"
+            kind: "option",
+            key: "bridge_flow",
           },
           {
-            "kind": "option",
-            "key": "internal_bridge_flow"
+            kind: "option",
+            key: "internal_bridge_flow",
           },
           {
-            "kind": "option",
-            "key": "bridge_density"
+            kind: "option",
+            key: "bridge_density",
           },
           {
-            "kind": "option",
-            "key": "internal_bridge_density"
+            kind: "option",
+            key: "internal_bridge_density",
           },
           {
-            "kind": "option",
-            "key": "thick_bridges"
+            kind: "option",
+            key: "thick_bridges",
           },
           {
-            "kind": "option",
-            "key": "thick_internal_bridges"
+            kind: "option",
+            key: "thick_internal_bridges",
           },
           {
-            "kind": "option",
-            "key": "enable_extra_bridge_layer"
+            kind: "option",
+            key: "enable_extra_bridge_layer",
           },
           {
-            "kind": "option",
-            "key": "dont_filter_internal_bridges"
+            kind: "option",
+            key: "dont_filter_internal_bridges",
           },
           {
-            "kind": "option",
-            "key": "counterbore_hole_bridging"
-          }
-        ]
+            kind: "option",
+            key: "counterbore_hole_bridging",
+          },
+        ],
       },
       {
-        "title": "Overhangs",
-        "icon": "param_overhang",
-        "rows": [
+        title: "Overhangs",
+        icon: "param_overhang",
+        rows: [
           {
-            "kind": "option",
-            "key": "detect_overhang_wall"
+            kind: "option",
+            key: "detect_overhang_wall",
           },
           {
-            "kind": "option",
-            "key": "unsupported_wall_last"
+            kind: "option",
+            key: "unsupported_wall_last",
           },
           {
-            "kind": "option",
-            "key": "make_overhang_printable"
+            kind: "option",
+            key: "make_overhang_printable",
           },
           {
-            "kind": "option",
-            "key": "make_overhang_printable_angle"
+            kind: "option",
+            key: "make_overhang_printable_angle",
           },
           {
-            "kind": "option",
-            "key": "make_overhang_printable_hole_size"
+            kind: "option",
+            key: "make_overhang_printable_hole_size",
           },
           {
-            "kind": "option",
-            "key": "extra_perimeters_on_overhangs"
+            kind: "option",
+            key: "extra_perimeters_on_overhangs",
           },
           {
-            "kind": "option",
-            "key": "overhang_reverse"
+            kind: "option",
+            key: "overhang_reverse",
           },
           {
-            "kind": "option",
-            "key": "overhang_reverse_internal_only"
+            kind: "option",
+            key: "overhang_reverse_internal_only",
           },
           {
-            "kind": "option",
-            "key": "overhang_reverse_threshold"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "overhang_reverse_threshold",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Strength",
-    "groups": [
+    title: "Strength",
+    groups: [
       {
-        "title": "Walls",
-        "icon": "param_wall",
-        "rows": [
+        title: "Walls",
+        icon: "param_wall",
+        rows: [
           {
-            "kind": "option",
-            "key": "wall_loops"
+            kind: "option",
+            key: "wall_loops",
           },
           {
-            "kind": "option",
-            "key": "alternate_extra_wall"
+            kind: "option",
+            key: "alternate_extra_wall",
           },
           {
-            "kind": "option",
-            "key": "detect_thin_wall"
-          }
-        ]
+            kind: "option",
+            key: "detect_thin_wall",
+          },
+        ],
       },
       {
-        "title": "Top/bottom shells",
-        "icon": "param_shell",
-        "rows": [
+        title: "Top/bottom shells",
+        icon: "param_shell",
+        rows: [
           {
-            "kind": "option",
-            "key": "top_shell_layers"
+            kind: "option",
+            key: "top_shell_layers",
           },
           {
-            "kind": "option",
-            "key": "top_shell_thickness"
+            kind: "option",
+            key: "top_shell_thickness",
           },
           {
-            "kind": "option",
-            "key": "top_color_penetration_layers"
+            kind: "option",
+            key: "top_color_penetration_layers",
           },
           {
-            "kind": "option",
-            "key": "top_surface_density"
+            kind: "option",
+            key: "top_surface_density",
           },
           {
-            "kind": "option",
-            "key": "top_surface_pattern"
+            kind: "option",
+            key: "top_surface_pattern",
           },
           {
-            "kind": "option",
-            "key": "top_surface_fill_order"
+            kind: "option",
+            key: "top_surface_fill_order",
           },
           {
-            "kind": "option",
-            "key": "top_layer_direction"
+            kind: "option",
+            key: "top_layer_direction",
           },
           {
-            "kind": "option",
-            "key": "top_surface_expansion"
+            kind: "option",
+            key: "top_surface_expansion",
           },
           {
-            "kind": "option",
-            "key": "top_surface_expansion_margin"
+            kind: "option",
+            key: "top_surface_expansion_margin",
           },
           {
-            "kind": "option",
-            "key": "top_surface_expansion_direction"
+            kind: "option",
+            key: "top_surface_expansion_direction",
           },
           {
-            "kind": "option",
-            "key": "bottom_shell_layers"
+            kind: "option",
+            key: "bottom_shell_layers",
           },
           {
-            "kind": "option",
-            "key": "bottom_shell_thickness"
+            kind: "option",
+            key: "bottom_shell_thickness",
           },
           {
-            "kind": "option",
-            "key": "bottom_color_penetration_layers"
+            kind: "option",
+            key: "bottom_color_penetration_layers",
           },
           {
-            "kind": "option",
-            "key": "bottom_surface_density"
+            kind: "option",
+            key: "bottom_surface_density",
           },
           {
-            "kind": "option",
-            "key": "bottom_surface_pattern"
+            kind: "option",
+            key: "bottom_surface_pattern",
           },
           {
-            "kind": "option",
-            "key": "bottom_surface_fill_order"
+            kind: "option",
+            key: "bottom_surface_fill_order",
           },
           {
-            "kind": "option",
-            "key": "bottom_layer_direction"
+            kind: "option",
+            key: "bottom_layer_direction",
           },
           {
-            "kind": "option",
-            "key": "center_of_surface_pattern"
+            kind: "option",
+            key: "center_of_surface_pattern",
           },
           {
-            "kind": "option",
-            "key": "top_bottom_infill_wall_overlap"
-          }
-        ]
+            kind: "option",
+            key: "top_bottom_infill_wall_overlap",
+          },
+        ],
       },
       {
-        "title": "Infill",
-        "icon": "param_infill",
-        "rows": [
+        title: "Infill",
+        icon: "param_infill",
+        rows: [
           {
-            "kind": "option",
-            "key": "sparse_infill_density"
+            kind: "option",
+            key: "sparse_infill_density",
           },
           {
-            "kind": "option",
-            "key": "fill_multiline"
+            kind: "option",
+            key: "fill_multiline",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_pattern"
+            kind: "option",
+            key: "sparse_infill_pattern",
           },
           {
-            "kind": "option",
-            "key": "adaptive_infill_mode"
+            kind: "option",
+            key: "adaptive_infill_mode",
           },
           {
-            "kind": "option",
-            "key": "adaptive_infill_interior_density"
+            kind: "option",
+            key: "adaptive_infill_interior_density",
           },
           {
-            "kind": "option",
-            "key": "adaptive_infill_gradient"
+            kind: "option",
+            key: "adaptive_infill_gradient",
           },
           {
-            "kind": "option",
-            "key": "gyroid_optimized"
+            kind: "option",
+            key: "gyroid_optimized",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_smooth_factor"
+            kind: "option",
+            key: "sparse_infill_smooth_factor",
           },
           {
-            "kind": "option",
-            "key": "infill_direction"
+            kind: "option",
+            key: "infill_direction",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_rotate_template"
+            kind: "option",
+            key: "sparse_infill_rotate_template",
           },
           {
-            "kind": "option",
-            "key": "skin_infill_density"
+            kind: "option",
+            key: "skin_infill_density",
           },
           {
-            "kind": "option",
-            "key": "skeleton_infill_density"
+            kind: "option",
+            key: "skeleton_infill_density",
           },
           {
-            "kind": "option",
-            "key": "infill_lock_depth"
+            kind: "option",
+            key: "infill_lock_depth",
           },
           {
-            "kind": "option",
-            "key": "skin_infill_depth"
+            kind: "option",
+            key: "skin_infill_depth",
           },
           {
-            "kind": "option",
-            "key": "skin_infill_line_width"
+            kind: "option",
+            key: "skin_infill_line_width",
           },
           {
-            "kind": "option",
-            "key": "skeleton_infill_line_width"
+            kind: "option",
+            key: "skeleton_infill_line_width",
           },
           {
-            "kind": "option",
-            "key": "symmetric_infill_y_axis"
+            kind: "option",
+            key: "symmetric_infill_y_axis",
           },
           {
-            "kind": "option",
-            "key": "infill_complete_top"
+            kind: "option",
+            key: "infill_complete_top",
           },
           {
-            "kind": "option",
-            "key": "infill_shift_step"
+            kind: "option",
+            key: "infill_shift_step",
           },
           {
-            "kind": "option",
-            "key": "lateral_lattice_angle_1"
+            kind: "option",
+            key: "lateral_lattice_angle_1",
           },
           {
-            "kind": "option",
-            "key": "lateral_lattice_angle_2"
+            kind: "option",
+            key: "lateral_lattice_angle_2",
           },
           {
-            "kind": "option",
-            "key": "infill_overhang_angle"
+            kind: "option",
+            key: "infill_overhang_angle",
           },
           {
-            "kind": "option",
-            "key": "lightning_overhang_angle"
+            kind: "option",
+            key: "lightning_overhang_angle",
           },
           {
-            "kind": "option",
-            "key": "lightning_prune_angle"
+            kind: "option",
+            key: "lightning_prune_angle",
           },
           {
-            "kind": "option",
-            "key": "lightning_straightening_angle"
+            kind: "option",
+            key: "lightning_straightening_angle",
           },
           {
-            "kind": "option",
-            "key": "infill_anchor_max"
+            kind: "option",
+            key: "infill_anchor_max",
           },
           {
-            "kind": "option",
-            "key": "infill_anchor"
+            kind: "option",
+            key: "infill_anchor",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_infill_pattern"
+            kind: "option",
+            key: "internal_solid_infill_pattern",
           },
           {
-            "kind": "option",
-            "key": "solid_infill_direction"
+            kind: "option",
+            key: "solid_infill_direction",
           },
           {
-            "kind": "option",
-            "key": "solid_infill_rotate_template"
+            kind: "option",
+            key: "solid_infill_rotate_template",
           },
           {
-            "kind": "option",
-            "key": "gap_fill_target"
+            kind: "option",
+            key: "gap_fill_target",
           },
           {
-            "kind": "option",
-            "key": "filter_out_gap_fill"
+            kind: "option",
+            key: "filter_out_gap_fill",
           },
           {
-            "kind": "option",
-            "key": "separated_infills"
+            kind: "option",
+            key: "separated_infills",
           },
           {
-            "kind": "option",
-            "key": "infill_wall_overlap"
-          }
-        ]
+            kind: "option",
+            key: "infill_wall_overlap",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "align_infill_direction_to_model"
+            kind: "option",
+            key: "align_infill_direction_to_model",
           },
           {
-            "kind": "option",
-            "key": "extra_solid_infills"
+            kind: "option",
+            key: "extra_solid_infills",
           },
           {
-            "kind": "option",
-            "key": "bridge_angle"
+            kind: "option",
+            key: "bridge_angle",
           },
           {
-            "kind": "option",
-            "key": "internal_bridge_angle"
+            kind: "option",
+            key: "internal_bridge_angle",
           },
           {
-            "kind": "option",
-            "key": "relative_bridge_angle"
+            kind: "option",
+            key: "relative_bridge_angle",
           },
           {
-            "kind": "option",
-            "key": "minimum_sparse_infill_area"
+            kind: "option",
+            key: "minimum_sparse_infill_area",
           },
           {
-            "kind": "option",
-            "key": "infill_combination"
+            kind: "option",
+            key: "infill_combination",
           },
           {
-            "kind": "option",
-            "key": "infill_combination_max_layer_height"
+            kind: "option",
+            key: "infill_combination_max_layer_height",
           },
           {
-            "kind": "option",
-            "key": "detect_narrow_internal_solid_infill"
+            kind: "option",
+            key: "detect_narrow_internal_solid_infill",
           },
           {
-            "kind": "option",
-            "key": "ensure_vertical_shell_thickness"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "ensure_vertical_shell_thickness",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Speed",
-    "groups": [
+    title: "Speed",
+    groups: [
       {
-        "title": "First layer speed",
-        "icon": "param_speed_first",
-        "rows": [
+        title: "First layer speed",
+        icon: "param_speed_first",
+        rows: [
           {
-            "kind": "option",
-            "key": "initial_layer_speed"
+            kind: "option",
+            key: "initial_layer_speed",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_infill_speed"
+            kind: "option",
+            key: "initial_layer_infill_speed",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_travel_speed"
+            kind: "option",
+            key: "initial_layer_travel_speed",
           },
           {
-            "kind": "option",
-            "key": "slow_down_layers"
-          }
-        ]
+            kind: "option",
+            key: "slow_down_layers",
+          },
+        ],
       },
       {
-        "title": "Other layers speed",
-        "icon": "param_speed",
-        "rows": [
+        title: "Other layers speed",
+        icon: "param_speed",
+        rows: [
           {
-            "kind": "option",
-            "key": "outer_wall_speed"
+            kind: "option",
+            key: "outer_wall_speed",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_speed"
+            kind: "option",
+            key: "inner_wall_speed",
           },
           {
-            "kind": "option",
-            "key": "small_perimeter_speed"
+            kind: "option",
+            key: "small_perimeter_speed",
           },
           {
-            "kind": "option",
-            "key": "small_perimeter_threshold"
+            kind: "option",
+            key: "small_perimeter_threshold",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_speed"
+            kind: "option",
+            key: "sparse_infill_speed",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_infill_speed"
+            kind: "option",
+            key: "internal_solid_infill_speed",
           },
           {
-            "kind": "option",
-            "key": "top_surface_speed"
+            kind: "option",
+            key: "top_surface_speed",
           },
           {
-            "kind": "option",
-            "key": "gap_infill_speed"
+            kind: "option",
+            key: "gap_infill_speed",
           },
           {
-            "kind": "option",
-            "key": "ironing_speed"
+            kind: "option",
+            key: "ironing_speed",
           },
           {
-            "kind": "option",
-            "key": "support_speed"
+            kind: "option",
+            key: "support_speed",
           },
           {
-            "kind": "option",
-            "key": "support_interface_speed"
+            kind: "option",
+            key: "support_interface_speed",
           },
           {
-            "kind": "option",
-            "key": "small_support_perimeter_speed"
+            kind: "option",
+            key: "small_support_perimeter_speed",
           },
           {
-            "kind": "option",
-            "key": "small_support_perimeter_threshold"
-          }
-        ]
+            kind: "option",
+            key: "small_support_perimeter_threshold",
+          },
+        ],
       },
       {
-        "title": "Overhang speed",
-        "icon": "param_overhang_speed",
-        "rows": [
+        title: "Overhang speed",
+        icon: "param_overhang_speed",
+        rows: [
           {
-            "kind": "option",
-            "key": "enable_overhang_speed"
+            kind: "option",
+            key: "enable_overhang_speed",
           },
           {
-            "kind": "option",
-            "key": "slowdown_for_curled_perimeters"
+            kind: "option",
+            key: "slowdown_for_curled_perimeters",
           },
           {
-            "kind": "line",
-            "label": "Overhang speed",
-            "options": [
+            kind: "line",
+            label: "Overhang speed",
+            options: [
               {
-                "key": "overhang_1_4_speed"
+                key: "overhang_1_4_speed",
               },
               {
-                "key": "overhang_2_4_speed"
+                key: "overhang_2_4_speed",
               },
               {
-                "key": "overhang_3_4_speed"
+                key: "overhang_3_4_speed",
               },
               {
-                "key": "overhang_4_4_speed"
-              }
-            ]
+                key: "overhang_4_4_speed",
+              },
+            ],
           },
           {
-            "kind": "separator"
+            kind: "separator",
           },
           {
-            "kind": "line",
-            "label": "Bridge",
-            "options": [
+            kind: "line",
+            label: "Bridge",
+            options: [
               {
-                "key": "bridge_speed"
+                key: "bridge_speed",
               },
               {
-                "key": "internal_bridge_speed"
-              }
-            ]
-          }
-        ]
+                key: "internal_bridge_speed",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Travel speed",
-        "icon": "param_travel_speed",
-        "rows": [
+        title: "Travel speed",
+        icon: "param_travel_speed",
+        rows: [
           {
-            "kind": "option",
-            "key": "travel_speed"
-          }
-        ]
+            kind: "option",
+            key: "travel_speed",
+          },
+        ],
       },
       {
-        "title": "Acceleration",
-        "icon": "param_acceleration",
-        "rows": [
+        title: "Acceleration",
+        icon: "param_acceleration",
+        rows: [
           {
-            "kind": "option",
-            "key": "default_acceleration"
+            kind: "option",
+            key: "default_acceleration",
           },
           {
-            "kind": "option",
-            "key": "outer_wall_acceleration"
+            kind: "option",
+            key: "outer_wall_acceleration",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_acceleration"
+            kind: "option",
+            key: "inner_wall_acceleration",
           },
           {
-            "kind": "option",
-            "key": "bridge_acceleration"
+            kind: "option",
+            key: "bridge_acceleration",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_acceleration"
+            kind: "option",
+            key: "sparse_infill_acceleration",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_infill_acceleration"
+            kind: "option",
+            key: "internal_solid_infill_acceleration",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_acceleration"
+            kind: "option",
+            key: "initial_layer_acceleration",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_travel_acceleration"
+            kind: "option",
+            key: "initial_layer_travel_acceleration",
           },
           {
-            "kind": "option",
-            "key": "top_surface_acceleration"
+            kind: "option",
+            key: "top_surface_acceleration",
           },
           {
-            "kind": "option",
-            "key": "travel_acceleration"
+            kind: "option",
+            key: "travel_acceleration",
           },
           {
-            "kind": "option",
-            "key": "accel_to_decel_enable"
+            kind: "option",
+            key: "accel_to_decel_enable",
           },
           {
-            "kind": "option",
-            "key": "accel_to_decel_factor"
-          }
-        ]
+            kind: "option",
+            key: "accel_to_decel_factor",
+          },
+        ],
       },
       {
-        "title": "Junction Deviation",
-        "icon": "param_junction_deviation",
-        "rows": [
+        title: "Junction Deviation",
+        icon: "param_junction_deviation",
+        rows: [
           {
-            "kind": "option",
-            "key": "default_junction_deviation"
-          }
-        ]
+            kind: "option",
+            key: "default_junction_deviation",
+          },
+        ],
       },
       {
-        "title": "Jerk(XY)",
-        "icon": "param_jerk",
-        "rows": [
+        title: "Jerk(XY)",
+        icon: "param_jerk",
+        rows: [
           {
-            "kind": "option",
-            "key": "default_jerk"
+            kind: "option",
+            key: "default_jerk",
           },
           {
-            "kind": "option",
-            "key": "outer_wall_jerk"
+            kind: "option",
+            key: "outer_wall_jerk",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_jerk"
+            kind: "option",
+            key: "inner_wall_jerk",
           },
           {
-            "kind": "option",
-            "key": "infill_jerk"
+            kind: "option",
+            key: "infill_jerk",
           },
           {
-            "kind": "option",
-            "key": "top_surface_jerk"
+            kind: "option",
+            key: "top_surface_jerk",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_jerk"
+            kind: "option",
+            key: "initial_layer_jerk",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_travel_jerk"
+            kind: "option",
+            key: "initial_layer_travel_jerk",
           },
           {
-            "kind": "option",
-            "key": "travel_jerk"
-          }
-        ]
+            kind: "option",
+            key: "travel_jerk",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "max_volumetric_extrusion_rate_slope"
+            kind: "option",
+            key: "max_volumetric_extrusion_rate_slope",
           },
           {
-            "kind": "option",
-            "key": "max_volumetric_extrusion_rate_slope_segment_length"
+            kind: "option",
+            key: "max_volumetric_extrusion_rate_slope_segment_length",
           },
           {
-            "kind": "option",
-            "key": "extrusion_rate_smoothing_external_perimeter_only"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "extrusion_rate_smoothing_external_perimeter_only",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Support",
-    "groups": [
+    title: "Support",
+    groups: [
       {
-        "title": "Support",
-        "icon": "param_support",
-        "rows": [
+        title: "Support",
+        icon: "param_support",
+        rows: [
           {
-            "kind": "option",
-            "key": "enable_support"
+            kind: "option",
+            key: "enable_support",
           },
           {
-            "kind": "option",
-            "key": "support_type"
+            kind: "option",
+            key: "support_type",
           },
           {
-            "kind": "option",
-            "key": "support_style"
+            kind: "option",
+            key: "support_style",
           },
           {
-            "kind": "option",
-            "key": "support_threshold_angle"
+            kind: "option",
+            key: "support_threshold_angle",
           },
           {
-            "kind": "option",
-            "key": "support_threshold_overlap"
+            kind: "option",
+            key: "support_threshold_overlap",
           },
           {
-            "kind": "option",
-            "key": "raft_first_layer_density"
+            kind: "option",
+            key: "raft_first_layer_density",
           },
           {
-            "kind": "option",
-            "key": "raft_first_layer_expansion"
+            kind: "option",
+            key: "raft_first_layer_expansion",
           },
           {
-            "kind": "option",
-            "key": "support_on_build_plate_only"
+            kind: "option",
+            key: "support_on_build_plate_only",
           },
           {
-            "kind": "option",
-            "key": "support_critical_regions_only"
+            kind: "option",
+            key: "support_critical_regions_only",
           },
           {
-            "kind": "option",
-            "key": "support_remove_small_overhang"
-          }
-        ]
+            kind: "option",
+            key: "support_remove_small_overhang",
+          },
+        ],
       },
       {
-        "title": "Raft",
-        "icon": "param_raft",
-        "rows": [
+        title: "Raft",
+        icon: "param_raft",
+        rows: [
           {
-            "kind": "option",
-            "key": "raft_layers"
+            kind: "option",
+            key: "raft_layers",
           },
           {
-            "kind": "option",
-            "key": "raft_contact_distance"
+            kind: "option",
+            key: "raft_contact_distance",
           },
           {
-            "kind": "option",
-            "key": "raft_expansion"
-          }
-        ]
+            kind: "option",
+            key: "raft_expansion",
+          },
+        ],
       },
       {
-        "title": "Filament for Supports",
-        "icon": "param_support_filament",
-        "rows": [
+        title: "Filament for Supports",
+        icon: "param_support_filament",
+        rows: [
           {
-            "kind": "option",
-            "key": "support_filament"
+            kind: "option",
+            key: "support_filament",
           },
           {
-            "kind": "option",
-            "key": "support_interface_filament"
+            kind: "option",
+            key: "support_interface_filament",
           },
           {
-            "kind": "option",
-            "key": "support_interface_not_for_body"
-          }
-        ]
+            kind: "option",
+            key: "support_interface_not_for_body",
+          },
+        ],
       },
       {
-        "title": "Support ironing",
-        "icon": "param_ironing",
-        "rows": [
+        title: "Support ironing",
+        icon: "param_ironing",
+        rows: [
           {
-            "kind": "option",
-            "key": "support_ironing"
+            kind: "option",
+            key: "support_ironing",
           },
           {
-            "kind": "option",
-            "key": "support_ironing_pattern"
+            kind: "option",
+            key: "support_ironing_pattern",
           },
           {
-            "kind": "option",
-            "key": "support_ironing_flow"
+            kind: "option",
+            key: "support_ironing_flow",
           },
           {
-            "kind": "option",
-            "key": "support_ironing_spacing"
-          }
-        ]
+            kind: "option",
+            key: "support_ironing_spacing",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "support_top_z_distance"
+            kind: "option",
+            key: "support_top_z_distance",
           },
           {
-            "kind": "option",
-            "key": "support_bottom_z_distance"
+            kind: "option",
+            key: "support_bottom_z_distance",
           },
           {
-            "kind": "option",
-            "key": "tree_support_wall_count"
+            kind: "option",
+            key: "tree_support_wall_count",
           },
           {
-            "kind": "option",
-            "key": "support_base_pattern"
+            kind: "option",
+            key: "support_base_pattern",
           },
           {
-            "kind": "option",
-            "key": "support_base_pattern_spacing"
+            kind: "option",
+            key: "support_base_pattern_spacing",
           },
           {
-            "kind": "option",
-            "key": "support_angle"
+            kind: "option",
+            key: "support_angle",
           },
           {
-            "kind": "option",
-            "key": "support_interface_top_layers"
+            kind: "option",
+            key: "support_interface_top_layers",
           },
           {
-            "kind": "option",
-            "key": "support_interface_bottom_layers"
+            kind: "option",
+            key: "support_interface_bottom_layers",
           },
           {
-            "kind": "option",
-            "key": "support_interface_pattern"
+            kind: "option",
+            key: "support_interface_pattern",
           },
           {
-            "kind": "option",
-            "key": "support_interface_spacing"
+            kind: "option",
+            key: "support_interface_spacing",
           },
           {
-            "kind": "option",
-            "key": "support_bottom_interface_spacing"
+            kind: "option",
+            key: "support_bottom_interface_spacing",
           },
           {
-            "kind": "option",
-            "key": "support_expansion"
+            kind: "option",
+            key: "support_expansion",
           },
           {
-            "kind": "option",
-            "key": "support_object_xy_distance"
+            kind: "option",
+            key: "support_object_xy_distance",
           },
           {
-            "kind": "option",
-            "key": "support_object_first_layer_gap"
+            kind: "option",
+            key: "support_object_first_layer_gap",
           },
           {
-            "kind": "option",
-            "key": "bridge_no_support"
+            kind: "option",
+            key: "bridge_no_support",
           },
           {
-            "kind": "option",
-            "key": "max_bridge_length"
+            kind: "option",
+            key: "max_bridge_length",
           },
           {
-            "kind": "option",
-            "key": "independent_support_layer_height"
-          }
-        ]
+            kind: "option",
+            key: "independent_support_layer_height",
+          },
+        ],
       },
       {
-        "title": "Tree supports",
-        "icon": "param_support_tree",
-        "rows": [
+        title: "Tree supports",
+        icon: "param_support_tree",
+        rows: [
           {
-            "kind": "option",
-            "key": "tree_support_tip_diameter"
+            kind: "option",
+            key: "tree_support_tip_diameter",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_distance"
+            kind: "option",
+            key: "tree_support_branch_distance",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_distance_organic"
+            kind: "option",
+            key: "tree_support_branch_distance_organic",
           },
           {
-            "kind": "option",
-            "key": "tree_support_top_rate"
+            kind: "option",
+            key: "tree_support_top_rate",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_diameter"
+            kind: "option",
+            key: "tree_support_branch_diameter",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_diameter_organic"
+            kind: "option",
+            key: "tree_support_branch_diameter_organic",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_diameter_angle"
+            kind: "option",
+            key: "tree_support_branch_diameter_angle",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_angle"
+            kind: "option",
+            key: "tree_support_branch_angle",
           },
           {
-            "kind": "option",
-            "key": "tree_support_branch_angle_organic"
+            kind: "option",
+            key: "tree_support_branch_angle_organic",
           },
           {
-            "kind": "option",
-            "key": "tree_support_angle_slow"
+            kind: "option",
+            key: "tree_support_angle_slow",
           },
           {
-            "kind": "option",
-            "key": "tree_support_auto_brim"
+            kind: "option",
+            key: "tree_support_auto_brim",
           },
           {
-            "kind": "option",
-            "key": "tree_support_brim_width"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "tree_support_brim_width",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Multimaterial",
-    "groups": [
+    title: "Multimaterial",
+    groups: [
       {
-        "title": "Prime tower",
-        "icon": "param_tower",
-        "rows": [
+        title: "Prime tower",
+        icon: "param_tower",
+        rows: [
           {
-            "kind": "option",
-            "key": "enable_prime_tower"
+            kind: "option",
+            key: "enable_prime_tower",
           },
           {
-            "kind": "option",
-            "key": "prime_tower_skip_points"
+            kind: "option",
+            key: "prime_tower_skip_points",
           },
           {
-            "kind": "option",
-            "key": "enable_tower_interface_features"
+            kind: "option",
+            key: "enable_tower_interface_features",
           },
           {
-            "kind": "option",
-            "key": "enable_tower_interface_cooldown_during_tower"
+            kind: "option",
+            key: "enable_tower_interface_cooldown_during_tower",
           },
           {
-            "kind": "option",
-            "key": "prime_tower_enable_framework"
+            kind: "option",
+            key: "prime_tower_enable_framework",
           },
           {
-            "kind": "option",
-            "key": "prime_tower_width"
+            kind: "option",
+            key: "prime_tower_width",
           },
           {
-            "kind": "option",
-            "key": "belt_purge_tower_width"
+            kind: "option",
+            key: "belt_purge_tower_width",
           },
           {
-            "kind": "option",
-            "key": "prime_volume"
+            kind: "option",
+            key: "prime_volume",
           },
           {
-            "kind": "option",
-            "key": "prime_tower_brim_width"
+            kind: "option",
+            key: "prime_tower_brim_width",
           },
           {
-            "kind": "option",
-            "key": "prime_tower_infill_gap"
+            kind: "option",
+            key: "prime_tower_infill_gap",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_rotation_angle"
+            kind: "option",
+            key: "wipe_tower_rotation_angle",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_bridging"
+            kind: "option",
+            key: "wipe_tower_bridging",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_extra_spacing"
+            kind: "option",
+            key: "wipe_tower_extra_spacing",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_extra_flow"
+            kind: "option",
+            key: "wipe_tower_extra_flow",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_max_purge_speed"
+            kind: "option",
+            key: "wipe_tower_max_purge_speed",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_wall_type"
+            kind: "option",
+            key: "wipe_tower_wall_type",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_cone_angle"
+            kind: "option",
+            key: "wipe_tower_cone_angle",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_extra_rib_length"
+            kind: "option",
+            key: "wipe_tower_extra_rib_length",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_rib_width"
+            kind: "option",
+            key: "wipe_tower_rib_width",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_fillet_wall"
+            kind: "option",
+            key: "wipe_tower_fillet_wall",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_no_sparse_layers"
+            kind: "option",
+            key: "wipe_tower_no_sparse_layers",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_sparse_layers_combination"
+            kind: "option",
+            key: "wipe_tower_sparse_layers_combination",
           },
           {
-            "kind": "option",
-            "key": "single_extruder_multi_material_priming"
-          }
-        ]
+            kind: "option",
+            key: "single_extruder_multi_material_priming",
+          },
+        ],
       },
       {
-        "title": "Filament for Features",
-        "icon": "param_filament_for_features",
-        "rows": [
+        title: "Filament for Features",
+        icon: "param_filament_for_features",
+        rows: [
           {
-            "kind": "option",
-            "key": "outer_wall_filament_id"
+            kind: "option",
+            key: "outer_wall_filament_id",
           },
           {
-            "kind": "option",
-            "key": "inner_wall_filament_id"
+            kind: "option",
+            key: "inner_wall_filament_id",
           },
           {
-            "kind": "option",
-            "key": "sparse_infill_filament_id"
+            kind: "option",
+            key: "sparse_infill_filament_id",
           },
           {
-            "kind": "option",
-            "key": "internal_solid_filament_id"
+            kind: "option",
+            key: "internal_solid_filament_id",
           },
           {
-            "kind": "option",
-            "key": "top_surface_filament_id"
+            kind: "option",
+            key: "top_surface_filament_id",
           },
           {
-            "kind": "option",
-            "key": "bottom_surface_filament_id"
+            kind: "option",
+            key: "bottom_surface_filament_id",
           },
           {
-            "kind": "option",
-            "key": "wipe_tower_filament"
-          }
-        ]
+            kind: "option",
+            key: "wipe_tower_filament",
+          },
+        ],
       },
       {
-        "title": "Ooze prevention",
-        "icon": "param_ooze_prevention",
-        "rows": [
+        title: "Ooze prevention",
+        icon: "param_ooze_prevention",
+        rows: [
           {
-            "kind": "option",
-            "key": "ooze_prevention"
+            kind: "option",
+            key: "ooze_prevention",
           },
           {
-            "kind": "option",
-            "key": "standby_temperature_delta"
+            kind: "option",
+            key: "standby_temperature_delta",
           },
           {
-            "kind": "option",
-            "key": "preheat_time"
+            kind: "option",
+            key: "preheat_time",
           },
           {
-            "kind": "option",
-            "key": "preheat_steps"
-          }
-        ]
+            kind: "option",
+            key: "preheat_steps",
+          },
+        ],
       },
       {
-        "title": "Flush options",
-        "icon": "param_flush",
-        "rows": [
+        title: "Flush options",
+        icon: "param_flush",
+        rows: [
           {
-            "kind": "option",
-            "key": "flush_into_infill"
+            kind: "option",
+            key: "flush_into_infill",
           },
           {
-            "kind": "option",
-            "key": "flush_into_objects"
+            kind: "option",
+            key: "flush_into_objects",
           },
           {
-            "kind": "option",
-            "key": "flush_into_support"
-          }
-        ]
+            kind: "option",
+            key: "flush_into_support",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "interlocking_beam"
+            kind: "option",
+            key: "interlocking_beam",
           },
           {
-            "kind": "option",
-            "key": "toolchange_ordering"
+            kind: "option",
+            key: "toolchange_ordering",
           },
           {
-            "kind": "option",
-            "key": "toolchange_cyclic_order"
+            kind: "option",
+            key: "toolchange_cyclic_order",
           },
           {
-            "kind": "option",
-            "key": "toolchange_cyclic_first_layer"
+            kind: "option",
+            key: "toolchange_cyclic_first_layer",
           },
           {
-            "kind": "option",
-            "key": "interface_shells"
+            kind: "option",
+            key: "interface_shells",
           },
           {
-            "kind": "option",
-            "key": "mmu_segmented_region_max_width"
+            kind: "option",
+            key: "mmu_segmented_region_max_width",
           },
           {
-            "kind": "option",
-            "key": "mmu_segmented_region_interlocking_depth"
+            kind: "option",
+            key: "mmu_segmented_region_interlocking_depth",
           },
           {
-            "kind": "option",
-            "key": "interlocking_beam_width"
+            kind: "option",
+            key: "interlocking_beam_width",
           },
           {
-            "kind": "option",
-            "key": "interlocking_orientation"
+            kind: "option",
+            key: "interlocking_orientation",
           },
           {
-            "kind": "option",
-            "key": "interlocking_beam_layer_count"
+            kind: "option",
+            key: "interlocking_beam_layer_count",
           },
           {
-            "kind": "option",
-            "key": "interlocking_depth"
+            kind: "option",
+            key: "interlocking_depth",
           },
           {
-            "kind": "option",
-            "key": "interlocking_boundary_avoidance"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "interlocking_boundary_avoidance",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Others",
-    "groups": [
+    title: "Others",
+    groups: [
       {
-        "title": "Skirt",
-        "icon": "param_skirt",
-        "rows": [
+        title: "Skirt",
+        icon: "param_skirt",
+        rows: [
           {
-            "kind": "option",
-            "key": "skirt_loops"
+            kind: "option",
+            key: "skirt_loops",
           },
           {
-            "kind": "option",
-            "key": "skirt_type"
+            kind: "option",
+            key: "skirt_type",
           },
           {
-            "kind": "option",
-            "key": "min_skirt_length"
+            kind: "option",
+            key: "min_skirt_length",
           },
           {
-            "kind": "option",
-            "key": "skirt_distance"
+            kind: "option",
+            key: "skirt_distance",
           },
           {
-            "kind": "option",
-            "key": "skirt_start_angle"
+            kind: "option",
+            key: "skirt_start_angle",
           },
           {
-            "kind": "option",
-            "key": "skirt_speed"
+            kind: "option",
+            key: "skirt_speed",
           },
           {
-            "kind": "option",
-            "key": "skirt_height"
+            kind: "option",
+            key: "skirt_height",
           },
           {
-            "kind": "option",
-            "key": "draft_shield"
+            kind: "option",
+            key: "draft_shield",
           },
           {
-            "kind": "option",
-            "key": "single_loop_draft_shield"
-          }
-        ]
+            kind: "option",
+            key: "single_loop_draft_shield",
+          },
+        ],
       },
       {
-        "title": "Brim",
-        "icon": "param_adhension",
-        "rows": [
+        title: "Brim",
+        icon: "param_adhension",
+        rows: [
           {
-            "kind": "option",
-            "key": "brim_type"
+            kind: "option",
+            key: "brim_type",
           },
           {
-            "kind": "option",
-            "key": "brim_width"
+            kind: "option",
+            key: "brim_width",
           },
           {
-            "kind": "option",
-            "key": "leading_brim_length"
+            kind: "option",
+            key: "leading_brim_length",
           },
           {
-            "kind": "option",
-            "key": "extra_brim_width"
+            kind: "option",
+            key: "extra_brim_width",
           },
           {
-            "kind": "option",
-            "key": "brim_object_gap"
+            kind: "option",
+            key: "brim_object_gap",
           },
           {
-            "kind": "option",
-            "key": "brim_flow_ratio"
+            kind: "option",
+            key: "brim_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "brim_use_efc_outline"
+            kind: "option",
+            key: "brim_use_efc_outline",
           },
           {
-            "kind": "option",
-            "key": "combine_brims"
+            kind: "option",
+            key: "combine_brims",
           },
           {
-            "kind": "option",
-            "key": "brim_ears_max_angle"
+            kind: "option",
+            key: "brim_ears_max_angle",
           },
           {
-            "kind": "option",
-            "key": "brim_ears_detection_length"
+            kind: "option",
+            key: "brim_ears_detection_length",
           },
           {
-            "kind": "option",
-            "key": "brim_ears_outer_only"
-          }
-        ]
+            kind: "option",
+            key: "brim_ears_outer_only",
+          },
+        ],
       },
       {
-        "title": "Special mode",
-        "icon": "param_special",
-        "rows": [
+        title: "Special mode",
+        icon: "param_special",
+        rows: [
           {
-            "kind": "option",
-            "key": "slicing_mode"
+            kind: "option",
+            key: "slicing_mode",
           },
           {
-            "kind": "option",
-            "key": "print_sequence"
+            kind: "option",
+            key: "print_sequence",
           },
           {
-            "kind": "option",
-            "key": "print_order"
+            kind: "option",
+            key: "print_order",
           },
           {
-            "kind": "option",
-            "key": "spiral_mode"
+            kind: "option",
+            key: "spiral_mode",
           },
           {
-            "kind": "option",
-            "key": "spiral_mode_smooth"
+            kind: "option",
+            key: "spiral_mode_smooth",
           },
           {
-            "kind": "option",
-            "key": "spiral_mode_max_xy_smoothing"
+            kind: "option",
+            key: "spiral_mode_max_xy_smoothing",
           },
           {
-            "kind": "option",
-            "key": "spiral_starting_flow_ratio"
+            kind: "option",
+            key: "spiral_starting_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "spiral_finishing_flow_ratio"
+            kind: "option",
+            key: "spiral_finishing_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "timelapse_type"
+            kind: "option",
+            key: "timelapse_type",
           },
           {
-            "kind": "option",
-            "key": "enable_wrapping_detection"
-          }
-        ]
+            kind: "option",
+            key: "enable_wrapping_detection",
+          },
+        ],
       },
       {
-        "title": "Fuzzy skin",
-        "icon": "fuzzy_skin",
-        "rows": [
+        title: "Fuzzy skin",
+        icon: "fuzzy_skin",
+        rows: [
           {
-            "kind": "option",
-            "key": "fuzzy_skin"
+            kind: "option",
+            key: "fuzzy_skin",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_mode"
+            kind: "option",
+            key: "fuzzy_skin_mode",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_noise_type"
+            kind: "option",
+            key: "fuzzy_skin_noise_type",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_point_distance"
+            kind: "option",
+            key: "fuzzy_skin_point_distance",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_thickness"
+            kind: "option",
+            key: "fuzzy_skin_thickness",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_scale"
+            kind: "option",
+            key: "fuzzy_skin_scale",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_octaves"
+            kind: "option",
+            key: "fuzzy_skin_octaves",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_persistence"
+            kind: "option",
+            key: "fuzzy_skin_persistence",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_ripples_per_layer"
+            kind: "option",
+            key: "fuzzy_skin_ripples_per_layer",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_ripple_offset"
+            kind: "option",
+            key: "fuzzy_skin_ripple_offset",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_layers_between_ripple_offset"
+            kind: "option",
+            key: "fuzzy_skin_layers_between_ripple_offset",
           },
           {
-            "kind": "option",
-            "key": "fuzzy_skin_first_layer"
-          }
-        ]
+            kind: "option",
+            key: "fuzzy_skin_first_layer",
+          },
+        ],
       },
       {
-        "title": "G-code output",
-        "icon": "param_gcode",
-        "rows": [
+        title: "G-code output",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "reduce_infill_retraction"
+            kind: "option",
+            key: "reduce_infill_retraction",
           },
           {
-            "kind": "option",
-            "key": "gcode_add_line_number"
+            kind: "option",
+            key: "gcode_add_line_number",
           },
           {
-            "kind": "option",
-            "key": "gcode_comments"
+            kind: "option",
+            key: "gcode_comments",
           },
           {
-            "kind": "option",
-            "key": "high_precision_gcode"
+            kind: "option",
+            key: "high_precision_gcode",
           },
           {
-            "kind": "option",
-            "key": "gcode_label_objects"
+            kind: "option",
+            key: "gcode_label_objects",
           },
           {
-            "kind": "option",
-            "key": "exclude_object"
+            kind: "option",
+            key: "exclude_object",
           },
           {
-            "kind": "option",
-            "key": "exclude_object_tolerance"
+            kind: "option",
+            key: "exclude_object_tolerance",
           },
           {
-            "kind": "option",
-            "key": "filename_format",
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "filename_format",
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Change extrusion role G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Change extrusion role G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "process_change_extrusion_role_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "process_change_extrusion_role_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Post-processing Scripts",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Post-processing Scripts",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "post_process",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "post_process",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Slicing Pipeline Plugin",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Slicing Pipeline Plugin",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "slicing_pipeline_plugin",
-            "full": true
-          }
-        ]
+            kind: "option",
+            key: "slicing_pipeline_plugin",
+            full: true,
+          },
+        ],
       },
       {
-        "title": "Plugin Configuration",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Plugin Configuration",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "print_plugin_config_overrides"
-          }
-        ]
+            kind: "option",
+            key: "print_plugin_config_overrides",
+          },
+        ],
       },
       {
-        "title": "Notes",
-        "icon": "note",
-        "rows": [
+        title: "Notes",
+        icon: "note",
+        rows: [
           {
-            "kind": "option",
-            "key": "notes",
-            "full": true
-          }
-        ]
-      }
-    ]
-  }
+            kind: "option",
+            key: "notes",
+            full: true,
+          },
+        ],
+      },
+    ],
+  },
 ];

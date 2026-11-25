@@ -13,7 +13,8 @@ const VOLUME_STYLE: Record<Exclude<VolumeType, "ModelPart">, [number, number]> =
 const SELECTED = new THREE.Color(0xffa040);
 
 /** A volume colour, blended towards the selection colour when its object is selected. */
-const shade = (color: number, selected: boolean) => (selected ? new THREE.Color(color).lerp(SELECTED, 0.65) : new THREE.Color(color));
+const shade = (color: number, selected: boolean) =>
+  selected ? new THREE.Color(color).lerp(SELECTED, 0.65) : new THREE.Color(color);
 
 /**
  * The instance materials, one per volume type and selection state, built on first use and kept for the
@@ -63,9 +64,12 @@ export function buildInstances(scene: Scene, materials: ModelMaterials): THREE.G
         "position",
         new THREE.BufferAttribute(scene.positions.subarray(start, start + volume.vertexCount * 3), 3),
       );
-      geometry.setIndex(new THREE.BufferAttribute(
-        scene.indices.subarray(volume.indexOffset, volume.indexOffset + volume.indexCount), 1,
-      ));
+      geometry.setIndex(
+        new THREE.BufferAttribute(
+          scene.indices.subarray(volume.indexOffset, volume.indexOffset + volume.indexCount),
+          1,
+        ),
+      );
       return { volume, geometry };
     });
     for (const [instanceIndex, instance] of object.instances.entries()) {

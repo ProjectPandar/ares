@@ -4,7 +4,11 @@ import type { Toolpaths } from "./toolpaths.js";
 type ArrayBufferView = Float32Array<ArrayBuffer> | Uint32Array<ArrayBuffer> | Uint8Array<ArrayBuffer>;
 
 /** One final contiguous JS array; each binding call owns at most one fixed window. */
-export function readRanges<T extends ArrayBufferView>(target: T, stride: number, read: (first: number, count: number) => ArrayLike<number>): T {
+export function readRanges<T extends ArrayBufferView>(
+  target: T,
+  stride: number,
+  read: (first: number, count: number) => ArrayLike<number>,
+): T {
   const count = target.length / stride;
   for (let first = 0; first < count; first += 1_048_576) {
     target.set(read(first, Math.min(1_048_576, count - first)), first * stride);
@@ -25,7 +29,10 @@ export function readEnabled(vertices: VertexBuffers) {
   };
 }
 
-export type VertexArrays = Pick<Toolpaths, "values" | "ids" | "tags" | "options" | "colors" | "heightsWidths" | "segmentPositions" | "segmentAngles">;
+export type VertexArrays = Pick<
+  Toolpaths,
+  "values" | "ids" | "tags" | "options" | "colors" | "heightsWidths" | "segmentPositions" | "segmentAngles"
+>;
 
 export function readVertexArrays(vertices: VertexBuffers): VertexArrays {
   const count = vertices.count;
@@ -35,8 +42,12 @@ export function readVertexArrays(vertices: VertexBuffers): VertexArrays {
     tags: readRanges(new Uint8Array(4 * count), 4, (first, size) => vertices.tagsRange(first, size)),
     options: readRanges(new Uint8Array(count), 1, (first, size) => vertices.optionsRange(first, size)),
     colors: readColors(vertices, "FeatureType", 0xffffffff, vertices.visibleOptions),
-    heightsWidths: readRanges(new Float32Array(2 * count), 2, (first, size) => vertices.heightsWidthsRange(first, size)),
-    segmentPositions: readRanges(new Float32Array(3 * count), 3, (first, size) => vertices.segmentPositionsRange(first, size)),
+    heightsWidths: readRanges(new Float32Array(2 * count), 2, (first, size) =>
+      vertices.heightsWidthsRange(first, size),
+    ),
+    segmentPositions: readRanges(new Float32Array(3 * count), 3, (first, size) =>
+      vertices.segmentPositionsRange(first, size),
+    ),
     segmentAngles: readRanges(new Float32Array(count), 1, (first, size) => vertices.segmentAnglesRange(first, size)),
   };
 }

@@ -11,7 +11,12 @@ const toggled = (set: ReadonlySet<string>, value: string, on: boolean) => {
 };
 
 /** A searchable checkbox column with its "all" box (guide/23/index.html `cbr-column`). */
-function FilterColumn({ title, values, checked, onChange }: {
+function FilterColumn({
+  title,
+  values,
+  checked,
+  onChange,
+}: {
   title: string;
   values: string[];
   checked: ReadonlySet<string>;
@@ -21,17 +26,30 @@ function FilterColumn({ title, values, checked, onChange }: {
   const shown = values.filter((value) => matches(value, search));
   return (
     <div className="filament-column" role="group" aria-label={title}>
-      <input type="search" className="filament-column-search" aria-label={`Search ${title}`} placeholder={title}
-        value={search} onChange={(event) => setSearch(event.target.value)} />
+      <input
+        type="search"
+        className="filament-column-search"
+        aria-label={`Search ${title}`}
+        placeholder={title}
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
       <div className="filament-column-list">
         <label className="vendor-item">
-          <input type="checkbox" checked={values.every((value) => checked.has(value))}
-            onChange={(event) => onChange(event.target.checked ? new Set(values) : new Set())} />
+          <input
+            type="checkbox"
+            checked={values.every((value) => checked.has(value))}
+            onChange={(event) => onChange(event.target.checked ? new Set(values) : new Set())}
+          />
           all
         </label>
         {shown.map((value) => (
           <label key={value} className="vendor-item">
-            <input type="checkbox" checked={checked.has(value)} onChange={(event) => onChange(toggled(checked, value, event.target.checked))} />
+            <input
+              type="checkbox"
+              checked={checked.has(value)}
+              onChange={(event) => onChange(toggled(checked, value, event.target.checked))}
+            />
             {value}
           </label>
         ))}
@@ -57,20 +75,34 @@ function Columns({ model, onDone }: { model: DialogModel; onDone: (checked: Read
         <FilterColumn title="Vendor" values={model.vendors} checked={vendors} onChange={setVendors} />
         <div className="filament-column filament-items" role="group" aria-label="Filaments">
           <div className="filament-items-bar">
-            <input type="search" className="filament-column-search" aria-label="Filter filaments" placeholder="Filter items"
-              value={filter} onChange={(event) => setFilter(event.target.value)} />
+            <input
+              type="search"
+              className="filament-column-search"
+              aria-label="Filter filaments"
+              placeholder="Filter items"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
             {/* UpdateStats (common.js:379-392): checked / all [listed]. */}
             <span className="filament-count" data-testid="filament-count">
-              {checked.size} / {model.items.length}{shown.length < model.items.length ? ` [${shown.length}]` : ""}
+              {checked.size} / {model.items.length}
+              {shown.length < model.items.length ? ` [${shown.length}]` : ""}
             </span>
-            <button className="side-button" onClick={() => setShown(true)}>all</button>
-            <button className="side-button" onClick={() => setShown(false)}>Clear all</button>
+            <button className="side-button" onClick={() => setShown(true)}>
+              all
+            </button>
+            <button className="side-button" onClick={() => setShown(false)}>
+              Clear all
+            </button>
           </div>
           <div className="filament-column-list">
             {shown.map((item) => (
               <label key={item.key} className="vendor-item" title={item.names.join("\n")}>
-                <input type="checkbox" checked={checked.has(item.key)}
-                  onChange={(event) => setChecked(toggled(checked, item.key, event.target.checked))} />
+                <input
+                  type="checkbox"
+                  checked={checked.has(item.key)}
+                  onChange={(event) => setChecked(toggled(checked, item.key, event.target.checked))}
+                />
                 {item.short}
               </label>
             ))}
@@ -79,7 +111,9 @@ function Columns({ model, onDone }: { model: DialogModel; onDone: (checked: Read
         </div>
       </div>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => onDone(checked)}>Done</button>
+        <button className="side-button" onClick={() => onDone(checked)}>
+          Done
+        </button>
       </footer>
     </>
   );
@@ -95,17 +129,29 @@ export function FilamentDialog({ printer, onClose }: { printer: string; onClose:
   }, [printer]);
   const model = useMemo(() => filaments && dialogModel(filaments), [filaments]);
   return (
-    <dialog ref={dialog} className="shortcuts-dialog filament-dialog" aria-labelledby="filaments-title" onClose={onClose}>
+    <dialog
+      ref={dialog}
+      className="shortcuts-dialog filament-dialog"
+      aria-labelledby="filaments-title"
+      onClose={onClose}
+    >
       <header className="shortcuts-header">
         <h2 id="filaments-title">Filament selection</h2>
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>{"\u2715"}</button>
+        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
+          {"\u2715"}
+        </button>
       </header>
       {model ? (
-        <Columns model={model} onDone={(checked) => {
-          setInstalledFilaments(installedAfter(useApp.getState().installedFilaments, model.items, checked));
-          dialog.current!.close();
-        }} />
-      ) : <div className="side-empty">Loading filaments…</div>}
+        <Columns
+          model={model}
+          onDone={(checked) => {
+            setInstalledFilaments(installedAfter(useApp.getState().installedFilaments, model.items, checked));
+            dialog.current!.close();
+          }}
+        />
+      ) : (
+        <div className="side-empty">Loading filaments…</div>
+      )}
     </dialog>
   );
 }

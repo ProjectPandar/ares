@@ -6,16 +6,43 @@ import type { Move } from "./oracleMoves";
 
 /** GCodeProcessor `EMoveType` by `--dump-moves` id with its `to_string` label (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS = [
-  "Noop", "Retract", "Unretract", "Seam", "Tool Change", "Color Change", "Pause Print", "Custom G-code", "Travel", "Wipe", "Extrude",
+  "Noop",
+  "Retract",
+  "Unretract",
+  "Seam",
+  "Tool Change",
+  "Color Change",
+  "Pause Print",
+  "Custom G-code",
+  "Travel",
+  "Wipe",
+  "Extrude",
 ];
 /**
  * GCodeProcessor `ExtrusionRole` by `--dump-moves` id (`ExtrusionEntity.hpp:20-42`)
  * with the `to_string(EGCodeExtrusionRole)` label of the role it converts to (`GCodeViewer.cpp:296-323`).
  */
 const ROLE_LABELS = [
-  "Unknown", "Inner wall", "Outer wall", "Overhang wall", "Sparse infill", "Internal solid infill", "Top surface",
-  "Bottom surface", "Ironing", "Bridge", "Internal bridge", "Gap infill", "Skirt", "Brim", "Support",
-  "Support interface", "Support transition", "Prime tower", "Custom", "Mixed",
+  "Unknown",
+  "Inner wall",
+  "Outer wall",
+  "Overhang wall",
+  "Sparse infill",
+  "Internal solid infill",
+  "Top surface",
+  "Bottom surface",
+  "Ironing",
+  "Bridge",
+  "Internal bridge",
+  "Gap infill",
+  "Skirt",
+  "Brim",
+  "Support",
+  "Support interface",
+  "Support transition",
+  "Prime tower",
+  "Custom",
+  "Mixed",
 ];
 const SEAM = 3;
 const EXTRUDE = 10;
@@ -24,7 +51,10 @@ const f32 = Math.fround;
 /** printf `%.*f`: round half to even on the exact value of the float. */
 const printf = (value: number, decimals: number) =>
   new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: decimals, maximumFractionDigits: decimals, roundingMode: "halfEven", useGrouping: false,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    roundingMode: "halfEven",
+    useGrouping: false,
   }).format(value);
 
 /** `render_position_window` X/Y/Z: fewer decimals on big prints (`GCodeViewer.cpp:651-653`). */
@@ -96,9 +126,18 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   const { vertices, stops } = movesSliderVertices(moves, top);
   const oracle = process.env.ARES_MARKER_TIME_STABLE_BIN;
   if (!oracle) throw new Error("ARES_MARKER_TIME_STABLE_BIN is required for the marker Time oracle");
-  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
-    "--dump-moves", `${artifacts}marker-time-moves.csv`,
-    "--dump-marker-time", `${artifacts}marker-time-native.json`], { stdio: "ignore" });
+  execFileSync(
+    oracle,
+    [
+      "--process-gcode",
+      `${artifacts}oracle-input.gcode`,
+      "--dump-moves",
+      `${artifacts}marker-time-moves.csv`,
+      "--dump-marker-time",
+      `${artifacts}marker-time-native.json`,
+    ],
+    { stdio: "ignore" },
+  );
   expect(readFileSync(`${artifacts}marker-time-moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
   const native = JSON.parse(readFileSync(`${artifacts}marker-time-native.json`, "utf8")) as {
     vertices: { id: number; gcodeId: number; layerId: number; type: number; role: number; text: [string, string] }[];
@@ -138,15 +177,29 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   await page.screenshot({ path: `${artifacts}preview-tool-properties.png` });
   // ORCA Acceleration / Jerk / Pressure Advance views (`GCodeViewer.cpp:404-412`) on the same vertex.
   const motion: string[] = ["view,gcode_id,type,pressure_advance,acceleration,jerk,detail"];
-  for (const [view, label] of [["Acceleration", "Acceleration"], ["Jerk", "Jerk"], ["PressureAdvance", "Pressure Advance"]] as const) {
+  for (const [view, label] of [
+    ["Acceleration", "Acceleration"],
+    ["Jerk", "Jerk"],
+    ["PressureAdvance", "Pressure Advance"],
+  ] as const) {
     await select.selectOption({ label });
     await expectToolPosition(page, before, view);
     await expect(window.locator("table td")).toHaveText(rows.map(([, value]) => value));
-    motion.push([view, before.gcodeId, before.type, before.pressureAdvance, before.acceleration, before.jerk, detail(before, view)].join(","));
+    motion.push(
+      [
+        view,
+        before.gcodeId,
+        before.type,
+        before.pressureAdvance,
+        before.acceleration,
+        before.jerk,
+        detail(before, view),
+      ].join(","),
+    );
   }
   const motionTheme = await page.locator("html").getAttribute("data-theme");
   for (const theme of ["dark", "light"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
+    if ((await page.locator("html").getAttribute("data-theme")) !== theme)
       await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
     await page.screenshot({ path: `${artifacts}motion-attributes-${theme}.png` });
   }
@@ -156,7 +209,10 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   const sliderBox = await page.getByTestId("moves-slider").boundingBox();
   expect(box!.y + box!.height).toBeLessThanOrEqual(sliderBox!.y);
   await select.selectOption({ label: "Line Type" });
-  const timeCell = window.locator("tr").filter({ has: page.getByText("Time", { exact: true }) }).locator("td");
+  const timeCell = window
+    .locator("tr")
+    .filter({ has: page.getByText("Time", { exact: true }) })
+    .locator("td");
   await expect(timeCell).toHaveText(time(stops[seamStop]));
   for (const stop of [0, Math.floor(stops.length / 2), stops.length - 1, 0]) {
     await slider.fill(String(stop));
@@ -166,7 +222,9 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   await outer.click();
   await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
   await slider.fill((await slider.getAttribute("max"))!);
-  const filteredLast = native.vertices.findLast((v) => v.layerId <= top && (v.type === SEAM || (v.type === EXTRUDE && v.role !== 2)))!;
+  const filteredLast = native.vertices.findLast(
+    (v) => v.layerId <= top && (v.type === SEAM || (v.type === EXTRUDE && v.role !== 2)),
+  )!;
   await expect(timeCell).toHaveText(time(filteredLast.id));
   await outer.click();
   // The moves slider answers the visibility change asynchronously.
@@ -175,7 +233,7 @@ export async function checkToolPosition(page: Page, moves: Move[], top: number, 
   await expect(timeCell).toHaveText(time(stops.at(-1)!));
   const initialTheme = await page.locator("html").getAttribute("data-theme");
   for (const theme of ["light", "dark"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
+    if ((await page.locator("html").getAttribute("data-theme")) !== theme)
       await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
     await expect(timeCell).toHaveText(time(stops.at(-1)!));
     await page.screenshot({ path: `${artifacts}marker-time-${theme}.png` });

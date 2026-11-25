@@ -7,7 +7,11 @@ export function LoadWarning() {
   return (
     <div className="notification warning" role="alert" data-testid="load-warning">
       <p>{warning}</p>
-      <button className="notification-close" aria-label="Close" onClick={() => useApp.setState({ loadWarning: undefined })}>
+      <button
+        className="notification-close"
+        aria-label="Close"
+        onClick={() => useApp.setState({ loadWarning: undefined })}
+      >
         {"✕"}
       </button>
     </div>

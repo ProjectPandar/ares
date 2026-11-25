@@ -11,7 +11,11 @@ import { withSelectedPresets } from "./selectedPresetLines";
 
 const fixture = (path: string) => fileURLToPath(new URL(`../../tests/parity/${path}`, import.meta.url));
 
-async function openProject(page: Page, vendor: string, file: string | { name: string; mimeType: string; buffer: Buffer }) {
+async function openProject(
+  page: Page,
+  vendor: string,
+  file: string | { name: string; mimeType: string; buffer: Buffer },
+) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
@@ -71,7 +75,11 @@ test("the filament editor follows the surviving position after deleting a slot",
   settings.filament_density = ["1.23", "1.45"];
   settings.different_settings_to_system = ["", "filament_density", "filament_density", ""];
   entries[key] = strToU8(JSON.stringify(settings));
-  await openProject(page, "Bambu Lab", { name: "two-densities.3mf", mimeType: "application/octet-stream", buffer: Buffer.from(zipSync(entries)) });
+  await openProject(page, "Bambu Lab", {
+    name: "two-densities.3mf",
+    mimeType: "application/octet-stream",
+    buffer: Buffer.from(zipSync(entries)),
+  });
 
   const editor = page.getByRole("dialog", { name: "Filament settings", exact: true });
   const density = editor.getByLabel("filament_density", { exact: true });
@@ -125,7 +133,9 @@ function modelTools(gcode: string) {
   return Object.fromEntries([...tools].map(([name, indices]) => [name, [...indices]]));
 }
 
-test("merging into a physical slot changes object extrusion to the target and matches OrcaSlicer", async ({ page }, info) => {
+test("merging into a physical slot changes object extrusion to the target and matches OrcaSlicer", async ({
+  page,
+}, info) => {
   test.setTimeout(300_000);
   // The two-cube 3MF already represents the expected assignments after Merge. We
   // never use an Ares export as the input to the independent desktop route.

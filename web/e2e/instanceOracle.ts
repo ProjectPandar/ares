@@ -14,11 +14,17 @@ export const CUBE_FIXTURE = "tests/parity/orca_cli_ender3.3mf";
 export function cubeWithTwoCopies(): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${CUBE_FIXTURE}`));
   const model = strFromU8(entries["3D/3dmodel.model"]);
-  entries["3D/3dmodel.model"] = strToU8(model.replace("</build>",
-    "<item objectid=\"2\" transform=\"1 0 0 0 1 0 0 0 1 121 121 5\" printable=\"1\"/><item objectid=\"2\" transform=\"1 0 0 0 1 0 0 0 1 132 132 5\" printable=\"1\"/></build>"));
+  entries["3D/3dmodel.model"] = strToU8(
+    model.replace(
+      "</build>",
+      '<item objectid="2" transform="1 0 0 0 1 0 0 0 1 121 121 5" printable="1"/><item objectid="2" transform="1 0 0 0 1 0 0 0 1 132 132 5" printable="1"/></build>',
+    ),
+  );
   const settings = strFromU8(entries["Metadata/model_settings.config"]);
   const instance = (id: number, identify: number) =>
     `    <model_instance>\n      <metadata key="object_id" value="2"/>\n      <metadata key="instance_id" value="${id}"/>\n      <metadata key="identify_id" value="${identify}"/>\n    </model_instance>\n`;
-  entries["Metadata/model_settings.config"] = strToU8(settings.replace("  </plate>", `${instance(1, 15)}${instance(2, 16)}  </plate>`));
+  entries["Metadata/model_settings.config"] = strToU8(
+    settings.replace("  </plate>", `${instance(1, 15)}${instance(2, 16)}  </plate>`),
+  );
   return zipSync(entries) as Uint8Array<ArrayBuffer>;
 }

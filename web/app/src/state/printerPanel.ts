@@ -18,10 +18,23 @@ export interface PrinterPanel {
 }
 
 /** Keys of a printer preset `printerPanel` reads. */
-export const PANEL_KEYS = ["printer_model", "printer_variant", "nozzle_diameter", "support_multi_bed_types", "default_bed_type",
-  "extruder_type", "extruder_variant_list", "default_nozzle_volume_type"];
+export const PANEL_KEYS = [
+  "printer_model",
+  "printer_variant",
+  "nozzle_diameter",
+  "support_multi_bed_types",
+  "default_bed_type",
+  "extruder_type",
+  "extruder_variant_list",
+  "default_nozzle_volume_type",
+];
 
-export function printerPanel(values: OptionMap, info: PrinterModelInfo, bbl: boolean, defaultBedType: string): PrinterPanel {
+export function printerPanel(
+  values: OptionMap,
+  info: PrinterModelInfo,
+  bbl: boolean,
+  defaultBedType: string,
+): PrinterPanel {
   return {
     printerModel: firstString(values, "printer_model") ?? "",
     printerVariant: firstString(values, "printer_variant") ?? "",

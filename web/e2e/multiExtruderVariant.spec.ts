@@ -11,8 +11,8 @@ const artifacts = process.env.ARES_VARIANT_ARTIFACT_ROOT ?? `${root}target/web-e
 const cube = `${root}tests/parity/cube10.stl`;
 const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8").replace(/^\uFEFF/, ""));
 const printer = (page: Page) => page.getByRole("button", { name: "Printer preset", exact: true });
-const selectionConfig = (gcode: string) => gcode.split("\n").filter((line) =>
-  /^; (nozzle_diameter|printer_settings_id|curr_bed_type) = /.test(line));
+const selectionConfig = (gcode: string) =>
+  gcode.split("\n").filter((line) => /^; (nozzle_diameter|printer_settings_id|curr_bed_type) = /.test(line));
 
 type Selection = { printer: string; process: string; filaments: string[]; bedType: string };
 
@@ -44,19 +44,43 @@ function nativePresets() {
   return { datadir, leaves, input };
 }
 
-function nativeSlice(selection: Selection, variant: string, presets: ReturnType<typeof nativePresets>, bridgeLineWidth: string) {
+function nativeSlice(
+  selection: Selection,
+  variant: string,
+  presets: ReturnType<typeof nativePresets>,
+  bridgeLineWidth: string,
+) {
   const output = `${artifacts}/native-${variant}`;
   mkdirSync(output, { recursive: true });
   const leaf = (kind: string, name: string) => presets.leaves.get(`${kind}:${name}`)!;
-  const launcher = process.env.ARES_PARITY_SEEDED_REFERENCE === "1" ? process.env.ARES_ORCA_SEEDED_BIN : `${root}scripts/orca-parity.sh`;
+  const launcher =
+    process.env.ARES_PARITY_SEEDED_REFERENCE === "1"
+      ? process.env.ARES_ORCA_SEEDED_BIN
+      : `${root}scripts/orca-parity.sh`;
   if (!launcher) throw new Error("The selected native mode needs its launcher");
-  execFileSync(launcher, [
-    "--datadir", presets.datadir,
-    "--load-settings", [leaf("machine", selection.printer), leaf("process", selection.process)].join(";"),
-    "--load-filaments", selection.filaments.map((name) => leaf("filament", name)).join(";"),
-    "--curr-bed-type", selection.bedType, "--bridge-line-width", bridgeLineWidth,
-    "--arrange", "0", "--slice", "0", "--outputdir", output, presets.input,
-  ], { cwd: artifacts, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(
+    launcher,
+    [
+      "--datadir",
+      presets.datadir,
+      "--load-settings",
+      [leaf("machine", selection.printer), leaf("process", selection.process)].join(";"),
+      "--load-filaments",
+      selection.filaments.map((name) => leaf("filament", name)).join(";"),
+      "--curr-bed-type",
+      selection.bedType,
+      "--bridge-line-width",
+      bridgeLineWidth,
+      "--arrange",
+      "0",
+      "--slice",
+      "0",
+      "--outputdir",
+      output,
+      presets.input,
+    ],
+    { cwd: artifacts, stdio: ["ignore", "pipe", "pipe"] },
+  );
   return readFileSync(`${output}/plate_1.gcode`, "utf8");
 }
 
@@ -166,7 +190,7 @@ test("H2D keeps its paired nozzle controls when switching the printer diameter",
   await expect(right).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Variant", exact: true })).toHaveCount(0);
   await expect(page.getByRole("combobox", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
-  const diameter = await left.inputValue() === "0.6" ? "0.4" : "0.6";
+  const diameter = (await left.inputValue()) === "0.6" ? "0.4" : "0.6";
   await left.selectOption(diameter);
   const question = page.getByRole("dialog", { name: "Switch diameter" });
   await question.getByRole("button", { name: `Left nozzle: ${diameter}mm`, exact: true }).click();
@@ -181,11 +205,18 @@ test("U1 shows a customized first nozzle instead of the unchanged mixed variant"
   mkdirSync(artifacts, { recursive: true });
   const name = "U1 customized first nozzle";
   const preset = `${artifacts}/customized-u1.json`;
-  writeFileSync(preset, JSON.stringify({
-    type: "machine", name, from: "user", inherits: "Snapmaker U1 (0.4+0.6 nozzle)",
-    version: readJson(`${profiles}/Snapmaker.json`).version, printer_settings_id: name,
-    nozzle_diameter: ["0.6", "0.4", "0.6", "0.6"],
-  }));
+  writeFileSync(
+    preset,
+    JSON.stringify({
+      type: "machine",
+      name,
+      from: "user",
+      inherits: "Snapmaker U1 (0.4+0.6 nozzle)",
+      version: readJson(`${profiles}/Snapmaker.json`).version,
+      printer_settings_id: name,
+      nozzle_diameter: ["0.6", "0.4", "0.6", "0.6"],
+    }),
+  );
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByTestId("import-input").setInputFiles(cube);
@@ -205,8 +236,11 @@ test("U1 shows a customized first nozzle instead of the unchanged mixed variant"
   await expect(variant).toHaveValue("0.4+0.6");
   await page.getByTestId("preset-import-input").setInputFiles(preset);
   await printer(page).click();
-  await page.getByRole("listbox", { name: "Printer preset", exact: true })
-    .getByRole("group", { name: "User presets", exact: true }).getByRole("option", { name, exact: true }).click();
+  await page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "User presets", exact: true })
+    .getByRole("option", { name, exact: true })
+    .click();
   await expect(printer(page)).toHaveAttribute("title", name, { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await expect(variant).toHaveValue("0.6");

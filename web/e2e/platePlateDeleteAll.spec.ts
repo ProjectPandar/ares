@@ -23,12 +23,12 @@ function without(text: string, open: string, close: string): string {
 function withoutPlateTwoCube(): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${FIXTURE}`));
   let model = strFromU8(entries["3D/3dmodel.model"]);
-  model = without(model, "<object id=\"3\"", "</object>");
-  model = without(model, "<item objectid=\"3\"", "/>");
+  model = without(model, '<object id="3"', "</object>");
+  model = without(model, '<item objectid="3"', "/>");
   entries["3D/3dmodel.model"] = strToU8(model);
   let settings = strFromU8(entries["Metadata/model_settings.config"]);
-  settings = without(settings, "<object id=\"3\"", "</object>");
-  settings = without(settings, "<model_instance>\n      <metadata key=\"object_id\" value=\"3\"/>", "</model_instance>");
+  settings = without(settings, '<object id="3"', "</object>");
+  settings = without(settings, '<model_instance>\n      <metadata key="object_id" value="3"/>', "</model_instance>");
   entries["Metadata/model_settings.config"] = strToU8(settings);
   return zipSync(entries) as Uint8Array<ArrayBuffer>;
 }
@@ -65,15 +65,30 @@ test("the plate menu's Delete All empties the plate, and the other plate slices 
 
   const oracle = `${artifacts}without-plate-two-cube.3mf`;
   writeFileSync(oracle, withoutPlateTwoCube());
-  const legs = { official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${FIXTURE}`), seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${FIXTURE}`) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["plate menu on plate 2: Delete All"],
-    oracle: "OrcaSlicer --slice 1 of the exported project without plate 2's object (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const legs = {
+    official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${FIXTURE}`),
+    seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${FIXTURE}`),
+  };
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: ["plate menu on plate 2: Delete All"],
+        oracle: "OrcaSlicer --slice 1 of the exported project without plate 2's object (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

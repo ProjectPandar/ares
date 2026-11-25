@@ -12,7 +12,9 @@ import { shownTab } from "./shownTab";
 
 // Failure inventory: full-sized getter staging returns on recolor, repeated
 // slider responses drift, or range assembly changes the Native geometry/RGB.
-test("repeated small-model viewer queries preserve Native bytes within bounded linear memory", async ({ page }, info) => {
+test("repeated small-model viewer queries preserve Native bytes within bounded linear memory", async ({
+  page,
+}, info) => {
   test.setTimeout(600_000);
   const oracle = oraclePath("ARES_PROCGCODE_BIN", "the processor oracle", "tools/chain-probe/procgcode.nix");
   if (!oracle) throw new Error("The required Native processor oracle must run");
@@ -20,7 +22,9 @@ test("repeated small-model viewer queries preserve Native bytes within bounded l
   mkdirSync(directory, { recursive: true });
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
-  await page.getByTestId("import-input").setInputFiles(fileURLToPath(new URL("../../tests/parity/orca_cli_ender3.3mf", import.meta.url)));
+  await page
+    .getByTestId("import-input")
+    .setInputFiles(fileURLToPath(new URL("../../tests/parity/orca_cli_ender3.3mf", import.meta.url)));
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 120_000 });
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
@@ -54,7 +58,15 @@ test("repeated small-model viewer queries preserve Native bytes within bounded l
   const records = await wasmMemory(page.context().browser()!, new URL(page.url()).origin);
   const linear = records.flatMap(({ linearBytes }) => linearBytes);
   await info.attach("repeated-query-ledger", {
-    body: JSON.stringify({ repeats: colors.length, sizes, geometry, colors, records, highwaterBytes: Math.max(...linear), limitBytes: 3_850_000_000 }),
+    body: JSON.stringify({
+      repeats: colors.length,
+      sizes,
+      geometry,
+      colors,
+      records,
+      highwaterBytes: Math.max(...linear),
+      limitBytes: 3_850_000_000,
+    }),
     contentType: "application/json",
   });
   expect(linear.length, "live slicing-worker WebAssembly.Memory objects").toBeGreaterThan(0);

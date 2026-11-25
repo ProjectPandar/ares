@@ -20,7 +20,10 @@ const action = (page: Page, name: string) => page.getByRole("navigation").getByR
 
 /** Plate origins and the current plate as the canvas draws them; `-0` reads as `0`. */
 async function canvasPlates(page: Page) {
-  const probe = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
+  const probe = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as {
+    origins: number[][];
+    current: number;
+  };
   return { origins: probe.origins.map((origin) => origin.map((value) => value + 0)), current: probe.current };
 }
 
@@ -37,7 +40,9 @@ async function exportCurrent(page: Page, name: string) {
   return readFileSync(`${artifacts}${name}`, "utf8");
 }
 
-test("plates render on the grid, slice one at a time or all, and follow add and delete like OrcaSlicer", async ({ page }) => {
+test("plates render on the grid, slice one at a time or all, and follow add and delete like OrcaSlicer", async ({
+  page,
+}) => {
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -62,7 +67,13 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   await expect(plateRow(page, 2)).toBeVisible({ timeout: 60_000 });
 
   // PartPlateList::render: both plates on the 2-column grid, plate 1 current.
-  expect(await canvasPlates(page)).toEqual({ origins: [[0, 0], [STRIDE, 0]], current: 0 });
+  expect(await canvasPlates(page)).toEqual({
+    origins: [
+      [0, 0],
+      [STRIDE, 0],
+    ],
+    current: 0,
+  });
   await expect(plateRow(page, 1)).toHaveAttribute("aria-selected", "true");
   await page.screenshot({ path: `${artifacts}plates.png` });
 
@@ -70,7 +81,13 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   const plate1 = await slice(page, "two-plates_plate_1.gcode");
   compare("plate 1", plate1, project, 1);
   await plateRow(page, 2).click();
-  expect(await canvasPlates(page)).toEqual({ origins: [[0, 0], [STRIDE, 0]], current: 1 });
+  expect(await canvasPlates(page)).toEqual({
+    origins: [
+      [0, 0],
+      [STRIDE, 0],
+    ],
+    current: 1,
+  });
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page.getByTestId("slice-summary")).toContainText("Plate not sliced");
   const plate2 = await slice(page, "two-plates_plate_2.gcode");
@@ -81,7 +98,9 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   await plateRow(page, 1).click();
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page.getByTestId("slice-plate")).toHaveText("1");
-  await expect(page.getByTestId("gcode-bytes")).toHaveText(`${Buffer.byteLength(plate1).toLocaleString("en-US")} bytes`);
+  await expect(page.getByTestId("gcode-bytes")).toHaveText(
+    `${Buffer.byteLength(plate1).toLocaleString("en-US")} bytes`,
+  );
   await page.screenshot({ path: `${artifacts}preview-plate-1.png` });
 
   // "Slice all" slices every plate in turn and ends on the last; "Export all" saves each plate.
@@ -101,30 +120,74 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   await page.getByRole("link", { name: "Prepare" }).click();
   for (let count = 0; count < 3; count++) await button(page, "Add plate").click();
   await expect(plateRow(page, 5)).toBeVisible();
-  expect(await canvasPlates(page)).toEqual({ origins: [[0, 0], [STRIDE, 0], [2 * STRIDE, 0], [0, -STRIDE], [STRIDE, -STRIDE]], current: 4 });
+  expect(await canvasPlates(page)).toEqual({
+    origins: [
+      [0, 0],
+      [STRIDE, 0],
+      [2 * STRIDE, 0],
+      [0, -STRIDE],
+      [STRIDE, -STRIDE],
+    ],
+    current: 4,
+  });
   await button(page, "Delete plate 1").click();
   await expect(plateRow(page, 5)).toHaveCount(0);
-  expect(await canvasPlates(page)).toEqual({ origins: [[0, 0], [STRIDE, 0], [0, -STRIDE], [STRIDE, -STRIDE]], current: 3 });
+  expect(await canvasPlates(page)).toEqual({
+    origins: [
+      [0, 0],
+      [STRIDE, 0],
+      [0, -STRIDE],
+      [STRIDE, -STRIDE],
+    ],
+    current: 3,
+  });
   await plateRow(page, 1).click();
-  const tree = await page.getByTestId("object-list").getByRole("treeitem").evaluateAll((rows) =>
-    rows.map((row) => (row.classList.contains("plate-row") ? row.querySelector(".object-name")!.textContent : "on plate")));
+  const tree = await page
+    .getByTestId("object-list")
+    .getByRole("treeitem")
+    .evaluateAll((rows) =>
+      rows.map((row) =>
+        row.classList.contains("plate-row") ? row.querySelector(".object-name")!.textContent : "on plate",
+      ),
+    );
   expect(tree).toEqual(["Plate 1", "on plate", "Plate 2", "Plate 3", "Plate 4", "Outside", "on plate"]);
   await page.screenshot({ path: `${artifacts}after-delete.png` });
   const moved = await slice(page, "two-plates_plate_1.gcode");
   const oracle = `${artifacts}after-delete.3mf`;
-  writeFileSync(oracle, guiExport(FIXTURE, [
-    { source: 1, items: [{ objectId: 3, instanceId: 0, identifyId: 15, matrix: matrix([], [110, 110, 5]) }] },
-    { source: null, items: [] }, { source: null, items: [] }, { source: null, items: [] },
-  ], await probedTowers(page), [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [110 + 2 * STRIDE, 110 - STRIDE, 5]) }]));
+  writeFileSync(
+    oracle,
+    guiExport(
+      FIXTURE,
+      [
+        { source: 1, items: [{ objectId: 3, instanceId: 0, identifyId: 15, matrix: matrix([], [110, 110, 5]) }] },
+        { source: null, items: [] },
+        { source: null, items: [] },
+        { source: null, items: [] },
+      ],
+      await probedTowers(page),
+      [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [110 + 2 * STRIDE, 110 - STRIDE, 5]) }],
+    ),
+  );
   compare("after delete, plate 1", moved, oracle, 1);
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    oracle: { command: "--slice <plate> (official and seed-replay seed 0); after the delete, of the GUI-exported project", runs: oracles },
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        oracle: {
+          command: "--slice <plate> (official and seed-replay seed 0); after the delete, of the GUI-exported project",
+          runs: oracles,
+        },
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   for (const [label, byLeg] of Object.entries(results)) {
-    for (const [leg, outcome] of Object.entries(byLeg)) expect(outcome, `${label} vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+    for (const [leg, outcome] of Object.entries(byLeg))
+      expect(outcome, `${label} vs ${leg} OrcaSlicer`).not.toBe("FAIL");
   }
 });

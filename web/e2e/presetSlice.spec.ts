@@ -6,7 +6,13 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
-import { withDifferences, withoutCliGroups, withPlaterBedType, withPlaterConfigLines, withPlaterTower } from "./platerExport";
+import {
+  withDifferences,
+  withoutCliGroups,
+  withPlaterBedType,
+  withPlaterConfigLines,
+  withPlaterTower,
+} from "./platerExport";
 import { lhModels, type NativeSelection, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
 import { setConfigLine, withSelectedPresets } from "./selectedPresetLines";
 import { checkToolpathPreview } from "./toolpathPreview";
@@ -19,25 +25,37 @@ const EDIT = { key: "layer_height", value: "0.3" };
 
 async function choose(page: Page, combo: string, group: string, name: string) {
   await page.getByRole("button", { name: combo, exact: true }).click();
-  await page.getByRole("listbox", { name: combo, exact: true }).getByRole("group", { name: group })
-    .getByRole("option", { name, exact: true }).click();
+  await page
+    .getByRole("listbox", { name: combo, exact: true })
+    .getByRole("group", { name: group })
+    .getByRole("option", { name, exact: true })
+    .click();
   await expect(page.getByRole("button", { name: combo, exact: true })).toHaveText(name);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }
 
 function viewportFrame(page: Page) {
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate(async (canvas: HTMLCanvasElement) => {
-    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    const probe = document.createElement("canvas");
-    [probe.width, probe.height] = [400, Math.round((400 * canvas.height) / canvas.width)];
-    const context = probe.getContext("2d")!;
-    context.drawImage(canvas, 0, 0, probe.width, probe.height);
-    return { width: probe.width, height: probe.height, pixels: [...context.getImageData(0, 0, probe.width, probe.height).data] };
-  });
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate(async (canvas: HTMLCanvasElement) => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const probe = document.createElement("canvas");
+      [probe.width, probe.height] = [400, Math.round((400 * canvas.height) / canvas.width)];
+      const context = probe.getContext("2d")!;
+      context.drawImage(canvas, 0, 0, probe.width, probe.height);
+      return {
+        width: probe.width,
+        height: probe.height,
+        pixels: [...context.getImageData(0, 0, probe.width, probe.height).data],
+      };
+    });
 }
 
 /** Compare against the same empty plate. Geometry and centroid do not depend on the filament hue. */
-function modelOffset(frames: readonly [Awaited<ReturnType<typeof viewportFrame>>, Awaited<ReturnType<typeof viewportFrame>>], filament: number[]) {
+function modelOffset(
+  frames: readonly [Awaited<ReturnType<typeof viewportFrame>>, Awaited<ReturnType<typeof viewportFrame>>],
+  filament: number[],
+) {
   const [{ width, height, pixels }, empty] = frames;
   expect([width, height]).toEqual([empty.width, empty.height]);
   const chroma = (rgb: number[]) => Math.max(...rgb) - Math.min(...rgb);
@@ -60,7 +78,10 @@ function modelOffset(frames: readonly [Awaited<ReturnType<typeof viewportFrame>>
 function bedCenter(vendor: string, machine: string): [number, number] {
   const dir = `${repositoryRoot}OrcaSlicer/resources/profiles/${vendor}/machine/`;
   const field = (name: string): string[] => {
-    const json = JSON.parse(readFileSync(`${dir}${name}.json`, "utf8")) as { printable_area?: string[]; inherits: string };
+    const json = JSON.parse(readFileSync(`${dir}${name}.json`, "utf8")) as {
+      printable_area?: string[];
+      inherits: string;
+    };
     return json.printable_area ?? field(json.inherits);
   };
   const points = field(machine).map((point) => point.split("x").map(Number));
@@ -94,9 +115,19 @@ async function exportGcode(page: Page, directory: string) {
   return path;
 }
 
-test("a 3MF plate with and without a sidebar edit and a centered STL sliced with selected system presets match OrcaSlicer --load-settings bytes", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the --load-settings oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
-  const procgcode = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
+test("a 3MF plate with and without a sidebar edit and a centered STL sliced with selected system presets match OrcaSlicer --load-settings bytes", async ({
+  page,
+}) => {
+  const orca = oraclePath(
+    "ORCA_APPDIR",
+    "the --load-settings oracle",
+    "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh",
+  );
+  const procgcode = oraclePath(
+    "ARES_PROCGCODE_BIN",
+    "the OrcaSlicer GCodeProcessor toolpath oracle",
+    "build it with tools/chain-probe/procgcode.nix",
+  );
   if (!orca) test.skip();
   const seeded = process.env.ARES_PARITY_SEEDED_REFERENCE === "1";
   const launcher = seeded ? process.env.ARES_ORCA_SEEDED_BIN : `${repositoryRoot}scripts/orca-parity.sh`;
@@ -118,24 +149,40 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // slices cube10.stl pre-placed at the center of the rectangular LH Stinger bed (printable_area
   // 18x38..218x238), where Plater::priv::load_model_objects puts a model loaded on an empty plate.
   const nativeRoot = `${mkdtempSync(`${tmpdir()}/ares-web-preset-oracle-`)}/`;
-  execFileSync("cargo", ["nextest", "run", "-p", "ares-cli", "-E",
-    "test(profile_entry_3mf_load_settings) | test(profile_entry_stl_center_placement)"], {
-    cwd: repositoryRoot,
-    stdio: ["ignore", "pipe", "pipe"],
-    env: {
-      ...process.env,
-      ARES_ORCA_BIN: launcher,
-      ...(seeded ? {} : nativeEnv(orca!)),
-      ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+  execFileSync(
+    "cargo",
+    [
+      "nextest",
+      "run",
+      "-p",
+      "ares-cli",
+      "-E",
+      "test(profile_entry_3mf_load_settings) | test(profile_entry_stl_center_placement)",
+    ],
+    {
+      cwd: repositoryRoot,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        ARES_ORCA_BIN: launcher,
+        ...(seeded ? {} : nativeEnv(orca!)),
+        ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+      },
     },
-  });
-  const runs = readdirSync(nativeRoot).filter((name) => name.startsWith("orca-runner-")).map((name) => `${nativeRoot}${name}/`);
+  );
+  const runs = readdirSync(nativeRoot)
+    .filter((name) => name.startsWith("orca-runner-"))
+    .map((name) => `${nativeRoot}${name}/`);
   const work = runs.find((dir) => existsSync(`${dir}selection.json`))!;
   const centerWork = runs.find((dir) => existsSync(`${dir}center-reference`))!;
   cpSync(work, `${artifacts}native/`, { recursive: true });
   cpSync(centerWork, `${artifacts}native-center/`, { recursive: true });
   expect(JSON.parse(readFileSync(`${work}result.json`, "utf8"))).toMatchObject({ native_repeat: "PASS" });
-  const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8")) as { machine: string; process: string; filaments: string[] };
+  const selection = JSON.parse(readFileSync(`${work}selection.json`, "utf8")) as {
+    machine: string;
+    process: string;
+    filaments: string[];
+  };
   // The plater session the browser replays: the first-run app opens the 3MF, the GuideFrame wizard installs every
   // LH model and the sidebar picks the selected LH system presets. The browser composes them as full_fff_config,
   // so each reference is the CLI slice with this session's selected-preset lines and group keys.
@@ -143,45 +190,105 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     wizard: { LH: lhModels() },
     select: { printer: selection.machine, process: selection.process, filaments: selection.filaments },
   });
-  const inputs = JSON.parse(readFileSync(`${work}native-profile-inputs.json`, "utf8")) as { datadir: string; settings: string[]; filaments: string[] };
-  const loadPresets = ["--datadir", inputs.datadir, "--load-settings", inputs.settings.join(";"), "--load-filaments", inputs.filaments.join(";")];
+  const inputs = JSON.parse(readFileSync(`${work}native-profile-inputs.json`, "utf8")) as {
+    datadir: string;
+    settings: string[];
+    filaments: string[];
+  };
+  const loadPresets = [
+    "--datadir",
+    inputs.datadir,
+    "--load-settings",
+    inputs.settings.join(";"),
+    "--load-filaments",
+    inputs.filaments.join(";"),
+  ];
   // The session's picks run load_selections, which replaces the 3MF's curr_bed_type with the selected printer's
   // (PresetBundle.cpp:4046-4055, Preset.cpp:1140-1171); the 3MF references slice with the session's.
   const platerBed = withPlaterBedType(session, `${work}profile-entry.3mf`, `${work}profile-entry-plater-bed.3mf`);
   mkdirSync(`${work}selected-system-reference`);
-  execFileSync(launcher, [
-    ...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, platerBed,
-  ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(
+    launcher,
+    [...loadPresets, "--slice", "0", "--outputdir", `${work}selected-system-reference`, platerBed],
+    { cwd: work, stdio: ["ignore", "pipe", "pipe"] },
+  );
   cpSync(`${work}selected-system-reference`, `${artifacts}native/selected-system-reference`, { recursive: true });
-  const native = withoutCliGroups(withSelectedPresets(normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session), withDifferences(session));
+  const native = withoutCliGroups(
+    withSelectedPresets(
+      normalize(readFileSync(`${work}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"),
+      session,
+    ),
+    withDifferences(session),
+  );
   mkdirSync(`${centerWork}selected-system-reference`);
   // With no project open the plater's project config holds the selected printer's bed type (load_selections,
   // PresetBundle.cpp:4046-4055) and the default flush_volumes_vector (PrintConfig.cpp:8275) cut to a load/unload
   // pair per filament (update_multi_material_filament_presets, PresetBundle.cpp:8623-8635); the CLI takes both
   // project options from the command line, which records no preset column for them (OrcaSlicer.cpp:4168-4220).
   const stlProject = [
-    "--curr-bed-type", (JSON.parse(session.full_fff_config) as { curr_bed_type: string }).curr_bed_type,
-    "--flush-volumes-vector", selection.filaments.flatMap(() => ["140", "140"]).join(","),
+    "--curr-bed-type",
+    (JSON.parse(session.full_fff_config) as { curr_bed_type: string }).curr_bed_type,
+    "--flush-volumes-vector",
+    selection.filaments.flatMap(() => ["140", "140"]).join(","),
   ];
-  execFileSync(launcher, [
-    ...loadPresets, ...stlProject, "--arrange", "0", "--slice", "0", "--outputdir", `${centerWork}selected-system-reference`, `${centerWork}cube10.stl`,
-  ], { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] });
-  cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, { recursive: true });
-  const nativeCenter = withPlaterStlLines(normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session);
-  const centerNames = ["machine", "process", "filament"].map((kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name);
-  expect(centerNames, "both native runs use the same presets").toEqual([selection.machine, selection.process, ...selection.filaments]);
+  execFileSync(
+    launcher,
+    [
+      ...loadPresets,
+      ...stlProject,
+      "--arrange",
+      "0",
+      "--slice",
+      "0",
+      "--outputdir",
+      `${centerWork}selected-system-reference`,
+      `${centerWork}cube10.stl`,
+    ],
+    { cwd: centerWork, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  cpSync(`${centerWork}selected-system-reference`, `${artifacts}native-center/selected-system-reference`, {
+    recursive: true,
+  });
+  const nativeCenter = withPlaterStlLines(
+    normalize(readFileSync(`${centerWork}selected-system-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"),
+    session,
+  );
+  const centerNames = ["machine", "process", "filament"].map(
+    (kind) => JSON.parse(readFileSync(`${centerWork}center-${kind}.json`, "utf8")).name,
+  );
+  expect(centerNames, "both native runs use the same presets").toEqual([
+    selection.machine,
+    selection.process,
+    ...selection.filaments,
+  ]);
 
   // Preserve the edit snapshot, but apply the Native CLI edit after pristine vendor loading
   // (OrcaSlicer.cpp:2118-2157; Config.cpp:461 apply_only: later values win).
   const processPreset = JSON.parse(readFileSync(`${work}process.json`, "utf8")) as Record<string, unknown>;
   writeFileSync(`${work}process-override.json`, JSON.stringify({ ...processPreset, [EDIT.key]: EDIT.value }, null, 2));
   mkdirSync(`${work}override-reference`);
-  execFileSync(launcher, [
-    ...loadPresets, "--layer-height", String(EDIT.value),
-    "--slice", "0", "--outputdir", `${work}override-reference`, platerBed,
-  ], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(
+    launcher,
+    [
+      ...loadPresets,
+      "--layer-height",
+      String(EDIT.value),
+      "--slice",
+      "0",
+      "--outputdir",
+      `${work}override-reference`,
+      platerBed,
+    ],
+    { cwd: work, stdio: ["ignore", "pipe", "pipe"] },
+  );
   cpSync(`${work}override-reference`, `${artifacts}native/override-reference`, { recursive: true });
-  const nativeEdited = withoutCliGroups(withSelectedPresets(normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"), session), withDifferences(session));
+  const nativeEdited = withoutCliGroups(
+    withSelectedPresets(
+      normalize(readFileSync(`${work}override-reference/plate_1.gcode`, "utf8"), "OrcaSlicer"),
+      session,
+    ),
+    withDifferences(session),
+  );
   expect(nativeEdited === native, "the edit changes the native output").toBe(false);
 
   await page.goto("/");
@@ -202,7 +309,10 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // here the 3MF's own printer, which the byte comparison below checks.
   const machine = JSON.parse(readFileSync(`${work}machine.json`, "utf8")) as { printer_model: string };
   await choose(page, "Printer preset", "System presets", machine.printer_model);
-  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", selection.machine);
+  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute(
+    "title",
+    selection.machine,
+  );
   await choose(page, "Process preset", "System presets", selection.process);
   for (const [slot, filament] of selection.filaments.entries()) {
     await choose(page, `Filament ${slot + 1} preset`, "System presets", filament);
@@ -214,14 +324,24 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const gcodePath = await exportGcode(page, artifacts);
   const browser = readFileSync(gcodePath, "utf8");
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on a 3MF (profile_entry_3mf_load_settings)",
-    evidence: "ordered_bytes_generator_only",
-    selection,
-    bytes: browser.length,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        oracle: "official OrcaSlicer 2.5.0-beta --load-settings on a 3MF (profile_entry_3mf_load_settings)",
+        evidence: "ordered_bytes_generator_only",
+        selection,
+        bytes: browser.length,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   expect(multiColour(browser), "filament_multi_colour config line").toEqual(multiColour(native));
-  expect(normalize(browser, "Ares") === withPlaterTower(native, normalize(browser, "Ares"), session), "browser G-code equals native --load-settings G-code").toBe(true);
+  expect(
+    normalize(browser, "Ares") === withPlaterTower(native, normalize(browser, "Ares"), session),
+    "browser G-code equals native --load-settings G-code",
+  ).toBe(true);
 
   // The preset slice carries the engine's toolpaths for the preview.
   await page.getByRole("link", { name: "Preview" }).click();
@@ -241,14 +361,24 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const editedPath = await exportGcode(page, `${artifacts}edited/`);
   const browserEdited = readFileSync(editedPath, "utf8");
-  writeFileSync(`${artifacts}edited/result.json`, `${JSON.stringify({
-    oracle: "OrcaSlicer selected vendor presets followed by the CLI layer-height edit",
-    evidence: "ordered_bytes_generator_only",
-    edit: EDIT,
-    bytes: browserEdited.length,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}edited/result.json`,
+    `${JSON.stringify(
+      {
+        oracle: "OrcaSlicer selected vendor presets followed by the CLI layer-height edit",
+        evidence: "ordered_bytes_generator_only",
+        edit: EDIT,
+        bytes: browserEdited.length,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   expect(multiColour(browserEdited), "edited filament_multi_colour config line").toEqual(multiColour(nativeEdited));
-  expect(normalize(browserEdited, "Ares") === withPlaterTower(nativeEdited, normalize(browserEdited, "Ares"), session), "edited browser G-code equals native --load-settings G-code").toBe(true);
+  expect(
+    normalize(browserEdited, "Ares") === withPlaterTower(nativeEdited, normalize(browserEdited, "Ares"), session),
+    "edited browser G-code equals native --load-settings G-code",
+  ).toBe(true);
 
   // An STL loaded on the empty plate is centered on the bed and dropped to it
   // (Plater.cpp:7056-7058, 7111-7112, 7149-7160): the presets stay selected.
@@ -265,11 +395,18 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   const viewToolbar = shownTab(page).getByTestId("view-toolbar");
   await viewToolbar.getByRole("button", { name: "Fit to plate" }).click();
   await viewToolbar.getByRole("button", { name: "Top", exact: true }).click();
-  const swatch = await page.getByTestId("filament-swatch-1").evaluate((element) => getComputedStyle(element).backgroundColor);
+  const swatch = await page
+    .getByTestId("filament-swatch-1")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
   const filament = swatch.match(/\d+/g)!.map(Number);
   expect(filament, "the slot swatch has an opaque RGB colour").toHaveLength(3);
-  const hex = filament.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase();
-  expect(nativeCenter, "the slot swatch matches the Native slice's filament colour").toContain(`; filament_colour = #${hex}\n`);
+  const hex = filament
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase();
+  expect(nativeCenter, "the slot swatch matches the Native slice's filament colour").toContain(
+    `; filament_colour = #${hex}\n`,
+  );
   const occupied = await viewportFrame(page);
   await page.screenshot({ path: `${artifacts}prepare-stl-top.png` });
   const model = page.getByRole("treeitem", { name: "cube10.stl" });
@@ -277,7 +414,10 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await expect(model).toHaveCount(0);
   const empty = await viewportFrame(page);
   const offset = modelOffset([occupied, empty], filament);
-  writeFileSync(`${artifacts}prepare-stl.json`, `${JSON.stringify({ bedCenter: bedCenter("LH", selection.machine), swatch, offset }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}prepare-stl.json`,
+    `${JSON.stringify({ bedCenter: bedCenter("LH", selection.machine), swatch, offset }, null, 2)}\n`,
+  );
   expect(offset.count, "the model changes pixels against the empty plate").toBeGreaterThan(50);
   expect(Math.hypot(offset.x, offset.y), "model centred on the selected printer's plate").toBeLessThan(0.01);
   expect(offset.matching, "the model uses the colour shown in its filament slot").toBeGreaterThan(50);
@@ -286,13 +426,24 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   const centered = readFileSync(await exportGcode(page, artifacts), "utf8");
-  writeFileSync(`${artifacts}result-stl.json`, `${JSON.stringify({
-    oracle: "official OrcaSlicer 2.5.0-beta --load-settings on cube10.stl at the bed center (profile_entry_stl_center_placement)",
-    evidence: "ordered_bytes_generator_only",
-    selection,
-    bytes: centered.length,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result-stl.json`,
+    `${JSON.stringify(
+      {
+        oracle:
+          "official OrcaSlicer 2.5.0-beta --load-settings on cube10.stl at the bed center (profile_entry_stl_center_placement)",
+        evidence: "ordered_bytes_generator_only",
+        selection,
+        bytes: centered.length,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   expect(multiColour(centered), "STL filament_multi_colour config line").toEqual(multiColour(nativeCenter));
-  expect(normalize(centered, "Ares") === nativeCenter, "browser STL G-code equals native G-code of the bed-centered model").toBe(true);
+  expect(
+    normalize(centered, "Ares") === nativeCenter,
+    "browser STL G-code equals native G-code of the bed-centered model",
+  ).toBe(true);
   expect(errors).toEqual([]);
 });

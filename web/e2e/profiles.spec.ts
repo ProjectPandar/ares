@@ -29,16 +29,29 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   mkdirSync(installed, { recursive: true });
 
   // bun pm pack (prepack regenerates dist from the checkout): data only, no runtime dependencies.
-  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-profiles`).trim().split("\n").pop()!;
-  const packedFiles = run("tar", ["-tzf", tarball], artifacts).trim().split("\n").map((entry) => entry.replace(/^package\//, ""));
+  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-profiles`)
+    .trim()
+    .split("\n")
+    .pop()!;
+  const packedFiles = run("tar", ["-tzf", tarball], artifacts)
+    .trim()
+    .split("\n")
+    .map((entry) => entry.replace(/^package\//, ""));
   run("tar", ["-xzf", tarball, "--strip-components=1", "-C", installed], artifacts);
   const manifest = readJson(`${installed}package.json`);
-  expect(manifest).toMatchObject({ name: "@ares-slicer/profiles", license: "AGPL-3.0-or-later", publishConfig: { access: "public" } });
+  expect(manifest).toMatchObject({
+    name: "@ares-slicer/profiles",
+    license: "AGPL-3.0-or-later",
+    publishConfig: { access: "public" },
+  });
   expect(manifest.dependencies ?? {}).toEqual({});
 
   // Fidelity: every vendor index (PresetBundle::load_vendor_configs_from_json loads each top-level
   // *.json) and every sub_path file it lists, equal to the source JSON.
-  const ids = readdirSync(profilesDir).filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)).sort();
+  const ids = readdirSync(profilesDir)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => file.slice(0, -5))
+    .sort();
   const data = await import(pathToFileURL(`${installed}dist/index.js`).href);
   expect(data.ORCA_SLICER_COMMIT).toBe(run("git", ["rev-parse", "HEAD"], orca).trim());
   expect(data.vendors.map((vendor: { id: string }) => vendor.id)).toEqual(ids);
@@ -51,11 +64,15 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
     expect(loadedId).toBe(id);
     expect(index).toEqual(source);
     expect(data.vendors.find((vendor: { id: string }) => vendor.id === id)).toEqual({
-      id, name: source.name, version: source.version, description: source.description,
+      id,
+      name: source.name,
+      version: source.version,
+      description: source.description,
     });
     const subPaths = LISTS.flatMap((list) => (source[list] ?? []).map((entry) => entry.sub_path));
     expect(Object.keys(files).sort(), id).toEqual([...new Set(subPaths)].sort());
-    for (const subPath of subPaths) expect(files[subPath], `${id}/${subPath}`).toEqual(readJson(`${profilesDir}${id}/${subPath}`));
+    for (const subPath of subPaths)
+      expect(files[subPath], `${id}/${subPath}`).toEqual(readJson(`${profilesDir}${id}/${subPath}`));
     profileCount += subPaths.length;
   }
 
@@ -66,8 +83,13 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   } catch (error) {
     throw new Error(`tsc failed:\n${(error as { stdout: string }).stdout}`, { cause: error });
   }
-  const output = await build({ root: consumer, logLevel: "warn", build: { outDir: "dist", target: "es2022", chunkSizeWarningLimit: 8_000 } });
-  const chunks = (Array.isArray(output) ? output : [output]).flatMap((result) => ("output" in result ? result.output : []))
+  const output = await build({
+    root: consumer,
+    logLevel: "warn",
+    build: { outDir: "dist", target: "es2022", chunkSizeWarningLimit: 8_000 },
+  });
+  const chunks = (Array.isArray(output) ? output : [output])
+    .flatMap((result) => ("output" in result ? result.output : []))
     .filter((chunk) => chunk.type === "chunk");
   const entry = chunks.find((chunk) => chunk.isEntry)!;
   const entryGzip = gzipSync(entry.code).length;
@@ -79,12 +101,18 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
 
   // Browser: the vendor list needs no vendor chunk; loading Snapmaker fetches exactly its chunk.
   const snapmaker = readJson(`${profilesDir}Snapmaker.json`) as VendorIndex;
-  const printers = snapmaker.machine_list.map(({ sub_path: subPath }) => readJson(`${profilesDir}Snapmaker/${subPath}`).name as string);
+  const printers = snapmaker.machine_list.map(
+    ({ sub_path: subPath }) => readJson(`${profilesDir}Snapmaker/${subPath}`).name as string,
+  );
   const scripts: string[] = [];
   page.on("request", (request) => {
     if (request.resourceType() === "script") scripts.push(new URL(request.url()).pathname);
   });
-  const server = await preview({ root: consumer, logLevel: "warn", preview: { host: "127.0.0.1", port: 4176, strictPort: true } });
+  const server = await preview({
+    root: consumer,
+    logLevel: "warn",
+    preview: { host: "127.0.0.1", port: 4176, strictPort: true },
+  });
   try {
     await page.goto("http://127.0.0.1:4176/");
     await expect(page.getByTestId("vendors").getByRole("listitem")).toHaveText(ids);
@@ -99,13 +127,20 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
     await server.close();
   }
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    tarball: basename(tarball),
-    orcaSlicerCommit: data.ORCA_SLICER_COMMIT,
-    vendors: ids.length,
-    profiles: profileCount,
-    entryGzipBytes: entryGzip,
-    vendorChunksGzipBytes: vendorGzip,
-    snapmakerPrinters: printers.length,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        tarball: basename(tarball),
+        orcaSlicerCommit: data.ORCA_SLICER_COMMIT,
+        vendors: ids.length,
+        profiles: profileCount,
+        entryGzipBytes: entryGzip,
+        vendorChunksGzipBytes: vendorGzip,
+        snapmakerPrinters: printers.length,
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });

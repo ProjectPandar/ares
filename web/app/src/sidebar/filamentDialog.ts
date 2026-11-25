@@ -60,8 +60,14 @@ export function dialogModel(filaments: readonly DialogFilament[]): DialogModel {
     else items.set(key, { key, short, type, vendor, names: [name] });
   }
   return {
-    types: column(sorted.map((filament) => filament.type), FILAMENT_PRIORITY),
-    vendors: column(sorted.map((filament) => filament.vendor), VENDOR_PRIORITY),
+    types: column(
+      sorted.map((filament) => filament.type),
+      FILAMENT_PRIORITY,
+    ),
+    vendors: column(
+      sorted.map((filament) => filament.vendor),
+      VENDOR_PRIORITY,
+    ),
     items: [...items.values()],
   };
 }
@@ -73,7 +79,13 @@ export const matches = (text: string, search: string) => text.toLowerCase().incl
  * Whether a filament item is listed: its type and vendor are checked (SortFilament, common.js:287-377)
  * and it passes the item filter, where `::checked` / `::unchecked` select by state (common.js:570-597).
  */
-export function itemShown(item: DialogItem, types: ReadonlySet<string>, vendors: ReadonlySet<string>, filter: string, checked: boolean) {
+export function itemShown(
+  item: DialogItem,
+  types: ReadonlySet<string>,
+  vendors: ReadonlySet<string>,
+  filter: string,
+  checked: boolean,
+) {
   if (!types.has(item.type) || !vendors.has(item.vendor)) return false;
   const query = filter.trim().toLowerCase();
   if (query === "::checked") return checked;
@@ -87,7 +99,11 @@ export function checkedItems(items: readonly DialogItem[], installed: ReadonlySe
 }
 
 /** The installed set after the dialog: its items' presets replaced by the checked items' presets. */
-export function installedAfter(installed: ReadonlySet<string>, items: readonly DialogItem[], checked: ReadonlySet<string>): string[] {
+export function installedAfter(
+  installed: ReadonlySet<string>,
+  items: readonly DialogItem[],
+  checked: ReadonlySet<string>,
+): string[] {
   const listed = new Set(items.flatMap((item) => item.names));
   return [
     ...[...installed].filter((name) => !listed.has(name)),

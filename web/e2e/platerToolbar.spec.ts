@@ -23,7 +23,12 @@ const SELECT = ":\nPlease select at least one object.";
 const UNSELECTED: Item[] = [
   ["Add", "Add [Ctrl+I]", "toolbar_open", true],
   ["Add plate", "Add plate", "toolbar_add_plate", true],
-  ["Auto orient", "Auto orient all/selected objects [Q]\nAuto orient all objects on current plate [Shift+Q]", "toolbar_orient", false],
+  [
+    "Auto orient",
+    "Auto orient all/selected objects [Q]\nAuto orient all objects on current plate [Shift+Q]",
+    "toolbar_orient",
+    false,
+  ],
   ["Arrange", "Arrange all objects [A]\nArrange objects on selected plates [Shift+A]", "toolbar_arrange", true, false],
   "|",
   ["Add instance", "Add instance [+]", "instance_add", false],
@@ -60,27 +65,49 @@ const SELECTED = UNSELECTED.map((item): Item => {
 });
 
 const toolbar = (page: Page) => page.getByTestId("plater-toolbar");
-const gizmoButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
-const mainButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Main toolbar" }).getByRole("button", { name, exact: true });
+const gizmoButton = (page: Page, name: string) =>
+  page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
+const mainButton = (page: Page, name: string) =>
+  page.getByRole("toolbar", { name: "Main toolbar" }).getByRole("button", { name, exact: true });
 const instances = (page: Page) => shownTab(page).locator(".viewport").getAttribute("data-instances");
-const plates = async (page: Page) => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as { origins: number[][]; current: number };
+const plates = async (page: Page) =>
+  JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-plates"))!) as {
+    origins: number[][];
+    current: number;
+  };
 const gizmo = (page: Page) => shownTab(page).getByTestId("viewport").getAttribute("data-gizmo");
 
 /** The toolbar items in order, icons named without the `_dark` suffix the dark theme shows. */
 async function shownItems(page: Page, dark: boolean): Promise<Item[]> {
-  const items = await toolbar(page).locator(".toolbar-item, .toolbar-separator").evaluateAll((elements) => elements.map((element) => {
-    if (element.classList.contains("toolbar-separator")) return "|";
-    const file = element.querySelector("img")!.getAttribute("src")!.split("/").pop()!.match(/^(.*?)(-[\w-]{8})?\.svg$/)![1];
-    const pressed = element.getAttribute("aria-pressed");
-    const shown = [element.getAttribute("aria-label")!, element.getAttribute("title")!, file, !(element as HTMLButtonElement).disabled];
-    return pressed === null ? shown : [...shown, pressed === "true"];
-  }));
+  const items = await toolbar(page)
+    .locator(".toolbar-item, .toolbar-separator")
+    .evaluateAll((elements) =>
+      elements.map((element) => {
+        if (element.classList.contains("toolbar-separator")) return "|";
+        const file = element
+          .querySelector("img")!
+          .getAttribute("src")!
+          .split("/")
+          .pop()!
+          .match(/^(.*?)(-[\w-]{8})?\.svg$/)![1];
+        const pressed = element.getAttribute("aria-pressed");
+        const shown = [
+          element.getAttribute("aria-label")!,
+          element.getAttribute("title")!,
+          file,
+          !(element as HTMLButtonElement).disabled,
+        ];
+        return pressed === null ? shown : [...shown, pressed === "true"];
+      }),
+    );
   return items.map((item) => {
     if (typeof item === "string") return item;
     const [name, tooltip, file, ...state] = item as [string, string, string, boolean, boolean?];
     const icon = file.replace(/_dark$/, "");
     // GLGizmoTextureDisplacement has one icon for both themes.
-    expect(file, `${name} icon in the ${dark ? "dark" : "light"} theme`).toBe(dark && icon !== "toolbar_texture_displacement" ? `${icon}_dark` : icon);
+    expect(file, `${name} icon in the ${dark ? "dark" : "light"} theme`).toBe(
+      dark && icon !== "toolbar_texture_displacement" ? `${icon}_dark` : icon,
+    );
     return [name, tooltip, icon, ...state] as Item;
   });
 }
@@ -132,7 +159,11 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   expect(Math.abs(bar.x + bar.width / 2 - (canvas.x + canvas.width / 2))).toBeLessThanOrEqual(1);
   expect(bar.y - canvas.y).toBeGreaterThanOrEqual(0);
   expect(bar.y - canvas.y).toBeLessThanOrEqual(12);
-  const parts = await Promise.all(["Main toolbar", "Gizmos", "Assembly view"].map(async (name) => (await page.getByRole("toolbar", { name }).boundingBox())!));
+  const parts = await Promise.all(
+    ["Main toolbar", "Gizmos", "Assembly view"].map(
+      async (name) => (await page.getByRole("toolbar", { name }).boundingBox())!,
+    ),
+  );
   expect(parts[0].x + parts[0].width).toBeLessThanOrEqual(parts[1].x);
   expect(parts[1].x + parts[1].width).toBeLessThanOrEqual(parts[2].x);
   const views = (await shownTab(page).getByTestId("view-toolbar").boundingBox())!;
@@ -164,8 +195,11 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
 
   // One gizmo at a time: its button or key opens it, the same again closes it (GLGizmosManager::open_gizmo).
   const open = async (mode: string | null) => {
-    await expect.poll(async () => (JSON.parse((await gizmo(page)) ?? "null") as { mode: string } | null)?.mode ?? null).toBe(mode);
-    for (const name of ["Move", "Rotate", "Scale"]) await expect(gizmoButton(page, name)).toHaveAttribute("aria-pressed", String(name.toLowerCase() === mode));
+    await expect
+      .poll(async () => (JSON.parse((await gizmo(page)) ?? "null") as { mode: string } | null)?.mode ?? null)
+      .toBe(mode);
+    for (const name of ["Move", "Rotate", "Scale"])
+      await expect(gizmoButton(page, name)).toHaveAttribute("aria-pressed", String(name.toLowerCase() === mode));
   };
   await gizmoButton(page, "Move").click();
   await open("move");
@@ -243,12 +277,17 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   await expect.poll(async () => (await plates(page)).origins, { timeout: 60_000 }).toHaveLength(1);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
 
-  writeFileSync(`${artifacts}toolbar.json`, `${JSON.stringify({ fixture: TWO_PLATES, unselected: UNSELECTED, selected: SELECTED }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}toolbar.json`,
+    `${JSON.stringify({ fixture: TWO_PLATES, unselected: UNSELECTED, selected: SELECTED }, null, 2)}\n`,
+  );
 });
 
 type Axis = "X" | "Y" | "Z";
-const field = (page: Page, group: string, axis: Axis) => page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
-const sizes = async (page: Page) => Promise.all((["X", "Y", "Z"] as const).map(async (axis) => Number(await field(page, "Size", axis).inputValue())));
+const field = (page: Page, group: string, axis: Axis) =>
+  page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
+const sizes = async (page: Page) =>
+  Promise.all((["X", "Y", "Z"] as const).map(async (axis) => Number(await field(page, "Size", axis).inputValue())));
 
 /** Drags from a grabber of the open scale gizmo away from the gizmo centre on screen by `factor` of their distance. */
 async function dragGrabber(page: Page, grabber: "x" | "y" | "z" | "uniform", factor: number) {
@@ -262,7 +301,9 @@ async function dragGrabber(page: Page, grabber: "x" | "y" | "z" | "uniform", fac
   await page.mouse.up();
 }
 
-test("the scale gizmo's grabbers scale one axis or all, drop the instance onto the bed, one undo step a drag", async ({ page }) => {
+test("the scale gizmo's grabbers scale one axis or all, drop the instance onto the bed, one undo step a drag", async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   const directory = `${artifacts}scale/`;
   rmSync(directory, { recursive: true, force: true });
@@ -275,8 +316,16 @@ test("the scale gizmo's grabbers scale one axis or all, drop the instance onto t
   // Framed, the 10 mm cube's 16 px grabbers stand apart.
   await page.getByRole("button", { name: "Fit to objects", exact: true }).click();
   await page.keyboard.press("s");
-  await expect.poll(async () => JSON.parse((await gizmo(page)) ?? "{}") as Record<string, unknown>)
-    .toMatchObject({ mode: "scale", center: expect.any(Array), x: expect.any(Array), y: expect.any(Array), z: expect.any(Array), uniform: expect.any(Array) });
+  await expect
+    .poll(async () => JSON.parse((await gizmo(page)) ?? "{}") as Record<string, unknown>)
+    .toMatchObject({
+      mode: "scale",
+      center: expect.any(Array),
+      x: expect.any(Array),
+      y: expect.any(Array),
+      z: expect.any(Array),
+      uniform: expect.any(Array),
+    });
   await page.screenshot({ path: `${directory}grabbers.png` });
   const results: Record<string, number[]> = {};
 

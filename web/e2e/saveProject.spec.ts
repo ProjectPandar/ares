@@ -15,20 +15,31 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const status = (page: Page) => page.getByTestId("status");
 const fileMenu = (page: Page) => page.getByRole("button", { name: "File", exact: true });
 const saveItem = (page: Page, name: string) => page.getByRole("menuitem", { name, exact: true });
-const object = (page: Page) => page.getByTestId("object-list").getByRole("treeitem", { name: /Bracket/ }).filter({ hasNotText: "Bracket plate" });
+const object = (page: Page) =>
+  page
+    .getByTestId("object-list")
+    .getByRole("treeitem", { name: /Bracket/ })
+    .filter({ hasNotText: "Bracket plate" });
 const field = (page: Page, name: string) => page.getByRole("textbox", { name, exact: true });
 const commit = async (page: Page, name: string, value: string) => {
   await field(page, name).fill(value);
   await field(page, name).press("Enter");
 };
-const selectQuality = (page: Page) => page.getByTestId("process-settings").getByRole("tab", { name: "Quality", exact: true }).click();
+const selectQuality = (page: Page) =>
+  page.getByTestId("process-settings").getByRole("tab", { name: "Quality", exact: true }).click();
 
 async function openProject(page: Page, project: string | Buffer) {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
-  await page.getByTestId("import-input").setInputFiles(typeof project === "string" ? project : {
-    name: "Brackets.3mf", mimeType: "model/3mf", buffer: project,
-  });
+  await page.getByTestId("import-input").setInputFiles(
+    typeof project === "string"
+      ? project
+      : {
+          name: "Brackets.3mf",
+          mimeType: "model/3mf",
+          buffer: project,
+        },
+  );
   await expect(status(page)).toHaveText("Ready to slice", { timeout: 60_000 });
 }
 
@@ -46,7 +57,9 @@ type Geometry = {
   plates: number[][][];
 };
 async function geometry(page: Page): Promise<Geometry> {
-  const { objects, plates } = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as Geometry;
+  const { objects, plates } = JSON.parse(
+    (await shownTab(page).locator(".viewport").getAttribute("data-instances"))!,
+  ) as Geometry;
   return { objects, plates };
 }
 
@@ -56,9 +69,11 @@ function comparedMembers(path: string, nativeReExport = false) {
     if (!nativeReExport || name !== "Metadata/model_settings.config") return [name, hash] as const;
 
     // bbs_3mf.cpp iterates a pointer-keyed map when emitting this run of object records.
-    const parts = Buffer.from(contents).toString("latin1").split(/(?<=^  )(<object [^\n]*>\n[\s\S]*?^  <\/object>)(?=\n)/m);
+    const parts = Buffer.from(contents)
+      .toString("latin1")
+      .split(/(?<=^  )(<object [^\n]*>\n[\s\S]*?^  <\/object>)(?=\n)/m);
     const outside = parts.filter((_, index) => index % 2 === 0);
-    if (outside.slice(1, -1).some(gap => /[^\t\n\r ]/.test(gap))) return [name, hash] as const;
+    if (outside.slice(1, -1).some((gap) => /[^\t\n\r ]/.test(gap))) return [name, hash] as const;
     return [name, { outside, records: parts.filter((_, index) => index % 2 === 1).sort() }] as const;
   });
   const objects = /^3D\/Objects\/[^/]+\.model$/;
@@ -77,7 +92,8 @@ function nativeExport(project: string, destination: string, leg: "official" | "s
   const cpu = /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync("/proc/self/status", "utf8"))![1];
   const argv = ["--arrange", "0", "--orient", "0", "--outputdir", work, "--export-3mf", "exported.3mf", project];
   execFileSync(join(root, "scripts", script), argv, {
-    cwd: work, env: { ...process.env, ORCA_REPLAY_CPU: cpu, ORCA_REPLAY_SEED: "0" },
+    cwd: work,
+    env: { ...process.env, ORCA_REPLAY_CPU: cpu, ORCA_REPLAY_SEED: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   return true;
@@ -94,7 +110,10 @@ async function installX1Carbon(page: Page) {
   await expect(printers).toHaveCount(0, { timeout: 60_000 });
 }
 
-test("Save Project downloads edited objects, plate assignments and settings that reopen", async ({ page, context }, info) => {
+test("Save Project downloads edited objects, plate assignments and settings that reopen", async ({
+  page,
+  context,
+}, info) => {
   // The headless executable checks compatibility against system presets; the GUI
   // also accepts project-local presets when this vendor is missing.
   await installX1Carbon(page);
@@ -106,7 +125,9 @@ test("Save Project downloads edited objects, plate assignments and settings that
     const template = info.outputPath("template", "Brackets.3mf");
     mkdirSync(resolve(template, ".."), { recursive: true });
     writeFileSync(template, saveProjectFixture());
-    const { full_fff_config: config } = nativeSelection(probe, `${info.outputPath("native-unedited")}/`, template, ["BBL"]);
+    const { full_fff_config: config } = nativeSelection(probe, `${info.outputPath("native-unedited")}/`, template, [
+      "BBL",
+    ]);
     writeFileSync(opened, saveProjectFixture({ config }));
     expectedConfig = nativeSelection(probe, `${info.outputPath("native-edited")}/`, opened, ["BBL"], {
       process_edit: { layer_height: "0.27" },
@@ -124,8 +145,17 @@ test("Save Project downloads edited objects, plate assignments and settings that
   await commit(page, "layer_height", "0.27");
   await expect(field(page, "layer_height")).toHaveValue("0.27");
   const before = await geometry(page);
-  expect(before.objects.map(({ name, instances }) => [name, instances.length])).toEqual([["Bracket", 1], ["Shim", 2]]);
-  expect(before.plates).toEqual([[[0, 0]], [[1, 0], [1, 1]]]);
+  expect(before.objects.map(({ name, instances }) => [name, instances.length])).toEqual([
+    ["Bracket", 1],
+    ["Shim", 2],
+  ]);
+  expect(before.plates).toEqual([
+    [[0, 0]],
+    [
+      [1, 0],
+      [1, 1],
+    ],
+  ]);
 
   const downloaded = info.outputPath("Brackets.3mf");
   await downloadProject(page, "Save Project as…", downloaded);
@@ -150,7 +180,10 @@ test("Save Project downloads edited objects, plate assignments and settings that
   await openProject(fresh, downloaded);
   const after = await geometry(fresh);
   expect(after.plates).toEqual(before.plates);
-  expect(after.objects.map(({ name, instances }) => [name, instances.length])).toEqual([["Bracket", 1], ["Shim", 2]]);
+  expect(after.objects.map(({ name, instances }) => [name, instances.length])).toEqual([
+    ["Bracket", 1],
+    ["Shim", 2],
+  ]);
   for (const [at, model] of after.objects.entries()) {
     for (const [index, item] of model.instances.entries()) {
       const expected = before.objects[at].instances[index];
@@ -196,7 +229,9 @@ for (const staleTables of [true, false]) {
     mkdirSync(resolve(opened, ".."), { recursive: true });
     writeFileSync(opened, fixture(JSON.stringify(input)));
 
-    const { full_fff_config: config } = nativeSelection(probe!, `${info.outputPath("native-opened")}/`, opened, ["BBL"]);
+    const { full_fff_config: config } = nativeSelection(probe!, `${info.outputPath("native-opened")}/`, opened, [
+      "BBL",
+    ]);
     const expected = JSON.parse(config) as Record<string, string | string[]>;
     expect(expected.filament_colour_type).toEqual([staleTables ? "1" : "0"]);
     expect(expected.flush_volumes_matrix).toHaveLength(1);

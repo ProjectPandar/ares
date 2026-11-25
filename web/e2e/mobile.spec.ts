@@ -20,24 +20,32 @@ const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
  */
 async function watchFrames(page: Page) {
   const viewport = (await shownTab(page).getByTestId("viewport").elementHandle())!;
-  const frames = await page.waitForFunction((element) => {
-    if (element.hasAttribute("data-drawing")) return null;
-    const state = {
-      requested: false,
-      drawn: false,
-      observer: new MutationObserver((records) => {
-        for (const { oldValue } of records) {
-          if (oldValue === null) state.requested = true;
-          else if (state.requested) state.drawn = true;
-        }
-      }),
-    };
-    state.observer.observe(element, { attributeFilter: ["data-drawing"], attributeOldValue: true });
-    return state;
-  }, viewport, { timeout: 60_000 });
+  const frames = await page.waitForFunction(
+    (element) => {
+      if (element.hasAttribute("data-drawing")) return null;
+      const state = {
+        requested: false,
+        drawn: false,
+        observer: new MutationObserver((records) => {
+          for (const { oldValue } of records) {
+            if (oldValue === null) state.requested = true;
+            else if (state.requested) state.drawn = true;
+          }
+        }),
+      };
+      state.observer.observe(element, { attributeFilter: ["data-drawing"], attributeOldValue: true });
+      return state;
+    },
+    viewport,
+    { timeout: 60_000 },
+  );
   return {
     drawn: async () => {
-      await page.waitForFunction(([element, state]) => state!.drawn && !element.hasAttribute("data-drawing"), [viewport, frames] as const, { timeout: 60_000 });
+      await page.waitForFunction(
+        ([element, state]) => state!.drawn && !element.hasAttribute("data-drawing"),
+        [viewport, frames] as const,
+        { timeout: 60_000 },
+      );
       await frames.evaluate((state) => state!.observer.disconnect());
     },
   };
@@ -45,11 +53,17 @@ async function watchFrames(page: Page) {
 
 /** axe-core WCAG A/AA scan of one step; serious and critical violations fail it. */
 async function axe(page: Page, directory: string, step: string) {
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  const { violations } = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
   const blocking = violations.filter(({ impact }) => impact === "serious" || impact === "critical");
   writeFileSync(`${directory}axe-${step}.json`, `${JSON.stringify(violations, null, 2)}\n`);
-  expect.soft(blocking.map(({ id, nodes }) => `${id}: ${nodes.map(({ target }) => target.join(" ")).join(", ")}`),
-    `${step}: no serious or critical axe violation`).toEqual([]);
+  expect
+    .soft(
+      blocking.map(({ id, nodes }) => `${id}: ${nodes.map(({ target }) => target.join(" ")).join(", ")}`),
+      `${step}: no serious or critical axe violation`,
+    )
+    .toEqual([]);
   return { step, serious: blocking.map(({ id, impact, nodes }) => ({ id, impact, nodes: nodes.length })) };
 }
 
@@ -94,10 +108,11 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     expect.soft(invisible, `${step}: every Tab stop shows its focus`).toEqual([]);
     for (const name of reach) expect.soft(reached, `${step}: Tab reaches ${name}`).toContain(name);
   };
-  const look = (control: Locator) => control.evaluate((element) => {
-    const { backgroundColor, borderColor, color } = getComputedStyle(element);
-    return `${backgroundColor} ${borderColor} ${color}`;
-  });
+  const look = (control: Locator) =>
+    control.evaluate((element) => {
+      const { backgroundColor, borderColor, color } = getComputedStyle(element);
+      return `${backgroundColor} ${borderColor} ${color}`;
+    });
   const settings = async (open: boolean) => {
     if (!drawer) return;
     await expect(panel, "the phone layout has a settings panel toggle").toBeVisible();
@@ -116,7 +131,9 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   // File › Import › Import 3MF/STL…; on touch a tap opens the submenu.
   await act(input, button("File"));
   await act(input, page.getByRole("menuitem", { name: "Import", exact: true }));
-  const importItem = page.getByRole("menu", { name: "Import", exact: true }).getByRole("menuitem", { name: "Import 3MF/STL…", exact: true });
+  const importItem = page
+    .getByRole("menu", { name: "Import", exact: true })
+    .getByRole("menuitem", { name: "Import 3MF/STL…", exact: true });
   if (touch) await expectFits(page, [importItem]);
   await targets("file menu");
   const chooser = page.waitForEvent("filechooser");
@@ -150,7 +167,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await shot("3-presets");
   await targets("presets");
   await access("presets", ['button "Slice plate"', 'button "Process preset"']);
-  audits.push(...await scan(page, input, directory, "prepare"));
+  audits.push(...(await scan(page, input, directory, "prepare")));
   await settings(false);
 
   if (touch) await expectFits(page, [button("Slice plate")]);
@@ -162,7 +179,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await shot("4-preview");
   await targets("preview");
   await access("preview", ['div "Top layer"', 'button "Export G-code file"']);
-  audits.push(...await scan(page, input, directory, "preview"));
+  audits.push(...(await scan(page, input, directory, "preview")));
 
   const gestures: Record<string, string> = {};
   if (touch) {
@@ -192,8 +209,12 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     const track = (await page.locator(".layer-slider-track").boundingBox())!;
     const from = { x: thumb.x + thumb.width / 2, y: thumb.y + thumb.height / 2 };
     gestures.layer = await swipe(page, from, { x: from.x, y: from.y + track.height / 2 });
-    await expect.poll(async () => Number(await top.getAttribute("aria-valuenow")), "the layer thumb follows the finger").toBeLessThan(layer);
-    await expect(page.locator(".layer-slider-label.top span").first()).toHaveText(await top.getAttribute("aria-valuenow") ?? "");
+    await expect
+      .poll(async () => Number(await top.getAttribute("aria-valuenow")), "the layer thumb follows the finger")
+      .toBeLessThan(layer);
+    await expect(page.locator(".layer-slider-label.top span").first()).toHaveText(
+      (await top.getAttribute("aria-valuenow")) ?? "",
+    );
     await shot("7-layer");
 
     // Scrubbing moves opens the G-code window; every preview overlay stays clear of the others and
@@ -225,7 +246,11 @@ test("touch flow: import, presets, slice, preview and download match the desktop
   const browser = await chromium.launch(chromiumLaunch);
   let desktop;
   try {
-    const context = await browser.newContext({ baseURL: info.project.use.baseURL, viewport: { width: 1600, height: 900 }, acceptDownloads: true });
+    const context = await browser.newContext({
+      baseURL: info.project.use.baseURL,
+      viewport: { width: 1600, height: 900 },
+      acceptDownloads: true,
+    });
     await seedFirstRun(context);
     desktop = await mainFlow(await context.newPage(), "mouse", `${artifacts}desktop/`);
   } finally {

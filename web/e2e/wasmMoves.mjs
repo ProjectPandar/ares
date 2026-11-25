@@ -28,91 +28,161 @@ const fixtures = [
   ["ksr", "tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf", undefined],
 ];
 const installed = vendors.filter(({ name }) => name);
-installed.sort((a, b) => Number(b.id === "OrcaFilamentLibrary") - Number(a.id === "OrcaFilamentLibrary") || a.id.localeCompare(b.id));
-const catalogJson = JSON.stringify({ vendors: await Promise.all(installed.map(({ id }) => loadVendor(id))), imports: [] });
-const uploads = new Set(["gcode", "move-values", "move-ids", "move-tags", "vertex-values", "vertex-ids", "vertex-tags", "tool-colors", "print-colors"]);
+installed.sort(
+  (a, b) => Number(b.id === "OrcaFilamentLibrary") - Number(a.id === "OrcaFilamentLibrary") || a.id.localeCompare(b.id),
+);
+const catalogJson = JSON.stringify({
+  vendors: await Promise.all(installed.map(({ id }) => loadVendor(id))),
+  imports: [],
+});
+const uploads = new Set([
+  "gcode",
+  "move-values",
+  "move-ids",
+  "move-tags",
+  "vertex-values",
+  "vertex-ids",
+  "vertex-tags",
+  "tool-colors",
+  "print-colors",
+]);
 const server = createServer(async (req, res) => {
   if (req.method === "POST") {
     const [, fixture, name] = req.url.split("/");
-    if (!fixtures.some(([key]) => key === fixture) || !uploads.has(name)) { res.writeHead(404).end(); return; }
+    if (!fixtures.some(([key]) => key === fixture) || !uploads.has(name)) {
+      res.writeHead(404).end();
+      return;
+    }
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     writeFileSync(`${artifacts}/${fixture}/${name}.bin`, Buffer.concat(chunks));
-    res.end("ok"); return;
+    res.end("ok");
+    return;
   }
   const files = new Map([
     ["/ares_wasm.js", [`${pkg}/ares_wasm.js`, "text/javascript"]],
     ["/ares_wasm_bg.wasm", [`${pkg}/ares_wasm_bg.wasm`, "application/wasm"]],
     ...fixtures.map(([key, path]) => [`/${key}.3mf`, [`${repo}/${path}`, "application/octet-stream"]]),
   ]);
-  if (req.url === "/") { res.setHeader("Content-Type", "text/html"); res.end("<!doctype html><title>WASM move oracle</title>"); return; }
+  if (req.url === "/") {
+    res.setHeader("Content-Type", "text/html");
+    res.end("<!doctype html><title>WASM move oracle</title>");
+    return;
+  }
   const entry = files.get(req.url);
-  if (!entry) { res.writeHead(404).end(); return; }
-  res.setHeader("Content-Type", entry[1]); res.end(readFileSync(entry[0]));
+  if (!entry) {
+    res.writeHead(404).end();
+    return;
+  }
+  res.setHeader("Content-Type", entry[1]);
+  res.end(readFileSync(entry[0]));
 });
-await new Promise(r => server.listen(4245, "127.0.0.1", r));
+await new Promise((r) => server.listen(4245, "127.0.0.1", r));
 let browser;
 try {
   browser = await chromium.launch({ executablePath: process.env.ARES_E2E_CHROME || undefined, headless: true });
   const page = await browser.newPage();
   const errors = [];
-  page.on("pageerror", e => errors.push(e.message));
+  page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const results = [];
   for (const [fixtureName, , plateId] of fixtures) {
     const dir = `${artifacts}/${fixtureName}`;
     mkdirSync(dir, { recursive: true });
-    const browserCounts = await page.evaluate(async ({ name, plate, catalog }) => {
-      const wasm = await import("/ares_wasm.js");
-      await wasm.default({ module_or_path: "/ares_wasm_bg.wasm" });
-      const input = new Uint8Array(await (await fetch(`/${name}.3mf`)).arrayBuffer());
-      const output = await wasm.sliceProjectPlateProcessedWithCatalog(input, plate, undefined, catalog);
-      const upload = async (key, value) => {
-        const response = await fetch(`/${name}/${key}`, { method: "POST", body: value });
-        if (!response.ok) throw new Error(`upload failed: ${key}`);
-      };
-      await upload("gcode", output.takeGcode());
-      const moves = output.takeMoves(), vertices = output.takeVertices();
-      const counts = { moves: moves.count, vertices: vertices.count };
-      await upload("move-values", moves.takeValues());
-      await upload("move-ids", moves.takeIds());
-      await upload("move-tags", moves.takeTags());
-      const collect = (ArrayType, stride, read) => {
-        const values = new ArrayType(stride * vertices.count);
-        for (let first = 0; first < vertices.count; first += 1_048_576) {
-          values.set(read(first, Math.min(1_048_576, vertices.count - first)), first * stride);
-        }
-        return values;
-      };
-      await upload("vertex-values", collect(Float32Array, 16, (first, count) => vertices.valuesRange(first, count)));
-      await upload("vertex-ids", collect(Uint32Array, 2, (first, count) => vertices.idsRange(first, count)));
-      await upload("vertex-tags", collect(Uint8Array, 4, (first, count) => vertices.tagsRange(first, count)));
-      await upload("tool-colors", vertices.takeToolColors());
-      await upload("print-colors", vertices.takeColorPrintColors());
-      moves.free(); vertices.free(); output.free();
-      return counts;
-    }, { name: fixtureName, plate: plateId, catalog: catalogJson });
+    const browserCounts = await page.evaluate(
+      async ({ name, plate, catalog }) => {
+        const wasm = await import("/ares_wasm.js");
+        await wasm.default({ module_or_path: "/ares_wasm_bg.wasm" });
+        const input = new Uint8Array(await (await fetch(`/${name}.3mf`)).arrayBuffer());
+        const output = await wasm.sliceProjectPlateProcessedWithCatalog(input, plate, undefined, catalog);
+        const upload = async (key, value) => {
+          const response = await fetch(`/${name}/${key}`, { method: "POST", body: value });
+          if (!response.ok) throw new Error(`upload failed: ${key}`);
+        };
+        await upload("gcode", output.takeGcode());
+        const moves = output.takeMoves(),
+          vertices = output.takeVertices();
+        const counts = { moves: moves.count, vertices: vertices.count };
+        await upload("move-values", moves.takeValues());
+        await upload("move-ids", moves.takeIds());
+        await upload("move-tags", moves.takeTags());
+        const collect = (ArrayType, stride, read) => {
+          const values = new ArrayType(stride * vertices.count);
+          for (let first = 0; first < vertices.count; first += 1_048_576) {
+            values.set(read(first, Math.min(1_048_576, vertices.count - first)), first * stride);
+          }
+          return values;
+        };
+        await upload(
+          "vertex-values",
+          collect(Float32Array, 16, (first, count) => vertices.valuesRange(first, count)),
+        );
+        await upload(
+          "vertex-ids",
+          collect(Uint32Array, 2, (first, count) => vertices.idsRange(first, count)),
+        );
+        await upload(
+          "vertex-tags",
+          collect(Uint8Array, 4, (first, count) => vertices.tagsRange(first, count)),
+        );
+        await upload("tool-colors", vertices.takeToolColors());
+        await upload("print-colors", vertices.takeColorPrintColors());
+        moves.free();
+        vertices.free();
+        output.free();
+        return counts;
+      },
+      { name: fixtureName, plate: plateId, catalog: catalogJson },
+    );
     const gcode = readFileSync(`${dir}/gcode.bin`, "utf8");
-    assert.deepEqual(gcode.match(/^; generated by OrcaSlicer Ares-.*$/gm), [aresGeneratorLine], "one exact Ares generator line");
+    assert.deepEqual(
+      gcode.match(/^; generated by OrcaSlicer Ares-.*$/gm),
+      [aresGeneratorLine],
+      "one exact Ares generator line",
+    );
     const nativeInput = gcode.replace(`\n${aresGeneratorLine}\n`, "\n; generated by OrcaSlicer 2.5.0\n");
     assert.notEqual(gcode, nativeInput, "expected exact producer line");
     writeFileSync(`${dir}/oracle-input.gcode`, nativeInput);
-    const stdout = execFileSync("taskset", ["-c", cpu, oracle, "--process-gcode", `${dir}/oracle-input.gcode`, "--dump-moves", `${dir}/oracle.csv`, "--dump-move-dynamics", `${dir}/dynamics.csv`], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    const stdout = execFileSync(
+      "taskset",
+      [
+        "-c",
+        cpu,
+        oracle,
+        "--process-gcode",
+        `${dir}/oracle-input.gcode`,
+        "--dump-moves",
+        `${dir}/oracle.csv`,
+        "--dump-move-dynamics",
+        `${dir}/dynamics.csv`,
+      ],
+      { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+    );
     writeFileSync(`${dir}/oracle.stdout`, stdout);
     const result = compareBuffers(dir);
     assert.equal(browserCounts.moves, result.moves);
     assert.equal(browserCounts.vertices, result.vertices);
     // Plater.cpp:16889-16901 uses processed filament_colour; LibVGCodeWrapper.cpp:58-61 clamps brightness.
     const colors = /^; filament_colour = (.*)$/m.exec(gcode)[1].split(/[;,]/);
-    const rgb = colors.flatMap((hex) => [1, 3, 5].map((at) => Math.max(48, Math.trunc(Math.fround(Math.fround(parseInt(hex.trim().slice(at, at + 2), 16) * Math.fround(1 / 255)) * 255)))));
+    const rgb = colors.flatMap((hex) =>
+      [1, 3, 5].map((at) =>
+        Math.max(
+          48,
+          Math.trunc(Math.fround(Math.fround(parseInt(hex.trim().slice(at, at + 2), 16) * Math.fround(1 / 255)) * 255)),
+        ),
+      ),
+    );
     assert.deepEqual([...readFileSync(`${dir}/tool-colors.bin`)], rgb);
     assert.deepEqual(readFileSync(`${dir}/tool-colors.bin`), readFileSync(`${dir}/print-colors.bin`));
     results.push({ name: fixtureName, ...result, gcodeSha256: createHash("sha256").update(gcode).digest("hex") });
     console.log(JSON.stringify(results.at(-1)));
   }
   assert.deepEqual(errors, []);
-  writeFileSync(`${artifacts}/result.json`, JSON.stringify({ oracle, pkg, browser: browser.version(), results }, null, 2));
+  writeFileSync(
+    `${artifacts}/result.json`,
+    JSON.stringify({ oracle, pkg, browser: browser.version(), results }, null, 2),
+  );
 } finally {
   await browser?.close();
-  await new Promise(r => server.close(r));
+  await new Promise((r) => server.close(r));
 }

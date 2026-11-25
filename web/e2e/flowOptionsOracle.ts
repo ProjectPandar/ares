@@ -19,9 +19,15 @@ type Machine = Record<string, unknown> & { inherits?: string };
  * The profiles store `extruder_type` by its key, which equals its label (PrintConfig.cpp:6276-6279).
  */
 export function flowOptions(vendor: string, printer: string, index: number) {
-  const list = JSON.parse(readFileSync(`${profiles}${vendor}.json`, "utf8")) as { machine_list: { name: string; sub_path: string }[] };
-  const machines = new Map(list.machine_list.map(({ name, sub_path }) =>
-    [name, JSON.parse(readFileSync(`${profiles}${vendor}/${sub_path}`, "utf8")) as Machine]));
+  const list = JSON.parse(readFileSync(`${profiles}${vendor}.json`, "utf8")) as {
+    machine_list: { name: string; sub_path: string }[];
+  };
+  const machines = new Map(
+    list.machine_list.map(({ name, sub_path }) => [
+      name,
+      JSON.parse(readFileSync(`${profiles}${vendor}/${sub_path}`, "utf8")) as Machine,
+    ]),
+  );
   const value = (name: string, key: string): unknown => {
     const machine = machines.get(name)!;
     return machine[key] ?? (machine.inherits ? value(machine.inherits, key) : undefined);
@@ -33,8 +39,11 @@ export function flowOptions(vendor: string, printer: string, index: number) {
   const count = counts[index] ?? counts[0];
   const diameter = value(printer, "printer_variant") as string;
   const model = value(printer, "printer_model") as string;
-  return VOLUME_TYPES.filter((type) =>
-    (variants[index].includes(`${types[index]} ${type}`) || (type === "Hybrid" && count !== "nil" && Number(count) > 1))
-    && !(type === "E3D High Flow" && diameter !== "0.4" && diameter !== "0.6")
-    && !(type === "High Flow" && (diameter === "0.2" || SKIP_HIGH_FLOW.includes(model))));
+  return VOLUME_TYPES.filter(
+    (type) =>
+      (variants[index].includes(`${types[index]} ${type}`) ||
+        (type === "Hybrid" && count !== "nil" && Number(count) > 1)) &&
+      !(type === "E3D High Flow" && diameter !== "0.4" && diameter !== "0.6") &&
+      !(type === "High Flow" && (diameter === "0.2" || SKIP_HIGH_FLOW.includes(model))),
+  );
 }

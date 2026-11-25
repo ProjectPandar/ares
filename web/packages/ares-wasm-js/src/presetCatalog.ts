@@ -1,5 +1,15 @@
 import type { RequestBody } from "./protocol.js";
-import type { CompatiblePresets, CurrentPrinter, GuideFilament, InstalledPrinters, OptionMap, PresetKind, PrinterModel, PrinterModelInfo, SelectablePrinter } from "./types.js";
+import type {
+  CompatiblePresets,
+  CurrentPrinter,
+  GuideFilament,
+  InstalledPrinters,
+  OptionMap,
+  PresetKind,
+  PrinterModel,
+  PrinterModelInfo,
+  SelectablePrinter,
+} from "./types.js";
 
 export interface FilamentSlotState {
   filaments: string[];
@@ -60,7 +70,12 @@ export class PresetCatalog {
    * in the catalog or is missing a parent.
    */
   async filterCompatible(printer: string, process?: string): Promise<CompatiblePresets> {
-    return (await this.#call({ kind: "catalogFilter", catalogId: this.#catalogId, printer, process })) as CompatiblePresets;
+    return (await this.#call({
+      kind: "catalogFilter",
+      catalogId: this.#catalogId,
+      printer,
+      process,
+    })) as CompatiblePresets;
   }
 
   /**
@@ -90,7 +105,13 @@ export class PresetCatalog {
    * the catalog.
    */
   async similarPrinterPreset(model: string, variant: string, current: CurrentPrinter): Promise<string | null> {
-    return (await this.#call({ kind: "catalogSimilarPrinter", catalogId: this.#catalogId, model, variant, current })) as string | null;
+    return (await this.#call({
+      kind: "catalogSimilarPrinter",
+      catalogId: this.#catalogId,
+      model,
+      variant,
+      current,
+    })) as string | null;
   }
 
   /**
@@ -100,12 +121,22 @@ export class PresetCatalog {
    * text. Rejects an unknown name or key.
    */
   async presetValues(kind: PresetKind, names: string[], keys: string[]): Promise<OptionMap[]> {
-    return (await this.#call({ kind: "catalogPresetValues", catalogId: this.#catalogId, presetKind: kind, names, keys })) as OptionMap[];
+    return (await this.#call({
+      kind: "catalogPresetValues",
+      catalogId: this.#catalogId,
+      presetKind: kind,
+      names,
+      keys,
+    })) as OptionMap[];
   }
 
   /** Vendor, unsupported bed types, default materials and nozzle diameters of a `printer_model`. */
   async printerModelInfo(model: string): Promise<PrinterModelInfo> {
-    return (await this.#call({ kind: "catalogPrinterModelInfo", catalogId: this.#catalogId, model })) as PrinterModelInfo;
+    return (await this.#call({
+      kind: "catalogPrinterModelInfo",
+      catalogId: this.#catalogId,
+      model,
+    })) as PrinterModelInfo;
   }
 
   /**
@@ -122,13 +153,33 @@ export class PresetCatalog {
    * filament stays, a missing or incompatible one takes the best compatible visible preset, or
    * "" when there is none. System filaments are visible when `installed` names them.
    */
-  async selectCompatibleFilaments(printer: string, process: string | undefined, filaments: string[], installed: string[]): Promise<string[]> {
-    return (await this.#call({ kind: "catalogSelectCompatibleFilaments", catalogId: this.#catalogId, printer, process, filaments, installed })) as string[];
+  async selectCompatibleFilaments(
+    printer: string,
+    process: string | undefined,
+    filaments: string[],
+    installed: string[],
+  ): Promise<string[]> {
+    return (await this.#call({
+      kind: "catalogSelectCompatibleFilaments",
+      catalogId: this.#catalogId,
+      printer,
+      process,
+      filaments,
+      installed,
+    })) as string[];
   }
 
   /** PresetBundle hardware minimum, last-preset padding, and per-nozzle flush layout. */
-  async normalizeFilamentSlots(printer: string, state: Partial<FilamentSlotState> & { filaments: string[] }): Promise<FilamentSlotState> {
-    return (await this.#call({ kind: "catalogNormalizeFilamentSlots", catalogId: this.#catalogId, printer, state })) as FilamentSlotState;
+  async normalizeFilamentSlots(
+    printer: string,
+    state: Partial<FilamentSlotState> & { filaments: string[] },
+  ): Promise<FilamentSlotState> {
+    return (await this.#call({
+      kind: "catalogNormalizeFilamentSlots",
+      catalogId: this.#catalogId,
+      printer,
+      state,
+    })) as FilamentSlotState;
   }
 
   /**
@@ -145,7 +196,8 @@ export class PresetCatalog {
    * (`PrinterPresetCollection::find_system_preset_by_model_and_variant`).
    */
   async systemPrinter(model: string, variant: string): Promise<string | null> {
-    return (await this.#call({ kind: "catalogSystemPrinter", catalogId: this.#catalogId, model, variant })) as string | null;
+    return (await this.#call({ kind: "catalogSystemPrinter", catalogId: this.#catalogId, model, variant })) as
+      string | null;
   }
 
   /**
@@ -154,7 +206,8 @@ export class PresetCatalog {
    * the printer's `default_print_profile` and its layer height; null when none is compatible.
    */
   async compatiblePrint(printer: string, current?: string): Promise<string | null> {
-    return (await this.#call({ kind: "catalogCompatiblePrint", catalogId: this.#catalogId, printer, current })) as string | null;
+    return (await this.#call({ kind: "catalogCompatiblePrint", catalogId: this.#catalogId, printer, current })) as
+      string | null;
   }
 
   /** The loaded system filaments in name order with the printers they are compatible with, for the setup guide. */

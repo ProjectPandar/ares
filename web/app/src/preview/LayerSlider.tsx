@@ -68,18 +68,33 @@ export function LayerSlider({ zs, view }: { zs: Float32Array; view: PreviewView 
         <span>{value[1] + 1}</span>
         <span className="layer-slider-z">{zs[value[1]].toFixed(2)}</span>
       </div>
-      <div className="layer-slider-track" ref={track}
-        onPointerDown={onPointerDown} onPointerMove={onPointerMove}
-        onPointerUp={() => (dragging.current = null)}>
-        <div className="layer-slider-fill"
-          style={{ bottom: `${fraction(value[0]) * 100}%`, top: `${(1 - fraction(value[1])) * 100}%` }} />
+      <div
+        className="layer-slider-track"
+        ref={track}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={() => (dragging.current = null)}
+      >
+        <div
+          className="layer-slider-fill"
+          style={{ bottom: `${fraction(value[0]) * 100}%`, top: `${(1 - fraction(value[1])) * 100}%` }}
+        />
         {thumbs.map((thumb) => (
-          <div key={thumb} className="layer-slider-thumb" role="slider" tabIndex={0}
-            aria-label={thumb === 1 ? "Top layer" : "Bottom layer"} aria-orientation="vertical"
-            aria-valuemin={1} aria-valuemax={last + 1} aria-valuenow={value[thumb] + 1}
+          <div
+            key={thumb}
+            className="layer-slider-thumb"
+            role="slider"
+            tabIndex={0}
+            aria-label={thumb === 1 ? "Top layer" : "Bottom layer"}
+            aria-orientation="vertical"
+            aria-valuemin={1}
+            aria-valuemax={last + 1}
+            aria-valuenow={value[thumb] + 1}
             aria-valuetext={`Layer ${value[thumb] + 1}, ${zs[value[thumb]].toFixed(2)} mm`}
             style={{ bottom: `${fraction(value[thumb]) * 100}%` }}
-            onFocus={() => setPreview({ selection: thumb })} onKeyDown={onKeyDown(thumb)} />
+            onFocus={() => setPreview({ selection: thumb })}
+            onKeyDown={onKeyDown(thumb)}
+          />
         ))}
       </div>
       {!oneLayer && (

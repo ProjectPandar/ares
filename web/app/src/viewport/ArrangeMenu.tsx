@@ -12,7 +12,15 @@ const MAX_SPACING = 100;
  * no arrange running), which toggles the arrange settings popup, and the shortcuts A (arrange all)
  * and Shift+A (arrange the current plate, Shortcuts.cpp:90-91).
  */
-export function ArrangeButton({ open, onToggle, icon }: { open: boolean; onToggle: (open: boolean) => void; icon: string }) {
+export function ArrangeButton({
+  open,
+  onToggle,
+  icon,
+}: {
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  icon: string;
+}) {
   const ready = useApp((app) => !!app.arrange && !!app.scene?.objects.length && !app.arranging);
 
   useEffect(() => {
@@ -26,12 +34,19 @@ export function ArrangeButton({ open, onToggle, icon }: { open: boolean; onToggl
   }, []);
 
   return (
-    <button type="button" className="toolbar-item" aria-label="Arrange" aria-pressed={open} aria-haspopup="dialog" disabled={!ready}
+    <button
+      type="button"
+      className="toolbar-item"
+      aria-label="Arrange"
+      aria-pressed={open}
+      aria-haspopup="dialog"
+      disabled={!ready}
       title={"Arrange all objects [A]\nArrange objects on selected plates [Shift+A]"}
       onClick={() => {
         if (!open) void showArrangeSettings();
         onToggle(!open);
-      }}>
+      }}
+    >
       <OrcaIcon name={icon} size={24} />
     </button>
   );
@@ -50,36 +65,64 @@ export function ArrangePopup() {
     <div className="arrange-popup" role="dialog" aria-label="Arrange settings">
       <div className="arrange-spacing">
         <label htmlFor="arrange-spacing">Spacing</label>
-        <input id="arrange-spacing" type="range" min={0} max={MAX_SPACING} step={0.01} value={Math.min(settings.distance, MAX_SPACING)}
-          onChange={(event) => spacing(event.target.valueAsNumber)} />
-        <input type="number" aria-label="Spacing value" min={0} step={0.05} value={settings.distance.toFixed(2)}
-          onChange={(event) => spacing(event.target.valueAsNumber)} />
+        <input
+          id="arrange-spacing"
+          type="range"
+          min={0}
+          max={MAX_SPACING}
+          step={0.01}
+          value={Math.min(settings.distance, MAX_SPACING)}
+          onChange={(event) => spacing(event.target.valueAsNumber)}
+        />
+        <input
+          type="number"
+          aria-label="Spacing value"
+          min={0}
+          step={0.05}
+          value={settings.distance.toFixed(2)}
+          onChange={(event) => spacing(event.target.valueAsNumber)}
+        />
       </div>
       <p className="arrange-hint">0 means auto spacing.</p>
       <label>
-        <input type="checkbox" checked={settings.enableRotation}
-          onChange={(event) => void editArrangeSettings({ enableRotation: event.target.checked })} />
+        <input
+          type="checkbox"
+          checked={settings.enableRotation}
+          onChange={(event) => void editArrangeSettings({ enableRotation: event.target.checked })}
+        />
         Auto rotate for arrangement
       </label>
       <label>
-        <input type="checkbox" checked={settings.allowMultiMaterialsOnSamePlate}
-          onChange={(event) => void editArrangeSettings({ allowMultiMaterialsOnSamePlate: event.target.checked })} />
+        <input
+          type="checkbox"
+          checked={settings.allowMultiMaterialsOnSamePlate}
+          onChange={(event) => void editArrangeSettings({ allowMultiMaterialsOnSamePlate: event.target.checked })}
+        />
         Allow multiple materials on same plate
       </label>
       {model.showsCalibrationRegion && (
         <label>
-          <input type="checkbox" checked={settings.avoidExtrusionCaliRegion}
-            onChange={(event) => void editArrangeSettings({ avoidExtrusionCaliRegion: event.target.checked })} />
+          <input
+            type="checkbox"
+            checked={settings.avoidExtrusionCaliRegion}
+            onChange={(event) => void editArrangeSettings({ avoidExtrusionCaliRegion: event.target.checked })}
+          />
           Avoid extrusion calibration region
         </label>
       )}
       <label>
-        <input type="checkbox" checked={settings.alignToYAxis} disabled={settings.enableRotation}
-          onChange={(event) => void editArrangeSettings({ alignToYAxis: event.target.checked })} />
+        <input
+          type="checkbox"
+          checked={settings.alignToYAxis}
+          disabled={settings.enableRotation}
+          onChange={(event) => void editArrangeSettings({ alignToYAxis: event.target.checked })}
+        />
         Align to Y axis
       </label>
       <div className="arrange-actions">
-        <button disabled={busy} onClick={() => void arrange()}>Arrange</button>
+        <button disabled={busy} onClick={() => void arrange()}>
+          Arrange
+        </button>
         <button onClick={resetArrangeSettings}>Reset</button>
       </div>
     </div>

@@ -29,7 +29,16 @@ import init, {
 import type { PrintConfigDef } from "./configDef.js";
 import { applyEdit } from "./platerEdit.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
-import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
+import type {
+  ActualSpeedProfile,
+  ColorRange,
+  MovesSlider,
+  MovesView,
+  SliceResult,
+  Toolpaths,
+  ViewColors,
+  ViewRange,
+} from "./toolpaths.js";
 import { colorsProbe, packTextures, prepareViewerTextures } from "./toolpathTextures.js";
 import type { Scene } from "./types.js";
 import { handlePlaterSource } from "./workerPlaterSource.js";
@@ -119,12 +128,43 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
       estimatedTime: vertices.estimatedTime,
       textures: packTextures(vertices, arrays),
     };
-    const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes, heightsWidths, segmentPositions, segmentAngles, textures } = toolpaths;
+    const {
+      values,
+      ids,
+      tags,
+      options,
+      moveTypeCounts,
+      colors,
+      roleColors: roles,
+      optionColors: optionRgb,
+      layerZs,
+      extrusionRoles,
+      extrusionRoleTimes,
+      heightsWidths,
+      segmentPositions,
+      segmentAngles,
+      textures,
+    } = toolpaths;
     const result: [SliceResult, Transferable[]] = [
       { gcode, toolpaths },
-      [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer,
-        extrusionRoles.buffer, extrusionRoleTimes.buffer, heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer,
-        ...(textures ? [textures.positions.buffer, textures.heightsWidthsAngles.buffer, textures.segments.buffer] : [])],
+      [
+        gcode.buffer,
+        values.buffer,
+        ids.buffer,
+        tags.buffer,
+        options.buffer,
+        moveTypeCounts.buffer,
+        colors.buffer,
+        roles.buffer,
+        optionRgb.buffer,
+        layerZs.buffer,
+        extrusionRoles.buffer,
+        extrusionRoleTimes.buffer,
+        heightsWidths.buffer,
+        segmentPositions.buffer,
+        segmentAngles.buffer,
+        ...(textures ? [textures.positions.buffer, textures.heightsWidthsAngles.buffer, textures.segments.buffer] : []),
+      ],
     ];
     replaceViewer(vertices);
     retained = true;
@@ -136,7 +176,8 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
 
 /** Posts each slicing status of request `id` to the client before the request's response. */
 function reportStatus(id: number) {
-  return (percent: number, text: string) => self.postMessage({ id, status: { percent, text } } satisfies WorkerResponse);
+  return (percent: number, text: string) =>
+    self.postMessage({ id, status: { percent, text } } satisfies WorkerResponse);
 }
 
 async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]> {
@@ -148,7 +189,8 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       const definition: PrintConfigDef = JSON.parse(new TextDecoder().decode(printConfigDef()));
       return [definition, []];
     }
-    case "resolveDefaultBedType": return [resolveDefaultBedType(request.hint, request.modelId), []];
+    case "resolveDefaultBedType":
+      return [resolveDefaultBedType(request.hint, request.modelId), []];
     case "orcaSlicerVersion":
       return [orcaSlicerVersion(), []];
     case "loadScene":
@@ -159,7 +201,9 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "sliceProject":
       // Both palettes come from GCodeProcessorResult.
-      return processedResult(await sliceProjectPlateProcessedWithCatalog(request.input, request.plate, request.overrides, request.catalog));
+      return processedResult(
+        await sliceProjectPlateProcessedWithCatalog(request.input, request.plate, request.overrides, request.catalog),
+      );
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
       return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));
@@ -197,21 +241,45 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [JSON.parse(catalogs.get(request.catalogId)!.printerModels()), []];
     case "catalogSimilarPrinter": {
       const { catalogId, model, variant, current } = request;
-      return [JSON.parse(catalogs.get(catalogId)!.similarPrinterPreset(model, variant, current.name, current.printer_variant)), []];
+      return [
+        JSON.parse(
+          catalogs.get(catalogId)!.similarPrinterPreset(model, variant, current.name, current.printer_variant),
+        ),
+        [],
+      ];
     }
     case "catalogPresetValues": {
       const { catalogId, presetKind, names, keys } = request;
-      return [JSON.parse(catalogs.get(catalogId)!.presetValues(presetKind, JSON.stringify(names), JSON.stringify(keys))), []];
+      return [
+        JSON.parse(catalogs.get(catalogId)!.presetValues(presetKind, JSON.stringify(names), JSON.stringify(keys))),
+        [],
+      ];
     }
     case "catalogPrinterModelInfo":
       return [JSON.parse(catalogs.get(request.catalogId)!.printerModelInfo(request.model)), []];
     case "catalogInstalledFilaments":
       return [JSON.parse(catalogs.get(request.catalogId)!.installedFilaments(JSON.stringify(request.installed))), []];
     case "catalogSelectCompatibleFilaments":
-      return [JSON.parse(catalogs.get(request.catalogId)!.selectCompatibleFilaments(
-        request.printer, request.process, JSON.stringify(request.filaments), JSON.stringify(request.installed))), []];
+      return [
+        JSON.parse(
+          catalogs
+            .get(request.catalogId)!
+            .selectCompatibleFilaments(
+              request.printer,
+              request.process,
+              JSON.stringify(request.filaments),
+              JSON.stringify(request.installed),
+            ),
+        ),
+        [],
+      ];
     case "catalogNormalizeFilamentSlots":
-      return [JSON.parse(catalogs.get(request.catalogId)!.normalizeFilamentSlots(request.printer, JSON.stringify(request.state))), []];
+      return [
+        JSON.parse(
+          catalogs.get(request.catalogId)!.normalizeFilamentSlots(request.printer, JSON.stringify(request.state)),
+        ),
+        [],
+      ];
     case "catalogSetInstalledPrinters":
       catalogs.get(request.catalogId)!.setInstalledPrinters(JSON.stringify(request.installed));
       return [undefined, []];
@@ -287,13 +355,21 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return [{ scale: [...values.subarray(0, 3)], size: [...values.subarray(3)] }, []];
     }
     case "platerSlice": {
-      const result = processedResult(await sessions.get(request.sessionId)!.sliceProcessed(request.plate, request.overrides, reportStatus(request.id)));
+      const result = processedResult(
+        await sessions
+          .get(request.sessionId)!
+          .sliceProcessed(request.plate, request.overrides, reportStatus(request.id)),
+      );
       keepPlateViewer(request.sessionId, request.plate);
       return result;
     }
     case "platerSliceWithProfiles": {
       const { sessionId, plate, catalog, selection, options } = request;
-      const result = processedResult(await sessions.get(sessionId)!.sliceWithProfilesProcessed(catalog, selection, options, reportStatus(request.id)));
+      const result = processedResult(
+        await sessions
+          .get(sessionId)!
+          .sliceWithProfilesProcessed(catalog, selection, options, reportStatus(request.id)),
+      );
       keepPlateViewer(sessionId, plate);
       return result;
     }
@@ -319,22 +395,28 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       sessions.delete(request.sessionId);
       return [undefined, []];
     case "decodeConfigValues":
-      return [request.entries.map(([key, serialized]) => {
-        try {
-          return JSON.parse(decodeConfigValue(key, serialized));
-        } catch (error) {
-          throw new Error(`${key} = ${JSON.stringify(serialized)}: ${String(error)}`, { cause: error });
-        }
-      }), []];
+      return [
+        request.entries.map(([key, serialized]) => {
+          try {
+            return JSON.parse(decodeConfigValue(key, serialized));
+          } catch (error) {
+            throw new Error(`${key} = ${JSON.stringify(serialized)}: ${String(error)}`, { cause: error });
+          }
+        }),
+        [],
+      ];
     case "encodeConfigValues":
-      return [request.entries.map(([key, value]) => {
-        const typed = JSON.stringify(value);
-        try {
-          return encodeConfigValue(key, typed);
-        } catch (error) {
-          throw new Error(`${key} = ${typed}: ${String(error)}`, { cause: error });
-        }
-      }), []];
+      return [
+        request.entries.map(([key, value]) => {
+          const typed = JSON.stringify(value);
+          try {
+            return encodeConfigValue(key, typed);
+          } catch (error) {
+            throw new Error(`${key} = ${typed}: ${String(error)}`, { cause: error });
+          }
+        }),
+        [],
+      ];
     case "viewRange": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions } = request;
@@ -344,7 +426,11 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { viewType, visibleRoles, visibleOptions } = request;
       const colors = readColors(viewer, viewType, visibleRoles, visibleOptions);
-      const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null, colorsProbe: colorsProbe(viewer, colors) };
+      const value: ViewColors = {
+        colors,
+        range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null,
+        colorsProbe: colorsProbe(viewer, colors),
+      };
       return [value, [colors.buffer]];
     }
     case "prepareViewerTextures":

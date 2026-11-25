@@ -16,14 +16,17 @@ import { shownTab } from "./shownTab";
 export async function canvasDigest(page: Page) {
   await expect(page.locator("[data-testid=moves-slider][aria-busy=true]")).toHaveCount(0);
   await expect(shownTab(page).locator("[data-testid=viewport][data-drawing]")).toHaveCount(0);
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
-    const probe = document.createElement("canvas");
-    probe.width = 256;
-    probe.height = 144;
-    const context = probe.getContext("2d")!;
-    context.drawImage(canvas, 0, 0, 256, 144);
-    return Array.from(context.getImageData(0, 0, 256, 144).data).join(",");
-  }).then((pixels) => createHash("sha256").update(pixels).digest("hex"));
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate((canvas: HTMLCanvasElement) => {
+      const probe = document.createElement("canvas");
+      probe.width = 256;
+      probe.height = 144;
+      const context = probe.getContext("2d")!;
+      context.drawImage(canvas, 0, 0, 256, 144);
+      return Array.from(context.getImageData(0, 0, 256, 144).data).join(",");
+    })
+    .then((pixels) => createHash("sha256").update(pixels).digest("hex"));
 }
 
 /** GCodeProcessor `EMoveType::Extrude` / `Seam` and `ExtrusionRole::erCustom` in `--dump-moves` CSV ids. */
@@ -48,7 +51,13 @@ const OPTION_ROWS = [
 ] as const;
 /** Option markers (libvgcode `PathVertex::is_option`, `PathVertex.cpp:26-41`) by `EOptionType` name. */
 const MARKER_TYPES: Record<string, number> = {
-  Retractions: 1, Unretractions: 2, Seams: 3, ToolChanges: 4, ColorChanges: 5, PausePrints: 6, CustomGCodes: 7,
+  Retractions: 1,
+  Unretractions: 2,
+  Seams: 3,
+  ToolChanges: 4,
+  ColorChanges: 5,
+  PausePrints: 6,
+  CustomGCodes: 7,
 };
 
 /** GCodeProcessor `EMoveType::Noop` / `Travel` / `Wipe`: with `Extrude`, the moves libvgcode draws as paths. */
@@ -82,8 +91,12 @@ export function movesSliderVertices(moves: Move[], top: number) {
   const vertices: Move[] = [];
   for (let i = 1; i < moves.length; i++) {
     const [prev, curr] = [moves[i - 1], moves[i]];
-    const startsPath = prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm
-      || prev.acceleration !== curr.acceleration || prev.jerk !== curr.jerk;
+    const startsPath =
+      prev.type !== curr.type ||
+      prev.role !== curr.role ||
+      prev.mm3PerMm !== curr.mm3PerMm ||
+      prev.acceleration !== curr.acceleration ||
+      prev.jerk !== curr.jerk;
     if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || startsPath)) vertices.push(curr);
     vertices.push(curr);
   }
@@ -135,7 +148,14 @@ async function expectMarkedLine(page: Page, gcode: string[], id: number) {
  * `GCodeViewer::update_sequential_view_current`); the layers below turn grey
  * (`ViewerImpl::update_colors_texture`).
  */
-async function checkMovesSlider(page: Page, gcode: string[], moves: Move[], top: number, artifacts: string, latched: boolean) {
+async function checkMovesSlider(
+  page: Page,
+  gcode: string[],
+  moves: Move[],
+  top: number,
+  artifacts: string,
+  latched: boolean,
+) {
   const stops = movesSliderStops(moves, top);
   const slider = page.getByRole("slider", { name: "Moves" });
   await expect(slider).toHaveAttribute("aria-valuemax", String(stops.length - 1));
@@ -248,7 +268,10 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
   const counts = new Map<number, number>();
   for (const move of moves) if (!move.internalOnly) counts.set(move.type, (counts.get(move.type) ?? 0) + 1);
   const rows = OPTION_ROWS.filter(({ type }) => counts.has(type));
-  expect(rows.map(({ option }) => option), "options of the sliced cube").toEqual(["Travels", "Wipes", "Retractions", "Unretractions", "Seams"]);
+  expect(
+    rows.map(({ option }) => option),
+    "options of the sliced cube",
+  ).toEqual(["Travels", "Wipes", "Retractions", "Unretractions", "Seams"]);
   const legend = page.getByTestId("legend");
   const buttons = legend.getByRole("button");
   await expect(buttons).toHaveCount(roles + rows.length);
@@ -259,8 +282,12 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
     await expect(row.locator(".legend-count")).toHaveText(option === "Travels" ? "" : String(counts.get(type)));
     await expect(row).toHaveAttribute("aria-pressed", String(option === "Seams"));
   }
-  const markers = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-option-markers"))!) as Record<string, number>;
-  const expected = Object.fromEntries(Object.entries(MARKER_TYPES).flatMap(([option, type]) => (counts.has(type) ? [[option, counts.get(type)!]] : [])));
+  const markers = JSON.parse(
+    (await shownTab(page).getByTestId("viewport").getAttribute("data-option-markers"))!,
+  ) as Record<string, number>;
+  const expected = Object.fromEntries(
+    Object.entries(MARKER_TYPES).flatMap(([option, type]) => (counts.has(type) ? [[option, counts.get(type)!]] : [])),
+  );
   expect(markers, "one marker per option move").toEqual(expected);
 
   const shown = await canvasDigest(page);
@@ -286,7 +313,14 @@ async function checkOptions(page: Page, moves: Move[], roles: number, artifacts:
  * with the layer slider and legend, checked against upstream GCodeProcessor
  * moves of the same G-code.
  */
-export async function checkToolpathPreview(page: Page, oracle: string, gcodePath: string, artifacts: string, errors: string[], speedTravelEnds: boolean) {
+export async function checkToolpathPreview(
+  page: Page,
+  oracle: string,
+  gcodePath: string,
+  artifacts: string,
+  errors: string[],
+  speedTravelEnds: boolean,
+) {
   const moves = oracleMoves(oracle, gcodePath, artifacts);
   const layers = moves.at(-1)!.layer + 1;
   const extrudeRoles = new Set(moves.filter((move) => move.type === EXTRUDE).map((move) => move.role));
@@ -351,10 +385,30 @@ export async function checkToolpathPreview(page: Page, oracle: string, gcodePath
 
   writeFileSync(
     `${artifacts}toolpaths.json`,
-    `${JSON.stringify({
-      moves: moves.length, layers, movesSlider, toolPosition, actualSpeedProfile, roles: [...extrudeRoles].sort((a, b) => a - b), roleTimes, segmentSizes, segmentGeometry, segmentColors, options, colorRanges, filamentView,
-      layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
-      currentLines: { 1: currentLine(moves, 0), 21: currentLine(moves, 20), [layers]: currentLine(moves, layers - 1) },
-    }, null, 2)}\n`,
+    `${JSON.stringify(
+      {
+        moves: moves.length,
+        layers,
+        movesSlider,
+        toolPosition,
+        actualSpeedProfile,
+        roles: [...extrudeRoles].sort((a, b) => a - b),
+        roleTimes,
+        segmentSizes,
+        segmentGeometry,
+        segmentColors,
+        options,
+        colorRanges,
+        filamentView,
+        layerZs: { 1: layerZ(moves, 0), [layers]: layerZ(moves, layers - 1) },
+        currentLines: {
+          1: currentLine(moves, 0),
+          21: currentLine(moves, 20),
+          [layers]: currentLine(moves, layers - 1),
+        },
+      },
+      null,
+      2,
+    )}\n`,
   );
 }

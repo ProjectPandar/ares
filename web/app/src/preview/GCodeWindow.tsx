@@ -53,8 +53,11 @@ export function GCodeWindow({ gcode, current }: { gcode: Uint8Array; current: nu
   for (let id = start; id <= end; id++) {
     const { command, parameters, comment } = splitLine(lines[id - 1]);
     rows.push(
-      <div className={id === current ? "gcode-line current" : "gcode-line"} key={id}
-        aria-current={id === current ? "true" : undefined}>
+      <div
+        className={id === current ? "gcode-line current" : "gcode-line"}
+        key={id}
+        aria-current={id === current ? "true" : undefined}
+      >
         <span className="gcode-ln">{String(id).padStart(digits, " ")}</span>
         <span className="gcode-text">
           <span className="gcode-cmd">{command}</span>

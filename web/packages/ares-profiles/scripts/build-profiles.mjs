@@ -18,7 +18,10 @@ const readJson = (path) => JSON.parse(readFileSync(path, "utf8").replace(/^\uFEF
 const moduleName = (id) => id.replace(/[^\w.-]/g, "_");
 
 const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: orca, encoding: "utf8" }).trim();
-const ids = readdirSync(profiles).filter((file) => file.endsWith(".json")).map((file) => file.slice(0, -5)).sort();
+const ids = readdirSync(profiles)
+  .filter((file) => file.endsWith(".json"))
+  .map((file) => file.slice(0, -5))
+  .sort();
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(`${dist}vendors`, { recursive: true });
@@ -42,7 +45,9 @@ const summaries = ids.map((id) => {
 writeFileSync(`${dist}models.js`, jsonModule(models));
 
 const loaders = ids.map((id) => `  ${JSON.stringify(id)}: () => import("./vendors/${moduleName(id)}.js"),`).join("\n");
-writeFileSync(`${dist}index.js`, `export const ORCA_SLICER_COMMIT = ${JSON.stringify(commit)};
+writeFileSync(
+  `${dist}index.js`,
+  `export const ORCA_SLICER_COMMIT = ${JSON.stringify(commit)};
 
 export const vendors = ${JSON.stringify(summaries, null, 2)};
 
@@ -59,6 +64,7 @@ export async function loadVendor(id) {
   if (!load) throw new Error("Unknown OrcaSlicer vendor: " + id);
   return (await load()).default;
 }
-`);
+`,
+);
 copyFileSync(fileURLToPath(new URL("../src/index.d.ts", import.meta.url)), `${dist}index.d.ts`);
 console.log(`@ares-slicer/profiles: ${ids.length} vendors from OrcaSlicer ${commit.slice(0, 10)}`);

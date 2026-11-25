@@ -1,7 +1,14 @@
 import type { GuideFilament, GuideModel, InstalledPrinters } from "@ares-slicer/wasm";
 import { type PrinterSettings, saveConfig, storedConfig } from "./persistence";
 import {
-  exportedProject, FILAMENT_LIBRARY, presetCatalog, projectFilamentState, saveSelection, selectFilament, selectPrinter, updateInstalledFilaments,
+  exportedProject,
+  FILAMENT_LIBRARY,
+  presetCatalog,
+  projectFilamentState,
+  saveSelection,
+  selectFilament,
+  selectPrinter,
+  updateInstalledFilaments,
   updateSystemPrinters,
 } from "./presets";
 import { slicer } from "./slicer";
@@ -43,9 +50,16 @@ export function installedFromChecked(models: readonly GuideModel[], checked: Rea
 }
 
 /** save_userguide_models (WebGuideDialog.cpp:624-655): the checked models' default materials that are listed filaments. */
-export function defaultMaterials(models: readonly GuideModel[], checked: ReadonlySet<string>, filaments: readonly GuideFilament[]): string[] {
+export function defaultMaterials(
+  models: readonly GuideModel[],
+  checked: ReadonlySet<string>,
+  filaments: readonly GuideFilament[],
+): string[] {
   const listed = new Set(filaments.map(({ name }) => name));
-  return models.filter(({ model }) => checked.has(model)).flatMap((model) => model.default_materials).filter((name) => listed.has(name));
+  return models
+    .filter(({ model }) => checked.has(model))
+    .flatMap((model) => model.default_materials)
+    .filter((name) => listed.has(name));
 }
 
 /**
@@ -54,7 +68,11 @@ export function defaultMaterials(models: readonly GuideModel[], checked: Readonl
  * new; its first variant in the model's nozzle order, or the first new variant of a model that was
  * installed before.
  */
-export function preferredPrinter(installed: InstalledPrinters, previous: InstalledPrinters, models: readonly GuideModel[]): [string, string] | null {
+export function preferredPrinter(
+  installed: InstalledPrinters,
+  previous: InstalledPrinters,
+  models: readonly GuideModel[],
+): [string, string] | null {
   const preferred = (vendor: string): [string, string] | null => {
     const enabled = installed[vendor];
     if (!enabled) return null;
@@ -71,7 +89,12 @@ export function preferredPrinter(installed: InstalledPrinters, previous: Install
     return null;
   };
   const DEFAULT_BUNDLE = "Custom";
-  for (const vendor of [DEFAULT_BUNDLE, ...Object.keys(installed).sort().filter((id) => id !== DEFAULT_BUNDLE)]) {
+  for (const vendor of [
+    DEFAULT_BUNDLE,
+    ...Object.keys(installed)
+      .sort()
+      .filter((id) => id !== DEFAULT_BUNDLE),
+  ]) {
     const printer = preferred(vendor);
     if (printer) return printer;
   }
@@ -100,7 +123,11 @@ function wizardInitialSelection(): PrinterSettings | undefined {
  * printer by name (select_preset_by_name, Preset.cpp:4240-4249), and an active filament that is
  * not one of `filaments` becomes the first of them that is visible and compatible.
  */
-export async function finishWizard(installed: InstalledPrinters, filaments: readonly string[], models: readonly GuideModel[]) {
+export async function finishWizard(
+  installed: InstalledPrinters,
+  filaments: readonly string[],
+  models: readonly GuideModel[],
+) {
   const initial = wizardInitialSelection();
   const preferred = preferredPrinter(installed, useApp.getState().installedPrinters, models);
   saveConfig({ installedPrinters: installed, installedFilaments: [...filaments].sort() });
@@ -111,11 +138,18 @@ export async function finishWizard(installed: InstalledPrinters, filaments: read
   await Promise.all([updateSystemPrinters(), updateInstalledFilaments()]);
   const catalog = await presetCatalog();
   const visible = (await catalog.printers()).map(({ name }) => name).sort();
-  const name = (preferred && await catalog.systemPrinter(...preferred)) ?? storedConfig.printer;
-  await selectPrinter(name !== null && visible.includes(name) ? name : visible[0] ?? null, initial);
+  const name = (preferred && (await catalog.systemPrinter(...preferred))) ?? storedConfig.printer;
+  await selectPrinter(name !== null && visible.includes(name) ? name : (visible[0] ?? null), initial);
   const { presetSelection, compatible, installedFilaments } = useApp.getState();
-  if (filaments.length > 0 && presetSelection && compatible?.status === "done" && !filaments.includes(presetSelection.filaments[0] ?? "")) {
-    const first = [...filaments].sort().find((filament) => installedFilaments.has(filament) && compatible.presets.filaments.includes(filament));
+  if (
+    filaments.length > 0 &&
+    presetSelection &&
+    compatible?.status === "done" &&
+    !filaments.includes(presetSelection.filaments[0] ?? "")
+  ) {
+    const first = [...filaments]
+      .sort()
+      .find((filament) => installedFilaments.has(filament) && compatible.presets.filaments.includes(filament));
     if (first !== undefined) selectFilament(0, first);
   }
   useApp.setState({ wizard: null });

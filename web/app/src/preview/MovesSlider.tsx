@@ -1,4 +1,10 @@
-import { EXTRUSION_ROLES, type MovesSlider as Stops, type MovesView, type ToolMarker, type Toolpaths } from "@ares-slicer/wasm";
+import {
+  EXTRUSION_ROLES,
+  type MovesSlider as Stops,
+  type MovesView,
+  type ToolMarker,
+  type Toolpaths,
+} from "@ares-slicer/wasm";
 import { type Dispatch, type SetStateAction, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import { slicer } from "../state/slicer";
@@ -93,7 +99,13 @@ function drain(ready: { current: Moves | null }, queue: Step[], steps: LayerStep
  * The tool position window of the engine's marker sits above it
  * (`SequentialView::render`, `GCodeViewer.cpp:957-963`).
  */
-export function MovesSlider({ toolpaths, view, onMoves, steps, shown }: {
+export function MovesSlider({
+  toolpaths,
+  view,
+  onMoves,
+  steps,
+  shown,
+}: {
   toolpaths: Toolpaths;
   view: PreviewView;
   onMoves: Dispatch<SetStateAction<MovesState | null>>;
@@ -135,22 +147,29 @@ export function MovesSlider({ toolpaths, view, onMoves, steps, shown }: {
   }, [slider, viewType, onMoves]);
   const live = slider?.toolpaths === toolpaths ? slider : null;
   const settled = live && applied?.slider === live ? applied : null;
-  const high = settled ? settled.high : live?.high ?? 0;
-  const busy = !settled || settled.viewType !== viewType || settled.slider.filter.layers !== layers
-    || settled.slider.filter.hiddenRoles !== hiddenRoles || settled.slider.filter.visibleOptions !== visibleOptions;
+  const high = settled ? settled.high : (live?.high ?? 0);
+  const busy =
+    !settled ||
+    settled.viewType !== viewType ||
+    settled.slider.filter.layers !== layers ||
+    settled.slider.filter.hiddenRoles !== hiddenRoles ||
+    settled.slider.filter.visibleOptions !== visibleOptions;
   // Keys go through one listener into `queue`; `ready` is the applied view at each commit, `null`
   // while a key's change is on its way to the engine.
   const ready = useRef<Moves | null>(null);
   const queue = useRef<Step[]>([]);
   useLayoutEffect(() => {
-    ready.current = settled && !busy ? {
-      high,
-      max: settled.slider.stops.gcodeIds.length - 1,
-      request: (value: number) => {
-        held.current = { toolpaths: settled.slider.toolpaths, high: value };
-        setSlider({ ...settled.slider, high: value });
-      },
-    } : null;
+    ready.current =
+      settled && !busy
+        ? {
+            high,
+            max: settled.slider.stops.gcodeIds.length - 1,
+            request: (value: number) => {
+              held.current = { toolpaths: settled.slider.toolpaths, high: value };
+              setSlider({ ...settled.slider, high: value });
+            },
+          }
+        : null;
     drain(ready, queue.current, steps);
   });
   useEffect(() => {
@@ -168,18 +187,35 @@ export function MovesSlider({ toolpaths, view, onMoves, steps, shown }: {
   if (!live) return null;
   const marker = applied?.slider.toolpaths === toolpaths ? applied.marker : null;
   const { stops } = live;
-  return (<>
-    {marker && <ToolPosition toolpaths={toolpaths} vertex={marker.windowVertex} viewType={applied!.viewType} time={marker.time} actualSpeed={marker.actualSpeed} />}
-    <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
-      <input type="range" aria-label="Moves" min={0} max={stops.gcodeIds.length - 1} step={1} value={high}
-        aria-valuemax={stops.gcodeIds.length - 1}
-        aria-valuetext={`G-code line ${stops.gcodeIds[high]}`}
-        onChange={(event) => {
-          const value = Number(event.currentTarget.value);
-          held.current = { toolpaths: live.toolpaths, high: value };
-          setSlider({ ...live, high: value });
-        }} />
-      <span className="moves-slider-label">{stops.gcodeIds[high]}</span>
-    </div>
-  </>);
+  return (
+    <>
+      {marker && (
+        <ToolPosition
+          toolpaths={toolpaths}
+          vertex={marker.windowVertex}
+          viewType={applied!.viewType}
+          time={marker.time}
+          actualSpeed={marker.actualSpeed}
+        />
+      )}
+      <div className="moves-slider" data-testid="moves-slider" aria-busy={busy}>
+        <input
+          type="range"
+          aria-label="Moves"
+          min={0}
+          max={stops.gcodeIds.length - 1}
+          step={1}
+          value={high}
+          aria-valuemax={stops.gcodeIds.length - 1}
+          aria-valuetext={`G-code line ${stops.gcodeIds[high]}`}
+          onChange={(event) => {
+            const value = Number(event.currentTarget.value);
+            held.current = { toolpaths: live.toolpaths, high: value };
+            setSlider({ ...live, high: value });
+          }}
+        />
+        <span className="moves-slider-label">{stops.gcodeIds[high]}</span>
+      </div>
+    </>
+  );
 }

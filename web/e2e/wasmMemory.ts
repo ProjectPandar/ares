@@ -23,17 +23,22 @@ export async function wasmMemory(browser: Browser, origin: string): Promise<Memo
         else entry.resolve(message.result);
       };
       cdp.on("Target.receivedMessageFromTarget", receive);
-      const request = <T>(method: string, params: object = {}) => new Promise<T>((resolve, reject) => {
-        const id = ++next;
-        pending.set(id, { resolve: (value) => resolve(value as T), reject });
-        cdp.send("Target.sendMessageToTarget", { sessionId, message: JSON.stringify({ id, method, params }) }).catch(reject);
-      });
+      const request = <T>(method: string, params: object = {}) =>
+        new Promise<T>((resolve, reject) => {
+          const id = ++next;
+          pending.set(id, { resolve: (value) => resolve(value as T), reject });
+          cdp
+            .send("Target.sendMessageToTarget", { sessionId, message: JSON.stringify({ id, method, params }) })
+            .catch(reject);
+        });
       try {
         const prototype = await request<{ result: { objectId: string } }>("Runtime.evaluate", {
-          expression: "WebAssembly.Memory.prototype", objectGroup: "memory-measurement",
+          expression: "WebAssembly.Memory.prototype",
+          objectGroup: "memory-measurement",
         });
         const objects = await request<{ objects: { objectId: string } }>("Runtime.queryObjects", {
-          prototypeObjectId: prototype.result.objectId, objectGroup: "memory-measurement",
+          prototypeObjectId: prototype.result.objectId,
+          objectGroup: "memory-measurement",
         });
         const sizes = await request<{ result: { value: number[] } }>("Runtime.callFunctionOn", {
           objectId: objects.objects.objectId,

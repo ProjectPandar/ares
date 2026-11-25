@@ -47,13 +47,17 @@ const MAX_GAP_MS = 200;
 // toolpath textures and E2E probes are prepared in the slicer worker; the main thread only uploads them.
 test("a slice result that reaches an open Preview leaves the main thread responsive", async ({ page }, info) => {
   test.setTimeout(600_000);
-  const artifacts = fileURLToPath(new URL(`../../target/web-e2e/preview-result-responsive/${info.project.name}/`, import.meta.url));
+  const artifacts = fileURLToPath(
+    new URL(`../../target/web-e2e/preview-result-responsive/${info.project.name}/`, import.meta.url),
+  );
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await openWithPresets(page);
-  await page.getByTestId("import-input").setInputFiles({ name: "cylinder.stl", buffer: cylinder(20, 60, 512), mimeType: "model/stl" });
+  await page
+    .getByTestId("import-input")
+    .setInputFiles({ name: "cylinder.stl", buffer: cylinder(20, 60, 512), mimeType: "model/stl" });
   const status = page.getByTestId("status");
   await expect(status).toHaveText("Ready to slice", { timeout: 60_000 });
 
@@ -79,17 +83,27 @@ test("a slice result that reaches an open Preview leaves the main thread respons
       clearInterval(timer);
       observer.disconnect();
     }).observe(view, { attributes: true, attributeFilter: ["data-segment-sizes"] });
-    return { slicing: document.querySelector("[data-testid=status]")!.textContent, sized: view.hasAttribute("data-segment-sizes") };
+    return {
+      slicing: document.querySelector("[data-testid=status]")!.textContent,
+      sized: view.hasAttribute("data-segment-sizes"),
+    };
   });
   expect(started.slicing, "the heartbeat starts while the plate still slices").toMatch(/^Slicing plate/);
   expect(started.sized, "no toolpaths were set before the heartbeat started").toBe(false);
   await expect(viewport).toHaveAttribute("data-segment-sizes", { timeout: 480_000 });
   await expect(status).toContainText("Slice complete");
-  const beat = await page.evaluate(() => (window as unknown as { beat: { maxGap: number; beats: number; done: boolean } }).beat);
+  const beat = await page.evaluate(
+    () => (window as unknown as { beat: { maxGap: number; beats: number; done: boolean } }).beat,
+  );
   const sizes = Number((await viewport.getAttribute("data-segment-sizes"))!.split(":")[0]);
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ project: info.project.name, maxGapMs: beat.maxGap, beats: beat.beats, segmentSizes: sizes }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ project: info.project.name, maxGapMs: beat.maxGap, beats: beat.beats, segmentSizes: sizes }, null, 2)}\n`,
+  );
 
   expect(beat.done).toBe(true);
-  expect(beat.maxGap, `no main-thread stall over ${MAX_GAP_MS} ms when the slice result reaches Preview`).toBeLessThan(MAX_GAP_MS);
+  expect(beat.maxGap, `no main-thread stall over ${MAX_GAP_MS} ms when the slice result reaches Preview`).toBeLessThan(
+    MAX_GAP_MS,
+  );
   expect(errors).toEqual([]);
 });

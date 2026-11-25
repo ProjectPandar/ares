@@ -6,7 +6,17 @@ import {
 } from "./wasm/ares_wasm.js";
 import type { WorkerRequest } from "./protocol.js";
 
-type Request = Extract<WorkerRequest, { kind: "platerCreate" | "platerCreateWithProfiles" | "platerCreateFromStlFiles" | "platerCreateFromStlFilesWithProfiles" | "platerProfileSettings" }>;
+type Request = Extract<
+  WorkerRequest,
+  {
+    kind:
+      | "platerCreate"
+      | "platerCreateWithProfiles"
+      | "platerCreateFromStlFiles"
+      | "platerCreateFromStlFilesWithProfiles"
+      | "platerProfileSettings";
+  }
+>;
 
 export async function handlePlaterSource(request: Request, sessions: Map<number, PlaterSession>): Promise<unknown> {
   switch (request.kind) {
@@ -23,7 +33,10 @@ export async function handlePlaterSource(request: Request, sessions: Map<number,
       return;
     case "platerCreateFromStlFilesWithProfiles": {
       const { sessionId, inputs, batch, catalog, selection, options } = request;
-      sessions.set(sessionId, await createPlaterSessionFromStlFilesWithProfiles(inputs, batch, catalog, selection, options));
+      sessions.set(
+        sessionId,
+        await createPlaterSessionFromStlFilesWithProfiles(inputs, batch, catalog, selection, options),
+      );
       return;
     }
     case "platerProfileSettings": {

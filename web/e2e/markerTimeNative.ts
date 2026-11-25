@@ -23,13 +23,25 @@ export function markerTimeNative(): string | null {
   if (version.error) throw version.error;
   if (version.status !== 0) throw new Error("node --version failed");
   const directory = mkdtempSync(join(tmpdir(), "marker-time-format-live-"));
-  const command = [fileURLToPath(new URL("../../tools/chain-probe/marker-time-fixtures.mjs", import.meta.url)), directory];
+  const command = [
+    fileURLToPath(new URL("../../tools/chain-probe/marker-time-fixtures.mjs", import.meta.url)),
+    directory,
+  ];
   const output = spawnSync("node", command, { encoding: "utf8", timeout: 330_000, killSignal: "SIGKILL" });
   writeFileSync(join(directory, "generator.stdout"), output.stdout ?? "");
   writeFileSync(join(directory, "generator.stderr"), output.stderr ?? "");
-  writeFileSync(join(directory, "generator.status.json"), JSON.stringify({ exit: output.status, signal: output.signal, error: output.error?.message, command: ["node", ...command] }) + "\n");
+  writeFileSync(
+    join(directory, "generator.status.json"),
+    JSON.stringify({
+      exit: output.status,
+      signal: output.signal,
+      error: output.error?.message,
+      command: ["node", ...command],
+    }) + "\n",
+  );
   if (output.error) throw output.error;
-  if (output.status !== 0) throw new Error(`live marker-time generator failed: ${output.stderr} (artifacts ${directory})`);
+  if (output.status !== 0)
+    throw new Error(`live marker-time generator failed: ${output.stderr} (artifacts ${directory})`);
   console.error(`live formatter Native artifacts: ${directory}`);
   return join(directory, "native.json");
 }

@@ -24,12 +24,24 @@ export const FIRST_RUN_CONFIG = {
   // printer type other than the BBL models, so btPEI (Preset.cpp:1140-1171), "High Temp Plate" (PrintConfig.cpp:611);
   // export_selections stores it per printer (PresetBundle.cpp:4255).
   printers: {
-    "MyKlipper 0.4 nozzle": { filaments: ["Generic PLA @System"], process: "0.20mm Standard @MyKlipper", bedType: "High Temp Plate" },
+    "MyKlipper 0.4 nozzle": {
+      filaments: ["Generic PLA @System"],
+      process: "0.20mm Standard @MyKlipper",
+      bedType: "High Temp Plate",
+    },
   },
   // The model's default_materials (Custom/machine/Generic Klipper Printer.json), checked by save_userguide_models.
   installedFilaments: [
-    "Generic ABS @System", "Generic ASA @System", "Generic PA @System", "Generic PA-CF @System", "Generic PC @System",
-    "Generic PETG @System", "Generic PLA @System", "Generic PLA-CF @System", "Generic PVA @System", "Generic TPU @System",
+    "Generic ABS @System",
+    "Generic ASA @System",
+    "Generic PA @System",
+    "Generic PA-CF @System",
+    "Generic PC @System",
+    "Generic PETG @System",
+    "Generic PLA @System",
+    "Generic PLA-CF @System",
+    "Generic PVA @System",
+    "Generic TPU @System",
   ],
   nozzleVolumeTypes: {},
   preferredFilamentMapMode: "Auto For Flush",
@@ -44,57 +56,79 @@ export const seedFirstRun = (target: Page | BrowserContext) =>
 export const test = base.extend<{ failureDiagnostics: void; firstRunConfig: boolean; firstRunSeed: void }>({
   /** Whether a page without an app config starts with `FIRST_RUN_CONFIG` instead of the setup wizard. */
   firstRunConfig: [true, { option: true }],
-  firstRunSeed: [async ({ page, firstRunConfig }, use) => {
-    if (firstRunConfig) {
-      await seedFirstRun(page);
-    }
-    await use();
-  }, { auto: true }],
-  failureDiagnostics: [async ({ page }, use, info) => {
-    await use();
-    if (info.status === info.expectedStatus) return;
-    try {
-      const browser = await page.evaluate(async () => {
-        const canvas = document.querySelector<HTMLCanvasElement>(".tab-pane:not([hidden]) [data-testid=viewport] canvas");
-        const sample = () => {
-          if (!canvas) return null;
-          const probe = document.createElement("canvas");
-          probe.width = probe.height = 32;
-          const context = probe.getContext("2d")!;
-          context.drawImage(canvas, 0, 0, 32, 32);
-          return context.getImageData(0, 0, 32, 32).data;
-        };
-        const before = sample();
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        const after = sample();
-        let diffPixels = 0;
-        const colors = new Set<number>();
-        if (before && after) {
-          for (let i = 0; i < after.length; i += 4) {
-            colors.add((after[i] << 16) | (after[i + 1] << 8) | after[i + 2]);
-            if (after.slice(i, i + 4).some((value, offset) => value !== before[i + offset])) diffPixels++;
+  firstRunSeed: [
+    async ({ page, firstRunConfig }, use) => {
+      if (firstRunConfig) {
+        await seedFirstRun(page);
+      }
+      await use();
+    },
+    { auto: true },
+  ],
+  failureDiagnostics: [
+    async ({ page }, use, info) => {
+      await use();
+      if (info.status === info.expectedStatus) return;
+      try {
+        const browser = await page.evaluate(async () => {
+          const canvas = document.querySelector<HTMLCanvasElement>(
+            ".tab-pane:not([hidden]) [data-testid=viewport] canvas",
+          );
+          const sample = () => {
+            if (!canvas) return null;
+            const probe = document.createElement("canvas");
+            probe.width = probe.height = 32;
+            const context = probe.getContext("2d")!;
+            context.drawImage(canvas, 0, 0, 32, 32);
+            return context.getImageData(0, 0, 32, 32).data;
+          };
+          const before = sample();
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          const after = sample();
+          let diffPixels = 0;
+          const colors = new Set<number>();
+          if (before && after) {
+            for (let i = 0; i < after.length; i += 4) {
+              colors.add((after[i] << 16) | (after[i + 1] << 8) | after[i + 2]);
+              if (after.slice(i, i + 4).some((value, offset) => value !== before[i + offset])) diffPixels++;
+            }
           }
-        }
-        const gl = canvas?.getContext("webgl2");
-        const debug = gl?.getExtension("WEBGL_debug_renderer_info");
-        return {
-          width: canvas?.width, height: canvas?.height, colors: colors.size, diffPixels,
-          before: before ? Array.from(before.slice(0, 16)) : null,
-          after: after ? Array.from(after.slice(0, 16)) : null,
-          viewport: [innerWidth, innerHeight], dpr: devicePixelRatio, userAgent: navigator.userAgent,
-          locale: navigator.language, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          renderer: gl?.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
-          vendor: gl?.getParameter(debug ? debug.UNMASKED_VENDOR_WEBGL : gl.VENDOR),
-          contextLost: gl?.isContextLost(), drawing: canvas?.parentElement?.dataset.drawing,
-        };
-      });
-      console.error("ARES_WEB_FAILURE_DIAGNOSTICS", JSON.stringify({
-        test: info.title, project: info.project.name, launch: info.project.use.launchOptions,
-        display: process.env.DISPLAY ?? null, locale: process.env.LC_ALL,
-        tz: process.env.TZ ?? null, browser,
-      }));
-    } catch (error) {
-      console.error("ARES_WEB_FAILURE_DIAGNOSTICS unavailable", String(error));
-    }
-  }, { auto: true }],
+          const gl = canvas?.getContext("webgl2");
+          const debug = gl?.getExtension("WEBGL_debug_renderer_info");
+          return {
+            width: canvas?.width,
+            height: canvas?.height,
+            colors: colors.size,
+            diffPixels,
+            before: before ? Array.from(before.slice(0, 16)) : null,
+            after: after ? Array.from(after.slice(0, 16)) : null,
+            viewport: [innerWidth, innerHeight],
+            dpr: devicePixelRatio,
+            userAgent: navigator.userAgent,
+            locale: navigator.language,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            renderer: gl?.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
+            vendor: gl?.getParameter(debug ? debug.UNMASKED_VENDOR_WEBGL : gl.VENDOR),
+            contextLost: gl?.isContextLost(),
+            drawing: canvas?.parentElement?.dataset.drawing,
+          };
+        });
+        console.error(
+          "ARES_WEB_FAILURE_DIAGNOSTICS",
+          JSON.stringify({
+            test: info.title,
+            project: info.project.name,
+            launch: info.project.use.launchOptions,
+            display: process.env.DISPLAY ?? null,
+            locale: process.env.LC_ALL,
+            tz: process.env.TZ ?? null,
+            browser,
+          }),
+        );
+      } catch (error) {
+        console.error("ARES_WEB_FAILURE_DIAGNOSTICS unavailable", String(error));
+      }
+    },
+    { auto: true },
+  ],
 });

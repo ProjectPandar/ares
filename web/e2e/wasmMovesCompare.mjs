@@ -18,14 +18,19 @@ function load(root, name, Type) {
 }
 export function compareBuffers(root) {
   const rows = readFileSync(`${root}/oracle.csv`, "utf8").trim().split("\n");
-  assert.equal(rows.shift(), "gcode_id,type,role,extruder_id,cp_color_id,x,y,z,delta_extruder,feedrate,width,height,mm3_per_mm,travel_dist,fan_speed,temperature,time0,layer_id,internal_only");
-  const moves = rows.map(line => line.split(",").map(Number));
+  assert.equal(
+    rows.shift(),
+    "gcode_id,type,role,extruder_id,cp_color_id,x,y,z,delta_extruder,feedrate,width,height,mm3_per_mm,travel_dist,fan_speed,temperature,time0,layer_id,internal_only",
+  );
+  const moves = rows.map((line) => line.split(",").map(Number));
   // --dump-move-dynamics (procgcode-dynamics.patch): the same moves' raw acceleration, jerk and actual_feedrate.
   const dynamicsRows = readFileSync(`${root}/dynamics.csv`, "utf8").trim().split("\n");
   assert.equal(dynamicsRows.shift(), "gcode_id,type,internal_only,pressure_advance,acceleration,jerk,actual_feedrate");
-  const dynamics = dynamicsRows.map(line => line.split(",").map(Number));
+  const dynamics = dynamicsRows.map((line) => line.split(",").map(Number));
   assert.equal(dynamics.length, moves.length);
-  dynamics.forEach((d, i) => assert.deepEqual([d[0], d[1], d[2]], [moves[i][0], moves[i][1], moves[i][18]], `dynamics row ${i}`));
+  dynamics.forEach((d, i) =>
+    assert.deepEqual([d[0], d[1], d[2]], [moves[i][0], moves[i][1], moves[i][18]], `dynamics row ${i}`),
+  );
   const values = load(root, "move-values", Float32Array);
   const ids = load(root, "move-ids", Uint32Array);
   const tags = load(root, "move-tags", Uint8Array);
@@ -53,19 +58,46 @@ export function compareBuffers(root) {
   let vertex = 0;
   function checkVertex(curr, dyn, position, actualFeedrate, phantom) {
     assert(16 * vertex < vv.length, `browser has fewer vertices than the projection at gcode_id ${curr[0]}`);
-    const expected = [...position, curr[11], curr[10], curr[9], actualFeedrate, curr[12], curr[14], curr[15], phantom ? 0 : curr[16], 0, 0, 0, dyn[4], dyn[5]];
+    const expected = [
+      ...position,
+      curr[11],
+      curr[10],
+      curr[9],
+      actualFeedrate,
+      curr[12],
+      curr[14],
+      curr[15],
+      phantom ? 0 : curr[16],
+      0,
+      0,
+      0,
+      dyn[4],
+      dyn[5],
+    ];
     const bounds = [1, 1, 1, 1, 1, 0, 0, 1, 0, 0, phantom ? 0 : 2, 0, 0, 0, 0, 0];
     expected.forEach((n, j) => number("vertex", vertex, j, n, vv[16 * vertex + j], bounds[j]));
     [curr[0], curr[17]].forEach((n, j) => integer("vertex", vertex, `id${j}`, n, vi[2 * vertex + j]));
-    [roleMap[curr[2]], curr[1], curr[3], curr[4]].forEach((n, j) => integer("vertex", vertex, `tag${j}`, n, vt[4 * vertex + j]));
+    [roleMap[curr[2]], curr[1], curr[3], curr[4]].forEach((n, j) =>
+      integer("vertex", vertex, `tag${j}`, n, vt[4 * vertex + j]),
+    );
     vertex++;
   }
   for (let i = 1; i < moves.length; i++) {
-    const curr = moves[i], prev = moves[i - 1], dyn = dynamics[i], prevDyn = dynamics[i - 1];
+    const curr = moves[i],
+      prev = moves[i - 1],
+      dyn = dynamics[i],
+      prevDyn = dynamics[i - 1];
     const changed = (a, b) => Math.fround(a) !== Math.fround(b);
     // starts_path (:227-237): type, role, mm3_per_mm, acceleration or jerk changes.
-    if ([0, 8, 9, 10].includes(curr[1]) && (i === 1 || prev[1] !== curr[1] || prev[2] !== curr[2] || changed(prev[12], curr[12])
-      || changed(prevDyn[4], dyn[4]) || changed(prevDyn[5], dyn[5]))) {
+    if (
+      [0, 8, 9, 10].includes(curr[1]) &&
+      (i === 1 ||
+        prev[1] !== curr[1] ||
+        prev[2] !== curr[2] ||
+        changed(prev[12], curr[12]) ||
+        changed(prevDyn[4], dyn[4]) ||
+        changed(prevDyn[5], dyn[5]))
+    ) {
       checkVertex(curr, dyn, prev.slice(5, 8), prevDyn[6], true);
     }
     checkVertex(curr, dyn, curr.slice(5, 8), dyn[6], false);

@@ -14,8 +14,13 @@ export const act = (input: Input, control: Locator) => (input === "touch" ? cont
 
 export async function choose(page: Page, input: Input, combo: string, group: string, name: string) {
   await act(input, page.getByRole("button", { name: combo, exact: true }));
-  await act(input, page.getByRole("listbox", { name: combo, exact: true }).getByRole("group", { name: group })
-    .getByRole("option", { name, exact: true }));
+  await act(
+    input,
+    page
+      .getByRole("listbox", { name: combo, exact: true })
+      .getByRole("group", { name: group })
+      .getByRole("option", { name, exact: true }),
+  );
   await expect(page.getByRole("button", { name: combo, exact: true })).toHaveText(name);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }

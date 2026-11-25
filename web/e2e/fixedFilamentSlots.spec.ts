@@ -42,7 +42,10 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await page.getByRole("button", { name: "Filament 1 preset", exact: true }).click();
   await page.getByRole("option", { name: "Add/Remove filaments" }).click();
   const install = page.getByRole("dialog", { name: "Filament selection" });
-  await install.getByRole("group", { name: "Filaments" }).getByRole("checkbox", { name: "Snapmaker PLA", exact: true }).check({ timeout: 60_000 });
+  await install
+    .getByRole("group", { name: "Filaments" })
+    .getByRole("checkbox", { name: "Snapmaker PLA", exact: true })
+    .check({ timeout: 60_000 });
   await install.getByRole("button", { name: "Done" }).click();
   await printer.click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
@@ -73,11 +76,21 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await page.getByRole("button", { name: "Export G-code file", exact: true }).click();
   await (await download).saveAs(`${artifacts}/u1.gcode`);
   const gcode = readFileSync(`${artifacts}/u1.gcode`, "utf8");
-  const densities = gcode.match(/^; filament_density = (.+)$/m)![1].split(",").map(Number);
+  const densities = gcode
+    .match(/^; filament_density = (.+)$/m)![1]
+    .split(",")
+    .map(Number);
   expect(densities.every((value) => value === originalDensity)).toBe(true);
-  const ids = gcode.match(/^; filament_settings_id = (.+)$/m)![1].split(";").map((value) => JSON.parse(value) as string);
+  const ids = gcode
+    .match(/^; filament_settings_id = (.+)$/m)![1]
+    .split(";")
+    .map((value) => JSON.parse(value) as string);
   expect(ids).toEqual(filaments);
-  for (const [key, length] of [["flush_multiplier", 4], ["flush_volumes_vector", 8], ["flush_volumes_matrix", 64]] as const) {
+  for (const [key, length] of [
+    ["flush_multiplier", 4],
+    ["flush_volumes_vector", 8],
+    ["flush_volumes_matrix", 64],
+  ] as const) {
     expect(gcode.match(new RegExp(`^; ${key} = (.+)$`, "m"))![1].split(",")).toHaveLength(length);
   }
   await page.getByRole("link", { name: "Prepare", exact: true }).click();
@@ -91,12 +104,31 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await expect(page.locator(".filament-row")).toHaveCount(1);
   await page.screenshot({ path: `${artifacts}/bbl-remembered-slots.png` });
   // The reload reads the stored selection, so it waits for the switch to store it.
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).printer)).toBe("Bambu Lab X1 Carbon 0.4 nozzle");
+  await expect
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).printer))
+    .toBe("Bambu Lab X1 Carbon 0.4 nozzle");
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await expect(printer).toHaveAttribute("title", "Bambu Lab X1 Carbon 0.4 nozzle", { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await expect(page.locator(".filament-row")).toHaveCount(1);
   expect(errors).toEqual([]);
-  writeFileSync(`${artifacts}/browser-result.json`, JSON.stringify({ printer: "Snapmaker U1 (0.4 nozzle)", slots: 4, filaments, sliced: true, densities, bblFreshSlots: 1, bblRememberedSlots: 1, restoredSlots: 1, errors }, null, 2));
+  writeFileSync(
+    `${artifacts}/browser-result.json`,
+    JSON.stringify(
+      {
+        printer: "Snapmaker U1 (0.4 nozzle)",
+        slots: 4,
+        filaments,
+        sliced: true,
+        densities,
+        bblFreshSlots: 1,
+        bblRememberedSlots: 1,
+        restoredSlots: 1,
+        errors,
+      },
+      null,
+      2,
+    ),
+  );
 });

@@ -243,10 +243,11 @@ jobs:
         run: |
           cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip
           bun web/scripts/build-panic-probe.mjs
-      - name: Build WASM package, web app, lint, typecheck, and unit tests
+      - name: Build WASM package, web app, format, lint, typecheck, and unit tests
         run: |
           bun run --cwd web build:wasm
           bun run --cwd web build
+          bun run --cwd web fmt:check
           bun run --cwd web lint
           bun run --cwd web typecheck
           mkdir -p "$RUNNER_TEMP/profile-tests"

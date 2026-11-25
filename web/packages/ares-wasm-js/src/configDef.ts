@@ -1,19 +1,33 @@
 /** `ConfigOptionType` (libslic3r/Config.hpp) as ares-core `OptionValueKind`; vector kinds end in `s`. */
 export type ConfigOptionType =
-  | "float" | "floats" | "floats_nullable"
-  | "int" | "ints" | "ints_nullable"
-  | "percent" | "percents" | "percents_nullable"
+  | "float"
+  | "floats"
+  | "floats_nullable"
+  | "int"
+  | "ints"
+  | "ints_nullable"
+  | "percent"
+  | "percents"
+  | "percents_nullable"
   | "float_or_percent"
-  | "bool" | "bools" | "bools_nullable"
-  | "enum" | "enums" | "enums_nullable"
-  | "string" | "strings"
-  | "point" | "points" | "points_groups";
+  | "bool"
+  | "bools"
+  | "bools_nullable"
+  | "enum"
+  | "enums"
+  | "enums_nullable"
+  | "string"
+  | "strings"
+  | "point"
+  | "points"
+  | "points_groups";
 
 /** `ConfigOptionMode` comSimple..comDevelop (Config.hpp). */
 export type ConfigOptionMode = "simple" | "advanced" | "expert" | "develop";
 
 /** `ConfigOptionDef::GUIType` (Config.hpp). */
-export type ConfigGuiType = "undefined" | "i_enum_open" | "f_enum_open" | "color" | "select_open" | "slider" | "legend" | "one_string";
+export type ConfigGuiType =
+  "undefined" | "i_enum_open" | "f_enum_open" | "color" | "select_open" | "slider" | "legend" | "one_string";
 
 /** One `ConfigOptionDef` of `PrintConfigDef` (libslic3r/PrintConfig.cpp); strings are untranslated msgids. */
 export interface ConfigOptionDef {

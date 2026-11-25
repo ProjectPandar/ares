@@ -13,9 +13,12 @@ const plater = {
     const { objects, plates } = await session.scene();
     return { objects: objects.map(({ instances }) => ({ instances })), plates };
   },
-  translate: (object: number, instance: number, displacement: [number, number, number]) => session.translate(object, instance, displacement),
-  setPosition: (object: number, instance: number, axis: 0 | 1 | 2, value: number) => session.setPosition(object, instance, axis, value),
-  rotate: (object: number, instance: number, radians: [number, number, number]) => session.rotate(object, instance, radians),
+  translate: (object: number, instance: number, displacement: [number, number, number]) =>
+    session.translate(object, instance, displacement),
+  setPosition: (object: number, instance: number, axis: 0 | 1 | 2, value: number) =>
+    session.setPosition(object, instance, axis, value),
+  rotate: (object: number, instance: number, radians: [number, number, number]) =>
+    session.rotate(object, instance, radians),
   absoluteRotation: (object: number, instance: number) => session.absoluteRotation(object, instance),
   setAbsoluteRotation: (object: number, instance: number, axis: 0 | 1 | 2, degrees: number) =>
     session.setAbsoluteRotation(object, instance, axis, degrees),

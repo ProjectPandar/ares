@@ -10,7 +10,10 @@ const EXTRUDE = 10;
 /** printf `%.*f`: round half to even on the exact value of the float. */
 const printf = (value: number, decimals: number) =>
   new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: decimals, maximumFractionDigits: decimals, roundingMode: "halfEven", useGrouping: false,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+    roundingMode: "halfEven",
+    useGrouping: false,
   }).format(value);
 const float = (bits: number) => new Float32Array(new Uint32Array([bits]).buffer)[0];
 
@@ -34,8 +37,18 @@ export async function checkActualSpeedProfile(page: Page, moves: Move[], artifac
   mkdirSync(out, { recursive: true });
   const oracle = process.env.ARES_ACTUAL_SPEED_PROFILE_BIN;
   if (!oracle) throw new Error("ARES_ACTUAL_SPEED_PROFILE_BIN is required for the actual speed profile oracle");
-  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
-    "--dump-moves", `${out}moves.csv`, "--dump-actual-speed-profile", `${out}native.json`], { stdio: "ignore" });
+  execFileSync(
+    oracle,
+    [
+      "--process-gcode",
+      `${artifacts}oracle-input.gcode`,
+      "--dump-moves",
+      `${out}moves.csv`,
+      "--dump-actual-speed-profile",
+      `${out}native.json`,
+    ],
+    { stdio: "ignore" },
+  );
   expect(readFileSync(`${out}moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
   const native = JSON.parse(readFileSync(`${out}native.json`, "utf8")) as {
     vertices: { id: number; gcodeId: number }[];
@@ -44,10 +57,15 @@ export async function checkActualSpeedProfile(page: Page, moves: Move[], artifac
   const { vertices, stops } = movesSliderVertices(moves, 0);
   expect(native.vertices.map((v) => v.gcodeId)).toEqual(vertices.map((v) => v.gcodeId));
   const rows = (profile: NativeProfile) =>
-    profile.data!.map(([pos, speed, internal]) => ({ pos: printf(float(pos), 3), speed: printf(float(speed), 1), internal }));
+    profile.data!.map(([pos, speed, internal]) => ({
+      pos: printf(float(pos), 3),
+      speed: printf(float(speed), 1),
+      internal,
+    }));
 
   // An extrusion stop whose line has at least two segments, preferring one with an internal point.
-  const candidates = stops.map((id, stop) => ({ stop, id, profile: native.hidden[id] }))
+  const candidates = stops
+    .map((id, stop) => ({ stop, id, profile: native.hidden[id] }))
     .filter(({ id, profile }) => vertices[id].type === EXTRUDE && profile.updated && profile.data!.length >= 3);
   const chosen = candidates.find(({ profile }) => profile.data!.some(([, , internal]) => internal)) ?? candidates[0];
   expect(chosen, "an extrusion stop with a multi-point profile").toBeDefined();
@@ -102,7 +120,7 @@ export async function checkActualSpeedProfile(page: Page, moves: Move[], artifac
   expect(windowBox.y).toBeGreaterThanOrEqual(0);
   const initialTheme = await page.locator("html").getAttribute("data-theme");
   for (const theme of ["dark", "light"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
+    if ((await page.locator("html").getAttribute("data-theme")) !== theme)
       await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
     await page.screenshot({ path: `${out}plot-${theme}.png` });
   }
@@ -145,7 +163,13 @@ export async function checkActualSpeedProfile(page: Page, moves: Move[], artifac
   await expect(window).toHaveCount(0);
   await fold.click();
   await expect(toggle).toHaveCount(0);
-  const result = { stop: chosen.stop, vertex: chosen.id, gcodeId: vertices[chosen.id].gcodeId, seamStop, rows: expected };
+  const result = {
+    stop: chosen.stop,
+    vertex: chosen.id,
+    gcodeId: vertices[chosen.id].gcodeId,
+    seamStop,
+    rows: expected,
+  };
   writeFileSync(`${out}profile.json`, `${JSON.stringify(result, null, 2)}\n`);
   return result;
 }

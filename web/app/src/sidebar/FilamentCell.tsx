@@ -5,11 +5,19 @@ import { useApp } from "../state/store";
 
 import "./filamentAssignment.css";
 
-const slotLabel = (slot: number) => slot ? `Filament ${slot}` : "Default";
+const slotLabel = (slot: number) => (slot ? `Filament ${slot}` : "Default");
 
 /** ObjectList's Fila. column editor (GUI_ObjectList.cpp:459–482). */
-export function FilamentCell({ name, target, slot, modifier = false }: {
-  name: string; target: FilamentTarget; slot: number; modifier?: boolean;
+export function FilamentCell({
+  name,
+  target,
+  slot,
+  modifier = false,
+}: {
+  name: string;
+  target: FilamentTarget;
+  slot: number;
+  modifier?: boolean;
 }) {
   const scene = useApp((state) => state.scene);
   const selection = useApp((state) => state.presetSelection);
@@ -52,33 +60,82 @@ export function FilamentCell({ name, target, slot, modifier = false }: {
         event.stopPropagation();
         close();
         break;
-      case "ArrowDown": case "ArrowUp": case "Home": case "End": {
+      case "ArrowDown":
+      case "ArrowUp":
+      case "Home":
+      case "End": {
         event.preventDefault();
         const items = Array.from(event.currentTarget.querySelectorAll("button"));
         const index = items.indexOf(document.activeElement as HTMLButtonElement);
-        const next = event.key === "Home" ? 0 : event.key === "End" ? items.length - 1
-          : (index + items.length + (event.key === "ArrowDown" ? 1 : -1)) % items.length;
+        const next =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? items.length - 1
+              : (index + items.length + (event.key === "ArrowDown" ? 1 : -1)) % items.length;
         items[next].focus();
         break;
       }
     }
   };
-  return <>
-    <button type="button" ref={trigger} className="filament-cell" disabled={!available} onClick={activate}
-      aria-label={`Edit filament for ${name}`} aria-haspopup="menu" aria-expanded={open} aria-controls={menuId}>
-      <span className="filament-swatch" role="img" aria-label={slotLabel(slot)} title={slotLabel(slot)}
-        style={{ background: background(slot) }}>{slot || "–"}</span>
-    </button>
-    <div id={menuId} ref={popup} popover="auto" className="context-menu filament-cell-menu"
-      role="menu" aria-label={`Filament for ${name}`} onKeyDown={navigate} onToggle={(event) => setOpen(event.newState === "open")}>
-      {choices.map((value) => <button key={value} type="button" role="menuitemradio" aria-checked={slot === value}
-        aria-label={slotLabel(value)} tabIndex={-1} disabled={!available} onClick={(event) => {
-          event.stopPropagation();
-          close();
-          void assignFilament({ cell: target }, value);
-        }}>
-        {value ? <span className="filament-swatch" aria-hidden="true" style={{ background: background(value) }}>{value}</span> : "Default"}
-      </button>)}
-    </div>
-  </>;
+  return (
+    <>
+      <button
+        type="button"
+        ref={trigger}
+        className="filament-cell"
+        disabled={!available}
+        onClick={activate}
+        aria-label={`Edit filament for ${name}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+      >
+        <span
+          className="filament-swatch"
+          role="img"
+          aria-label={slotLabel(slot)}
+          title={slotLabel(slot)}
+          style={{ background: background(slot) }}
+        >
+          {slot || "–"}
+        </span>
+      </button>
+      <div
+        id={menuId}
+        ref={popup}
+        popover="auto"
+        className="context-menu filament-cell-menu"
+        role="menu"
+        aria-label={`Filament for ${name}`}
+        onKeyDown={navigate}
+        onToggle={(event) => setOpen(event.newState === "open")}
+      >
+        {choices.map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="menuitemradio"
+            aria-checked={slot === value}
+            aria-label={slotLabel(value)}
+            tabIndex={-1}
+            disabled={!available}
+            onClick={(event) => {
+              event.stopPropagation();
+              close();
+              void assignFilament({ cell: target }, value);
+            }}
+          >
+            {value ? (
+              <span className="filament-swatch" aria-hidden="true" style={{ background: background(value) }}>
+                {value}
+              </span>
+            ) : (
+              "Default"
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  );
 }

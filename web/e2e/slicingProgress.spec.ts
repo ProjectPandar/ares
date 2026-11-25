@@ -18,7 +18,11 @@ type Shown = { text: string; percent: number | null };
 /** The project's statuses as `ares slice --progress` prints them: `[percent, text]`. */
 function cliStatuses(): [number, string][] {
   const output = `${artifacts}/cli.gcode`;
-  const { status: exit, stderr } = spawnSync(`${root}target/release/ares`, ["slice", "--progress", "-o", output, project], { encoding: "utf8" });
+  const { status: exit, stderr } = spawnSync(
+    `${root}target/release/ares`,
+    ["slice", "--progress", "-o", output, project],
+    { encoding: "utf8" },
+  );
   expect(exit, stderr).toBe(0);
   return stderr.split("\n").flatMap((line) => {
     const status = /^Percent (-?\d+): (.*)$/.exec(line);
@@ -49,7 +53,12 @@ test("the status bar follows the core's slicing statuses while a plate slices", 
       const percent = bar ? bar.value : null;
       if (last?.text !== text || last.percent !== percent) shown.push({ text, percent });
     };
-    new MutationObserver(record).observe(document.querySelector(".statusbar")!, { subtree: true, childList: true, characterData: true, attributes: true });
+    new MutationObserver(record).observe(document.querySelector(".statusbar")!, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    });
   });
   await page.getByRole("button", { name: "Slice plate", exact: true }).click();
   // Statuses that arrive between two renders show only the last, so the spec checks what the
@@ -60,7 +69,9 @@ test("the status bar follows the core's slicing statuses while a plate slices", 
   await expect(page.getByTestId("slice-progress")).toHaveCount(0);
   await page.screenshot({ path: `${artifacts}/sliced.png` });
 
-  const shown = (await page.evaluate(() => (window as unknown as { shown: Shown[] }).shown)).filter(({ text }) => text.startsWith("Slicing plate 1: "));
+  const shown = (await page.evaluate(() => (window as unknown as { shown: Shown[] }).shown)).filter(({ text }) =>
+    text.startsWith("Slicing plate 1: "),
+  );
   expect(shown.length).toBeGreaterThan(1);
   // Each shown status and percent is the next matching one of the core's sequence; a text can
   // repeat at another percent ("Generating support" at 50 and 60).

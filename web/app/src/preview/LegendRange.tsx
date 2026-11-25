@@ -36,9 +36,14 @@ export const css = ([r, g, b]: Iterable<number>) => `rgb(${r} ${g} ${b})`;
 export function RangeRows({ range, decimals }: { range: ColorRange; decimals: number }) {
   const { values, palette } = range;
   const rows: [number, number][] =
-    values.length === 1 ? [[0, values[0]]]
-    : values.length === 2 ? [[palette.length - 1, values[1]], [0, values[0]]]
-    : palette.map((_, i) => [i, values[i]] as [number, number]).reverse();
+    values.length === 1
+      ? [[0, values[0]]]
+      : values.length === 2
+        ? [
+            [palette.length - 1, values[1]],
+            [0, values[0]],
+          ]
+        : palette.map((_, i) => [i, values[i]] as [number, number]).reverse();
   return (
     <ul className="legend-list legend-range">
       {rows.map(([color, value], index) => (

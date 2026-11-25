@@ -1,24 +1,57 @@
-import { EXTRUSION_ROLES, MOVE_TYPES, type ExtrusionRole, type MoveType, type ToolMarker, type Toolpaths, VERTEX_VALUES, type VertexValue } from "@ares-slicer/wasm";
+import {
+  EXTRUSION_ROLES,
+  MOVE_TYPES,
+  type ExtrusionRole,
+  type MoveType,
+  type ToolMarker,
+  type Toolpaths,
+  VERTEX_VALUES,
+  type VertexValue,
+} from "@ares-slicer/wasm";
 import { lazy, Suspense, useState } from "react";
 import { formatMarkerTime, printf } from "./toolPositionFormat";
 
-const ActualSpeedWindow = lazy(() => import("./ActualSpeedProfile").then((module) => ({ default: module.ActualSpeedWindow })));
+const ActualSpeedWindow = lazy(() =>
+  import("./ActualSpeedProfile").then((module) => ({ default: module.ActualSpeedWindow })),
+);
 
 /** `to_string(EMoveType)` (`GCodeViewer.cpp:277-294`). */
 const TYPE_LABELS: Record<MoveType, string> = {
-  Noop: "Noop", Retract: "Retract", Unretract: "Unretract", Seam: "Seam", ToolChange: "Tool Change",
-  ColorChange: "Color Change", PausePrint: "Pause Print", CustomGCode: "Custom G-code", Travel: "Travel",
-  Wipe: "Wipe", Extrude: "Extrude",
+  Noop: "Noop",
+  Retract: "Retract",
+  Unretract: "Unretract",
+  Seam: "Seam",
+  ToolChange: "Tool Change",
+  ColorChange: "Color Change",
+  PausePrint: "Pause Print",
+  CustomGCode: "Custom G-code",
+  Travel: "Travel",
+  Wipe: "Wipe",
+  Extrude: "Extrude",
 };
 
 /** `to_string(EGCodeExtrusionRole)` (`GCodeViewer.cpp:296-323`). */
 const ROLE_LABELS: Record<ExtrusionRole, string> = {
-  None: "Unknown", Perimeter: "Inner wall", ExternalPerimeter: "Outer wall", OverhangPerimeter: "Overhang wall",
-  InternalInfill: "Sparse infill", SolidInfill: "Internal solid infill", TopSolidInfill: "Top surface",
-  Ironing: "Ironing", BridgeInfill: "Bridge", GapFill: "Gap infill", Skirt: "Skirt", SupportMaterial: "Support",
-  SupportMaterialInterface: "Support interface", WipeTower: "Prime tower", Custom: "Custom",
-  BottomSurface: "Bottom surface", InternalBridgeInfill: "Internal bridge", Brim: "Brim",
-  SupportTransition: "Support transition", Mixed: "Mixed",
+  None: "Unknown",
+  Perimeter: "Inner wall",
+  ExternalPerimeter: "Outer wall",
+  OverhangPerimeter: "Overhang wall",
+  InternalInfill: "Sparse infill",
+  SolidInfill: "Internal solid infill",
+  TopSolidInfill: "Top surface",
+  Ironing: "Ironing",
+  BridgeInfill: "Bridge",
+  GapFill: "Gap infill",
+  Skirt: "Skirt",
+  SupportMaterial: "Support",
+  SupportMaterialInterface: "Support interface",
+  WipeTower: "Prime tower",
+  Custom: "Custom",
+  BottomSurface: "Bottom surface",
+  InternalBridgeInfill: "Internal bridge",
+  Brim: "Brim",
+  SupportTransition: "Support transition",
+  Mixed: "Mixed",
 };
 
 const NA = "N/A";
@@ -27,22 +60,37 @@ const NA = "N/A";
 function detail(viewType: string, value: (name: VertexValue) => number, extrusion: boolean, label: string) {
   const extrusionDetail = (name: string, amount: number) => `${name}${extrusion ? printf(amount, 2) : NA}`;
   switch (viewType) {
-    case "FeatureType": return label;
-    case "Height": return extrusionDetail("Height: ", value("height"));
-    case "Width": return extrusionDetail("Width: ", value("width"));
-    case "VolumetricFlowRate": return extrusionDetail("Flow: ", Math.fround(value("feedrate") * value("mm3PerMm")));
-    case "FanSpeed": return `Fan: ${printf(value("fanSpeed"), 0)}`;
-    case "Temperature": return `Temperature: ${printf(value("temperature"), 0)}`;
+    case "FeatureType":
+      return label;
+    case "Height":
+      return extrusionDetail("Height: ", value("height"));
+    case "Width":
+      return extrusionDetail("Width: ", value("width"));
+    case "VolumetricFlowRate":
+      return extrusionDetail("Flow: ", Math.fround(value("feedrate") * value("mm3PerMm")));
+    case "FanSpeed":
+      return `Fan: ${printf(value("fanSpeed"), 0)}`;
+    case "Temperature":
+      return `Temperature: ${printf(value("temperature"), 0)}`;
     case "LayerTimeLinear":
-    case "LayerTimeLogarithmic": return `Layer Time: ${printf(value("layerDuration"), 1)}`;
-    case "Acceleration": return `Acceleration: ${printf(value("acceleration"), 0)}`;
-    case "Jerk": return `Jerk: ${printf(value("jerk"), 1)}`;
-    case "PressureAdvance": return `PA: ${printf(value("pressureAdvance"), 4)}`;
-    default: return "";
+    case "LayerTimeLogarithmic":
+      return `Layer Time: ${printf(value("layerDuration"), 1)}`;
+    case "Acceleration":
+      return `Acceleration: ${printf(value("acceleration"), 0)}`;
+    case "Jerk":
+      return `Jerk: ${printf(value("jerk"), 1)}`;
+    case "PressureAdvance":
+      return `PA: ${printf(value("pressureAdvance"), 4)}`;
+    default:
+      return "";
   }
 }
 
-const AXES = [["X", "#ff3c5b"], ["Y", "#64c818"], ["Z", "#2f88e9"]] as const;
+const AXES = [
+  ["X", "#ff3c5b"],
+  ["Y", "#64c818"],
+  ["Z", "#2f88e9"],
+] as const;
 
 /**
  * GCodeViewer `Marker::render_position_window` (`GCodeViewer.cpp:325-690`)
@@ -51,8 +99,18 @@ const AXES = [["X", "#ff3c5b"], ["Y", "#64c818"], ["Z", "#2f88e9"]] as const;
  * prints (`:651-674`), the speed and the view type detail (`:676-683`). Below
  * the properties, the actual speed profile toggle and its window (`:518-614`).
  */
-export function ToolPosition({ toolpaths, vertex, viewType, time, actualSpeed }: {
-  toolpaths: Toolpaths; vertex: number; viewType: string; time: ToolMarker["time"]; actualSpeed: ToolMarker["actualSpeed"];
+export function ToolPosition({
+  toolpaths,
+  vertex,
+  viewType,
+  time,
+  actualSpeed,
+}: {
+  toolpaths: Toolpaths;
+  vertex: number;
+  viewType: string;
+  time: ToolMarker["time"];
+  actualSpeed: ToolMarker["actualSpeed"];
 }) {
   const [shown, setShown] = useState(false);
   const [profileShown, setProfileShown] = useState(false);
@@ -88,19 +146,35 @@ export function ToolPosition({ toolpaths, vertex, viewType, time, actualSpeed }:
       {shown && (
         <table className="tool-position-table">
           <tbody>
-            {rows.map(([name, cell]) => <tr key={name}><th>{name}</th><td>{cell}</td></tr>)}
+            {rows.map(([name, cell]) => (
+              <tr key={name}>
+                <th>{name}</th>
+                <td>{cell}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
       {shown && (
         <div className="tool-position-profile">
-          <button disabled={!actualSpeedExist} onClick={() => setProfileShown(!profileShown)}>{profileShown ? "Hide" : "Show"}</button>
+          <button disabled={!actualSpeedExist} onClick={() => setProfileShown(!profileShown)}>
+            {profileShown ? "Hide" : "Show"}
+          </button>
           <span>Actual speed profile</span>
         </div>
       )}
-      {shown && actualSpeedExist && profileShown && <Suspense fallback={null}><ActualSpeedWindow profile={actualSpeed} /></Suspense>}
+      {shown && actualSpeedExist && profileShown && (
+        <Suspense fallback={null}>
+          <ActualSpeedWindow profile={actualSpeed} />
+        </Suspense>
+      )}
       <div className="tool-position-row">
-        <button className="tool-position-fold" aria-label="Properties" aria-expanded={shown} onClick={() => setShown(!shown)}>
+        <button
+          className="tool-position-fold"
+          aria-label="Properties"
+          aria-expanded={shown}
+          onClick={() => setShown(!shown)}
+        >
           {shown ? "▾" : "▸"}
         </button>
         {AXES.map(([axis, color], index) => (
@@ -109,7 +183,9 @@ export function ToolPosition({ toolpaths, vertex, viewType, time, actualSpeed }:
             <span className="tool-position-axis-value">{printf(position[index], decimals)}</span>
           </span>
         ))}
-        <span className="tool-position-speed" data-testid="tool-position-speed">Speed: {printf(value("feedrate"), 0)}</span>
+        <span className="tool-position-speed" data-testid="tool-position-speed">
+          Speed: {printf(value("feedrate"), 0)}
+        </span>
         {text && <span data-testid="tool-position-detail">{text}</span>}
       </div>
     </div>

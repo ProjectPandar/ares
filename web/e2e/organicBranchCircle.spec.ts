@@ -25,9 +25,14 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
   // Compare the raw reference artifact rather than the shared helper's normalization.
   const expected = withoutGenerator(info.outputPath(`ramp-plate_1-${lane}.gcode`));
   const support = expected.split(/^;(?: FEATURE: |TYPE:)Support\r?$/m).slice(1);
-  expect(support.some((section) => /^G1 [^\r\n]* E(?:[1-9]\d*(?:\.\d+)?|0?\.\d*[1-9]\d*)(?:\s|$)/m.test(
-    section.split(/^;(?: FEATURE: |TYPE:)/m, 1)[0],
-  )), "Native extrudes the ramp's support").toBe(true);
+  expect(
+    support.some((section) =>
+      /^G1 [^\r\n]* E(?:[1-9]\d*(?:\.\d+)?|0?\.\d*[1-9]\d*)(?:\s|$)/m.test(
+        section.split(/^;(?: FEATURE: |TYPE:)/m, 1)[0],
+      ),
+    ),
+    "Native extrudes the ramp's support",
+  ).toBe(true);
 
   const catalogPath = process.env.ARES_PARITY_PROJECT_PRESET_CATALOG;
   const catalog = catalogPath ? readFileSync(catalogPath, "utf8") : await systemPresetCatalog();
@@ -41,7 +46,9 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
   ]) {
     await page.route(`${origin}/${name}`, (route) => route.fulfill({ path, contentType }));
   }
-  await page.route(`${origin}/catalog.json`, (route) => route.fulfill({ contentType: "application/json", body: catalog }));
+  await page.route(`${origin}/catalog.json`, (route) =>
+    route.fulfill({ contentType: "application/json", body: catalog }),
+  );
   await page.goto(origin);
   const bytes = await page.evaluate(async (modulePath) => {
     const wasm: typeof import("../packages/ares-wasm-js/src/wasm/ares_wasm") = await import(modulePath);
@@ -50,7 +57,9 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
       fetch("/ramp.3mf").then((response) => response.arrayBuffer()),
       fetch("/catalog.json").then((response) => response.text()),
     ]);
-    return Array.from(await wasm.sliceProjectPlateWithCatalog(new Uint8Array(input), undefined, undefined, presetCatalog));
+    return Array.from(
+      await wasm.sliceProjectPlateWithCatalog(new Uint8Array(input), undefined, undefined, presetCatalog),
+    );
   }, "/ares_wasm.js");
   const output = info.outputPath("browser.gcode");
   writeFileSync(output, Buffer.from(bytes));

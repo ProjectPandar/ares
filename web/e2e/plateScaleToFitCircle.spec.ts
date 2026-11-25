@@ -11,7 +11,7 @@ const artifacts = fileURLToPath(new URL(`../../${ARTIFACTS}`, import.meta.url));
 // Ender-3 (250 mm printable height): cube10 object 2 at (110, 110), its centre at z 5.
 const FIXTURE = "tests/parity/orca_cli_ender3.3mf";
 const PROJECT = "Metadata/project_settings.config";
-const ENDER3_AREA = "\"printable_area\": [\n\t\t\"0x0\",\n\t\t\"220x0\",\n\t\t\"220x220\",\n\t\t\"0x220\"\n\t]";
+const ENDER3_AREA = '"printable_area": [\n\t\t"0x0",\n\t\t"220x0",\n\t\t"220x220",\n\t\t"0x220"\n\t]';
 
 /**
  * A circular bed (`BuildVolume.cpp:46-75`): the 36 integer points exactly on the circle of radius 65
@@ -30,13 +30,17 @@ function circularArea() {
 }
 
 type Axis = "X" | "Y" | "Z";
-const field = (page: Page, group: string, axis: Axis) => page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
+const field = (page: Page, group: string, axis: Axis) =>
+  page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
 
 async function expectFields(page: Page, group: string, values: readonly [string, string, string]) {
-  for (const [index, axis] of (["X", "Y", "Z"] as const).entries()) await expect(field(page, group, axis)).toHaveValue(values[index]);
+  for (const [index, axis] of (["X", "Y", "Z"] as const).entries())
+    await expect(field(page, group, axis)).toHaveValue(values[index]);
 }
 
-test("Scale to build volume fills the printable height on a circular bed, and slices like OrcaSlicer", async ({ page }) => {
+test("Scale to build volume fills the printable height on a circular bed, and slices like OrcaSlicer", async ({
+  page,
+}) => {
   test.setTimeout(600_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -57,7 +61,10 @@ test("Scale to build volume fills the printable height on a circular bed, and sl
   await expectFields(page, "Size", ["10.00", "10.00", "200.00"]);
 
   await row.click({ button: "right" });
-  await page.getByRole("menu", { name: "Object menu" }).getByRole("menuitem", { name: "Scale to build volume" }).click();
+  await page
+    .getByRole("menu", { name: "Object menu" })
+    .getByRole("menuitem", { name: "Scale to build volume" })
+    .click();
   // fit_circle (Selection.cpp:1534-1569): s = min(65 / circle radius, 250 / 200) = 1.25, centred on
   // the bed circle and standing on the bed.
   const s = 250 / 200;
@@ -75,19 +82,54 @@ test("Scale to build volume fills the printable height on a circular bed, and sl
   const gcode = readFileSync(`${artifacts}browser.gcode`, "utf8");
 
   const oracle = `${artifacts}fitted.3mf`;
-  const fitted = [[s, 0, 0], [0, s, 0], [0, 0, 20 * s]];
-  writeFileSync(oracle, guiExport(circle, [
-    { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([fitted], [110, 110, 100 * s]) }] },
-  ], await probedTowers(page)));
-  const legs = { official: orcaPlate(oracle, 1, "official", `${artifacts}circle.3mf`), seeded: orcaPlate(oracle, 1, "seeded", `${artifacts}circle.3mf`) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["printable_area: 36 points on the circle of radius 65 around (110, 110)", "Uniform scale off", "Size Z 200", "Object menu: Scale to build volume"],
-    oracle: "OrcaSlicer --slice 1 of the GUI-exported project with the upstream fit's transform (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const fitted = [
+    [s, 0, 0],
+    [0, s, 0],
+    [0, 0, 20 * s],
+  ];
+  writeFileSync(
+    oracle,
+    guiExport(
+      circle,
+      [
+        {
+          source: 0,
+          items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([fitted], [110, 110, 100 * s]) }],
+        },
+      ],
+      await probedTowers(page),
+    ),
+  );
+  const legs = {
+    official: orcaPlate(oracle, 1, "official", `${artifacts}circle.3mf`),
+    seeded: orcaPlate(oracle, 1, "seeded", `${artifacts}circle.3mf`),
+  };
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: [
+          "printable_area: 36 points on the circle of radius 65 around (110, 110)",
+          "Uniform scale off",
+          "Size Z 200",
+          "Object menu: Scale to build volume",
+        ],
+        oracle:
+          "OrcaSlicer --slice 1 of the GUI-exported project with the upstream fit's transform (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

@@ -66,7 +66,10 @@ export function optionMarkerMaterial() {
  * but travels and wipes, which are segments). Returns the mesh and its marker
  * count by `EOptionType` name.
  */
-export function buildOptionMarkers({ values, ids, tags, options, optionTypes, colors, vertexCount }: Toolpaths, material: THREE.ShaderMaterial) {
+export function buildOptionMarkers(
+  { values, ids, tags, options, optionTypes, colors, vertexCount }: Toolpaths,
+  material: THREE.ShaderMaterial,
+) {
   const center = new Float32Array(vertexCount * 3);
   const size = new Float32Array(vertexCount * 2);
   const color = new Uint8Array(vertexCount * 3);
@@ -91,7 +94,10 @@ export function buildOptionMarkers({ values, ids, tags, options, optionTypes, co
     count++;
   }
 
-  const diamond = new THREE.LatheGeometry([new THREE.Vector2(0, -0.5), new THREE.Vector2(0.5, 0), new THREE.Vector2(0, 0.5)], 16);
+  const diamond = new THREE.LatheGeometry(
+    [new THREE.Vector2(0, -0.5), new THREE.Vector2(0.5, 0), new THREE.Vector2(0, 0.5)],
+    16,
+  );
   diamond.rotateX(Math.PI / 2);
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.index = diamond.index;

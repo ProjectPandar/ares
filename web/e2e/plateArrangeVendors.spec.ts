@@ -16,7 +16,7 @@ const PROJECT = "Metadata/project_settings.config";
  */
 const printerEdits = (keys: string[]): Edit => [
   PROJECT,
-  "\"different_settings_to_system\": [\n    \"\",\n    \"\",\n    \"\",\n    \"\"\n  ]",
+  '"different_settings_to_system": [\n    "",\n    "",\n    "",\n    ""\n  ]',
   `"different_settings_to_system": [\n    "",\n    "",\n    "",\n    "${keys.join(";")}"\n  ]`,
 ];
 /**
@@ -27,13 +27,13 @@ const printerEdits = (keys: string[]): Edit => [
 const EDITS: Edit[] = [
   [
     PROJECT,
-    "{\n  \"accel_to_decel_enable\"",
-    "{\n  \"bed_exclude_volume_mode\": \"per_extruder\",\n  \"extruder_bed_exclude_volumes\": [\"\", \"0..250;-10x-10,266x-10,266x266,-10x266\"],\n  \"accel_to_decel_enable\"",
+    '{\n  "accel_to_decel_enable"',
+    '{\n  "bed_exclude_volume_mode": "per_extruder",\n  "extruder_bed_exclude_volumes": ["", "0..250;-10x-10,266x-10,266x266,-10x266"],\n  "accel_to_decel_enable"',
   ],
   [
     PROJECT,
-    "\"extruder_printable_area\": [\n    \"0x0,256x0,256x256,0x256\",\n    \"20.5x0,256x0,256x256,20.5x256\"\n  ]",
-    "\"extruder_printable_area\": []",
+    '"extruder_printable_area": [\n    "0x0,256x0,256x256,0x256",\n    "20.5x0,256x0,256x256,20.5x256"\n  ]',
+    '"extruder_printable_area": []',
   ],
   printerEdits(["bed_exclude_volume_mode", "extruder_bed_exclude_volumes", "extruder_printable_area"]),
 ];
@@ -55,7 +55,9 @@ async function installBbl(page: Page, installed: boolean) {
   await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(wizard).toHaveCount(0, { timeout: 60_000 });
   // The printer list follows the catalog sync, which hands the plater the installed vendors first.
-  await expect.poll(async () => (await systemPrinters(page)).includes("Bambu Lab X2D"), { timeout: 60_000 }).toBe(installed);
+  await expect
+    .poll(async () => (await systemPrinters(page)).includes("Bambu Lab X2D"), { timeout: 60_000 })
+    .toBe(installed);
 }
 
 /** "Arrange all" with the popup's defaults, then the first instance's XY offset. */
@@ -99,12 +101,19 @@ test("the arrange reads the printer's vendor from the installed vendors, as Pres
   expect(withoutBbl).not.toEqual([138.25, 128]);
   await page.screenshot({ path: `${artifacts}without-bbl.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: X2D,
-    edits: ["PerExtruder, extruder-2 volume over the whole bed", "one nozzle area"],
-    withBbl: { offset: withBbl, arranged: false },
-    withoutBbl: { offset: withoutBbl, arranged: true },
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: X2D,
+        edits: ["PerExtruder, extruder-2 volume over the whole bed", "one nozzle area"],
+        withBbl: { offset: withBbl, arranged: false },
+        withoutBbl: { offset: withoutBbl, arranged: true },
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });
 
 test("the arrange keeps a first-layer-scanning Bambu Lab printer's calibration region clear", async ({ page }) => {
@@ -113,11 +122,14 @@ test("the arrange keeps a first-layer-scanning Bambu Lab printer's calibration r
   // The X2D scanning its first layer, its cube scaled to 230 mm deep: centred it spans Y 13..243, into
   // the (18, 0)-(240, 15) region ArrangeJob::process adds for a Bambu Lab vendor (ArrangeJob.cpp:732-734).
   const project = `${artifacts}x2d-scan.3mf`;
-  writeFileSync(project, editedProject(X2D, [
-    ["3D/3dmodel.model", "transform=\"1 0 0 0 1 0 0 0 1 138.25 128 5\"", "transform=\"1 0 0 0 23 0 0 0 1 138.25 128 5\""],
-    [PROJECT, "\"scan_first_layer\": \"0\"", "\"scan_first_layer\": \"1\""],
-    printerEdits(["scan_first_layer"]),
-  ]));
+  writeFileSync(
+    project,
+    editedProject(X2D, [
+      ["3D/3dmodel.model", 'transform="1 0 0 0 1 0 0 0 1 138.25 128 5"', 'transform="1 0 0 0 23 0 0 0 1 138.25 128 5"'],
+      [PROJECT, '"scan_first_layer": "0"', '"scan_first_layer": "1"'],
+      printerEdits(["scan_first_layer"]),
+    ]),
+  );
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await installBbl(page, true);

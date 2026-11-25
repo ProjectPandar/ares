@@ -24,6 +24,10 @@ export async function recoverSession() {
   if (!record) return;
   const { file, printer } = record;
   if (file.kind === "single") await importFile(new File([file.bytes as Uint8Array<ArrayBuffer>], file.name));
-  else await importStlFiles(file.files.map(({ name, bytes }) => new File([bytes as Uint8Array<ArrayBuffer>], name)), file.choices);
+  else
+    await importStlFiles(
+      file.files.map(({ name, bytes }) => new File([bytes as Uint8Array<ArrayBuffer>], name)),
+      file.choices,
+    );
   if (printer !== null && useApp.getState().presetSelection?.printer !== printer) await selectPrinter(printer);
 }

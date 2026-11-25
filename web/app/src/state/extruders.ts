@@ -14,7 +14,8 @@ export const MAP_MODES = ["Auto For Flush", "Auto For Match", "Manual"] as const
 export type MapMode = (typeof MAP_MODES)[number];
 
 /** `isBBL && is_dual_extruder` (Plater.cpp:2645-2648): the Left / Right Nozzle groups replace the nozzle combo. */
-export const isDual = (panel: PrinterPanel | null): panel is PrinterPanel => panel !== null && panel.bbl && panel.nozzleDiameters.length === 2;
+export const isDual = (panel: PrinterPanel | null): panel is PrinterPanel =>
+  panel !== null && panel.bbl && panel.nozzleDiameters.length === 2;
 
 /**
  * Volume types the extruder offers: those whose get_extruder_variant_string (PrintConfig.cpp:588-606),
@@ -38,9 +39,16 @@ export function extruderState(): ExtruderState {
   const slots = selection ? selection.filaments.length : filamentNames(scene?.settings ?? null).length;
   const project = scene?.settings?.project;
   const edited = (key: string) => overrides[key] as string | string[] | undefined;
-  const volumeTypes = selection?.nozzleVolumeTypes ?? (edited("nozzle_volume_type") as string[] | undefined) ?? stringList(project, "nozzle_volume_type");
-  const mode = (selection?.filamentMapMode ?? edited("filament_map_mode") ?? firstString(project, "filament_map_mode") ?? "Auto For Flush") as MapMode;
-  const map = selection?.filamentMap ?? (edited("filament_map") as string[] | undefined) ?? stringList(project, "filament_map");
+  const volumeTypes =
+    selection?.nozzleVolumeTypes ??
+    (edited("nozzle_volume_type") as string[] | undefined) ??
+    stringList(project, "nozzle_volume_type");
+  const mode = (selection?.filamentMapMode ??
+    edited("filament_map_mode") ??
+    firstString(project, "filament_map_mode") ??
+    "Auto For Flush") as MapMode;
+  const map =
+    selection?.filamentMap ?? (edited("filament_map") as string[] | undefined) ?? stringList(project, "filament_map");
   // Plater.cpp:17876-17877: a map shorter than the filaments is filled with the left nozzle.
   return { volumeTypes, mode, map: Array.from({ length: slots }, (_, index) => map[index] ?? "1") };
 }

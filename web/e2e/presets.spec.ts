@@ -79,14 +79,19 @@ test("preset combo boxes show the project's embedded presets", async ({ page }) 
     await checkCombo(page, fixture.name, "Process preset", expected.process, [expected.process]);
     for (const [index, filament] of expected.filaments.entries()) {
       await checkCombo(page, fixture.name, `Filament ${index + 1} preset`, filament, unique);
-      await expect(page.getByTestId(`filament-swatch-${index + 1}`)).toHaveCSS("background-color", rgb(expected.colours[index]));
+      await expect(page.getByTestId(`filament-swatch-${index + 1}`)).toHaveCSS(
+        "background-color",
+        rgb(expected.colours[index]),
+      );
     }
     await expect(page.getByRole("button", { name: `Filament ${expected.filaments.length + 1} preset` })).toHaveCount(0);
   }
 
   // Outside clicks close an open list as well.
   await page.getByRole("button", { name: "Printer preset" }).click();
-  await shownTab(page).getByTestId("viewport").click({ position: { x: 20, y: 400 } });
+  await shownTab(page)
+    .getByTestId("viewport")
+    .click({ position: { x: 20, y: 400 } });
   await expect(page.getByRole("listbox")).toHaveCount(0);
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify(results, null, 2)}\n`);

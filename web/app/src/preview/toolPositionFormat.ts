@@ -7,7 +7,10 @@ export function printf(value: number, decimals: number) {
   let format = formats.get(decimals);
   if (!format) {
     format = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: decimals, maximumFractionDigits: decimals, roundingMode: "halfEven", useGrouping: false,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      roundingMode: "halfEven",
+      useGrouping: false,
     });
     formats.set(decimals, format);
   }
@@ -25,10 +28,15 @@ export function timeDhms(timeInSecs: number) {
   const minutes = Math.trunc(f32(seconds / 60));
   seconds = f32(seconds - f32(f32(minutes) * 60));
   const whole = Math.trunc(seconds);
-  return days > 0 ? `${days}d ${hours}h ${minutes}m ${whole}s`
-    : hours > 0 ? `${hours}h ${minutes}m ${whole}s`
-      : minutes > 0 ? `${minutes}m ${whole}s`
-        : seconds > 1 ? `${whole}s` : `${printf(seconds, 6)}s`;
+  return days > 0
+    ? `${days}d ${hours}h ${minutes}m ${whole}s`
+    : hours > 0
+      ? `${hours}h ${minutes}m ${whole}s`
+      : minutes > 0
+        ? `${minutes}m ${whole}s`
+        : seconds > 1
+          ? `${whole}s`
+          : `${printf(seconds, 6)}s`;
 }
 
 /** GCodeViewer.cpp:452-454. */
@@ -55,11 +63,17 @@ export function shortTime(time: string) {
       ++days;
     }
   }
-  return days > 0 ? `${days}d${hours}h${minutes}m`
-    : hours > 0 ? `${hours}h${minutes}m`
-      : minutes > 0 ? `${minutes}m${seconds}s`
-        : seconds >= 1 ? `${seconds}s`
-          : fSeconds > 0 && fSeconds < 1 ? "<1s" : "0s";
+  return days > 0
+    ? `${days}d${hours}h${minutes}m`
+    : hours > 0
+      ? `${hours}h${minutes}m`
+      : minutes > 0
+        ? `${minutes}m${seconds}s`
+        : seconds >= 1
+          ? `${seconds}s`
+          : fSeconds > 0 && fSeconds < 1
+            ? "<1s"
+            : "0s";
 }
 
 /** `format_compact_weight` (GCodeViewer.cpp:128-150), metric display. */

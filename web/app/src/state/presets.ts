@@ -1,7 +1,24 @@
-import type { CurrentPrinter, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, PresetCatalog, ProjectSettings, Scene } from "@ares-slicer/wasm";
+import type {
+  CurrentPrinter,
+  FilamentSlotState,
+  InstalledPrinters,
+  ParsedPresetBundle,
+  PlaterSession,
+  PresetCatalog,
+  ProjectSettings,
+  Scene,
+} from "@ares-slicer/wasm";
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString } from "../sidebar/options";
-import { deleteImport, loadImports, type PrinterSettings, saveConfig, saveImports, storedConfig, storedConfigExists } from "./persistence";
+import {
+  deleteImport,
+  loadImports,
+  type PrinterSettings,
+  saveConfig,
+  saveImports,
+  storedConfig,
+  storedConfigExists,
+} from "./persistence";
 import { selectionExtruders } from "./extruders";
 import { printerBedType, updatePrinterPanel } from "./printer";
 import { catalogJson } from "./projectPresets";
@@ -17,7 +34,12 @@ export const FILAMENT_LIBRARY = "OrcaFilamentLibrary";
 /** Imported preset files, in import order, for the engine catalog. */
 const importFiles: { input: Uint8Array; filename: string }[] = [];
 
-let synced: { vendors: readonly string[]; installed: InstalledPrinters | null; imports: number; catalog: PresetCatalog } | null = null;
+let synced: {
+  vendors: readonly string[];
+  installed: InstalledPrinters | null;
+  imports: number;
+  catalog: PresetCatalog;
+} | null = null;
 let syncing: Promise<unknown> = Promise.resolve();
 
 /**
@@ -147,19 +169,35 @@ export async function updateCompatible(project?: Partial<FilamentSlotState>) {
       .finally(() => performance.measure("ares:filter-compatible-presets", { start }));
     // PresetComboBoxes.cpp:1216-1226: each filament's type and vendor for the combo's grouping.
     const values = await catalog.presetValues("filament", presets.filaments, ["filament_type", "filament_vendor"]);
-    const filamentInfo = new Map(presets.filaments.map((name, index) => [name, {
-      type: firstString(values[index], "filament_type") ?? "",
-      vendor: firstString(values[index], "filament_vendor") ?? "",
-    }]));
+    const filamentInfo = new Map(
+      presets.filaments.map((name, index) => [
+        name,
+        {
+          type: firstString(values[index], "filament_type") ?? "",
+          vendor: firstString(values[index], "filament_vendor") ?? "",
+        },
+      ]),
+    );
     const { scene, installedFilaments } = useApp.getState();
-    const selected = await catalog.selectCompatibleFilaments(selection.printer, selection.process, selection.filaments, [...installedFilaments]);
-    const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer,
-      { ...(project ?? selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)), filaments: selected });
+    const selected = await catalog.selectCompatibleFilaments(
+      selection.printer,
+      selection.process,
+      selection.filaments,
+      [...installedFilaments],
+    );
+    const { filaments, ...filamentProject } = await catalog.normalizeFilamentSlots(selection.printer, {
+      ...(project ?? selection.filamentProject ?? projectFilamentState(scene?.settings ?? null)),
+      filaments: selected,
+    });
     // No project open: load_selections copies the filament colours into filament_multi_colour (PresetBundle.cpp:4116-4117).
-    if (!project && !selection.filamentProject && !scene?.settings) filamentProject.filament_multi_colour = filamentProject.filament_colour;
+    if (!project && !selection.filamentProject && !scene?.settings)
+      filamentProject.filament_multi_colour = filamentProject.filament_colour;
     if (filtered(selection)) {
       const current = useApp.getState().presetSelection!;
-      useApp.setState({ presetSelection: { ...current, filaments, filamentProject }, compatible: { status: "done", presets, filamentInfo } });
+      useApp.setState({
+        presetSelection: { ...current, filaments, filamentProject },
+        compatible: { status: "done", presets, filamentInfo },
+      });
     }
   } catch (error) {
     if (filtered(selection)) {
@@ -176,7 +214,14 @@ export function projectFilamentState(settings: ProjectSettings | null): Partial<
     const raw = values[key];
     return Array.isArray(raw) ? raw : String(raw).split(/[;,]/);
   };
-  for (const key of ["flush_multiplier", "flush_volumes_vector", "flush_volumes_matrix", "filament_map", "filament_nozzle_map", "filament_volume_map"] as const) {
+  for (const key of [
+    "flush_multiplier",
+    "flush_volumes_vector",
+    "flush_volumes_matrix",
+    "filament_map",
+    "filament_nozzle_map",
+    "filament_volume_map",
+  ] as const) {
     if (key in values) state[key] = entries(key).map(Number);
   }
   for (const key of ["filament_colour", "filament_multi_colour", "filament_colour_type"] as const) {
@@ -244,7 +289,11 @@ export function saveSelection() {
   const { printer, process, filaments, bedType } = selection;
   const project = selection.filamentProject ?? projectFilamentState(scene?.settings ?? null);
   const settings = {
-    ...storedConfig.printers[printer], process, filaments: Array.from(filaments, (name) => name ?? ""), bedType, ...exportedProject(project),
+    ...storedConfig.printers[printer],
+    process,
+    filaments: Array.from(filaments, (name) => name ?? ""),
+    bedType,
+    ...exportedProject(project),
   };
   saveConfig({ printer, printers: { ...storedConfig.printers, [printer]: settings } });
 }
@@ -275,7 +324,8 @@ function rememberedSelection(saved: PrinterSettings | undefined) {
   const project = current?.filamentProject ?? projectFilamentState(scene?.settings ?? null);
   // 3929-3937: slot 1, then filament_01, filament_02, ...
   const filaments = [saved?.filaments[0] ?? "", ...(saved?.filaments.slice(1) ?? [])];
-  const resized = (values: string[], fill: string) => Array.from({ length: filaments.length }, (_, index) => values[index] ?? fill);
+  const resized = (values: string[], fill: string) =>
+    Array.from({ length: filaments.length }, (_, index) => values[index] ?? fill);
   const colours = resized(saved?.filamentColours ?? [], "#26A69A");
   return {
     // 3918-3923: the stored print, strictly selected; "" leaves none (Preset.cpp:4335-4357).
@@ -301,13 +351,19 @@ function rememberedSelection(saved: PrinterSettings | undefined) {
  * own; `null` returns to the project's presets. update_compatible(Always) keeps the remembered print while compatible, else picks the one
  * PreferedPrintProfileMatch prefers against the printer's default_print_profile (PresetBundle.cpp:8837-8838).
  */
-export async function selectPrinter(printer: string | null, stored = printer === null ? undefined : storedConfig.printers[printer]) {
+export async function selectPrinter(
+  printer: string | null,
+  stored = printer === null ? undefined : storedConfig.printers[printer],
+) {
   const saved = printer === null ? undefined : storedConfig.printers[printer];
   const remembered = printer === null ? null : rememberedSelection(stored);
   if (printer === null || remembered === null) useApp.setState({ presetSelection: null });
   else {
     // The combo shows the printer and the filtering state while the print is chosen.
-    useApp.setState({ presetSelection: { printer, filaments: remembered.filaments }, compatible: { status: "filtering" } });
+    useApp.setState({
+      presetSelection: { printer, filaments: remembered.filaments },
+      compatible: { status: "filtering" },
+    });
     // A printer the catalog cannot resolve has no print; updateCompatible shows the engine's error.
     const process = await (await presetCatalog()).compatiblePrint(printer, remembered.process).catch(() => null);
     const chosen = useApp.getState().presetSelection;
@@ -318,7 +374,11 @@ export async function selectPrinter(printer: string | null, stored = printer ===
   const selection = useApp.getState().presetSelection;
   if (selection && selection.printer === printer) {
     useApp.setState({
-      presetSelection: { ...selection, bedType: printerBedType(saved?.bedType), ...selectionExtruders(printer, useApp.getState().printerPanel) },
+      presetSelection: {
+        ...selection,
+        bedType: printerBedType(saved?.bedType),
+        ...selectionExtruders(printer, useApp.getState().printerPanel),
+      },
     });
   }
   if ((useApp.getState().presetSelection?.printer ?? null) === printer) saveSelection();
@@ -334,7 +394,9 @@ export async function selectPrinterModel(model: string, current: CurrentPrinter)
   try {
     const printer = await (await presetCatalog()).similarPrinterPreset(model, "", current);
     if (printer === null) {
-      useApp.setState({ compatible: { status: "error", error: `No printer preset of model "${model}" for "${current.name}"` } });
+      useApp.setState({
+        compatible: { status: "error", error: `No printer preset of model "${model}" for "${current.name}"` },
+      });
       return;
     }
     await selectPrinter(printer);
@@ -378,9 +440,13 @@ export function presetSliceBlocker(selection: PresetSelection, scene: Scene): st
 }
 
 /** Names of the imported presets of one `type`, for the "User presets" group. */
-export function importedNames(imports: readonly ParsedPresetBundle[], type: "machine" | "process" | "filament"): Set<string> {
+export function importedNames(
+  imports: readonly ParsedPresetBundle[],
+  type: "machine" | "process" | "filament",
+): Set<string> {
   return new Set(
     imports.flatMap(({ profiles }) =>
-      profiles.filter((profile) => profile.type === type).map((profile) => profile.name as string)),
+      profiles.filter((profile) => profile.type === type).map((profile) => profile.name as string),
+    ),
   );
 }

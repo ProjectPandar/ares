@@ -11,14 +11,21 @@ const FILAMENT = "Generic PLA Silk";
 
 /** A1 mini's nozzle variants, in `nozzle_diameter` order (`VendorProfile::PrinterModel`). */
 function a1miniVariants(): string[] {
-  const index = JSON.parse(readFileSync(`${profiles}BBL.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
+  const index = JSON.parse(readFileSync(`${profiles}BBL.json`, "utf8")) as {
+    machine_model_list: { name: string; sub_path: string }[];
+  };
   const entry = index.machine_model_list.find(({ name }) => name === MODEL)!;
-  return (JSON.parse(readFileSync(`${profiles}BBL/${entry.sub_path}`, "utf8")) as { nozzle_diameter: string }).nozzle_diameter.split(";");
+  return (
+    JSON.parse(readFileSync(`${profiles}BBL/${entry.sub_path}`, "utf8")) as { nozzle_diameter: string }
+  ).nozzle_diameter.split(";");
 }
 
 const combo = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 const storedConfig = (page: Page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!) as { installedPrinters: unknown; installedFilaments: string[] });
+  page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("ares.config")!) as { installedPrinters: unknown; installedFilaments: string[] },
+  );
 
 async function settled(page: Page) {
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -27,8 +34,11 @@ async function settled(page: Page) {
 /** The models of the printer combo's "System presets" group; Escape closes the list. */
 async function systemModels(page: Page) {
   await combo(page, "Printer preset").click();
-  const names = await page.getByRole("listbox", { name: "Printer preset", exact: true })
-    .getByRole("group", { name: "System presets", exact: true }).getByRole("option").allTextContents();
+  const names = await page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "System presets", exact: true })
+    .getByRole("option")
+    .allTextContents();
   await page.keyboard.press("Escape");
   return names.sort();
 }
@@ -40,7 +50,9 @@ async function confirm(page: Page, wizard: ReturnType<Page["getByRole"]>) {
   await settled(page);
 }
 
-test("the printer title, the printer combo and the filament title open the guide with the current selection checked", async ({ page }) => {
+test("the printer title, the printer combo and the filament title open the guide with the current selection checked", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -54,15 +66,23 @@ test("the printer title, the printer combo and the filament title open the guide
   // The printer title's settings button (Plater.cpp:2851-2857) opens the models page with the
   // installed model checked; adding A1 mini installs exactly its presets and selects it.
   await page.getByRole("button", { name: "Select/Remove printers (system presets)", exact: true }).click();
-  await expect(wizard.getByRole("checkbox", { name: "Generic Klipper Printer", exact: true })).toBeChecked({ timeout: 30_000 });
-  expect(await wizard.getByRole("checkbox", { checked: true }).evaluateAll((boxes) => boxes.map((box) => box.getAttribute("aria-label"))))
-    .toEqual(["Generic Klipper Printer"]);
+  await expect(wizard.getByRole("checkbox", { name: "Generic Klipper Printer", exact: true })).toBeChecked({
+    timeout: 30_000,
+  });
+  expect(
+    await wizard
+      .getByRole("checkbox", { checked: true })
+      .evaluateAll((boxes) => boxes.map((box) => box.getAttribute("aria-label"))),
+  ).toEqual(["Generic Klipper Printer"]);
   await wizard.getByRole("searchbox", { name: "Search printers" }).fill("a1 mini");
   await wizard.getByRole("checkbox", { name: MODEL, exact: true }).check();
   await page.screenshot({ path: `${artifacts}title-button.png` });
   await confirm(page, wizard);
   const variants = a1miniVariants();
-  expect((await storedConfig(page)).installedPrinters).toEqual({ ...FIRST_RUN_CONFIG.installedPrinters, BBL: { [MODEL]: [...variants].sort() } });
+  expect((await storedConfig(page)).installedPrinters).toEqual({
+    ...FIRST_RUN_CONFIG.installedPrinters,
+    BBL: { [MODEL]: [...variants].sort() },
+  });
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", `${MODEL} ${variants[0]} nozzle`);
   expect(await systemModels(page)).toEqual([MODEL, "Generic Klipper Printer"]);
 
@@ -106,8 +126,11 @@ test("the printer title, the printer combo and the filament title open the guide
   expect(added.length).toBeGreaterThan(0);
   await combo(page, "Filament 1 preset").click();
   await page.getByRole("searchbox", { name: "Search Filament 1 preset" }).fill("silk");
-  const listed = await page.getByRole("listbox", { name: "Filament 1 preset", exact: true })
-    .getByRole("group", { name: "System presets", exact: true }).getByRole("option").allTextContents();
+  const listed = await page
+    .getByRole("listbox", { name: "Filament 1 preset", exact: true })
+    .getByRole("group", { name: "System presets", exact: true })
+    .getByRole("option")
+    .allTextContents();
   expect(listed).toEqual(added.filter((name) => listed.includes(name)));
   expect(listed.length).toBeGreaterThan(0);
   await page.getByRole("option", { name: listed[0], exact: true }).click();

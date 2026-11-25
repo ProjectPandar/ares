@@ -12,7 +12,11 @@ const VERTEX_DATA = [0, 1, 2, 3, 4, 5, 6, 7];
 const INDEX_DATA = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 1, 5, 4, 7, 5, 7, 6];
 
 /** Per-vertex RGBA texture of `width` x `height` texels. */
-function vertexTexture(data: Float32Array | Uint8Array, [width, height]: [number, number], type: THREE.TextureDataType) {
+function vertexTexture(
+  data: Float32Array | Uint8Array,
+  [width, height]: [number, number],
+  type: THREE.TextureDataType,
+) {
   const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, type);
   texture.needsUpdate = true;
   return texture;
@@ -54,7 +58,13 @@ export function toolpathMaterial() {
  * filtering also run in the vertex shader, so view changes only update uniforms.
  */
 export function buildToolpathMesh(toolpaths: Toolpaths, material: THREE.ShaderMaterial): THREE.Mesh {
-  const { extent, positions, heightsWidthsAngles, segments, bounds: [minX, minY, minZ, maxX, maxY, maxZ] } = toolpaths.textures!;
+  const {
+    extent,
+    positions,
+    heightsWidthsAngles,
+    segments,
+    bounds: [minX, minY, minZ, maxX, maxY, maxZ],
+  } = toolpaths.textures!;
   const size = extent[0] * extent[1];
   const bounds = new THREE.Box3(new THREE.Vector3(minX, minY, minZ), new THREE.Vector3(maxX, maxY, maxZ));
 
@@ -117,7 +127,9 @@ export function applyVertexColors(mesh: THREE.Mesh, colors: Uint8Array) {
   for (const node of mesh.children) {
     if (!(node instanceof THREE.Mesh)) continue;
     const vertices = node.userData.vertices as Uint32Array;
-    const attribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aColor") as THREE.InstancedBufferAttribute;
+    const attribute = (node.geometry as THREE.InstancedBufferGeometry).getAttribute(
+      "aColor",
+    ) as THREE.InstancedBufferAttribute;
     const color = attribute.array as Uint8Array;
     for (let n = 0; n < vertices.length; n++) color.set(colors.subarray(3 * vertices[n], 3 * vertices[n] + 3), 3 * n);
     attribute.needsUpdate = true;
@@ -148,7 +160,9 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
   for (const node of mesh.children) {
     if (!(node instanceof THREE.Mesh)) continue;
     const vertices = node.userData.vertices as Uint32Array;
-    const flags = (node.geometry as THREE.InstancedBufferGeometry).getAttribute("aEnabled") as THREE.InstancedBufferAttribute;
+    const flags = (node.geometry as THREE.InstancedBufferGeometry).getAttribute(
+      "aEnabled",
+    ) as THREE.InstancedBufferAttribute;
     const enabled = flags.array as Uint8Array;
     for (let n = 0; n < vertices.length; n++) enabled[n] = optionVertices[vertices[n]];
     flags.needsUpdate = true;

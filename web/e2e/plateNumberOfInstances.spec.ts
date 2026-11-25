@@ -9,7 +9,7 @@ import { orcaPlate } from "./platerOracle";
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-number-of-instances/", import.meta.url));
 
-test("\"Set number of instances\" reaches the count, and the copies slice like OrcaSlicer", async ({ page }) => {
+test('"Set number of instances" reaches the count, and the copies slice like OrcaSlicer', async ({ page }) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -21,7 +21,10 @@ test("\"Set number of instances\" reaches the count, and the copies slice like O
 
   const row = page.getByTestId("object-list").getByRole("treeitem").nth(1);
   await row.click({ button: "right" });
-  await page.getByRole("menu", { name: "Object menu" }).getByRole("menuitem", { name: "Set number of instances..." }).click();
+  await page
+    .getByRole("menu", { name: "Object menu" })
+    .getByRole("menuitem", { name: "Set number of instances..." })
+    .click();
   // GetNumberFromUser, preset to the current count (Plater.cpp:19394-19395).
   const dialog = page.getByRole("dialog", { name: "Copies of the selected object" });
   const field = dialog.getByRole("spinbutton", { name: "Number of copies:" });
@@ -42,15 +45,30 @@ test("\"Set number of instances\" reaches the count, and the copies slice like O
 
   const oracle = `${artifacts}two-copies.3mf`;
   writeFileSync(oracle, cubeWithTwoCopies());
-  const legs = { official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${CUBE_FIXTURE}`), seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${CUBE_FIXTURE}`) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: CUBE_FIXTURE,
-    edits: ["object menu: Set number of instances = 3"],
-    oracle: "OrcaSlicer --slice 1 of the exported project with the two copies (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const legs = {
+    official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${CUBE_FIXTURE}`),
+    seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${CUBE_FIXTURE}`),
+  };
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: CUBE_FIXTURE,
+        edits: ["object menu: Set number of instances = 3"],
+        oracle: "OrcaSlicer --slice 1 of the exported project with the two copies (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

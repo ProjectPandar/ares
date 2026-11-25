@@ -30,27 +30,29 @@ const sizes = [
  * reads is what that frame shows.
  */
 function observeFrames(page: Page) {
-  return shownTab(page).getByTestId("viewport").evaluate((container) => {
-    const samples: Sample[] = [];
-    (window as unknown as { resizeSamples: Sample[] }).resizeSamples = samples;
-    const probe = document.createElement("canvas");
-    probe.width = 64;
-    probe.height = 64;
-    const context = probe.getContext("2d", { willReadFrequently: true })!;
-    new ResizeObserver(() => {
-      const canvas = container.querySelector("canvas")!;
-      context.clearRect(0, 0, 64, 64);
-      context.drawImage(canvas, 0, 0, 64, 64);
-      const pixels = context.getImageData(0, 0, 64, 64).data;
-      const colours = new Set<number>();
-      let opaque = 0;
-      for (let index = 0; index < pixels.length; index += 4) {
-        if (pixels[index + 3] === 255) opaque++;
-        colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
-      }
-      samples.push({ width: canvas.width, height: canvas.height, opaque: opaque / (64 * 64), colours: colours.size });
-    }).observe(container);
-  });
+  return shownTab(page)
+    .getByTestId("viewport")
+    .evaluate((container) => {
+      const samples: Sample[] = [];
+      (window as unknown as { resizeSamples: Sample[] }).resizeSamples = samples;
+      const probe = document.createElement("canvas");
+      probe.width = 64;
+      probe.height = 64;
+      const context = probe.getContext("2d", { willReadFrequently: true })!;
+      new ResizeObserver(() => {
+        const canvas = container.querySelector("canvas")!;
+        context.clearRect(0, 0, 64, 64);
+        context.drawImage(canvas, 0, 0, 64, 64);
+        const pixels = context.getImageData(0, 0, 64, 64).data;
+        const colours = new Set<number>();
+        let opaque = 0;
+        for (let index = 0; index < pixels.length; index += 4) {
+          if (pixels[index + 3] === 255) opaque++;
+          colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
+        }
+        samples.push({ width: canvas.width, height: canvas.height, opaque: opaque / (64 * 64), colours: colours.size });
+      }).observe(container);
+    });
 }
 
 /** The viewport's distances to the window edges; they stay fixed while the window resizes. */
@@ -108,17 +110,21 @@ test("a resized viewport paints the plate in the frame of the resize", async ({ 
   await observeFrames(page);
   await expect.poll(async () => (await samples(page)).length).toBe(1);
   await page.screenshot({ path: `${artifacts}before.png` });
-  const margins = await shownTab(page).getByTestId("viewport").evaluate((container): Margins => {
-    const box = container.getBoundingClientRect();
-    return { left: box.left, top: box.top, right: innerWidth - box.right, bottom: innerHeight - box.bottom };
-  });
+  const margins = await shownTab(page)
+    .getByTestId("viewport")
+    .evaluate((container): Margins => {
+      const box = container.getBoundingClientRect();
+      return { left: box.left, top: box.top, right: innerWidth - box.right, bottom: innerHeight - box.bottom };
+    });
   // The brightness of the empty viewport: the corner of the canvas shows the scene background.
-  const background = await shownTab(page).getByTestId("viewport").evaluate((container) => {
-    const probe = document.createElement("canvas").getContext("2d")!;
-    probe.drawImage(container.querySelector("canvas")!, 0, 0, 1, 1, 0, 0, 1, 1);
-    const [red, green, blue] = probe.getImageData(0, 0, 1, 1).data;
-    return red + green + blue;
-  });
+  const background = await shownTab(page)
+    .getByTestId("viewport")
+    .evaluate((container) => {
+      const probe = document.createElement("canvas").getContext("2d")!;
+      probe.drawImage(container.querySelector("canvas")!, 0, 0, 1, 1, 0, 0, 1, 1);
+      const [red, green, blue] = probe.getImageData(0, 0, 1, 1).data;
+      return red + green + blue;
+    });
 
   // Every composited frame of the resizes.
   const screencast = await page.context().newCDPSession(page);

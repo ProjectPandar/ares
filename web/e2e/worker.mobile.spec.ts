@@ -30,7 +30,9 @@ function cylinder(radius: number, height: number, segments: number): Buffer {
 const MAX_GAP_MS = 200;
 const MIN_SLICE_MS = 2_000;
 
-test("the 3D view caps its pixel ratio at 2 and a large model slices in the worker while the UI responds", async ({ page }, info) => {
+test("the 3D view caps its pixel ratio at 2 and a large model slices in the worker while the UI responds", async ({
+  page,
+}, info) => {
   test.setTimeout(600_000);
   const artifacts = fileURLToPath(new URL(`../../target/web-e2e/mobile-worker/${info.project.name}/`, import.meta.url));
   rmSync(artifacts, { recursive: true, force: true });
@@ -43,11 +45,12 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   const canvas = shownTab(page).locator("[data-testid=viewport] canvas");
-  const pixels = () => canvas.evaluate((element: HTMLCanvasElement) => ({
-    devicePixelRatio,
-    width: element.width,
-    expected: Math.floor(element.clientWidth * Math.min(devicePixelRatio, 2)),
-  }));
+  const pixels = () =>
+    canvas.evaluate((element: HTMLCanvasElement) => ({
+      devicePixelRatio,
+      width: element.width,
+      expected: Math.floor(element.clientWidth * Math.min(devicePixelRatio, 2)),
+    }));
   await expect.poll(async () => (await pixels()).width, "the 3D view has a drawing buffer").toBeGreaterThan(0);
   const { width, expected } = await pixels();
   expect.soft(width, "canvas width is clientWidth x min(devicePixelRatio, 2)").toBe(expected);
@@ -55,7 +58,10 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
   const chooser = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: "File", exact: true }).tap();
   await page.getByRole("menuitem", { name: "Import", exact: true }).tap();
-  await page.getByRole("menu", { name: "Import", exact: true }).getByRole("menuitem", { name: "Import 3MF/STL…", exact: true }).tap();
+  await page
+    .getByRole("menu", { name: "Import", exact: true })
+    .getByRole("menuitem", { name: "Import 3MF/STL…", exact: true })
+    .tap();
   await (await chooser).setFiles(model);
   const status = page.getByTestId("status");
   await expect(status).toHaveText("Ready to slice", { timeout: 60_000 });
@@ -100,13 +106,24 @@ test("the 3D view caps its pixel ratio at 2 and a large model slices in the work
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light", { timeout: 1_000 });
   await expect(status, "the theme switched while the plate was still slicing").toHaveText(/^Slicing plate 1: /);
   await expect(status).toContainText("Slice complete", { timeout: 480_000 });
-  const beat = await page.evaluate(() => (window as unknown as { beat: { start: number; end: number; maxGap: number; beats: number } }).beat);
+  const beat = await page.evaluate(
+    () => (window as unknown as { beat: { start: number; end: number; maxGap: number; beats: number } }).beat,
+  );
   const sliceMs = beat.end - beat.start;
-  const report = { project: info.project.name, pixels: await pixels(), sliceMs, maxGapMs: beat.maxGap, beats: beat.beats, workers: page.workers().length };
+  const report = {
+    project: info.project.name,
+    pixels: await pixels(),
+    sliceMs,
+    maxGapMs: beat.maxGap,
+    beats: beat.beats,
+    workers: page.workers().length,
+  };
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify(report, null, 2)}\n`);
   await page.screenshot({ path: `${artifacts}sliced.png` });
 
-  expect(sliceMs, "the model is large enough that a main-thread slice would freeze the UI").toBeGreaterThan(MIN_SLICE_MS);
+  expect(sliceMs, "the model is large enough that a main-thread slice would freeze the UI").toBeGreaterThan(
+    MIN_SLICE_MS,
+  );
   expect(beat.maxGap, `no main-thread stall over ${MAX_GAP_MS} ms while slicing`).toBeLessThan(MAX_GAP_MS);
   expect(page.workers().length, "the slicer runs in a Web Worker").toBeGreaterThan(0);
   expect(errors).toEqual([]);

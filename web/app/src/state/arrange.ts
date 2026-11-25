@@ -21,7 +21,8 @@ function configKeys({ key }: ArrangeSettingsModel) {
 }
 
 /** `load_bool`: a stored "1" or "true" is on, any other stored value off. */
-const storedBool = (value: string | undefined, fallback: boolean) => (value === undefined ? fallback : value === "1" || value === "true");
+const storedBool = (value: string | undefined, fallback: boolean) =>
+  value === undefined ? fallback : value === "1" || value === "true";
 
 /** `load_float`: a stored number that parses replaces the default. */
 function storedFloat(value: string | undefined, fallback: number) {
@@ -66,8 +67,10 @@ export async function editArrangeSettings(patch: Partial<ArrangeSettings>) {
   // `float_to_string_decimal_point` and the bool's "1" / "0".
   if ("distance" in patch) stored[keys.distance] = String(settings.distance);
   if ("enableRotation" in patch) stored[keys.rotation] = settings.enableRotation ? "1" : "0";
-  if ("allowMultiMaterialsOnSamePlate" in patch) stored[keys.multiMaterial] = settings.allowMultiMaterialsOnSamePlate ? "1" : "0";
-  if ("avoidExtrusionCaliRegion" in patch) stored[keys.calibrationRegion] = settings.avoidExtrusionCaliRegion ? "1" : "0";
+  if ("allowMultiMaterialsOnSamePlate" in patch)
+    stored[keys.multiMaterial] = settings.allowMultiMaterialsOnSamePlate ? "1" : "0";
+  if ("avoidExtrusionCaliRegion" in patch)
+    stored[keys.calibrationRegion] = settings.avoidExtrusionCaliRegion ? "1" : "0";
   saveConfig({ arrange: stored });
   useApp.setState({ arrange: { ...state, settings } });
 }

@@ -21,15 +21,21 @@ async function comboGroups(page: Page) {
     [...list.querySelectorAll(":scope > [role=group]")].map((group) => ({
       group: group.getAttribute("aria-label")!,
       inline: [...group.querySelectorAll(":scope > [role=option]")].map((option) => option.textContent!),
-      submenus: [...group.querySelectorAll(":scope > [role=group]")].map((submenu) => [
-        submenu.getAttribute("aria-label")!,
-        [...submenu.querySelectorAll("[role=option]")].map((option) => option.textContent!),
-      ] as [string, string[]]),
-    })));
+      submenus: [...group.querySelectorAll(":scope > [role=group]")].map(
+        (submenu) =>
+          [
+            submenu.getAttribute("aria-label")!,
+            [...submenu.querySelectorAll("[role=option]")].map((option) => option.textContent!),
+          ] as [string, string[]],
+      ),
+    })),
+  );
   return groups;
 }
 
-test("filament combos group compatible installed presets like PlaterPresetComboBox; the filament dialog edits the installed set", async ({ page }) => {
+test("filament combos group compatible installed presets like PlaterPresetComboBox; the filament dialog edits the installed set", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -44,7 +50,9 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   await wizard.getByRole("checkbox", { name: "All Bambu Lab models", exact: true }).check();
   await wizard.getByRole("button", { name: "Confirm" }).click();
   await expect(wizard).toHaveCount(0, { timeout: 60_000 });
-  await page.getByTestId("preset-import-input").setInputFiles(`${repositoryRoot}tests/presets/My X1C 0.4 nozzle.orca_printer`);
+  await page
+    .getByTestId("preset-import-input")
+    .setInputFiles(`${repositoryRoot}tests/presets/My X1C 0.4 nozzle.orca_printer`);
   // The imported printer inherits the X1C 0.4 nozzle; a user printer matches filaments through its
   // parent (Preset.cpp:799-806).
   await combo(page, "Printer preset").click();
@@ -74,10 +82,17 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   // Search: the lower-case substring match of the filament dialog.
   await combo(page, COMBO).click();
   await page.getByRole("searchbox", { name: `Search ${COMBO}` }).fill("PETG");
-  const searched = await page.getByRole("listbox", { name: COMBO, exact: true })
-    .getByRole("group", { name: "System presets", exact: true }).getByRole("option").allTextContents();
-  await expect(page.getByRole("listbox", { name: COMBO, exact: true }).getByRole("group", { name: "User presets", exact: true })).toHaveCount(0);
-  expect(searched).toEqual(expected.flatMap(([, names]) => names).filter((name) => name.toLowerCase().includes("petg")));
+  const searched = await page
+    .getByRole("listbox", { name: COMBO, exact: true })
+    .getByRole("group", { name: "System presets", exact: true })
+    .getByRole("option")
+    .allTextContents();
+  await expect(
+    page.getByRole("listbox", { name: COMBO, exact: true }).getByRole("group", { name: "User presets", exact: true }),
+  ).toHaveCount(0);
+  expect(searched).toEqual(
+    expected.flatMap(([, names]) => names).filter((name) => name.toLowerCase().includes("petg")),
+  );
   await page.screenshot({ path: `${artifacts}search.png` });
 
   // "Add/Remove filaments": the dialog's type column starts with the FilamentPriority types and the
@@ -90,7 +105,10 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   const typeNames = await types.locator("label").allTextContents();
   expect(typeNames.slice(0, 3)).toEqual(["all", "PLA", "ABS"]);
   await dialog.getByRole("searchbox", { name: "Search Vendor" }).fill("gener");
-  expect(await dialog.getByRole("group", { name: "Vendor" }).locator("label").allTextContents()).toEqual(["all", "Generic"]);
+  expect(await dialog.getByRole("group", { name: "Vendor" }).locator("label").allTextContents()).toEqual([
+    "all",
+    "Generic",
+  ]);
   const filter = dialog.getByRole("searchbox", { name: "Filter filaments" });
   await filter.fill("::checked");
   const checkedItems = await dialog.getByRole("group", { name: "Filaments" }).locator("label").allTextContents();
@@ -101,8 +119,9 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   await item.check();
   await page.screenshot({ path: `${artifacts}dialog.png` });
   await dialog.getByRole("button", { name: "Done" }).click();
-  const added = [...bbl.filaments.keys()].filter((name) => name.split("@")[0].trim() === ADDED
-    && bbl.filament(name).compatiblePrinters.includes(printer));
+  const added = [...bbl.filaments.keys()].filter(
+    (name) => name.split("@")[0].trim() === ADDED && bbl.filament(name).compatiblePrinters.includes(printer),
+  );
   expect(added.length).toBeGreaterThan(0);
   const after = await comboGroups(page);
   await page.keyboard.press("Escape");
@@ -117,6 +136,9 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   expect(reloaded[1].submenus).toEqual(after[1].submenus);
   await page.screenshot({ path: `${artifacts}after-reload.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ printer, submenus: reloaded[1].submenus, added }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ printer, submenus: reloaded[1].submenus, added }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

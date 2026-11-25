@@ -36,7 +36,12 @@ function travelSpeedsProject(): string {
   const config = JSON.parse(strFromU8(entries[name]));
   const present = "G1 X5 Y{print_bed_max[1]*0.8} F{travel_speed*60} ; present print\n";
   expect(config.machine_end_gcode).toContain(present);
-  entries[name] = strToU8(JSON.stringify({ ...config, machine_end_gcode: config.machine_end_gcode.replace(present, `${endTravel}\n${present}`) }));
+  entries[name] = strToU8(
+    JSON.stringify({
+      ...config,
+      machine_end_gcode: config.machine_end_gcode.replace(present, `${endTravel}\n${present}`),
+    }),
+  );
   const project = `${directory}orca_cli_ender3.3mf`;
   writeFileSync(project, zipSync(entries));
   return project;
@@ -59,7 +64,8 @@ function orcaEditedGcode(project: string, edit: Record<string, string>): string 
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-project-edit-`)}/`;
   const options = Object.entries(edit).flatMap(([key, value]) => [`--${key.replaceAll("_", "-")}`, value]);
   execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, [...options, "--slice", "0", "--outputdir", work, project], {
-    cwd: work, stdio: ["ignore", "pipe", "pipe"],
+    cwd: work,
+    stdio: ["ignore", "pipe", "pipe"],
   });
   const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
   writeFileSync(`${artifacts}project-edit/native.gcode`, gcode);
@@ -68,44 +74,62 @@ function orcaEditedGcode(project: string, edit: Record<string, string>): string 
 
 /** True when the WebGL canvas shows more than a flat background. */
 async function canvasHasContent(page: Page) {
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
-    const probe = document.createElement("canvas");
-    probe.width = 64;
-    probe.height = 64;
-    const context = probe.getContext("2d")!;
-    context.drawImage(canvas, 0, 0, 64, 64);
-    const pixels = context.getImageData(0, 0, 64, 64).data;
-    const colours = new Set<number>();
-    for (let index = 0; index < pixels.length; index += 4) {
-      colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
-    }
-    return colours.size;
-  });
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate((canvas: HTMLCanvasElement) => {
+      const probe = document.createElement("canvas");
+      probe.width = 64;
+      probe.height = 64;
+      const context = probe.getContext("2d")!;
+      context.drawImage(canvas, 0, 0, 64, 64);
+      const pixels = context.getImageData(0, 0, 64, 64).data;
+      const colours = new Set<number>();
+      for (let index = 0; index < pixels.length; index += 4) {
+        colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
+      }
+      return colours.size;
+    });
 }
 
 /** Re-slices the plate `runs` times; each sample is Slice plate click to "Slice complete" in ms. */
 async function sliceTimings(page: Page, runs = 20) {
   const samples: number[] = [];
   for (let run = 0; run < runs; run++) {
-    samples.push(await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).evaluate((button: HTMLButtonElement) => new Promise<number>((resolve) => {
-      const status = document.querySelector("[data-testid=status]")!;
-      const observer = new MutationObserver(() => {
-        if (!status.textContent!.startsWith("Slice complete")) return;
-        observer.disconnect();
-        resolve(Math.round((performance.now() - started) * 10) / 10);
-      });
-      observer.observe(status, { childList: true, subtree: true, characterData: true });
-      const started = performance.now();
-      button.click();
-    })));
+    samples.push(
+      await page
+        .getByRole("navigation")
+        .getByRole("button", { name: "Slice plate", exact: true })
+        .evaluate(
+          (button: HTMLButtonElement) =>
+            new Promise<number>((resolve) => {
+              const status = document.querySelector("[data-testid=status]")!;
+              const observer = new MutationObserver(() => {
+                if (!status.textContent!.startsWith("Slice complete")) return;
+                observer.disconnect();
+                resolve(Math.round((performance.now() - started) * 10) / 10);
+              });
+              observer.observe(status, { childList: true, subtree: true, characterData: true });
+              const started = performance.now();
+              button.click();
+            }),
+        ),
+    );
   }
   return samples;
 }
 
 test("import 3MF, slice in the WASM worker, export and preview G-code", async ({ page }) => {
   // GCodeProcessor oracle (tools/chain-probe/procgcode.nix) of the toolpath preview.
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0 AppImage, see scripts/orca-parity.sh");
-  const oracle = oraclePath("ARES_PROCGCODE_BIN", "the OrcaSlicer GCodeProcessor toolpath oracle", "build it with tools/chain-probe/procgcode.nix");
+  const orca = oraclePath(
+    "ORCA_APPDIR",
+    "the project-edit oracle",
+    "an extraction of the official OrcaSlicer 2.5.0 AppImage, see scripts/orca-parity.sh",
+  );
+  const oracle = oraclePath(
+    "ARES_PROCGCODE_BIN",
+    "the OrcaSlicer GCodeProcessor toolpath oracle",
+    "build it with tools/chain-probe/procgcode.nix",
+  );
   mkdirSync(artifacts, { recursive: true });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -151,7 +175,10 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   let comparison = project;
   if (selection) {
     comparison = withGuiProjectOptions(project, selection, `${artifacts}slice-reference/`);
-    const expected = withoutCliGroups(withSelectedPresets(nativeGcode(comparison, "1").toString("utf8"), selection), selection);
+    const expected = withoutCliGroups(
+      withSelectedPresets(nativeGcode(comparison, "1").toString("utf8"), selection),
+      selection,
+    );
     writeFileSync(`${artifacts}expected.gcode`, expected);
     for (const key of ["flush_volumes_matrix", "flush_volumes_vector"]) {
       const line = (output: string) => output.split("\n").find((entry) => entry.startsWith(`; ${key} = `));
@@ -159,9 +186,15 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
       expect(browserValue, `the browser exports ${key}`).toBeDefined();
       expect.soft(line(expected), `the CLI reference must slice with the GUI's ${key}`).toBe(browserValue);
     }
-    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
+    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(
+      sha256(Buffer.from(expected)),
+    );
   } else {
-    test.info().annotations.push({ type: "skip", description: "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run" });
+    test.info().annotations.push({
+      type: "skip",
+      description:
+        "ARES_ORCA_PRESET_SELECT_BIN is unset: the ares-cli byte comparison needs the plater's selected presets and did not run",
+    });
   }
 
   await page.getByRole("link", { name: "Preview" }).click();
@@ -208,15 +241,31 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
     await checkToolPosition(page, moves, 0, `${artifacts}project-edit/`);
   }
   if (orca) {
-    if (!selection) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the project-edit comparison needs the plater's selected presets");
-    const nativeEdited = withoutCliGroups(withSelectedPresets(orcaEditedGcode(comparison, { layer_height: "0.12" }), selection), withDifferences(selection));
-    writeFileSync(`${artifacts}project-edit/result.json`, `${JSON.stringify({
-      oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
-      evidence: "ordered_bytes_generator_only",
-      edit: { layer_height: "0.12" },
-      bytes: edited.length,
-    }, null, 2)}\n`);
-    expect(normalize(edited, "Ares") === nativeEdited, "edited browser G-code equals OrcaSlicer's for the edited project").toBe(true);
+    if (!selection)
+      throw new Error(
+        "ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the project-edit comparison needs the plater's selected presets",
+      );
+    const nativeEdited = withoutCliGroups(
+      withSelectedPresets(orcaEditedGcode(comparison, { layer_height: "0.12" }), selection),
+      withDifferences(selection),
+    );
+    writeFileSync(
+      `${artifacts}project-edit/result.json`,
+      `${JSON.stringify(
+        {
+          oracle: "official OrcaSlicer 2.5.0 on the project with the edit as typed CLI options",
+          evidence: "ordered_bytes_generator_only",
+          edit: { layer_height: "0.12" },
+          bytes: edited.length,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    expect(
+      normalize(edited, "Ares") === nativeEdited,
+      "edited browser G-code equals OrcaSlicer's for the edited project",
+    ).toBe(true);
   }
   await page.getByRole("button", { name: "Reset all" }).click();
   await expect(page.getByTestId("process-edited")).toHaveCount(0);
@@ -224,10 +273,20 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
 
   writeFileSync(
     `${artifacts}result.json`,
-    `${JSON.stringify({
-      fixture: "tests/parity/orca_cli_ender3.3mf", machineEndGcodeTravel: endTravel, bytes: gcode.length, sha256: sha256(gcode),
-      engineReadyMs, firstSliceS, sliceMs, sliceMedianMs: [...sliceMs].sort((a, b) => a - b)[sliceMs.length >> 1],
-    }, null, 2)}\n`,
+    `${JSON.stringify(
+      {
+        fixture: "tests/parity/orca_cli_ender3.3mf",
+        machineEndGcodeTravel: endTravel,
+        bytes: gcode.length,
+        sha256: sha256(gcode),
+        engineReadyMs,
+        firstSliceS,
+        sliceMs,
+        sliceMedianMs: [...sliceMs].sort((a, b) => a - b)[sliceMs.length >> 1],
+      },
+      null,
+      2,
+    )}\n`,
   );
   writeFileSync(`${artifacts}gcode.sha256`, `${sha256(gcode)}  ${download.suggestedFilename()}\n`);
   expect(errors).toEqual([]);

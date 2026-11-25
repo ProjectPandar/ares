@@ -11,7 +11,8 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-scale/", imp
 const FIXTURE = "tests/parity/orca_cli_ender3.3mf";
 
 type Axis = "X" | "Y" | "Z";
-const field = (page: Page, group: string, axis: Axis) => page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
+const field = (page: Page, group: string, axis: Axis) =>
+  page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
 
 async function setField(page: Page, group: string, axis: Axis, value: string) {
   await field(page, group, axis).fill(value);
@@ -19,10 +20,13 @@ async function setField(page: Page, group: string, axis: Axis, value: string) {
 }
 
 async function expectFields(page: Page, group: string, values: readonly [string, string, string]) {
-  for (const [index, axis] of (["X", "Y", "Z"] as const).entries()) await expect(field(page, group, axis)).toHaveValue(values[index]);
+  for (const [index, axis] of (["X", "Y", "Z"] as const).entries())
+    await expect(field(page, group, axis)).toHaveValue(values[index]);
 }
 
-test("the Scale and Size fields scale an instance about its centre, drop it onto the bed, and slice like OrcaSlicer", async ({ page }) => {
+test("the Scale and Size fields scale an instance about its centre, drop it onto the bed, and slice like OrcaSlicer", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -71,19 +75,40 @@ test("the Scale and Size fields scale an instance about its centre, drop it onto
   const gcode = readFileSync(`${artifacts}browser.gcode`, "utf8");
 
   const oracle = `${artifacts}scaled.3mf`;
-  const scaleX = [[1.2, 0, 0], [0, 1, 0], [0, 0, 1]];
-  writeFileSync(oracle, guiExport(FIXTURE, [
-    { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([scaleX], [110, 110, 5]) }] },
-  ], await probedTowers(page)));
+  const scaleX = [
+    [1.2, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ];
+  writeFileSync(
+    oracle,
+    guiExport(
+      FIXTURE,
+      [{ source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([scaleX], [110, 110, 5]) }] }],
+      await probedTowers(page),
+    ),
+  );
   const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["Scale X 120 (uniform)", "Reset scale", "Uniform scale off", "Size X 12"],
-    oracle: "OrcaSlicer --slice 1 of the GUI-exported project (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: ["Scale X 120 (uniform)", "Reset scale", "Uniform scale off", "Size X 12"],
+        oracle: "OrcaSlicer --slice 1 of the GUI-exported project (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

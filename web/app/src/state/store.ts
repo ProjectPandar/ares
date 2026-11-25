@@ -1,4 +1,20 @@
-import type { ArrangeSettings, ArrangeSettingsModel, CompatiblePresets, ConfigOptionDef, ConfigOverrides, FilamentSlotState, InstalledPrinters, ParsedPresetBundle, PlaterSession, Scene, SelectablePrinter, SlicingStatus, StlFile, StlImportOptions, Toolpaths } from "@ares-slicer/wasm";
+import type {
+  ArrangeSettings,
+  ArrangeSettingsModel,
+  CompatiblePresets,
+  ConfigOptionDef,
+  ConfigOverrides,
+  FilamentSlotState,
+  InstalledPrinters,
+  ParsedPresetBundle,
+  PlaterSession,
+  Scene,
+  SelectablePrinter,
+  SlicingStatus,
+  StlFile,
+  StlImportOptions,
+  Toolpaths,
+} from "@ares-slicer/wasm";
 import type { FilamentSelection } from "./filamentAssignment";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
@@ -140,7 +156,9 @@ export interface AppState {
 
 /** The vendor bundles `PresetBundle::apply_vendor_config` installs: those with a model (PresetBundle.cpp:1968-1975). */
 export const installedVendors = (installed: InstalledPrinters) =>
-  Object.keys(installed).filter((vendor) => Object.keys(installed[vendor]).length > 0).sort();
+  Object.keys(installed)
+    .filter((vendor) => Object.keys(installed[vendor]).length > 0)
+    .sort();
 
 export const DEFAULT_PREVIEW: PreviewView = {
   layers: [0, 0],

@@ -19,8 +19,18 @@ export async function checkRoleTimes(page: Page, artifacts: string) {
   mkdirSync(out, { recursive: true });
   const oracle = process.env.ARES_ROLE_TIMES_BIN;
   if (!oracle) throw new Error("ARES_ROLE_TIMES_BIN is required for the role times oracle");
-  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
-    "--dump-moves", `${out}moves.csv`, "--dump-role-times", `${out}native.json`], { stdio: "ignore" });
+  execFileSync(
+    oracle,
+    [
+      "--process-gcode",
+      `${artifacts}oracle-input.gcode`,
+      "--dump-moves",
+      `${out}moves.csv`,
+      "--dump-role-times",
+      `${out}native.json`,
+    ],
+    { stdio: "ignore" },
+  );
   expect(readFileSync(`${out}moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
   const { cells } = JSON.parse(readFileSync(`${out}native.json`, "utf8")) as { cells: NativeCells };
   expect(cells.rows.length, "roles of the sliced cube").toBeGreaterThanOrEqual(3);

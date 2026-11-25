@@ -15,9 +15,11 @@ test("Pages serves the production app, isolated WASM and module worker", async (
   expect(wasm.ok()).toBe(true);
   expect(wasm.headers()["content-type"]).toContain("application/wasm");
   const fileButton = page.getByRole("button", { name: "File", exact: true });
-  const importMenuItem = page.getByRole("menu", { name: "File", exact: true })
+  const importMenuItem = page
+    .getByRole("menu", { name: "File", exact: true })
     .getByRole("menuitem", { name: "Import", exact: true });
-  const importItem = page.getByRole("menu", { name: "Import", exact: true })
+  const importItem = page
+    .getByRole("menu", { name: "Import", exact: true })
     .getByRole("menuitem", { name: "Import 3MF/STL…", exact: true });
   await fileButton.click();
   await importMenuItem.click();
@@ -38,5 +40,8 @@ test("Pages serves the production app, isolated WASM and module worker", async (
   }
   expect(errors).toEqual([]);
   await page.screenshot({ path: testInfo.outputPath("pages-prepare.png") });
-  await testInfo.attach("wasm-response", { body: JSON.stringify({ url: wasm.url(), headers: wasm.headers() }), contentType: "application/json" });
+  await testInfo.attach("wasm-response", {
+    body: JSON.stringify({ url: wasm.url(), headers: wasm.headers() }),
+    contentType: "application/json",
+  });
 });

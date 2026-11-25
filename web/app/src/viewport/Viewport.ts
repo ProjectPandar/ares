@@ -12,7 +12,14 @@ import { buildOptionMarkers } from "./optionMarkers";
 import { attachPicking } from "./picking";
 import { type SharedGl, sharedGl } from "./sharedGl";
 import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import { applyEnabled, applyPreviewView, applyVertexColors, buildToolpathMesh, releaseToolpathMesh, type ToolpathFilter } from "./toolpathMesh";
+import {
+  applyEnabled,
+  applyPreviewView,
+  applyVertexColors,
+  buildToolpathMesh,
+  releaseToolpathMesh,
+  type ToolpathFilter,
+} from "./toolpathMesh";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -44,7 +51,15 @@ export class Viewport {
   readonly #toolMarker = buildToolMarker();
   #toolpathColors: Uint8Array | null = null;
   #previewView: ToolpathFilter | null = null;
-  #bedShape: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
+  #bedShape: BedShape = {
+    polygon: [
+      [0, 0],
+      [256, 0],
+      [256, 256],
+      [0, 256],
+    ],
+    height: 256,
+  };
   /** Plate grid origins (PartPlateList::compute_origin) and the current plate's index. */
   #plateOrigins: readonly (readonly [number, number])[] = [[0, 0]];
   #currentPlate = 0;
@@ -73,9 +88,16 @@ export class Viewport {
   /** The user started orbiting/panning/zooming away from a preset view. */
   onOrbit?: () => void;
 
-  constructor(readonly container: HTMLElement, colors: ViewportColors) {
+  constructor(
+    readonly container: HTMLElement,
+    colors: ViewportColors,
+  ) {
     this.#gl = sharedGl(colors);
-    ({ renderer: this.#renderer, plateMaterials: this.#plateMaterials, modelMaterials: this.#modelMaterials } = this.#gl);
+    ({
+      renderer: this.#renderer,
+      plateMaterials: this.#plateMaterials,
+      modelMaterials: this.#modelMaterials,
+    } = this.#gl);
     this.#renderTask.port1.onmessage = () => {
       if (this.#dirty) this.#draw();
     };
@@ -107,11 +129,24 @@ export class Viewport {
     this.#controls.connect(canvas);
     this.#listeners = new AbortController();
     const { signal } = this.#listeners;
-    attachPicking(canvas, this.#camera, this.#models, {
-      onPick: (objectId) => this.onPick?.(objectId),
-      onContextPick: (target, at) => this.#edit && this.onContextPick?.(target, at),
-    }, signal);
-    attachInstanceDrag(canvas, this.#controls, this.#camera, { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() }, () => this.#edit, signal);
+    attachPicking(
+      canvas,
+      this.#camera,
+      this.#models,
+      {
+        onPick: (objectId) => this.onPick?.(objectId),
+        onContextPick: (target, at) => this.#edit && this.onContextPick?.(target, at),
+      },
+      signal,
+    );
+    attachInstanceDrag(
+      canvas,
+      this.#controls,
+      this.#camera,
+      { hit: (raycaster) => this.#dragHit(raycaster), previewed: () => this.#placeGizmo() },
+      () => this.#edit,
+      signal,
+    );
     this.#attached = true;
     this.#size = [0, 0];
     this.#fitCanvas();
@@ -197,7 +232,9 @@ export class Viewport {
   }
 
   #selectedGroup() {
-    return this.#models.children.find((node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0);
+    return this.#models.children.find(
+      (node) => node.userData.objectId === this.#selected && node.userData.ref.instance === 0,
+    );
   }
 
   #dragHit(raycaster: THREE.Raycaster): DragHit | null {
@@ -205,7 +242,9 @@ export class Viewport {
     const gizmo = this.#gizmos.hit(raycaster);
     const hit = gizmo ? null : raycaster.intersectObject(this.#models, true)[0];
     const group = gizmo ? this.#selectedGroup()! : hit?.object.parent;
-    return group ? { target: group.userData.ref as InstanceRef, group, point: gizmo?.point ?? hit!.point, gizmo } : null;
+    return group
+      ? { target: group.userData.ref as InstanceRef, group, point: gizmo?.point ?? hit!.point, gizmo }
+      : null;
   }
 
   setEditHandlers(edit: EditHandlers | undefined, mode: GizmoMode | null) {
@@ -218,7 +257,12 @@ export class Viewport {
     this.#selected = objectId;
     this.#placeGizmo();
     this.#models.traverse((node) => {
-      if (node instanceof THREE.Mesh) node.material = this.#modelMaterials.get(node.userData.volumeType as VolumeType, node.userData.objectId === objectId, node.userData.filament as number);
+      if (node instanceof THREE.Mesh)
+        node.material = this.#modelMaterials.get(
+          node.userData.volumeType as VolumeType,
+          node.userData.objectId === objectId,
+          node.userData.filament as number,
+        );
     });
     this.render();
   }
@@ -237,7 +281,10 @@ export class Viewport {
     if (this.#gl.toolpathsCompiled) return;
     this.#gl.toolpathsCompiled = true;
     const geometry = new THREE.InstancedBufferGeometry();
-    const meshes = new THREE.Group().add(new THREE.Mesh(geometry, this.#gl.toolpaths), new THREE.Mesh(geometry, this.#gl.optionMarkers));
+    const meshes = new THREE.Group().add(
+      new THREE.Mesh(geometry, this.#gl.toolpaths),
+      new THREE.Mesh(geometry, this.#gl.optionMarkers),
+    );
     this.#renderer.compile(meshes, this.#camera, this.#scene);
     geometry.dispose();
   }
@@ -286,7 +333,7 @@ export class Viewport {
     this.render();
   }
 
-/** Shows the tool marker at vertex `vertex` of `toolpaths`, or hides it. */
+  /** Shows the tool marker at vertex `vertex` of `toolpaths`, or hides it. */
   setToolMarker(toolpaths: Toolpaths, vertex: number | null) {
     this.#toolMarker.visible = vertex !== null;
     if (vertex !== null) {
@@ -338,8 +385,7 @@ export class Viewport {
     if (target === "objects") {
       box.setFromObject(this.#models);
       if (this.#toolpaths) box.union(this.#toolpaths.geometry.boundingBox!.clone().translate(this.#toolpaths.position));
-    }
-    else {
+    } else {
       const origins = target === "plates" ? this.#plateOrigins : [this.#origin];
       for (const [ox, oy] of origins) {
         for (const [x, y] of this.#bedShape.polygon) box.expandByPoint(new THREE.Vector3(x + ox, y + oy, 0));

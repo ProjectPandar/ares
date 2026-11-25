@@ -64,7 +64,9 @@ test.beforeAll(() => {
   mkdirSync(artifacts, { recursive: true });
 });
 
-test("an A1M project switched to the H2D lists and selects only filaments compatible with the H2D, like update_compatible", async ({ page }) => {
+test("an A1M project switched to the H2D lists and selects only filaments compatible with the H2D, like update_compatible", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -77,31 +79,38 @@ test("an A1M project switched to the H2D lists and selects only filaments compat
   const superseded = (name: string, printer: string) =>
     [...bbl.filaments.keys()].some((other) => alias(other) === alias(name) && lists(other, printer));
   const library = FIRST_RUN_CONFIG.installedFilaments.filter((name) => name.endsWith(" @System"));
-  const compatible = (printer: string) => [
-    ...[...bbl.seeded].filter((name) => lists(name, printer)),
-    ...library.filter((name) => !superseded(name, printer)),
-  ].sort();
+  const compatible = (printer: string) =>
+    [
+      ...[...bbl.seeded].filter((name) => lists(name, printer)),
+      ...library.filter((name) => !superseded(name, printer)),
+    ].sort();
   const expected = ["Bambu PLA Basic @BBL H2D", "Bambu PLA Matte @BBL H2D"];
   for (const name of expected) expect(compatible(H2D)).toContain(name);
 
   await installBambuLab(page);
   // Both printers remember the A1M presets (AppConfig printer settings, PresetBundle::update_selections,
   // PresetBundle.cpp:3914-3937): the project was used on the A1 mini.
-  await page.evaluate(({ printers, filaments }) => {
-    const config = JSON.parse(localStorage.getItem("ares.config")!);
-    for (const printer of printers) config.printers = { ...config.printers, [printer]: { filaments } };
-    localStorage.setItem("ares.config", JSON.stringify(config));
-  }, { printers: [H2D, A1M], filaments: A1M_FILAMENTS });
+  await page.evaluate(
+    ({ printers, filaments }) => {
+      const config = JSON.parse(localStorage.getItem("ares.config")!);
+      for (const printer of printers) config.printers = { ...config.printers, [printer]: { filaments } };
+      localStorage.setItem("ares.config", JSON.stringify(config));
+    },
+    { printers: [H2D, A1M], filaments: A1M_FILAMENTS },
+  );
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await page.getByTestId("import-input").setInputFiles(project("a1m-filaments.3mf", { filament_settings_id: A1M_FILAMENTS }));
+  await page
+    .getByTestId("import-input")
+    .setInputFiles(project("a1m-filaments.3mf", { filament_settings_id: A1M_FILAMENTS }));
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
 
   // update_compatible(Always) replaces each incompatible filament with the compatible preset of the
   // same alias (PresetBundle.cpp:8574-8598, 8664-8672).
   await choose(page, "Printer preset", "Bambu Lab H2D");
   await expect(combo(page, "Printer preset")).toHaveText("Bambu Lab H2D");
-  for (const [slot, name] of expected.entries()) await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(name);
+  for (const [slot, name] of expected.entries())
+    await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(name);
   // PlaterPresetComboBox::update lists no incompatible preset (PresetComboBoxes.cpp:1300, 1501-1503).
   const h2dOptions = await filamentOptions(page, "Filament 2 preset");
   expect(h2dOptions).toEqual(compatible(H2D));
@@ -119,7 +128,8 @@ test("an A1M project switched to the H2D lists and selects only filaments compat
   // The list follows the printer, and the A1 mini's remembered filaments come back.
   await choose(page, "Printer preset", "Bambu Lab A1 mini");
   await expect(combo(page, "Printer preset")).toHaveText("Bambu Lab A1 mini");
-  for (const [slot, name] of A1M_FILAMENTS.entries()) await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(name);
+  for (const [slot, name] of A1M_FILAMENTS.entries())
+    await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(name);
   const a1mOptions = await filamentOptions(page, "Filament 2 preset");
   expect(a1mOptions).toEqual(compatible(A1M));
   expect(a1mOptions).not.toEqual(h2dOptions);
@@ -130,13 +140,17 @@ test("an A1M project switched to the H2D lists and selects only filaments compat
   expect(errors).toEqual([]);
 });
 
-test("a project with an out-of-range value warns at load like Plater::load_files and slices like the GUI", async ({ page }) => {
+test("a project with an out-of-range value warns at load like Plater::load_files and slices like the GUI", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await page.getByTestId("import-input").setInputFiles(project("raft-expansion.3mf", { raft_first_layer_expansion: "-1" }));
+  await page
+    .getByTestId("import-input")
+    .setInputFiles(project("raft-expansion.3mf", { raft_first_layer_expansion: "-1" }));
   // Plater.cpp:9466-9481: one "-key: message" line per invalid value, and the project loads.
   const warning = page.getByTestId("load-warning");
   await expect(warning).toContainText("Invalid values found in the 3MF:", { timeout: 60_000 });

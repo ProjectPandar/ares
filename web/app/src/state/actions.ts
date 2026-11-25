@@ -10,7 +10,16 @@ import { updatePrinterPanel } from "./printer";
 import { slicer } from "./slicer";
 import { recoverSession } from "./engineRecovery";
 import { decodeSettings } from "./typedSettings";
-import { DEFAULT_PREVIEW, invalidatedSlices, type PreviewView, type SlicedPlate, type Theme, type Thumb, useApp, type ViewMode } from "./store";
+import {
+  DEFAULT_PREVIEW,
+  invalidatedSlices,
+  type PreviewView,
+  type SlicedPlate,
+  type Theme,
+  type Thumb,
+  useApp,
+  type ViewMode,
+} from "./store";
 
 const configDefs = slicer.printConfigDef().then(({ options }) => {
   const defs = new Map(options.map((def) => [def.key, def]));
@@ -22,13 +31,15 @@ const configDefs = slicer.printConfigDef().then(({ options }) => {
 // (GUI_App.cpp:3713): the app reads ready, which opens files to the user, after the startup selection.
 // presets.ts evaluates after this module (it imports printer.ts, which imports this one), so the
 // restore promise is read once the definitions arrive.
-configDefs.then(() => sessionRestored).then(
-  () => {
-    useApp.setState({ engine: "ready" });
-    void recoverSession();
-  },
-  (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
-);
+configDefs
+  .then(() => sessionRestored)
+  .then(
+    () => {
+      useApp.setState({ engine: "ready" });
+      void recoverSession();
+    },
+    (error: Error) => useApp.setState({ engine: "error", engineError: error.message }),
+  );
 
 export function setTheme(theme: Theme) {
   saveConfig({ theme });
@@ -50,7 +61,8 @@ let stlImports = 0;
 export function importFiles(files: File[]) {
   if (!files.length) return;
   if (files.length === 1) void importFile(files[0]);
-  else if (files.every((file) => /\.stl$/i.test(file.name))) useApp.setState({ stlImport: { id: ++stlImports, files }, loadError: undefined });
+  else if (files.every((file) => /\.stl$/i.test(file.name)))
+    useApp.setState({ stlImport: { id: ++stlImports, files }, loadError: undefined });
   else useApp.setState({ loadError: "multiple inputs must all be STL files" });
 }
 
@@ -65,7 +77,13 @@ export async function importFile(file: File) {
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure)
     // and its presets filled from the installed system presets.
     const plater = /\.3mf$/i.test(file.name)
-      ? await slicer.createPlaterSessionWithProfiles(bytes, file.name, await catalogJson(useApp.getState()), FROM_PROJECT, { seed: 0, placement: "none" })
+      ? await slicer.createPlaterSessionWithProfiles(
+          bytes,
+          file.name,
+          await catalogJson(useApp.getState()),
+          FROM_PROJECT,
+          { seed: 0, placement: "none" },
+        )
       : null;
     if (plater) await installVendors(plater);
     const scene = plater ? await plater.scene() : await slicer.loadScene(bytes);
@@ -114,7 +132,9 @@ export async function importFile(file: File) {
 export async function newProject() {
   const { plater, presetSelection: selection } = useApp.getState();
   useApp.setState({
-    ...(selection ? { presetSelection: { ...selection, filamentProject: undefined } } : { compatible: null, printerPanel: null }),
+    ...(selection
+      ? { presetSelection: { ...selection, filamentProject: undefined } }
+      : { compatible: null, printerPanel: null }),
     file: null,
     scene: null,
     plater: null,
@@ -144,7 +164,11 @@ function invalidValuesWarning(values: Record<string, string>) {
 }
 
 export function selectObject(id: number | null) {
-  useApp.setState({ selectedObject: id, selectedInstance: null, filamentSelection: id === null ? [] : [{ object: id }] });
+  useApp.setState({
+    selectedObject: id,
+    selectedInstance: null,
+    filamentSelection: id === null ? [] : [{ object: id }],
+  });
 }
 
 /** Slices the current plate ("Slice plate", BackgroundSlicingProcess::start in the worker). */
@@ -172,15 +196,22 @@ async function slicePlates(indices: number[]) {
     useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt }, arrangeError: undefined });
     const plate = scene.plates[index]?.id;
     const onStatus = (progress: SlicingStatus) =>
-      useApp.setState(({ slice: running }) => (running.status === "slicing" ? { slice: { ...running, progress } } : {}));
+      useApp.setState(({ slice: running }) =>
+        running.status === "slicing" ? { slice: { ...running, progress } } : {},
+      );
     try {
       const result = presetSelection
         ? await sliceWithPresets(file, scene, presetSelection, overrides, plate, onStatus)
         : file.kind === "stl-batch"
           ? await plater!.slice(plate, await overrideTokens(overrides), onStatus)
           : plater
-          ? await plater.sliceWithProfiles(await catalogJson(useApp.getState()), FROM_PROJECT, { plate, seed: 0, placement: "none", overrides: await overrideTokens(overrides) }, onStatus)
-          : await slicer.sliceStl(file.bytes);
+            ? await plater.sliceWithProfiles(
+                await catalogJson(useApp.getState()),
+                FROM_PROJECT,
+                { plate, seed: 0, placement: "none", overrides: await overrideTokens(overrides) },
+                onStatus,
+              )
+            : await slicer.sliceStl(file.bytes);
       if (useApp.getState().file !== file) return;
       // A preset switch opened another STL session and freed this one: upstream applies the new config to
       // the one current print, stops the slice and invalidates the plate (Plater.cpp:11402-11466).
@@ -189,7 +220,9 @@ async function slicePlates(indices: number[]) {
         return;
       }
       setSliceResult(result, performance.now() - startedAt);
-      useApp.setState(({ plateSlices, slice: done }) => ({ plateSlices: { ...plateSlices, [index]: done as SlicedPlate } }));
+      useApp.setState(({ plateSlices, slice: done }) => ({
+        plateSlices: { ...plateSlices, [index]: done as SlicedPlate },
+      }));
     } catch (error) {
       useApp.setState({ slice: { status: "error", error: (error as Error).message } });
       return;
@@ -220,7 +253,8 @@ export function exportGcode() {
 
 /** Saves every sliced plate's G-code, one file per plate. */
 export function exportAllGcode() {
-  for (const [index, { gcode }] of Object.entries(useApp.getState().plateSlices)) download(gcode, gcodeFileName(Number(index)));
+  for (const [index, { gcode }] of Object.entries(useApp.getState().plateSlices))
+    download(gcode, gcodeFileName(Number(index)));
 }
 
 /** Shows a slice result and resets the preview to every layer (GCodeViewer::load). */
@@ -247,7 +281,9 @@ function lastLayer() {
 
 /** Moves a layer slider thumb and makes it the active one. */
 export function moveLayerThumb(thumb: Thumb, layer: number) {
-  useApp.setState(({ preview }) => ({ preview: { ...moveThumb(preview, thumb, layer, lastLayer()), selection: thumb } }));
+  useApp.setState(({ preview }) => ({
+    preview: { ...moveThumb(preview, thumb, layer, lastLayer()), selection: thumb },
+  }));
 }
 
 /**

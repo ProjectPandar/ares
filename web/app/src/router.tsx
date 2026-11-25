@@ -1,10 +1,4 @@
-import {
-  createHashHistory,
-  createRootRoute,
-  createRoute,
-  createRouter,
-  redirect,
-} from "@tanstack/react-router";
+import { createHashHistory, createRootRoute, createRoute, createRouter, redirect } from "@tanstack/react-router";
 import { Shell } from "./shell/Shell";
 
 const rootRoute = createRootRoute({ component: Shell });

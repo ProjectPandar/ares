@@ -31,7 +31,12 @@ interface SliceRelay {
 async function relaySliceResults(page: Page) {
   await page.addInitScript(() => {
     const relay: SliceRelay = {
-      hold: true, sliced: [], freed: [], openings: 0, results: [], creates: [],
+      hold: true,
+      sliced: [],
+      freed: [],
+      openings: 0,
+      results: [],
+      creates: [],
       deliverResults() {
         for (const deliver of this.results.splice(0)) deliver();
       },
@@ -54,8 +59,12 @@ async function relaySliceResults(page: Page) {
         });
       }
 
-      postMessage(request: { id: number; kind: string; sessionId: number }, options?: Transferable[] | StructuredSerializeOptions) {
-        const send = () => (Array.isArray(options) ? super.postMessage(request, options) : super.postMessage(request, options));
+      postMessage(
+        request: { id: number; kind: string; sessionId: number },
+        options?: Transferable[] | StructuredSerializeOptions,
+      ) {
+        const send = () =>
+          Array.isArray(options) ? super.postMessage(request, options) : super.postMessage(request, options);
         if (request.kind.startsWith("platerSlice")) {
           slices.add(request.id);
           relay.sliced.push(request.sessionId);
@@ -87,17 +96,20 @@ async function openWithPresets(page: Page) {
 
 // Plater.cpp:11402-11466, PrintApply.cpp:1702: a preset change applies a new config to the one current print,
 // stops a running slice and invalidates the plate's result.
-test("a preset switch that replaces the STL session during a slice leaves the plate unsliced", async ({ page }, info) => {
+test("a preset switch that replaces the STL session during a slice leaves the plate unsliced", async ({
+  page,
+}, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await relaySliceResults(page);
   await openWithPresets(page);
   await page.getByTestId("import-input").setInputFiles({ name: "cube.stl", buffer: cube, mimeType: "model/stl" });
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
-  const relay = () => page.evaluate(() => {
-    const { sliced, freed, results } = (window as unknown as { sliceRelay: SliceRelay }).sliceRelay;
-    return { sliced, freed, results: results.length };
-  });
+  const relay = () =>
+    page.evaluate(() => {
+      const { sliced, freed, results } = (window as unknown as { sliceRelay: SliceRelay }).sliceRelay;
+      return { sliced, freed, results: results.length };
+    });
 
   await page.getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect.poll(async () => (await relay()).results, { timeout: 120_000 }).toBe(1);
@@ -132,10 +144,11 @@ test("a slice started while a preset switch opens the STL session completes on t
   await page.getByTestId("import-input").setInputFiles({ name: "cube.stl", buffer: cube, mimeType: "model/stl" });
   const status = page.getByTestId("status");
   await expect(status).toHaveText("Ready to slice");
-  const relay = () => page.evaluate(() => {
-    const { sliced, openings, creates, results } = (window as unknown as { sliceRelay: SliceRelay }).sliceRelay;
-    return { sliced: sliced.length, openings, creates: creates.length, results: results.length };
-  });
+  const relay = () =>
+    page.evaluate(() => {
+      const { sliced, openings, creates, results } = (window as unknown as { sliceRelay: SliceRelay }).sliceRelay;
+      return { sliced: sliced.length, openings, creates: creates.length, results: results.length };
+    });
   const slicePlate = page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true });
 
   // A first slice: from here on the relay lets one session opening through and holds the later ones.
@@ -154,7 +167,11 @@ test("a slice started while a preset switch opens the STL session completes on t
   await slicePlate.click();
   await expect(page).toHaveURL(/#\/preview$/);
   // The Preview 3D view shows its canvas after its mount effects, which request its session.
-  await expect(shownTab(page).locator(".viewport", { has: page.getByTestId("slice-summary") }).locator("canvas")).toBeVisible();
+  await expect(
+    shownTab(page)
+      .locator(".viewport", { has: page.getByTestId("slice-summary") })
+      .locator("canvas"),
+  ).toBeVisible();
   await page.evaluate(() => (window as unknown as { sliceRelay: SliceRelay }).sliceRelay.resume());
   await expect.poll(async () => (await relay()).sliced, { timeout: 120_000 }).toBe(2);
   await expect(status).not.toHaveText(/^Slicing/, { timeout: 240_000 });

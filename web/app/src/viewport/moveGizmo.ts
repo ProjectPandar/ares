@@ -23,8 +23,14 @@ export function buildMoveGizmo(box: THREE.Box3, pixel: number) {
     const tipLength = 12 * pixel;
     const arrow = new THREE.Group();
     const material = new THREE.MeshBasicMaterial({ color: AXIS_COLORS[index], depthTest: false });
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(pixel, pixel, length, 8).translate(0, length / 2, 0), material);
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(5 * pixel, tipLength, 16).translate(0, length + tipLength / 2, 0), material);
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(pixel, pixel, length, 8).translate(0, length / 2, 0),
+      material,
+    );
+    const tip = new THREE.Mesh(
+      new THREE.ConeGeometry(5 * pixel, tipLength, 16).translate(0, length + tipLength / 2, 0),
+      material,
+    );
     // Only the grabber at the tip takes a press (GLGizmoMove3D::m_grabbers), not the connection.
     const sleeve = new THREE.Mesh(
       new THREE.SphereGeometry(SLEEVE_PX * pixel, 12, 8).translate(0, length + tipLength / 2, 0),

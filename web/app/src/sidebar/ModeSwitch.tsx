@@ -38,12 +38,26 @@ export function ModeSwitch() {
     select(step(selected));
   };
   return (
-    <span className="mode-switch" role="slider" tabIndex={0} aria-label="Settings mode" aria-valuemin={0}
-      aria-valuemax={MODES.length - 1} aria-valuenow={selected} aria-valuetext={name} title={name}
-      style={{ "--mode": selected } as CSSProperties} onClick={onClick} onKeyDown={onKeyDown}>
+    <span
+      className="mode-switch"
+      role="slider"
+      tabIndex={0}
+      aria-label="Settings mode"
+      aria-valuemin={0}
+      aria-valuemax={MODES.length - 1}
+      aria-valuenow={selected}
+      aria-valuetext={name}
+      title={name}
+      style={{ "--mode": selected } as CSSProperties}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+    >
       <span className="mode-track">
         {MODES.map(({ mode }, index) => (
-          <span key={mode} className={`mode-dot${index <= selected ? " active" : ""}${index === selected ? " current" : ""}`} />
+          <span
+            key={mode}
+            className={`mode-dot${index <= selected ? " active" : ""}${index === selected ? " current" : ""}`}
+          />
         ))}
       </span>
     </span>

@@ -41,15 +41,26 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
   mkdirSync(installed, { recursive: true });
 
   // bun pm pack (runs prepack: build + LICENSE): exactly the publishable files and registry metadata.
-  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-wasm-js`).trim().split("\n").pop()!;
-  const packedFiles = run("tar", ["-tzf", tarball], artifacts).trim().split("\n").map((entry) => entry.replace(/^package\//, "")).sort();
+  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-wasm-js`)
+    .trim()
+    .split("\n")
+    .pop()!;
+  const packedFiles = run("tar", ["-tzf", tarball], artifacts)
+    .trim()
+    .split("\n")
+    .map((entry) => entry.replace(/^package\//, ""))
+    .sort();
   expect(packedFiles).toEqual(PACKED_FILES);
   run("tar", ["-xzf", tarball, "--strip-components=1", "-C", installed], artifacts);
   const manifest = JSON.parse(readFileSync(`${installed}package.json`, "utf8"));
   expect(manifest).toMatchObject({
     name: "@ares-slicer/wasm",
     license: "AGPL-3.0-or-later",
-    repository: { type: "git", url: expect.stringContaining("github.com/ProjectPandar/ares"), directory: "web/packages/ares-wasm-js" },
+    repository: {
+      type: "git",
+      url: expect.stringContaining("github.com/ProjectPandar/ares"),
+      directory: "web/packages/ares-wasm-js",
+    },
     publishConfig: { access: "public" },
   });
   expect(manifest.dependencies ?? {}).toEqual({});
@@ -68,7 +79,11 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
 
   // Runtime: the README usage, bundled by Vite from the extracted tarball, slices byte-identically to native.
   await build({ root: consumer, logLevel: "warn", build: { outDir: "dist", target: "es2022" } });
-  const server = await preview({ root: consumer, logLevel: "warn", preview: { host: "127.0.0.1", port: 4245, strictPort: true } });
+  const server = await preview({
+    root: consumer,
+    logLevel: "warn",
+    preview: { host: "127.0.0.1", port: 4245, strictPort: true },
+  });
   try {
     await page.goto("http://127.0.0.1:4245/");
     await page.getByTestId("input").setInputFiles(`${repositoryRoot}${fixture}`);
@@ -76,9 +91,16 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
     await expect(result).not.toBeEmpty({ timeout: 120_000 });
     const browser = JSON.parse((await result.textContent())!);
 
-    run(`${repositoryRoot}target/release/ares`, ["slice", "--resources-dir", resources, "--plate", "1", "-o", `${artifacts}native.gcode`, fixture], repositoryRoot);
+    run(
+      `${repositoryRoot}target/release/ares`,
+      ["slice", "--resources-dir", resources, "--plate", "1", "-o", `${artifacts}native.gcode`, fixture],
+      repositoryRoot,
+    );
     const native = run("sha256sum", [`${artifacts}native.gcode`], artifacts).split(" ")[0];
-    writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ tarball: basename(tarball), files: PACKED_FILES, browser, native }, null, 2)}\n`);
+    writeFileSync(
+      `${artifacts}result.json`,
+      `${JSON.stringify({ tarball: basename(tarball), files: PACKED_FILES, browser, native }, null, 2)}\n`,
+    );
     expect(browser).toEqual({ objects: 3, bytes: readFileSync(`${artifacts}native.gcode`).length, sha256: native });
   } finally {
     // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.

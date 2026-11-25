@@ -1,5 +1,5 @@
 {
-  "plugins": ["typescript", "react", "react-hooks", "import"],
+  "plugins": ["typescript", "react", "react-hooks", "import", "node", "oxc", "promise"],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -7,6 +7,8 @@
   },
   "rules": {
     "no-await-in-loop": "off",
+    "oxc/no-map-spread": "off",
+    "promise/always-return": "off",
     "react/no-array-index-key": "off",
     "react/no-object-type-as-default-prop": "off",
     "react/react-in-jsx-scope": "off",

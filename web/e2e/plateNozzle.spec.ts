@@ -19,8 +19,12 @@ const BED_TYPE = "Textured PEI Plate";
 
 // PrintConfig.cpp:1086-1097: `curr_bed_type` values and labels, in BedType order (btPC = 1 ...).
 const BED_TYPES = [
-  ["Cool Plate", "Smooth Cool Plate"], ["Engineering Plate", "Engineering Plate"], ["High Temp Plate", "Smooth High Temp Plate"],
-  ["Textured PEI Plate", "Textured PEI Plate"], ["Textured Cool Plate", "Textured Cool Plate"], ["Supertack Plate", "Cool Plate (SuperTack)"],
+  ["Cool Plate", "Smooth Cool Plate"],
+  ["Engineering Plate", "Engineering Plate"],
+  ["High Temp Plate", "Smooth High Temp Plate"],
+  ["Textured PEI Plate", "Textured PEI Plate"],
+  ["Textured Cool Plate", "Textured Cool Plate"],
+  ["Supertack Plate", "Cool Plate (SuperTack)"],
 ];
 
 const readJson = (path: string) => JSON.parse(readFileSync(`${profiles}${path}`, "utf8"));
@@ -29,13 +33,17 @@ const combo = (page: Page, name: string) => page.getByRole("button", { name, exa
 /** A vendor's printers with resolved model, variant and default bed type, and its models' files. */
 function vendorPrinters(vendor: string) {
   const index = readJson(`${vendor}.json`) as Record<string, { name: string; sub_path: string }[]>;
-  const machines = new Map(index.machine_list.map(({ sub_path: path }) => {
-    const machine = readJson(`${vendor}/${path}`) as Record<string, string>;
-    return [machine.name, machine];
-  }));
+  const machines = new Map(
+    index.machine_list.map(({ sub_path: path }) => {
+      const machine = readJson(`${vendor}/${path}`) as Record<string, string>;
+      return [machine.name, machine];
+    }),
+  );
   const field = (name: string, key: string): string | undefined =>
     machines.get(name)![key] ?? (machines.get(name)!.inherits ? field(machines.get(name)!.inherits, key) : undefined);
-  const models = index.machine_model_list.map(({ sub_path: path }) => readJson(`${vendor}/${path}`) as Record<string, string>);
+  const models = index.machine_model_list.map(
+    ({ sub_path: path }) => readJson(`${vendor}/${path}`) as Record<string, string>,
+  );
   return { machines, field, models };
 }
 
@@ -46,13 +54,21 @@ function plateOracle(vendor: string, printer: string) {
   const unsupported = (model.not_support_bed_type ?? "").split(";");
   const labels = BED_TYPES.filter(([, label]) => !unsupported.includes(label)).map(([, label]) => label);
   const defaultBed = field(printer, "default_bed_type") ?? "";
-  const key = defaultBed !== "" ? (Number.parseInt(defaultBed, 10) > 0 ? Number.parseInt(defaultBed, 10) : 3)
-    : ["BL-P001", "BL-P002", "C13"].includes(model.model_id) ? 1 : 3;
+  const key =
+    defaultBed !== ""
+      ? Number.parseInt(defaultBed, 10) > 0
+        ? Number.parseInt(defaultBed, 10)
+        : 3
+      : ["BL-P001", "BL-P002", "C13"].includes(model.model_id)
+        ? 1
+        : 3;
   return { labels, selected: BED_TYPES[key - 1][1] };
 }
 
 async function selectedLabel(page: Page, name: string) {
-  return page.getByRole("combobox", { name, exact: true }).evaluate((select: HTMLSelectElement) => select.selectedOptions[0].textContent);
+  return page
+    .getByRole("combobox", { name, exact: true })
+    .evaluate((select: HTMLSelectElement) => select.selectedOptions[0].textContent);
 }
 
 async function install(page: Page, vendor: string) {
@@ -86,7 +102,8 @@ function editedProject(edit: Record<string, string>) {
 function orcaGcode(project: string) {
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-plate-`)}/`;
   execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, project], {
-    cwd: work, stdio: ["ignore", "pipe", "pipe"],
+    cwd: work,
+    stdio: ["ignore", "pipe", "pipe"],
   });
   const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
   writeFileSync(`${artifacts}native.gcode`, gcode);
@@ -96,24 +113,39 @@ function orcaGcode(project: string) {
 async function sliceAndExport(page: Page, name: string) {
   await page.getByRole("navigation").getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code" }).click(),
+  ]);
   await download.saveAs(`${artifacts}${name}`);
   return readFileSync(`${artifacts}${name}`, "utf8");
 }
 
 /** Lines one G-code has more often than the other, counted by text. */
 function lineDiff(a: string, b: string) {
-  const count = (gcode: string) => gcode.split("\n").reduce((counts, line) => counts.set(line, (counts.get(line) ?? 0) + 1), new Map<string, number>());
+  const count = (gcode: string) =>
+    gcode
+      .split("\n")
+      .reduce((counts, line) => counts.set(line, (counts.get(line) ?? 0) + 1), new Map<string, number>());
   const [left, right] = [count(a), count(b)];
   const extra = (from: Map<string, number>, to: Map<string, number>) =>
-    [...from].filter(([line, n]) => n > (to.get(line) ?? 0)).map(([line, n]) => `${line} (x${n - (to.get(line) ?? 0)})`);
+    [...from]
+      .filter(([line, n]) => n > (to.get(line) ?? 0))
+      .map(([line, n]) => `${line} (x${n - (to.get(line) ?? 0)})`);
   return { orcaOnly: extra(left, right), aresOnly: extra(right, left) };
 }
 
 test("plate type and nozzle offer the selected printer's options and reach the slice", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
+  const orca = oraclePath(
+    "ORCA_APPDIR",
+    "the project-edit oracle",
+    "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh",
+  );
   const probe = presetSelectProbe();
-  if (orca && !probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export");
+  if (orca && !probe)
+    throw new Error(
+      "ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export",
+    );
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -132,8 +164,13 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   expect(await plateCombo.locator("option").allTextContents()).toEqual(plate.labels);
   expect(await selectedLabel(page, "Plate type")).toBe(plate.selected);
   const { machines, field } = vendorPrinters("BBL");
-  const variants = [...new Set([...machines.keys()].filter((name) => field(name, "printer_model") === "Bambu Lab A1 mini")
-    .map((name) => field(name, "printer_variant")!))].sort();
+  const variants = [
+    ...new Set(
+      [...machines.keys()]
+        .filter((name) => field(name, "printer_model") === "Bambu Lab A1 mini")
+        .map((name) => field(name, "printer_variant")!),
+    ),
+  ].sort();
   const nozzleCombo = page.getByRole("combobox", { name: "Nozzle diameter", exact: true });
   expect(await nozzleCombo.locator("option").allTextContents()).toEqual(variants.map((variant) => `${variant} mm`));
   expect(await selectedLabel(page, "Nozzle diameter")).toBe(`${field(a1mini, "printer_variant")} mm`);
@@ -147,7 +184,9 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   await plateCombo.selectOption({ label: "Textured PEI Plate" });
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab A1 mini 0.6 nozzle", { timeout: 60_000 });
+  await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab A1 mini 0.6 nozzle", {
+    timeout: 60_000,
+  });
   await expect.poll(() => selectedLabel(page, "Plate type")).toBe("Textured PEI Plate");
   await page.screenshot({ path: `${artifacts}a1-mini-0.6.png` });
 
@@ -160,11 +199,19 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   // Project mode: the X1C project's plate type is editable and slices as the edited project.
   await page.getByTestId("import-input").setInputFiles(PROJECT);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
-  const project = JSON.parse(strFromU8(unzipSync(readFileSync(PROJECT))["Metadata/project_settings.config"])) as Record<string, string>;
+  const project = JSON.parse(strFromU8(unzipSync(readFileSync(PROJECT))["Metadata/project_settings.config"])) as Record<
+    string,
+    string
+  >;
   await combo(page, "Printer preset").click();
-  await page.getByRole("listbox", { name: "Printer preset" }).getByRole("group", { name: "Project presets" })
-    .getByRole("option", { name: project.printer_settings_id, exact: true }).click();
-  expect(await selectedLabel(page, "Plate type")).toBe(BED_TYPES.find(([value]) => value === project.curr_bed_type)![1]);
+  await page
+    .getByRole("listbox", { name: "Printer preset" })
+    .getByRole("group", { name: "Project presets" })
+    .getByRole("option", { name: project.printer_settings_id, exact: true })
+    .click();
+  expect(await selectedLabel(page, "Plate type")).toBe(
+    BED_TYPES.find(([value]) => value === project.curr_bed_type)![1],
+  );
   await plateCombo.selectOption(BED_TYPE);
   const web = await sliceAndExport(page, "web.gcode");
   expect(web).toContain(`; curr_bed_type = ${BED_TYPE}`);
@@ -173,18 +220,25 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   const edited = editedProject({ curr_bed_type: BED_TYPE });
   await page.getByTestId("import-input").setInputFiles(edited);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
-  expect(normalize(web, "Ares"), "the plate edit equals the edited project").toBe(normalize(await sliceAndExport(page, "edited.gcode"), "Ares"));
+  expect(normalize(web, "Ares"), "the plate edit equals the edited project").toBe(
+    normalize(await sliceAndExport(page, "edited.gcode"), "Ares"),
+  );
   // Official OrcaSlicer on the plater export after the plate edit (BBL and LH installed): the header and bed
   // temperatures agree. Other lines are recorded: ares-core does not yet emit the bed-temperature branch of the X1C
   // filament_start_gcode (`M106 P3 S150` at a 55 °C bed) on either path.
   let orcaDiff: ReturnType<typeof lineDiff> | null = null;
   if (orca) {
     const selection = nativeSelection(probe!, `${artifacts}selection/`, PROJECT, ["BBL", "LH"]);
-    const native = orcaGcode(platerExport(selection, PROJECT, `${artifacts}plater-export.3mf`, { curr_bed_type: BED_TYPE }));
+    const native = orcaGcode(
+      platerExport(selection, PROJECT, `${artifacts}plater-export.3mf`, { curr_bed_type: BED_TYPE }),
+    );
     const pick = (gcode: string) => gcode.split("\n").filter((line) => /^; curr_bed_type = |^M1[49]0 /.test(line));
     expect(pick(normalize(web, "Ares"))).toEqual(pick(native));
     orcaDiff = lineDiff(native, normalize(web, "Ares"));
   }
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ a1mini, plate, variants, bedType: BED_TYPE, orcaDiff }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ a1mini, plate, variants, bedType: BED_TYPE, orcaDiff }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

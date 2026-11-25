@@ -1,7 +1,9 @@
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 
-test("a system printer model shows the filtering state from its selection event, as Plater::priv::on_select_preset selects it in the event", async ({ page }) => {
+test("a system printer model shows the filtering state from its selection event, as Plater::priv::on_select_preset selects it in the event", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   const printer = page.getByRole("button", { name: "Printer preset", exact: true });
@@ -15,7 +17,9 @@ test("a system printer model shows the filtering state from its selection event,
   await expect(filtering).toHaveCount(0, { timeout: 60_000 });
 
   await printer.click();
-  const model = page.getByRole("listbox", { name: "Printer preset", exact: true }).getByRole("group", { name: "System presets" })
+  const model = page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "System presets" })
     .getByRole("option", { name: "Bambu Lab A1 mini", exact: true });
   // Engine calls answer in later tasks, so one microtask after the click shows only what the selection event set.
   const filteringAtSelection = await model.evaluate(async (option: HTMLElement) => {

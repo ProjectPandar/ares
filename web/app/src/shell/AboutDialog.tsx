@@ -18,11 +18,15 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
     <dialog ref={dialog} className="about-dialog" aria-labelledby="about-title" onClose={onClose}>
       <header className="shortcuts-header">
         <h2 id="about-title">About Ares</h2>
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>{"✕"}</button>
+        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
+          {"✕"}
+        </button>
       </header>
       <div className="about-body">
         <p className="about-name">Ares</p>
-        <p className="about-version" data-testid="about-version">{ARES_VERSION}</p>
+        <p className="about-version" data-testid="about-version">
+          {ARES_VERSION}
+        </p>
         {orca && <p>Ares is a Rust port of the OrcaSlicer {orca} slicing core.</p>}
         <p className="about-credits">
           Open-source slicing stands on a tradition of collaboration and attribution. Slic3r, created by Alessandro
@@ -34,7 +38,8 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
           Ares is licensed under the{" "}
           <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer">
             GNU Affero General Public License, version 3
-          </a>.
+          </a>
+          .
         </p>
       </div>
     </dialog>

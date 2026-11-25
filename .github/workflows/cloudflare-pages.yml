@@ -57,8 +57,9 @@ jobs:
         run: bun install --cwd web --frozen-lockfile
       - name: Build Pages bundle
         run: bun run --cwd web build:pages
-      - name: Lint and typecheck web
+      - name: Format, lint, and typecheck web
         run: |
+          bun run --cwd web fmt:check
           bun run --cwd web lint
           bun run --cwd web typecheck
       - name: Run web unit tests

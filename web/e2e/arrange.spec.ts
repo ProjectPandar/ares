@@ -17,18 +17,38 @@ const OBJECTS = "Metadata/model_settings.config";
 const PROJECT = "Metadata/project_settings.config";
 /** The A3a "several objects" case: named cubes by layer, one turned 30° and one stretched to 30 x 10 mm. */
 const SEVERAL: Edit[] = [
-  [OBJECTS, "<object id=\"2\">\n    <metadata key=\"name\" value=\"cube10.stl\"/>", "<object id=\"2\">\n    <metadata key=\"name\" value=\"first-cube\"/>"],
-  [OBJECTS, "<object id=\"3\">\n    <metadata key=\"name\" value=\"cube10.stl\"/>", "<object id=\"3\">\n    <metadata key=\"name\" value=\"second-cube\"/>"],
-  [PROJECT, "\"print_sequence\": \"by object\"", "\"print_sequence\": \"by layer\""],
-  [MODEL, "transform=\"1 0 0 0 1 0 0 0 1 50 110 2\"", "transform=\"0.866025404 0.5 0 -0.5 0.866025404 0 0 0 1 50 110 2\""],
-  [MODEL, "transform=\"1 0 0 0 1 0 0 0 1 125 110 2\"", "transform=\"3 0 0 0 1 0 0 0 1 125 110 2\""],
+  [
+    OBJECTS,
+    '<object id="2">\n    <metadata key="name" value="cube10.stl"/>',
+    '<object id="2">\n    <metadata key="name" value="first-cube"/>',
+  ],
+  [
+    OBJECTS,
+    '<object id="3">\n    <metadata key="name" value="cube10.stl"/>',
+    '<object id="3">\n    <metadata key="name" value="second-cube"/>',
+  ],
+  [PROJECT, '"print_sequence": "by object"', '"print_sequence": "by layer"'],
+  [MODEL, 'transform="1 0 0 0 1 0 0 0 1 50 110 2"', 'transform="0.866025404 0.5 0 -0.5 0.866025404 0 0 0 1 50 110 2"'],
+  [MODEL, 'transform="1 0 0 0 1 0 0 0 1 125 110 2"', 'transform="3 0 0 0 1 0 0 0 1 125 110 2"'],
 ];
 /** The A3c "several objects" case: plate 2's cube off-centre with two more instances on plate 2. */
 const PLATE_2: Edit[] = [
-  [OBJECTS, "<object id=\"2\">\n    <metadata key=\"name\" value=\"cube10.stl\"/>", "<object id=\"2\">\n    <metadata key=\"name\" value=\"plate-1-cube\"/>"],
-  [OBJECTS, "<object id=\"3\">\n    <metadata key=\"name\" value=\"cube10.stl\"/>", "<object id=\"3\">\n    <metadata key=\"name\" value=\"plate-2-cube\"/>"],
-  [MODEL, " 374 110 5\"", " 300 60 5\""],
-  [MODEL, "</build>", "<item objectid=\"3\" transform=\"1 0 0 0 1 0 0 0 1 420 160 5\" printable=\"1\"/><item objectid=\"3\" transform=\"1 0 0 0 1 0 0 0 1 330 170 5\" printable=\"1\"/></build>"],
+  [
+    OBJECTS,
+    '<object id="2">\n    <metadata key="name" value="cube10.stl"/>',
+    '<object id="2">\n    <metadata key="name" value="plate-1-cube"/>',
+  ],
+  [
+    OBJECTS,
+    '<object id="3">\n    <metadata key="name" value="cube10.stl"/>',
+    '<object id="3">\n    <metadata key="name" value="plate-2-cube"/>',
+  ],
+  [MODEL, ' 374 110 5"', ' 300 60 5"'],
+  [
+    MODEL,
+    "</build>",
+    '<item objectid="3" transform="1 0 0 0 1 0 0 0 1 420 160 5" printable="1"/><item objectid="3" transform="1 0 0 0 1 0 0 0 1 330 170 5" printable="1"/></build>',
+  ],
 ];
 /** The settings the CLI flags give: no rotation, no calibration region, no align to Y. */
 const FLAGS = ["--allow-rotations=0", "--avoid-extrusion-cali-region=0", "--align-to-y-axis=0"];
@@ -127,11 +147,13 @@ test("a plate's arrange icon arranges that plate like the OrcaSlicer v2.5.0-beta
   if (native) expect(await appArranged(page, 1)).toEqual(native);
 });
 
-test("Arrange all packs a two-nozzle printer into the nozzles' shared bed like the OrcaSlicer v2.5.0-beta CLI", async ({ page }) => {
+test("Arrange all packs a two-nozzle printer into the nozzles' shared bed like the OrcaSlicer v2.5.0-beta CLI", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   // A Bambu Lab X2D (nozzle areas X 0..256 and X 20.5..256), its object moved off the shared bed's centre.
   const project = await open(page, "shared-bed", X2D, [
-    [MODEL, "transform=\"1 0 0 0 1 0 0 0 1 138.25 128 5\"", "transform=\"1 0 0 0 1 0 0 0 1 60 60 5\""],
+    [MODEL, 'transform="1 0 0 0 1 0 0 0 1 138.25 128 5"', 'transform="1 0 0 0 1 0 0 0 1 60 60 5"'],
   ]);
   const native = orcaArrange(project, FLAGS);
   await page.getByRole("button", { name: "Arrange", exact: true }).click();

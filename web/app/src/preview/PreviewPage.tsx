@@ -80,23 +80,46 @@ export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene |
   const currentLine = toolpaths && moves ? toolpaths.ids[2 * moves.range[2]] : 0;
   return (
     <div className="tab-pane" hidden={!shown}>
-      <ViewportView scene={placed} shown={shown} toolpaths={toolpaths} colors={moves ?? colors} enabled={moves} view={live?.filter ?? view} fit="objects">
+      <ViewportView
+        scene={placed}
+        shown={shown}
+        toolpaths={toolpaths}
+        colors={moves ?? colors}
+        enabled={moves}
+        view={live?.filter ?? view}
+        fit="objects"
+      >
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (
             <dl className="summary">
-              <dt>G-code size</dt><dd data-testid="gcode-bytes">{slice.gcode.length.toLocaleString()} bytes</dd>
-              <dt>Slicing time</dt><dd>{(slice.elapsedMs / 1000).toFixed(2)} s</dd>
-              <dt>Plate</dt><dd data-testid="slice-plate">{scene?.plates[currentPlate]?.id ?? 1}</dd>
-              {toolpaths && <><dt>Layers</dt><dd data-testid="layer-count">{toolpaths.layerZs.length}</dd></>}
+              <dt>G-code size</dt>
+              <dd data-testid="gcode-bytes">{slice.gcode.length.toLocaleString()} bytes</dd>
+              <dt>Slicing time</dt>
+              <dd>{(slice.elapsedMs / 1000).toFixed(2)} s</dd>
+              <dt>Plate</dt>
+              <dd data-testid="slice-plate">{scene?.plates[currentPlate]?.id ?? 1}</dd>
+              {toolpaths && (
+                <>
+                  <dt>Layers</dt>
+                  <dd data-testid="layer-count">{toolpaths.layerZs.length}</dd>
+                </>
+              )}
             </dl>
           ) : slice.status === "slicing" ? (
-            <div className="summary-empty"><span className="spinner" /> Slicing…</div>
+            <div className="summary-empty">
+              <span className="spinner" /> Slicing…
+            </div>
           ) : !scene ? (
-            <div className="summary-empty">Nothing to preview. <Link to="/prepare">Import a model</Link>.</div>
+            <div className="summary-empty">
+              Nothing to preview. <Link to="/prepare">Import a model</Link>.
+            </div>
           ) : (
             <div className="summary-empty">
-              Plate not sliced. <button className="link-button" onClick={() => void slicePlate()}>Slice plate</button>
+              Plate not sliced.{" "}
+              <button className="link-button" onClick={() => void slicePlate()}>
+                Slice plate
+              </button>
             </div>
           )}
           {slice.status === "done" && !toolpaths && (
@@ -107,13 +130,16 @@ export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene |
         </div>
         {toolpaths && (
           <Suspense>
-            <Legend options={options} toolpaths={toolpaths}
-              range={colors?.range ?? null} view={view} onChange={setPreview} />
+            <Legend
+              options={options}
+              toolpaths={toolpaths}
+              range={colors?.range ?? null}
+              view={view}
+              onChange={setPreview}
+            />
           </Suspense>
         )}
-        {toolpaths && toolpaths.layerZs.length > 0 && (
-          <LayerSlider zs={toolpaths.layerZs} view={view} />
-        )}
+        {toolpaths && toolpaths.layerZs.length > 0 && <LayerSlider zs={toolpaths.layerZs} view={view} />}
         {toolpaths && (
           <Suspense>
             <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} steps={LAYER_STEPS} shown={shown} />

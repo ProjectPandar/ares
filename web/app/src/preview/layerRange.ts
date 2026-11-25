@@ -10,7 +10,9 @@ export function moveThumb(view: PreviewView, thumb: Thumb, layer: number, last: 
   const [lower, higher] = view.layers;
   const layers: [number, number] = view.oneLayer
     ? [value, value]
-    : thumb === 1 ? [Math.min(lower, value), value] : [value, Math.max(higher, value)];
+    : thumb === 1
+      ? [Math.min(lower, value), value]
+      : [value, Math.max(higher, value)];
   return { ...view, layers };
 }
 
