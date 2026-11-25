@@ -48,6 +48,14 @@ fn tool_ordering_map_lines(bytes: &[u8]) -> Vec<String> {
 
 impl NativeCase {
     pub(crate) fn slice(runner: &OrcaRunner, project: &[u8], prefix: &str) -> Self {
+        Self::slice_mode(runner, project, prefix, false)
+    }
+
+    pub(crate) fn slice_live(runner: &OrcaRunner, project: &[u8], prefix: &str) -> Self {
+        Self::slice_mode(runner, project, prefix, true)
+    }
+
+    fn slice_mode(runner: &OrcaRunner, project: &[u8], prefix: &str, live: bool) -> Self {
         let root = tempfile::Builder::new()
             .prefix(prefix)
             .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -57,19 +65,18 @@ impl NativeCase {
         let output = root.join("native");
         fs::write(&input, project).unwrap();
         fs::create_dir(&output).unwrap();
-        stages::run_live(
-            runner.bin(),
-            [
-                "--slice".to_owned(),
-                "0".to_owned(),
-                "--outputdir".to_owned(),
-                output.to_str().unwrap().to_owned(),
-                input.to_str().unwrap().to_owned(),
-            ],
-            stages::Stage::Slice,
-            &root,
-        )
-        .unwrap();
+        let args = [
+            "--slice".to_owned(),
+            "0".to_owned(),
+            "--outputdir".to_owned(),
+            output.to_str().unwrap().to_owned(),
+            input.to_str().unwrap().to_owned(),
+        ];
+        if live {
+            stages::run_live(runner.bin(), args, stages::Stage::Slice, &root).unwrap();
+        } else {
+            stages::run(runner.bin(), args, stages::Stage::Slice, &root).unwrap();
+        }
         let bytes = fs::read(output.join("plate_1.gcode")).unwrap();
         fs::write(root.join("native.gcode"), &bytes).unwrap();
         Self {

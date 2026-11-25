@@ -7,6 +7,8 @@ use std::{fs, os::unix::fs::PermissionsExt, path::Path, process::Command};
 mod child;
 #[path = "content_cache_tests/cwd_outputs.rs"]
 mod cwd_outputs;
+#[path = "content_cache_tests/extensions.rs"]
+mod extensions;
 
 #[test]
 fn direct_slice_content_cache_normalizes_paths_and_tracks_input_bytes() {

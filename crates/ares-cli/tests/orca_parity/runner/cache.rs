@@ -29,7 +29,7 @@ impl OrcaRunner {
         if let Some(producer) = self.producer.get() {
             return Ok(producer);
         }
-        let producer = cache_identity::identify(&self.bin)?;
+        let producer = super::command_cache::identify_producer(&self.bin)?;
         Ok(self.producer.get_or_init(|| producer))
     }
 
