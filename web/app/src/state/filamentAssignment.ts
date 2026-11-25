@@ -25,11 +25,11 @@ export function chooseFilamentTarget(target: FilamentSelection, mode: "select" |
   useApp.setState({ filamentSelection: targets, selectedObject: active?.object ?? null, selectedInstance: active?.instance ?? null });
 }
 
-export async function assignFilament(targets: readonly FilamentTarget[], slot: number) {
+export async function assignFilament(choice: { targets: readonly FilamentTarget[] } | { cell: FilamentTarget }, slot: number) {
   const { plater, presetSelection, scene, currentPlate } = useApp.getState();
   if (!plater) return;
   const count = presetSelection?.filaments.length ?? filamentNames(scene?.settings ?? null).length;
   takeSnapshot();
-  const layout = await plater.setFilament(targets, slot, count);
+  const layout = await ("cell" in choice ? plater.setFilamentCell(choice.cell, slot, count) : plater.setFilament(choice.targets, slot, count));
   if (useApp.getState().plater === plater) applyLayout(layout, currentPlate);
 }

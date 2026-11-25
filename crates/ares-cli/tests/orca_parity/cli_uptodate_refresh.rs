@@ -25,6 +25,9 @@ const KEYS: [&str; 3] = [
     "filament_density",
 ];
 
+#[path = "cli_uptodate_refresh/selected_plate.rs"]
+mod selected_plate;
+
 #[test]
 fn refresh_files_update_retained_values_without_replacing_preset_names() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {

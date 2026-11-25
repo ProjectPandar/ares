@@ -156,10 +156,9 @@ impl Project {
         // typed builder and the `is_value_valid` loop see it.
         merged.handle_legacy();
         // The typed build mirrors upstream's fully parsed `m_print_config`:
-        // the bed classification reads it exactly like `opt_float(
-        // "printable_height")`/`opt<ConfigOptionPoints>(
-        // "printable_area")` over the fully parsed config
-        // (`OrcaSlicer.cpp:3711,3708`), `PrintConfigDef` defaults included.
+        // CLI bed classification reads `printable_area` and `printable_height`
+        // from the parsed config (`OrcaSlicer.cpp:4350–4354,4371–4382`),
+        // `PrintConfigDef` defaults included.
         let mut resolved = crate::options::json_deserialize::deserialize_config_values(
             merged.clone().into_object(),
         )
@@ -169,13 +168,11 @@ impl Project {
         .resolve();
         // OrcaSlicer.cpp:1640 chooses importer membership before placement.
         project.prepare_import_scope(plate);
-        // `shrink_to_new_bed` (`OrcaSlicer.cpp:3766-3796`): a BBL-family 3mf
-        // re-centers onto the loaded machine's bed — the embedded bed being
-        // smaller sets `shrink = 1`, and every instance plus the wipe tower
-        // shifts by the bed-center delta (`:3958-4053 translate_models`).
-        let offset = project
-            .documents
-            .bbl_family_3mf
+        // CLI `shrink_to_new_bed` classifies the bed change and translates the
+        // instances and wipe tower (`OrcaSlicer.cpp:4414–4443,4602–4690`).
+        // The plater changes bed size without moving instances
+        // (`PartPlate.cpp:6423–6440,7083–7102,4180–4235`).
+        let offset = (full_fff_config.is_none() && project.documents.bbl_family_3mf)
             .then(|| {
                 shrink_to_new_bed_offset(&embedded_raw, &resolved, project.instances_world_bbox())
             })

@@ -34,7 +34,7 @@ pub(super) async fn run(
                 .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
         {
             args.diagnostics.startup_version();
-            return settings_export::run(input, destination);
+            return settings_export::run(input, destination, &args);
         }
         // OrcaSlicer.cpp:1453–1467 checks actions before transforms, before any input is read.
         if destination == Path::new("-")

@@ -116,7 +116,10 @@ fn slice_cli_project(
     slice_source(
         ProjectSource {
             loaded,
-            input: crate::project_slice::ProjectInput::Bytes(input),
+            input: match refresh {
+                None => crate::project_slice::ProjectInput::SavedCliBytes(input),
+                Some(_) => crate::project_slice::ProjectInput::Bytes(input),
+            },
             plate,
             profile: None,
             refresh: refresh.map(crate::profiles::ProjectPresetRefresh::native),

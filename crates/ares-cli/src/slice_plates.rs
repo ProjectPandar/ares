@@ -9,6 +9,7 @@ use crate::{
     SliceArgs,
     args::ProjectActionArgs,
     failure::{CliFailure, slice_error_to_failure},
+    native_refresh::{self, RefreshInputs},
     substitutions,
 };
 
@@ -22,6 +23,8 @@ pub(super) struct PlateOptions<'a> {
     pub project_preset_catalog: Option<&'a Path>,
     pub resources_dir: Option<&'a Path>,
     pub uptodate: bool,
+    pub uptodate_settings: Option<&'a str>,
+    pub uptodate_filaments: Option<&'a str>,
     pub orient: bool,
     #[cfg(target_os = "linux")]
     pub report_plate: u32,
@@ -39,6 +42,8 @@ impl<'a> From<&'a SliceArgs> for PlateOptions<'a> {
             project_preset_catalog: args.project_preset_catalog.as_deref(),
             resources_dir: args.resources_dir.as_deref(),
             uptodate: args.uptodate,
+            uptodate_settings: args.uptodate_settings.as_deref(),
+            uptodate_filaments: args.uptodate_filaments.as_deref(),
             orient: args.orient == Some(1),
             #[cfg(target_os = "linux")]
             report_plate: args.plate.unwrap_or(1),
@@ -64,20 +69,17 @@ pub(super) fn run(
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
     let loaded_files = args.load_settings.is_some() || args.load_filaments.is_some();
-    let admitted = if loaded_files {
-        Some(
-            ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
-                slice_error_to_failure(
-                    error,
-                    &result_path,
-                    #[cfg(target_os = "linux")]
-                    args.report_plate,
-                )
-            })?,
-        )
-    } else {
-        None
+    let admit = || {
+        ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
+            slice_error_to_failure(
+                error,
+                &result_path,
+                #[cfg(target_os = "linux")]
+                args.report_plate,
+            )
+        })
     };
+    let mut admitted = loaded_files.then(admit).transpose()?;
     let catalog = args
         .project_preset_catalog
         .map(fs::read_to_string)
@@ -102,6 +104,7 @@ pub(super) fn run(
         .collect::<Vec<_>>();
     let loaded_sources;
     let system_catalog;
+    let refresh;
     let (settings, source, machine_full) = if loaded_files {
         loaded_sources = sources_for_slice(
             args.datadir,
@@ -132,6 +135,27 @@ pub(super) fn run(
             source,
             None,
         )
+    } else if args.uptodate
+        && let Some(source) = ares_core::UpwardMachineSource::from_project(input)
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
+    {
+        admitted = Some(admit()?);
+        refresh = native_refresh::load(
+            &RefreshInputs {
+                resources_dir: args.resources_dir,
+                settings: args.uptodate_settings,
+                filaments: args.uptodate_filaments,
+                #[cfg(target_os = "linux")]
+                output: &result_path,
+            },
+            &source,
+            &[],
+        )?;
+        (
+            CliPlatesSettings::RetainedRefresh(&refresh),
+            Some(source),
+            None,
+        )
     } else {
         let resources = crate::installed_resources::resolve(args.resources_dir)?;
         let (source, machine) = crate::compatible_machine::load(input, &resources)?;
@@ -144,10 +168,10 @@ pub(super) fn run(
             machine,
         )
     };
-    let upward_input = if catalog.is_some() {
-        UpwardMachineInput::Embedded
-    } else {
-        UpwardMachineInput::FetchOriginal(machine_full.as_deref())
+    let upward_input = match &settings {
+        CliPlatesSettings::RetainedRefresh(refresh) => UpwardMachineInput::RetainedRefresh(refresh),
+        _ if catalog.is_some() => UpwardMachineInput::Embedded,
+        _ => UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
     };
     let mut upward_report = Vec::new();
     let mut downward_report = Vec::new();

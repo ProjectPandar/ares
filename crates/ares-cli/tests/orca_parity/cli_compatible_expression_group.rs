@@ -114,7 +114,7 @@ const STOCK: &[u8] = include_bytes!("../../../../tests/parity/adaptive-cubic-bod
 #[test]
 fn installed_stock_slice_keeps_the_effective_filament_config() {
     let (root, native, ares) = run_installed_pair(
-        STOCK,
+        |root, _| fs::write(root.join("input.3mf"), STOCK).unwrap(),
         &["--slice", "1", "--outputdir", "out", "input.3mf"],
         Stage::Slice,
         "out/plate_1.gcode",
@@ -150,7 +150,7 @@ fn compare_saved_settings(project: &[u8]) {
     use serde_json::{Map, Value};
 
     let (root, native, ares) = run_installed_pair(
-        project,
+        |root, _| fs::write(root.join("input.3mf"), project).unwrap(),
         &["--export-settings", "settings.json", "input.3mf"],
         Stage::Export,
         "settings.json",
@@ -169,8 +169,12 @@ fn compare_saved_settings(project: &[u8]) {
 }
 
 #[cfg(unix)]
+#[path = "cli_compatible_expression_group/bbl_settings_export.rs"]
+mod bbl_settings_export;
+
+#[cfg(unix)]
 fn run_installed_pair(
-    project: &[u8],
+    prepare: impl FnOnce(&Path, &OrcaRunner),
     argv: &[&str],
     stage: Stage,
     output: &str,
@@ -181,7 +185,7 @@ fn run_installed_pair(
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
         .unwrap()
         .keep();
-    fs::write(root.join("input.3mf"), project).unwrap();
+    prepare(&root, &runner);
     stages::run(
         runner.bin(),
         argv.iter().map(|arg| (*arg).to_owned()),

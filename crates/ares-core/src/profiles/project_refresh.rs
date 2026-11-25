@@ -204,6 +204,10 @@ impl<'a> ProjectPresetRefresh<'a> {
         }
     }
 
+    pub(crate) fn is_native(self) -> bool {
+        matches!(self.source, RefreshSource::Native(_))
+    }
+
     fn lookup(self) -> PresetLookup<'a> {
         match self.source {
             RefreshSource::Catalog(catalog) => PresetLookup::Catalog(&catalog.catalog),

@@ -307,6 +307,11 @@ export class PlaterSession {
     return this.#edit({ op: "setFilament", targets, slot, count });
   }
 
+  /** Changes one filament cell; an object choice clears all of its volume overrides. */
+  setFilamentCell(target: FilamentTarget, slot: number, count: number): Promise<PlaterLayout> {
+    return this.#edit({ op: "setFilamentCell", target, slot, count });
+  }
+
   async #edit(edit: PlaterEdit): Promise<PlaterLayout> {
     return (await this.#call({ kind: "platerEdit", sessionId: this.#sessionId, edit })) as PlaterLayout;
   }

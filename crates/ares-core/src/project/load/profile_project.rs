@@ -7,6 +7,10 @@ pub(crate) struct LoadedProfileProject {
 }
 
 impl LoadedProfileProject {
+    pub(crate) fn is_bbl_family_3mf(&self) -> bool {
+        self.project.documents().bbl_family_3mf
+    }
+
     pub(crate) fn load(input: &[u8], normative_check: bool) -> Result<Self, SliceError> {
         let mut sparse_settings = ProjectSettingsRaw::default();
         let (project, preparation) = load_project_raw(

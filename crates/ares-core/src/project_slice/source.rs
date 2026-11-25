@@ -101,6 +101,7 @@ impl<'a> ProfileInput<'a> {
 #[derive(Clone, Copy)]
 pub(crate) enum ProjectInput<'a> {
     Bytes(&'a [u8]),
+    SavedCliBytes(&'a [u8]),
     Model(&'a crate::Project),
     Assembly(&'a crate::Assembly<'a>),
     ImportedStl(&'a crate::ImportedStl),
@@ -126,12 +127,13 @@ impl ProjectInput<'_> {
         crate::SliceError,
     > {
         match self {
-            Self::Bytes(bytes) => {
+            Self::Bytes(bytes) | Self::SavedCliBytes(bytes) => {
+                let saved_cli = matches!(self, Self::SavedCliBytes(_));
                 let (mut project, preparation) = match refresh {
                     Some(refresh) => {
                         refresh.load(bytes, overrides, validate_post_process, loaded)?
                     }
-                    None if system_catalog.is_some() => match loaded {
+                    None if saved_cli || system_catalog.is_some() => match loaded {
                         Some(project) => project.into_profile_project()?,
                         None => crate::project::load_project_for_profiles(bytes)?,
                     },
@@ -140,8 +142,16 @@ impl ProjectInput<'_> {
                         None => crate::project::load_project_with_preparation(bytes, overrides)?,
                     },
                 };
-                if refresh.is_none()
-                    && let Some(system_catalog) = system_catalog
+                // CLI::run collects the retained names only for BBL-family 3MFs.
+                let embedded_only = saved_cli && !project.documents().bbl_family_3mf;
+                if embedded_only && !overrides.is_empty() {
+                    project.apply_project_config(
+                        project.documents().project_settings_raw.clone(),
+                        overrides,
+                    )?;
+                } else if !embedded_only
+                    && refresh.is_none()
+                    && (saved_cli || system_catalog.is_some())
                 {
                     apply_direct_catalog(&mut project, system_catalog, overrides)?;
                 }
@@ -193,10 +203,14 @@ impl ProjectInput<'_> {
 
 fn apply_direct_catalog(
     project: &mut crate::Project,
-    catalog: &crate::PresetCatalogHandle,
+    catalog: Option<&crate::PresetCatalogHandle>,
     overrides: &ConfigOverrides,
 ) -> Result<(), crate::SliceError> {
-    let mut raw = catalog.refresh_direct(&project.documents().project_settings_raw)?;
+    let embedded = &project.documents().project_settings_raw;
+    let mut raw = match catalog {
+        Some(catalog) => catalog.refresh_direct(embedded)?,
+        None => embedded.clone(),
+    };
     crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
     project.apply_project_preset_refresh(raw, overrides)
 }

@@ -27,19 +27,17 @@ function bedSize(config: Record<string, unknown>): [number, number, number] {
 }
 
 /**
- * The plater export of `selection`, a session that switched the opened BBL 3MF `opened` to a never-used printer,
- * saved to `out` with the CLI machine-switch steps the web slice still runs on the plater's full_fff_config
- * (OrcaSlicer.cpp at 40ecc66f7). Returns `selection` with that project config. Each change is computed from
- * `opened` and `selection`:
- * - the instances and wipe tower move onto the larger bed (shrink_to_new_bed 1, 1899-1909, 4371-4382,
- *   4414-4443, 4619-4685): by the difference of the bed centres;
+ * The plater export of `selection`, a session that switched the opened BBL 3MF `opened` to a never-used printer.
+ * The 3MF keeps its instance transforms: PartPlateList::reset_size passes adjust_position=false to
+ * PartPlate::set_pos_and_size (PartPlate.cpp:6423-6440, 7083-7102, 4180-4235).
+ * Returns `selection` with the exported project config:
  * - curr_bed_type is the printer's default_bed_type, which Sidebar::update_presets selects for a printer without a
  *   stored bed type (Plater.cpp:3880-3900, Preset.cpp:1140-1150), where the probe keeps the wizard's;
  * - nozzle_volume_type stays the session's, one entry per head from load_selections (PresetBundle.cpp:4196-4216).
  * The one-colour prime-tower rule (2531-2535, 4316-4343) is CLI::run's alone: the plater applies full_fff_config to
  * the print as it is (Plater.cpp:11429-11442), so the export keeps the session's enable_prime_tower.
  */
-export function cliSwitchedExport(selection: NativeSelection, opened: string, out: string): NativeSelection {
+export function switchedPlaterExport(selection: NativeSelection, opened: string, out: string): NativeSelection {
   const entries = unzipSync(readFileSync(opened));
   const model = strFromU8(entries["3D/3dmodel.model"]);
   expect(model, "a BBL 3MF (bbs_3mf.cpp:4170-4186)").toMatch(/<metadata name="Application">(BambuStudio|OrcaSlicer)-/);
@@ -49,17 +47,9 @@ export function cliSwitchedExport(selection: NativeSelection, opened: string, ou
   const [oldWidth, oldDepth, oldHeight] = bedSize(project);
   const [width, depth, height] = bedSize(plater);
   expect(oldWidth <= width && oldDepth <= depth && oldHeight <= height && (oldWidth < width || oldDepth < depth), "shrink_to_new_bed 1").toBe(true);
-  const [x, y] = [width / 2 - oldWidth / 2, depth / 2 - oldDepth / 2];
-  entries["3D/3dmodel.model"] = strToU8(model.replace(/(<item [^>]*transform="(?:\S+ ){9})(\S+) (\S+)/g,
-    (_, head: string, tx: string, ty: string) => `${head}${Number(tx) + x} ${Number(ty) + y}`));
-  const moved = (values: string[], offset: number) => [String(Number(values[0]) + offset), ...values.slice(1)];
   const bedType = plater.default_bed_type as string;
   expect(bedType, "a default_bed_type (Preset.cpp:1142-1150)").not.toBe("");
-  const config = Object.assign({ ...plater }, {
-    wipe_tower_x: moved(plater.wipe_tower_x as string[], x),
-    wipe_tower_y: moved(plater.wipe_tower_y as string[], y),
-    curr_bed_type: bedType,
-  });
+  const config = { ...plater, curr_bed_type: bedType };
   entries[PROJECT_CONFIG] = strToU8(JSON.stringify(config));
   writeFileSync(out, zipSync(entries));
   return { ...selection, full_fff_config: JSON.stringify(config) };

@@ -96,3 +96,103 @@ test("Prepare offers Default for a parameter modifier but not for a normal part"
   await page.getByRole("menuitem", { name: "Default", exact: true }).click();
   await expect(page.getByRole("menu", { name: "Object menu" })).toHaveCount(0);
 });
+
+test("the filament cell edits only its row and slices like the assigned project", async ({ page }, info) => {
+  await setup(page, "Snapmaker");
+  await openProject(page, initiallySameFilament());
+  const tree = page.getByTestId("object-list");
+  const coral = tree.getByRole("treeitem").filter({ hasText: "coral.stl" });
+  const azure = tree.getByRole("treeitem").filter({ hasText: "azure.stl" });
+  await coral.getByText("coral.stl", { exact: true }).click();
+  await azure.getByText("azure.stl", { exact: true }).click({ modifiers: ["Control"] });
+  await expect(coral).toHaveAttribute("aria-selected", "true");
+  await expect(azure).toHaveAttribute("aria-selected", "true");
+  await azure.getByRole("button", { name: "Edit filament for azure.stl" }).click({ timeout: 5_000 });
+  const menu = page.getByRole("menu", { name: "Filament for azure.stl" });
+  const one = menu.getByRole("menuitemradio", { name: "Filament 1" });
+  const two = menu.getByRole("menuitemradio", { name: "Filament 2" });
+  await expect(menu.getByRole("menuitemradio")).toHaveCount(2);
+  await expect(one).toHaveAttribute("aria-checked", "true");
+  await expect(two).toHaveAttribute("aria-checked", "false");
+  const files = unzipSync(assigned);
+  const { filament_colour: colours } = JSON.parse(strFromU8(files["Metadata/project_settings.config"])) as { filament_colour: string[] };
+  const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+  await expect(one.getByText("1", { exact: true })).toHaveCSS("background-color", rgb(colours[0]));
+  await expect(two.getByText("2", { exact: true })).toHaveCSS("background-color", rgb(colours[1]));
+  await two.click();
+  await expect(menu).toHaveCount(0);
+  await expect(coral.getByRole("img", { name: "Filament 1" })).toBeVisible();
+  await expect(azure.getByRole("img", { name: "Filament 2" })).toBeVisible();
+
+  const edited = await sliceDownload(page, info.outputPath("inline-assigned.gcode"));
+  expect(objectTools(edited.toString("utf8"))).toEqual({ "coral.stl": [0], "azure.stl": [1] });
+  await page.goto("/");
+  await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
+  await openProject(page, assigned);
+  const baked = await sliceDownload(page, info.outputPath("baked-assignment.gcode"));
+  expect(edited.equals(baked)).toBe(true);
+});
+
+test("part and modifier filament cells offer row-specific choices and object edits undo together", async ({ page }) => {
+  const fixture = readFileSync(new URL("../../tests/parity/modifier-feature-filament/control.3mf", import.meta.url));
+  const files = unzipSync(fixture);
+  const path = "Metadata/model_settings.config";
+  const xml = strFromU8(files[path]);
+  files[path] = strToU8(xml.replace(/<part id="(?:1|3)"[^>]*>/g, (part) =>
+    `${part}<metadata key="extruder" value="${part.includes('id="1"') ? 1 : 2}"/>`));
+  await setup(page, "Bambu Lab");
+  await openProject(page, Buffer.from(zipSync(files)));
+  const tree = page.getByTestId("object-list");
+  await tree.getByRole("button", { name: "Toggle parts" }).click();
+  const [object, part] = await tree.getByRole("treeitem").filter({ hasText: "cube10.stl" }).all();
+  const modifier = tree.getByRole("treeitem").filter({ hasText: "epsilon-modifier" });
+  const slot = (row: typeof part, name: string) => row.getByRole("img", { name, exact: true });
+  await expect(slot(part, "Filament 1")).toBeVisible();
+  await expect(slot(modifier, "Filament 2")).toBeVisible();
+
+  const partCell = part.getByRole("button", { name: "Edit filament for cube10.stl" });
+  const partMenu = page.getByRole("menu", { name: "Filament for cube10.stl" });
+  const viewport = page.getByTestId("viewport");
+  await expect(viewport.locator("canvas")).toBeVisible();
+  await expect(viewport).not.toHaveAttribute("data-drawing", "");
+  const beforeCancel = await viewport.screenshot();
+  await partCell.press("Enter", { timeout: 5_000 });
+  await expect(partMenu.getByRole("menuitemradio", { name: "Default" })).toHaveCount(0);
+  await expect(partMenu.getByRole("menuitemradio", { name: "Filament 1" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(partMenu).toHaveCount(0);
+  await expect(partCell).toBeFocused();
+  await expect(slot(part, "Filament 1")).toBeVisible();
+  expect((await viewport.screenshot()).equals(beforeCancel)).toBe(true);
+  await partCell.click();
+  await partMenu.getByRole("menuitemradio", { name: "Filament 2" }).click();
+  await expect(slot(part, "Filament 2")).toBeVisible();
+  await expect(slot(object, "Filament 1")).toBeVisible();
+  await page.keyboard.press("Control+z");
+  await expect(slot(part, "Filament 1")).toBeVisible();
+
+  await modifier.getByRole("button", { name: "Edit filament for epsilon-modifier" }).click();
+  await page.getByRole("menu", { name: "Filament for epsilon-modifier" }).getByRole("menuitemradio", { name: "Default" }).click();
+  await expect(slot(modifier, "Default")).toBeVisible();
+  await page.keyboard.press("Control+z");
+  await expect(slot(modifier, "Filament 2")).toBeVisible();
+
+  await object.getByText("cube10.stl", { exact: true }).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Change Filament", exact: true }).click();
+  await page.getByRole("menuitem", { name: /^Filament 2:/ }).click();
+  await expect(slot(part, "Filament 2")).toBeVisible();
+  await expect(slot(modifier, "Filament 2")).toBeVisible();
+  await page.keyboard.press("Control+z");
+  await expect(slot(part, "Filament 1")).toBeVisible();
+
+  await object.getByRole("button", { name: "Edit filament for cube10.stl" }).press("Space");
+  await partMenu.getByRole("menuitemradio", { name: "Filament 2" }).click();
+  await expect(slot(part, "Filament 2")).toBeVisible();
+  await expect(slot(modifier, "Default")).toBeVisible();
+  await page.keyboard.press("Control+z");
+  await expect(slot(part, "Filament 1")).toBeVisible();
+  await expect(slot(modifier, "Filament 2")).toBeVisible();
+  await page.keyboard.press("Control+Shift+z");
+  await expect(slot(part, "Filament 2")).toBeVisible();
+  await expect(slot(modifier, "Default")).toBeVisible();
+});
