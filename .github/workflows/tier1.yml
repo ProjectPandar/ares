@@ -1,6 +1,8 @@
 name: Tier 1
 
 on:
+  push:
+    branches: [main]
   pull_request:
   merge_group:
     types: [checks_requested]
@@ -13,6 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+defaults:
+  run:
+    shell: bash
+
 env:
   ORCA_REF: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
   CARGO_INCREMENTAL: "0"
@@ -22,6 +28,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           components: rustfmt
@@ -29,31 +38,32 @@ jobs:
 
   native-nonparity:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.99.0
         with:
-          targets: wasm32-unknown-unknown
-          components: clippy
-      - uses: taiki-e/install-action@nextest
+          filter: blob:none
+          persist-credentials: false
       - uses: Swatinem/rust-cache@v2
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
           ref: ${{ env.ORCA_REF }}
           path: OrcaSlicer
+          filter: blob:none
           sparse-checkout: |
             resources/profiles
             src/libslic3r
             deps_src/glu-libtess
             src/OrcaSlicer.cpp
           persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
       - name: Verify runtime GLU and configuration metadata prerequisites
         run: |
           set -euo pipefail
@@ -71,7 +81,7 @@ jobs:
           printf 'ARES_CONFIGDEF_CONTEXT_ARTIFACTS=%s\nARES_ENUM_ARTIFACTS=%s\n' \
             "$context_artifacts" "$enum_artifacts" >> "$GITHUB_ENV"
       - name: Verify generated PrintConfigDef source is in sync
-        run: node scripts/gen-configdef.mjs --check
+        run: bun scripts/gen-configdef.mjs --check
       - name: Check wasm32 targets
         run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
       - name: Run non-parity workspace tests without compiling orca_parity
@@ -105,13 +115,19 @@ jobs:
   build-parity:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.99.0
-      - uses: taiki-e/install-action@nextest
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: Swatinem/rust-cache@v2
       - name: Build and archive orca_parity test binary
         run: |
@@ -176,16 +192,25 @@ jobs:
   web-build:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
           ref: ${{ env.ORCA_REF }}
           path: OrcaSlicer
+          filter: blob:none
           sparse-checkout: |
             resources/profiles
             src/libslic3r
@@ -193,38 +218,41 @@ jobs:
             src/libvgcode
             src/slic3r/GUI/LibVGCode
           persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - uses: dtolnay/rust-toolchain@1.99.0
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: taiki-e/install-action@nextest
-      - name: Install wasm-bindgen-cli matching Cargo.lock
-        run: |
-          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
-          cargo install wasm-bindgen-cli --version "$version" --locked
       - uses: Swatinem/rust-cache@v2
-      - run: npm ci --prefix web
+      - name: Cache web node_modules
+        id: web-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            web/node_modules
+            web/app/node_modules
+            web/packages/ares-profiles/node_modules
+            web/packages/ares-wasm-js/node_modules
+          key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - name: Install web dependencies
+        if: steps.web-deps.outputs.cache-hit != 'true'
+        run: bun install --cwd web --frozen-lockfile
       - name: Build release CLI and print_config_def in one Cargo invocation
         run: cargo build --release -p ares-cli --bin ares -p ares-core --example print_config_def
       - name: Verify generated PrintConfigDef metadata
         run: |
-          node scripts/gen-configdef.mjs --check
+          bun scripts/gen-configdef.mjs --check
           ./target/release/examples/print_config_def > target/print-config-def.json
-          node scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
+          bun scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
       - name: Generate ares-wasm E2E fixtures and panic probe
         run: |
           cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip
-          node web/scripts/build-panic-probe.mjs
-      - name: Build WASM package, web app, lint, and typecheck
+          bun web/scripts/build-panic-probe.mjs
+      - name: Build WASM package, web app, lint, typecheck, and unit tests
         run: |
-          npm run build:wasm --prefix web
-          npm run build --prefix web
-          npm run lint --prefix web
-          npm run typecheck --prefix web
+          bun run --cwd web build:wasm
+          bun run --cwd web build
+          bun run --cwd web lint
+          bun run --cwd web typecheck
+          mkdir -p "$RUNNER_TEMP/profile-tests"
+          ORCA_SLICER_DIR="$PWD/OrcaSlicer" \
+          ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
+            bun run --cwd web test:unit
       - name: Pack prebuilt web and release CLI bundle
         run: |
           set -euo pipefail
@@ -254,8 +282,8 @@ jobs:
           ghcr-token: ${{ github.token }}
       - name: Run desktop-streaming E2E
         run: |
-          npm exec --prefix web -- playwright test \
-            --config web/playwright.config.ts \
+          bunx --cwd web playwright test \
+            --config playwright.config.ts \
             --project desktop-streaming \
             --workers 1 --retries 0 \
             --output "$RUNNER_TEMP/web-results/streaming"
@@ -277,10 +305,10 @@ jobs:
           ghcr-token: ${{ github.token }}
       - name: Run desktop E2E shard ${{ matrix.shard }}/2
         run: |
-          npm exec --prefix web -- playwright test \
-            --config web/playwright.config.ts \
+          bunx --cwd web playwright test \
+            --config playwright.config.ts \
             --project desktop \
-            --workers 2 --retries 0 \
+            --workers 1 --retries 0 \
             --shard="${{ matrix.shard }}/2" \
             --output "$RUNNER_TEMP/web-results/desktop-${{ matrix.shard }}"
 
@@ -304,17 +332,17 @@ jobs:
         run: cargo nextest run --no-run -p ares-cli --test orca_parity
       - name: Run packages E2E (workers=1)
         run: |
-          npm exec --prefix web -- playwright test \
-            --config web/playwright.config.ts \
+          bunx --cwd web playwright test \
+            --config playwright.config.ts \
             --project packages \
             --workers 1 --retries 0 \
             --output "$RUNNER_TEMP/web-results/packages"
       - name: Run mobile E2E (iphone, pixel, ipad)
         run: |
-          npm exec --prefix web -- playwright test \
-            --config web/playwright.config.ts \
+          bunx --cwd web playwright test \
+            --config playwright.config.ts \
             --project iphone --project pixel --project ipad \
-            --workers 2 --retries 0 \
+            --workers 1 --retries 0 \
             --output "$RUNNER_TEMP/web-results/mobile"
 
   tier1-gate:

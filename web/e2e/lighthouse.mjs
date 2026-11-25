@@ -1,7 +1,7 @@
 // Lighthouse audit of the production build served by `vite preview`: the mobile
 // (default) and desktop presets, RUNS runs each, the median of every score and
 // metric, JSON and HTML reports and a summary. Exits non-zero when a median
-// score misses its target. Run `npm run build` first.
+// score misses its target. Run `bun run build` first.
 // Usage: node e2e/lighthouse.mjs [outDir]   (ARES_E2E_CHROME: Chrome binary)
 import { spawn } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -31,7 +31,7 @@ mkdirSync(out, { recursive: true });
 const median = (values) => values.toSorted((a, b) => a - b)[Math.floor(values.length / 2)];
 
 async function startPreview() {
-  const server = spawn("npm", ["run", "preview", "-w", "ares-app", "--", "--host", "127.0.0.1", "--strictPort"],
+  const server = spawn("bun", ["run", "--filter", "ares-app", "preview", "--", "--host", "127.0.0.1", "--strictPort"],
     { cwd: web, detached: true, stdio: "ignore" });
   const exited = new Promise((resolve) => server.once("exit", resolve));
   for (let attempt = 0; attempt < 120; attempt++) {

@@ -7,16 +7,19 @@
     "app"
   ],
   "scripts": {
-    "build:wasm": "npm run build:wasm -w @ares-slicer/wasm",
-    "build": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run build -w ares-app",
-    "dev": "npm run build -w @ares-slicer/wasm && npm run build -w @ares-slicer/profiles && npm run dev -w ares-app",
-    "lint": "oxlint packages app e2e pages",
-    "typecheck": "npm run typecheck -w @ares-slicer/wasm && npm run typecheck -w ares-app && tsc -p tsconfig.json",
-    "prepare:e2e": "cargo build --release -p ares-cli --bin ares -p ares-core --example print_config_def && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && node scripts/build-panic-probe.mjs && npm run build:wasm && npm run build && cargo nextest list -p ares-cli --test orca_parity -E 'test(=runner::config_block_roundtrip::config_block_encode_inverts_decode)'",
-    "test:e2e": "npm run prepare:e2e && playwright test",
-    "lighthouse": "node e2e/lighthouse.mjs",
-    "build:pages": "npm run build:wasm && npm run build && node scripts/package-pages.mjs",
-    "test:pages": "playwright test --config playwright.pages.config.ts"
+    "build:wasm": "bun run --filter @ares-slicer/wasm build:wasm",
+    "build": "bun run --filter @ares-slicer/wasm build && bun run --filter @ares-slicer/profiles build && bun run --filter ares-app build",
+    "dev": "bun run --filter @ares-slicer/wasm build && bun run --filter @ares-slicer/profiles build && bun run --filter ares-app dev",
+    "lint": "bun lint --no-script --max-warnings=0 packages app e2e pages",
+    "fmt": "bun fmt --no-script packages app e2e pages",
+    "fmt:check": "bun fmt --no-script --check packages app e2e pages",
+    "typecheck": "bun check --no-script -p packages/ares-wasm-js/tsconfig.json && bun check --no-script -p app/tsconfig.json && bun check --no-script -p tsconfig.json",
+    "test:unit": "bun test --randomize packages/ares-profiles/scripts/build-profiles.test.mjs scripts/extract-process-layout.test.mjs",
+    "prepare:e2e": "cargo build --release -p ares-cli --bin ares -p ares-core --example print_config_def && cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip && bun scripts/build-panic-probe.mjs && bun run build:wasm && bun run build && cargo nextest list -p ares-cli --test orca_parity -E 'test(=runner::config_block_roundtrip::config_block_encode_inverts_decode)'",
+    "test:e2e": "bun run prepare:e2e && bunx playwright test",
+    "lighthouse": "bun e2e/lighthouse.mjs",
+    "build:pages": "bun run build:wasm && bun run build && bun scripts/package-pages.mjs",
+    "test:pages": "bunx playwright test --config playwright.pages.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -25,7 +28,6 @@
     "chrome-launcher": "^1.2.2",
     "fflate": "^0.8.3",
     "lighthouse": "^13.5.0",
-    "oxlint": "^1.86.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
     "wrangler": "4.150.0"

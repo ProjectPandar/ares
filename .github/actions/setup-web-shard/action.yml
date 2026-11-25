@@ -1,5 +1,5 @@
 name: Setup Web E2E Shard
-description: Restore prebuilt web/WASM bundle, Playwright browsers, and pinned GHCR v2.5.0 oracles
+description: Restore prebuilt web/WASM bundle, Bun, Playwright browsers, and pinned GHCR v2.5.0 oracles
 inputs:
   bundle-key:
     description: Actions cache key for prebuilt web and release CLI assets
@@ -14,11 +14,15 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
+      with:
+        filter: blob:none
+        persist-credentials: false
     - uses: actions/checkout@v4
       with:
         repository: SoftFever/OrcaSlicer
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
         path: OrcaSlicer
+        filter: blob:none
         sparse-checkout: |
           resources/profiles
           src/libslic3r
@@ -26,13 +30,31 @@ runs:
           src/libvgcode
           src/slic3r/GUI/LibVGCode
         persist-credentials: false
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: npm
-        cache-dependency-path: web/package-lock.json
-    - run: npm ci --prefix web
+    - name: Install pinned Bun canary
       shell: bash
+      run: |
+        set -euo pipefail
+        source scripts/ci/toolchain-image.env
+        mkdir -p "$RUNNER_TEMP/bun/bin"
+        curl -fsSL "https://registry.npmjs.org/@oven/bun-linux-x64/-/bun-linux-x64-${BUN_CANARY_VERSION}.tgz" -o "$RUNNER_TEMP/bun.tgz"
+        echo "${BUN_CANARY_SHA256}  $RUNNER_TEMP/bun.tgz" | sha256sum -c -
+        tar -xzf "$RUNNER_TEMP/bun.tgz" --strip-components=2 -C "$RUNNER_TEMP/bun/bin" package/bin/bun
+        ln -sf "$RUNNER_TEMP/bun/bin/bun" "$RUNNER_TEMP/bun/bin/bunx"
+        echo "$RUNNER_TEMP/bun/bin" >> "$GITHUB_PATH"
+    - name: Cache web node_modules
+      id: web-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          web/node_modules
+          web/app/node_modules
+          web/packages/ares-profiles/node_modules
+          web/packages/ares-wasm-js/node_modules
+        key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+    - name: Install web dependencies
+      if: steps.web-deps.outputs.cache-hit != 'true'
+      shell: bash
+      run: bun install --cwd web --frozen-lockfile
     - uses: actions/cache/restore@v4
       with:
         path: ${{ runner.temp }}/web-bundle
@@ -44,10 +66,10 @@ runs:
     - uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ inputs.browsers }}-${{ hashFiles('web/package-lock.json') }}
+        key: playwright-${{ runner.os }}-${{ inputs.browsers }}-${{ hashFiles('web/bun.lock') }}
     - name: Install Playwright browsers
       shell: bash
-      run: npm exec --prefix web -- playwright install --with-deps ${{ inputs.browsers }}
+      run: bunx --cwd web playwright install --with-deps ${{ inputs.browsers }}
     - name: Cache official OrcaSlicer v2.5.0 AppImage
       uses: actions/cache@v4
       with:

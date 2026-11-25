@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
@@ -39,11 +40,11 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(installed, { recursive: true });
 
-  // npm pack (runs prepack: build + LICENSE): exactly the publishable files and registry metadata.
-  const pack = run("npm", ["pack", "--json", "--pack-destination", artifacts], `${web}packages/ares-wasm-js`);
-  const [packed] = JSON.parse(pack.slice(pack.lastIndexOf("\n[\n"))) as { filename: string; files: { path: string }[] }[];
-  expect(packed.files.map((file) => file.path).sort()).toEqual(PACKED_FILES);
-  run("tar", ["-xzf", `${artifacts}${packed.filename}`, "--strip-components=1", "-C", installed], artifacts);
+  // bun pm pack (runs prepack: build + LICENSE): exactly the publishable files and registry metadata.
+  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-wasm-js`).trim().split("\n").pop()!;
+  const packedFiles = run("tar", ["-tzf", tarball], artifacts).trim().split("\n").map((entry) => entry.replace(/^package\//, "")).sort();
+  expect(packedFiles).toEqual(PACKED_FILES);
+  run("tar", ["-xzf", tarball, "--strip-components=1", "-C", installed], artifacts);
   const manifest = JSON.parse(readFileSync(`${installed}package.json`, "utf8"));
   expect(manifest).toMatchObject({
     name: "@ares-slicer/wasm",
@@ -77,7 +78,7 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
 
     run(`${repositoryRoot}target/release/ares`, ["slice", "--resources-dir", resources, "--plate", "1", "-o", `${artifacts}native.gcode`, fixture], repositoryRoot);
     const native = run("sha256sum", [`${artifacts}native.gcode`], artifacts).split(" ")[0];
-    writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ tarball: packed.filename, files: PACKED_FILES, browser, native }, null, 2)}\n`);
+    writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ tarball: basename(tarball), files: PACKED_FILES, browser, native }, null, 2)}\n`);
     expect(browser).toEqual({ objects: 3, bytes: readFileSync(`${artifacts}native.gcode`).length, sha256: native });
   } finally {
     // PreviewServer.close destroys open sockets; httpServer.close waits on a browser preconnect forever.

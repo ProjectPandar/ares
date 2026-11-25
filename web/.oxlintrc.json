@@ -1,13 +1,16 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react", "react-hooks", "import"],
   "categories": {
     "correctness": "error",
-    "suspicious": "warn"
+    "suspicious": "error",
+    "perf": "error"
   },
   "rules": {
+    "no-await-in-loop": "off",
+    "react/no-array-index-key": "off",
+    "react/no-object-type-as-default-prop": "off",
     "react/react-in-jsx-scope": "off",
-    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }]
   },
   "ignorePatterns": ["**/dist/**", "packages/ares-wasm-js/src/wasm/**"]
 }

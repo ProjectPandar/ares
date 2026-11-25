@@ -5,7 +5,7 @@ import { chromiumLaunch as chromium } from "./e2e/chromiumLaunch";
 const webkit = { executablePath: process.env.ARES_E2E_WEBKIT || undefined };
 const mobileSpecs = /mobile\.spec\.ts$/;
 const streamingSpec = /\/gcodeProcessorStreaming\.spec\.ts$/;
-// Specs that pack a workspace package (`npm pack` runs `prepack`, which empties its dist) or build
+// Specs that pack a workspace package (`bun pm pack` runs `prepack`, which empties its dist) or build
 // a page that imports one from its dist: one at a time, so no pack empties a dist another spec is
 // reading. A new spec that packs a package or builds a page from one belongs here.
 const packageSpecs = /\/(package|profiles|configRoundTrip|ksrProject|platerSession|profileSlice)\.spec\.ts$/;
@@ -57,7 +57,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run preview -w ares-app -- --host 127.0.0.1",
+    command: "bun run --cwd app preview -- --host 127.0.0.1",
     url: "http://127.0.0.1:4174/",
     reuseExistingServer: false,
   },

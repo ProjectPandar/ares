@@ -87,8 +87,8 @@ test("the actual WASM module resolves bed hints through its message protocol", a
     ["", "BL-P002", "Cool Plate"], ["", "C13", "Cool Plate"], ["", "C11", "High Temp Plate"],
     ["", "", "High Temp Plate"], ["", "Bambu Lab X1 Carbon", "High Temp Plate"],
   ];
-  const actual = await page.evaluate(async ({ workerUrl, wasmUrl, cases }) => {
-    const worker = new Worker(workerUrl, { type: "module" });
+  const actual = await page.evaluate(async ({ workerScriptUrl, wasmBinaryUrl, bedCases }) => {
+    const worker = new Worker(workerScriptUrl, { type: "module" });
     let nextId = 0;
     const call = (request: Record<string, unknown>): Promise<unknown> => new Promise((resolve, reject) => {
       const id = nextId++;
@@ -102,12 +102,12 @@ test("the actual WASM module resolves bed hints through its message protocol", a
       worker.postMessage({ id, ...request });
     });
     try {
-      await call({ kind: "init", wasmUrl });
-      return await Promise.all(cases.map(([hint, modelId]) => call({ kind: "resolveDefaultBedType", hint, modelId })));
+      await call({ kind: "init", wasmUrl: wasmBinaryUrl });
+      return await Promise.all(bedCases.map(([hint, modelId]) => call({ kind: "resolveDefaultBedType", hint, modelId })));
     } finally {
       worker.terminate();
     }
-  }, { workerUrl, wasmUrl, cases });
+  }, { workerScriptUrl: workerUrl, wasmBinaryUrl: wasmUrl, bedCases: cases });
   mkdirSync(artifacts, { recursive: true });
   writeFileSync(`${artifacts}resolver.json`, JSON.stringify({ workerUrl, wasmUrl, cases, actual }, null, 2));
   expect(actual).toEqual(cases.map(([, , expected]) => expected));

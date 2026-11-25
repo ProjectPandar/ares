@@ -34,7 +34,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node scripts/build-profiles.mjs",
-    "prepack": "npm run build && node -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\""
+    "build": "bun scripts/build-profiles.mjs",
+    "prepack": "bun run build && bun -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\""
   }
 }
