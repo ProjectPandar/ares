@@ -202,7 +202,9 @@ fn slice_project_plates(
                 input: ProjectInput::SavedCliBytes(input),
                 plate: selected,
                 overrides,
-                refresh: Some(crate::profiles::ProjectPresetRefresh::native(refresh)),
+                refresh: Some(crate::profiles::ProjectPresetRefresh::native(
+                    refresh, false,
+                )),
                 ..ProjectSource::from(input)
             }),
             CliPlatesSettings::Catalog { json, uptodate } => with_profile_source(
