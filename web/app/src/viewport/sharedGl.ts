@@ -28,9 +28,10 @@ let shared: SharedGl | null = null;
 /** The shared context, created with the first viewport's theme colours. */
 export function sharedGl(colors: ViewportColors): SharedGl {
   if (shared) return shared;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-  // Phones report 2.6-3; above 2 the extra pixels cost fill rate without a visible gain.
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Cap the backing buffer at 2× and avoid a multisample resolve at that pixel density.
+  const pixelRatio = Math.min(window.devicePixelRatio, 2);
+  const renderer = new THREE.WebGLRenderer({ antialias: pixelRatio < 2, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(pixelRatio);
   shared = {
     renderer,
     plateMaterials: plateMaterials(colors),

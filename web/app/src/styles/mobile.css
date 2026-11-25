@@ -22,6 +22,7 @@
 /* Phones: one column, plate actions in a bottom bar, sidebar as a drawer. */
 @media (max-width: 640px) {
   .shell {
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr) auto auto;
     padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
   }
