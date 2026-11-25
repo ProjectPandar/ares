@@ -187,6 +187,7 @@ fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
                         | "filament_settings_id"
                         | "inherits_group"
                         | "upward_compatible_machine"
+                        | "different_settings_to_system"
                 )
             })
             .map(|(key, value)| (key.clone(), value.clone())),

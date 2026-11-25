@@ -148,6 +148,7 @@ impl ProjectInput<'_> {
                     project.apply_project_config(
                         project.documents().project_settings_raw.clone(),
                         overrides,
+                        false,
                     )?;
                 } else if !embedded_only
                     && refresh.is_none()
@@ -193,6 +194,7 @@ impl ProjectInput<'_> {
                     project.apply_project_preset_refresh(
                         model.documents().project_settings_raw.clone(),
                         overrides,
+                        false,
                     )?;
                 }
                 Ok((project, preparation))
@@ -207,12 +209,12 @@ fn apply_direct_catalog(
     overrides: &ConfigOverrides,
 ) -> Result<(), crate::SliceError> {
     let embedded = &project.documents().project_settings_raw;
-    let mut raw = match catalog {
+    let (mut raw, retained_thumbnails) = match catalog {
         Some(catalog) => catalog.refresh_direct(embedded)?,
-        None => embedded.clone(),
+        None => (embedded.clone(), false),
     };
     crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;
-    project.apply_project_preset_refresh(raw, overrides)
+    project.apply_project_preset_refresh(raw, overrides, retained_thumbnails)
 }
 
 pub(super) enum PlateInput<'a> {

@@ -93,6 +93,17 @@ pub(super) fn load_resources_catalog(
     Ok(catalog)
 }
 
+pub(super) fn retained_printer_catalog(
+    resources: &Path,
+    source: Option<&ares_core::UpwardMachineSource>,
+    explicit: bool,
+) -> Result<Option<ares_core::PresetCatalogHandle>, CliFailure> {
+    if explicit || (source.is_some() && resources.join("profiles").try_exists()?) {
+        return load_resources_catalog(resources).map(Some);
+    }
+    Ok(None)
+}
+
 pub(super) enum Entry<'a> {
     Catalog(&'a Path),
     Native(&'a ares_core::NativeRefreshPresets),

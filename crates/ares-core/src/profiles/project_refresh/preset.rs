@@ -17,12 +17,13 @@ pub(super) fn refresh(
     project: &ProjectSettingsRaw,
     uptodate: bool,
     scope: RefreshScope<'_>,
-) -> Result<ProjectSettingsRaw, SliceError> {
+) -> Result<(ProjectSettingsRaw, bool), SliceError> {
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
     let dirty = strings(project, "different_settings_to_system");
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
+    let mut retained_thumbnails = false;
     // CLI:3167–3200: machine and process refresh, not replacement selection.
     let supplied = match scope {
         RefreshScope::Project(selected) => selected.map(|selected| &selected.project.preset),
@@ -64,6 +65,8 @@ pub(super) fn refresh(
             {
                 continue;
             }
+            // CLI:3188–3193 compares loaded options, not archive strings.
+            retained_thumbnails |= kind == ProfileKind::Machine && key == "thumbnails";
             result.insert(key.clone(), value.clone());
         }
     }
@@ -72,7 +75,7 @@ pub(super) fn refresh(
         (!p.printer_settings_id.0.is_empty() && matches!(lookup, PresetLookup::Catalog(_)))
             || !p.filament_settings_id.0.is_empty()
     }) {
-        return Ok(result);
+        return Ok((result, retained_thumbnails));
     }
     let filaments = names
         .iter()
@@ -88,7 +91,7 @@ pub(super) fn refresh(
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
     filament::apply(&mut result, project, &filaments, &dirty, refresh_unlisted)?;
-    Ok(result)
+    Ok((result, retained_thumbnails))
 }
 
 pub(super) fn system_config(
@@ -114,6 +117,9 @@ pub(super) fn system_config(
                 .map(|(key, value)| (key.clone(), value.clone())),
         );
         fragment.handle_legacy();
+        if kind == ProfileKind::Machine {
+            normalize_authored_thumbnails(&mut fragment)?;
+        }
         for (key, value) in fragment.entries() {
             if membership.contains(key.as_str()) {
                 raw.insert(key.clone(), value.clone());
@@ -126,6 +132,29 @@ pub(super) fn system_config(
         super::super::preset_normalization::normalize_machine(&mut raw)?;
     }
     Ok(Some(raw))
+}
+
+// Config.cpp:1149 converts authored JSON before preset defaults and inheritance.
+pub(super) fn normalize_authored_thumbnails(
+    raw: &mut ProjectSettingsRaw,
+) -> Result<(), SliceError> {
+    let Some(value) = raw.get("thumbnails") else {
+        return Ok(());
+    };
+    let mut authored = ProjectSettingsRaw::default();
+    authored.insert("thumbnails".to_owned(), value.clone());
+    if let Some(format) = raw.get("thumbnails_format") {
+        authored.insert("thumbnails_format".to_owned(), format.clone());
+    }
+    authored
+        .normalize_scalar_arrays()
+        .and_then(|()| authored.normalize_loaded_composites())
+        .map_err(SliceError::InvalidInput)?;
+    raw.insert(
+        "thumbnails".to_owned(),
+        authored.get("thumbnails").unwrap().clone(),
+    );
+    Ok(())
 }
 
 pub(super) fn system_name<'a>(name: &'a str, inherited: &'a [String], slot: usize) -> &'a str {
