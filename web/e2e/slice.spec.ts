@@ -87,7 +87,7 @@ async function canvasHasContent(page: Page) {
 async function sliceTimings(page: Page, runs = 20) {
   const samples: number[] = [];
   for (let run = 0; run < runs; run++) {
-    samples.push(await page.evaluate(() => new Promise<number>((resolve) => {
+    samples.push(await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).evaluate((button: HTMLButtonElement) => new Promise<number>((resolve) => {
       const status = document.querySelector("[data-testid=status]")!;
       const observer = new MutationObserver(() => {
         if (!status.textContent!.startsWith("Slice complete")) return;
@@ -96,7 +96,7 @@ async function sliceTimings(page: Page, runs = 20) {
       });
       observer.observe(status, { childList: true, subtree: true, characterData: true });
       const started = performance.now();
-      [...document.querySelectorAll("button")].find((button) => button.textContent === "Slice plate")!.click();
+      button.click();
     })));
   }
   return samples;
@@ -127,7 +127,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   expect(await canvasHasContent(page)).toBeGreaterThan(8);
   await page.screenshot({ path: `${artifacts}prepare.png` });
 
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   // First slice as the status bar reports it (worker round trip, cold), then warm re-slices.
   const firstSliceS = Number(/in ([\d.]+) s$/.exec((await page.getByTestId("status").textContent())!)![1]);
@@ -184,7 +184,7 @@ test("import 3MF, slice in the WASM worker, export and preview G-code", async ({
   await expect(layerHeight).toHaveValue("0.12");
   await expect(page.getByTestId("slice-summary")).toContainText("Plate not sliced");
   await page.screenshot({ path: `${artifacts}process-edited.png` });
-  await page.getByRole("button", { name: "Slice plate" }).first().click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
   mkdirSync(`${artifacts}project-edit/`, { recursive: true });
   const [editedDownload] = await Promise.all([
