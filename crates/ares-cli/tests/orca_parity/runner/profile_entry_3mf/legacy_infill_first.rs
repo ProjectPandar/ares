@@ -53,7 +53,6 @@ fn loaded_legacy_wall_order_exports_infill_first_like_native() {
         let native = native_infill_first(&runner, name, args, &cube);
         let ares_path = runner.work.join(format!("{name}-ares.3mf"));
         let output = application::cli_command()
-            .arg("slice")
             .args(args)
             .args(["--export-3mf", ares_path.to_str().unwrap()])
             .arg(&cube)
