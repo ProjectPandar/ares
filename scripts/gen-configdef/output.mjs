@@ -27,7 +27,10 @@ export function projectDefinitions(parsed, upstream) {
             full_config_default: defaultOwners.has(rec.key),
             default_is_nil: (rec.nullable && !staticDefaultOwners.has(rec.key) && filamentDefaults.has(rec.key) && nilOverrides.has(rec.key)) ||
                 (numericVector && (wire === '' || (rec.nullable && wire.split(',').every((value) => value === 'nil')))),
-            nullable: rec.nullable,
+            // PrintConfig.cpp:12622-12664 range-validates coFloats via def->nullable, but
+            // skips coFloatsOrPercents; cloned ConfigOptionFloatsOrPercentsNullable defaults
+            // (e.g. small_support_perimeter_speed) admit nil even without def->nullable = true.
+            nullable: rec.nullable || (rec.type === 'FloatsOrPercents' && rec.default_ctor === 'ConfigOptionFloatsOrPercentsNullable'),
             label: rec.label,
             full_label: rec.full_label,
             category: rec.category,
