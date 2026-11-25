@@ -40,11 +40,20 @@ function exported(project: Uint8Array): Arranged {
   const entries = unzipSync(project);
   const objects = strFromU8(entries["Metadata/model_settings.config"]);
   const name = (id: string) => new RegExp(`<object id="${id}"[\\s\\S]*?key="name" value="([^"]*)"`).exec(objects)![1];
-  const items = [...strFromU8(entries["3D/3dmodel.model"]).matchAll(/<item [^>]*\/>/g)].map(([item]): [string, number[], boolean] =>
-    [name(attribute(item, "objectid")), attribute(item, "transform").split(" ").map((value) => digits(Number(value))), attribute(item, "printable") === "1"]);
+  const items = [...strFromU8(entries["3D/3dmodel.model"]).matchAll(/<item [^>]*\/>/g)].map(
+    ([item]): [string, number[], boolean] => [
+      name(attribute(item, "objectid")),
+      attribute(item, "transform")
+        .split(" ")
+        .map((value) => digits(Number(value))),
+      attribute(item, "printable") === "1",
+    ],
+  );
   const plates = [...objects.matchAll(/<plate>([\s\S]*?)<\/plate>/g)].map(([, plate]) =>
-    [...plate.matchAll(/key="object_id" value="(\d+)"\/>\s*<metadata key="instance_id" value="(\d+)"/g)]
-      .map(([, object, instance]): [string, number] => [name(object), Number(instance)]));
+    [...plate.matchAll(/key="object_id" value="(\d+)"\/>\s*<metadata key="instance_id" value="(\d+)"/g)].map(
+      ([, object, instance]): [string, number] => [name(object), Number(instance)],
+    ),
+  );
   return { items, plates };
 }
 
@@ -54,19 +63,33 @@ function exported(project: Uint8Array): Arranged {
  * provides no oracle.
  */
 export function orcaArrange(project: string, flags: readonly string[]): Arranged | null {
-  if (!oraclePath("ORCA_APPDIR", "the official plater oracle", "an extraction of the official OrcaSlicer AppImage, see scripts/orca-parity.sh")) return null;
+  if (
+    !oraclePath(
+      "ORCA_APPDIR",
+      "the official plater oracle",
+      "an extraction of the official OrcaSlicer AppImage, see scripts/orca-parity.sh",
+    )
+  )
+    return null;
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-arrange-`)}/`;
   const output = `${work}arranged.3mf`;
-  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--arrange", "1", ...flags, "--export-3mf", output, project], {
-    cwd: work,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  execFileSync(
+    `${repositoryRoot}scripts/orca-parity.sh`,
+    ["--arrange", "1", ...flags, "--export-3mf", output, project],
+    {
+      cwd: work,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
   const bytes = readFileSync(output);
   writeFileSync(`${project.replace(/\.3mf$/, "")}-arranged-native.3mf`, bytes);
   return exported(bytes);
 }
 
-type Probe = { objects: { name: string; instances: { printable: boolean; matrix: number[] }[] }[]; plates: [number, number][][] };
+type Probe = {
+  objects: { name: string; instances: { printable: boolean; matrix: number[] }[] }[];
+  plates: [number, number][][];
+};
 
 /**
  * The app's plater as Native would export it, from the viewport's instance probe; with `plate`
@@ -76,9 +99,23 @@ export async function appArranged(page: Page, plate?: number): Promise<Arranged>
   const probe = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as Probe;
   const kept = (object: number, instance: number) =>
     plate === undefined || probe.plates[plate].some(([o, i]) => o === object && i === instance);
-  const items = probe.objects.flatMap(({ name, instances }, object) => instances.flatMap(({ printable, matrix }, instance): [string, number[], boolean][] =>
-    kept(object, instance) ? [[name, [0, 1, 2, 3].flatMap((column) => [0, 1, 2].map((row) => digits(matrix[column * 4 + row]))), printable]] : []));
-  const plates = probe.plates.map((entries) => entries.filter(([object, instance]) => kept(object, instance))
-    .map(([object, instance]): [string, number] => [probe.objects[object].name, instance]));
+  const items = probe.objects.flatMap(({ name, instances }, object) =>
+    instances.flatMap(({ printable, matrix }, instance): [string, number[], boolean][] =>
+      kept(object, instance)
+        ? [
+            [
+              name,
+              [0, 1, 2, 3].flatMap((column) => [0, 1, 2].map((row) => digits(matrix[column * 4 + row]))),
+              printable,
+            ],
+          ]
+        : [],
+    ),
+  );
+  const plates = probe.plates.map((entries) =>
+    entries
+      .filter(([object, instance]) => kept(object, instance))
+      .map(([object, instance]): [string, number] => [probe.objects[object].name, instance]),
+  );
   return { items, plates };
 }

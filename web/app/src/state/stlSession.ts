@@ -11,7 +11,12 @@ import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from 
  * per plate; the store keeps it as an STL scene without project settings. Returns the session's
  * scene, whose `settings` are the composed config.
  */
-export function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+export function openStlSession(
+  file: ModelFile,
+  scene: Scene,
+  selection: PresetSelection,
+  sources: CatalogSources,
+): Promise<Scene> {
   // The shell places the model for both tabs; the plater keeps the session it holds for the same
   // inputs, as switching tabs reloads nothing upstream.
   const held = openedSession;
@@ -38,8 +43,12 @@ export function openStlSession(file: ModelFile, scene: Scene, selection: PresetS
 type SessionInputs = { file: ModelFile; selection: PresetSelection; sources: CatalogSources };
 
 function sameInputs(held: SessionInputs, file: ModelFile, selection: PresetSelection, sources: CatalogSources) {
-  return held.file === file && held.selection === selection
-    && held.sources.vendors === sources.vendors && held.sources.presetImports === sources.presetImports;
+  return (
+    held.file === file &&
+    held.selection === selection &&
+    held.sources.vendors === sources.vendors &&
+    held.sources.presetImports === sources.presetImports
+  );
 }
 
 /**
@@ -57,11 +66,17 @@ export function stlSessionOpened(): Promise<unknown> {
   return stlSessionOpening;
 }
 
-async function openSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
+async function openSession(
+  file: ModelFile,
+  scene: Scene,
+  selection: PresetSelection,
+  sources: CatalogSources,
+): Promise<Scene> {
   const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  const plater = file.kind === "stl-batch"
-    ? await slicer.createPlaterSessionFromStlFilesWithProfiles(file.files, file.choices, catalog, profiles, options)
-    : await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
+  const plater =
+    file.kind === "stl-batch"
+      ? await slicer.createPlaterSessionFromStlFilesWithProfiles(file.files, file.choices, catalog, profiles, options)
+      : await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
   await installVendors(plater);
   const placed = await plater.scene();
   if (useApp.getState().file !== file) {
@@ -69,7 +84,13 @@ async function openSession(file: ModelFile, scene: Scene, selection: PresetSelec
     return placed;
   }
   const previous = useApp.getState().plater;
-  useApp.setState(({ slice }) => ({ plater, scene: { ...placed, format: "stl", settings: null }, currentPlate: 0, arrange: null, ...invalidatedSlices(slice) }));
+  useApp.setState(({ slice }) => ({
+    plater,
+    scene: { ...placed, format: "stl", settings: null },
+    currentPlate: 0,
+    arrange: null,
+    ...invalidatedSlices(slice),
+  }));
   openedSession = { plater, file, selection, sources, placed };
   await loadArrangeSettings(plater);
   void previous?.free();

@@ -7,7 +7,9 @@ import { ModelPage, sortedModels } from "./ModelPage";
 
 /** HandleModelList's pre-checked models (common.js:118-125): those with installed nozzles. */
 const installedModels = (installed: InstalledPrinters) =>
-  new Set(Object.values(installed).flatMap((models) => Object.keys(models).filter((model) => models[model].length > 0)));
+  new Set(
+    Object.values(installed).flatMap((models) => Object.keys(models).filter((model) => models[model].length > 0)),
+  );
 
 /** The filament page's data: the listed filaments and the presets checked at open. */
 interface FilamentStep {
@@ -24,7 +26,9 @@ interface FilamentStep {
 export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [models, setModels] = useState<GuideModel[] | null>(null);
-  const [checked, setChecked] = useState<ReadonlySet<string>>(() => installedModels(useApp.getState().installedPrinters));
+  const [checked, setChecked] = useState<ReadonlySet<string>>(() =>
+    installedModels(useApp.getState().installedPrinters),
+  );
   const [filamentStep, setFilamentStep] = useState<FilamentStep | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
@@ -49,42 +53,69 @@ export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose:
     }
   };
   // OnExitFilter (common.js:416-444): nothing happens while no model is checked.
-  const next = (all: GuideModel[]) => run(async () => {
-    const step = await saveModels(all);
-    const pairs = all.filter(({ model }) => checked.has(model)).flatMap(({ model, variants }) => variants.map((variant) => `${model}++${variant}`));
-    setFilamentStep({ ...step, filaments: listedFilaments(step.filaments, pairs) });
-  });
-  const confirm = (all: GuideModel[]) => run(async () => {
-    const { installed, selected } = await saveModels(all);
-    await finishWizard(installed, [...selected], all);
-  });
+  const next = (all: GuideModel[]) =>
+    run(async () => {
+      const step = await saveModels(all);
+      const pairs = all
+        .filter(({ model }) => checked.has(model))
+        .flatMap(({ model, variants }) => variants.map((variant) => `${model}++${variant}`));
+      setFilamentStep({ ...step, filaments: listedFilaments(step.filaments, pairs) });
+    });
+  const confirm = (all: GuideModel[]) =>
+    run(async () => {
+      const { installed, selected } = await saveModels(all);
+      await finishWizard(installed, [...selected], all);
+    });
   const blockClose = (event: SyntheticEvent | KeyboardEvent) => {
     if (firstRun || busy) event.preventDefault();
   };
 
   return (
-    <dialog ref={dialog} className="shortcuts-dialog wizard-dialog" aria-labelledby="wizard-title" onClose={onClose}
-      onCancel={blockClose} onKeyDown={(event) => event.key === "Escape" && blockClose(event)}>
+    <dialog
+      ref={dialog}
+      className="shortcuts-dialog wizard-dialog"
+      aria-labelledby="wizard-title"
+      onClose={onClose}
+      onCancel={blockClose}
+      onKeyDown={(event) => event.key === "Escape" && blockClose(event)}
+    >
       <header className="shortcuts-header">
         <h2 id="wizard-title">{filamentStep ? "Filament Selection" : "Printer Selection"}</h2>
-        {!firstRun && <button className="bar-button" aria-label="Close" disabled={busy} onClick={() => dialog.current!.close()}>{"✕"}</button>}
+        {!firstRun && (
+          <button className="bar-button" aria-label="Close" disabled={busy} onClick={() => dialog.current!.close()}>
+            {"✕"}
+          </button>
+        )}
       </header>
       {!models && <div className="side-empty">Loading printers…</div>}
       {models && filamentStep && (
-        <FilamentPage filaments={filamentStep.filaments} selected={filamentStep.selected}
+        <FilamentPage
+          filaments={filamentStep.filaments}
+          selected={filamentStep.selected}
           onBack={() => setFilamentStep(null)}
-          onFinish={(filaments) => void run(() => finishWizard(filamentStep.installed, filaments, models))} />
+          onFinish={(filaments) => void run(() => finishWizard(filamentStep.installed, filaments, models))}
+        />
       )}
       {models && !filamentStep && (
         <>
           <ModelPage models={models} checked={checked} onChange={setChecked} />
           <footer className="vendor-footer wizard-footer">
             {firstRun ? (
-              <button className="side-button" disabled={busy} onClick={() => checked.size > 0 && void next(models)}>Next</button>
+              <button className="side-button" disabled={busy} onClick={() => checked.size > 0 && void next(models)}>
+                Next
+              </button>
             ) : (
               <>
-                <button className="side-button" disabled={busy} onClick={() => checked.size > 0 && void confirm(models)}>Confirm</button>
-                <button className="side-button" disabled={busy} onClick={() => dialog.current!.close()}>Cancel</button>
+                <button
+                  className="side-button"
+                  disabled={busy}
+                  onClick={() => checked.size > 0 && void confirm(models)}
+                >
+                  Confirm
+                </button>
+                <button className="side-button" disabled={busy} onClick={() => dialog.current!.close()}>
+                  Cancel
+                </button>
               </>
             )}
           </footer>

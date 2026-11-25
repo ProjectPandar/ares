@@ -9,19 +9,21 @@ const fixture = `${repositoryRoot}tests/parity/orca_cli_ender3.3mf`;
 
 /** Distinct colours of the WebGL canvas: 1 while nothing has been drawn. */
 function canvasColours(page: Page) {
-  return shownTab(page).locator("[data-testid=viewport] canvas").evaluate((canvas: HTMLCanvasElement) => {
-    const probe = document.createElement("canvas");
-    probe.width = 64;
-    probe.height = 64;
-    const context = probe.getContext("2d")!;
-    context.drawImage(canvas, 0, 0, 64, 64);
-    const pixels = context.getImageData(0, 0, 64, 64).data;
-    const colours = new Set<number>();
-    for (let index = 0; index < pixels.length; index += 4) {
-      colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
-    }
-    return colours.size;
-  });
+  return shownTab(page)
+    .locator("[data-testid=viewport] canvas")
+    .evaluate((canvas: HTMLCanvasElement) => {
+      const probe = document.createElement("canvas");
+      probe.width = 64;
+      probe.height = 64;
+      const context = probe.getContext("2d")!;
+      context.drawImage(canvas, 0, 0, 64, 64);
+      const pixels = context.getImageData(0, 0, 64, 64).data;
+      const colours = new Set<number>();
+      for (let index = 0; index < pixels.length; index += 4) {
+        colours.add((pixels[index] << 16) | (pixels[index + 1] << 8) | pixels[index + 2]);
+      }
+      return colours.size;
+    });
 }
 
 const renders = (page: Page) => page.evaluate(() => (window as unknown as { renders: number }).renders);

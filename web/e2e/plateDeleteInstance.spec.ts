@@ -19,14 +19,19 @@ const FIXTURE = "tests/parity/byobject-perobject-multi-copy-brim/combined-brim.3
 function withoutFirstInstance(): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${FIXTURE}`));
   const model = strFromU8(entries["3D/3dmodel.model"]);
-  const first = model.indexOf("<item objectid=\"2\"");
+  const first = model.indexOf('<item objectid="2"');
   expect(first, "object 2's first build item").toBeGreaterThanOrEqual(0);
   entries["3D/3dmodel.model"] = strToU8(model.slice(0, first) + model.slice(model.indexOf("/>", first) + 2));
   const settings = strFromU8(entries["Metadata/model_settings.config"]);
-  const pairs = "<model_instance><metadata key=\"object_id\" value=\"2\"/><metadata key=\"instance_id\" value=\"0\"/><metadata key=\"identify_id\" value=\"14\"/></model_instance><model_instance><metadata key=\"object_id\" value=\"2\"/><metadata key=\"instance_id\" value=\"1\"/><metadata key=\"identify_id\" value=\"15\"/></model_instance>";
+  const pairs =
+    '<model_instance><metadata key="object_id" value="2"/><metadata key="instance_id" value="0"/><metadata key="identify_id" value="14"/></model_instance><model_instance><metadata key="object_id" value="2"/><metadata key="instance_id" value="1"/><metadata key="identify_id" value="15"/></model_instance>';
   expect(settings, "object 2's plate pairs").toContain(pairs);
-  entries["Metadata/model_settings.config"] = strToU8(settings.replace(pairs,
-    "<model_instance><metadata key=\"object_id\" value=\"2\"/><metadata key=\"instance_id\" value=\"0\"/><metadata key=\"identify_id\" value=\"15\"/></model_instance><model_instance><metadata key=\"object_id\" value=\"2\"/><metadata key=\"instance_id\" value=\"1\"/><metadata key=\"identify_id\" value=\"0\"/></model_instance>"));
+  entries["Metadata/model_settings.config"] = strToU8(
+    settings.replace(
+      pairs,
+      '<model_instance><metadata key="object_id" value="2"/><metadata key="instance_id" value="0"/><metadata key="identify_id" value="15"/></model_instance><model_instance><metadata key="object_id" value="2"/><metadata key="instance_id" value="1"/><metadata key="identify_id" value="0"/></model_instance>',
+    ),
+  );
   return zipSync(entries) as Uint8Array<ArrayBuffer>;
 }
 
@@ -62,15 +67,30 @@ test("Delete on an instance item removes that instance, and the plate slices lik
 
   const oracle = `${artifacts}without-first-instance.3mf`;
   writeFileSync(oracle, withoutFirstInstance());
-  const legs = { official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${FIXTURE}`), seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${FIXTURE}`) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["object list: Instance 1 of object 2, Delete"],
-    oracle: "OrcaSlicer --slice 1 of the exported project without the instance (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const legs = {
+    official: orcaPlate(oracle, 1, "official", `${repositoryRoot}${FIXTURE}`),
+    seeded: orcaPlate(oracle, 1, "seeded", `${repositoryRoot}${FIXTURE}`),
+  };
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: ["object list: Instance 1 of object 2, Delete"],
+        oracle: "OrcaSlicer --slice 1 of the exported project without the instance (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

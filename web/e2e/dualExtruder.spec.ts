@@ -34,7 +34,10 @@ function project(name: string, edit: Record<string, unknown>) {
 
 function orcaGcode(file: string) {
   const work = `${mkdtempSync(`${tmpdir()}/ares-web-dual-`)}/`;
-  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, file], { cwd: work, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(`${repositoryRoot}scripts/orca-parity.sh`, ["--slice", "0", "--outputdir", work, file], {
+    cwd: work,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   const gcode = readFileSync(`${work}plate_1.gcode`, "utf8");
   writeFileSync(`${artifacts}native.gcode`, gcode);
   return normalize(gcode, "OrcaSlicer");
@@ -43,17 +46,31 @@ function orcaGcode(file: string) {
 /** The flow combos list the printer's upstream options; extruder 0 is the left nozzle (Plater.cpp:4111-4112). */
 async function expectFlowOptions(page: Page, printer: string) {
   for (const [index, nozzle] of ["Left Nozzle", "Right Nozzle"].entries())
-    expect(await select(page, `${nozzle} flow`).locator("option").allTextContents(), `${printer} ${nozzle} flow options`)
-      .toEqual(flowOptions("BBL", printer, index));
+    expect(
+      await select(page, `${nozzle} flow`).locator("option").allTextContents(),
+      `${printer} ${nozzle} flow options`,
+    ).toEqual(flowOptions("BBL", printer, index));
 }
 
 const nozzleFilaments = (page: Page, nozzle: string) =>
-  page.getByRole("group", { name: nozzle, exact: true }).getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.textContent!.trim()));
+  page
+    .getByRole("group", { name: nozzle, exact: true })
+    .getByRole("button")
+    .evaluateAll((buttons) => buttons.map((button) => button.textContent!.trim()));
 
-test("an H2D project shows the left and right nozzles and slices its filament map and flow like OrcaSlicer", async ({ page }) => {
-  const orca = oraclePath("ORCA_APPDIR", "the project-edit oracle", "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh");
+test("an H2D project shows the left and right nozzles and slices its filament map and flow like OrcaSlicer", async ({
+  page,
+}) => {
+  const orca = oraclePath(
+    "ORCA_APPDIR",
+    "the project-edit oracle",
+    "an extraction of the official OrcaSlicer 2.5.0-beta AppImage, see scripts/orca-parity.sh",
+  );
   const probe = presetSelectProbe();
-  if (orca && !probe) throw new Error("ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export");
+  if (orca && !probe)
+    throw new Error(
+      "ARES_ORCA_PRESET_SELECT_BIN is unset while ORCA_APPDIR is set: the comparison needs the plater export",
+    );
   test.setTimeout(400_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -97,7 +114,10 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
 
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code" }).click(),
+  ]);
   await download.saveAs(`${artifacts}web.gcode`);
   const web = readFileSync(`${artifacts}web.gcode`, "utf8");
   expect(web).toContain("; filament_map = 2,1");
@@ -113,7 +133,10 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   // reference is therefore the 3MF the plater saves after the edits, sliced by OrcaSlicer.
   if (orca) {
     const selection = nativeSelection(probe!, `${artifacts}selection/`, legal, ["BBL"]);
-    const native = withoutCliGroups(orcaGcode(platerExport(selection, legal, `${artifacts}edited.3mf`, EDITS)), selection);
+    const native = withoutCliGroups(
+      orcaGcode(platerExport(selection, legal, `${artifacts}edited.3mf`, EDITS)),
+      selection,
+    );
     expect(normalize(web, "Ares"), "the sidebar edits slice as the plater export").toBe(native);
   }
 
@@ -139,9 +162,14 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab H2D 0.6 nozzle", { timeout: 60_000 });
   await expect(select(page, "Right Nozzle flow")).toHaveValue("High Flow");
   await expect(select(page, "Left Nozzle flow")).toHaveValue("Standard");
-  await expect(page.getByRole("radiogroup", { name: "Filament grouping" }).getByRole("radio", { name: /Custom Mode/ })).toBeChecked();
+  await expect(
+    page.getByRole("radiogroup", { name: "Filament grouping" }).getByRole("radio", { name: /Custom Mode/ }),
+  ).toBeChecked();
   await page.screenshot({ path: `${artifacts}after-reload.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ edits: EDITS, legal: LEGAL, oracle: orca ? "OrcaSlicer 2.5.0-beta" : null }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ edits: EDITS, legal: LEGAL, oracle: orca ? "OrcaSlicer 2.5.0-beta" : null }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

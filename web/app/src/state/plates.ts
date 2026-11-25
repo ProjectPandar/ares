@@ -27,13 +27,22 @@ export async function selectPlate(index: number) {
  * The scene with an edit's instance matrices and plates, its objects in the layout's model order
  * (an arrange sorts them) looked up in `objects`; every slice result is stale.
  */
-export function applyLayout(layout: PlaterLayout, currentPlate: number, objects: readonly SceneObject[] = useApp.getState().scene!.objects) {
+export function applyLayout(
+  layout: PlaterLayout,
+  currentPlate: number,
+  objects: readonly SceneObject[] = useApp.getState().scene!.objects,
+) {
   useApp.setState(({ scene, slice }) => ({
     scene: {
       ...scene!,
       objects: layout.objects.map(({ id, instances, filament, volumes }) => {
         const object = objects.find((candidate) => candidate.id === id)!;
-        return { ...object, instances, filament, volumes: object.volumes.map((volume, index) => ({ ...volume, ...volumes[index] })) };
+        return {
+          ...object,
+          instances,
+          filament,
+          volumes: object.volumes.map((volume, index) => ({ ...volume, ...volumes[index] })),
+        };
       }),
       plates: layout.plates,
       wipeTower: layout.wipeTower,
@@ -154,7 +163,8 @@ export async function setNumberOfCopies(object: number, num: number) {
   const { plater, currentPlate } = useApp.getState();
   takeSnapshot();
   const layout = await plater!.setNumberOfCopies(object, num);
-  if (!layout.objects.some(({ id }) => id === useApp.getState().selectedObject)) useApp.setState({ selectedObject: null });
+  if (!layout.objects.some(({ id }) => id === useApp.getState().selectedObject))
+    useApp.setState({ selectedObject: null });
   applyLayout(layout, currentPlate);
 }
 

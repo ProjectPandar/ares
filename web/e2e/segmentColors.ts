@@ -25,8 +25,18 @@ export async function checkSegmentColors(page: Page, artifacts: string, speedTra
   mkdirSync(out, { recursive: true });
   const oracle = process.env.ARES_SEGMENT_COLOR_BIN;
   if (!oracle) throw new Error("ARES_SEGMENT_COLOR_BIN is required for the segment colors oracle");
-  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
-    "--dump-moves", `${out}moves.csv`, "--dump-segment-colors", `${out}native.json`], { stdio: "ignore" });
+  execFileSync(
+    oracle,
+    [
+      "--process-gcode",
+      `${artifacts}oracle-input.gcode`,
+      "--dump-moves",
+      `${out}moves.csv`,
+      "--dump-segment-colors",
+      `${out}native.json`,
+    ],
+    { stdio: "ignore" },
+  );
   expect(readFileSync(`${out}moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
   const vertices = (JSON.parse(readFileSync(`${out}native.json`, "utf8")) as { vertices: NativeVertex[] }).vertices;
 
@@ -60,7 +70,10 @@ export async function checkSegmentColors(page: Page, artifacts: string, speedTra
   // could pass vacuously; the controls need equal ends.
   expect(expected.featureType.differing, "Native Line Type instances with differing end RGB").toBe(0);
   if (speedTravelEnds) {
-    expect(expected[speedView].differingTravel, "Native Speed + Travel travel instances with differing end RGB").toBeGreaterThan(0);
+    expect(
+      expected[speedView].differingTravel,
+      "Native Speed + Travel travel instances with differing end RGB",
+    ).toBeGreaterThan(0);
   } else {
     expect(expected[speedView].differing, "Native Speed instances with differing end RGB").toBe(0);
   }
@@ -77,12 +90,18 @@ export async function checkSegmentColors(page: Page, artifacts: string, speedTra
     await travel.click();
     await expect(travel).toHaveAttribute("aria-pressed", "true");
   }
-  await expect(viewport, `Speed${speedTravelEnds ? " + Travel" : ""} ${readOut}`).toHaveAttribute("data-segment-colors", expected[speedView].probe);
+  await expect(viewport, `Speed${speedTravelEnds ? " + Travel" : ""} ${readOut}`).toHaveAttribute(
+    "data-segment-colors",
+    expected[speedView].probe,
+  );
   if (speedTravelEnds) {
     await travel.click();
     await expect(travel).toHaveAttribute("aria-pressed", "false");
   }
   await select.selectOption({ label: "Line Type" });
-  await expect(viewport, `Line Type ${readOut} after recolor`).toHaveAttribute("data-segment-colors", expected.featureType.probe);
+  await expect(viewport, `Line Type ${readOut} after recolor`).toHaveAttribute(
+    "data-segment-colors",
+    expected.featureType.probe,
+  );
   return expected;
 }

@@ -1,13 +1,26 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { exportAllGcode, exportGcode, importFile, importFiles, setTheme, sliceAllPlates, slicePlate } from "../state/actions";
+import {
+  exportAllGcode,
+  exportGcode,
+  importFile,
+  importFiles,
+  setTheme,
+  sliceAllPlates,
+  slicePlate,
+} from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
 import { FileMenu } from "./FileMenu";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
 /** BBLTopbar: the File menu and the project title. */
-export function TitleBar({ importInput: input, projectInput, onShortcuts, onAbout }: {
+export function TitleBar({
+  importInput: input,
+  projectInput,
+  onShortcuts,
+  onAbout,
+}: {
   importInput: RefObject<HTMLInputElement | null>;
   projectInput: RefObject<HTMLInputElement | null>;
   onShortcuts: () => void;
@@ -23,31 +36,54 @@ export function TitleBar({ importInput: input, projectInput, onShortcuts, onAbou
           Ares
         </span>
         <FileMenu importInput={input} projectInput={projectInput} presetInput={presetInput} />
-        <input ref={input} type="file" accept=".3mf,.stl" multiple hidden data-testid="import-input"
+        <input
+          ref={input}
+          type="file"
+          accept=".3mf,.stl"
+          multiple
+          hidden
+          data-testid="import-input"
           onChange={(event) => {
             importFiles([...(event.target.files ?? [])]);
             event.target.value = "";
-          }} />
+          }}
+        />
         {/* Plater::load_project (File > Open Project). */}
-        <input ref={projectInput} type="file" accept=".3mf" hidden data-testid="project-input"
+        <input
+          ref={projectInput}
+          type="file"
+          accept=".3mf"
+          hidden
+          data-testid="project-input"
           onChange={(event) => {
             const picked = event.target.files?.[0];
             if (picked) void importFile(picked);
             event.target.value = "";
-          }} />
+          }}
+        />
         {/* MainFrame::load_config_file (File > Import > Import Configs). */}
-        <input ref={presetInput} type="file" accept=".json,.zip,.orca_printer,.orca_bundle,.orca_filament" multiple hidden
-          data-testid="preset-import-input" onChange={(event) => {
+        <input
+          ref={presetInput}
+          type="file"
+          accept=".json,.zip,.orca_printer,.orca_bundle,.orca_filament"
+          multiple
+          hidden
+          data-testid="preset-import-input"
+          onChange={(event) => {
             const picked = [...(event.target.files ?? [])];
             if (picked.length) void importPresetFiles(picked);
             event.target.value = "";
-          }} />
+          }}
+        />
       </div>
       <span className="titlebar-title">{file ? `${file.name} - Ares` : "Ares"}</span>
       <div className="titlebar-right">
         <HelpMenu onShortcuts={onShortcuts} onAbout={onAbout} />
-        <button className="bar-button" title={theme === "dark" ? "Light theme" : "Dark theme"}
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        <button
+          className="bar-button"
+          title={theme === "dark" ? "Light theme" : "Dark theme"}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
       </div>
@@ -66,7 +102,8 @@ function HelpMenu({ onShortcuts, onAbout }: { onShortcuts: () => void; onAbout: 
   useEffect(() => {
     if (!open) return;
     const close = (event: Event) => {
-      if (event instanceof KeyboardEvent ? event.key === "Escape" : !root.current?.contains(event.target as Node)) setOpen(false);
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !root.current?.contains(event.target as Node))
+        setOpen(false);
     };
     document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", close);
@@ -81,11 +118,17 @@ function HelpMenu({ onShortcuts, onAbout }: { onShortcuts: () => void; onAbout: 
   };
   return (
     <div ref={root} className="help-menu">
-      <button className="bar-button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>Help</button>
+      <button className="bar-button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+        Help
+      </button>
       {open && (
         <div className="context-menu" role="menu" aria-label="Help">
-          <button type="button" role="menuitem" onClick={pick(onShortcuts)}>Keyboard Shortcuts</button>
-          <button type="button" role="menuitem" onClick={pick(onAbout)}>About Ares</button>
+          <button type="button" role="menuitem" onClick={pick(onShortcuts)}>
+            Keyboard Shortcuts
+          </button>
+          <button type="button" role="menuitem" onClick={pick(onAbout)}>
+            About Ares
+          </button>
         </div>
       )}
     </div>
@@ -119,14 +162,21 @@ export function TabBar() {
         </Link>
       </div>
       <div className="tabbar-actions">
-        <button className="side-button" onClick={() => sliceAndPreview(slicePlate)}
+        <button
+          className="side-button"
+          onClick={() => sliceAndPreview(slicePlate)}
           disabled={!scene || slicing || engine !== "ready" || blocker !== null}
-          title={blocker ?? undefined}>
+          title={blocker ?? undefined}
+        >
           {slicing ? "Slicing…" : "Slice plate"}
         </button>
         {multiPlate && (
-          <button className="side-button" onClick={() => sliceAndPreview(sliceAllPlates)}
-            disabled={slicing || engine !== "ready" || blocker !== null} title={blocker ?? undefined}>
+          <button
+            className="side-button"
+            onClick={() => sliceAndPreview(sliceAllPlates)}
+            disabled={slicing || engine !== "ready" || blocker !== null}
+            title={blocker ?? undefined}
+          >
             Slice all
           </button>
         )}
@@ -134,7 +184,11 @@ export function TabBar() {
           Export G-code file
         </button>
         {multiPlate && (
-          <button className="side-button" onClick={exportAllGcode} disabled={slicing || Object.keys(plateSlices).length === 0}>
+          <button
+            className="side-button"
+            onClick={exportAllGcode}
+            disabled={slicing || Object.keys(plateSlices).length === 0}
+          >
             Export all
           </button>
         )}

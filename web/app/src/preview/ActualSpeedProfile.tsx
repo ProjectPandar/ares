@@ -14,7 +14,11 @@ const rgba = ([r, g, b, a]: number[]) => `rgb(${r * 255} ${g * 255} ${b * 255} /
  * hovered segment, or -1.
  */
 function Plot({ profile, hovered, onHover }: { profile: Profile; hovered: number; onHover: (index: number) => void }) {
-  const { data, levels, yRange: [y0, y1] } = profile;
+  const {
+    data,
+    levels,
+    yRange: [y0, y1],
+  } = profile;
   const sizeY = y1 - y0;
   const sizeX = data.length > 0 ? data.at(-1)!.pos - data[0].pos : 0;
   const drawn = sizeX > 0 && data.length >= 2;
@@ -28,24 +32,56 @@ function Plot({ profile, hovered, onHover }: { profile: Profile; hovered: number
     onHover(data.findIndex((item, n) => n + 1 < data.length && x(item.pos) < t && t < x(data[n + 1].pos)));
   };
   return (
-    <div className="actual-speed-plot" data-testid="actual-speed-plot" onPointerMove={hover} onPointerLeave={() => onHover(-1)}>
-      {drawn && <>
-        <svg className="actual-speed-levels" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
-          {levels.map(({ value, color }) => (
-            <line key={value} className="actual-speed-level" x1={0.1} x2={0.9} y1={y(value)} y2={y(value)} stroke={rgba(color)} strokeWidth={3} vectorEffect="non-scaling-stroke" />
-          ))}
-        </svg>
-        <svg className="actual-speed-profile" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
-          {data.slice(0, -1).map((item, n) => (
-            <line key={n} x1={x(item.pos)} x2={x(item.pos)} y1={0} y2={1} className={item.internal ? "actual-speed-grid is-internal" : "actual-speed-grid"} vectorEffect="non-scaling-stroke" />
-          ))}
-          <line x1={1} x2={1} y1={0} y2={1} className="actual-speed-grid" vectorEffect="non-scaling-stroke" />
-          {data.slice(0, -1).map((item, n) => (
-            <line key={n} x1={x(item.pos)} y1={y(item.speed)} x2={x(data[n + 1].pos)} y2={y(data[n + 1].speed)}
-              className={n === hovered ? "actual-speed-segment is-hovered" : "actual-speed-segment"} vectorEffect="non-scaling-stroke" />
-          ))}
-        </svg>
-      </>}
+    <div
+      className="actual-speed-plot"
+      data-testid="actual-speed-plot"
+      onPointerMove={hover}
+      onPointerLeave={() => onHover(-1)}
+    >
+      {drawn && (
+        <>
+          <svg className="actual-speed-levels" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+            {levels.map(({ value, color }) => (
+              <line
+                key={value}
+                className="actual-speed-level"
+                x1={0.1}
+                x2={0.9}
+                y1={y(value)}
+                y2={y(value)}
+                stroke={rgba(color)}
+                strokeWidth={3}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+          <svg className="actual-speed-profile" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+            {data.slice(0, -1).map((item, n) => (
+              <line
+                key={n}
+                x1={x(item.pos)}
+                x2={x(item.pos)}
+                y1={0}
+                y2={1}
+                className={item.internal ? "actual-speed-grid is-internal" : "actual-speed-grid"}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+            <line x1={1} x2={1} y1={0} y2={1} className="actual-speed-grid" vectorEffect="non-scaling-stroke" />
+            {data.slice(0, -1).map((item, n) => (
+              <line
+                key={n}
+                x1={x(item.pos)}
+                y1={y(item.speed)}
+                x2={x(data[n + 1].pos)}
+                y2={y(data[n + 1].speed)}
+                className={n === hovered ? "actual-speed-segment is-hovered" : "actual-speed-segment"}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+          </svg>
+        </>
+      )}
     </div>
   );
 }
@@ -77,7 +113,12 @@ export function ActualSpeedWindow({ profile }: { profile: Profile }) {
       <Plot profile={profile} hovered={hovered} onHover={setHovered} />
       <div className="actual-speed-table">
         <table>
-          <thead><tr><th>Position (mm)</th><th>Speed (mm/s)</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Position (mm)</th>
+              <th>Speed (mm/s)</th>
+            </tr>
+          </thead>
           <tbody>
             {profile.data.map((item, index) => {
               const highlight = hovered >= 0 && (index === hovered || index === hovered + 1);

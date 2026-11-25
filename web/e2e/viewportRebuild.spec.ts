@@ -29,17 +29,23 @@ function countGl() {
   }
 }
 
-const counts = (page: Page) => page.evaluate(() => ({ ...(window as unknown as { gl: { links: number; uploads: number } }).gl }));
+const counts = (page: Page) =>
+  page.evaluate(() => ({ ...(window as unknown as { gl: { links: number; uploads: number } }).gl }));
 
 /** The counts once no draw is waiting (data-drawing, Viewport.render) and nothing uploaded between two polls. */
 async function quiet(page: Page) {
   let last = "";
-  await expect.poll(async () => {
-    if ((await shownTab(page).getByTestId("viewport").getAttribute("data-drawing")) !== null) return false;
-    const [previous, next] = [last, JSON.stringify(await counts(page))];
-    last = next;
-    return previous === next;
-  }, { intervals: [500], timeout: 60_000 }).toBe(true);
+  await expect
+    .poll(
+      async () => {
+        if ((await shownTab(page).getByTestId("viewport").getAttribute("data-drawing")) !== null) return false;
+        const [previous, next] = [last, JSON.stringify(await counts(page))];
+        last = next;
+        return previous === next;
+      },
+      { intervals: [500], timeout: 60_000 },
+    )
+    .toBe(true);
   return JSON.parse(last) as { links: number; uploads: number };
 }
 
@@ -47,7 +53,9 @@ async function quiet(page: Page) {
 async function rebuild(page: Page, edit: () => Promise<void>) {
   const before = await quiet(page);
   await edit();
-  await expect.poll(async () => (await counts(page)).uploads, "the edit rebuilds geometry").toBeGreaterThan(before.uploads);
+  await expect
+    .poll(async () => (await counts(page)).uploads, "the edit rebuilds geometry")
+    .toBeGreaterThan(before.uploads);
   const after = await quiet(page);
   return { links: after.links - before.links, uploads: after.uploads - before.uploads };
 }
@@ -60,7 +68,9 @@ function artifactsOf(name: string) {
   return directory;
 }
 
-test("a new scene and a new plate rebuild plates and instances without compiling shaders, as GLShadersManager::init compiles them once", async ({ page }) => {
+test("a new scene and a new plate rebuild plates and instances without compiling shaders, as GLShadersManager::init compiles them once", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   const directory = artifactsOf("project");
   const results: Record<string, { links: number; uploads: number }> = {};
@@ -108,7 +118,9 @@ test("a preset change that opens a new plater session for an STL keeps the shade
   await choose(page, "mouse", "Filament 1 preset", "System presets", PRESETS.filament);
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
 
-  results["process preset"] = await rebuild(page, () => choose(page, "mouse", "Process preset", "System presets", SWITCHED_PROCESS));
+  results["process preset"] = await rebuild(page, () =>
+    choose(page, "mouse", "Process preset", "System presets", SWITCHED_PROCESS),
+  );
   await page.screenshot({ path: `${directory}stl.png` });
   writeFileSync(`${directory}result.json`, `${JSON.stringify(results, null, 2)}\n`);
 

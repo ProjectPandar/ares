@@ -6,7 +6,11 @@ import type { LayoutOption, LayoutPage, LayoutRow } from "../app/src/sidebar/lay
 export const MODES = ["simple", "advanced", "expert"] as const;
 export type ViewMode = (typeof MODES)[number];
 /** ModeSwitchButton tooltips (Widgets/SwitchButton.cpp:262-264). */
-export const MODE_NAMES: Record<ViewMode, string> = { simple: "Simple settings", advanced: "Advanced settings", expert: "Expert settings" };
+export const MODE_NAMES: Record<ViewMode, string> = {
+  simple: "Simple settings",
+  advanced: "Advanced settings",
+  expert: "Expert settings",
+};
 const RANK: Record<ConfigOptionMode, number> = { simple: 0, advanced: 1, expert: 2, develop: 3 };
 
 /**
@@ -25,12 +29,16 @@ export function nativeConfigDef(repositoryRoot: string) {
  */
 const legacyValue = (key: string, value: string | string[]) =>
   key === "enable_arc_fitting" && typeof value === "string"
-    ? ({ "1": "enabled", true: "enabled", "0": "disabled", false: "disabled" } as Record<string, string>)[value.toLowerCase()] ?? value
+    ? (({ "1": "enabled", true: "enabled", "0": "disabled", false: "disabled" } as Record<string, string>)[
+        value.toLowerCase()
+      ] ?? value)
     : value;
 
 /** OrcaSlicer's own `Metadata/project_settings.config` of the fixture, as loaded: the values the controls must show. */
 export function projectConfig(fixture: string): Record<string, string | string[]> {
-  const stored: Record<string, string | string[]> = JSON.parse(execFileSync("unzip", ["-p", fixture, "Metadata/project_settings.config"], { maxBuffer: 1 << 24 }).toString());
+  const stored: Record<string, string | string[]> = JSON.parse(
+    execFileSync("unzip", ["-p", fixture, "Metadata/project_settings.config"], { maxBuffer: 1 << 24 }).toString(),
+  );
   return Object.fromEntries(Object.entries(stored).map(([key, value]) => [key, legacyValue(key, value)]));
 }
 
@@ -40,7 +48,9 @@ export function projectConfig(fixture: string): Record<string, string | string[]
  * the fields show typed: bools, int/enum/float/percent vectors and points.
  */
 export type Decoded = Record<string, unknown>;
-export function decodedSettings(repositoryRoot: string): Record<"printer" | "process" | "filament" | "project", Decoded> {
+export function decodedSettings(
+  repositoryRoot: string,
+): Record<"printer" | "process" | "filament" | "project", Decoded> {
   return JSON.parse(readFileSync(`${repositoryRoot}target/web-e2e/expected-decoded.json`, "utf8"));
 }
 
@@ -107,7 +117,8 @@ function typedText(def: ConfigOptionDef, control: ExpectedField["control"], valu
   if (control === "checkbox") return String(value === true);
   if (control === "point") return (value as number[]).map(coordinate).join(",");
   // `get_thumbnails_string` (Field.cpp:78-86).
-  if (def.type === "points") return (value as number[][]).map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
+  if (def.type === "points")
+    return (value as number[][]).map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
   if (value === null) return control === "text" ? "N/A" : "";
   return typeof value === "number" && control === "text" ? doubleToString(value) : String(value);
 }
@@ -123,13 +134,23 @@ function bound(def: ConfigOptionDef, option: LayoutOption, value: unknown, slot?
   return value[option.index ?? slot ?? 0];
 }
 
-function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boolean }, stored: unknown, typed: unknown, slot?: number): ExpectedField {
+function expectedField(
+  def: ConfigOptionDef,
+  option: LayoutOption & { code?: boolean },
+  stored: unknown,
+  typed: unknown,
+  slot?: number,
+): ExpectedField {
   const control = controlOf(def, option.code, option.index);
   const raw = bound(def, option, stored, slot);
   const value = typeof raw === "string" ? raw : undefined;
   const texts = def.enum_labels.length ? def.enum_labels : def.enum_values;
   const field: ExpectedField = {
-    key: def.key, control, label: option.label ?? def.label ?? "", unit: def.sidetext, tooltip: tooltipOf(def, option.index),
+    key: def.key,
+    control,
+    label: option.label ?? def.label ?? "",
+    unit: def.sidetext,
+    tooltip: tooltipOf(def, option.index),
   };
   if (typed !== undefined && def.gui_type === "undefined") {
     field.value = typedText(def, control, bound(def, option, typed, slot));
@@ -138,13 +159,23 @@ function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boo
     return field;
   }
   const scalar = value;
-  if (control === "choice") Object.assign(field, { options: def.enum_values.map((item, at) => ({ value: item, text: texts[at] })), value: scalar });
+  if (control === "choice")
+    Object.assign(field, {
+      options: def.enum_values.map((item, at) => ({ value: item, text: texts[at] })),
+      value: scalar,
+    });
   // Choice::set_value (Field.cpp:1599-1616): a listed value shows its label, anything else its text.
-  if (control === "combo") Object.assign(field, { options: texts.map((text) => ({ value: text, text })), value: texts[def.enum_values.indexOf(scalar!)] ?? scalar });
+  if (control === "combo")
+    Object.assign(field, {
+      options: texts.map((text) => ({ value: text, text })),
+      value: texts[def.enum_values.indexOf(scalar!)] ?? scalar,
+    });
   // SpinCtrl::BUILD (Field.cpp:1186-1187): unset min is 0, unset max INT_MAX.
-  if (control === "spin") Object.assign(field, { min: String(def.min ?? 0), max: String(def.max ?? 2147483647), value: scalar });
+  if (control === "spin")
+    Object.assign(field, { min: String(def.min ?? 0), max: String(def.max ?? 2147483647), value: scalar });
   // A percent TextCtrl shows the bare number, "%" is its sidetext (OptionsGroup.cpp:1013-1015).
-  if (control === "text" && scalar !== undefined) field.value = def.type === "percent" ? scalar.replace(/%$/, "") : scalar;
+  if (control === "text" && scalar !== undefined)
+    field.value = def.type === "percent" ? scalar.replace(/%$/, "") : scalar;
   if (control === "code" && scalar !== undefined) field.value = scalar;
   return field;
 }
@@ -154,14 +185,20 @@ function expectedField(def: ConfigOptionDef, option: LayoutOption & { code?: boo
  * typed ones against the native decode.
  */
 export function expectedPage(
-  defs: Map<string, ConfigOptionDef>, page: LayoutPage, mode: ViewMode, config: Record<string, unknown>, typed: Decoded, slot?: number,
+  defs: Map<string, ConfigOptionDef>,
+  page: LayoutPage,
+  mode: ViewMode,
+  config: Record<string, unknown>,
+  typed: Decoded,
+  slot?: number,
 ) {
   const groups: string[] = [];
   const fields: ExpectedField[] = [];
   for (const group of page.groups) {
     const rows = group.rows.filter((row) => lineVisible(defs, row, mode));
     if (rows.length) groups.push(group.title);
-    for (const option of rows.flatMap(rowOptions)) fields.push(expectedField(defs.get(option.key)!, option, config[option.key], typed[option.key], slot));
+    for (const option of rows.flatMap(rowOptions))
+      fields.push(expectedField(defs.get(option.key)!, option, config[option.key], typed[option.key], slot));
   }
   return { groups, fields };
 }

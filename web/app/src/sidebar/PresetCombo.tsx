@@ -48,7 +48,16 @@ function layout(presets: PresetEntry[]): Row[] {
   return rows;
 }
 
-export function PresetCombo({ label, value, tooltip, groups, placeholder, onSelect, actions = [], searchable = false }: {
+export function PresetCombo({
+  label,
+  value,
+  tooltip,
+  groups,
+  placeholder,
+  onSelect,
+  actions = [],
+  searchable = false,
+}: {
   label: string;
   value?: string;
   /** The selected preset's name when `value` shows its printer model (PresetComboBoxes.cpp:1265, 1486). */
@@ -66,14 +75,23 @@ export function PresetCombo({ label, value, tooltip, groups, placeholder, onSele
   const listId = useId();
   const query = search.trim().toLowerCase();
   const shown = groups
-    .map((group) => ({ ...group, presets: group.presets.filter((preset) => preset.name.toLowerCase().includes(query)) }))
+    .map((group) => ({
+      ...group,
+      presets: group.presets.filter((preset) => preset.name.toLowerCase().includes(query)),
+    }))
     .filter((group) => group.presets.length > 0);
   const option = (preset: PresetEntry, group: PresetGroup) => (
-    <div key={preset.name} role="option" aria-selected={preset.name === value} className="combo-option"
-      title={preset.name} onClick={() => {
+    <div
+      key={preset.name}
+      role="option"
+      aria-selected={preset.name === value}
+      className="combo-option"
+      title={preset.name}
+      onClick={() => {
         setOpen(false);
         onSelect?.(preset.name, group.title);
-      }}>
+      }}
+    >
       {preset.colour && <span className="combo-option-swatch" style={{ background: preset.colour }} />}
       <span className="combo-text">{preset.name}</span>
     </div>
@@ -97,40 +115,66 @@ export function PresetCombo({ label, value, tooltip, groups, placeholder, onSele
 
   return (
     <div className="combo-root" ref={root}>
-      <button type="button" className={value ? "combo" : "combo empty"} title={tooltip ?? value ?? placeholder} aria-label={label}
-        aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
-        disabled={groups.every((group) => group.presets.length === 0) && actions.length === 0} onClick={() => {
+      <button
+        type="button"
+        className={value ? "combo" : "combo empty"}
+        title={tooltip ?? value ?? placeholder}
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        disabled={groups.every((group) => group.presets.length === 0) && actions.length === 0}
+        onClick={() => {
           setSearch("");
           setOpen(!open);
-        }}>
+        }}
+      >
         <span className="combo-text">{value ?? placeholder}</span>
         <span className="combo-caret" />
       </button>
       {open && (
         <div className="combo-popup" role="listbox" id={listId} aria-label={label}>
           {searchable && (
-            <input className="combo-search" type="search" aria-label={`Search ${label}`} placeholder="Search"
-              autoFocus value={search} onChange={(event) => setSearch(event.target.value)} />
+            <input
+              className="combo-search"
+              type="search"
+              aria-label={`Search ${label}`}
+              placeholder="Search"
+              autoFocus
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
           )}
           {shown.map((group) => (
             <div key={group.title} role="group" aria-label={group.title}>
-              <div className="combo-group-title" role="presentation">{group.title}</div>
-              {layout(group.presets).map((row) => ("presets" in row
-                ? (
+              <div className="combo-group-title" role="presentation">
+                {group.title}
+              </div>
+              {layout(group.presets).map((row) =>
+                "presets" in row ? (
                   <div key={`group:${row.subgroup}`} role="group" aria-label={row.subgroup} className="combo-subgroup">
-                    <div className="combo-subgroup-title" role="presentation">{row.subgroup}</div>
+                    <div className="combo-subgroup-title" role="presentation">
+                      {row.subgroup}
+                    </div>
                     {row.presets.map((preset) => option(preset, group))}
                   </div>
-                )
-                : option(row, group)))}
+                ) : (
+                  option(row, group)
+                ),
+              )}
             </div>
           ))}
           {actions.map((action) => (
-            <div key={action.label} role="option" aria-selected={false} className="combo-option combo-action"
+            <div
+              key={action.label}
+              role="option"
+              aria-selected={false}
+              className="combo-option combo-action"
               onClick={() => {
                 setOpen(false);
                 action.run();
-              }}>
+              }}
+            >
               <span className="combo-text">{action.label}</span>
             </div>
           ))}

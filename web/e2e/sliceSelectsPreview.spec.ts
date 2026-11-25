@@ -11,7 +11,8 @@ async function watchPreviewSwitch(page: Page) {
   await page.getByRole("link", { name: "Preview" }).evaluate((tab) => {
     new MutationObserver((_, observer) => {
       if (!tab.classList.contains("active")) return;
-      (window as { statusAtSwitch?: string | null }).statusAtSwitch = document.querySelector("[data-testid=status]")!.textContent;
+      (window as { statusAtSwitch?: string | null }).statusAtSwitch =
+        document.querySelector("[data-testid=status]")!.textContent;
       observer.disconnect();
     }).observe(tab, { attributes: true, attributeFilter: ["class"] });
   });
@@ -45,7 +46,9 @@ test("Slice plate selects the Preview tab as the slice starts", async ({ page })
 test("Slice all selects the Preview tab and ends on the last plate", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}tests/parity/custom-gcode-overview/two-plates.3mf`);
+  await page
+    .getByTestId("import-input")
+    .setInputFiles(`${repositoryRoot}tests/parity/custom-gcode-overview/two-plates.3mf`);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
   await expect(page).toHaveURL(/#\/prepare$/);
 
@@ -74,6 +77,8 @@ test("the Preview canvas draws with the context of the Prepare canvas", async ({
   await action(page, "Slice plate").click();
   await expect(page).toHaveURL(/#\/preview$/);
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
-  const marked = await canvas.evaluate((node: HTMLCanvasElement) => (node.getContext("webgl2") as Marked).prepareMark === true);
+  const marked = await canvas.evaluate(
+    (node: HTMLCanvasElement) => (node.getContext("webgl2") as Marked).prepareMark === true,
+  );
   expect(marked, "the Preview canvas has the Prepare canvas's WebGL context").toBe(true);
 });

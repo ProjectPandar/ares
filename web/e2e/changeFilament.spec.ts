@@ -12,7 +12,9 @@ function initiallySameFilament() {
   const path = "Metadata/model_settings.config";
   const model = strFromU8(files[path]);
   expect(model.match(/<metadata key="extruder" value="2"\s*\/>/g)).toHaveLength(1);
-  files[path] = strToU8(model.replace(/(<metadata key="extruder" value=")2("\s*\/>)/, (_, before, after) => `${before}1${after}`));
+  files[path] = strToU8(
+    model.replace(/(<metadata key="extruder" value=")2("\s*\/>)/, (_, before, after) => `${before}1${after}`),
+  );
   return Buffer.from(zipSync(files));
 }
 
@@ -28,14 +30,19 @@ async function setup(page: Page, vendor: string) {
 }
 
 async function openProject(page: Page, buffer: Buffer) {
-  await page.getByTestId("import-input").setInputFiles({ name: "two-cubes.3mf", mimeType: "application/octet-stream", buffer });
+  await page
+    .getByTestId("import-input")
+    .setInputFiles({ name: "two-cubes.3mf", mimeType: "application/octet-stream", buffer });
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
 }
 
 async function sliceDownload(page: Page, path: string) {
   await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code" }).click(),
+  ]);
   await download.saveAs(path);
   return readFileSync(path);
 }
@@ -47,7 +54,8 @@ function objectTools(gcode: string) {
   for (const line of gcode.split("\n")) {
     const command = line.match(/^T([01])(?:\s|$)/);
     if (command) tool = Number(command[1]);
-    if (line.startsWith("; printing object ")) object = line.match(/^; printing object ((?:coral|azure)\.stl) id:/)?.[1];
+    if (line.startsWith("; printing object "))
+      object = line.match(/^; printing object ((?:coral|azure)\.stl) id:/)?.[1];
     if (line.startsWith("; stop printing object ")) object = undefined;
     if (object && /^G1\b(?=.* [XY]-?\d)(?=.* E(?:\d|\.\d))/.test(line)) (tools[object] ??= new Set()).add(tool);
   }
@@ -116,7 +124,9 @@ test("the filament cell edits only its row and slices like the assigned project"
   await expect(one).toHaveAttribute("aria-checked", "true");
   await expect(two).toHaveAttribute("aria-checked", "false");
   const files = unzipSync(assigned);
-  const { filament_colour: colours } = JSON.parse(strFromU8(files["Metadata/project_settings.config"])) as { filament_colour: string[] };
+  const { filament_colour: colours } = JSON.parse(strFromU8(files["Metadata/project_settings.config"])) as {
+    filament_colour: string[];
+  };
   const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
   await expect(one.getByText("1", { exact: true })).toHaveCSS("background-color", rgb(colours[0]));
   await expect(two.getByText("2", { exact: true })).toHaveCSS("background-color", rgb(colours[1]));
@@ -139,8 +149,12 @@ test("part and modifier filament cells offer row-specific choices and object edi
   const files = unzipSync(fixture);
   const path = "Metadata/model_settings.config";
   const xml = strFromU8(files[path]);
-  files[path] = strToU8(xml.replace(/<part id="(?:1|3)"[^>]*>/g, (part) =>
-    `${part}<metadata key="extruder" value="${part.includes('id="1"') ? 1 : 2}"/>`));
+  files[path] = strToU8(
+    xml.replace(
+      /<part id="(?:1|3)"[^>]*>/g,
+      (part) => `${part}<metadata key="extruder" value="${part.includes('id="1"') ? 1 : 2}"/>`,
+    ),
+  );
   await setup(page, "Bambu Lab");
   await openProject(page, Buffer.from(zipSync(files)));
   const tree = page.getByTestId("object-list");
@@ -173,7 +187,10 @@ test("part and modifier filament cells offer row-specific choices and object edi
   await expect(slot(part, "Filament 1")).toBeVisible();
 
   await modifier.getByRole("button", { name: "Edit filament for epsilon-modifier" }).click();
-  await page.getByRole("menu", { name: "Filament for epsilon-modifier" }).getByRole("menuitemradio", { name: "Default" }).click();
+  await page
+    .getByRole("menu", { name: "Filament for epsilon-modifier" })
+    .getByRole("menuitemradio", { name: "Default" })
+    .click();
   await expect(slot(modifier, "Default")).toBeVisible();
   await page.keyboard.press("Control+z");
   await expect(slot(modifier, "Filament 2")).toBeVisible();

@@ -31,12 +31,29 @@ export async function gesture(page: Page, frames: Frame[]) {
     const target = document.elementFromPoint(played[0][0].x, played[0][0].y)!;
     const { setPointerCapture, releasePointerCapture } = Element.prototype;
     const synthetic = (id: number) => id >= 100 && id < 100 + played[0].length;
-    Element.prototype.setPointerCapture = function (id) { if (!synthetic(id)) setPointerCapture.call(this, id); };
-    Element.prototype.releasePointerCapture = function (id) { if (!synthetic(id)) releasePointerCapture.call(this, id); };
-    const fire = (type: string, frame: Point[]) => frame.forEach(({ x, y }, index) => target.dispatchEvent(new PointerEvent(type, {
-      pointerId: 100 + index, pointerType: "touch", isPrimary: index === 0, clientX: x, clientY: y,
-      bubbles: true, cancelable: true, composed: true, buttons: type === "pointerup" ? 0 : 1, button: 0,
-    })));
+    Element.prototype.setPointerCapture = function (id) {
+      if (!synthetic(id)) setPointerCapture.call(this, id);
+    };
+    Element.prototype.releasePointerCapture = function (id) {
+      if (!synthetic(id)) releasePointerCapture.call(this, id);
+    };
+    const fire = (type: string, frame: Point[]) =>
+      frame.forEach(({ x, y }, index) =>
+        target.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: 100 + index,
+            pointerType: "touch",
+            isPrimary: index === 0,
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            buttons: type === "pointerup" ? 0 : 1,
+            button: 0,
+          }),
+        ),
+      );
     fire("pointerdown", played[0]);
     for (const frame of played.slice(1)) fire("pointermove", frame);
     fire("pointerup", played.at(-1)!);
@@ -49,14 +66,23 @@ const steps = (count: number) => Array.from({ length: count + 1 }, (_, index) =>
 
 /** One finger from `from` to `to`. */
 export const swipe = (page: Page, from: Point, to: Point) =>
-  gesture(page, steps(10).map((t) => [{ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }]));
+  gesture(
+    page,
+    steps(10).map((t) => [{ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }]),
+  );
 
 /** Two fingers moving apart symmetrically around `center` from `start` to `end` px apart. */
 export const pinch = (page: Page, center: Point, start: number, end: number) =>
-  gesture(page, steps(10).map((t) => {
-    const half = (start + (end - start) * t) / 2;
-    return [{ x: center.x - half, y: center.y }, { x: center.x + half, y: center.y }];
-  }));
+  gesture(
+    page,
+    steps(10).map((t) => {
+      const half = (start + (end - start) * t) / 2;
+      return [
+        { x: center.x - half, y: center.y },
+        { x: center.x + half, y: center.y },
+      ];
+    }),
+  );
 
 /** WCAG 2.5.5 target size, the 44 CSS px the mobile task requires. */
 export const MIN_TARGET = 44;
@@ -65,18 +91,24 @@ export const MIN_TARGET = 44;
  * Every visible control on the page that is smaller than 44x44, as `name WxH`. A checkbox or
  * radio counts its label, which activates it too.
  */
-export const undersized = (page: Page) => page.evaluate((min) => {
-  const controls = document.querySelectorAll<HTMLElement>(
-    "button, a[href], input:not([type=hidden]), select, textarea, [role=slider], [role=option], [role=tab], [role=checkbox]");
-  return [...controls].flatMap((control) => {
-    const target = control.matches("input[type=checkbox], input[type=radio]") ? control.closest("label") ?? control : control;
-    const { width, height } = target.getBoundingClientRect();
-    if (!width || !height || getComputedStyle(target).visibility !== "visible") return [];
-    if (width >= min && height >= min) return [];
-    const name = control.getAttribute("aria-label") ?? control.textContent?.trim().slice(0, 30) ?? "";
-    return [`${control.tagName.toLowerCase()}.${control.className} "${name}" ${Math.round(width)}x${Math.round(height)}`];
-  });
-}, MIN_TARGET);
+export const undersized = (page: Page) =>
+  page.evaluate((min) => {
+    const controls = document.querySelectorAll<HTMLElement>(
+      "button, a[href], input:not([type=hidden]), select, textarea, [role=slider], [role=option], [role=tab], [role=checkbox]",
+    );
+    return [...controls].flatMap((control) => {
+      const target = control.matches("input[type=checkbox], input[type=radio]")
+        ? (control.closest("label") ?? control)
+        : control;
+      const { width, height } = target.getBoundingClientRect();
+      if (!width || !height || getComputedStyle(target).visibility !== "visible") return [];
+      if (width >= min && height >= min) return [];
+      const name = control.getAttribute("aria-label") ?? control.textContent?.trim().slice(0, 30) ?? "";
+      return [
+        `${control.tagName.toLowerCase()}.${control.className} "${name}" ${Math.round(width)}x${Math.round(height)}`,
+      ];
+    });
+  }, MIN_TARGET);
 
 /**
  * The page does not scroll sideways and every control is fully on screen, uncovered and at least
@@ -101,10 +133,13 @@ export async function expectFits(page: Page, controls: Locator[]) {
     expect.soft(box.width, `${name} target width`).toBeGreaterThanOrEqual(MIN_TARGET);
     expect.soft(box.height, `${name} target height`).toBeGreaterThanOrEqual(MIN_TARGET);
     // Nothing covers the control's centre.
-    const covered = await control.evaluate((element, [x, y]) => {
-      const top = document.elementFromPoint(x, y);
-      return !top || !(element === top || element.contains(top));
-    }, [box.x + box.width / 2, box.y + box.height / 2]);
+    const covered = await control.evaluate(
+      (element, [x, y]) => {
+        const top = document.elementFromPoint(x, y);
+        return !top || !(element === top || element.contains(top));
+      },
+      [box.x + box.width / 2, box.y + box.height / 2],
+    );
     expect.soft(covered, `${name} is not covered`).toBe(false);
   }
 }
@@ -125,18 +160,33 @@ export async function expectNoOverlap(page: Page, allowed: string[]) {
     if (!(await overlay.isVisible())) continue;
     const box = (await overlay.boundingBox())!;
     boxes.push({ id, ...box });
-    expect.soft(box.x >= viewport.x && box.y >= viewport.y && box.x + box.width <= viewport.x + viewport.width
-      && box.y + box.height <= viewport.y + viewport.height, `${id} lies inside the 3D view`).toBe(true);
+    expect
+      .soft(
+        box.x >= viewport.x &&
+          box.y >= viewport.y &&
+          box.x + box.width <= viewport.x + viewport.width &&
+          box.y + box.height <= viewport.y + viewport.height,
+        `${id} lies inside the 3D view`,
+      )
+      .toBe(true);
   }
   for (const [index, a] of boxes.entries()) {
     for (const b of boxes.slice(index + 1)) {
       if (allowed.includes(`${a.id}/${b.id}`) || allowed.includes(`${b.id}/${a.id}`)) continue;
       const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
       const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-      expect.soft(width > 0 && height > 0 ? `${Math.round(width)}x${Math.round(height)}` : "none", `${a.id} and ${b.id} overlap`).toBe("none");
+      expect
+        .soft(
+          width > 0 && height > 0 ? `${Math.round(width)}x${Math.round(height)}` : "none",
+          `${a.id} and ${b.id} overlap`,
+        )
+        .toBe("none");
     }
   }
-  const centre = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, [viewport.x + viewport.width / 2, viewport.y + viewport.height / 2]);
+  const centre = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.tagName,
+    [viewport.x + viewport.width / 2, viewport.y + viewport.height / 2],
+  );
   expect.soft(centre, "nothing covers the 3D view centre").toBe("CANVAS");
   return boxes.map(({ id }) => id);
 }

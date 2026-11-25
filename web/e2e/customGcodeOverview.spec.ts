@@ -19,16 +19,26 @@ const overview = `${root}tests/parity/custom-gcode-overview/overview.3mf`;
  */
 function native(gcode: string) {
   const directory = mkdtempSync(`${tmpdir()}/custom-gcode-overview-web-`);
-  execFileSync(process.execPath, [`${root}tools/chain-probe/custom-gcode-overview-fixtures.mjs`, `${directory}/oracle`, overview, gcode, "0"], { cwd: root });
+  execFileSync(
+    process.execPath,
+    [`${root}tools/chain-probe/custom-gcode-overview-fixtures.mjs`, `${directory}/oracle`, overview, gcode, "0"],
+    { cwd: root },
+  );
   const { rows } = JSON.parse(readFileSync(`${directory}/oracle/native.json`, "utf8")) as {
     rows: { label: string; layer: string; time: string }[];
   };
-  return { directory, table: [["Custom G-code", "Layer", "Time"], ...rows.map(({ label, layer, time }) => [label, layer, time])] };
+  return {
+    directory,
+    table: [["Custom G-code", "Layer", "Time"], ...rows.map(({ label, layer, time }) => [label, layer, time])],
+  };
 }
 
 /** Non-waiting read: a missing block is an assertion diff, not a timeout. */
-const table = (page: Page) => page.getByTestId("legend-custom-gcode").locator("tr").evaluateAll((rows) =>
-  rows.map((row) => [...row.querySelectorAll("th, td")].map((cell) => cell.textContent)));
+const table = (page: Page) =>
+  page
+    .getByTestId("legend-custom-gcode")
+    .locator("tr")
+    .evaluateAll((rows) => rows.map((row) => [...row.querySelectorAll("th, td")].map((cell) => cell.textContent)));
 
 async function slice(page: Page, project: string) {
   await page.getByRole("link", { name: "Prepare", exact: true }).click();
@@ -41,18 +51,31 @@ async function slice(page: Page, project: string) {
   await expect(page.getByTestId("view-type")).toBeVisible();
 }
 
-test("legend Custom G-code overview matches GCodeViewer::render_legend over the live Native kernel", async ({ page }) => {
+test("legend Custom G-code overview matches GCodeViewer::render_legend over the live Native kernel", async ({
+  page,
+}) => {
   test.setTimeout(900_000);
   const bins = [
-    oraclePath("ARES_PLATE_CUSTOM_GCODES_BIN", "the plate custom G-code probe", "tools/chain-probe/plate-custom-gcodes.nix"),
-    oraclePath("ARES_CUSTOM_GCODE_OVERVIEW_BIN", "the custom G-code overview kernel", "tools/chain-probe/custom-gcode-overview.nix"),
+    oraclePath(
+      "ARES_PLATE_CUSTOM_GCODES_BIN",
+      "the plate custom G-code probe",
+      "tools/chain-probe/plate-custom-gcodes.nix",
+    ),
+    oraclePath(
+      "ARES_CUSTOM_GCODE_OVERVIEW_BIN",
+      "the custom G-code overview kernel",
+      "tools/chain-probe/custom-gcode-overview.nix",
+    ),
   ];
   if (bins.includes(null)) test.skip();
   mkdirSync(artifacts, { recursive: true });
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await slice(page, overview);
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code" }).click()]);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Export G-code" }).click(),
+  ]);
   const gcode = `${artifacts}/browser.gcode`;
   await download.saveAs(gcode);
   const oracle = native(gcode);
@@ -61,15 +84,20 @@ test("legend Custom G-code overview matches GCodeViewer::render_legend over the 
   const report: Record<string, unknown> = { oracle: oracle.directory, expected: oracle.table };
   for (const view of ["FeatureType", "Speed"]) {
     await page.getByTestId("view-type").selectOption(view);
-    await expect.poll(async () => {
-      report[view] = await table(page);
-      writeFileSync(`${artifacts}/rows.json`, `${JSON.stringify(report, null, 2)}\n`);
-      return report[view];
-    }, { message: `${view} overview table` }).toEqual(oracle.table);
+    await expect
+      .poll(
+        async () => {
+          report[view] = await table(page);
+          writeFileSync(`${artifacts}/rows.json`, `${JSON.stringify(report, null, 2)}\n`);
+          return report[view];
+        },
+        { message: `${view} overview table` },
+      )
+      .toEqual(oracle.table);
   }
   await page.getByTestId("view-type").selectOption("FeatureType");
   for (const theme of ["dark", "light"] as const) {
-    if (await page.locator("html").getAttribute("data-theme") !== theme)
+    if ((await page.locator("html").getAttribute("data-theme")) !== theme)
       await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-custom-gcode-${theme}.png` });

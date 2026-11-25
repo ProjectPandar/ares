@@ -11,8 +11,10 @@ const fixture = `${repositoryRoot}tests/parity/orca_cli_ender3.3mf`;
 
 const blur = (page: Page) => page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 const pressed = (page: Page, view: string) =>
-  expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: view, exact: true }))
-    .toHaveAttribute("aria-pressed", "true");
+  expect(shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: view, exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 
 /** Preview shortcuts (KBShortcutsDialog "Preview"): layer slider keys, wheel, one-layer mode. */
 async function checkSliderShortcuts(page: Page) {
@@ -146,6 +148,9 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   await checkSliderShortcuts(page);
 
   await page.screenshot({ path: `${artifacts}preview.png` });
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ gcode: download.suggestedFilename(), slider: true }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ gcode: download.suggestedFilename(), slider: true }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

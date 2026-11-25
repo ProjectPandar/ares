@@ -12,10 +12,20 @@ export function CustomGCodeRows({ rows }: { rows: CustomGCodeOverviewRow[] }) {
   return (
     <section className="legend-custom-gcode" data-testid="legend-custom-gcode">
       <table aria-label="Custom G-code overview">
-        <thead><tr><th scope="col">Custom G-code</th><th scope="col">Layer</th><th scope="col">Time</th></tr></thead>
+        <thead>
+          <tr>
+            <th scope="col">Custom G-code</th>
+            <th scope="col">Layer</th>
+            <th scope="col">Time</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map(({ label, layer, time }, index) => (
-            <tr key={index}><td>{label}</td><td>{layer}</td><td>{shortTime(timeDhms(time))}</td></tr>
+            <tr key={index}>
+              <td>{label}</td>
+              <td>{layer}</td>
+              <td>{shortTime(timeDhms(time))}</td>
+            </tr>
           ))}
         </tbody>
       </table>

@@ -87,33 +87,53 @@ export function attachInstanceDrag(
     scene.previewed();
   };
   // Capture phase: decided before OrbitControls sees the press.
-  canvas.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
-    const pressed = scene.hit(ray(event));
-    if (!pressed) return;
-    const { gizmo, group } = pressed;
-    const last = gizmo?.kind === "ring" ? planePoint(ray(event).ray, gizmo.center, gizmo.axis) : pressed.point;
-    if (!last) return;
-    const center = new THREE.Box3().setFromObject(group).getCenter(new THREE.Vector3());
-    const current: Drag = { ...pressed, matrix: group.matrix.clone(), center, pivot: null, last, started: false, displacement: new THREE.Vector3(), angle: 0, ratio: 1 };
-    drag = current;
-    controls.enabled = false;
-    if (gizmo?.kind === "ring") {
-      void edit()!.pivot(pressed.target).then((pivot) => {
-        current.pivot = new THREE.Vector3(...pivot);
-        if (drag === current && current.started) preview(current);
-      });
-    }
-  }, { capture: true, signal });
-  canvas.addEventListener("pointermove", (event) => {
-    const handlers = edit();
-    if (!drag || !handlers || !step(drag, ray(event).ray, event.shiftKey)) return;
-    if (!drag.started) {
-      drag.started = true;
-      handlers.start(drag.target);
-    }
-    preview(drag);
-  }, { signal });
+  canvas.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.button !== 0) return;
+      const pressed = scene.hit(ray(event));
+      if (!pressed) return;
+      const { gizmo, group } = pressed;
+      const last = gizmo?.kind === "ring" ? planePoint(ray(event).ray, gizmo.center, gizmo.axis) : pressed.point;
+      if (!last) return;
+      const center = new THREE.Box3().setFromObject(group).getCenter(new THREE.Vector3());
+      const current: Drag = {
+        ...pressed,
+        matrix: group.matrix.clone(),
+        center,
+        pivot: null,
+        last,
+        started: false,
+        displacement: new THREE.Vector3(),
+        angle: 0,
+        ratio: 1,
+      };
+      drag = current;
+      controls.enabled = false;
+      if (gizmo?.kind === "ring") {
+        void edit()!
+          .pivot(pressed.target)
+          .then((pivot) => {
+            current.pivot = new THREE.Vector3(...pivot);
+            if (drag === current && current.started) preview(current);
+          });
+      }
+    },
+    { capture: true, signal },
+  );
+  canvas.addEventListener(
+    "pointermove",
+    (event) => {
+      const handlers = edit();
+      if (!drag || !handlers || !step(drag, ray(event).ray, event.shiftKey)) return;
+      if (!drag.started) {
+        drag.started = true;
+        handlers.start(drag.target);
+      }
+      preview(drag);
+    },
+    { signal },
+  );
   const end = () => {
     if (!drag) return;
     const handlers = edit();
@@ -165,14 +185,16 @@ function transform(drag: Drag): THREE.Matrix4 | null {
     const [x, y, z] = scaleFactor(gizmo.grabber, drag.ratio);
     return about(drag.center, new THREE.Matrix4().makeScale(x, y, z));
   }
-  if (gizmo?.kind === "ring") return drag.pivot && about(drag.pivot, new THREE.Matrix4().makeRotationAxis(gizmo.axis, drag.angle));
+  if (gizmo?.kind === "ring")
+    return drag.pivot && about(drag.pivot, new THREE.Matrix4().makeRotationAxis(gizmo.axis, drag.angle));
   return new THREE.Matrix4().makeTranslation(drag.displacement);
 }
 
 function commit(drag: Drag, handlers: EditHandlers) {
   const { gizmo, target } = drag;
   if (gizmo?.kind === "grabber") handlers.scale(target, scaleFactor(gizmo.grabber, drag.ratio));
-  else if (gizmo?.kind === "ring") handlers.rotate(target, gizmo.axis.toArray().map((component) => component * drag.angle) as Vec3);
+  else if (gizmo?.kind === "ring")
+    handlers.rotate(target, gizmo.axis.toArray().map((component) => component * drag.angle) as Vec3);
   else handlers.move(target, drag.displacement.toArray());
 }
 

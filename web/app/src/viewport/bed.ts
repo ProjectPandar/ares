@@ -7,7 +7,12 @@ import type { ViewportColors } from "./Viewport";
  * the current plate's outline in the accent colour, and each plate's index above its top-left
  * corner (`m_plate_idx_icon`, PartPlate::render_icons, PartPlate.cpp:1106-1207). The Bed3D origin axes stay at the first plate's origin.
  */
-export function buildPlates(shape: BedShape, origins: readonly (readonly [number, number])[], current: number, materials: PlateMaterials): THREE.Group {
+export function buildPlates(
+  shape: BedShape,
+  origins: readonly (readonly [number, number])[],
+  current: number,
+  materials: PlateMaterials,
+): THREE.Group {
   const group = new THREE.Group();
   const xs = shape.polygon.map(([x]) => x);
   const ys = shape.polygon.map(([, y]) => y);
@@ -23,7 +28,12 @@ export function buildPlates(shape: BedShape, origins: readonly (readonly [number
     plate.position.set(x, y, 0);
     group.add(plate);
   });
-  group.add(buildAxes(0.1 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), shape.height), materials.axes));
+  group.add(
+    buildAxes(
+      0.1 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), shape.height),
+      materials.axes,
+    ),
+  );
   return group;
 }
 
@@ -68,7 +78,11 @@ export function recolorPlates(group: THREE.Group, current: number, materials: Pl
   group.children.slice(0, -1).forEach((plate, index) => {
     const label = plate.children[4];
     if (label instanceof THREE.Sprite) {
-      drawLabel(label.material.map!.image as HTMLCanvasElement, String(index + 1), index === current ? colors.current : colors.outline);
+      drawLabel(
+        label.material.map!.image as HTMLCanvasElement,
+        String(index + 1),
+        index === current ? colors.current : colors.outline,
+      );
       label.material.map!.needsUpdate = true;
     }
   });
@@ -89,19 +103,22 @@ function buildLabel(text: string, color: number, size: number) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 64;
   drawLabel(canvas, text, color);
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthWrite: false }));
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthWrite: false }),
+  );
   sprite.scale.set(size, size, 1);
   return sprite;
 }
 
 /** Plate surface, 10 mm grid with 50 mm major lines and outline. */
-function buildBed({ polygon }: BedShape, materials: PlateMaterials, outlineMaterial: THREE.LineBasicMaterial): THREE.Group {
+function buildBed(
+  { polygon }: BedShape,
+  materials: PlateMaterials,
+  outlineMaterial: THREE.LineBasicMaterial,
+): THREE.Group {
   const group = new THREE.Group();
   const shape = new THREE.Shape(polygon.map(([x, y]) => new THREE.Vector2(x, y)));
-  const surface = new THREE.Mesh(
-    new THREE.ShapeGeometry(shape),
-    materials.bed,
-  );
+  const surface = new THREE.Mesh(new THREE.ShapeGeometry(shape), materials.bed);
   surface.position.z = -0.05;
   group.add(surface);
 

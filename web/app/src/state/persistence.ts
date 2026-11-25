@@ -70,26 +70,39 @@ const isStrings = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string");
 const isOptionalString = (value: unknown) => value === undefined || typeof value === "string";
 const isOptionalStrings = (value: unknown) => value === undefined || isStrings(value);
-const isOptionalNumbers = (value: unknown) => value === undefined || (Array.isArray(value) && value.every((item) => typeof item === "number"));
+const isOptionalNumbers = (value: unknown) =>
+  value === undefined || (Array.isArray(value) && value.every((item) => typeof item === "number"));
 
 function isPrinterSettings(value: unknown): value is PrinterSettings {
-  return isRecord(value) && isOptionalString(value.process) && isStrings(value.filaments) && isOptionalString(value.bedType)
-    && [value.filamentColours, value.filamentMultiColours, value.filamentColourTypes].every(isOptionalStrings)
-    && [value.flushVolumesMatrix, value.flushVolumesVector, value.flushMultiplier].every(isOptionalNumbers);
+  return (
+    isRecord(value) &&
+    isOptionalString(value.process) &&
+    isStrings(value.filaments) &&
+    isOptionalString(value.bedType) &&
+    [value.filamentColours, value.filamentMultiColours, value.filamentColourTypes].every(isOptionalStrings) &&
+    [value.flushVolumesMatrix, value.flushVolumesVector, value.flushMultiplier].every(isOptionalNumbers)
+  );
 }
 
 function isStoredConfig(value: Record<string, unknown>): boolean {
-  return (value.theme === "dark" || value.theme === "light")
-    && (value.mode === "simple" || value.mode === "advanced" || value.mode === "expert")
-    && typeof value.gcodeWindow === "boolean"
-    && isRecord(value.installedPrinters)
-    && Object.values(value.installedPrinters).every((models) => isRecord(models) && Object.values(models).every(isStrings))
-    && (value.printer === null || typeof value.printer === "string")
-    && isRecord(value.printers) && Object.values(value.printers).every(isPrinterSettings)
-    && isStrings(value.installedFilaments)
-    && isRecord(value.nozzleVolumeTypes) && Object.values(value.nozzleVolumeTypes).every(isStrings)
-    && ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string)
-    && (value.arrange === undefined || (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string")));
+  return (
+    (value.theme === "dark" || value.theme === "light") &&
+    (value.mode === "simple" || value.mode === "advanced" || value.mode === "expert") &&
+    typeof value.gcodeWindow === "boolean" &&
+    isRecord(value.installedPrinters) &&
+    Object.values(value.installedPrinters).every(
+      (models) => isRecord(models) && Object.values(models).every(isStrings),
+    ) &&
+    (value.printer === null || typeof value.printer === "string") &&
+    isRecord(value.printers) &&
+    Object.values(value.printers).every(isPrinterSettings) &&
+    isStrings(value.installedFilaments) &&
+    isRecord(value.nozzleVolumeTypes) &&
+    Object.values(value.nozzleVolumeTypes).every(isStrings) &&
+    ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string) &&
+    (value.arrange === undefined ||
+      (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string")))
+  );
 }
 
 /** The stored record, or null after deleting an old or malformed one. */
@@ -151,7 +164,10 @@ function done(transaction: IDBTransaction): Promise<void> {
 }
 
 const isStoredImport = (value: unknown): value is { version: number } & StoredImport =>
-  isRecord(value) && value.version === VERSION && typeof value.filename === "string" && value.bytes instanceof Uint8Array;
+  isRecord(value) &&
+  value.version === VERSION &&
+  typeof value.filename === "string" &&
+  value.bytes instanceof Uint8Array;
 
 /** Imports in import order with their keys; malformed entries are deleted. */
 export async function loadImports(): Promise<{ key: IDBValidKey; file: StoredImport }[]> {
@@ -163,7 +179,8 @@ export async function loadImports(): Promise<{ key: IDBValidKey; file: StoredImp
     const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
     if (!cursor) return;
     const value: unknown = cursor.value;
-    if (isStoredImport(value)) entries.push({ key: cursor.key, file: { filename: value.filename, bytes: value.bytes } });
+    if (isStoredImport(value))
+      entries.push({ key: cursor.key, file: { filename: value.filename, bytes: value.bytes } });
     else cursor.delete();
     cursor.continue();
   };

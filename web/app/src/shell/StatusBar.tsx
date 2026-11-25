@@ -8,7 +8,22 @@ function formatBytes(bytes: number) {
 }
 
 export function StatusBar() {
-  const { engine, engineError, engineCrash, file, scene, presetSelection, slice, currentPlate, loadError, loadingFile, openingStlSession, arranging, arrangeError, saveError } = useApp();
+  const {
+    engine,
+    engineError,
+    engineCrash,
+    file,
+    scene,
+    presetSelection,
+    slice,
+    currentPlate,
+    loadError,
+    loadingFile,
+    openingStlSession,
+    arranging,
+    arrangeError,
+    saveError,
+  } = useApp();
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   const progress = slice.status === "slicing" ? slice.progress : undefined;
   let message: string;
@@ -28,16 +43,33 @@ export function StatusBar() {
     message = `Slice complete — ${formatBytes(slice.gcode.length)} G-code in ${(slice.elapsedMs / 1000).toFixed(2)} s`;
   else if (file) message = blocker ?? "Ready to slice";
   else message = "Import a 3MF project or STL model to begin";
-  const error = engine === "error" || !!loadError || !!saveError || (!arranging && !!arrangeError) || slice.status === "error";
+  const error =
+    engine === "error" || !!loadError || !!saveError || (!arranging && !!arrangeError) || slice.status === "error";
   return (
     <footer className="statusbar">
-      <span className={error ? "status-message error" : message === blocker ? "status-message warning" : "status-message"} data-testid="status">
-        {(slice.status === "slicing" || loadingFile || openingStlSession || arranging || engine === "loading") && <span className="spinner" />}
+      <span
+        className={error ? "status-message error" : message === blocker ? "status-message warning" : "status-message"}
+        data-testid="status"
+      >
+        {(slice.status === "slicing" || loadingFile || openingStlSession || arranging || engine === "loading") && (
+          <span className="spinner" />
+        )}
         {message}
-        {progress && <progress className="slice-progress" data-testid="slice-progress" max={100} value={progress.percent} />}
+        {progress && (
+          <progress className="slice-progress" data-testid="slice-progress" max={100} value={progress.percent} />
+        )}
       </span>
       <span className="status-right">
-        {file && <span>{file.name} · {formatBytes(file.kind === "single" ? file.bytes.length : file.files.reduce((total, input) => total + input.bytes.length, 0))}</span>}
+        {file && (
+          <span>
+            {file.name} ·{" "}
+            {formatBytes(
+              file.kind === "single"
+                ? file.bytes.length
+                : file.files.reduce((total, input) => total + input.bytes.length, 0),
+            )}
+          </span>
+        )}
         <span className={`engine-dot ${engine}`} title={`WASM engine: ${engine}`} />
         <span>WASM worker</span>
       </span>

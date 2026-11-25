@@ -9,7 +9,9 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/preset-bundle-load
 // The H2D project of dualExtruder.spec.ts, with its legal master extruder.
 const FIXTURE = `${repositoryRoot}tests/parity/master-extruder-id/stock-right-only.3mf`;
 
-test("after the wizard installs every Bambu Lab printer, an H2D project opens within the ready budget", async ({ page }) => {
+test("after the wizard installs every Bambu Lab printer, an H2D project opens within the ready budget", async ({
+  page,
+}) => {
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
   const entries = unzipSync(readFileSync(FIXTURE));
@@ -34,6 +36,9 @@ test("after the wizard installs every Bambu Lab printer, an H2D project opens wi
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   const ready = Date.now() - start;
   await page.screenshot({ path: `${artifacts}ready.png` });
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ fixture: "master-extruder-id/stock-right-only.3mf", ready_ms: ready, errors }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ fixture: "master-extruder-id/stock-right-only.3mf", ready_ms: ready, errors }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

@@ -48,7 +48,17 @@ async function countToolpathWork(page: Page) {
     const segmentShaders = new WeakSet<WebGLShader>();
     const segmentPrograms = new WeakSet<WebGLProgram>();
     let current: WebGLProgram | null = null;
-    const { shaderSource, attachShader, useProgram, drawArraysInstanced, drawElementsInstanced, bufferData, bufferSubData, texImage2D, texSubImage2D } = proto;
+    const {
+      shaderSource,
+      attachShader,
+      useProgram,
+      drawArraysInstanced,
+      drawElementsInstanced,
+      bufferData,
+      bufferSubData,
+      texImage2D,
+      texSubImage2D,
+    } = proto;
     proto.shaderSource = function (shader, source) {
       if (source.includes("#define POINTY_CAPS")) segmentShaders.add(shader);
       shaderSource.call(this, shader, source);
@@ -100,20 +110,23 @@ async function countToolpathWork(page: Page) {
 }
 
 /** The work counted since the last call, which starts a new count. */
-const takeWork = (page: Page) => page.evaluate(() => {
-  const work = (window as unknown as { toolpathWork: Workload }).toolpathWork;
-  const taken = structuredClone(work);
-  work.enabled.length = 0;
-  work.draws.length = 0;
-  work.buffers = work.floatTextures = work.textures = 0;
-  return taken;
-});
+const takeWork = (page: Page) =>
+  page.evaluate(() => {
+    const work = (window as unknown as { toolpathWork: Workload }).toolpathWork;
+    const taken = structuredClone(work);
+    work.enabled.length = 0;
+    work.draws.length = 0;
+    work.buffers = work.floatTextures = work.textures = 0;
+    return taken;
+  });
 
 // libvgcode draws the enabled segments only. update_enabled_entities uploads their ids, 4 bytes each
 // (`ViewerImpl.cpp:1357-1361,543-616`), and render_segments draws one instance per id
 // (`ViewerImpl.cpp:2311-2320,2331-2350`) and nothing when there is none (`:2233-2238`). The segment
 // geometry stays in the per-vertex textures uploaded with the G-code (`ViewerImpl.cpp:384-488`).
-test("a layer range change draws one segment instance per enabled segment and uploads only their ids", async ({ page }) => {
+test("a layer range change draws one segment instance per enabled segment and uploads only their ids", async ({
+  page,
+}) => {
   test.setTimeout(900_000);
   mkdirSync(artifacts, { recursive: true });
   await countToolpathWork(page);
@@ -130,8 +143,9 @@ test("a layer range change draws one segment instance per enabled segment and up
   await expect(busy).toHaveAttribute("aria-busy", "false", { timeout: 120_000 });
   await expect(viewport).not.toHaveAttribute("data-drawing", { timeout: 120_000 });
   const segments = Number((await viewport.getAttribute("data-segment-geometry"))!.split(":")[0]);
-  const markers = Object.values(JSON.parse((await viewport.getAttribute("data-option-markers"))!) as Record<string, number>)
-    .reduce((sum, count) => sum + count, 0);
+  const markers = Object.values(
+    JSON.parse((await viewport.getAttribute("data-option-markers"))!) as Record<string, number>,
+  ).reduce((sum, count) => sum + count, 0);
   const top = page.getByRole("slider", { name: "Top layer" });
   const last = Number(await top.getAttribute("aria-valuemax")) - 1;
   const tenth = Math.round(last / 10);
@@ -150,17 +164,27 @@ test("a layer range change draws one segment instance per enabled segment and up
   const bottom = page.getByRole("slider", { name: "Bottom layer" });
   // Name, the lower thumb (none in one layer mode), the upper thumb, and the input that sets them.
   const steps: [string, number | null, number, () => Promise<void>][] = [
-    ["first layer", 0, 0, async () => {
-      await top.focus();
-      await page.keyboard.press("Home");
-    }],
+    [
+      "first layer",
+      0,
+      0,
+      async () => {
+        await top.focus();
+        await page.keyboard.press("Home");
+      },
+    ],
     // Both thumbs at the first layer: a track click moves the upper one on a tie.
     ["first tenth of the layers", 0, tenth, () => click(tenth)],
     // One layer mode keeps a moved upper thumb (IMSlider::switch_one_layer_mode).
-    ["one layer at the first tenth", null, tenth, async () => {
-      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-      await page.keyboard.press("l");
-    }],
+    [
+      "one layer at the first tenth",
+      null,
+      tenth,
+      async () => {
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+        await page.keyboard.press("l");
+      },
+    ],
     // In one layer mode a track click moves the one thumb.
     ["middle layer", null, middle, () => click(middle)],
     ["all layers", 0, last, () => page.keyboard.press("l")],
@@ -177,7 +201,10 @@ test("a layer range change draws one segment instance per enabled segment and up
     const enabled = work.enabled.at(-1)!;
     const triangles = work.draws.reduce((sum, { count, instances }) => sum + (count / 3) * instances, 0);
     report[name] = { layers: [(lower ?? upper) + 1, upper + 1], ...work, triangles };
-    writeFileSync(`${artifacts}workload.json`, `${JSON.stringify({ fixture, segments, markers, layers: last + 1, report }, null, 2)}\n`);
+    writeFileSync(
+      `${artifacts}workload.json`,
+      `${JSON.stringify({ fixture, segments, markers, layers: last + 1, report }, null, 2)}\n`,
+    );
     expect(work.enabled.length, `${name}: moves results`).toBeGreaterThan(0);
     expect(work.draws.length, `${name}: segment draws`).toBeGreaterThan(0);
     // A draw before the result is committed still shows the previous range.
@@ -186,8 +213,9 @@ test("a layer range change draws one segment instance per enabled segment and up
     expect(work.draws.at(-1)!.instances, `${name}: the settled draw`).toBe(enabled);
     expect(work.floatTextures, `${name}: no segment geometry uploaded`).toBe(0);
     // Every result also re-flags and recolours the option markers, 1 + 3 bytes each.
-    expect(work.buffers, `${name}: buffer bytes = 4-byte enabled ids + option marker flags and colours`)
-      .toBe(work.enabled.reduce((sum, count) => sum + 4 * count + 4 * markers, 0));
+    expect(work.buffers, `${name}: buffer bytes = 4-byte enabled ids + option marker flags and colours`).toBe(
+      work.enabled.reduce((sum, count) => sum + 4 * count + 4 * markers, 0),
+    );
     previous = enabled;
   }
   await page.screenshot({ path: `${artifacts}preview.png` });

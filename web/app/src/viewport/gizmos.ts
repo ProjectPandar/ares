@@ -7,7 +7,8 @@ import { buildScaleGizmo, type ScaleHit } from "./scaleGizmo";
 export type GizmoMode = "move" | "rotate" | "scale";
 
 /** A press on a gizmo: a move arrow or a rotate ring, about `center`, or a scale grabber. */
-export type GizmoHit = { kind: "axis" | "ring"; axis: THREE.Vector3; point: THREE.Vector3; center: THREE.Vector3 } | ScaleHit;
+export type GizmoHit =
+  { kind: "axis" | "ring"; axis: THREE.Vector3; point: THREE.Vector3; center: THREE.Vector3 } | ScaleHit;
 
 /** `GLGizmoBase::AXES_COLOR`, the Bed3D axis colours. */
 const AXIS_COLORS = [0xff3c5b, 0x64c818, 0x2f88e9];
@@ -27,9 +28,14 @@ function buildRotateGizmo(box: THREE.Box3, pixel: number) {
   const radius = RING_OFFSET + box.getBoundingSphere(new THREE.Sphere()).radius;
   AXES.forEach((axis, index) => {
     const ring = new THREE.Group();
-    const line = new THREE.Mesh(new THREE.TorusGeometry(radius, pixel, 6, 96),
-      new THREE.MeshBasicMaterial({ color: AXIS_COLORS[index], depthTest: false }));
-    const sleeve = new THREE.Mesh(new THREE.TorusGeometry(radius, RING_HIT_PX * pixel, 6, 48), new THREE.MeshBasicMaterial({ visible: false }));
+    const line = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, pixel, 6, 96),
+      new THREE.MeshBasicMaterial({ color: AXIS_COLORS[index], depthTest: false }),
+    );
+    const sleeve = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, RING_HIT_PX * pixel, 6, 48),
+      new THREE.MeshBasicMaterial({ visible: false }),
+    );
     for (const mesh of [line, sleeve]) {
       mesh.userData.axis = axis;
       mesh.renderOrder = 1;
@@ -56,7 +62,11 @@ export class Gizmos {
   /** The scale grabbers' world centres and the box's bottom centre. */
   #scale: { at: (grabber: number) => THREE.Vector3; bottom: THREE.Vector3 } | null = null;
 
-  constructor(readonly scene: THREE.Scene, readonly camera: THREE.PerspectiveCamera, readonly container: HTMLElement) {}
+  constructor(
+    readonly scene: THREE.Scene,
+    readonly camera: THREE.PerspectiveCamera,
+    readonly container: HTMLElement,
+  ) {}
 
   place(box: THREE.Box3 | null) {
     if (this.#group) {
@@ -70,22 +80,21 @@ export class Gizmos {
     const center = box.getCenter(new THREE.Vector3());
     const height = this.container.clientHeight;
     // World length of one screen pixel at the box centre.
-    const pixel = (2 * this.camera.position.distanceTo(center) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2))) / height;
+    const pixel =
+      (2 * this.camera.position.distanceTo(center) * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2))) / height;
     const handles: Record<string, THREE.Vector3> = {};
     if (this.mode === "move") {
       const { gizmo, tips } = buildMoveGizmo(box, pixel);
       this.#group = gizmo;
       NAMES.forEach((name, index) => (handles[name] = tips[index]));
-    }
-    else if (this.mode === "rotate") {
+    } else if (this.mode === "rotate") {
       const { gizmo, radius } = buildRotateGizmo(box, pixel);
       this.#group = gizmo;
       // A point on each ring: X's ring towards +y, Y's and Z's towards +x.
       handles.x = new THREE.Vector3(0, radius, 0).add(center);
       handles.y = new THREE.Vector3(radius, 0, 0).add(center);
       handles.z = new THREE.Vector3(radius, 0, 0).add(center);
-    }
-    else {
+    } else {
       const { gizmo, at, bottom } = buildScaleGizmo(box, pixel);
       this.#group = gizmo;
       this.#scale = { at, bottom };
@@ -109,14 +118,23 @@ export class Gizmos {
   hit(raycaster: THREE.Raycaster): GizmoHit | null {
     // The scale gizmo's lines take no press; a drawn grabber takes it before a touch sleeve of a
     // neighbour (the grabbers' own picking, GLGizmoBase::Grabber::render).
-    const hits = this.#group ? raycaster.intersectObject(this.#group, true).filter(({ object }) => object.userData.axis || object.userData.grabber !== undefined) : [];
+    const hits = this.#group
+      ? raycaster
+          .intersectObject(this.#group, true)
+          .filter(({ object }) => object.userData.axis || object.userData.grabber !== undefined)
+      : [];
     const hit = hits.find(({ object }) => ((object as THREE.Mesh).material as THREE.Material).visible) ?? hits[0];
     if (!hit) return null;
     if (this.mode === "scale") {
       const { grabber } = hit.object.userData as { grabber: number };
       return { kind: "grabber", grabber, point: this.#scale!.at(grabber), bottom: this.#scale!.bottom.clone() };
     }
-    return { kind: this.mode === "move" ? "axis" : "ring", axis: hit.object.userData.axis as THREE.Vector3, point: hit.point, center: this.#group!.position.clone() };
+    return {
+      kind: this.mode === "move" ? "axis" : "ring",
+      axis: hit.object.userData.axis as THREE.Vector3,
+      point: hit.point,
+      center: this.#group!.position.clone(),
+    };
   }
 
   dispose() {

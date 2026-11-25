@@ -14,11 +14,12 @@ function excluded({ columns, rows, filamentDiameters, filamentDensities }: Filam
   for (const column of EXCLUDED) {
     const index = columns.indexOf(column);
     let [columnM, columnG] = [0, 0];
-    if (index >= 0) for (const { extruderId, volumes } of rows) {
-      const radius = 0.5 * Math.fround(filamentDiameters[extruderId]);
-      columnM += 0.001 * volumes[index] / (Math.PI * (radius * radius));
-      columnG += volumes[index] * Math.fround(filamentDensities[extruderId]) * 0.001;
-    }
+    if (index >= 0)
+      for (const { extruderId, volumes } of rows) {
+        const radius = 0.5 * Math.fround(filamentDiameters[extruderId]);
+        columnM += (0.001 * volumes[index]) / (Math.PI * (radius * radius));
+        columnG += volumes[index] * Math.fround(filamentDensities[extruderId]) * 0.001;
+      }
     m += columnM;
     g += columnG;
   }
@@ -30,7 +31,11 @@ function excluded({ columns, rows, filamentDiameters, filamentDensities }: Filam
  * mode, metric units: filament and cost rows in the feature type view
  * (:4596-4626), then the time rows (:4627-4644).
  */
-export function EstimationRows({ estimation, legend, featureType }: {
+export function EstimationRows({
+  estimation,
+  legend,
+  featureType,
+}: {
   estimation: Estimation;
   legend: FilamentLegend;
   featureType: boolean;
@@ -57,7 +62,12 @@ export function EstimationRows({ estimation, legend, featureType }: {
     <section className="legend-estimation" data-testid="legend-estimation" aria-labelledby="legend-estimation-title">
       <h3 id="legend-estimation-title">{featureType ? "Total Estimation" : "Time Estimation"}</h3>
       <dl>
-        {rows.map(([label, value]) => <div key={label}><dt>{label}:</dt><dd>{value}</dd></div>)}
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}:</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
       </dl>
     </section>
   );

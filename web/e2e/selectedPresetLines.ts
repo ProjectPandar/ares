@@ -32,10 +32,12 @@ export const SELECTED_PRESET_KEYS = [
 
 /** ConfigOptionStrings::serialize, escape_strings_cstyle (Config.cpp:99-147). */
 export function cstyle(values: string[]) {
-  return values.map((value) => {
-    const quote = (values.length === 1 && value === "") || /[ \t;\\"\r\n]/.test(value);
-    return quote ? `"${value.replace(/[\\"]/g, "\\$&").replace(/\r/g, "\\r").replace(/\n/g, "\\n")}"` : value;
-  }).join(";");
+  return values
+    .map((value) => {
+      const quote = (values.length === 1 && value === "") || /[ \t;\\"\r\n]/.test(value);
+      return quote ? `"${value.replace(/[\\"]/g, "\\$&").replace(/\r/g, "\\r").replace(/\n/g, "\\n")}"` : value;
+    })
+    .join(";");
 }
 
 type SelectedPresetKey = (typeof SELECTED_PRESET_KEYS)[number];
@@ -63,7 +65,10 @@ export function setConfigLine(lines: string[], key: string, value: string | unde
 function selectedValues(selection: NativeSelection): Record<SelectedPresetKey, string | undefined> {
   // Native premise: the filament collection's selection is the first filament, whose edited copy find_preset returns.
   expect(selection.filament.selected.name, "Native selects the first filament").toBe(selection.filament_presets[0]);
-  const plater = JSON.parse(selection.full_fff_config) as { pellet_flow_coefficient?: string[]; filament_multi_colour?: string[] };
+  const plater = JSON.parse(selection.full_fff_config) as {
+    pellet_flow_coefficient?: string[];
+    filament_multi_colour?: string[];
+  };
   return {
     printer_settings_id: selection.printer.selected.name,
     print_settings_id: selection.process.selected.name,
@@ -118,13 +123,23 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
   const values = selectedValues(selection);
   const lines = reference.split("\n");
   for (const key of ["Printer", "Profile"] as const) {
-    for (const [index, line] of lines.entries()) if (line.startsWith(`; ${key} : `)) lines[index] = `; ${key} : ${values[key]}`;
+    for (const [index, line] of lines.entries())
+      if (line.startsWith(`; ${key} : `)) lines[index] = `; ${key} : ${values[key]}`;
   }
-  for (const key of ["printer_settings_id", "print_settings_id", "filament_settings_id", "filament_plugin_config_overrides", "pellet_flow_coefficient", "filament_multi_colour"] as const) {
+  for (const key of [
+    "printer_settings_id",
+    "print_settings_id",
+    "filament_settings_id",
+    "filament_plugin_config_overrides",
+    "pellet_flow_coefficient",
+    "filament_multi_colour",
+  ] as const) {
     setConfigLine(lines, key, values[key]);
   }
   const start = lines.indexOf("; CONFIG_BLOCK_START");
-  const erased = lines.findIndex((line, index) => index > start && line.startsWith("; compatible_printers_condition = "));
+  const erased = lines.findIndex(
+    (line, index) => index > start && line.startsWith("; compatible_printers_condition = "),
+  );
   if (erased >= 0) lines.splice(erased, 1);
   return lines.join("\n");
 }
@@ -140,10 +155,15 @@ export function withSelectedPresets(reference: string, selection: NativeSelectio
 export function withGuiMissingKeys(opened: string, selection: NativeSelection, out: string) {
   const entries = unzipSync(readFileSync(opened));
   const project = JSON.parse(strFromU8(entries[PROJECT_CONFIG])) as Record<string, unknown>;
-  const added = Object.fromEntries(Object.entries(JSON.parse(selection.full_fff_config) as Record<string, unknown>)
-    .filter(([key]) => !(key in project)));
+  const added = Object.fromEntries(
+    Object.entries(JSON.parse(selection.full_fff_config) as Record<string, unknown>).filter(
+      ([key]) => !(key in project),
+    ),
+  );
   const config = { ...project, ...added };
-  expect("different_settings_to_system" in config, "no different_settings_to_system turns on refresh_unlisted").toBe(false);
+  expect("different_settings_to_system" in config, "no different_settings_to_system turns on refresh_unlisted").toBe(
+    false,
+  );
   entries[PROJECT_CONFIG] = strToU8(JSON.stringify(config));
   writeFileSync(out, zipSync(entries));
   return added as Record<string, string | string[]>;

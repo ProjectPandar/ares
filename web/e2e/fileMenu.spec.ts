@@ -50,22 +50,39 @@ const EXPORT_ROWS: Row[] = [
 ];
 const SUBMENUS = ["Recent files", "Import", "Export"];
 /** Items enabled with the engine ready and nothing sliced. */
-const ENABLED = ["New Window", "New Project", "Open Project…", "Import", "Export", "Import 3MF/STL…", "Import Configs…"];
+const ENABLED = [
+  "New Window",
+  "New Project",
+  "Open Project…",
+  "Import",
+  "Export",
+  "Import 3MF/STL…",
+  "Import Configs…",
+];
 
 /** The rows a menu should show, with the platform's Ctrl label and `aria-keyshortcuts` modifier. */
-const expected = (rows: Row[], enabled: string[], mac: boolean) => rows.map((row) => row === "-" ? "-" : {
-  label: row[0],
-  enabled: enabled.includes(row[0]),
-  shortcut: row[1] && `${mac ? "⌘+" : "Ctrl+"}${row[1]}`,
-  keys: row[1] && `${mac ? "Meta" : "Control"}+${row[1]}`,
-  reason: enabled.includes(row[0]) ? "" : row[2],
-  submenu: SUBMENUS.includes(row[0]),
-});
+const expected = (rows: Row[], enabled: string[], mac: boolean) =>
+  rows.map((row) =>
+    row === "-"
+      ? "-"
+      : {
+          label: row[0],
+          enabled: enabled.includes(row[0]),
+          shortcut: row[1] && `${mac ? "⌘+" : "Ctrl+"}${row[1]}`,
+          keys: row[1] && `${mac ? "Meta" : "Control"}+${row[1]}`,
+          reason: enabled.includes(row[0]) ? "" : row[2],
+          submenu: SUBMENUS.includes(row[0]),
+        },
+  );
 
 /** A menu's own rows, in order, as a reader gets them. */
-const readMenu = (menu: Locator) => menu.evaluate((root) =>
-  [...root.querySelectorAll(":scope > [role=menuitem], :scope > [role=separator], :scope > [role=none] > [role=menuitem]")]
-    .map((item) => {
+const readMenu = (menu: Locator) =>
+  menu.evaluate((root) =>
+    [
+      ...root.querySelectorAll(
+        ":scope > [role=menuitem], :scope > [role=separator], :scope > [role=none] > [role=menuitem]",
+      ),
+    ].map((item) => {
       if (item.getAttribute("role") === "separator") return "-";
       const description = item.getAttribute("aria-describedby");
       return {
@@ -76,9 +93,11 @@ const readMenu = (menu: Locator) => menu.evaluate((root) =>
         reason: (description && document.getElementById(description)?.textContent) ?? "",
         submenu: item.getAttribute("aria-haspopup") === "menu",
       };
-    }));
+    }),
+  );
 
-const sha256 = (download: Download) => download.path().then((path) => createHash("sha256").update(readFileSync(path)).digest("hex"));
+const sha256 = (download: Download) =>
+  download.path().then((path) => createHash("sha256").update(readFileSync(path)).digest("hex"));
 
 /** What a load shows: the window title, the object list and the status line. */
 const loaded = async (page: Page) => ({
@@ -87,7 +106,10 @@ const loaded = async (page: Page) => ({
   status: await page.getByTestId("status").textContent(),
 });
 
-test("the File menu lists upstream's rows and runs import, open, export, new project and new window", async ({ page, context }) => {
+test("the File menu lists upstream's rows and runs import, open, export, new project and new window", async ({
+  page,
+  context,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -213,14 +235,21 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
   expect(configs.isMultiple()).toBe(true);
   await configs.setFiles(PRESET);
   const printer = page.getByRole("button", { name: "Printer preset", exact: true });
-  const userPrinter = page.getByRole("listbox", { name: "Printer preset", exact: true })
-    .getByRole("group", { name: "User presets" }).getByRole("option", { name: USER_PRINTER, exact: true });
-  await expect.poll(async () => {
-    await printer.click();
-    const shown = await userPrinter.count();
-    await page.keyboard.press("Escape");
-    return shown;
-  }, { timeout: 30_000 }).toBe(1);
+  const userPrinter = page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "User presets" })
+    .getByRole("option", { name: USER_PRINTER, exact: true });
+  await expect
+    .poll(
+      async () => {
+        await printer.click();
+        const shown = await userPrinter.count();
+        await page.keyboard.press("Escape");
+        return shown;
+      },
+      { timeout: 30_000 },
+    )
+    .toBe(1);
   await printer.click();
   await userPrinter.click();
   await expect(printer).toHaveText(USER_PRINTER);
@@ -273,15 +302,25 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
 
   // New Window opens the app in a second page.
   const [second] = await Promise.all([context.waitForEvent("page"), pick(["New Window"])]);
-  const app = (url: string) => { const { origin, pathname } = new URL(url); return origin + pathname; };
+  const app = (url: string) => {
+    const { origin, pathname } = new URL(url);
+    return origin + pathname;
+  };
   await expect.poll(() => app(second.url())).toBe(app(page.url()));
   await second.close();
 
-  writeFileSync(`${artifacts}menu.json`, `${JSON.stringify({
-    empty,
-    sliced,
-    gcode: { name: button.suggestedFilename(), sha256: await sha256(button), menuSha256: await sha256(fromMenu) },
-    project,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}menu.json`,
+    `${JSON.stringify(
+      {
+        empty,
+        sliced,
+        gcode: { name: button.suggestedFilename(), sha256: await sha256(button), menuSha256: await sha256(fromMenu) },
+        project,
+      },
+      null,
+      2,
+    )}\n`,
+  );
   expect(errors).toEqual([]);
 });

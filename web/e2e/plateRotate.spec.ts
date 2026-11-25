@@ -12,7 +12,8 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-rotate/", im
 // Ender-3 (220 mm bed): cube10 object 2 at the bed centre (110, 110), its centre at z 5.
 const FIXTURE = "tests/parity/orca_cli_ender3.3mf";
 
-const field = (page: Page, group: string, axis: "X" | "Y" | "Z") => page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
+const field = (page: Page, group: string, axis: "X" | "Y" | "Z") =>
+  page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
 
 async function setField(page: Page, group: string, axis: "X" | "Y" | "Z", value: string) {
   await field(page, group, axis).fill(value);
@@ -27,7 +28,9 @@ async function importCube(page: Page, project: string) {
   await expect(field(page, "Rotate (absolute)", "Z")).toHaveValue("0.00");
 }
 
-test("an instance turns by the rotate gizmo ring and rotation fields, drops onto the bed, and slices like OrcaSlicer", async ({ page }) => {
+test("an instance turns by the rotate gizmo ring and rotation fields, drops onto the bed, and slices like OrcaSlicer", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -43,7 +46,10 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   // alone. (A clockwise turn reads as X 180, Y 180: get_rotation_by_quaternion, Geometry.cpp:481-489.)
   await page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name: "Rotate" }).click();
   const box = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
-  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "z", [number, number]>;
+  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<
+    "center" | "z",
+    [number, number]
+  >;
   const [cx, cy] = [box.x + gizmo.center[0], box.y + gizmo.center[1]];
   const [dx, dy] = [gizmo.z[0] - gizmo.center[0], gizmo.z[1] - gizmo.center[1]];
   await page.mouse.move(cx + dx, cy + dy);
@@ -81,19 +87,58 @@ test("an instance turns by the rotate gizmo ring and rotation fields, drops onto
   const gcode = readFileSync(`${artifacts}browser.gcode`, "utf8");
 
   const oracle = `${artifacts}rotated.3mf`;
-  writeFileSync(oracle, guiExport(FIXTURE, [
-    { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([aboutZ(45), aboutX(90)], [110, 110, 5 * Math.SQRT2]) }] },
-  ], await probedTowers(page)));
-  const legs = { official: orcaPlate(oracle, 1, "official", reopened), seeded: orcaPlate(oracle, 1, "seeded", reopened) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["rotate gizmo Z ring eighth sweep (fresh load after)", "Rotate (relative) Z 45", "Rotate (absolute) X 90"],
-    oracle: { command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)", official: oracleRun(oracle, 1, "official", legs.official),
-      seeded: oracleRun(oracle, 1, "seeded", legs.seeded) },
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  writeFileSync(
+    oracle,
+    guiExport(
+      FIXTURE,
+      [
+        {
+          source: 0,
+          items: [
+            {
+              objectId: 2,
+              instanceId: 0,
+              identifyId: 14,
+              matrix: matrix([aboutZ(45), aboutX(90)], [110, 110, 5 * Math.SQRT2]),
+            },
+          ],
+        },
+      ],
+      await probedTowers(page),
+    ),
+  );
+  const legs = {
+    official: orcaPlate(oracle, 1, "official", reopened),
+    seeded: orcaPlate(oracle, 1, "seeded", reopened),
+  };
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: [
+          "rotate gizmo Z ring eighth sweep (fresh load after)",
+          "Rotate (relative) Z 45",
+          "Rotate (absolute) X 90",
+        ],
+        oracle: {
+          command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)",
+          official: oracleRun(oracle, 1, "official", legs.official),
+          seeded: oracleRun(oracle, 1, "seeded", legs.seeded),
+        },
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

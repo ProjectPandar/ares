@@ -36,44 +36,104 @@ export function FilamentSection({ settings, openTab }: { settings: ProjectSettin
   const groups = (slot: number): PresetGroup[] => {
     if (!selection) return [{ title: "Project presets", presets }];
     if (compatible?.status !== "done") return [];
-    return filamentGroups(compatible.presets.filaments, compatible.filamentInfo, user, installed, selection.filaments[slot]);
+    return filamentGroups(
+      compatible.presets.filaments,
+      compatible.filamentInfo,
+      user,
+      installed,
+      selection.filaments[slot],
+    );
   };
   const run = (edit: FilamentSlotEdit) => {
     setError(undefined);
     setWorking(true);
-    void editFilamentSlots(edit).catch((cause: unknown) => setError(String(cause))).finally(() => setWorking(false));
+    void editFilamentSlots(edit)
+      .catch((cause: unknown) => setError(String(cause)))
+      .finally(() => setWorking(false));
   };
   const unavailable = working || slicing;
   return (
     // The title `settings` button, "Set filaments to use": run_wizard(RR_USER, SP_FILAMENTS), the guide/23
     // filament page (Plater.cpp:3379-3387).
-    <Section icon={<OrcaIcon name="filament" />} title="Filament" extra={slots || undefined}
-      action={<>
-        {view?.canRemove && <button type="button" className="preset-edit" aria-label="Remove last filament"
-          title="Remove last filament" disabled={unavailable} onClick={() => run({ kind: "delete", slot: view.slots.findLastIndex(({ isMixed }) => !isMixed) + 1 })}>−</button>}
-        {view?.canAdd && <button type="button" className="preset-edit" aria-label="Add one filament"
-          title="Add one filament" disabled={unavailable} onClick={() => run({ kind: "add" })}>+</button>}
-        {selection && <EditButton icon="settings" label="Set filaments to use" onClick={() => setDialog(true)} />}
-      </>}>
+    <Section
+      icon={<OrcaIcon name="filament" />}
+      title="Filament"
+      extra={slots || undefined}
+      action={
+        <>
+          {view?.canRemove && (
+            <button
+              type="button"
+              className="preset-edit"
+              aria-label="Remove last filament"
+              title="Remove last filament"
+              disabled={unavailable}
+              onClick={() => run({ kind: "delete", slot: view.slots.findLastIndex(({ isMixed }) => !isMixed) + 1 })}
+            >
+              −
+            </button>
+          )}
+          {view?.canAdd && (
+            <button
+              type="button"
+              className="preset-edit"
+              aria-label="Add one filament"
+              title="Add one filament"
+              disabled={unavailable}
+              onClick={() => run({ kind: "add" })}
+            >
+              +
+            </button>
+          )}
+          {selection && <EditButton icon="settings" label="Set filaments to use" onClick={() => setDialog(true)} />}
+        </>
+      }
+    >
       {error && <p role="alert">{error}</p>}
       {slots === 0 && <div className="side-empty">No filament preset</div>}
       {Array.from({ length: slots }, (_, index) => names[index]).map((name, index) => (
         <div className="filament-row" key={index}>
-          <span className="filament-swatch" data-testid={`filament-swatch-${index + 1}`}
-            style={{ background: colours[index] ?? "#888" }}>{index + 1}</span>
-          <PresetCombo label={`Filament ${index + 1} preset`} value={name} groups={groups(index)}
-            placeholder="" searchable={selection !== null} onSelect={(filament) => selection && selectFilament(index, filament)}
+          <span
+            className="filament-swatch"
+            data-testid={`filament-swatch-${index + 1}`}
+            style={{ background: colours[index] ?? "#888" }}
+          >
+            {index + 1}
+          </span>
+          <PresetCombo
+            label={`Filament ${index + 1} preset`}
+            value={name}
+            groups={groups(index)}
+            placeholder=""
+            searchable={selection !== null}
+            onSelect={(filament) => selection && selectFilament(index, filament)}
             // PresetComboBoxes.cpp:1460-1461: the "Add/Remove filaments" item.
-            actions={selection ? [{ label: "Add/Remove filaments", run: () => setDialog(true) }] : []} />
+            actions={selection ? [{ label: "Add/Remove filaments", run: () => setDialog(true) }] : []}
+          />
           <span className="filament-type">{types[index]}</span>
-          {!view?.slots[index]?.isMixed && (view?.canRemove && view.slots[index] ? (
-            <FilamentSlotMenu slot={index + 1} slots={view.slots} edit={run} disabled={unavailable}
-              openPreset={() => openTab({ kind: "filament", slot: index })} />
-          ) : <EditButton label={`Edit filament ${index + 1} settings`} onClick={() => openTab({ kind: "filament", slot: index })} />)}
+          {!view?.slots[index]?.isMixed &&
+            (view?.canRemove && view.slots[index] ? (
+              <FilamentSlotMenu
+                slot={index + 1}
+                slots={view.slots}
+                edit={run}
+                disabled={unavailable}
+                openPreset={() => openTab({ kind: "filament", slot: index })}
+              />
+            ) : (
+              <EditButton
+                label={`Edit filament ${index + 1} settings`}
+                onClick={() => openTab({ kind: "filament", slot: index })}
+              />
+            ))}
         </div>
       ))}
       <FilamentMapPanel settings={settings} />
-      {dialog && selection && <Suspense><FilamentDialog printer={selection.printer} onClose={() => setDialog(false)} /></Suspense>}
+      {dialog && selection && (
+        <Suspense>
+          <FilamentDialog printer={selection.printer} onClose={() => setDialog(false)} />
+        </Suspense>
+      )}
     </Section>
   );
 }

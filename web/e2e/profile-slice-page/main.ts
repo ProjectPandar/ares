@@ -8,7 +8,13 @@ import wasmUrl from "@ares-slicer/wasm/ares_wasm_bg.wasm?url";
 const slicer = new AresSlicer({ worker: new AresWorker(), wasmUrl });
 
 /** `edits` are typed values; the engine encodes them into the override tokens. */
-async function slice(model: number[], filename: string, vendorIds: string[], selection: ProfileSelection, edits: [string, ConfigValue][] = []) {
+async function slice(
+  model: number[],
+  filename: string,
+  vendorIds: string[],
+  selection: ProfileSelection,
+  edits: [string, ConfigValue][] = [],
+) {
   const start = performance.now();
   const vendors = await Promise.all(vendorIds.map(loadVendor));
   const loaded = performance.now();
@@ -16,7 +22,10 @@ async function slice(model: number[], filename: string, vendorIds: string[], sel
   const serialized = performance.now();
   const tokens = await slicer.encodeConfigValues(edits);
   const overrides = Object.fromEntries(edits.map(([key], index) => [key, tokens[index]]));
-  const { gcode } = await slicer.sliceWithProfiles(new Uint8Array(model), filename, catalog, selection, { seed: 0, overrides });
+  const { gcode } = await slicer.sliceWithProfiles(new Uint8Array(model), filename, catalog, selection, {
+    seed: 0,
+    overrides,
+  });
   return {
     gcode: new TextDecoder().decode(gcode),
     catalogBytes: catalog.length,

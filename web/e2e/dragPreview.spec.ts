@@ -21,12 +21,16 @@ type Probe = { messages: Message[]; moves: number[]; draws: number[] };
 type Matrices = number[][][];
 type Drag = Awaited<ReturnType<typeof drag>>;
 
-const gizmoButton = (page: Page, name: string) => page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
-const handles = async (page: Page) => JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Handles;
+const gizmoButton = (page: Page, name: string) =>
+  page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name, exact: true });
+const handles = async (page: Page) =>
+  JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Handles;
 const probe = (page: Page) => page.evaluate(() => (window as unknown as { dragProbe: Probe }).dragProbe);
 
 async function matrices(page: Page): Promise<Matrices> {
-  const probed = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as { objects: { instances: { matrix: number[] }[] }[] };
+  const probed = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as {
+    objects: { instances: { matrix: number[] }[] }[];
+  };
   return probed.objects.map(({ instances }) => instances.map(({ matrix }) => matrix));
 }
 
@@ -36,7 +40,11 @@ async function open(page: Page, fixture: string) {
     const dragProbe: Probe = { messages: [], moves: [], draws: [] };
     (window as unknown as { dragProbe: Probe }).dragProbe = dragProbe;
     const post = Worker.prototype.postMessage;
-    Worker.prototype.postMessage = function (this: Worker, message: { kind: string; edit?: { op: string } }, transfer?: Transferable[] | StructuredSerializeOptions) {
+    Worker.prototype.postMessage = function (
+      this: Worker,
+      message: { kind: string; edit?: { op: string } },
+      transfer?: Transferable[] | StructuredSerializeOptions,
+    ) {
       dragProbe.messages.push({ at: performance.now(), kind: message.kind, op: message.edit?.op });
       post.call(this, message, transfer as StructuredSerializeOptions);
     };
@@ -68,7 +76,10 @@ async function drag(page: Page, [from, to]: [Point, Point], steps: number) {
   const pressed = (await probe(page)).messages.length;
   await page.mouse.down();
   for (let step = 1; step <= steps; step++) {
-    await page.mouse.move(box.x + from[0] + ((to[0] - from[0]) * step) / steps, box.y + from[1] + ((to[1] - from[1]) * step) / steps);
+    await page.mouse.move(
+      box.x + from[0] + ((to[0] - from[0]) * step) / steps,
+      box.y + from[1] + ((to[1] - from[1]) * step) / steps,
+    );
   }
   // GLCanvas3D::on_mouse dragging: the selection's volumes follow the pointer.
   await expect.poll(() => handles(page)).not.toEqual(start);
@@ -98,20 +109,47 @@ async function drag(page: Page, [from, to]: [Point, Point], steps: number) {
  * the release sends one undo snapshot and one `op` edit, and no other instance changes.
  */
 async function check(page: Page, name: string, op: string, result: Drag, before: Matrices) {
-  const points = Object.entries(result.committed).filter((entry): entry is [keyof Handles, Point] => Array.isArray(entry[1]));
+  const points = Object.entries(result.committed).filter((entry): entry is [keyof Handles, Point] =>
+    Array.isArray(entry[1]),
+  );
   expect(points.length, `${name}: gizmo handles`).toBeGreaterThanOrEqual(4);
   for (const [handle, point] of points) {
-    for (const axis of [0, 1]) expect(Math.abs(point[axis] - result.preview[handle][axis]), `${name}: preview vs committed ${handle}`).toBeLessThanOrEqual(1);
+    for (const axis of [0, 1])
+      expect(
+        Math.abs(point[axis] - result.preview[handle][axis]),
+        `${name}: preview vs committed ${handle}`,
+      ).toBeLessThanOrEqual(1);
   }
   const now = await matrices(page);
-  const changed = now.flatMap((instances, object) => instances.flatMap((matrix, instance) => (JSON.stringify(matrix) === JSON.stringify(before[object][instance]) ? [] : [{ object, instance, matrix }])));
-  expect(changed.map(({ object, instance }) => [object, instance]), `${name}: only the dragged instance changes`).toHaveLength(1);
+  const changed = now.flatMap((instances, object) =>
+    instances.flatMap((matrix, instance) =>
+      JSON.stringify(matrix) === JSON.stringify(before[object][instance]) ? [] : [{ object, instance, matrix }],
+    ),
+  );
+  expect(
+    changed.map(({ object, instance }) => [object, instance]),
+    `${name}: only the dragged instance changes`,
+  ).toHaveLength(1);
   expect(now[changed[0].object], `${name}: the dragged object has no sibling instances`).toHaveLength(1);
   expect(result.previewMatrix, `${name}: previewed matrix`).toHaveLength(16);
-  changed[0].matrix.forEach((value, index) => expect(Math.abs(value - result.previewMatrix![index]), `${name}: preview vs committed matrix [${index}]`).toBeLessThanOrEqual(1e-4));
-  expect(result.during.map(({ kind }) => kind), `${name}: worker messages while dragging`).toEqual(op === "rotate" ? ["platerRotationPivot"] : []);
-  expect(result.after.filter(({ kind }) => kind === "platerTakeSnapshot"), `${name}: undo snapshots`).toHaveLength(1);
-  expect(result.after.filter(({ kind }) => kind === "platerEdit").map((message) => message.op), `${name}: edits`).toEqual([op]);
+  changed[0].matrix.forEach((value, index) =>
+    expect(
+      Math.abs(value - result.previewMatrix![index]),
+      `${name}: preview vs committed matrix [${index}]`,
+    ).toBeLessThanOrEqual(1e-4),
+  );
+  expect(
+    result.during.map(({ kind }) => kind),
+    `${name}: worker messages while dragging`,
+  ).toEqual(op === "rotate" ? ["platerRotationPivot"] : []);
+  expect(
+    result.after.filter(({ kind }) => kind === "platerTakeSnapshot"),
+    `${name}: undo snapshots`,
+  ).toHaveLength(1);
+  expect(
+    result.after.filter(({ kind }) => kind === "platerEdit").map((message) => message.op),
+    `${name}: edits`,
+  ).toEqual([op]);
   await page.screenshot({ path: `${artifacts}${name}.png` });
   return now;
 }
@@ -123,7 +161,9 @@ async function check(page: Page, name: string, op: string, result: Drag, before:
 function zTurn(at: Handles, from: number, to: number): [Point, Point] {
   const point = (degrees: number): Point => {
     const [cos, sin] = [Math.cos((degrees * Math.PI) / 180), Math.sin((degrees * Math.PI) / 180)];
-    return [0, 1].map((axis) => at.center[axis] + cos * (at.z[axis] - at.center[axis]) + sin * (at.x[axis] - at.center[axis])) as Point;
+    return [0, 1].map(
+      (axis) => at.center[axis] + cos * (at.z[axis] - at.center[axis]) + sin * (at.x[axis] - at.center[axis]),
+    ) as Point;
   };
   return [point(from), point(to)];
 }
@@ -144,11 +184,16 @@ test("a rotate drag previews the turn about the core's rotation pivot, like Sele
   // land about 2 mm away from the preview.
   const before = await matrices(page);
   const result = await drag(page, zTurn(await handles(page), -45, 45), STEPS);
-  writeFileSync(`${artifacts}asymmetric-result.json`, `${JSON.stringify({ fixture: "tests/parity/island-visit-order/four-disjoint-prisms.3mf", steps: STEPS, rotate: result }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}asymmetric-result.json`,
+    `${JSON.stringify({ fixture: "tests/parity/island-visit-order/four-disjoint-prisms.3mf", steps: STEPS, rotate: result }, null, 2)}\n`,
+  );
   await check(page, "asymmetric-rotate", "rotate", result, before);
 });
 
-test("drags preview in the viewport without the worker and commit once on release, like GLCanvas3D", async ({ page }) => {
+test("drags preview in the viewport without the worker and commit once on release, like GLCanvas3D", async ({
+  page,
+}) => {
   test.setTimeout(180_000);
   await open(page, FIXTURE);
 
@@ -156,7 +201,10 @@ test("drags preview in the viewport without the worker and commit once on releas
   // has no sibling instance (Selection::synchronize_unselected_instances has nothing to follow).
   const cubes = page.getByTestId("object-list").getByRole("treeitem", { name: /cube10\.stl/ });
   await cubes.first().click();
-  await page.getByRole("toolbar", { name: "Main toolbar" }).getByRole("button", { name: "Add instance", exact: true }).click();
+  await page
+    .getByRole("toolbar", { name: "Main toolbar" })
+    .getByRole("button", { name: "Add instance", exact: true })
+    .click();
   await expect.poll(async () => (await matrices(page)).map((instances) => instances.length)).toEqual([3, 1]);
   // The dragged object is selected first, so the press selects nothing new.
   await cubes.last().click();
@@ -168,7 +216,10 @@ test("drags preview in the viewport without the worker and commit once on releas
   const record = async (name: string, op: string, result: Drag) => {
     // Written first: on the per-step shell the checks fail, and its numbers are the baseline.
     results[name] = result;
-    writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ fixture: FIXTURE_NAME, steps: STEPS, drags: results }, null, 2)}\n`);
+    writeFileSync(
+      `${artifacts}result.json`,
+      `${JSON.stringify({ fixture: FIXTURE_NAME, steps: STEPS, drags: results }, null, 2)}\n`,
+    );
     states.push(await check(page, name, op, result, states.at(-1)!));
   };
 
@@ -177,14 +228,22 @@ test("drags preview in the viewport without the worker and commit once on releas
   await record("canvas", "translate", await drag(page, [at.center, [at.center[0] - 80, at.center[1] + 20]], STEPS));
   // GLGizmoMove3D: the X arrow, along the arrow on screen.
   at = await handles(page);
-  await record("move-gizmo", "translate", await drag(page, [at.x, [2 * at.x[0] - at.center[0], 2 * at.x[1] - at.center[1]]], STEPS));
+  await record(
+    "move-gizmo",
+    "translate",
+    await drag(page, [at.x, [2 * at.x[0] - at.center[0], 2 * at.x[1] - at.center[1]]], STEPS),
+  );
   // GLGizmoRotate3D: 45 degrees round the Z ring.
   await gizmoButton(page, "Rotate").click();
   await record("rotate-gizmo", "rotate", await drag(page, zTurn(await handles(page), 0, 45), STEPS));
   // GLGizmoScale3D: the X grabber pulled out by half its distance from the centre.
   await gizmoButton(page, "Scale").click();
   at = await handles(page);
-  await record("scale-gizmo", "scale", await drag(page, [at.x, [1.5 * at.x[0] - 0.5 * at.center[0], 1.5 * at.x[1] - 0.5 * at.center[1]]], STEPS));
+  await record(
+    "scale-gizmo",
+    "scale",
+    await drag(page, [at.x, [1.5 * at.x[0] - 0.5 * at.center[0], 1.5 * at.x[1] - 0.5 * at.center[1]]], STEPS),
+  );
 
   // One undo step a drag.
   for (const state of states.slice(0, -1).reverse()) {

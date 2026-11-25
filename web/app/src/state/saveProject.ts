@@ -5,10 +5,22 @@ import { presetSliceBlocker } from "./presets";
 import { stlSessionOpened } from "./stlSession";
 import { useApp } from "./store";
 
-export function saveProjectBlocker({ file, scene, presetSelection, plater, loadingFile, arranging, slice }: ReturnType<typeof useApp.getState>) {
+export function saveProjectBlocker({
+  file,
+  scene,
+  presetSelection,
+  plater,
+  loadingFile,
+  arranging,
+  slice,
+}: ReturnType<typeof useApp.getState>) {
   if (loadingFile || arranging || slice.status === "slicing") return "Wait for the current plater operation to finish.";
   if (!file || !scene || !scene.objects.length) return "Open or import a model to save a project.";
-  if (scene.format === "stl" && file.kind === "single" && (!presetSelection || presetSliceBlocker(presetSelection, scene))) {
+  if (
+    scene.format === "stl" &&
+    file.kind === "single" &&
+    (!presetSelection || presetSliceBlocker(presetSelection, scene))
+  ) {
     return "Select a printer, process, and filament before saving this STL as a project.";
   }
   if (!plater) return "Wait for the project to finish opening.";
@@ -23,7 +35,8 @@ export async function saveProject() {
   const state = useApp.getState();
   const { file, scene, overrides, plater, presetSelection } = state;
   if (file !== selectedFile || saveProjectBlocker(state)) return;
-  const stillOpen = () => useApp.getState().file === file && useApp.getState().plater === plater && opening === stlSessionOpened();
+  const stillOpen = () =>
+    useApp.getState().file === file && useApp.getState().plater === plater && opening === stlSessionOpened();
   useApp.setState({ saveError: undefined });
   try {
     let bytes: Uint8Array<ArrayBuffer>;
@@ -35,9 +48,14 @@ export async function saveProject() {
       const tokens = await overrideTokens(overrides);
       const catalog = file!.kind === "stl-batch" ? null : await catalogJson(state);
       if (!stillOpen()) return;
-      bytes = catalog === null
-        ? await plater!.saveProject(tokens)
-        : await plater!.saveProjectWithProfiles(catalog, FROM_PROJECT, { seed: 0, placement: "none", overrides: tokens });
+      bytes =
+        catalog === null
+          ? await plater!.saveProject(tokens)
+          : await plater!.saveProjectWithProfiles(catalog, FROM_PROJECT, {
+              seed: 0,
+              placement: "none",
+              overrides: tokens,
+            });
     }
     if (!stillOpen()) return;
     const stem = file!.name.replace(/\.(3mf|stl)$/i, "").replace(/[/\\\0]/g, "_");

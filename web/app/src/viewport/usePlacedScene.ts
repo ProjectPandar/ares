@@ -24,7 +24,7 @@ export function usePlacedScene(): Scene | null {
   const current = placed && placed.inputs.every((input, at) => input === inputs[at]) ? placed.scene : null;
   // A plater session keeps its edited objects and plates; the placement supplies the composed bed.
   const scene = useMemo(
-    () => (current && plater && loaded ? { ...loaded, settings: current.settings } : current ?? loaded),
+    () => (current && plater && loaded ? { ...loaded, settings: current.settings } : (current ?? loaded)),
     [current, loaded, plater],
   );
   useEffect(() => {
@@ -34,7 +34,10 @@ export function usePlacedScene(): Scene | null {
     const sources = { vendors, presetImports };
     // A selection the engine cannot compose keeps the loaded plate; the process tab shows the
     // same composition error (usePresetValues).
-    (model.format === "stl" ? openStlSession(file, model, selection, sources) : placedScene(file, model, selection, sources)).then(
+    (model.format === "stl"
+      ? openStlSession(file, model, selection, sources)
+      : placedScene(file, model, selection, sources)
+    ).then(
       (result) => !stale && setPlaced({ inputs: [file, selection, vendors, presetImports], scene: result }),
       () => !stale && setPlaced(null),
     );

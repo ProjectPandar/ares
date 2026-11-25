@@ -17,7 +17,12 @@ export function listedFilaments(filaments: readonly GuideFilament[], selected: r
  * Filament Selection, guide page 22: the listed filaments merged by vendor, type and short name,
  * checked when one of their presets is selected; Finish stores every preset of the checked items.
  */
-export function FilamentPage({ filaments, selected, onBack, onFinish }: {
+export function FilamentPage({
+  filaments,
+  selected,
+  onBack,
+  onFinish,
+}: {
   filaments: readonly GuideFilament[];
   selected: ReadonlySet<string>;
   onBack: () => void;
@@ -45,22 +50,43 @@ export function FilamentPage({ filaments, selected, onBack, onFinish }: {
       <div className="wizard-filaments" role="group" aria-label="Filaments">
         {model.items.map((item) => (
           <label key={item.key} className="vendor-item" title={item.names.join("\n")}>
-            <input type="checkbox" checked={checked.has(item.key)} onChange={(event) => toggle(item.key, event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={checked.has(item.key)}
+              onChange={(event) => toggle(item.key, event.target.checked)}
+            />
             {item.short}
-            <span className="wizard-filament-meta">{item.vendor} · {item.type}</span>
+            <span className="wizard-filament-meta">
+              {item.vendor} · {item.type}
+            </span>
           </label>
         ))}
       </div>
       <footer className="vendor-footer wizard-footer">
-        <span className="filament-count" data-testid="filament-count">{checked.size} / {model.items.length}</span>
-        <button className="side-button" onClick={onBack}>Back</button>
-        <button className="side-button" onClick={finish}>Finish</button>
+        <span className="filament-count" data-testid="filament-count">
+          {checked.size} / {model.items.length}
+        </span>
+        <button className="side-button" onClick={onBack}>
+          Back
+        </button>
+        <button className="side-button" onClick={finish}>
+          Finish
+        </button>
       </footer>
       {notice && (
-        <div className="wizard-notice" role="alertdialog" aria-labelledby="wizard-notice-title" aria-describedby="wizard-notice-text">
-          <div id="wizard-notice-title" className="wizard-notice-bar">Error</div>
+        <div
+          className="wizard-notice"
+          role="alertdialog"
+          aria-labelledby="wizard-notice-title"
+          aria-describedby="wizard-notice-text"
+        >
+          <div id="wizard-notice-title" className="wizard-notice-bar">
+            Error
+          </div>
           <p id="wizard-notice-text">At least one filament must be selected.</p>
-          <button className="side-button" onClick={() => setNotice(false)}>OK</button>
+          <button className="side-button" onClick={() => setNotice(false)}>
+            OK
+          </button>
         </div>
       )}
     </>

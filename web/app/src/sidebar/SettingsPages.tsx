@@ -25,7 +25,15 @@ function slotValue({ values, slot }: RowContext, def: ConfigOptionDef, index?: n
   return at === undefined ? value : value[at];
 }
 
-function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs: ReadonlyMap<string, ConfigOptionDef> }) {
+function Row({
+  row,
+  context,
+  defs,
+}: {
+  row: LayoutRow;
+  context: RowContext;
+  defs: ReadonlyMap<string, ConfigOptionDef>;
+}) {
   const readOnly = !context.overrides;
   switch (row.kind) {
     case "separator":
@@ -42,8 +50,14 @@ function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs
               return (
                 <span className="option-subfield" key={key}>
                   <span className="option-sublabel">{text}</span>
-                  <OptionControl def={def} index={index} label={text} original={slotValue(context, def, index)}
-                    edited={context.overrides?.[key]} readOnly={readOnly} />
+                  <OptionControl
+                    def={def}
+                    index={index}
+                    label={text}
+                    original={slotValue(context, def, index)}
+                    edited={context.overrides?.[key]}
+                    readOnly={readOnly}
+                  />
                 </span>
               );
             })}
@@ -54,33 +68,55 @@ function Row({ row, context, defs }: { row: LayoutRow; context: RowContext; defs
     default: {
       const def = defs.get(row.key)!;
       return (
-        <OptionField def={def} index={row.index} label={row.label ?? def.label ?? ""}
-          original={slotValue(context, def, row.index)} edited={context.overrides?.[row.key]}
-          readOnly={readOnly || row.kind === "widget"} code={row.kind === "option" && row.code}
-          full={row.kind === "option" && row.full} />
+        <OptionField
+          def={def}
+          index={row.index}
+          label={row.label ?? def.label ?? ""}
+          original={slotValue(context, def, row.index)}
+          edited={context.overrides?.[row.key]}
+          readOnly={readOnly || row.kind === "widget"}
+          code={row.kind === "option" && row.code}
+          full={row.kind === "option" && row.full}
+        />
       );
     }
   }
 }
 
-const rowKeys = (row: LayoutRow) => (row.kind === "line" ? row.options.map(({ key }) => key) : row.kind === "separator" ? [] : [row.key]);
+const rowKeys = (row: LayoutRow) =>
+  row.kind === "line" ? row.options.map(({ key }) => key) : row.kind === "separator" ? [] : [row.key];
 
 function Group({ group, context, mode }: { group: LayoutGroup; context: RowContext; mode: ViewMode }) {
   const defs = useApp((state) => state.configDefs);
   // Lines hidden by the mode or of options this config does not carry are skipped; a group without any is hidden.
-  const rows = group.rows.filter((row) =>
-    row.kind === "separator" || (lineVisible(defs, row, mode) && rowKeys(row).some((key) => key in context.values)));
+  const rows = group.rows.filter(
+    (row) =>
+      row.kind === "separator" || (lineVisible(defs, row, mode) && rowKeys(row).some((key) => key in context.values)),
+  );
   if (!rows.some((row) => row.kind !== "separator")) return null;
   return (
     <div className="optgroup">
-      <div className="optgroup-title">{group.icon && <OrcaIcon name={group.icon} size={18} />}{group.title}</div>
-      {rows.map((row, index) => <Row key={index} row={row} context={context} defs={defs} />)}
+      <div className="optgroup-title">
+        {group.icon && <OrcaIcon name={group.icon} size={18} />}
+        {group.title}
+      </div>
+      {rows.map((row, index) => (
+        <Row key={index} row={row} context={context} defs={defs} />
+      ))}
     </div>
   );
 }
 
 /** A settings `Tab`: the page selector of the pages the mode shows plus the optgroups of the active `Page`. */
-export function SettingsPages({ pages, context, empty }: { pages: LayoutPage[]; context: RowContext | null; empty?: string }) {
+export function SettingsPages({
+  pages,
+  context,
+  empty,
+}: {
+  pages: LayoutPage[];
+  context: RowContext | null;
+  empty?: string;
+}) {
   const defs = useApp((state) => state.configDefs);
   const mode = useApp((state) => state.mode);
   const [title, setTitle] = useState(pages[0].title);
@@ -91,15 +127,20 @@ export function SettingsPages({ pages, context, empty }: { pages: LayoutPage[]; 
     <>
       <div className="process-tabs" role="tablist">
         {shown.map((page) => (
-          <button key={page.title} role="tab" aria-selected={page === current}
+          <button
+            key={page.title}
+            role="tab"
+            aria-selected={page === current}
             className={page === current ? "process-tab active" : "process-tab"}
-            onClick={() => setTitle(page.title)}>
+            onClick={() => setTitle(page.title)}
+          >
             {page.title}
           </button>
         ))}
       </div>
       {!context && empty && <div className="side-empty">{empty}</div>}
-      {context && current.groups.map((group, index) => <Group key={index} group={group} context={context} mode={mode} />)}
+      {context &&
+        current.groups.map((group, index) => <Group key={index} group={group} context={context} mode={mode} />)}
     </>
   );
 }

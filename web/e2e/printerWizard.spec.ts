@@ -12,14 +12,19 @@ test.use({ firstRunConfig: false });
 
 /** A vendor model's nozzle variants, in `nozzle_diameter` order (`VendorProfile::PrinterModel`). */
 function modelVariants(vendor: string, model: string): string[] {
-  const index = JSON.parse(readFileSync(`${profiles}${vendor}.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
+  const index = JSON.parse(readFileSync(`${profiles}${vendor}.json`, "utf8")) as {
+    machine_model_list: { name: string; sub_path: string }[];
+  };
   const entry = index.machine_model_list.find(({ name }) => name === model)!;
-  const file = JSON.parse(readFileSync(`${profiles}${vendor}/${entry.sub_path}`, "utf8")) as { nozzle_diameter: string };
+  const file = JSON.parse(readFileSync(`${profiles}${vendor}/${entry.sub_path}`, "utf8")) as {
+    nozzle_diameter: string;
+  };
   return file.nozzle_diameter.split(";");
 }
 
 const combo = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
-const storedConfig = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("ares.config") ?? "null") as unknown);
+const storedConfig = (page: Page) =>
+  page.evaluate(() => JSON.parse(localStorage.getItem("ares.config") ?? "null") as unknown);
 
 async function settled(page: Page) {
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -28,8 +33,11 @@ async function settled(page: Page) {
 /** The models of the printer combo's "System presets" group; Escape closes the list. */
 async function systemModels(page: Page) {
   await combo(page, "Printer preset").click();
-  const names = await page.getByRole("listbox", { name: "Printer preset", exact: true })
-    .getByRole("group", { name: "System presets", exact: true }).getByRole("option").allTextContents();
+  const names = await page
+    .getByRole("listbox", { name: "Printer preset", exact: true })
+    .getByRole("group", { name: "System presets", exact: true })
+    .getByRole("option")
+    .allTextContents();
   await page.keyboard.press("Escape");
   return names;
 }
@@ -113,7 +121,9 @@ test("the setup wizard installs printer models with every nozzle and their defau
   expect(await systemModels(page)).toEqual(["Generic Klipper Printer"]);
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "MyKlipper 0.4 nozzle");
   const nozzles = page.getByRole("combobox", { name: "Nozzle diameter", exact: true });
-  expect((await nozzles.locator("option").allTextContents()).sort()).toEqual(klipperVariants.map((variant) => `${variant} mm`).sort());
+  expect((await nozzles.locator("option").allTextContents()).sort()).toEqual(
+    klipperVariants.map((variant) => `${variant} mm`).sort(),
+  );
   await page.screenshot({ path: `${artifacts}finished.png` });
 
   // 6. A plate slices with the chosen printer.

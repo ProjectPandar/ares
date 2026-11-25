@@ -15,7 +15,11 @@ test("a model opened right at startup loads after the stored printer is selected
     const probe: Probe = { messages: [], statuses: [] };
     (window as unknown as { startupProbe: Probe }).startupProbe = probe;
     const post = Worker.prototype.postMessage;
-    Worker.prototype.postMessage = function (this: Worker, message: { kind: string }, transfer?: Transferable[] | StructuredSerializeOptions) {
+    Worker.prototype.postMessage = function (
+      this: Worker,
+      message: { kind: string },
+      transfer?: Transferable[] | StructuredSerializeOptions,
+    ) {
       probe.messages.push({ at: performance.now(), kind: message.kind });
       post.call(this, message, transfer as StructuredSerializeOptions);
     };
@@ -30,17 +34,27 @@ test("a model opened right at startup loads after the stored printer is selected
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await page.getByTestId("import-input").setInputFiles(`${repositoryRoot}tests/parity/cube10.stl`);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
-  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", FIRST_RUN_CONFIG.printer);
+  await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute(
+    "title",
+    FIRST_RUN_CONFIG.printer,
+  );
   // The startup selection ends with the printer panel's model query (selectPrinter, presets.ts).
-  await expect.poll(async () => {
-    const kinds = (await probe()).messages.map(({ kind }) => kind);
-    return kinds.lastIndexOf("catalogPrinterModelInfo") > kinds.indexOf("catalogCompatiblePrint");
-  }, { timeout: 60_000 }).toBe(true);
+  await expect
+    .poll(
+      async () => {
+        const kinds = (await probe()).messages.map(({ kind }) => kind);
+        return kinds.lastIndexOf("catalogPrinterModelInfo") > kinds.indexOf("catalogCompatiblePrint");
+      },
+      { timeout: 60_000 },
+    )
+    .toBe(true);
 
   const { messages, statuses } = await probe();
   const loading = statuses.findIndex(({ text }) => text === "Loading model…");
   const ready = statuses.slice(loading).find(({ text }) => text === "Ready to slice")!;
-  expect(messages.filter(({ at, kind }) => at > ready.at && kind.startsWith("catalog")).map(({ kind }) => kind)).toEqual([]);
+  expect(
+    messages.filter(({ at, kind }) => at > ready.at && kind.startsWith("catalog")).map(({ kind }) => kind),
+  ).toEqual([]);
 });
 
 // GUI_App::on_init_inner creates and shows the main frame only after load_presets has selected the
@@ -58,6 +72,7 @@ test("the app reads ready only once the stored printer is selected", async ({ pa
 
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  expect(await page.evaluate(() => (window as unknown as { printerAtReady: string | null }).printerAtReady))
-    .toBe(FIRST_RUN_CONFIG.printer);
+  expect(await page.evaluate(() => (window as unknown as { printerAtReady: string | null }).printerAtReady)).toBe(
+    FIRST_RUN_CONFIG.printer,
+  );
 });

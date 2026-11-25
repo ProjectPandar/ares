@@ -1,4 +1,14 @@
-import type { FilamentSlotEdit, FilamentTarget, ArrangeSettings, ConfigValue, CurrentPrinter, InstalledPrinters, PresetKind, ScaleEdit, SlicingStatus } from "./types.js";
+import type {
+  FilamentSlotEdit,
+  FilamentTarget,
+  ArrangeSettings,
+  ConfigValue,
+  CurrentPrinter,
+  InstalledPrinters,
+  PresetKind,
+  ScaleEdit,
+  SlicingStatus,
+} from "./types.js";
 
 import type { FilamentSlotState } from "./presetCatalog.js";
 
@@ -35,10 +45,41 @@ export type WorkerRequest =
   | { id: number; kind: "resolveDefaultBedType"; hint: string; modelId: string }
   | { id: number; kind: "orcaSlicerVersion" }
   | { id: number; kind: "loadScene"; input: Uint8Array }
-  | { id: number; kind: "sliceProject"; input: Uint8Array; plate: number | undefined; overrides: string; catalog: string | undefined }
-  | { id: number; kind: "sliceWithProfiles"; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
-  | { id: number; kind: "placementScene"; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
-  | { id: number; kind: "profileSettings"; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
+  | {
+      id: number;
+      kind: "sliceProject";
+      input: Uint8Array;
+      plate: number | undefined;
+      overrides: string;
+      catalog: string | undefined;
+    }
+  | {
+      id: number;
+      kind: "sliceWithProfiles";
+      input: Uint8Array;
+      filename: string;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
+  | {
+      id: number;
+      kind: "placementScene";
+      input: Uint8Array;
+      filename: string;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
+  | {
+      id: number;
+      kind: "profileSettings";
+      input: Uint8Array;
+      filename: string;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
   | { id: number; kind: "sliceStl"; input: Uint8Array; options: string }
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
@@ -49,12 +90,40 @@ export type WorkerRequest =
   | { id: number; kind: "catalogFilter"; catalogId: number; printer: string; process: string | undefined }
   | { id: number; kind: "catalogPrinters"; catalogId: number }
   | { id: number; kind: "catalogPrinterModels"; catalogId: number }
-  | { id: number; kind: "catalogSimilarPrinter"; catalogId: number; model: string; variant: string; current: CurrentPrinter }
-  | { id: number; kind: "catalogPresetValues"; catalogId: number; presetKind: PresetKind; names: string[]; keys: string[] }
+  | {
+      id: number;
+      kind: "catalogSimilarPrinter";
+      catalogId: number;
+      model: string;
+      variant: string;
+      current: CurrentPrinter;
+    }
+  | {
+      id: number;
+      kind: "catalogPresetValues";
+      catalogId: number;
+      presetKind: PresetKind;
+      names: string[];
+      keys: string[];
+    }
   | { id: number; kind: "catalogPrinterModelInfo"; catalogId: number; model: string }
   | { id: number; kind: "catalogInstalledFilaments"; catalogId: number; installed: string[] }
-  | { id: number; kind: "catalogSelectCompatibleFilaments"; catalogId: number; printer: string; process?: string; filaments: string[]; installed: string[] }
-  | { id: number; kind: "catalogNormalizeFilamentSlots"; catalogId: number; printer: string; state: Partial<FilamentSlotState> & { filaments: string[] } }
+  | {
+      id: number;
+      kind: "catalogSelectCompatibleFilaments";
+      catalogId: number;
+      printer: string;
+      process?: string;
+      filaments: string[];
+      installed: string[];
+    }
+  | {
+      id: number;
+      kind: "catalogNormalizeFilamentSlots";
+      catalogId: number;
+      printer: string;
+      state: Partial<FilamentSlotState> & { filaments: string[] };
+    }
   | { id: number; kind: "catalogSetInstalledPrinters"; catalogId: number; installed: InstalledPrinters }
   | { id: number; kind: "catalogSystemPrinter"; catalogId: number; model: string; variant: string }
   | { id: number; kind: "catalogCompatiblePrint"; catalogId: number; printer: string; current: string | undefined }
@@ -62,10 +131,35 @@ export type WorkerRequest =
   | { id: number; kind: "guideModels"; input: Uint8Array }
   | { id: number; kind: "catalogFree"; catalogId: number }
   | { id: number; kind: "platerCreate"; sessionId: number; input: Uint8Array; filename: string }
-  | { id: number; kind: "platerCreateWithProfiles"; sessionId: number; input: Uint8Array; filename: string; catalog: string; selection: string; options: string }
+  | {
+      id: number;
+      kind: "platerCreateWithProfiles";
+      sessionId: number;
+      input: Uint8Array;
+      filename: string;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
   | { id: number; kind: "platerCreateFromStlFiles"; sessionId: number; inputs: Uint8Array[]; batch: string }
-  | { id: number; kind: "platerCreateFromStlFilesWithProfiles"; sessionId: number; inputs: Uint8Array[]; batch: string; catalog: string; selection: string; options: string }
-  | { id: number; kind: "platerProfileSettings"; sessionId: number; catalog: string; selection: string; options: string }
+  | {
+      id: number;
+      kind: "platerCreateFromStlFilesWithProfiles";
+      sessionId: number;
+      inputs: Uint8Array[];
+      batch: string;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
+  | {
+      id: number;
+      kind: "platerProfileSettings";
+      sessionId: number;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
   | { id: number; kind: "platerScene"; sessionId: number }
   | { id: number; kind: "platerInvalidValues"; sessionId: number }
   | { id: number; kind: "platerEdit"; sessionId: number; edit: PlaterEdit }
@@ -76,9 +170,24 @@ export type WorkerRequest =
   | { id: number; kind: "platerArrangeSettings"; sessionId: number }
   | { id: number; kind: "platerShownArrangeSettings"; sessionId: number; settings: ArrangeSettings }
   | { id: number; kind: "platerSlice"; sessionId: number; plate: number | undefined; overrides: string }
-  | { id: number; kind: "platerSliceWithProfiles"; sessionId: number; plate: number | undefined; catalog: string; selection: string; options: string }
+  | {
+      id: number;
+      kind: "platerSliceWithProfiles";
+      sessionId: number;
+      plate: number | undefined;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
   | { id: number; kind: "platerSaveProject"; sessionId: number; overrides: string }
-  | { id: number; kind: "platerSaveProjectWithProfiles"; sessionId: number; catalog: string; selection: string; options: string }
+  | {
+      id: number;
+      kind: "platerSaveProjectWithProfiles";
+      sessionId: number;
+      catalog: string;
+      selection: string;
+      options: string;
+    }
   | { id: number; kind: "platerPreview"; sessionId: number; plate: number }
   | { id: number; kind: "platerTakeSnapshot"; sessionId: number; snapshotId: number }
   | { id: number; kind: "platerLoadSnapshot"; sessionId: number; snapshotId: number }
@@ -89,7 +198,14 @@ export type WorkerRequest =
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number }
   | { id: number; kind: "viewColors"; viewType: string; visibleRoles: number; visibleOptions: number }
   | { id: number; kind: "prepareViewerTextures"; maxTextureSize: number }
-  | { id: number; kind: "movesSlider"; layers: [number, number]; visibleRoles: number; visibleOptions: number; higher?: number }
+  | {
+      id: number;
+      kind: "movesSlider";
+      layers: [number, number];
+      visibleRoles: number;
+      visibleOptions: number;
+      higher?: number;
+    }
   | { id: number; kind: "movesHigher"; higher: number; viewType: string; visibleRoles: number; visibleOptions: number };
 
 /** A request before the client assigns its `id`. */

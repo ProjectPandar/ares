@@ -8,12 +8,16 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-lock/", impo
 /** An Ender-3 project with a cube on each of two plates. */
 const TWO_PLATES = "tests/parity/custom-gcode-overview/two-plates.3mf";
 /** Plate 1's cube off the plate centre, so an arrange of it shows. */
-const MOVED: Edit = ["3D/3dmodel.model", "transform=\"1 0 0 0 1 0 0 0 1 110 110 5\"", "transform=\"1 0 0 0 1 0 0 0 1 40 40 5\""];
+const MOVED: Edit = [
+  "3D/3dmodel.model",
+  'transform="1 0 0 0 1 0 0 0 1 110 110 5"',
+  'transform="1 0 0 0 1 0 0 0 1 40 40 5"',
+];
 /** Plate 1 locked in the 3MF (`bbs_3mf.cpp:4637-4640`), as the lock icon leaves it. */
 const LOCKED: Edit = [
   "Metadata/model_settings.config",
-  "<metadata key=\"plater_id\" value=\"1\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>",
-  "<metadata key=\"plater_id\" value=\"1\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"true\"/>",
+  '<metadata key="plater_id" value="1"/>\n    <metadata key="plater_name" value=""/>\n    <metadata key="locked" value="false"/>',
+  '<metadata key="plater_id" value="1"/>\n    <metadata key="plater_name" value=""/>\n    <metadata key="locked" value="true"/>',
 ];
 /** The settings the CLI flags give: no rotation, no calibration region, no align to Y. */
 const FLAGS = ["--allow-rotations=0", "--avoid-extrusion-cali-region=0", "--align-to-y-axis=0"];

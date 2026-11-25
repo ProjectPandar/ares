@@ -3,7 +3,22 @@ import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody, WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
-import type { AresSlicerOptions, CompatiblePresets, ConfigValue, DirectProjectSliceOptions, GuideModel, OptionMap, ParsedPresetBundle, ProfileSelection, ProfileSliceOptions, ProjectPresetSelection, Scene, SlicingStatus, StlFile, StlImportOptions } from "./types.js";
+import type {
+  AresSlicerOptions,
+  CompatiblePresets,
+  ConfigValue,
+  DirectProjectSliceOptions,
+  GuideModel,
+  OptionMap,
+  ParsedPresetBundle,
+  ProfileSelection,
+  ProfileSliceOptions,
+  ProjectPresetSelection,
+  Scene,
+  SlicingStatus,
+  StlFile,
+  StlImportOptions,
+} from "./types.js";
 
 export * from "./toolpaths.js";
 export { PlaterSession } from "./platerSession.js";
@@ -11,7 +26,11 @@ export { PresetCatalog, type FilamentSlotState } from "./presetCatalog.js";
 export type * from "./configDef.js";
 export type * from "./types.js";
 
-type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; onStatus?: (status: SlicingStatus) => void };
+type Pending = {
+  resolve: (value: unknown) => void;
+  reject: (error: Error) => void;
+  onStatus?: (status: SlicingStatus) => void;
+};
 
 /**
  * Promise client for the Ares WebAssembly slicer. Every call runs in the
@@ -91,9 +110,20 @@ export class AresSlicer {
    * `ConfigOption::serialize()` string from `encodeConfigValues`, or one string
    * per element of a vector option. Rejects an unknown key or invalid value.
    */
-  async sliceProject(input: Uint8Array, plate?: number, overrides: Record<string, string | string[]> = {}, options?: DirectProjectSliceOptions): Promise<SliceResult> {
+  async sliceProject(
+    input: Uint8Array,
+    plate?: number,
+    overrides: Record<string, string | string[]> = {},
+    options?: DirectProjectSliceOptions,
+  ): Promise<SliceResult> {
     await this.#ready;
-    return (await this.#call({ kind: "sliceProject", input: input.slice(), plate, overrides: JSON.stringify(overrides), catalog: options?.catalogJson })) as SliceResult;
+    return (await this.#call({
+      kind: "sliceProject",
+      input: input.slice(),
+      plate,
+      overrides: JSON.stringify(overrides),
+      catalog: options?.catalogJson,
+    })) as SliceResult;
   }
 
   /**
@@ -241,7 +271,8 @@ export class AresSlicer {
     await this.#ready;
     const sessionId = this.#nextSessionId++;
     await this.#call({
-      kind: "platerCreateFromStlFiles", sessionId,
+      kind: "platerCreateFromStlFiles",
+      sessionId,
       inputs: files.map(({ bytes }) => bytes.slice()),
       batch: JSON.stringify({ names: files.map(({ name }) => name), ...choices }),
     });
@@ -250,16 +281,22 @@ export class AresSlicer {
 
   /** Loads the complete STL batch onto the selected printer's bed. */
   async createPlaterSessionFromStlFilesWithProfiles(
-    files: readonly StlFile[], choices: StlImportOptions, catalogJson: string,
-    selection: ProfileSelection, options: ProfileSliceOptions,
+    files: readonly StlFile[],
+    choices: StlImportOptions,
+    catalogJson: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
   ): Promise<PlaterSession> {
     await this.#ready;
     const sessionId = this.#nextSessionId++;
     await this.#call({
-      kind: "platerCreateFromStlFilesWithProfiles", sessionId,
+      kind: "platerCreateFromStlFilesWithProfiles",
+      sessionId,
       inputs: files.map(({ bytes }) => bytes.slice()),
       batch: JSON.stringify({ names: files.map(({ name }) => name), ...choices }),
-      catalog: catalogJson, selection: JSON.stringify(selection), options: JSON.stringify(options),
+      catalog: catalogJson,
+      selection: JSON.stringify(selection),
+      options: JSON.stringify(options),
     });
     return new PlaterSession((body, onStatus) => this.#call(body, onStatus), sessionId);
   }
@@ -273,7 +310,12 @@ export class AresSlicer {
    */
   async filterCompatiblePresets(catalogJson: string, printer: string, process?: string): Promise<CompatiblePresets> {
     await this.#ready;
-    return (await this.#call({ kind: "filterCompatiblePresets", catalog: catalogJson, printer, process })) as CompatiblePresets;
+    return (await this.#call({
+      kind: "filterCompatiblePresets",
+      catalog: catalogJson,
+      printer,
+      process,
+    })) as CompatiblePresets;
   }
 
   /**
@@ -293,7 +335,10 @@ export class AresSlicer {
    */
   async decodeConfigValues(entries: readonly (readonly [key: string, serialized: string])[]): Promise<ConfigValue[]> {
     await this.#ready;
-    return (await this.#call({ kind: "decodeConfigValues", entries: entries.map(([key, value]) => [key, value]) })) as ConfigValue[];
+    return (await this.#call({
+      kind: "decodeConfigValues",
+      entries: entries.map(([key, value]) => [key, value]),
+    })) as ConfigValue[];
   }
 
   /**
@@ -303,7 +348,10 @@ export class AresSlicer {
    */
   async encodeConfigValues(entries: readonly (readonly [key: string, value: ConfigValue])[]): Promise<string[]> {
     await this.#ready;
-    return (await this.#call({ kind: "encodeConfigValues", entries: entries.map(([key, value]) => [key, value]) })) as string[];
+    return (await this.#call({
+      kind: "encodeConfigValues",
+      entries: entries.map(([key, value]) => [key, value]),
+    })) as string[];
   }
 
   /** Slices an STL model with Ares slice options. */
@@ -357,7 +405,12 @@ export class AresSlicer {
    * stop when it was there, else at the last; otherwise both thumbs span the
    * visible range.
    */
-  async movesSlider(layers: [number, number], visibleRoles: number, visibleOptions: number, higher?: number): Promise<MovesSlider> {
+  async movesSlider(
+    layers: [number, number],
+    visibleRoles: number,
+    visibleOptions: number,
+    higher?: number,
+  ): Promise<MovesSlider> {
     await this.#ready;
     return (await this.#call({ kind: "movesSlider", layers, visibleRoles, visibleOptions, higher })) as MovesSlider;
   }
@@ -371,7 +424,12 @@ export class AresSlicer {
    * higher thumb is not at the last stop, and the tool marker once the view
    * ended before the last move since the slice.
    */
-  async movesHigher(higher: number, viewType: string, visibleRoles: number, visibleOptions: number): Promise<MovesView> {
+  async movesHigher(
+    higher: number,
+    viewType: string,
+    visibleRoles: number,
+    visibleOptions: number,
+  ): Promise<MovesView> {
     await this.#ready;
     return (await this.#call({ kind: "movesHigher", higher, viewType, visibleRoles, visibleOptions })) as MovesView;
   }
@@ -384,7 +442,12 @@ export class AresSlicer {
     if (this.#crash !== undefined) return Promise.reject(new Error(this.#crash));
     const id = this.#nextId++;
     const request = { ...body, id } as WorkerRequest;
-    const transfer = "inputs" in request ? request.inputs.map((input) => input.buffer) : "input" in request ? [request.input.buffer] : [];
+    const transfer =
+      "inputs" in request
+        ? request.inputs.map((input) => input.buffer)
+        : "input" in request
+          ? [request.input.buffer]
+          : [];
     return new Promise((resolve, reject) => {
       this.#pending.set(id, { resolve, reject, onStatus });
       this.#worker.postMessage(request, transfer);

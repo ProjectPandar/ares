@@ -10,7 +10,9 @@ export async function importStlFiles(picked: File[], choices: StlImportOptions) 
   useApp.setState({ loadingFile: true, loadError: undefined });
   let candidate: PlaterSession | undefined;
   try {
-    const files = await Promise.all(picked.map(async (file) => ({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) })));
+    const files = await Promise.all(
+      picked.map(async (file) => ({ name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) })),
+    );
     candidate = await slicer.createPlaterSessionFromStlFiles(files, choices);
     await installVendors(candidate);
     const scene = await candidate.scene();
@@ -18,9 +20,19 @@ export async function importStlFiles(picked: File[], choices: StlImportOptions) 
     const plater = candidate;
     useApp.setState({
       file: { kind: "stl-batch", name: files[0].name, files, choices },
-      scene: { ...scene, format: "stl", settings: null }, plater,
-      currentPlate: 0, arrange: null, arrangeError: undefined, plateSlices: {}, typedSettings: null,
-      selectedObject: null, selectedInstance: null, filamentSelection: [], overrides: {}, slice: { status: "idle" }, loadWarning: undefined,
+      scene: { ...scene, format: "stl", settings: null },
+      plater,
+      currentPlate: 0,
+      arrange: null,
+      arrangeError: undefined,
+      plateSlices: {},
+      typedSettings: null,
+      selectedObject: null,
+      selectedInstance: null,
+      filamentSelection: [],
+      overrides: {},
+      slice: { status: "idle" },
+      loadWarning: undefined,
     });
     candidate = undefined;
     void previous?.free();

@@ -62,11 +62,15 @@ function expectedLegend(moves: Move[], gcode: string) {
   }
   const used = [...volumes.keys()].sort((a, b) => a - b);
   // Bucket index of each column in display order: Model, Support, Tower.
-  const columns = [["Model", 0], ["Support", 1], ["Tower", 2]] as const;
+  const columns = [
+    ["Model", 0],
+    ["Support", 1],
+    ["Tower", 2],
+  ] as const;
   const shown = columns.filter(([, bucket]) => used.some((id) => volumes.get(id)![bucket] !== 0));
   const total = shown.some(([name]) => name !== "Model");
   const usage = (id: number, volume: number) => [
-    0.001 * volume / (Math.PI * (0.5 * diameters[id]) ** 2),
+    (0.001 * volume) / (Math.PI * (0.5 * diameters[id]) ** 2),
     volume * densities[id] * 0.001,
   ];
   const cell = ([m, g]: number[]) => `${m.toFixed(2)} m${total ? "\n" : "    "}${compactWeight(g)}`;
@@ -83,7 +87,12 @@ function expectedLegend(moves: Move[], gcode: string) {
   });
   const grand = totals.reduce(([m, g], value) => [m + value[0], g + value[1]], [0, 0]);
   return {
-    headers: [...(shown.some(([name]) => name === "Model") ? ["Filament"] : []), ...shown.map(([name]) => name), ...(total ? ["Total"] : []), "Display"],
+    headers: [
+      ...(shown.some(([name]) => name === "Model") ? ["Filament"] : []),
+      ...shown.map(([name]) => name),
+      ...(total ? ["Total"] : []),
+      "Display",
+    ],
     rows,
     total: used.length > 1 ? ["Total", ...[...totals, ...(total ? [grand] : [])].map(cell)] : null,
     colours: used.map((id) => colours[id]),
@@ -91,7 +100,8 @@ function expectedLegend(moves: Move[], gcode: string) {
 }
 
 // LibVGCodeWrapper.cpp:58-61: ORCA's minimum brightness clamp, before display.
-const rgb = (hex: string) => `rgb(${[1, 3, 5].map((at) => Math.max(48, Math.trunc(f32(f32(parseInt(hex.slice(at, at + 2), 16) * f32(1 / 255)) * 255)))).join(", ")})`;
+const rgb = (hex: string) =>
+  `rgb(${[1, 3, 5].map((at) => Math.max(48, Math.trunc(f32(f32(parseInt(hex.slice(at, at + 2), 16) * f32(1 / 255)) * 255)))).join(", ")})`;
 
 /**
  * The Filament view lists the used filaments (`GCodeViewer.cpp:4026-4141`) and

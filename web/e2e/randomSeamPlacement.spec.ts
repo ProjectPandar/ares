@@ -10,7 +10,9 @@ function prism() {
     const angle = (2 * Math.PI * i) / sides;
     return [4.25 * Math.cos(angle), 4.25 * Math.sin(angle)];
   });
-  const vertices = [0, 2.2].flatMap((z) => ring.map(([x, y]) => `<vertex x="${x.toFixed(6)}" y="${y.toFixed(6)}" z="${z}"/>`));
+  const vertices = [0, 2.2].flatMap((z) =>
+    ring.map(([x, y]) => `<vertex x="${x.toFixed(6)}" y="${y.toFixed(6)}" z="${z}"/>`),
+  );
   const faces = [];
   for (let i = 1; i < sides - 1; i++) faces.push([0, i + 1, i], [sides, sides + i, sides + i + 1]);
   for (let i = 0; i < sides; i++) {
@@ -19,22 +21,40 @@ function prism() {
   }
   const triangles = faces.map(([a, b, c]) => `<triangle v1="${a}" v2="${b}" v3="${c}"/>`).join("");
   const settings = {
-    printer_model: "Bambu Lab X1 Carbon", printer_technology: "FFF", gcode_flavor: "marlin",
-    nozzle_diameter: ["0.4"], printable_area: ["0x0", "256x0", "256x256", "0x256"], printable_height: "256",
-    filament_type: ["PLA"], filament_colour: ["#cc3322"], filament_diameter: ["1.75"],
-    layer_height: "0.2", initial_layer_print_height: "0.2", print_sequence: "by layer",
-    seam_position: "random", enable_arc_fitting: "disabled", enable_prime_tower: "0",
-    wall_loops: "2", brim_type: "no_brim", sparse_infill_density: "0%",
+    printer_model: "Bambu Lab X1 Carbon",
+    printer_technology: "FFF",
+    gcode_flavor: "marlin",
+    nozzle_diameter: ["0.4"],
+    printable_area: ["0x0", "256x0", "256x256", "0x256"],
+    printable_height: "256",
+    filament_type: ["PLA"],
+    filament_colour: ["#cc3322"],
+    filament_diameter: ["1.75"],
+    layer_height: "0.2",
+    initial_layer_print_height: "0.2",
+    print_sequence: "by layer",
+    seam_position: "random",
+    enable_arc_fitting: "disabled",
+    enable_prime_tower: "0",
+    wall_loops: "2",
+    brim_type: "no_brim",
+    sparse_infill_density: "0%",
   };
   return zipSync({
-    "[Content_Types].xml": strToU8('<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="png" ContentType="image/png"/></Types>'),
-    "_rels/.rels": strToU8('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'),
+    "[Content_Types].xml": strToU8(
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="png" ContentType="image/png"/></Types>',
+    ),
+    "_rels/.rels": strToU8(
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>',
+    ),
     "3D/3dmodel.model": strToU8(`<?xml version="1.0" encoding="UTF-8"?>
 <model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
 <metadata name="Application">OrcaSlicer-2.5.0</metadata>
 <resources><object id="1" type="model"><mesh><vertices>${vertices.join("")}</vertices><triangles>${triangles}</triangles></mesh></object></resources>
 <build><item objectid="1" transform="1 0 0 0 1 0 0 0 1 38.013 42.727 0"/></build></model>`),
-    "Metadata/model_settings.config": strToU8('<config><object id="1"><metadata key="name" value="Prism"/><metadata key="extruder" value="1"/><part id="1" subtype="normal_part"><metadata key="name" value="Prism"/></part></object></config>'),
+    "Metadata/model_settings.config": strToU8(
+      '<config><object id="1"><metadata key="name" value="Prism"/><metadata key="extruder" value="1"/><part id="1" subtype="normal_part"><metadata key="name" value="Prism"/></part></object></config>',
+    ),
     "Metadata/project_settings.config": strToU8(JSON.stringify(settings)),
   });
 }
@@ -48,7 +68,9 @@ function outerWallStarts(text: string) {
     if (record.startsWith("; FEATURE: ")) pending = record === "; FEATURE: Outer wall";
     const move = record.split(";", 1)[0];
     if (!/^G[123]\s/.test(move)) continue;
-    const words = Object.fromEntries(Array.from(move.matchAll(/\b([XYE])(-?(?:\d+\.?\d*|\.\d+))/g), ([, axis, value]) => [axis, Number(value)]));
+    const words = Object.fromEntries(
+      Array.from(move.matchAll(/\b([XYE])(-?(?:\d+\.?\d*|\.\d+))/g), ([, axis, value]) => [axis, Number(value)]),
+    );
     const nextX = words.X ?? x;
     const nextY = words.Y ?? y;
     if (pending && words.E > 0 && x !== undefined && y !== undefined && (nextX !== x || nextY !== y)) {

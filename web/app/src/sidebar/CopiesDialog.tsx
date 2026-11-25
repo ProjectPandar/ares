@@ -18,18 +18,35 @@ export function CopiesDialog({ object, count, onClose }: { object: number; count
     <dialog ref={dialog} className="shortcuts-dialog" aria-labelledby="copies-title" onClose={onClose}>
       <header className="shortcuts-header">
         <h2 id="copies-title">Copies of the selected object</h2>
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>{"\u2715"}</button>
+        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
+          {"\u2715"}
+        </button>
       </header>
       <label className="vendor-item">
         Number of copies:
-        <input type="number" min={0} max={MAX_COPIES} step={1} value={value} onChange={(event) => setValue(event.target.value)} />
+        <input
+          type="number"
+          min={0}
+          max={MAX_COPIES}
+          step={1}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
       </label>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => dialog.current!.close()}>Cancel</button>
-        <button className="side-button" disabled={!valid} onClick={() => {
-          void setNumberOfCopies(object, num);
-          dialog.current!.close();
-        }}>OK</button>
+        <button className="side-button" onClick={() => dialog.current!.close()}>
+          Cancel
+        </button>
+        <button
+          className="side-button"
+          disabled={!valid}
+          onClick={() => {
+            void setNumberOfCopies(object, num);
+            dialog.current!.close();
+          }}
+        >
+          OK
+        </button>
       </footer>
     </dialog>
   );

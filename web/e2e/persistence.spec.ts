@@ -44,33 +44,40 @@ async function expectSelection(page: Page) {
   await expect(combo(page, "Printer preset")).toHaveText(SELECTION.printer, { timeout: 60_000 });
   await settled(page);
   await expect(combo(page, "Process preset")).toHaveText(SELECTION.process);
-  for (const [slot, filament] of SELECTION.filaments.entries()) await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(filament);
+  for (const [slot, filament] of SELECTION.filaments.entries())
+    await expect(combo(page, `Filament ${slot + 1} preset`)).toHaveText(filament);
   await expect(combo(page, `Filament ${SELECTION.filaments.length + 1} preset`)).toHaveCount(0);
 }
 
 /** Names in a combo's group; Escape closes the list. */
 async function groupOptions(page: Page, name: string, group: string) {
   await combo(page, name).click();
-  const names = await page.getByRole("listbox", { name, exact: true }).getByRole("group", { name: group, exact: true })
-    .getByRole("option").allTextContents();
+  const names = await page
+    .getByRole("listbox", { name, exact: true })
+    .getByRole("group", { name: group, exact: true })
+    .getByRole("option")
+    .allTextContents();
   await page.keyboard.press("Escape");
   return names;
 }
 
-const importCount = (page: Page) => page.evaluate(async () => {
-  const db = await new Promise<IDBDatabase>((resolve) => {
-    const request = indexedDB.open("ares");
-    request.onsuccess = () => resolve(request.result);
+const importCount = (page: Page) =>
+  page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve) => {
+      const request = indexedDB.open("ares");
+      request.onsuccess = () => resolve(request.result);
+    });
+    const count = await new Promise<number>((resolve) => {
+      const request = db.transaction("presetImports").objectStore("presetImports").count();
+      request.onsuccess = () => resolve(request.result);
+    });
+    db.close();
+    return count;
   });
-  const count = await new Promise<number>((resolve) => {
-    const request = db.transaction("presetImports").objectStore("presetImports").count();
-    request.onsuccess = () => resolve(request.result);
-  });
-  db.close();
-  return count;
-});
 
-test("selections, imported presets and UI preferences survive a reload; corrupt entries are dropped", async ({ page }) => {
+test("selections, imported presets and UI preferences survive a reload; corrupt entries are dropped", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -91,7 +98,8 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   await page.getByTestId("preset-import-input").setInputFiles(IMPORT);
   await choose(page, "Printer preset", SELECTION.printer);
   await choose(page, "Process preset", SELECTION.process);
-  for (const [slot, filament] of SELECTION.filaments.entries()) await choose(page, `Filament ${slot + 1} preset`, filament);
+  for (const [slot, filament] of SELECTION.filaments.entries())
+    await choose(page, `Filament ${slot + 1} preset`, filament);
   await page.getByRole("button", { name: "Light theme" }).click();
   await page.getByRole("slider", { name: "Settings mode" }).press("End");
   await expectSelection(page);
@@ -103,11 +111,16 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await loadProject(page);
-  expect(await page.evaluate(() => (JSON.parse(localStorage.getItem("ares.config")!) as { printer: string | null }).printer)).toBeNull();
+  expect(
+    await page.evaluate(() => (JSON.parse(localStorage.getItem("ares.config")!) as { printer: string | null }).printer),
+  ).toBeNull();
   await choose(page, "Printer preset", SELECTION.printer);
   await expectSelection(page);
   expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
-  await expect(page.getByRole("slider", { name: "Settings mode" })).toHaveAttribute("aria-valuetext", "Expert settings");
+  await expect(page.getByRole("slider", { name: "Settings mode" })).toHaveAttribute(
+    "aria-valuetext",
+    "Expert settings",
+  );
   expect(await groupOptions(page, "Printer preset", "User presets")).toEqual([SELECTION.printer]);
   await page.screenshot({ path: `${artifacts}after-reload.png` });
 
@@ -116,8 +129,9 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   // (Preset.cpp:4414-4437), else its layer height: A1 mini's default_print_profile. Switching back
   // brings the process and filaments back.
   await choose(page, "Printer preset", "Bambu Lab A1 mini");
-  const a1mini = JSON.parse(readFileSync(`${orca}/resources/profiles/BBL/machine/${A1_MINI}.json`, "utf8")) as
-    { default_print_profile: string };
+  const a1mini = JSON.parse(readFileSync(`${orca}/resources/profiles/BBL/machine/${A1_MINI}.json`, "utf8")) as {
+    default_print_profile: string;
+  };
   await expect(combo(page, "Process preset")).toHaveText(a1mini.default_print_profile);
   await choose(page, "Printer preset", SELECTION.printer);
   await expectSelection(page);
@@ -127,7 +141,15 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   const records = {
     old: JSON.stringify({ version: 0, theme: "light" }),
     invalid: "{",
-    badField: JSON.stringify({ version: 1, theme: 5, mode: "simple", gcodeWindow: true, vendors: [], printer: null, printers: {} }),
+    badField: JSON.stringify({
+      version: 1,
+      theme: 5,
+      mode: "simple",
+      gcodeWindow: true,
+      vendors: [],
+      printer: null,
+      printers: {},
+    }),
   };
   const dropped: Record<string, boolean> = {};
   for (const [name, record] of Object.entries(records)) {
@@ -140,9 +162,18 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
     dropped[name] = await page.evaluate(() => {
       const text = localStorage.getItem("ares.config");
       if (text === null) return true;
-      const stored = JSON.parse(text) as { version: number; theme: string; printer: string | null; installedPrinters: object };
-      return stored.version === 1 && stored.theme === "dark" && stored.printer === null
-        && Object.keys(stored.installedPrinters).length === 0;
+      const stored = JSON.parse(text) as {
+        version: number;
+        theme: string;
+        printer: string | null;
+        installedPrinters: object;
+      };
+      return (
+        stored.version === 1 &&
+        stored.theme === "dark" &&
+        stored.printer === null &&
+        Object.keys(stored.installedPrinters).length === 0
+      );
     });
     expect(dropped[name], name).toBe(true);
   }
@@ -170,6 +201,9 @@ test("selections, imported presets and UI preferences survive a reload; corrupt 
   expect(await groupOptions(page, "Printer preset", "User presets")).toEqual([SELECTION.printer]);
   await page.screenshot({ path: `${artifacts}corrupt-imports.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ selection: SELECTION, dropped, importsAfterCleanup: 1 }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ selection: SELECTION, dropped, importsAfterCleanup: 1 }, null, 2)}\n`,
+  );
   expect(errors).toEqual([]);
 });

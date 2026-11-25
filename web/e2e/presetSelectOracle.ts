@@ -43,7 +43,11 @@ export interface SessionSteps {
 
 /** The preset-select probe, or null where CI does not provision it. */
 export const presetSelectProbe = () =>
-  oraclePath("ARES_ORCA_PRESET_SELECT_BIN", "the preset-select probe", "tools/chain-probe/preset-select.patch built at 40ecc66f7");
+  oraclePath(
+    "ARES_ORCA_PRESET_SELECT_BIN",
+    "the preset-select probe",
+    "tools/chain-probe/preset-select.patch built at 40ecc66f7",
+  );
 
 /**
  * The project config as ConfigBase::load_from_json reads its JSON arrays (Config.cpp:1032-1052): ConfigOptionStrings
@@ -71,7 +75,13 @@ function serialized(config: Record<string, string | string[]>) {
  * GuideFrame wizard confirmed with `wizard` checked ({vendor: {model: [variant]}}), the sidebar picks `select`, then
  * the sidebar process edits `process_edit`.
  */
-export function nativeSelection(probe: string, directory: string, project: string, vendors: string[], steps: SessionSteps = {}): NativeSelection {
+export function nativeSelection(
+  probe: string,
+  directory: string,
+  project: string,
+  vendors: string[],
+  steps: SessionSteps = {},
+): NativeSelection {
   rmSync(directory, { recursive: true, force: true });
   const system = `${directory}data/system/`;
   mkdirSync(system, { recursive: true });
@@ -82,7 +92,8 @@ export function nativeSelection(probe: string, directory: string, project: strin
   const entries = unzipSync(readFileSync(project));
   // bbs_3mf.cpp:1539-1551: the OrcaSlicer metadata tag is the file version, else the Application's.
   const model = strFromU8(entries["3D/3dmodel.model"]);
-  const version = (/<metadata name="OrcaSlicer">([^<]+)/.exec(model) ?? /<metadata name="Application">[^<]*-([^<-]+)/.exec(model))![1];
+  const version = (/<metadata name="OrcaSlicer">([^<]+)/.exec(model) ??
+    /<metadata name="Application">[^<]*-([^<-]+)/.exec(model))![1];
   const { options, unknown } = serialized(JSON.parse(strFromU8(entries[PROJECT_CONFIG])));
   writeFileSync(`${directory}unknown-keys.json`, JSON.stringify(unknown));
   const request = {
@@ -93,7 +104,11 @@ export function nativeSelection(probe: string, directory: string, project: strin
     output: `${directory}native.json`,
   };
   writeFileSync(`${directory}request.json`, JSON.stringify(request, null, 2));
-  execFileSync(probe, { cwd: directory, env: { ...process.env, ARES_PRESET_SELECT_REQUEST: `${directory}request.json` }, stdio: ["ignore", "pipe", "pipe"] });
+  execFileSync(probe, {
+    cwd: directory,
+    env: { ...process.env, ARES_PRESET_SELECT_REQUEST: `${directory}request.json` },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   const replay = JSON.parse(readFileSync(`${directory}native.json`, "utf8")).projects[0];
   if (steps.filament_slot_edits && replay.filament_slot_edits_applied !== steps.filament_slot_edits.length) {
     throw new Error("The OrcaSlicer preset-select probe did not apply the requested filament slot edits");
@@ -107,7 +122,15 @@ export function nativeSelection(probe: string, directory: string, project: strin
  */
 export function lhModels() {
   const profiles = `${orca}resources/profiles/`;
-  const vendor = JSON.parse(readFileSync(`${profiles}LH.json`, "utf8")) as { machine_model_list: { name: string; sub_path: string }[] };
-  return Object.fromEntries(vendor.machine_model_list.map(({ name, sub_path }) =>
-    [name, (JSON.parse(readFileSync(`${profiles}LH/${sub_path}`, "utf8")) as { nozzle_diameter: string }).nozzle_diameter.split(";")]));
+  const vendor = JSON.parse(readFileSync(`${profiles}LH.json`, "utf8")) as {
+    machine_model_list: { name: string; sub_path: string }[];
+  };
+  return Object.fromEntries(
+    vendor.machine_model_list.map(({ name, sub_path }) => [
+      name,
+      (
+        JSON.parse(readFileSync(`${profiles}LH/${sub_path}`, "utf8")) as { nozzle_diameter: string }
+      ).nozzle_diameter.split(";"),
+    ]),
+  );
 }

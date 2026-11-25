@@ -58,7 +58,9 @@ function legendValues(values: number[], logarithmic: boolean) {
   if (count === 2) return [max, min];
   const colors = 11;
   const step = logarithmic
-    ? min !== 0 ? f32(f32(Math.log(f32(max / min))) / (colors - 1)) : 0
+    ? min !== 0
+      ? f32(f32(Math.log(f32(max / min))) / (colors - 1))
+      : 0
     : f32(f32(max - min) / (colors - 1));
   const out = [];
   for (let i = colors - 1; i >= 0; i--) {
@@ -79,7 +81,10 @@ function rangeInputs(moves: RangeMove[], travels: boolean) {
   const vertices: RangeMove[] = [];
   for (let i = 1; i < moves.length; i++) {
     const [prev, curr] = [moves[i - 1], moves[i]];
-    if (PATH_TYPES.has(curr.type) && (vertices.length === 0 || prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm))
+    if (
+      PATH_TYPES.has(curr.type) &&
+      (vertices.length === 0 || prev.type !== curr.type || prev.role !== curr.role || prev.mm3PerMm !== curr.mm3PerMm)
+    )
       vertices.push({ ...curr, time: 0, actualFeedrate: prev.actualFeedrate });
     vertices.push(curr);
   }
@@ -166,7 +171,18 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
     expected[view] = legendValues(inputs[view], view === "LayerTimeLogarithmic");
     await expectRows(page, expected[view], decimals, view);
     expect(await canvasDigest(page), `${label} must recolor the toolpaths`).not.toBe(featureType);
-    if (["Height", "Speed", "ActualSpeed", "ActualVolumetricFlowRate", "LayerTimeLogarithmic", "Acceleration", "Jerk", "PressureAdvance"].includes(view)) {
+    if (
+      [
+        "Height",
+        "Speed",
+        "ActualSpeed",
+        "ActualVolumetricFlowRate",
+        "LayerTimeLogarithmic",
+        "Acceleration",
+        "Jerk",
+        "PressureAdvance",
+      ].includes(view)
+    ) {
       await page.screenshot({ path: `${artifacts}preview-view-${view}.png` });
     }
   }
@@ -182,7 +198,11 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
   await expectRows(page, expected.Speed, 0, "Speed");
   // Actual Speed, Acceleration and Jerk offer the same Travel row (`GCodeViewer.cpp:3930-3978`).
   const travelInputs = rangeInputs(moves, true);
-  for (const [view, label, decimals] of [["ActualSpeed", "Actual Speed", 0], ["Acceleration", "Acceleration", 0], ["Jerk", "Jerk", 1]] as const) {
+  for (const [view, label, decimals] of [
+    ["ActualSpeed", "Actual Speed", 0],
+    ["Acceleration", "Acceleration", 0],
+    ["Jerk", "Jerk", 1],
+  ] as const) {
     await select.selectOption({ label });
     await expect(travel).toHaveAttribute("aria-pressed", "false");
     await travel.click();
@@ -194,5 +214,7 @@ export async function checkColorRanges(page: Page, moves: RangeMove[], artifacts
   await select.selectOption({ label: "Line Type" });
   await expect(page.getByTestId("legend").locator(".legend-range li")).toHaveCount(0);
   expect(await canvasDigest(page), "Line Type restores the feature colors").toBe(featureType);
-  return Object.fromEntries(Object.entries(expected).map(([view, values]) => [view, [values.at(-1), values[0], values.length]]));
+  return Object.fromEntries(
+    Object.entries(expected).map(([view, values]) => [view, [values.at(-1), values[0], values.length]]),
+  );
 }

@@ -16,12 +16,17 @@ const PRISM = `<mesh><vertices><vertex x="0" y="0" z="0"/><vertex x="20" y="0" z
 function prismProject(item: string): Uint8Array<ArrayBuffer> {
   const entries = unzipSync(readFileSync(`${repositoryRoot}${FIXTURE}`));
   const mesh = strFromU8(entries["3D/Objects/cube10.stl_1.model"]);
-  entries["3D/Objects/cube10.stl_1.model"] = strToU8(mesh.slice(0, mesh.indexOf("<mesh>")) + PRISM + mesh.slice(mesh.indexOf("</mesh>") + "</mesh>".length));
-  entries["3D/3dmodel.model"] = strToU8(strFromU8(entries["3D/3dmodel.model"]).replace("transform=\"1 0 0 0 1 0 0 0 1 110 110 5\"", `transform="${item}"`));
+  entries["3D/Objects/cube10.stl_1.model"] = strToU8(
+    mesh.slice(0, mesh.indexOf("<mesh>")) + PRISM + mesh.slice(mesh.indexOf("</mesh>") + "</mesh>".length),
+  );
+  entries["3D/3dmodel.model"] = strToU8(
+    strFromU8(entries["3D/3dmodel.model"]).replace('transform="1 0 0 0 1 0 0 0 1 110 110 5"', `transform="${item}"`),
+  );
   return zipSync(entries) as Uint8Array<ArrayBuffer>;
 }
 
-const field = (page: Page, group: string, axis: "X" | "Y" | "Z") => page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
+const field = (page: Page, group: string, axis: "X" | "Y" | "Z") =>
+  page.getByRole("textbox", { name: `${group} ${axis}`, exact: true });
 
 test("the object menu mirrors an instance about its centre and slices like OrcaSlicer", async ({ page }) => {
   test.setTimeout(300_000);
@@ -39,12 +44,26 @@ test("the object menu mirrors an instance about its centre and slices like OrcaS
   // ObjectList's right click selects the object and shows its menu (GUI_Factories.cpp:1353-1363).
   await page.getByTestId("object-list").getByRole("treeitem").nth(1).click({ button: "right" });
   const menu = page.getByRole("menu", { name: "Object menu" });
-  await expect(menu.getByRole("menuitem")).toHaveText(["Delete", "Add instance", "Remove instance", "Set number of instances...", "Along X Axis", "Along Y Axis", "Along Z Axis", "Scale to build volume"]);
+  await expect(menu.getByRole("menuitem")).toHaveText([
+    "Delete",
+    "Add instance",
+    "Remove instance",
+    "Set number of instances...",
+    "Along X Axis",
+    "Along Y Axis",
+    "Along Z Axis",
+    "Scale to build volume",
+  ]);
   await page.screenshot({ path: `${artifacts}menu.png` });
   await menu.getByRole("menuitem", { name: "Along X Axis" }).click();
   await expect(menu).toHaveCount(0);
   // Mirrored about its box centre, the offset stays.
-  for (const [axis, value] of [["X", "110.00"], ["Y", "108.00"], ["Z", "5.00"]] as const) await expect(field(page, "Position", axis)).toHaveValue(value);
+  for (const [axis, value] of [
+    ["X", "110.00"],
+    ["Y", "108.00"],
+    ["Z", "5.00"],
+  ] as const)
+    await expect(field(page, "Position", axis)).toHaveValue(value);
   await page.screenshot({ path: `${artifacts}mirrored.png` });
 
   await page.getByRole("navigation").getByRole("button", { name: "Slice plate", exact: true }).click();
@@ -60,14 +79,26 @@ test("the object menu mirrors an instance about its centre and slices like OrcaS
   const oracle = `${artifacts}mirrored.3mf`;
   writeFileSync(oracle, prismProject("-1 0 0 0 1 0 0 0 1 120 100 0"));
   const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: `${FIXTURE} with the asymmetric prism`,
-    edits: ["object menu: Mirror Along X Axis"],
-    oracle: "OrcaSlicer --slice 1 of the mirrored project (official and seed-replay legs)",
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: `${FIXTURE} with the asymmetric prism`,
+        edits: ["object menu: Mirror Along X Axis"],
+        oracle: "OrcaSlicer --slice 1 of the mirrored project (official and seed-replay legs)",
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

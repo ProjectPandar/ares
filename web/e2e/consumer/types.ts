@@ -60,23 +60,50 @@ export const checks = [
   assert<Equal<ReturnType<AresSlicer["printConfigDef"]>, Promise<PrintConfigDef>>>(),
   assert<Equal<PrintConfigDef["options"], ConfigOptionDef[]>>(),
   assert<Equal<ConfigOptionDef["mode"], ConfigOptionMode>>(),
-  assert<Equal<Parameters<AresSlicer["sliceProject"]>, [Uint8Array, number?, Record<string, string | string[]>?, DirectProjectSliceOptions?]>>(),
+  assert<
+    Equal<
+      Parameters<AresSlicer["sliceProject"]>,
+      [Uint8Array, number?, Record<string, string | string[]>?, DirectProjectSliceOptions?]
+    >
+  >(),
   assert<Equal<ReturnType<AresSlicer["sliceProject"]>, Promise<SliceResult>>>(),
-  assert<Equal<Parameters<AresSlicer["sliceWithProfiles"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
+  assert<
+    Equal<
+      Parameters<AresSlicer["sliceWithProfiles"]>,
+      [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]
+    >
+  >(),
   assert<Equal<ReturnType<AresSlicer["sliceWithProfiles"]>, Promise<SliceResult>>>(),
-  assert<Equal<Parameters<AresSlicer["placementScene"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
+  assert<
+    Equal<Parameters<AresSlicer["placementScene"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>
+  >(),
   assert<Equal<ReturnType<AresSlicer["placementScene"]>, Promise<Scene>>>(),
-  assert<Equal<Parameters<AresSlicer["profileSettings"]>, [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]>>(),
+  assert<
+    Equal<
+      Parameters<AresSlicer["profileSettings"]>,
+      [Uint8Array, string, string, ProfileSelection, ProfileSliceOptions]
+    >
+  >(),
   assert<Equal<ReturnType<AresSlicer["profileSettings"]>, Promise<OptionMap>>>(),
   assert<Equal<ProfileSelection, { machine: string; process: string; filaments: string[] }>>(),
-  assert<Equal<ProfileSliceOptions, { plate?: number; seed: number; overrides?: Record<string, string | string[]>; placement?: "none" | "center" }>>(),
+  assert<
+    Equal<
+      ProfileSliceOptions,
+      { plate?: number; seed: number; overrides?: Record<string, string | string[]>; placement?: "none" | "center" }
+    >
+  >(),
   assert<Equal<ReturnType<AresSlicer["sliceStl"]>, Promise<SliceResult>>>(),
   assert<Equal<Parameters<AresSlicer["createPlaterSession"]>, [Uint8Array, string]>>(),
   assert<Equal<ReturnType<AresSlicer["createPlaterSession"]>, Promise<PlaterSession>>>(),
   assert<Equal<Parameters<PlaterSession["translate"]>, [number, number, [number, number, number]]>>(),
   assert<Equal<ReturnType<PlaterSession["translate"]>, Promise<PlaterLayout>>>(),
   assert<Equal<ReturnType<PlaterSession["scene"]>, Promise<Scene>>>(),
-  assert<Equal<Parameters<PlaterSession["slice"]>, [number?, Record<string, string | string[]>?, ((status: SlicingStatus) => void)?]>>(),
+  assert<
+    Equal<
+      Parameters<PlaterSession["slice"]>,
+      [number?, Record<string, string | string[]>?, ((status: SlicingStatus) => void)?]
+    >
+  >(),
   assert<Equal<SlicingStatus, { percent: number; text: string }>>(),
   assert<Equal<ReturnType<PlaterSession["slice"]>, Promise<SliceResult>>>(),
   assert<Equal<ScenePlate["origin"], [number, number] | undefined>>(),
@@ -84,9 +111,13 @@ export const checks = [
   assert<Equal<ReturnType<AresSlicer["parsePresetBundle"]>, Promise<ParsedPresetBundle>>>(),
   assert<Equal<Parameters<AresSlicer["filterCompatiblePresets"]>, [string, string, string?]>>(),
   assert<Equal<ReturnType<AresSlicer["filterCompatiblePresets"]>, Promise<CompatiblePresets>>>(),
-  assert<Equal<Parameters<AresSlicer["decodeConfigValues"]>, [readonly (readonly [key: string, serialized: string])[]]>>(),
+  assert<
+    Equal<Parameters<AresSlicer["decodeConfigValues"]>, [readonly (readonly [key: string, serialized: string])[]]>
+  >(),
   assert<Equal<ReturnType<AresSlicer["decodeConfigValues"]>, Promise<ConfigValue[]>>>(),
-  assert<Equal<Parameters<AresSlicer["encodeConfigValues"]>, [readonly (readonly [key: string, value: ConfigValue])[]]>>(),
+  assert<
+    Equal<Parameters<AresSlicer["encodeConfigValues"]>, [readonly (readonly [key: string, value: ConfigValue])[]]>
+  >(),
   assert<Equal<ReturnType<AresSlicer["encodeConfigValues"]>, Promise<string[]>>>(),
   assert<Equal<CompatiblePresets["diagnostics"][number]["kind"], "machine" | "process" | "filament">>(),
   assert<Equal<CompatiblePresets["missing_parents"], MissingParent[]>>(),
@@ -134,7 +165,12 @@ export const checks = [
   assert<Equal<Toolpaths["roleColors"], Uint8Array<ArrayBuffer>>>(),
   assert<Equal<Toolpaths["optionColors"], Uint8Array<ArrayBuffer>>>(),
   assert<Equal<Toolpaths["customGcodeOverview"], CustomGCodeOverviewRow[]>>(),
-  assert<Equal<CustomGCodeOverviewRow, { label: "Pause" | "Template" | "Tool Change" | "Custom" | "Unknown"; layer: number; time: number }>>(),
+  assert<
+    Equal<
+      CustomGCodeOverviewRow,
+      { label: "Pause" | "Template" | "Tool Change" | "Custom" | "Unknown"; layer: number; time: number }
+    >
+  >(),
   assert<Equal<Parameters<AresSlicer["viewColors"]>, [string, number, number]>>(),
   assert<Equal<ReturnType<AresSlicer["viewColors"]>, Promise<ViewColors>>>(),
   assert<Equal<ViewColors["colors"], Uint8Array<ArrayBuffer>>>(),
@@ -157,12 +193,27 @@ export const checks = [
   assert<Equal<MovesView["segments"] | MovesView["options"], Uint32Array<ArrayBuffer>>>(),
   assert<Equal<MovesView["colors"], Uint8Array<ArrayBuffer>>>(),
   assert<Equal<MovesView["marker"], ToolMarker | null>>(),
-  assert<Equal<ToolMarker, { vertex: number; windowVertex: number; time: { elapsedSeconds: number; vertexSeconds: number }; actualSpeed: ActualSpeedProfile }>>(),
-  assert<Equal<ActualSpeedProfile, {
-    yRange: [number, number];
-    levels: { value: number; color: [number, number, number, number] }[];
-    data: { pos: number; speed: number; internal: boolean }[];
-  }>>(),
+  assert<
+    Equal<
+      ToolMarker,
+      {
+        vertex: number;
+        windowVertex: number;
+        time: { elapsedSeconds: number; vertexSeconds: number };
+        actualSpeed: ActualSpeedProfile;
+      }
+    >
+  >(),
+  assert<
+    Equal<
+      ActualSpeedProfile,
+      {
+        yRange: [number, number];
+        levels: { value: number; color: [number, number, number, number] }[];
+        data: { pos: number; speed: number; internal: boolean }[];
+      }
+    >
+  >(),
   assert<Equal<MoveType, (typeof MOVE_TYPES)[number]>>(),
   assert<Equal<ExtrusionRole, (typeof EXTRUSION_ROLES)[number]>>(),
   assert<Equal<MoveTypeId | ExtrusionRoleId, number>>(),

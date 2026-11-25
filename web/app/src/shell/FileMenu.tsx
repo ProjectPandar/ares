@@ -22,8 +22,9 @@ const WRITER = "Needs the 3MF project writer.";
 const STL = "STL export is not available yet.";
 const DRC = "DRC export is not available yet.";
 
-const items = (menu: HTMLElement) =>
-  [...menu.querySelectorAll<HTMLElement>(":scope > [role=menuitem], :scope > [role=none] > [role=menuitem]")];
+const items = (menu: HTMLElement) => [
+  ...menu.querySelectorAll<HTMLElement>(":scope > [role=menuitem], :scope > [role=none] > [role=menuitem]"),
+];
 const focusFirst = (menu: HTMLElement) => {
   const all = items(menu);
   (all.find((item) => item.getAttribute("aria-disabled") !== "true") ?? all[0]).focus();
@@ -34,7 +35,11 @@ const focusFirst = (menu: HTMLElement) => {
  * BBLTopbar's File tool (BBLTopbar.cpp:290-292, :647-659). Items the web cannot perform yet are disabled
  * with their reason.
  */
-export function FileMenu({ importInput, projectInput, presetInput }: {
+export function FileMenu({
+  importInput,
+  projectInput,
+  presetInput,
+}: {
   importInput: RefObject<HTMLInputElement | null>;
   projectInput: RefObject<HTMLInputElement | null>;
   presetInput: RefObject<HTMLInputElement | null>;
@@ -64,29 +69,43 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
   const rows: Row[] = [
     { label: "New Window", run: () => window.open(location.origin + location.pathname, "_blank", "noopener") },
     { label: "New Project", run: slicing ? undefined : () => (file ? setConfirming(true) : startNewProject()) },
-    { label: "Open Project…", key: "O", run: ready && !loadingFile && !slicing ? () => projectInput.current!.click() : undefined },
+    {
+      label: "Open Project…",
+      key: "O",
+      run: ready && !loadingFile && !slicing ? () => projectInput.current!.click() : undefined,
+    },
     { label: "Recent files", reason: "Recent files are not kept in the browser yet.", submenu: [] },
     { label: "Save Project", run: save, reason: saveReason },
     { label: "Save Project as…", run: save, reason: saveReason },
     "-",
-    { label: "Import", submenu: [
-      { label: "Import 3MF/STL…", key: "I", run: ready && !loadingFile ? () => importInput.current!.click() : undefined },
-      { label: "Import ZIP Archive…", reason: "ZIP archives cannot be imported yet." },
-      { label: "Import Configs…", run: ready ? () => presetInput.current!.click() : undefined },
-    ] },
-    { label: "Export", submenu: [
-      { label: "Export all objects as one STL…", reason: STL },
-      { label: "Export all objects as STLs…", reason: STL },
-      { label: "Export all objects as one DRC…", reason: DRC },
-      { label: "Export all objects as DRCs…", reason: DRC },
-      { label: "Export Generic 3MF…", reason: WRITER },
-      { label: "Export plate sliced file…", reason: WRITER },
-      { label: "Export all plate sliced file…", reason: WRITER },
-      // Ctrl+G runs the G-code export until the sliced file export takes it (Shortcuts.cpp:70).
-      { label: "Export G-code…", key: "G", run: slice.status === "done" ? exportGcode : undefined },
-      { label: "Export toolpaths as OBJ…", reason: "Toolpath OBJ export is not available yet." },
-      { label: "Export Preset Bundle…", reason: "Preset bundle export is not available yet." },
-    ] },
+    {
+      label: "Import",
+      submenu: [
+        {
+          label: "Import 3MF/STL…",
+          key: "I",
+          run: ready && !loadingFile ? () => importInput.current!.click() : undefined,
+        },
+        { label: "Import ZIP Archive…", reason: "ZIP archives cannot be imported yet." },
+        { label: "Import Configs…", run: ready ? () => presetInput.current!.click() : undefined },
+      ],
+    },
+    {
+      label: "Export",
+      submenu: [
+        { label: "Export all objects as one STL…", reason: STL },
+        { label: "Export all objects as STLs…", reason: STL },
+        { label: "Export all objects as one DRC…", reason: DRC },
+        { label: "Export all objects as DRCs…", reason: DRC },
+        { label: "Export Generic 3MF…", reason: WRITER },
+        { label: "Export plate sliced file…", reason: WRITER },
+        { label: "Export all plate sliced file…", reason: WRITER },
+        // Ctrl+G runs the G-code export until the sliced file export takes it (Shortcuts.cpp:70).
+        { label: "Export G-code…", key: "G", run: slice.status === "done" ? exportGcode : undefined },
+        { label: "Export toolpaths as OBJ…", reason: "Toolpath OBJ export is not available yet." },
+        { label: "Export Preset Bundle…", reason: "Preset bundle export is not available yet." },
+      ],
+    },
     "-",
     { label: "Sync Presets", reason: "Cloud preset sync is not available in the browser." },
     "-",
@@ -140,7 +159,11 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
     if (index < 0) return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       all[(index + (event.key === "ArrowDown" ? 1 : all.length - 1)) % all.length].focus();
-    } else if (event.key === "ArrowRight" && current.getAttribute("aria-haspopup") && current.getAttribute("aria-disabled") !== "true") {
+    } else if (
+      event.key === "ArrowRight" &&
+      current.getAttribute("aria-haspopup") &&
+      current.getAttribute("aria-disabled") !== "true"
+    ) {
       openSubmenu(current.getAttribute("aria-label")!, current);
     } else if (event.key === "ArrowLeft" && menu.dataset.submenu) {
       setSubmenu(null);
@@ -153,56 +176,76 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
     event.stopPropagation();
   };
 
-  const renderRows = (list: Row[], nested: boolean) => list.map((row, index) => {
-    if (row === "-") return <div key={`-${index}`} role="separator" className="menu-separator" />;
-    const enabled = row.run !== undefined || (row.submenu !== undefined && row.reason === undefined);
-    const expanded = submenu === row.label;
-    const reasonId = row.reason && `${menuId}-${row.label.replace(/\W/g, "")}`;
-    const onClick = (event: MouseEvent<HTMLButtonElement>) => {
-      if (!enabled) return;
-      if (row.submenu) {
-        // Opens, never toggles: a mouse hover has already opened it. A keyboard click (Enter or Space)
-        // focuses its first item.
-        if (event.detail === 0) openSubmenu(row.label, event.currentTarget);
-        else setSubmenu(row.label);
-        return;
-      }
-      close();
-      // A keyboard pick returns the focus to the File button.
-      if (event.detail === 0) button.current!.focus();
-      row.run!();
-    };
-    const control = (
-      <button key={row.label} type="button" role="menuitem" aria-label={row.label}
-        aria-disabled={enabled ? undefined : true} aria-describedby={reasonId}
-        aria-haspopup={row.submenu ? "menu" : undefined} aria-expanded={row.submenu ? expanded : undefined}
-        aria-keyshortcuts={row.key && `${mac ? "Meta" : "Control"}+${row.key}`}
-        onClick={onClick}
-        onPointerEnter={(event) => {
-          if (!nested && event.pointerType === "mouse") setSubmenu(row.submenu && enabled ? row.label : null);
-        }}>
-        <span className="menu-label">{row.label}</span>
-        {row.key && <span className="menu-shortcut">{`${ctrlLabel}${row.key}`}</span>}
-        {row.submenu && <span className="menu-arrow" aria-hidden>›</span>}
-        {row.reason && <span className="menu-reason" id={reasonId}>{row.reason}</span>}
-      </button>
-    );
-    if (!row.submenu) return control;
-    return (
-      <div key={row.label} role="none" className="file-submenu">
-        {control}
-        {expanded && (
-          <div className="context-menu" role="menu" aria-label={row.label} data-submenu="true" onKeyDown={onKeyDown}>
-            {renderRows(row.submenu, true)}
-          </div>
-        )}
-      </div>
-    );
-  });
+  const renderRows = (list: Row[], nested: boolean) =>
+    list.map((row, index) => {
+      if (row === "-") return <div key={`-${index}`} role="separator" className="menu-separator" />;
+      const enabled = row.run !== undefined || (row.submenu !== undefined && row.reason === undefined);
+      const expanded = submenu === row.label;
+      const reasonId = row.reason && `${menuId}-${row.label.replace(/\W/g, "")}`;
+      const onClick = (event: MouseEvent<HTMLButtonElement>) => {
+        if (!enabled) return;
+        if (row.submenu) {
+          // Opens, never toggles: a mouse hover has already opened it. A keyboard click (Enter or Space)
+          // focuses its first item.
+          if (event.detail === 0) openSubmenu(row.label, event.currentTarget);
+          else setSubmenu(row.label);
+          return;
+        }
+        close();
+        // A keyboard pick returns the focus to the File button.
+        if (event.detail === 0) button.current!.focus();
+        row.run!();
+      };
+      const control = (
+        <button
+          key={row.label}
+          type="button"
+          role="menuitem"
+          aria-label={row.label}
+          aria-disabled={enabled ? undefined : true}
+          aria-describedby={reasonId}
+          aria-haspopup={row.submenu ? "menu" : undefined}
+          aria-expanded={row.submenu ? expanded : undefined}
+          aria-keyshortcuts={row.key && `${mac ? "Meta" : "Control"}+${row.key}`}
+          onClick={onClick}
+          onPointerEnter={(event) => {
+            if (!nested && event.pointerType === "mouse") setSubmenu(row.submenu && enabled ? row.label : null);
+          }}
+        >
+          <span className="menu-label">{row.label}</span>
+          {row.key && <span className="menu-shortcut">{`${ctrlLabel}${row.key}`}</span>}
+          {row.submenu && (
+            <span className="menu-arrow" aria-hidden>
+              ›
+            </span>
+          )}
+          {row.reason && (
+            <span className="menu-reason" id={reasonId}>
+              {row.reason}
+            </span>
+          )}
+        </button>
+      );
+      if (!row.submenu) return control;
+      return (
+        <div key={row.label} role="none" className="file-submenu">
+          {control}
+          {expanded && (
+            <div className="context-menu" role="menu" aria-label={row.label} data-submenu="true" onKeyDown={onKeyDown}>
+              {renderRows(row.submenu, true)}
+            </div>
+          )}
+        </div>
+      );
+    });
 
   return (
     <div ref={root} className="file-menu">
-      <button ref={button} className="bar-button" aria-haspopup="menu" aria-expanded={open}
+      <button
+        ref={button}
+        className="bar-button"
+        aria-haspopup="menu"
+        aria-expanded={open}
         onClick={(event) => {
           if (open) close();
           else if (event.detail === 0) openMenu();
@@ -212,7 +255,8 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
           if (event.key !== "ArrowDown" || open) return;
           event.preventDefault();
           openMenu();
-        }}>
+        }}
+      >
         <OrcaIcon name="topbar_file" /> <span>File</span>
       </button>
       {open && (
@@ -220,10 +264,14 @@ export function FileMenu({ importInput, projectInput, presetInput }: {
           {renderRows(rows, false)}
         </div>
       )}
-      {confirming && <NewProjectDialog onClose={(discard) => {
-        setConfirming(false);
-        if (discard) startNewProject();
-      }} />}
+      {confirming && (
+        <NewProjectDialog
+          onClose={(discard) => {
+            setConfirming(false);
+            if (discard) startNewProject();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -238,14 +286,25 @@ function NewProjectDialog({ onClose }: { onClose: (discard: boolean) => void }) 
     dialog.current!.close();
   };
   return (
-    <dialog ref={dialog} className="shortcuts-dialog" aria-labelledby="new-project-title" onClose={() => onClose(discard.current)}>
+    <dialog
+      ref={dialog}
+      className="shortcuts-dialog"
+      aria-labelledby="new-project-title"
+      onClose={() => onClose(discard.current)}
+    >
       <header className="shortcuts-header">
         <h2 id="new-project-title">Discard the current project?</h2>
       </header>
-      <p className="switch-diameter-text">The model, its plates and slice results are closed. The selected presets stay.</p>
+      <p className="switch-diameter-text">
+        The model, its plates and slice results are closed. The selected presets stay.
+      </p>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => answer(true)}>Discard</button>
-        <button className="side-button" onClick={() => answer(false)}>Cancel</button>
+        <button className="side-button" onClick={() => answer(true)}>
+          Discard
+        </button>
+        <button className="side-button" onClick={() => answer(false)}>
+          Cancel
+        </button>
       </footer>
     </dialog>
   );

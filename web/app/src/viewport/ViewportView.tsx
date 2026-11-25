@@ -33,13 +33,24 @@ function themeColors(): ViewportColors {
 }
 
 const VIEWS: [ViewPreset, string][] = [
-  ["iso", "Iso"], ["top", "Top"], ["bottom", "Bottom"], ["front", "Front"],
-  ["rear", "Rear"], ["left", "Left"], ["right", "Right"],
+  ["iso", "Iso"],
+  ["top", "Top"],
+  ["bottom", "Bottom"],
+  ["front", "Front"],
+  ["rear", "Rear"],
+  ["left", "Left"],
+  ["right", "Right"],
 ];
 
 /** GLCanvas3D::on_char with Ctrl/Cmd: 0 plate + zoom_to_bed, 1-6 axis views. */
 const VIEW_KEYS: Record<string, ViewPreset> = {
-  "0": "plate", "1": "top", "2": "bottom", "3": "front", "4": "rear", "5": "left", "6": "right",
+  "0": "plate",
+  "1": "top",
+  "2": "bottom",
+  "3": "front",
+  "4": "rear",
+  "5": "left",
+  "6": "right",
 };
 
 /** GLGizmosManager's gizmo keys (GLGizmoMove3D, Rotate3D, Scale3D::on_init). */
@@ -51,16 +62,34 @@ const GIZMO_KEYS: Record<string, GizmoMode> = { m: "move", r: "rotate", s: "scal
  */
 function instancesProbe(scene: Scene | null) {
   if (!scene) return undefined;
-  const objects = scene.objects.map(({ name, instances }) => ({ name, instances: instances.map(({ printable, matrix }) => ({ printable, matrix })) }));
+  const objects = scene.objects.map(({ name, instances }) => ({
+    name,
+    instances: instances.map(({ printable, matrix }) => ({ printable, matrix })),
+  }));
   const position = ([objectId, instanceId]: readonly number[]) => {
-    const at = (instances: SceneInstance[]) => instances.findIndex(({ id }) => id[0] === objectId && id[1] === instanceId);
+    const at = (instances: SceneInstance[]) =>
+      instances.findIndex(({ id }) => id[0] === objectId && id[1] === instanceId);
     const object = scene.objects.findIndex(({ instances }) => at(instances) >= 0);
     return [object, at(scene.objects[object].instances)];
   };
-  return JSON.stringify({ objects, plates: scene.plates.map((plate) => plate.instances.map(position)), wipeTower: scene.wipeTower });
+  return JSON.stringify({
+    objects,
+    plates: scene.plates.map((plate) => plate.instances.map(position)),
+    wipeTower: scene.wipeTower,
+  });
 }
 
-export function ViewportView({ scene, shown, toolpaths = null, colors = null, enabled = null, view, fit = "plate", editable = false, children }: {
+export function ViewportView({
+  scene,
+  shown,
+  toolpaths = null,
+  colors = null,
+  enabled = null,
+  view,
+  fit = "plate",
+  editable = false,
+  children,
+}: {
   /** The placed scene (`usePlacedScene`). */
   scene: Scene | null;
   /** Its tab is shown: the canvas, its events and its keys are this view's. */
@@ -121,7 +150,9 @@ export function ViewportView({ scene, shown, toolpaths = null, colors = null, en
           setMenu(null);
           return;
         }
-        const volume = useApp.getState().filamentSelection.some((item) => sameTarget(item, hit)) ? hit.volume : undefined;
+        const volume = useApp.getState().filamentSelection.some((item) => sameTarget(item, hit))
+          ? hit.volume
+          : undefined;
         chooseFilamentTarget({ object: hit.object, volume }, "context");
         setMenu(gizmoOpen.current ? null : { objectId: hit.object, volume, at });
       };
@@ -185,22 +216,27 @@ export function ViewportView({ scene, shown, toolpaths = null, colors = null, en
       const id = useApp.getState().scene?.objects[object]?.id;
       if (id !== undefined && useApp.getState().selectedObject !== id) selectObject(id);
     };
-    viewport.setEditHandlers(editable && plater ? {
-      start: (target) => select(target.object),
-      pivot: rotationPivot,
-      move: (target, displacement) => {
-        takeSnapshot();
-        void moveInstance(target, displacement);
-      },
-      rotate: (target, radians) => {
-        takeSnapshot();
-        void rotateInstance(target, radians);
-      },
-      scale: (target, factor) => {
-        takeSnapshot();
-        void scaleInstance(target, factor);
-      },
-    } : undefined, gizmo);
+    viewport.setEditHandlers(
+      editable && plater
+        ? {
+            start: (target) => select(target.object),
+            pivot: rotationPivot,
+            move: (target, displacement) => {
+              takeSnapshot();
+              void moveInstance(target, displacement);
+            },
+            rotate: (target, radians) => {
+              takeSnapshot();
+              void rotateInstance(target, radians);
+            },
+            scale: (target, factor) => {
+              takeSnapshot();
+              void scaleInstance(target, factor);
+            },
+          }
+        : undefined,
+      gizmo,
+    );
   }, [viewport, editable, plater, gizmo]);
   useEffect(() => {
     gizmoOpen.current = gizmo !== null;
@@ -222,7 +258,8 @@ export function ViewportView({ scene, shown, toolpaths = null, colors = null, en
   }, [viewport, frame, toolpaths, fit]);
   // An added plate frames every plate (Plater::priv::on_action_add_plate, REQUIRES_ZOOM_TO_ALL_PLATE).
   useEffect(() => {
-    if (viewport && counted.current.frame === frame && plateCount > counted.current.plateCount) viewport.zoomTo("plates");
+    if (viewport && counted.current.frame === frame && plateCount > counted.current.plateCount)
+      viewport.zoomTo("plates");
     counted.current = { frame, plateCount };
   }, [viewport, frame, plateCount]);
   // Layout effects: the commit that shows a preview state already has its draw queued.
@@ -247,32 +284,64 @@ export function ViewportView({ scene, shown, toolpaths = null, colors = null, en
   return (
     <div className="viewport" data-instances={instancesProbe(scene)}>
       <div className="viewport-canvas" ref={host} data-testid="viewport" />
-      <div className={editable ? "view-toolbar bottom" : "view-toolbar"} role="toolbar" aria-label="Camera view" data-testid="view-toolbar">
+      <div
+        className={editable ? "view-toolbar bottom" : "view-toolbar"}
+        role="toolbar"
+        aria-label="Camera view"
+        data-testid="view-toolbar"
+      >
         {VIEWS.map(([preset, label]) => (
-          <button key={preset} className="view-button" aria-pressed={active === preset}
+          <button
+            key={preset}
+            className="view-button"
+            aria-pressed={active === preset}
             onClick={() => {
               viewport?.setView(preset);
               setActive(preset);
-            }}>
+            }}
+          >
             {label}
           </button>
         ))}
         <span className="view-separator" />
-        <button className="view-button" aria-label="Fit to plate" title="Fit to plate"
+        <button
+          className="view-button"
+          aria-label="Fit to plate"
+          title="Fit to plate"
           onClick={() => {
             viewport?.setView("plate");
             viewport?.zoomTo("plate");
             setActive("plate");
-          }}>Plate</button>
-        <button className="view-button" aria-label="Fit to objects" title="Fit to objects" disabled={!scene}
-          onClick={() => viewport?.zoomTo("objects")}>Fit</button>
+          }}
+        >
+          Plate
+        </button>
+        <button
+          className="view-button"
+          aria-label="Fit to objects"
+          title="Fit to objects"
+          disabled={!scene}
+          onClick={() => viewport?.zoomTo("objects")}
+        >
+          Fit
+        </button>
       </div>
       {editable && plater && <PlaterToolbar gizmo={gizmo} onGizmo={setGizmo} />}
       {menu && (
-        <ObjectMenu objectId={menu.objectId} volume={menu.volume} position={menu.at} onClose={() => setMenu(null)} onCopies={() => setCopies(menu.objectId)} />
+        <ObjectMenu
+          objectId={menu.objectId}
+          volume={menu.volume}
+          position={menu.at}
+          onClose={() => setMenu(null)}
+          onCopies={() => setCopies(menu.objectId)}
+        />
       )}
       {copiesIndex >= 0 && (
-        <CopiesDialog object={copiesIndex} count={loaded!.objects[copiesIndex].instances.length} onClose={() => setCopies(null)} />
+        <CopiesDialog
+          object={copiesIndex}
+          count={loaded!.objects[copiesIndex].instances.length}
+          onClose={() => setCopies(null)}
+        />
       )}
       {children}
     </div>

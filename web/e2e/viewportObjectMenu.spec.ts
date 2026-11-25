@@ -111,11 +111,18 @@ test("a right click on an object in the canvas shows the object menu, a right dr
   const events = await prevented();
   expect(events.length).toBeGreaterThanOrEqual(6);
   expect(events.every(Boolean)).toBe(true);
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    menuAt: [menuBox.x, menuBox.y],
-    cursor: [x, y],
-    instances: { before, added, copies },
-    contextmenuPrevented: events,
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        menuAt: [menuBox.x, menuBox.y],
+        cursor: [x, y],
+        instances: { before, added, copies },
+        contextmenuPrevented: events,
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });

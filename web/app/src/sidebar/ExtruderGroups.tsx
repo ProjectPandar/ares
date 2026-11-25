@@ -8,7 +8,15 @@ import { useApp } from "../state/store";
 const TITLES = ["Left Nozzle", "Right Nozzle"];
 
 /** Sidebar::priv::switch_diameter's "Switch diameter" question (Plater.cpp:1249-1272). */
-function SwitchDiameter({ panel, diameters, onClose }: { panel: PrinterPanel; diameters: [string, string]; onClose: () => void }) {
+function SwitchDiameter({
+  panel,
+  diameters,
+  onClose,
+}: {
+  panel: PrinterPanel;
+  diameters: [string, string];
+  onClose: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => dialog.current!.showModal(), []);
   const choose = (diameter: string) => {
@@ -16,17 +24,29 @@ function SwitchDiameter({ panel, diameters, onClose }: { panel: PrinterPanel; di
     void selectDiameter(panel, diameter);
   };
   return (
-    <dialog ref={dialog} className="shortcuts-dialog switch-diameter" aria-labelledby="switch-diameter-title" onClose={onClose}>
-      <header className="shortcuts-header"><h2 id="switch-diameter-title">Switch diameter</h2></header>
+    <dialog
+      ref={dialog}
+      className="shortcuts-dialog switch-diameter"
+      aria-labelledby="switch-diameter-title"
+      onClose={onClose}
+    >
+      <header className="shortcuts-header">
+        <h2 id="switch-diameter-title">Switch diameter</h2>
+      </header>
       <p className="switch-diameter-text">
-        The software does not support using different diameter of nozzles for one print. If the left and right nozzles are
-        inconsistent, we can only proceed with single-head printing. Please confirm which nozzle you would like to use for
-        this project.
+        The software does not support using different diameter of nozzles for one print. If the left and right nozzles
+        are inconsistent, we can only proceed with single-head printing. Please confirm which nozzle you would like to
+        use for this project.
       </p>
       <footer className="vendor-footer">
         <button className="side-button" onClick={() => choose(diameters[0])}>{`Left nozzle: ${diameters[0]}mm`}</button>
-        <button className="side-button" onClick={() => choose(diameters[1])}>{`Right nozzle: ${diameters[1]}mm`}</button>
-        <button className="side-button" onClick={() => dialog.current!.close()}>Cancel</button>
+        <button
+          className="side-button"
+          onClick={() => choose(diameters[1])}
+        >{`Right nozzle: ${diameters[1]}mm`}</button>
+        <button className="side-button" onClick={() => dialog.current!.close()}>
+          Cancel
+        </button>
       </footer>
     </dialog>
   );
@@ -59,25 +79,45 @@ export function ExtruderGroups() {
             <legend>{title}</legend>
             <label className="kv-row">
               <span>Diameter</span>
-              <select className="option-select printer-select" aria-label={`${title} diameter`} value={nozzles[extruder].selected}
-                onChange={(event) => pickDiameter(extruder, event.target.value)}>
-                {nozzles[extruder].options.map((diameter) => <option key={diameter} value={diameter}>{`${diameter} mm`}</option>)}
+              <select
+                className="option-select printer-select"
+                aria-label={`${title} diameter`}
+                value={nozzles[extruder].selected}
+                onChange={(event) => pickDiameter(extruder, event.target.value)}
+              >
+                {nozzles[extruder].options.map((diameter) => (
+                  <option key={diameter} value={diameter}>{`${diameter} mm`}</option>
+                ))}
               </select>
             </label>
             {flows.length > 1 && (
               <label className="kv-row">
                 <span>Flow</span>
-                <select className="option-select printer-select" aria-label={`${title} flow`} value={volumeTypes[extruder]}
-                  onChange={(event) => setVolumeType(extruder, event.target.value)}>
-                  {flows.map((flow) => <option key={flow} value={flow}>{flow}</option>)}
+                <select
+                  className="option-select printer-select"
+                  aria-label={`${title} flow`}
+                  value={volumeTypes[extruder]}
+                  onChange={(event) => setVolumeType(extruder, event.target.value)}
+                >
+                  {flows.map((flow) => (
+                    <option key={flow} value={flow}>
+                      {flow}
+                    </option>
+                  ))}
                 </select>
               </label>
             )}
           </fieldset>
         );
       })}
-      {mismatch && <SwitchDiameter key={mismatch.id} panel={panel} diameters={mismatch.diameters}
-        onClose={() => setMismatch((current) => (current?.id === mismatch.id ? null : current))} />}
+      {mismatch && (
+        <SwitchDiameter
+          key={mismatch.id}
+          panel={panel}
+          diameters={mismatch.diameters}
+          onClose={() => setMismatch((current) => (current?.id === mismatch.id ? null : current))}
+        />
+      )}
     </div>
   );
 }

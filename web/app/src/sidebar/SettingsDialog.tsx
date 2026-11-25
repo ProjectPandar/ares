@@ -14,7 +14,10 @@ export type SettingsTab = { kind: "printer" } | { kind: "filament"; slot: number
 const MARLIN_FLAVORS = new Set(["marlin", "marlin2", "klipper", "reprapfirmware", "repetier"]);
 
 const atExtruder = (groups: LayoutGroup[], index: number): LayoutGroup[] =>
-  groups.map((group) => ({ ...group, rows: group.rows.map((row) => (row.kind === "option" ? { ...row, index } : row)) }));
+  groups.map((group) => ({
+    ...group,
+    rows: group.rows.map((row) => (row.kind === "option" ? { ...row, index } : row)),
+  }));
 
 /**
  * TabPrinter page order after build_unregular_pages (Tab.cpp:4927-5080): "Motion ability"
@@ -35,14 +38,22 @@ function printerPages(values: OptionMap): LayoutPage[] {
 
 /** Plater.cpp:3752-3758 opens the toolchanger's selected filament tab directly;
  * Tab.cpp:7233-7267 loads its edited preset, independently of a project file. */
-export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; settings: ProjectSettings | null; onClose: () => void }) {
+export function SettingsDialog({
+  tab,
+  settings,
+  onClose,
+}: {
+  tab: SettingsTab;
+  settings: ProjectSettings | null;
+  onClose: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => dialog.current!.showModal(), []);
   const printer = tab.kind === "printer";
   const typed = useApp((state) => state.typedSettings);
-  const project = useApp((state) => printer ? undefined : state.scene?.filamentSettings);
+  const project = useApp((state) => (printer ? undefined : state.scene?.filamentSettings));
   const slots = useApp((state) => state.scene?.filamentSlots);
-  const selection = useApp((state) => printer || project ? null : state.presetSelection);
+  const selection = useApp((state) => (printer || project ? null : state.presetSelection));
   const defs = useApp((state) => state.configDefs)!;
   const [fetched, setFetched] = useState<{ selection: typeof selection; values: OptionMap } | null>(null);
   const [edited, setEdited] = useState<{ source: OptionMap; values: OptionMap } | null>(null);
@@ -52,47 +63,75 @@ export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; s
     void decodeOptions(defs, project).then((decoded) => {
       if (!stale) setEdited({ source: project, values: { ...project, ...decoded } });
     });
-    return () => { stale = true; };
+    return () => {
+      stale = true;
+    };
   }, [project, defs]);
   useEffect(() => {
     if (!selection) return;
     let stale = false;
     const pages = FILAMENT_PAGES;
-    const keys = [...new Set(pages.flatMap((page) => page.groups.flatMap((group) => group.rows.flatMap((row) =>
-      row.kind === "line" ? row.options.map((option) => option.key) : row.kind === "separator" ? [] : [row.key]))))];
+    const keys = [
+      ...new Set(
+        pages.flatMap((page) =>
+          page.groups.flatMap((group) =>
+            group.rows.flatMap((row) =>
+              row.kind === "line" ? row.options.map((option) => option.key) : row.kind === "separator" ? [] : [row.key],
+            ),
+          ),
+        ),
+      ),
+    ];
     void presetCatalog().then(async (catalog) => {
       const presets = await catalog.presetValues("filament", selection.filaments, keys);
       const values = { ...presets[0] };
       for (const key of keys) {
-        if (/s(?:_nullable)?$/.test(defs.get(key)!.type)) values[key] = presets.map((preset) => {
-          const value = preset[key];
-          return Array.isArray(value) ? value[0] : value;
-        });
+        if (/s(?:_nullable)?$/.test(defs.get(key)!.type))
+          values[key] = presets.map((preset) => {
+            const value = preset[key];
+            return Array.isArray(value) ? value[0] : value;
+          });
       }
       const decoded = await decodeOptions(defs, values);
       if (!stale) setFetched({ selection, values: { ...values, ...decoded } });
     });
-    return () => { stale = true; };
+    return () => {
+      stale = true;
+    };
   }, [selection, defs]);
-  const values = project ? (edited?.source === project ? { ...settings?.project, ...typed?.project, ...edited.values } : null)
-    : selection ? (fetched?.selection === selection ? fetched.values : null)
+  const values = project
+    ? edited?.source === project
+      ? { ...settings?.project, ...typed?.project, ...edited.values }
+      : null
+    : selection
+      ? fetched?.selection === selection
+        ? fetched.values
+        : null
       : settings && typed && tabValues(settings, typed, printer ? "printer" : "filament");
   const title = printer ? "Printer settings" : "Filament settings";
   const presetKey = printer ? "printer_settings_id" : "filament_settings_id";
   const preset = selection ? (printer ? selection.printer : selection.filaments) : values?.[presetKey];
-  const name = project && !printer ? slots?.slots[tab.slot]?.preset
-    : Array.isArray(preset) ? preset[printer ? 0 : tab.slot] : preset;
+  const name =
+    project && !printer
+      ? slots?.slots[tab.slot]?.preset
+      : Array.isArray(preset)
+        ? preset[printer ? 0 : tab.slot]
+        : preset;
   return (
     <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title" onClose={onClose}>
       <header className="shortcuts-header">
         <h2 id="settings-title">{title}</h2>
         <span className="settings-preset">{name ? String(name) : ""}</span>
         <ModeSwitch />
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>{"\u2715"}</button>
+        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
+          {"\u2715"}
+        </button>
       </header>
       <div className="settings-body process">
-        <SettingsPages pages={printer && values ? printerPages(values) : printer ? PRINTER_PAGES : FILAMENT_PAGES}
-          context={values && { values, slot: printer ? undefined : tab.slot }} />
+        <SettingsPages
+          pages={printer && values ? printerPages(values) : printer ? PRINTER_PAGES : FILAMENT_PAGES}
+          context={values && { values, slot: printer ? undefined : tab.slot }}
+        />
       </div>
     </dialog>
   );

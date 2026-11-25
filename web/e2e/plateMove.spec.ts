@@ -11,14 +11,17 @@ const artifacts = fileURLToPath(new URL("../../target/web-e2e/plate-move/", impo
 // Ender-3 (220 mm bed): cube10 object 2 at the bed centre (110, 110), its centre at z 5.
 const FIXTURE = "tests/parity/orca_cli_ender3.3mf";
 
-const position = (page: Page, axis: "X" | "Y" | "Z") => page.getByRole("textbox", { name: `Position ${axis}`, exact: true });
+const position = (page: Page, axis: "X" | "Y" | "Z") =>
+  page.getByRole("textbox", { name: `Position ${axis}`, exact: true });
 
 async function setPosition(page: Page, axis: "X" | "Y" | "Z", value: string) {
   await position(page, axis).fill(value);
   await position(page, axis).press("Enter");
 }
 
-test("an instance moves by drag and Position fields, drops onto the bed, and slices like OrcaSlicer", async ({ page }) => {
+test("an instance moves by drag and Position fields, drops onto the bed, and slices like OrcaSlicer", async ({
+  page,
+}) => {
   test.setTimeout(300_000);
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(artifacts, { recursive: true });
@@ -54,10 +57,15 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   // screen, moves the instance along X only.
   const dragged = await position(page, "X").inputValue();
   await page.getByRole("toolbar", { name: "Gizmos" }).getByRole("button", { name: "Move", exact: true }).click();
-  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<"center" | "x", [number, number]>;
+  const gizmo = JSON.parse((await shownTab(page).getByTestId("viewport").getAttribute("data-gizmo"))!) as Record<
+    "center" | "x",
+    [number, number]
+  >;
   await page.mouse.move(box.x + gizmo.x[0], box.y + gizmo.x[1]);
   await page.mouse.down();
-  await page.mouse.move(box.x + 2 * gizmo.x[0] - gizmo.center[0], box.y + 2 * gizmo.x[1] - gizmo.center[1], { steps: 10 });
+  await page.mouse.move(box.x + 2 * gizmo.x[0] - gizmo.center[0], box.y + 2 * gizmo.x[1] - gizmo.center[1], {
+    steps: 10,
+  });
   await page.mouse.up();
   await expect(position(page, "X")).not.toHaveValue(dragged);
   await expect(position(page, "Y")).toHaveValue("110.00");
@@ -83,19 +91,45 @@ test("an instance moves by drag and Position fields, drops onto the bed, and sli
   const gcode = readFileSync(`${artifacts}browser.gcode`, "utf8");
 
   const oracle = `${artifacts}moved.3mf`;
-  writeFileSync(oracle, guiExport(FIXTURE, [
-    { source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [145.5, 95.5, 5]) }] },
-  ], await probedTowers(page)));
+  writeFileSync(
+    oracle,
+    guiExport(
+      FIXTURE,
+      [{ source: 0, items: [{ objectId: 2, instanceId: 0, identifyId: 14, matrix: matrix([], [145.5, 95.5, 5]) }] }],
+      await probedTowers(page),
+    ),
+  );
   const legs = { official: orcaPlate(oracle, 1, "official", project), seeded: orcaPlate(oracle, 1, "seeded", project) };
-  const results = Object.fromEntries(Object.entries(legs).map(([leg, native]) =>
-    [leg, native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL"]));
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["drag along X", "move gizmo X arrow", "Position X 145.5", "Position Y 95.5", "Position Z 12 drops to 5"],
-    oracle: { command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)", official: oracleRun(oracle, 1, "official", legs.official),
-      seeded: oracleRun(oracle, 1, "seeded", legs.seeded) },
-    evidence: "ordered_bytes_generator_only",
-    results,
-  }, null, 2)}\n`);
-  for (const [leg, outcome] of Object.entries(results)) expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
+  const results = Object.fromEntries(
+    Object.entries(legs).map(([leg, native]) => [
+      leg,
+      native === null ? "skipped" : native === normalize(gcode, "Ares") ? "PASS" : "FAIL",
+    ]),
+  );
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: [
+          "drag along X",
+          "move gizmo X arrow",
+          "Position X 145.5",
+          "Position Y 95.5",
+          "Position Z 12 drops to 5",
+        ],
+        oracle: {
+          command: "--slice 1 of the GUI-exported project (official and seed-replay seed 0)",
+          official: oracleRun(oracle, 1, "official", legs.official),
+          seeded: oracleRun(oracle, 1, "seeded", legs.seeded),
+        },
+        evidence: "ordered_bytes_generator_only",
+        results,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  for (const [leg, outcome] of Object.entries(results))
+    expect(outcome, `browser plate 1 vs ${leg} OrcaSlicer`).not.toBe("FAIL");
 });

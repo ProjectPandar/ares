@@ -14,8 +14,18 @@ function EditButton({ label, onClick, icon = "edit" }: { label: string; onClick:
   );
 }
 
-export function Section({ icon, title, children, extra, action }: {
-  icon: ReactNode; title: string; children: ReactNode; extra?: ReactNode; action?: ReactNode;
+export function Section({
+  icon,
+  title,
+  children,
+  extra,
+  action,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+  extra?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <section className="side-section">
@@ -30,5 +40,7 @@ export function Section({ icon, title, children, extra, action }: {
   );
 }
 
-export const project = (name: string | undefined): PresetGroup => ({ title: "Project presets", presets: name ? [{ name }] : [] });
-
+export const project = (name: string | undefined): PresetGroup => ({
+  title: "Project presets",
+  presets: name ? [{ name }] : [],
+});

@@ -39,9 +39,16 @@ export async function checkSegmentGeometry(page: Page, artifacts: string) {
     angles.push(vertices[i - 1].hwaBits[2], vertices[i].hwaBits[2]);
   }
   let hash = 0x811c9dc5;
-  for (const byte of new Uint8Array(new Uint32Array([...starts, ...ends, ...angles]).buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
+  for (const byte of new Uint8Array(new Uint32Array([...starts, ...ends, ...angles]).buffer))
+    hash = Math.imul(hash ^ byte, 0x01000193);
   const expected = `${angles.length / 2}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
-  writeFileSync(`${out}geometry-expected.json`, `${JSON.stringify({ probe: expected, starts, ends, angles }, null, 0)}\n`);
-  await expect(shownTab(page).getByTestId("viewport"), "instance geometry (count:fnv32 of aStart, aEnd, aAngles f32 bits)").toHaveAttribute("data-segment-geometry", expected);
+  writeFileSync(
+    `${out}geometry-expected.json`,
+    `${JSON.stringify({ probe: expected, starts, ends, angles }, null, 0)}\n`,
+  );
+  await expect(
+    shownTab(page).getByTestId("viewport"),
+    "instance geometry (count:fnv32 of aStart, aEnd, aAngles f32 bits)",
+  ).toHaveAttribute("data-segment-geometry", expected);
   return expected;
 }

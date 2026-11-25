@@ -24,8 +24,18 @@ export async function checkSegmentSizes(page: Page, artifacts: string) {
   mkdirSync(out, { recursive: true });
   const oracle = process.env.ARES_SEGMENT_HW_BIN;
   if (!oracle) throw new Error("ARES_SEGMENT_HW_BIN is required for the segment heights/widths oracle");
-  execFileSync(oracle, ["--process-gcode", `${artifacts}oracle-input.gcode`,
-    "--dump-moves", `${out}moves.csv`, "--dump-segment-hw", `${out}native.json`], { stdio: "ignore" });
+  execFileSync(
+    oracle,
+    [
+      "--process-gcode",
+      `${artifacts}oracle-input.gcode`,
+      "--dump-moves",
+      `${out}moves.csv`,
+      "--dump-segment-hw",
+      `${out}native.json`,
+    ],
+    { stdio: "ignore" },
+  );
   expect(readFileSync(`${out}moves.csv`)).toEqual(readFileSync(`${artifacts}oracle-moves.csv`));
   const vertices = (JSON.parse(readFileSync(`${out}native.json`, "utf8")) as { vertices: NativeVertex[] }).vertices;
 
@@ -43,6 +53,9 @@ export async function checkSegmentSizes(page: Page, artifacts: string) {
   for (const byte of new Uint8Array(new Uint32Array(ends).buffer)) hash = Math.imul(hash ^ byte, 0x01000193);
   const expected = `${ends.length / 4}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
   writeFileSync(`${out}expected.json`, `${JSON.stringify({ probe: expected, ends }, null, 0)}\n`);
-  await expect(shownTab(page).getByTestId("viewport"), "instance end sizes (count:fnv32 of f32 bits)").toHaveAttribute("data-segment-sizes", expected);
+  await expect(shownTab(page).getByTestId("viewport"), "instance end sizes (count:fnv32 of f32 bits)").toHaveAttribute(
+    "data-segment-sizes",
+    expected,
+  );
   return expected;
 }

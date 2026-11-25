@@ -5,7 +5,15 @@ export interface BedShape {
   height: number;
 }
 
-const DEFAULT_BED: BedShape = { polygon: [[0, 0], [256, 0], [256, 256], [0, 256]], height: 256 };
+const DEFAULT_BED: BedShape = {
+  polygon: [
+    [0, 0],
+    [256, 0],
+    [256, 256],
+    [0, 256],
+  ],
+  height: 256,
+};
 
 function parsePoint(value: unknown): [number, number] | null {
   const [x, y] = Array.isArray(value) ? value.map(Number) : String(value).split("x").map(Number);

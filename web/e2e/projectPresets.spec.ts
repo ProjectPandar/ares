@@ -43,8 +43,12 @@ test("opening a project selects its presets, and a model file keeps the selected
   await expect(combo(page, "Printer preset")).toHaveText(printer);
   await expect(combo(page, "Process preset")).toHaveText(processPreset);
   await combo(page, "Printer preset").click();
-  await expect(page.getByRole("listbox", { name: "Printer preset", exact: true }).getByRole("group", { name: "Project presets" })
-    .getByRole("option", { selected: true })).toHaveText(printer);
+  await expect(
+    page
+      .getByRole("listbox", { name: "Printer preset", exact: true })
+      .getByRole("group", { name: "Project presets" })
+      .getByRole("option", { selected: true }),
+  ).toHaveText(printer);
   await page.keyboard.press("Escape");
   expect(await storedPrinter(page)).toBeNull();
   await page.screenshot({ path: `${artifacts}project-presets.png` });

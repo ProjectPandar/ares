@@ -74,7 +74,9 @@ function TimeCells({ time, total }: { time: number; total: number }) {
   return (
     <>
       <span className="legend-time">{time > 0 ? shortTime(timeDhms(time)) : ""}</span>
-      <span className="legend-percent">{percent === 0 ? "0" : percent > 0.001 ? printf(f32(percent * 100), 1) : "<0.1"}</span>
+      <span className="legend-percent">
+        {percent === 0 ? "0" : percent > 0.001 ? printf(f32(percent * 100), 1) : "<0.1"}
+      </span>
     </>
   );
 }
@@ -90,7 +92,13 @@ function TimeCells({ time, total }: { time: number; total: number }) {
  * list their color range; Speed, Acceleration and Jerk add the Travel row
  * (`GCodeViewer.cpp:3913-3929, 3947-3978`).
  */
-export function Legend({ options, toolpaths, range, view, onChange }: {
+export function Legend({
+  options,
+  toolpaths,
+  range,
+  view,
+  onChange,
+}: {
   options: number[];
   toolpaths: Toolpaths;
   /** Color range of `view.viewType`, once the engine has computed it. */
@@ -98,7 +106,8 @@ export function Legend({ options, toolpaths, range, view, onChange }: {
   view: PreviewView;
   onChange: (patch: Partial<PreviewView>) => void;
 }) {
-  const { optionTypes, moveTypeCounts, roleColors, optionColors, viewTypes, extrusionRoles, extrusionRoleTimes } = toolpaths;
+  const { optionTypes, moveTypeCounts, roleColors, optionColors, viewTypes, extrusionRoles, extrusionRoleTimes } =
+    toolpaths;
   const total = toolpaths.estimation.time > 0 ? toolpaths.estimation.time : toolpaths.estimatedTime;
   const times = total > 0;
   const optionRow = (id: number, count: boolean) => {
@@ -108,11 +117,19 @@ export function Legend({ options, toolpaths, range, view, onChange }: {
     const visible = ((view.visibleOptions >> id) & 1) === 1;
     return [
       <li key={name}>
-        <button className={visible ? "legend-row" : "legend-row off"} aria-pressed={visible} data-option={name}
-          onClick={() => onChange({ visibleOptions: view.visibleOptions ^ (1 << id) })}>
+        <button
+          className={visible ? "legend-row" : "legend-row off"}
+          aria-pressed={visible}
+          data-option={name}
+          onClick={() => onChange({ visibleOptions: view.visibleOptions ^ (1 << id) })}
+        >
           <span className="legend-swatch" style={{ background: css(optionColors.subarray(3 * id, 3 * id + 3)) }} />
           <span className="legend-label">{row.label}</span>
-          {count && <span className="legend-count">{row.moves && compactCount(moveTypeCounts[MOVE_TYPES.indexOf(row.moves)])}</span>}
+          {count && (
+            <span className="legend-count">
+              {row.moves && compactCount(moveTypeCounts[MOVE_TYPES.indexOf(row.moves)])}
+            </span>
+          )}
           {count && name === "Travels" && times && <TimeCells time={toolpaths.travelsTime} total={total} />}
         </button>
       </li>,
@@ -121,10 +138,17 @@ export function Legend({ options, toolpaths, range, view, onChange }: {
   const item = VIEW_TYPE_ITEMS.find(({ view: type }) => type === view.viewType);
   return (
     <div className="legend" data-testid="legend">
-      <select className="legend-view" data-testid="view-type" aria-label="View type" value={view.viewType}
-        onChange={(event) => onChange({ viewType: event.target.value })}>
+      <select
+        className="legend-view"
+        data-testid="view-type"
+        aria-label="View type"
+        value={view.viewType}
+        onChange={(event) => onChange({ viewType: event.target.value })}
+      >
         {VIEW_TYPE_ITEMS.filter(({ view: type }) => viewTypes.includes(type)).map(({ view: type, label }) => (
-          <option key={type} value={type}>{label}</option>
+          <option key={type} value={type}>
+            {label}
+          </option>
         ))}
       </select>
       {view.viewType === "ColorPrint" ? (
@@ -136,32 +160,49 @@ export function Legend({ options, toolpaths, range, view, onChange }: {
       ) : view.viewType !== "FeatureType" ? (
         <>
           {range && item?.decimals !== undefined && <RangeRows range={range} decimals={item.decimals} />}
-          {TRAVEL_ROW_VIEWS.has(view.viewType) && <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>}
+          {TRAVEL_ROW_VIEWS.has(view.viewType) && (
+            <ul className="legend-list">{optionRow(optionTypes.indexOf("Travels"), false)}</ul>
+          )}
         </>
       ) : (
-      <>
-      {times && <div className="legend-header" aria-hidden="true"><span>Line Type</span><span>Time</span><span>%</span></div>}
-      <ul className="legend-list">
-        {Array.from(extrusionRoles, (id, index) => {
-          const hidden = (view.hiddenRoles >> id) & 1;
-          return (
-            <li key={id}>
-              <button className={hidden ? "legend-row off" : "legend-row"} aria-pressed={!hidden}
-                onClick={() => onChange({ hiddenRoles: view.hiddenRoles ^ (1 << id) })}>
-                <span className="legend-swatch" style={{ background: css(roleColors.subarray(3 * id, 3 * id + 3)) }} />
-                <span className="legend-label">{ROLE_LABELS[EXTRUSION_ROLES[id]]}</span>
-                {times && <TimeCells time={extrusionRoleTimes[index]} total={total} />}
-              </button>
-            </li>
-          );
-        })}
-        {options.flatMap((id) => optionRow(id, true))}
-      </ul>
-      </>
+        <>
+          {times && (
+            <div className="legend-header" aria-hidden="true">
+              <span>Line Type</span>
+              <span>Time</span>
+              <span>%</span>
+            </div>
+          )}
+          <ul className="legend-list">
+            {Array.from(extrusionRoles, (id, index) => {
+              const hidden = (view.hiddenRoles >> id) & 1;
+              return (
+                <li key={id}>
+                  <button
+                    className={hidden ? "legend-row off" : "legend-row"}
+                    aria-pressed={!hidden}
+                    onClick={() => onChange({ hiddenRoles: view.hiddenRoles ^ (1 << id) })}
+                  >
+                    <span
+                      className="legend-swatch"
+                      style={{ background: css(roleColors.subarray(3 * id, 3 * id + 3)) }}
+                    />
+                    <span className="legend-label">{ROLE_LABELS[EXTRUSION_ROLES[id]]}</span>
+                    {times && <TimeCells time={extrusionRoleTimes[index]} total={total} />}
+                  </button>
+                </li>
+              );
+            })}
+            {options.flatMap((id) => optionRow(id, true))}
+          </ul>
+        </>
       )}
       <CustomGCodeRows rows={toolpaths.customGcodeOverview} />
-      <EstimationRows estimation={toolpaths.estimation} legend={toolpaths.filamentLegend}
-        featureType={view.viewType === "FeatureType"} />
+      <EstimationRows
+        estimation={toolpaths.estimation}
+        legend={toolpaths.filamentLegend}
+        featureType={view.viewType === "FeatureType"}
+      />
     </div>
   );
 }

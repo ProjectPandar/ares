@@ -7,8 +7,20 @@ export interface FilamentInfo {
 }
 
 // PresetComboBoxes.cpp:1313-1316.
-const FILAMENT_ORDERS = ["Bambu PLA Basic", "Bambu PLA Matte", "Bambu PETG HF", "Bambu ABS", "Bambu PLA Silk", "Bambu PLA-CF",
-  "Bambu PLA Galaxy", "Bambu PLA Metal", "Bambu PLA Marble", "Bambu PETG-CF", "Bambu PETG Translucent", "Bambu ABS-GF"];
+const FILAMENT_ORDERS = [
+  "Bambu PLA Basic",
+  "Bambu PLA Matte",
+  "Bambu PETG HF",
+  "Bambu ABS",
+  "Bambu PLA Silk",
+  "Bambu PLA-CF",
+  "Bambu PLA Galaxy",
+  "Bambu PLA Metal",
+  "Bambu PLA Marble",
+  "Bambu PETG-CF",
+  "Bambu PETG Translucent",
+  "Bambu ABS-GF",
+];
 const FIRST_VENDORS = ["", "Bambu", "Generic"];
 const FIRST_TYPES = ["PLA", "PETG", "ABS", "TPU"];
 
@@ -44,15 +56,23 @@ export function filamentGroups(
   selected: string | undefined,
 ): PresetGroup[] {
   const visible = compatible.filter((name) => user.has(name) || installed.has(name) || name === selected);
-  const users = visible.filter((name) => user.has(name))
+  const users = visible
+    .filter((name) => user.has(name))
     .sort((a, b) => ordinal(asciiLower(a), asciiLower(b)) || ordinal(a, b));
-  const systems = visible.filter((name) => !user.has(name)).sort((a, b) =>
-    rank(FILAMENT_ORDERS, a) - rank(FILAMENT_ORDERS, b)
-    || rank(FIRST_VENDORS, vendorOf(info.get(a))) - rank(FIRST_VENDORS, vendorOf(info.get(b)))
-    || rank(FIRST_TYPES, info.get(a)?.type ?? "") - rank(FIRST_TYPES, info.get(b)?.type ?? "")
-    || ordinal(a, b));
+  const systems = visible
+    .filter((name) => !user.has(name))
+    .sort(
+      (a, b) =>
+        rank(FILAMENT_ORDERS, a) - rank(FILAMENT_ORDERS, b) ||
+        rank(FIRST_VENDORS, vendorOf(info.get(a))) - rank(FIRST_VENDORS, vendorOf(info.get(b))) ||
+        rank(FIRST_TYPES, info.get(a)?.type ?? "") - rank(FIRST_TYPES, info.get(b)?.type ?? "") ||
+        ordinal(a, b),
+    );
   return [
     { title: "User presets", presets: users.map((name): PresetEntry => ({ name })) },
-    { title: "System presets", presets: systems.map((name): PresetEntry => ({ name, subgroup: vendorOf(info.get(name)) })) },
+    {
+      title: "System presets",
+      presets: systems.map((name): PresetEntry => ({ name, subgroup: vendorOf(info.get(name)) })),
+    },
   ];
 }

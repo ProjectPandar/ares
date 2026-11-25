@@ -6,7 +6,11 @@ import { takeSnapshot } from "./undoRedo";
 
 export type FilamentSelection = FilamentTarget & { instance?: number };
 
-export function filamentPalette(selection: PresetSelection | null, settings: ProjectSettings | null, project?: FilamentSlots) {
+export function filamentPalette(
+  selection: PresetSelection | null,
+  settings: ProjectSettings | null,
+  project?: FilamentSlots,
+) {
   if (project?.edited) return project.slots.map(({ colour }) => colour);
   return selection?.filamentProject?.filament_colour ?? stringList(settings?.filament, "filament_colour");
 }
@@ -32,18 +36,26 @@ export function chooseFilamentTarget(target: FilamentSelection, mode: "select" |
   const previous = useApp.getState().filamentSelection;
   const index = previous.findIndex((item) => sameTarget(item, target));
   if (mode === "context" && index !== -1) return;
-  const targets = mode === "toggle"
-    ? index === -1 ? [...previous, target] : previous.filter((_, i) => i !== index)
-    : [target];
+  const targets =
+    mode === "toggle" ? (index === -1 ? [...previous, target] : previous.filter((_, i) => i !== index)) : [target];
   const active = targets.at(-1);
-  useApp.setState({ filamentSelection: targets, selectedObject: active?.object ?? null, selectedInstance: active?.instance ?? null });
+  useApp.setState({
+    filamentSelection: targets,
+    selectedObject: active?.object ?? null,
+    selectedInstance: active?.instance ?? null,
+  });
 }
 
-export async function assignFilament(choice: { targets: readonly FilamentTarget[] } | { cell: FilamentTarget }, slot: number) {
+export async function assignFilament(
+  choice: { targets: readonly FilamentTarget[] } | { cell: FilamentTarget },
+  slot: number,
+) {
   const { plater, presetSelection, scene, currentPlate } = useApp.getState();
   if (!plater) return;
   const count = activeFilamentNames(presetSelection, scene).length;
   takeSnapshot();
-  const layout = await ("cell" in choice ? plater.setFilamentCell(choice.cell, slot, count) : plater.setFilament(choice.targets, slot, count));
+  const layout = await ("cell" in choice
+    ? plater.setFilamentCell(choice.cell, slot, count)
+    : plater.setFilament(choice.targets, slot, count));
   if (useApp.getState().plater === plater) applyLayout(layout, currentPlate);
 }

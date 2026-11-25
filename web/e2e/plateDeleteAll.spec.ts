@@ -40,9 +40,16 @@ test("Ctrl+D deletes every object on the Prepare tab and keeps the plates", asyn
     await expect(list.getByText(description, { exact: true })).toBeVisible();
   await page.screenshot({ path: `${artifacts}shortcuts.png` });
 
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    fixture: FIXTURE,
-    edits: ["Ctrl+D on Preview (ignored)", "Ctrl+D on Prepare"],
-    tree: await tree.getByRole("treeitem").allTextContents(),
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        fixture: FIXTURE,
+        edits: ["Ctrl+D on Preview (ignored)", "Ctrl+D on Prepare"],
+        tree: await tree.getByRole("treeitem").allTextContents(),
+      },
+      null,
+      2,
+    )}\n`,
+  );
 });

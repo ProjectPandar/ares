@@ -6,23 +6,28 @@ import { test as diagnostics } from "./failureDiagnostics";
 import { choose, PRESETS } from "./lhPresets";
 
 const test = diagnostics.extend<{ servedBodies: void }>({
-  servedBodies: [async ({ context }, use, info) => {
-    const captures: Promise<unknown>[] = [];
-    context.on("response", (response) => {
-      if (!/\.(js|wasm)(\?|$)/.test(response.url())) return;
-      const index = captures.length;
-      captures.push((async () => {
-        const bytes = await response.body();
-        const path = `served-${index}.${response.url().includes(".wasm") ? "wasm" : "js"}`;
-        writeFileSync(info.outputPath(path), bytes);
-        return { url: response.url(), status: response.status(), path, bytes: bytes.length, sha256: sha256(bytes) };
-      })());
-    });
-    await use();
-    const responses = await Promise.allSettled(captures);
-    writeFileSync(info.outputPath("served-bodies.json"), `${JSON.stringify(responses, null, 2)}\n`);
-    expect(responses.filter((response) => response.status === "rejected")).toEqual([]);
-  }, { auto: true }],
+  servedBodies: [
+    async ({ context }, use, info) => {
+      const captures: Promise<unknown>[] = [];
+      context.on("response", (response) => {
+        if (!/\.(js|wasm)(\?|$)/.test(response.url())) return;
+        const index = captures.length;
+        captures.push(
+          (async () => {
+            const bytes = await response.body();
+            const path = `served-${index}.${response.url().includes(".wasm") ? "wasm" : "js"}`;
+            writeFileSync(info.outputPath(path), bytes);
+            return { url: response.url(), status: response.status(), path, bytes: bytes.length, sha256: sha256(bytes) };
+          })(),
+        );
+      });
+      await use();
+      const responses = await Promise.allSettled(captures);
+      writeFileSync(info.outputPath("served-bodies.json"), `${JSON.stringify(responses, null, 2)}\n`);
+      expect(responses.filter((response) => response.status === "rejected")).toEqual([]);
+    },
+    { auto: true },
+  ],
 });
 
 const cube = readFileSync(fileURLToPath(new URL("../../tests/parity/cube10.stl", import.meta.url)));
@@ -43,7 +48,9 @@ function part(name: string, scale: readonly number[], offset: readonly number[])
     const first = Buffer.from(bytes.subarray(facet + 12, facet + 24));
     bytes.copy(bytes, facet + 12, facet + 24, facet + 36);
     first.copy(bytes, facet + 24);
-    const points = [12, 24, 36].map((vertexOffset) => [0, 4, 8].map((axis) => bytes.readFloatLE(facet + vertexOffset + axis)));
+    const points = [12, 24, 36].map((vertexOffset) =>
+      [0, 4, 8].map((axis) => bytes.readFloatLE(facet + vertexOffset + axis)),
+    );
     const a = points[1].map((value, axis) => value - points[0][axis]);
     const b = points[2].map((value, axis) => value - points[0][axis]);
     const normal = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -68,13 +75,16 @@ async function openWithPresets(page: Page) {
 }
 
 async function drop(page: Page, files: { name: string; bytes: Buffer }[]) {
-  const transfer = await page.evaluateHandle((inputs) => {
-    const data = new DataTransfer();
-    for (const { name, base64 } of inputs) {
-      data.items.add(new File([Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))], name));
-    }
-    return data;
-  }, files.map(({ name, bytes }) => ({ name, base64: bytes.toString("base64") })));
+  const transfer = await page.evaluateHandle(
+    (inputs) => {
+      const data = new DataTransfer();
+      for (const { name, base64 } of inputs) {
+        data.items.add(new File([Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))], name));
+      }
+      return data;
+    },
+    files.map(({ name, bytes }) => ({ name, base64: bytes.toString("base64") })),
+  );
   const workspace = page.getByTestId("workspace");
   await workspace.dispatchEvent("dragenter", { dataTransfer: transfer });
   await workspace.dispatchEvent("dragover", { dataTransfer: transfer });
@@ -103,7 +113,9 @@ test("dropping two STLs loads one object with both parts and slices it", async (
   await expect(dialog.getByRole("button", { name: "No", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeFocused();
-  await expect(dialog.getByText("Load these files as a single object with multiple parts?", { exact: true })).toBeVisible();
+  await expect(
+    dialog.getByText("Load these files as a single object with multiple parts?", { exact: true }),
+  ).toBeVisible();
   await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
   await page.screenshot({ path: info.outputPath("question.png") });
   await page.keyboard.press("Tab");
@@ -133,7 +145,10 @@ test("dropping two STLs loads one object with both parts and slices it", async (
   expect(gcode.length).toBeGreaterThan(0);
   expect(gcode.toString()).toContain("\nG1 ");
   const objects = await list.getByRole("treeitem").allTextContents();
-  writeFileSync(info.outputPath("result.json"), `${JSON.stringify({ inputs, objects, gcode: { bytes: gcode.length, sha256: sha256(gcode) }, errors }, null, 2)}\n`);
+  writeFileSync(
+    info.outputPath("result.json"),
+    `${JSON.stringify({ inputs, objects, gcode: { bytes: gcode.length, sha256: sha256(gcode) }, errors }, null, 2)}\n`,
+  );
   await page.screenshot({ path: info.outputPath("sliced.png") });
   expect(errors).toEqual([]);
 });
@@ -150,7 +165,9 @@ for (const autoDrop of [true, false]) {
     });
     writeFileSync(info.outputPath("inputs.json"), `${JSON.stringify({ inputs, autoDrop }, null, 2)}\n`);
     await openWithPresets(page);
-    await page.getByTestId("import-input").setInputFiles(files.map(({ name, bytes: buffer }) => ({ name, buffer, mimeType: "model/stl" })));
+    await page
+      .getByTestId("import-input")
+      .setInputFiles(files.map(({ name, bytes: buffer }) => ({ name, buffer, mimeType: "model/stl" })));
     const dialog = page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
@@ -161,7 +178,10 @@ for (const autoDrop of [true, false]) {
     await page.screenshot({ path: info.outputPath("separate.png") });
     await page.getByRole("button", { name: "Slice plate", exact: true }).click();
     await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 240_000 });
-    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export G-code file", exact: true }).click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Export G-code file", exact: true }).click(),
+    ]);
     const gcodePath = info.outputPath("separate.gcode");
     await download.saveAs(gcodePath);
     expect(readFileSync(gcodePath, "utf8")).toContain("\nG1 ");
@@ -213,13 +233,18 @@ test("a batch dropped before the closed dialog's close event opens its own dialo
   const dialog = page.getByRole("dialog", { name: "An object with multiple parts was detected", exact: true });
   await expect(dialog).toBeVisible();
   // One task: the Escape close (cancel now, the close event in a later task) and the drop, before that event runs.
-  await page.evaluate((inputs) => {
-    (document.querySelector("dialog[open]") as HTMLDialogElement).requestClose();
-    const data = new DataTransfer();
-    for (const { name, base64 } of inputs) data.items.add(new File([Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))], name));
-    const workspace = document.querySelector("[data-testid=workspace]")!;
-    for (const type of ["dragenter", "dragover", "drop"]) workspace.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
-  }, files.map(({ name, bytes }) => ({ name, base64: bytes.toString("base64") })));
+  await page.evaluate(
+    (inputs) => {
+      (document.querySelector("dialog[open]") as HTMLDialogElement).requestClose();
+      const data = new DataTransfer();
+      for (const { name, base64 } of inputs)
+        data.items.add(new File([Uint8Array.from(atob(base64), (character) => character.charCodeAt(0))], name));
+      const workspace = document.querySelector("[data-testid=workspace]")!;
+      for (const type of ["dragenter", "dragover", "drop"])
+        workspace.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
+    },
+    files.map(({ name, bytes }) => ({ name, base64: bytes.toString("base64") })),
+  );
   await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeChecked();
   await dialog.getByRole("button", { name: "Yes", exact: true }).click();
   await expect(page.getByTestId("object-count")).toHaveText("1");
@@ -233,11 +258,16 @@ test("single STL and 3MF imports keep their single-file entry", async ({ page },
   await expect(page.getByTestId("object-count")).toHaveText("1");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.screenshot({ path: info.outputPath("single-stl.png") });
-  const project = readFileSync(fileURLToPath(new URL("../../tests/parity/arachne/default-prisms.3mf", import.meta.url)));
+  const project = readFileSync(
+    fileURLToPath(new URL("../../tests/parity/arachne/default-prisms.3mf", import.meta.url)),
+  );
   await page.getByTestId("import-input").setInputFiles({ name: "prisms.3mf", buffer: project, mimeType: "model/3mf" });
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
   await expect(page.getByTestId("object-count")).toHaveText("3");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  writeFileSync(info.outputPath("inputs.json"), `${JSON.stringify({ stl: sha256(cube), threeMf: sha256(project) }, null, 2)}\n`);
+  writeFileSync(
+    info.outputPath("inputs.json"),
+    `${JSON.stringify({ stl: sha256(cube), threeMf: sha256(project) }, null, 2)}\n`,
+  );
   await page.screenshot({ path: info.outputPath("single-3mf.png") });
 });

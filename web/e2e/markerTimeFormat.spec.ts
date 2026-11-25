@@ -11,21 +11,31 @@ import { markerTimeNative } from "./markerTimeNative";
 test("missing Native cannot become frozen formatter parity", async () => {
   const directory = mkdtempSync(join(tmpdir(), "marker-time-format-contract-"));
   const config = join(directory, "playwright.config.mjs");
-  writeFileSync(config, `export default ${JSON.stringify({
-    testDir: fileURLToPath(new URL(".", import.meta.url)),
-    testMatch: "markerTimeFormat.spec.ts",
-    outputDir: join(directory, "results"),
-    reporter: "line",
-    timeout: 300_000,
-    use: { launchOptions: chromiumLaunch },
-  })}`);
+  writeFileSync(
+    config,
+    `export default ${JSON.stringify({
+      testDir: fileURLToPath(new URL(".", import.meta.url)),
+      testMatch: "markerTimeFormat.spec.ts",
+      outputDir: join(directory, "results"),
+      reporter: "line",
+      timeout: 300_000,
+      use: { launchOptions: chromiumLaunch },
+    })}`,
+  );
   const env: NodeJS.ProcessEnv = { ...process.env, ARES_REQUIRE_ORCA: "1", FORCE_COLOR: "0" };
   delete env.ARES_MARKER_TIME_BIN;
-  const output = spawnSync(process.execPath, [
-    fileURLToPath(new URL("../node_modules/@playwright/test/cli.js", import.meta.url)),
-    "test", "--config", config,
-    "--grep", "marker Time text matches native source-kernel boundary records$",
-  ], { env, encoding: "utf8", timeout: 330_000, killSignal: "SIGKILL" });
+  const output = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL("../node_modules/@playwright/test/cli.js", import.meta.url)),
+      "test",
+      "--config",
+      config,
+      "--grep",
+      "marker Time text matches native source-kernel boundary records$",
+    ],
+    { env, encoding: "utf8", timeout: 330_000, killSignal: "SIGKILL" },
+  );
   writeFileSync(join(directory, "stdout.log"), output.stdout ?? "");
   writeFileSync(join(directory, "stderr.log"), output.stderr ?? "");
   expect(output.error).toBeUndefined();
@@ -45,12 +55,24 @@ test("marker Time text matches native source-kernel boundary records", async () 
     synthetic: { elapsedBits: number[]; durationBits: number[]; text: string[] }[];
   };
   const view = new DataView(new ArrayBuffer(4));
-  const float = (bits: number) => { view.setUint32(0, bits); return view.getFloat32(0); };
-  const records = [...native.formats, ...native.synthetic.flatMap((row) => row.text.map((text, mode) => ({
-    elapsedBits: row.elapsedBits[mode], durationBits: row.durationBits[mode], text,
-  })))];
+  const float = (bits: number) => {
+    view.setUint32(0, bits);
+    return view.getFloat32(0);
+  };
+  const records = [
+    ...native.formats,
+    ...native.synthetic.flatMap((row) =>
+      row.text.map((text, mode) => ({
+        elapsedBits: row.elapsedBits[mode],
+        durationBits: row.durationBits[mode],
+        text,
+      })),
+    ),
+  ];
   for (const record of records) {
-    expect(formatMarkerTime({ elapsedSeconds: float(record.elapsedBits), vertexSeconds: float(record.durationBits) }),
-      JSON.stringify(record)).toBe(record.text);
+    expect(
+      formatMarkerTime({ elapsedSeconds: float(record.elapsedBits), vertexSeconds: float(record.durationBits) }),
+      JSON.stringify(record),
+    ).toBe(record.text);
   }
 });

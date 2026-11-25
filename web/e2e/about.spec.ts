@@ -7,8 +7,9 @@ const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/about/", import.meta.url));
 // The release version (bumped with every batch) and the OrcaSlicer version the core tracks.
 const version: string = JSON.parse(readFileSync(`${repositoryRoot}web/app/package.json`, "utf8")).version;
-const orca = /ORCA_SLICER_COMPATIBILITY_VERSION: &str = "([^"]+)"/
-  .exec(readFileSync(`${repositoryRoot}crates/ares-core/src/generation.rs`, "utf8"))![1];
+const orca = /ORCA_SLICER_COMPATIBILITY_VERSION: &str = "([^"]+)"/.exec(
+  readFileSync(`${repositoryRoot}crates/ares-core/src/generation.rs`, "utf8"),
+)![1];
 
 /** MainFrame::generate_help_menu (MainFrame.cpp:2903-2966) in the top bar's drop-down (:3683). */
 async function openFromHelp(page: Page, item: string) {
@@ -41,9 +42,12 @@ test("Help opens the keyboard shortcuts and an About dialog with the release ver
   await expect(about).toBeVisible();
   await expect(about.getByTestId("about-version")).toHaveText(version);
   await expect(about).toContainText(`Rust port of the OrcaSlicer ${orca} slicing core`);
-  for (const project of ["Slic3r", "PrusaSlicer", "Bambu Studio", "OrcaSlicer"]) await expect(about).toContainText(project);
-  await expect(about.getByRole("link", { name: "GNU Affero General Public License, version 3" }))
-    .toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
+  for (const project of ["Slic3r", "PrusaSlicer", "Bambu Studio", "OrcaSlicer"])
+    await expect(about).toContainText(project);
+  await expect(about.getByRole("link", { name: "GNU Affero General Public License, version 3" })).toHaveAttribute(
+    "href",
+    "https://www.gnu.org/licenses/agpl-3.0.html",
+  );
   await page.screenshot({ path: `${artifacts}about-dark.png` });
   const dark = await background(page);
   await page.keyboard.press("Escape");
@@ -70,5 +74,8 @@ test("Help opens the keyboard shortcuts and an About dialog with the release ver
   await expect(about).toBeHidden();
 
   expect(errors).toEqual([]);
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ version, orca, themes: { dark, light }, phone: box }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify({ version, orca, themes: { dark, light }, phone: box }, null, 2)}\n`,
+  );
 });

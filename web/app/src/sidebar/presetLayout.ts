@@ -5,1573 +5,1573 @@ import type { LayoutPage } from "./layoutTypes";
 
 export const FILAMENT_PAGES: LayoutPage[] = [
   {
-    "title": "Filament",
-    "groups": [
+    title: "Filament",
+    groups: [
       {
-        "title": "Basic information",
-        "icon": "param_information",
-        "rows": [
+        title: "Basic information",
+        icon: "param_information",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_type"
+            kind: "option",
+            key: "filament_type",
           },
           {
-            "kind": "option",
-            "key": "filament_vendor"
+            kind: "option",
+            key: "filament_vendor",
           },
           {
-            "kind": "option",
-            "key": "filament_soluble"
+            kind: "option",
+            key: "filament_soluble",
           },
           {
-            "kind": "option",
-            "key": "filament_is_support"
+            kind: "option",
+            key: "filament_is_support",
           },
           {
-            "kind": "option",
-            "key": "filament_change_length"
+            kind: "option",
+            key: "filament_change_length",
           },
           {
-            "kind": "option",
-            "key": "default_filament_colour"
+            kind: "option",
+            key: "default_filament_colour",
           },
           {
-            "kind": "option",
-            "key": "filament_diameter"
+            kind: "option",
+            key: "filament_diameter",
           },
           {
-            "kind": "option",
-            "key": "filament_adhesiveness_category"
+            kind: "option",
+            key: "filament_adhesiveness_category",
           },
           {
-            "kind": "option",
-            "key": "filament_density"
+            kind: "option",
+            key: "filament_density",
           },
           {
-            "kind": "option",
-            "key": "filament_shrink"
+            kind: "option",
+            key: "filament_shrink",
           },
           {
-            "kind": "option",
-            "key": "filament_shrinkage_compensation_z"
+            kind: "option",
+            key: "filament_shrinkage_compensation_z",
           },
           {
-            "kind": "option",
-            "key": "filament_cost"
+            kind: "option",
+            key: "filament_cost",
           },
           {
-            "kind": "option",
-            "key": "temperature_vitrification"
+            kind: "option",
+            key: "temperature_vitrification",
           },
           {
-            "kind": "option",
-            "key": "idle_temperature"
+            kind: "option",
+            key: "idle_temperature",
           },
           {
-            "kind": "line",
-            "label": "Recommended nozzle temperature",
-            "options": [
+            kind: "line",
+            label: "Recommended nozzle temperature",
+            options: [
               {
-                "key": "nozzle_temperature_range_low"
+                key: "nozzle_temperature_range_low",
               },
               {
-                "key": "nozzle_temperature_range_high"
-              }
-            ]
-          }
-        ]
+                key: "nozzle_temperature_range_high",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Flow ratio and Pressure Advance",
-        "icon": "param_flow_ratio_and_pressure_advance",
-        "rows": [
+        title: "Flow ratio and Pressure Advance",
+        icon: "param_flow_ratio_and_pressure_advance",
+        rows: [
           {
-            "kind": "option",
-            "key": "pellet_flow_coefficient"
+            kind: "option",
+            key: "pellet_flow_coefficient",
           },
           {
-            "kind": "option",
-            "key": "filament_flow_ratio"
+            kind: "option",
+            key: "filament_flow_ratio",
           },
           {
-            "kind": "option",
-            "key": "enable_pressure_advance"
+            kind: "option",
+            key: "enable_pressure_advance",
           },
           {
-            "kind": "option",
-            "key": "pressure_advance"
+            kind: "option",
+            key: "pressure_advance",
           },
           {
-            "kind": "option",
-            "key": "adaptive_pressure_advance"
+            kind: "option",
+            key: "adaptive_pressure_advance",
           },
           {
-            "kind": "option",
-            "key": "adaptive_pressure_advance_overhangs"
+            kind: "option",
+            key: "adaptive_pressure_advance_overhangs",
           },
           {
-            "kind": "option",
-            "key": "adaptive_pressure_advance_bridges"
+            kind: "option",
+            key: "adaptive_pressure_advance_bridges",
           },
           {
-            "kind": "option",
-            "key": "adaptive_pressure_advance_model",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "adaptive_pressure_advance_model",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Print chamber temperature",
-        "icon": "param_chamber_temp",
-        "rows": [
+        title: "Print chamber temperature",
+        icon: "param_chamber_temp",
+        rows: [
           {
-            "kind": "option",
-            "key": "activate_chamber_temp_control"
+            kind: "option",
+            key: "activate_chamber_temp_control",
           },
           {
-            "kind": "line",
-            "label": "Chamber temperature",
-            "options": [
+            kind: "line",
+            label: "Chamber temperature",
+            options: [
               {
-                "key": "chamber_temperature",
-                "label": "Target"
+                key: "chamber_temperature",
+                label: "Target",
               },
               {
-                "key": "chamber_minimal_temperature",
-                "label": "Minimal"
-              }
-            ]
-          }
-        ]
+                key: "chamber_minimal_temperature",
+                label: "Minimal",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Print temperature",
-        "icon": "param_extruder_temp",
-        "rows": [
+        title: "Print temperature",
+        icon: "param_extruder_temp",
+        rows: [
           {
-            "kind": "line",
-            "label": "Nozzle",
-            "options": [
+            kind: "line",
+            label: "Nozzle",
+            options: [
               {
-                "key": "nozzle_temperature_initial_layer"
+                key: "nozzle_temperature_initial_layer",
               },
               {
-                "key": "nozzle_temperature"
-              }
-            ]
-          }
-        ]
+                key: "nozzle_temperature",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Bed temperature",
-        "icon": "param_bed_temp",
-        "rows": [
+        title: "Bed temperature",
+        icon: "param_bed_temp",
+        rows: [
           {
-            "kind": "line",
-            "label": "Cool Plate (SuperTack)",
-            "options": [
+            kind: "line",
+            label: "Cool Plate (SuperTack)",
+            options: [
               {
-                "key": "supertack_plate_temp_initial_layer"
+                key: "supertack_plate_temp_initial_layer",
               },
               {
-                "key": "supertack_plate_temp"
-              }
-            ]
+                key: "supertack_plate_temp",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Cool Plate",
-            "options": [
+            kind: "line",
+            label: "Cool Plate",
+            options: [
               {
-                "key": "cool_plate_temp_initial_layer"
+                key: "cool_plate_temp_initial_layer",
               },
               {
-                "key": "cool_plate_temp"
-              }
-            ]
+                key: "cool_plate_temp",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Textured Cool Plate",
-            "options": [
+            kind: "line",
+            label: "Textured Cool Plate",
+            options: [
               {
-                "key": "textured_cool_plate_temp_initial_layer"
+                key: "textured_cool_plate_temp_initial_layer",
               },
               {
-                "key": "textured_cool_plate_temp"
-              }
-            ]
+                key: "textured_cool_plate_temp",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Engineering Plate",
-            "options": [
+            kind: "line",
+            label: "Engineering Plate",
+            options: [
               {
-                "key": "eng_plate_temp_initial_layer"
+                key: "eng_plate_temp_initial_layer",
               },
               {
-                "key": "eng_plate_temp"
-              }
-            ]
+                key: "eng_plate_temp",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Smooth PEI Plate / High Temp Plate",
-            "options": [
+            kind: "line",
+            label: "Smooth PEI Plate / High Temp Plate",
+            options: [
               {
-                "key": "hot_plate_temp_initial_layer"
+                key: "hot_plate_temp_initial_layer",
               },
               {
-                "key": "hot_plate_temp"
-              }
-            ]
+                key: "hot_plate_temp",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Textured PEI Plate",
-            "options": [
+            kind: "line",
+            label: "Textured PEI Plate",
+            options: [
               {
-                "key": "textured_plate_temp_initial_layer"
+                key: "textured_plate_temp_initial_layer",
               },
               {
-                "key": "textured_plate_temp"
-              }
-            ]
-          }
-        ]
+                key: "textured_plate_temp",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Volumetric speed limitation",
-        "icon": "param_volumetric_speed",
-        "rows": [
+        title: "Volumetric speed limitation",
+        icon: "param_volumetric_speed",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_adaptive_volumetric_speed"
+            kind: "option",
+            key: "filament_adaptive_volumetric_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_max_volumetric_speed"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "filament_max_volumetric_speed",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Cooling",
-    "groups": [
+    title: "Cooling",
+    groups: [
       {
-        "title": "Cooling for specific layer",
-        "icon": "param_cooling_specific_layer",
-        "rows": [
+        title: "Cooling for specific layer",
+        icon: "param_cooling_specific_layer",
+        rows: [
           {
-            "kind": "option",
-            "key": "close_fan_the_first_x_layers"
+            kind: "option",
+            key: "close_fan_the_first_x_layers",
           },
           {
-            "kind": "option",
-            "key": "initial_layer_fan_speed"
+            kind: "option",
+            key: "initial_layer_fan_speed",
           },
           {
-            "kind": "option",
-            "key": "full_fan_speed_layer"
-          }
-        ]
+            kind: "option",
+            key: "full_fan_speed_layer",
+          },
+        ],
       },
       {
-        "title": "Part cooling fan",
-        "icon": "param_cooling_part_fan",
-        "rows": [
+        title: "Part cooling fan",
+        icon: "param_cooling_part_fan",
+        rows: [
           {
-            "kind": "line",
-            "label": "Min fan speed threshold",
-            "options": [
+            kind: "line",
+            label: "Min fan speed threshold",
+            options: [
               {
-                "key": "fan_min_speed"
+                key: "fan_min_speed",
               },
               {
-                "key": "fan_cooling_layer_time"
-              }
-            ]
+                key: "fan_cooling_layer_time",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Max fan speed threshold",
-            "options": [
+            kind: "line",
+            label: "Max fan speed threshold",
+            options: [
               {
-                "key": "fan_max_speed"
+                key: "fan_max_speed",
               },
               {
-                "key": "slow_down_layer_time"
-              }
-            ]
+                key: "slow_down_layer_time",
+              },
+            ],
           },
           {
-            "kind": "option",
-            "key": "reduce_fan_stop_start_freq"
+            kind: "option",
+            key: "reduce_fan_stop_start_freq",
           },
           {
-            "kind": "option",
-            "key": "slow_down_for_layer_cooling"
+            kind: "option",
+            key: "slow_down_for_layer_cooling",
           },
           {
-            "kind": "option",
-            "key": "dont_slow_down_outer_wall"
+            kind: "option",
+            key: "dont_slow_down_outer_wall",
           },
           {
-            "kind": "option",
-            "key": "slow_down_min_speed"
+            kind: "option",
+            key: "slow_down_min_speed",
           },
           {
-            "kind": "option",
-            "key": "enable_overhang_bridge_fan"
+            kind: "option",
+            key: "enable_overhang_bridge_fan",
           },
           {
-            "kind": "option",
-            "key": "overhang_fan_threshold"
+            kind: "option",
+            key: "overhang_fan_threshold",
           },
           {
-            "kind": "option",
-            "key": "overhang_fan_speed"
+            kind: "option",
+            key: "overhang_fan_speed",
           },
           {
-            "kind": "option",
-            "key": "internal_bridge_fan_speed"
+            kind: "option",
+            key: "internal_bridge_fan_speed",
           },
           {
-            "kind": "option",
-            "key": "support_material_interface_fan_speed"
+            kind: "option",
+            key: "support_material_interface_fan_speed",
           },
           {
-            "kind": "option",
-            "key": "ironing_fan_speed"
-          }
-        ]
+            kind: "option",
+            key: "ironing_fan_speed",
+          },
+        ],
       },
       {
-        "title": "Auxiliary part cooling fan",
-        "icon": "param_cooling_aux_fan",
-        "rows": [
+        title: "Auxiliary part cooling fan",
+        icon: "param_cooling_aux_fan",
+        rows: [
           {
-            "kind": "option",
-            "key": "additional_cooling_fan_speed"
-          }
-        ]
+            kind: "option",
+            key: "additional_cooling_fan_speed",
+          },
+        ],
       },
       {
-        "title": "Exhaust fan",
-        "icon": "param_cooling_exhaust",
-        "rows": [
+        title: "Exhaust fan",
+        icon: "param_cooling_exhaust",
+        rows: [
           {
-            "kind": "option",
-            "key": "activate_air_filtration"
+            kind: "option",
+            key: "activate_air_filtration",
           },
           {
-            "kind": "line",
-            "label": "During print",
-            "options": [
+            kind: "line",
+            label: "During print",
+            options: [
               {
-                "key": "activate_air_filtration_during_print"
+                key: "activate_air_filtration_during_print",
               },
               {
-                "key": "during_print_exhaust_fan_speed"
-              }
-            ]
+                key: "during_print_exhaust_fan_speed",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Complete print",
-            "options": [
+            kind: "line",
+            label: "Complete print",
+            options: [
               {
-                "key": "activate_air_filtration_on_completion"
+                key: "activate_air_filtration_on_completion",
               },
               {
-                "key": "complete_print_exhaust_fan_speed"
-              }
-            ]
-          }
-        ]
-      }
-    ]
+                key: "complete_print_exhaust_fan_speed",
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Setting Overrides",
-    "groups": [
+    title: "Setting Overrides",
+    groups: [
       {
-        "title": "Retraction",
-        "icon": "param_retraction",
-        "rows": [
+        title: "Retraction",
+        icon: "param_retraction",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_retraction_length"
+            kind: "option",
+            key: "filament_retraction_length",
           },
           {
-            "kind": "option",
-            "key": "filament_z_hop"
+            kind: "option",
+            key: "filament_z_hop",
           },
           {
-            "kind": "option",
-            "key": "filament_z_hop_types"
+            kind: "option",
+            key: "filament_z_hop_types",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_lift_above"
+            kind: "option",
+            key: "filament_retract_lift_above",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_lift_below"
+            kind: "option",
+            key: "filament_retract_lift_below",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_lift_enforce"
+            kind: "option",
+            key: "filament_retract_lift_enforce",
           },
           {
-            "kind": "option",
-            "key": "filament_retraction_speed"
+            kind: "option",
+            key: "filament_retraction_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_deretraction_speed"
+            kind: "option",
+            key: "filament_deretraction_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_restart_extra"
+            kind: "option",
+            key: "filament_retract_restart_extra",
           },
           {
-            "kind": "option",
-            "key": "filament_retraction_minimum_travel"
+            kind: "option",
+            key: "filament_retraction_minimum_travel",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_when_changing_layer"
+            kind: "option",
+            key: "filament_retract_when_changing_layer",
           },
           {
-            "kind": "option",
-            "key": "filament_wipe"
+            kind: "option",
+            key: "filament_wipe",
           },
           {
-            "kind": "option",
-            "key": "filament_wipe_distance"
+            kind: "option",
+            key: "filament_wipe_distance",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_before_wipe"
+            kind: "option",
+            key: "filament_retract_before_wipe",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_after_wipe"
+            kind: "option",
+            key: "filament_retract_after_wipe",
           },
           {
-            "kind": "option",
-            "key": "filament_long_retractions_when_cut"
+            kind: "option",
+            key: "filament_long_retractions_when_cut",
           },
           {
-            "kind": "option",
-            "key": "filament_retraction_distances_when_cut"
-          }
-        ]
+            kind: "option",
+            key: "filament_retraction_distances_when_cut",
+          },
+        ],
       },
       {
-        "title": "Retraction when switching material",
-        "icon": "param_retraction_material_change",
-        "rows": [
+        title: "Retraction when switching material",
+        icon: "param_retraction_material_change",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_retract_length_toolchange"
+            kind: "option",
+            key: "filament_retract_length_toolchange",
           },
           {
-            "kind": "option",
-            "key": "filament_retract_restart_extra_toolchange"
-          }
-        ]
+            kind: "option",
+            key: "filament_retract_restart_extra_toolchange",
+          },
+        ],
       },
       {
-        "title": "Ironing",
-        "icon": "param_ironing",
-        "rows": [
+        title: "Ironing",
+        icon: "param_ironing",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_ironing_flow"
+            kind: "option",
+            key: "filament_ironing_flow",
           },
           {
-            "kind": "option",
-            "key": "filament_ironing_spacing"
+            kind: "option",
+            key: "filament_ironing_spacing",
           },
           {
-            "kind": "option",
-            "key": "filament_ironing_inset"
+            kind: "option",
+            key: "filament_ironing_inset",
           },
           {
-            "kind": "option",
-            "key": "filament_ironing_speed"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "filament_ironing_speed",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Advanced",
-    "groups": [
+    title: "Advanced",
+    groups: [
       {
-        "title": "Filament start G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Filament start G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_start_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "filament_start_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Change extrusion role G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Change extrusion role G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_change_extrusion_role_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "filament_change_extrusion_role_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Filament end G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Filament end G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_end_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "filament_end_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Plugin Configuration",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Plugin Configuration",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_plugin_config_overrides"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "filament_plugin_config_overrides",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Multimaterial",
-    "groups": [
+    title: "Multimaterial",
+    groups: [
       {
-        "title": "Wipe tower parameters",
-        "icon": "param_tower",
-        "rows": [
+        title: "Wipe tower parameters",
+        icon: "param_tower",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_minimal_purge_on_wipe_tower"
+            kind: "option",
+            key: "filament_minimal_purge_on_wipe_tower",
           },
           {
-            "kind": "option",
-            "key": "filament_tower_interface_pre_extrusion_dist"
+            kind: "option",
+            key: "filament_tower_interface_pre_extrusion_dist",
           },
           {
-            "kind": "option",
-            "key": "filament_tower_interface_pre_extrusion_length"
+            kind: "option",
+            key: "filament_tower_interface_pre_extrusion_length",
           },
           {
-            "kind": "option",
-            "key": "filament_tower_ironing_area"
+            kind: "option",
+            key: "filament_tower_ironing_area",
           },
           {
-            "kind": "option",
-            "key": "filament_tower_interface_purge_volume"
+            kind: "option",
+            key: "filament_tower_interface_purge_volume",
           },
           {
-            "kind": "option",
-            "key": "filament_tower_interface_print_temp"
-          }
-        ]
+            kind: "option",
+            key: "filament_tower_interface_print_temp",
+          },
+        ],
       },
       {
-        "title": "Multi Filament",
-        "rows": [
+        title: "Multi Filament",
+        rows: [
           {
-            "kind": "option",
-            "key": "long_retractions_when_ec"
+            kind: "option",
+            key: "long_retractions_when_ec",
           },
           {
-            "kind": "option",
-            "key": "retraction_distances_when_ec"
-          }
-        ]
+            kind: "option",
+            key: "retraction_distances_when_ec",
+          },
+        ],
       },
       {
-        "title": "Tool change parameters with single extruder MM printers",
-        "icon": "param_toolchange",
-        "rows": [
+        title: "Tool change parameters with single extruder MM printers",
+        icon: "param_toolchange",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_loading_speed_start"
+            kind: "option",
+            key: "filament_loading_speed_start",
           },
           {
-            "kind": "option",
-            "key": "filament_loading_speed"
+            kind: "option",
+            key: "filament_loading_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_unloading_speed_start"
+            kind: "option",
+            key: "filament_unloading_speed_start",
           },
           {
-            "kind": "option",
-            "key": "filament_unloading_speed"
+            kind: "option",
+            key: "filament_unloading_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_toolchange_delay"
+            kind: "option",
+            key: "filament_toolchange_delay",
           },
           {
-            "kind": "option",
-            "key": "filament_cooling_moves"
+            kind: "option",
+            key: "filament_cooling_moves",
           },
           {
-            "kind": "option",
-            "key": "filament_cooling_initial_speed"
+            kind: "option",
+            key: "filament_cooling_initial_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_cooling_final_speed"
+            kind: "option",
+            key: "filament_cooling_final_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_stamping_loading_speed"
+            kind: "option",
+            key: "filament_stamping_loading_speed",
           },
           {
-            "kind": "option",
-            "key": "filament_stamping_distance"
+            kind: "option",
+            key: "filament_stamping_distance",
           },
           {
-            "kind": "widget",
-            "key": "filament_ramming_parameters"
-          }
-        ]
+            kind: "widget",
+            key: "filament_ramming_parameters",
+          },
+        ],
       },
       {
-        "title": "Tool change parameters with multi extruder MM printers",
-        "icon": "param_toolchange_multi_extruder",
-        "rows": [
+        title: "Tool change parameters with multi extruder MM printers",
+        icon: "param_toolchange_multi_extruder",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_multitool_ramming"
+            kind: "option",
+            key: "filament_multitool_ramming",
           },
           {
-            "kind": "option",
-            "key": "filament_multitool_ramming_volume"
+            kind: "option",
+            key: "filament_multitool_ramming_volume",
           },
           {
-            "kind": "option",
-            "key": "filament_multitool_ramming_flow"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "filament_multitool_ramming_flow",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Dependencies",
-    "groups": [
+    title: "Dependencies",
+    groups: [
       {
-        "title": "Compatible printers",
-        "icon": "param_dependencies_printers",
-        "rows": [
+        title: "Compatible printers",
+        icon: "param_dependencies_printers",
+        rows: [
           {
-            "kind": "widget",
-            "key": "compatible_printers"
+            kind: "widget",
+            key: "compatible_printers",
           },
           {
-            "kind": "option",
-            "key": "compatible_printers_condition",
-            "full": true
-          }
-        ]
+            kind: "option",
+            key: "compatible_printers_condition",
+            full: true,
+          },
+        ],
       },
       {
-        "title": "Compatible process profiles",
-        "icon": "param_dependencies_presets",
-        "rows": [
+        title: "Compatible process profiles",
+        icon: "param_dependencies_presets",
+        rows: [
           {
-            "kind": "widget",
-            "key": "compatible_prints"
+            kind: "widget",
+            key: "compatible_prints",
           },
           {
-            "kind": "option",
-            "key": "compatible_prints_condition",
-            "full": true
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "compatible_prints_condition",
+            full: true,
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Notes",
-    "groups": [
+    title: "Notes",
+    groups: [
       {
-        "title": "Notes",
-        "icon": "note",
-        "rows": [
+        title: "Notes",
+        icon: "note",
+        rows: [
           {
-            "kind": "option",
-            "key": "filament_notes",
-            "full": true
-          }
-        ]
-      }
-    ]
-  }
+            kind: "option",
+            key: "filament_notes",
+            full: true,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const PRINTER_PAGES: LayoutPage[] = [
   {
-    "title": "Basic information",
-    "groups": [
+    title: "Basic information",
+    groups: [
       {
-        "title": "Printable space",
-        "icon": "param_printable_space",
-        "rows": [
+        title: "Printable space",
+        icon: "param_printable_space",
+        rows: [
           {
-            "kind": "widget",
-            "key": "printable_area"
+            kind: "widget",
+            key: "printable_area",
           },
           {
-            "kind": "option",
-            "key": "parallel_printheads_count"
+            kind: "option",
+            key: "parallel_printheads_count",
           },
           {
-            "kind": "option",
-            "key": "bed_exclude_area",
-            "full": true
+            kind: "option",
+            key: "bed_exclude_area",
+            full: true,
           },
           {
-            "kind": "option",
-            "key": "bed_exclude_volumes",
-            "full": true
+            kind: "option",
+            key: "bed_exclude_volumes",
+            full: true,
           },
           {
-            "kind": "option",
-            "key": "bed_exclude_volume_mode"
+            kind: "option",
+            key: "bed_exclude_volume_mode",
           },
           {
-            "kind": "option",
-            "key": "printable_height"
+            kind: "option",
+            key: "printable_height",
           },
           {
-            "kind": "option",
-            "key": "support_multi_bed_types"
+            kind: "option",
+            key: "support_multi_bed_types",
           },
           {
-            "kind": "option",
-            "key": "best_object_pos"
+            kind: "option",
+            key: "best_object_pos",
           },
           {
-            "kind": "option",
-            "key": "z_offset"
+            kind: "option",
+            key: "z_offset",
           },
           {
-            "kind": "option",
-            "key": "preferred_orientation"
-          }
-        ]
+            kind: "option",
+            key: "preferred_orientation",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "printer_structure"
+            kind: "option",
+            key: "printer_structure",
           },
           {
-            "kind": "option",
-            "key": "gcode_flavor"
+            kind: "option",
+            key: "gcode_flavor",
           },
           {
-            "kind": "option",
-            "key": "gcode_skip_config_block"
+            kind: "option",
+            key: "gcode_skip_config_block",
           },
           {
-            "kind": "option",
-            "key": "pellet_modded_printer"
+            kind: "option",
+            key: "pellet_modded_printer",
           },
           {
-            "kind": "option",
-            "key": "bbl_use_printhost"
+            kind: "option",
+            key: "bbl_use_printhost",
           },
           {
-            "kind": "option",
-            "key": "printer_agent"
+            kind: "option",
+            key: "printer_agent",
           },
           {
-            "kind": "option",
-            "key": "use_3mf"
+            kind: "option",
+            key: "use_3mf",
           },
           {
-            "kind": "option",
-            "key": "scan_first_layer"
+            kind: "option",
+            key: "scan_first_layer",
           },
           {
-            "kind": "option",
-            "key": "enable_power_loss_recovery"
+            kind: "option",
+            key: "enable_power_loss_recovery",
           },
           {
-            "kind": "option",
-            "key": "disable_m73"
+            kind: "option",
+            key: "disable_m73",
           },
           {
-            "kind": "option",
-            "key": "thumbnails",
-            "full": true
+            kind: "option",
+            key: "thumbnails",
+            full: true,
           },
           {
-            "kind": "option",
-            "key": "use_relative_e_distances"
+            kind: "option",
+            key: "use_relative_e_distances",
           },
           {
-            "kind": "option",
-            "key": "use_firmware_retraction"
+            kind: "option",
+            key: "use_firmware_retraction",
           },
           {
-            "kind": "option",
-            "key": "time_cost"
+            kind: "option",
+            key: "time_cost",
           },
           {
-            "kind": "option",
-            "key": "build_plate_tilt_x"
+            kind: "option",
+            key: "build_plate_tilt_x",
           },
           {
-            "kind": "option",
-            "key": "build_plate_tilt_y"
-          }
-        ]
+            kind: "option",
+            key: "build_plate_tilt_y",
+          },
+        ],
       },
       {
-        "title": "Belt printer",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Belt printer",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "belt_printer"
+            kind: "option",
+            key: "belt_printer",
           },
           {
-            "kind": "option",
-            "key": "belt_printer_infinite_y"
+            kind: "option",
+            key: "belt_printer_infinite_y",
           },
           {
-            "kind": "option",
-            "key": "belt_slice_rotation_angle"
+            kind: "option",
+            key: "belt_slice_rotation_angle",
           },
           {
-            "kind": "option",
-            "key": "belt_slice_rotation"
+            kind: "option",
+            key: "belt_slice_rotation",
           },
           {
-            "kind": "option",
-            "key": "belt_support_floor_offset"
-          }
-        ]
+            kind: "option",
+            key: "belt_support_floor_offset",
+          },
+        ],
       },
       {
-        "title": "Machine frame transforms",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Machine frame transforms",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "gcode_remap_x"
+            kind: "option",
+            key: "gcode_remap_x",
           },
           {
-            "kind": "option",
-            "key": "gcode_remap_y"
+            kind: "option",
+            key: "gcode_remap_y",
           },
           {
-            "kind": "option",
-            "key": "gcode_remap_z"
+            kind: "option",
+            key: "gcode_remap_z",
           },
           {
-            "kind": "option",
-            "key": "belt_frame_tilt_decouple"
+            kind: "option",
+            key: "belt_frame_tilt_decouple",
           },
           {
-            "kind": "option",
-            "key": "belt_frame_tilt_angle"
-          }
-        ]
+            kind: "option",
+            key: "belt_frame_tilt_angle",
+          },
+        ],
       },
       {
-        "title": "Plugin Configuration",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Plugin Configuration",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "printer_plugin_config_overrides"
-          }
-        ]
+            kind: "option",
+            key: "printer_plugin_config_overrides",
+          },
+        ],
       },
       {
-        "title": "Cooling Fan",
-        "icon": "param_cooling_fan",
-        "rows": [
+        title: "Cooling Fan",
+        icon: "param_cooling_fan",
+        rows: [
           {
-            "kind": "line",
-            "label": "Fan speed-up time",
-            "options": [
+            kind: "line",
+            label: "Fan speed-up time",
+            options: [
               {
-                "key": "fan_speedup_time"
+                key: "fan_speedup_time",
               },
               {
-                "key": "fan_speedup_overhangs"
-              }
-            ]
+                key: "fan_speedup_overhangs",
+              },
+            ],
           },
           {
-            "kind": "option",
-            "key": "fan_kickstart"
+            kind: "option",
+            key: "fan_kickstart",
           },
           {
-            "kind": "option",
-            "key": "part_cooling_fan_min_pwm"
-          }
-        ]
+            kind: "option",
+            key: "part_cooling_fan_min_pwm",
+          },
+        ],
       },
       {
-        "title": "Extruder Clearance",
-        "icon": "param_extruder_clearance",
-        "rows": [
+        title: "Extruder Clearance",
+        icon: "param_extruder_clearance",
+        rows: [
           {
-            "kind": "option",
-            "key": "extruder_clearance_radius"
+            kind: "option",
+            key: "extruder_clearance_radius",
           },
           {
-            "kind": "option",
-            "key": "extruder_clearance_dist_to_rod"
+            kind: "option",
+            key: "extruder_clearance_dist_to_rod",
           },
           {
-            "kind": "option",
-            "key": "extruder_clearance_height_to_rod"
+            kind: "option",
+            key: "extruder_clearance_height_to_rod",
           },
           {
-            "kind": "option",
-            "key": "extruder_clearance_height_to_lid"
-          }
-        ]
+            kind: "option",
+            key: "extruder_clearance_height_to_lid",
+          },
+        ],
       },
       {
-        "title": "Adaptive bed mesh",
-        "icon": "param_adaptive_mesh",
-        "rows": [
+        title: "Adaptive bed mesh",
+        icon: "param_adaptive_mesh",
+        rows: [
           {
-            "kind": "option",
-            "key": "bed_mesh_min"
+            kind: "option",
+            key: "bed_mesh_min",
           },
           {
-            "kind": "option",
-            "key": "bed_mesh_max"
+            kind: "option",
+            key: "bed_mesh_max",
           },
           {
-            "kind": "option",
-            "key": "bed_mesh_probe_distance"
+            kind: "option",
+            key: "bed_mesh_probe_distance",
           },
           {
-            "kind": "option",
-            "key": "adaptive_bed_mesh_margin"
-          }
-        ]
+            kind: "option",
+            key: "adaptive_bed_mesh_margin",
+          },
+        ],
       },
       {
-        "title": "Accessory",
-        "icon": "param_accessory",
-        "rows": [
+        title: "Accessory",
+        icon: "param_accessory",
+        rows: [
           {
-            "kind": "option",
-            "key": "nozzle_hrc"
+            kind: "option",
+            key: "nozzle_hrc",
           },
           {
-            "kind": "option",
-            "key": "auxiliary_fan"
+            kind: "option",
+            key: "auxiliary_fan",
           },
           {
-            "kind": "option",
-            "key": "fan_direction"
+            kind: "option",
+            key: "fan_direction",
           },
           {
-            "kind": "option",
-            "key": "support_chamber_temp_control"
+            kind: "option",
+            key: "support_chamber_temp_control",
           },
           {
-            "kind": "option",
-            "key": "support_air_filtration"
+            kind: "option",
+            key: "support_air_filtration",
           },
           {
-            "kind": "option",
-            "key": "cooling_filter_enabled"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "cooling_filter_enabled",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Machine G-code",
-    "groups": [
+    title: "Machine G-code",
+    groups: [
       {
-        "title": "File header G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "File header G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "file_start_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "file_start_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Machine start G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Machine start G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_start_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "machine_start_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Machine end G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Machine end G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_end_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "machine_end_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Printing by object G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Printing by object G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "printing_by_object_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "printing_by_object_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Before layer change G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Before layer change G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "before_layer_change_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "before_layer_change_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Layer change G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Layer change G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "layer_change_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "layer_change_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Timelapse G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Timelapse G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "time_lapse_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "time_lapse_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Clumping Detection G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Clumping Detection G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "wrapping_detection_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "wrapping_detection_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Change filament G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Change filament G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "change_filament_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "change_filament_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Change extrusion role G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Change extrusion role G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "change_extrusion_role_gcode",
-            "full": true,
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "change_extrusion_role_gcode",
+            full: true,
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Pause G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Pause G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_pause_gcode",
-            "code": true
-          }
-        ]
+            kind: "option",
+            key: "machine_pause_gcode",
+            code: true,
+          },
+        ],
       },
       {
-        "title": "Template Custom G-code",
-        "icon": "param_gcode",
-        "rows": [
+        title: "Template Custom G-code",
+        icon: "param_gcode",
+        rows: [
           {
-            "kind": "option",
-            "key": "template_custom_gcode",
-            "code": true
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "template_custom_gcode",
+            code: true,
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Multimaterial",
-    "groups": [
+    title: "Multimaterial",
+    groups: [
       {
-        "title": "Single extruder multi-material setup",
-        "icon": "param_multi_material",
-        "rows": [
+        title: "Single extruder multi-material setup",
+        icon: "param_multi_material",
+        rows: [
           {
-            "kind": "option",
-            "key": "single_extruder_multi_material"
+            kind: "option",
+            key: "single_extruder_multi_material",
           },
           {
-            "kind": "option",
-            "key": "manual_filament_change"
+            kind: "option",
+            key: "manual_filament_change",
           },
           {
-            "kind": "option",
-            "key": "bed_temperature_formula"
-          }
-        ]
+            kind: "option",
+            key: "bed_temperature_formula",
+          },
+        ],
       },
       {
-        "title": "Wipe tower",
-        "icon": "param_tower",
-        "rows": [
+        title: "Wipe tower",
+        icon: "param_tower",
+        rows: [
           {
-            "kind": "option",
-            "key": "wipe_tower_type"
+            kind: "option",
+            key: "wipe_tower_type",
           },
           {
-            "kind": "option",
-            "key": "purge_in_prime_tower"
+            kind: "option",
+            key: "purge_in_prime_tower",
           },
           {
-            "kind": "option",
-            "key": "enable_filament_ramming"
+            kind: "option",
+            key: "enable_filament_ramming",
           },
           {
-            "kind": "option",
-            "key": "tool_change_on_wipe_tower"
+            kind: "option",
+            key: "tool_change_on_wipe_tower",
           },
           {
-            "kind": "option",
-            "key": "wait_for_temp_on_wipe_tower"
-          }
-        ]
+            kind: "option",
+            key: "wait_for_temp_on_wipe_tower",
+          },
+        ],
       },
       {
-        "title": "Belt purge tower",
-        "icon": "param_tower",
-        "rows": [
+        title: "Belt purge tower",
+        icon: "param_tower",
+        rows: [
           {
-            "kind": "option",
-            "key": "enable_belt_purge_tower"
-          }
-        ]
+            kind: "option",
+            key: "enable_belt_purge_tower",
+          },
+        ],
       },
       {
-        "title": "Single extruder multi-material parameters",
-        "icon": "param_settings",
-        "rows": [
+        title: "Single extruder multi-material parameters",
+        icon: "param_settings",
+        rows: [
           {
-            "kind": "option",
-            "key": "cooling_tube_retraction"
+            kind: "option",
+            key: "cooling_tube_retraction",
           },
           {
-            "kind": "option",
-            "key": "cooling_tube_length"
+            kind: "option",
+            key: "cooling_tube_length",
           },
           {
-            "kind": "option",
-            "key": "parking_pos_retraction"
+            kind: "option",
+            key: "parking_pos_retraction",
           },
           {
-            "kind": "option",
-            "key": "extra_loading_move"
+            kind: "option",
+            key: "extra_loading_move",
           },
           {
-            "kind": "option",
-            "key": "high_current_on_filament_swap"
-          }
-        ]
+            kind: "option",
+            key: "high_current_on_filament_swap",
+          },
+        ],
       },
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_load_filament_time"
+            kind: "option",
+            key: "machine_load_filament_time",
           },
           {
-            "kind": "option",
-            "key": "machine_unload_filament_time"
+            kind: "option",
+            key: "machine_unload_filament_time",
           },
           {
-            "kind": "option",
-            "key": "machine_tool_change_time"
-          }
-        ]
+            kind: "option",
+            key: "machine_tool_change_time",
+          },
+        ],
       },
       {
-        "title": "IDEX/IQEX Configuration",
-        "icon": "param_advanced",
-        "rows": [
+        title: "IDEX/IQEX Configuration",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "is_imex"
+            kind: "option",
+            key: "is_imex",
           },
           {
-            "kind": "option",
-            "key": "imex_firmware_managed_zones"
+            kind: "option",
+            key: "imex_firmware_managed_zones",
           },
           {
-            "kind": "option",
-            "key": "imex_gantry_count"
+            kind: "option",
+            key: "imex_gantry_count",
           },
           {
-            "kind": "option",
-            "key": "imex_tools_per_gantry"
+            kind: "option",
+            key: "imex_tools_per_gantry",
           },
           {
-            "kind": "option",
-            "key": "imex_tool_layout"
+            kind: "option",
+            key: "imex_tool_layout",
           },
           {
-            "kind": "option",
-            "key": "imex_nozzle_clearance_x"
+            kind: "option",
+            key: "imex_nozzle_clearance_x",
           },
           {
-            "kind": "option",
-            "key": "imex_nozzle_clearance_y"
+            kind: "option",
+            key: "imex_nozzle_clearance_y",
           },
           {
-            "kind": "option",
-            "key": "imex_carriage_margin"
+            kind: "option",
+            key: "imex_carriage_margin",
           },
           {
-            "kind": "option",
-            "key": "imex_viz_theme"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "imex_viz_theme",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Extruder",
-    "groups": [
+    title: "Extruder",
+    groups: [
       {
-        "title": "Basic information",
-        "icon": "param_information",
-        "rows": [
+        title: "Basic information",
+        icon: "param_information",
+        rows: [
           {
-            "kind": "option",
-            "key": "nozzle_diameter"
+            kind: "option",
+            key: "nozzle_diameter",
           },
           {
-            "kind": "option",
-            "key": "nozzle_type"
+            kind: "option",
+            key: "nozzle_type",
           },
           {
-            "kind": "option",
-            "key": "nozzle_volume"
+            kind: "option",
+            key: "nozzle_volume",
           },
           {
-            "kind": "option",
-            "key": "extruder_printable_height"
+            kind: "option",
+            key: "extruder_printable_height",
           },
           {
-            "kind": "option",
-            "key": "extruder_printable_area",
-            "full": true
+            kind: "option",
+            key: "extruder_printable_area",
+            full: true,
           },
           {
-            "kind": "option",
-            "key": "extruder_bed_exclude_volumes",
-            "full": true
-          }
-        ]
+            kind: "option",
+            key: "extruder_bed_exclude_volumes",
+            full: true,
+          },
+        ],
       },
       {
-        "title": "Layer height limits",
-        "icon": "param_layer_height",
-        "rows": [
+        title: "Layer height limits",
+        icon: "param_layer_height",
+        rows: [
           {
-            "kind": "option",
-            "key": "min_layer_height"
+            kind: "option",
+            key: "min_layer_height",
           },
           {
-            "kind": "option",
-            "key": "max_layer_height"
-          }
-        ]
+            kind: "option",
+            key: "max_layer_height",
+          },
+        ],
       },
       {
-        "title": "Position",
-        "icon": "param_position",
-        "rows": [
+        title: "Position",
+        icon: "param_position",
+        rows: [
           {
-            "kind": "option",
-            "key": "extruder_offset"
-          }
-        ]
+            kind: "option",
+            key: "extruder_offset",
+          },
+        ],
       },
       {
-        "title": "Retraction when switching material",
-        "icon": "param_retraction_material_change",
-        "rows": [
+        title: "Retraction when switching material",
+        icon: "param_retraction_material_change",
+        rows: [
           {
-            "kind": "option",
-            "key": "retract_length_toolchange"
+            kind: "option",
+            key: "retract_length_toolchange",
           },
           {
-            "kind": "option",
-            "key": "retract_restart_extra_toolchange"
+            kind: "option",
+            key: "retract_restart_extra_toolchange",
           },
           {
-            "kind": "option",
-            "key": "long_retractions_when_cut"
+            kind: "option",
+            key: "long_retractions_when_cut",
           },
           {
-            "kind": "option",
-            "key": "retraction_distances_when_cut"
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "retraction_distances_when_cut",
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Motion ability",
-    "groups": [
+    title: "Motion ability",
+    groups: [
       {
-        "title": "Advanced",
-        "icon": "param_advanced",
-        "rows": [
+        title: "Advanced",
+        icon: "param_advanced",
+        rows: [
           {
-            "kind": "option",
-            "key": "emit_machine_limits_to_gcode"
-          }
-        ]
+            kind: "option",
+            key: "emit_machine_limits_to_gcode",
+          },
+        ],
       },
       {
-        "title": "Resonance Compensation",
-        "icon": "param_resonance_avoidance",
-        "rows": [
+        title: "Resonance Compensation",
+        icon: "param_resonance_avoidance",
+        rows: [
           {
-            "kind": "option",
-            "key": "resonance_avoidance"
+            kind: "option",
+            key: "resonance_avoidance",
           },
           {
-            "kind": "line",
-            "label": "Resonance Avoidance Speed",
-            "options": [
+            kind: "line",
+            label: "Resonance Avoidance Speed",
+            options: [
               {
-                "key": "min_resonance_avoidance_speed"
+                key: "min_resonance_avoidance_speed",
               },
               {
-                "key": "max_resonance_avoidance_speed"
-              }
-            ]
+                key: "max_resonance_avoidance_speed",
+              },
+            ],
           },
           {
-            "kind": "option",
-            "key": "input_shaping_emit"
+            kind: "option",
+            key: "input_shaping_emit",
           },
           {
-            "kind": "option",
-            "key": "input_shaping_type"
+            kind: "option",
+            key: "input_shaping_type",
           },
           {
-            "kind": "line",
-            "label": "Frequency",
-            "options": [
+            kind: "line",
+            label: "Frequency",
+            options: [
               {
-                "key": "input_shaping_freq_x"
+                key: "input_shaping_freq_x",
               },
               {
-                "key": "input_shaping_freq_y"
-              }
-            ]
+                key: "input_shaping_freq_y",
+              },
+            ],
           },
           {
-            "kind": "line",
-            "label": "Damping",
-            "options": [
+            kind: "line",
+            label: "Damping",
+            options: [
               {
-                "key": "input_shaping_damp_x"
+                key: "input_shaping_damp_x",
               },
               {
-                "key": "input_shaping_damp_y"
-              }
-            ]
-          }
-        ]
+                key: "input_shaping_damp_y",
+              },
+            ],
+          },
+        ],
       },
       {
-        "title": "Speed limitation",
-        "icon": "param_speed",
-        "rows": [
+        title: "Speed limitation",
+        icon: "param_speed",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_max_speed_x",
-            "index": 0
+            kind: "option",
+            key: "machine_max_speed_x",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_speed_y",
-            "index": 0
+            kind: "option",
+            key: "machine_max_speed_y",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_speed_z",
-            "index": 0
+            kind: "option",
+            key: "machine_max_speed_z",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_speed_e",
-            "index": 0
-          }
-        ]
+            kind: "option",
+            key: "machine_max_speed_e",
+            index: 0,
+          },
+        ],
       },
       {
-        "title": "Acceleration limitation",
-        "icon": "param_acceleration",
-        "rows": [
+        title: "Acceleration limitation",
+        icon: "param_acceleration",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_x",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_x",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_y",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_y",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_z",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_z",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_e",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_e",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_extruding",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_extruding",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_retracting",
-            "index": 0
+            kind: "option",
+            key: "machine_max_acceleration_retracting",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_acceleration_travel",
-            "index": 0
-          }
-        ]
+            kind: "option",
+            key: "machine_max_acceleration_travel",
+            index: 0,
+          },
+        ],
       },
       {
-        "title": "Jerk limitation",
-        "icon": "param_jerk",
-        "rows": [
+        title: "Jerk limitation",
+        icon: "param_jerk",
+        rows: [
           {
-            "kind": "option",
-            "key": "machine_max_junction_deviation",
-            "index": 0
+            kind: "option",
+            key: "machine_max_junction_deviation",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_jerk_x",
-            "index": 0
+            kind: "option",
+            key: "machine_max_jerk_x",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_jerk_y",
-            "index": 0
+            kind: "option",
+            key: "machine_max_jerk_y",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_jerk_z",
-            "index": 0
+            kind: "option",
+            key: "machine_max_jerk_z",
+            index: 0,
           },
           {
-            "kind": "option",
-            "key": "machine_max_jerk_e",
-            "index": 0
-          }
-        ]
-      }
-    ]
+            kind: "option",
+            key: "machine_max_jerk_e",
+            index: 0,
+          },
+        ],
+      },
+    ],
   },
   {
-    "title": "Notes",
-    "groups": [
+    title: "Notes",
+    groups: [
       {
-        "title": "Notes",
-        "icon": "note",
-        "rows": [
+        title: "Notes",
+        icon: "note",
+        rows: [
           {
-            "kind": "option",
-            "key": "printer_notes",
-            "full": true
-          }
-        ]
-      }
-    ]
-  }
+            kind: "option",
+            key: "printer_notes",
+            full: true,
+          },
+        ],
+      },
+    ],
+  },
 ];

@@ -10,7 +10,11 @@ import { project, Section } from "./Section";
 import { firstString } from "./options";
 
 /** Compatible names of one kind, imported ones under "User presets" and the rest under "System presets". */
-function compatibleGroups(compatible: CompatibleState | null, names: "processes" | "filaments", user: Set<string>): PresetGroup[] {
+function compatibleGroups(
+  compatible: CompatibleState | null,
+  names: "processes" | "filaments",
+  user: Set<string>,
+): PresetGroup[] {
   if (compatible?.status !== "done") return [];
   const all = compatible.presets[names];
   return [
@@ -31,28 +35,41 @@ export function ProcessSection({ settings }: { settings: ProjectSettings | null 
   const selection = useApp((state) => state.presetSelection);
   const compatible = useApp((state) => state.compatible);
   const typed = useApp((state) => state.typedSettings);
-  const process = firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
+  const process =
+    firstString(settings?.process, "print_settings_id") ?? firstString(settings?.project, "print_settings_id");
   return (
     // ParamsPanel top panel: the process tab's ModeSwitchButton (ParamsPanel.cpp:281).
     <Section icon={<OrcaIcon name="process" />} title="Process" action={<ModeSwitch />}>
       {selection ? (
         <>
-          <PresetCombo label="Process preset" value={selection.process} placeholder="Select a process preset"
+          <PresetCombo
+            label="Process preset"
+            value={selection.process}
+            placeholder="Select a process preset"
             groups={compatibleGroups(compatible, "processes", importedNames(imports, "process"))}
-            onSelect={(name) => void selectProcess(name)} />
+            onSelect={(name) => void selectProcess(name)}
+          />
           {scene && presetSliceBlocker(selection, scene) && (
-            <div className="side-empty" data-testid="preset-slice-blocker">{presetSliceBlocker(selection, scene)}.</div>
+            <div className="side-empty" data-testid="preset-slice-blocker">
+              {presetSliceBlocker(selection, scene)}.
+            </div>
           )}
           <PresetProcessSettings selection={selection} />
         </>
       ) : (
         <>
-          <PresetCombo label="Process preset" value={process} groups={[project(process)]} placeholder="No process preset" />
-          <ProcessSettings values={settings && typed && tabValues(settings, typed, "process")}
-            empty="Settings appear after importing a 3MF project" />
+          <PresetCombo
+            label="Process preset"
+            value={process}
+            groups={[project(process)]}
+            placeholder="No process preset"
+          />
+          <ProcessSettings
+            values={settings && typed && tabValues(settings, typed, "process")}
+            empty="Settings appear after importing a 3MF project"
+          />
         </>
       )}
     </Section>
   );
 }
-

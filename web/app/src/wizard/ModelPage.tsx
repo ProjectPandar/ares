@@ -3,7 +3,13 @@ import { useEffect, useRef, useState } from "react";
 
 /** CreateVendorBlock's banner name (guide/21/common.js:269-277). */
 const vendorTitle = (vendor: string) =>
-  vendor === "BBL" ? "Bambu Lab" : vendor === "Custom" ? "Custom Printer" : vendor === "Other" ? "Orca colosseum" : vendor;
+  vendor === "BBL"
+    ? "Bambu Lab"
+    : vendor === "Custom"
+      ? "Custom Printer"
+      : vendor === "Other"
+        ? "Orca colosseum"
+        : vendor;
 
 /** CreatePrinterBlock's card name (common.js:292-309): the model name without its vendor prefix. */
 function modelTitle({ vendor, name }: GuideModel) {
@@ -28,7 +34,12 @@ function matchesSearch({ name, vendor }: GuideModel, search: string) {
   return (search.toLowerCase().match(/\S+/g) ?? []).every((keyword) => text.includes(keyword));
 }
 
-function VendorBlock({ vendor, models, checked, onChange }: {
+function VendorBlock({
+  vendor,
+  models,
+  checked,
+  onChange,
+}: {
   vendor: string;
   models: GuideModel[];
   checked: ReadonlySet<string>;
@@ -55,19 +66,32 @@ function VendorBlock({ vendor, models, checked, onChange }: {
       <header className="wizard-vendor-banner">
         <h3>{vendorTitle(vendor)}</h3>
         <label className="wizard-vendor-check">
-          <span className="wizard-count">{count} / {models.length}</span>
-          <input ref={box} type="checkbox" aria-label={`All ${vendorTitle(vendor)} models`}
-            checked={count > 0 && count === models.length} onChange={chooseVendor} />
+          <span className="wizard-count">
+            {count} / {models.length}
+          </span>
+          <input
+            ref={box}
+            type="checkbox"
+            aria-label={`All ${vendorTitle(vendor)} models`}
+            checked={count > 0 && count === models.length}
+            onChange={chooseVendor}
+          />
         </label>
       </header>
       <div className="wizard-models">
         {models.map((model) => (
           <label key={model.model} className="wizard-model" title={model.name}>
             <img className="wizard-cover" src={`${import.meta.env.BASE_URL}printer-dummy.png`} alt="" />
-            <span className="wizard-nozzle">Nozzle <span>{model.variants.join(" · ")}</span></span>
+            <span className="wizard-nozzle">
+              Nozzle <span>{model.variants.join(" · ")}</span>
+            </span>
             <span className="wizard-model-name">
-              <input type="checkbox" aria-label={model.name} checked={checked.has(model.model)}
-                onChange={(event) => onChange(set(model.model, event.target.checked, new Set(checked)))} />
+              <input
+                type="checkbox"
+                aria-label={model.name}
+                checked={checked.has(model.model)}
+                onChange={(event) => onChange(set(model.model, event.target.checked, new Set(checked)))}
+              />
               {modelTitle(model)}
             </span>
           </label>
@@ -78,7 +102,11 @@ function VendorBlock({ vendor, models, checked, onChange }: {
 }
 
 /** Printer Selection, guide pages 21 and 24: the vendor sidebar, the search and one block per vendor. */
-export function ModelPage({ models, checked, onChange }: {
+export function ModelPage({
+  models,
+  checked,
+  onChange,
+}: {
   models: readonly GuideModel[];
   checked: ReadonlySet<string>;
   onChange: (checked: ReadonlySet<string>) => void;
@@ -87,11 +115,13 @@ export function ModelPage({ models, checked, onChange }: {
   const content = useRef<HTMLDivElement>(null);
   const byVendor = new Map<string, GuideModel[]>();
   for (const model of models) {
-    if (matchesSearch(model, search)) byVendor.set(model.vendor, [...byVendor.get(model.vendor) ?? [], model]);
+    if (matchesSearch(model, search)) byVendor.set(model.vendor, [...(byVendor.get(model.vendor) ?? []), model]);
   }
   // scrollToVendor (common.js:328-334).
   const scrollTo = (vendor: string) =>
-    content.current!.querySelector<HTMLElement>(`[data-vendor="${CSS.escape(vendor)}"]`)!.scrollIntoView({ behavior: "smooth" });
+    content
+      .current!.querySelector<HTMLElement>(`[data-vendor="${CSS.escape(vendor)}"]`)!
+      .scrollIntoView({ behavior: "smooth" });
   return (
     <div className="wizard-printers">
       <nav className="wizard-sidebar" aria-label="Vendors">
@@ -103,8 +133,14 @@ export function ModelPage({ models, checked, onChange }: {
         ))}
       </nav>
       <div className="wizard-content">
-        <input type="search" className="filament-column-search wizard-search" aria-label="Search printers" placeholder="Search"
-          value={search} onChange={(event) => setSearch(event.target.value)} />
+        <input
+          type="search"
+          className="filament-column-search wizard-search"
+          aria-label="Search printers"
+          placeholder="Search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
         <div ref={content} className="wizard-vendors">
           {[...byVendor].map(([vendor, listed]) => (
             <VendorBlock key={vendor} vendor={vendor} models={listed} checked={checked} onChange={onChange} />

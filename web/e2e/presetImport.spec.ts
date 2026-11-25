@@ -47,7 +47,10 @@ const expected = JSON.parse(
 /** Names of a combo's group, in list order; Escape closes the list. */
 async function groupOptions(page: Page, combo: string, group: string) {
   await page.getByRole("button", { name: combo, exact: true }).click();
-  const options = page.getByRole("listbox", { name: combo, exact: true }).getByRole("group", { name: group }).getByRole("option");
+  const options = page
+    .getByRole("listbox", { name: combo, exact: true })
+    .getByRole("group", { name: group })
+    .getByRole("option");
   const names = await options.allTextContents();
   await page.keyboard.press("Escape");
   return names;
@@ -78,14 +81,21 @@ const ordinal = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 function systemPrinters(vendor: string) {
   const readJson = (path: string) => JSON.parse(readFileSync(join(orca, "resources/profiles", path), "utf8"));
   const index = readJson(`${vendor}.json`) as { machine_list: { sub_path: string }[] };
-  const machines = new Map(index.machine_list.map(({ sub_path }) => {
-    const machine = readJson(`${vendor}/${sub_path}`) as Record<string, string>;
-    return [machine.name, machine];
-  }));
-  const field = (name: string, key: string): string => machines.get(name)![key] ?? field(machines.get(name)!.inherits, key);
-  return [...machines.values()].filter((machine) => machine.instantiation === "true").map(({ name }) => ({
-    name, printer_model: field(name, "printer_model"), printer_variant: field(name, "printer_variant"),
-  }));
+  const machines = new Map(
+    index.machine_list.map(({ sub_path }) => {
+      const machine = readJson(`${vendor}/${sub_path}`) as Record<string, string>;
+      return [machine.name, machine];
+    }),
+  );
+  const field = (name: string, key: string): string =>
+    machines.get(name)![key] ?? field(machines.get(name)!.inherits, key);
+  return [...machines.values()]
+    .filter((machine) => machine.instantiation === "true")
+    .map(({ name }) => ({
+      name,
+      printer_model: field(name, "printer_model"),
+      printer_variant: field(name, "printer_variant"),
+    }));
 }
 
 /**
@@ -96,14 +106,16 @@ function systemPrinters(vendor: string) {
  * the model. Then the first candidate with the old variant (:3773-3779), else the first by name (:3781).
  */
 function similarSystemPrinter(vendor: string, model: string, variantOld: string) {
-  const candidates = systemPrinters(vendor).filter((printer) => printer.printer_model === model)
+  const candidates = systemPrinters(vendor)
+    .filter((printer) => printer.printer_model === model)
     .sort((a, b) => ordinal(a.name, b.name));
   return (candidates.find((printer) => printer.printer_variant === variantOld) ?? candidates[0]).name;
 }
 
 const timings = (page: Page) =>
   page.evaluate(() =>
-    performance.getEntriesByType("measure")
+    performance
+      .getEntriesByType("measure")
       .filter((entry) => entry.name.startsWith("ares:"))
       .map(({ name, duration }) => ({ name, duration })),
   );
@@ -126,11 +138,13 @@ test("imported printer presets list the compatible processes and filaments", asy
   await expect(sliceButton).toBeEnabled();
 
   // MainFrame::load_config_file: File > Import > Import Configs.
-  await page.getByTestId("preset-import-input").setInputFiles(
-    [expected.bundle, expected.filament].map((name) => `${repositoryRoot}tests/presets/${name}`),
-  );
+  await page
+    .getByTestId("preset-import-input")
+    .setInputFiles([expected.bundle, expected.filament].map((name) => `${repositoryRoot}tests/presets/${name}`));
   // The input change starts importPresetFiles without waiting for it; the worker parses the files after.
-  await expect.poll(() => groupOptions(page, "Printer preset", "User presets"), { timeout: 30_000 }).toEqual([expected.printer]);
+  await expect
+    .poll(() => groupOptions(page, "Printer preset", "User presets"), { timeout: 30_000 })
+    .toEqual([expected.printer]);
   expect(await groupOptions(page, "Printer preset", "Project presets")).toEqual([projectPrinter]);
 
   // No system vendor installed: the engine's missing-parent error, verbatim.
@@ -158,8 +172,8 @@ test("imported printer presets list the compatible processes and filaments", asy
   expect(await groupOptions(page, "Printer preset", "System presets")).toEqual(systemPrinterModels("BBL"));
 
   const processes = [
-    ...await groupOptions(page, "Process preset", "User presets"),
-    ...await groupOptions(page, "Process preset", "System presets"),
+    ...(await groupOptions(page, "Process preset", "User presets")),
+    ...(await groupOptions(page, "Process preset", "System presets")),
   ];
   expect(processes.sort()).toEqual([...expected.withoutProcess.processes].sort());
   await expect(page.getByTestId("preset-diagnostics")).toHaveCount(expected.withoutProcess.diagnostics.length ? 1 : 0);
@@ -167,17 +181,21 @@ test("imported printer presets list the compatible processes and filaments", asy
   const missingParents = page.getByTestId("preset-missing-parents");
   await missingParents.locator("summary").click();
   await expect(missingParents.getByRole("listitem")).toHaveText(
-    expected.withoutProcess.missing_parents.map(({ kind, name, parent }) => `${name} (${kind}): parent preset "${parent}" is not loaded`),
+    expected.withoutProcess.missing_parents.map(
+      ({ kind, name, parent }) => `${name} (${kind}): parent preset "${parent}" is not loaded`,
+    ),
   );
   await page.screenshot({ path: `${artifacts}missing-parents.png` });
   // update_compatible(Always) selects the print (PresetBundle.cpp:8635-8639): with no previous print,
   // the inherited default_print_profile of the imported printer's parent.
-  await expect(page.getByRole("button", { name: "Process preset", exact: true }))
-    .toHaveText(defaultPrint("Bambu Lab X1 Carbon 0.4 nozzle"));
+  await expect(page.getByRole("button", { name: "Process preset", exact: true })).toHaveText(
+    defaultPrint("Bambu Lab X1 Carbon 0.4 nozzle"),
+  );
   // The filament pass of the same call filled the slot (Tab.cpp:7702-7713, PresetBundle.cpp:8637, 8656-8664),
   // so nothing blocks the slice.
-  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true }))
-    .toHaveText(defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"));
+  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true })).toHaveText(
+    defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"),
+  );
   await expect(sliceButton).toBeEnabled();
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
   await page.getByRole("button", { name: "Process preset", exact: true }).click();
@@ -187,8 +205,8 @@ test("imported printer presets list the compatible processes and filaments", asy
   await choose(page, "Process preset", expected.process);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   const filaments = [
-    ...await groupOptions(page, "Filament 1 preset", "User presets"),
-    ...await groupOptions(page, "Filament 1 preset", "System presets"),
+    ...(await groupOptions(page, "Filament 1 preset", "User presets")),
+    ...(await groupOptions(page, "Filament 1 preset", "System presets")),
   ];
   // The combo lists the compatible filaments that are visible (PresetComboBoxes.cpp:1179-1187): user
   // presets and the installed system ones, seeded from the printer models' default materials.
@@ -197,11 +215,16 @@ test("imported printer presets list the compatible processes and filaments", asy
   expect(filaments.sort()).toEqual([...visible].sort());
   // update_compatible(Always) on the printer change (Tab.cpp:7702-7713) filled the empty slot with the
   // printer's preferred default_filament_profile (PresetBundle.cpp:8637, 8656-8664).
-  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true }))
-    .toHaveText(defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"));
+  await expect(page.getByRole("button", { name: "Filament 1 preset", exact: true })).toHaveText(
+    defaultFilament("Bambu Lab X1 Carbon 0.4 nozzle"),
+  );
   await expect(sliceButton).toBeEnabled();
   // The imported PLA: Cool Plate, the 3MF plate, supports it.
-  await choose(page, "Filament 1 preset", visible.find((name) => !bbl.filaments.has(name))!);
+  await choose(
+    page,
+    "Filament 1 preset",
+    visible.find((name) => !bbl.filaments.has(name))!,
+  );
   // A 3MF with every preset selected slices through sliceWithProfiles.
   await expect(sliceButton).toBeEnabled();
   await expect(page.getByTestId("preset-slice-blocker")).toHaveCount(0);
@@ -238,16 +261,23 @@ test("imported printer presets list the compatible processes and filaments", asy
   await expect(page.getByRole("button", { name: "Printer preset", exact: true })).toHaveAttribute("title", resolved);
   await expect(page.getByTestId("preset-error")).toHaveCount(0);
   await page.screenshot({ path: `${artifacts}printer-model.png` });
-  writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    vendors: ["BBL", "OrcaFilamentLibrary"],
-    printer: expected.printer,
-    printerModel: { model, resolved },
-    processes: processes.length,
-    filaments: filaments.length,
-    missingParents: expected.withoutProcess.missing_parents,
-    // Without BBL, with BBL; and the filters without BBL, with BBL, with BBL and a process.
-    catalogBuildMs: build.map((entry) => entry.duration),
-    filterMs: filter.map((entry) => entry.duration),
-  }, null, 2)}\n`);
+  writeFileSync(
+    `${artifacts}result.json`,
+    `${JSON.stringify(
+      {
+        vendors: ["BBL", "OrcaFilamentLibrary"],
+        printer: expected.printer,
+        printerModel: { model, resolved },
+        processes: processes.length,
+        filaments: filaments.length,
+        missingParents: expected.withoutProcess.missing_parents,
+        // Without BBL, with BBL; and the filters without BBL, with BBL, with BBL and a process.
+        catalogBuildMs: build.map((entry) => entry.duration),
+        filterMs: filter.map((entry) => entry.duration),
+      },
+      null,
+      2,
+    )}\n`,
+  );
   expect(errors).toEqual([]);
 });

@@ -22,7 +22,8 @@ function inRange(def: ConfigOptionDef, value: number) {
   return min <= value && value <= max;
 }
 
-const clamp = (def: ConfigOptionDef, value: number) => Math.min(Math.max(value, def.min ?? -FLT_MAX), def.max ?? FLT_MAX);
+const clamp = (def: ConfigOptionDef, value: number) =>
+  Math.min(Math.max(value, def.min ?? -FLT_MAX), def.max ?? FLT_MAX);
 
 /**
  * Text of a decoded number (`get_config_value`, OptionsGroup.cpp:941-1065): TextCtrls show
@@ -35,10 +36,12 @@ export const typedText = (textCtrl: boolean, value: number | null) =>
 export const coordinateText = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2));
 
 /** `get_thumbnails_string` (Field.cpp:78-86): `%ix%i` points joined by ", ". */
-export const thumbnailsText = (points: [number, number][]) => points.map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
+export const thumbnailsText = (points: [number, number][]) =>
+  points.map(([x, y]) => `${Math.trunc(x)}x${Math.trunc(y)}`).join(", ");
 
 /** Text a `TextCtrl` shows for a serialized value (`get_config_value`, OptionsGroup.cpp:1013-1015). */
-export const displayText = (def: ConfigOptionDef, value: string) => (def.type === "percent" ? value.replace(/%$/, "") : value);
+export const displayText = (def: ConfigOptionDef, value: string) =>
+  def.type === "percent" ? value.replace(/%$/, "") : value;
 
 /**
  * `Field::get_value_by_opt_type` (Field.cpp:313-450) for the scalar types this UI edits:
@@ -63,7 +66,10 @@ export function commitText(def: ConfigOptionDef, text: string, label: string): C
       let str = text;
       if (def.type === "percent" && str.endsWith("%")) str = str.slice(0, -1);
       else if (str.endsWith("%")) {
-        return { value: doubleToString(def.min ?? -FLT_MAX), error: `${def.full_label ?? label} can't be a percentage` };
+        return {
+          value: doubleToString(def.min ?? -FLT_MAX),
+          error: `${def.full_label ?? label} can't be a percentage`,
+        };
       }
       str = str.replace(",", ".");
       let error: string | undefined;
