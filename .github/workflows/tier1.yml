@@ -188,6 +188,8 @@ jobs:
           cargo nextest archive -p ares-cli --test orca_parity \
             --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
           ls -lh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+          bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-official 8
+          bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-seeded 8
       - uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/parity-archive
@@ -275,7 +277,9 @@ jobs:
         if: steps.web-deps.outputs.cache-hit != 'true'
         run: bun install --cwd web --frozen-lockfile
       - name: Build CLI, WASM, web app, verify metadata, and pack bundle
-        run: bash scripts/ci/run-web-build.sh
+        run: |
+          bash scripts/ci/run-web-build.sh
+          bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
       - uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/web-bundle
@@ -297,25 +301,34 @@ jobs:
             --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/streaming"
 
   web-desktop:
-    name: web-desktop (${{ matrix.shard }}/2)
+    name: web-desktop (${{ matrix.shard }}/4)
     needs: web-build
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: ./.github/actions/setup-web-shard
         with:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
           browsers: chromium
           ghcr-token: ${{ github.token }}
-      - name: Run desktop E2E shard ${{ matrix.shard }}/2
-        run: |
-          bunx --cwd web playwright test --config playwright.config.ts --project desktop \
-            --workers 1 --retries 0 --shard="${{ matrix.shard }}/2" \
-            --output "$RUNNER_TEMP/web-results/desktop-${{ matrix.shard }}"
+      - name: Restore main web E2E timing baseline
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/web-timings
+          key: web-desktop-timings-main-${{ github.sha }}
+          restore-keys: web-desktop-timings-main-
+      - name: Run timing-balanced desktop E2E shard ${{ matrix.shard }}/4
+        run: bash scripts/ci/run-web-desktop-shard.sh "${{ matrix.shard }}" 4
+      - name: Save updated web E2E timings on main/merge_group
+        if: github.event_name == 'merge_group' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/web-timings
+          key: web-desktop-timings-main-${{ github.sha }}-shard-${{ matrix.shard }}
 
   web-packages-mobile:
     needs: web-build
