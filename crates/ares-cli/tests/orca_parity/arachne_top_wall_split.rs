@@ -12,6 +12,21 @@ const MK4_STOCK: &[u8] =
     include_bytes!("../../../../tests/parity/arachne-top-wall-split/mk4-stock.3mf");
 const MK4_SINGLE_TOP_WALL: &[u8] =
     include_bytes!("../../../../tests/parity/arachne-top-wall-split/mk4-single-top-wall.3mf");
+const STEPPED_RIB_ALL_WALLS: &[u8] = include_bytes!(
+    "../../../../tests/parity/arachne-top-wall-inset-depth/stepped-rib-all-walls.3mf"
+);
+const STEPPED_RIB_SINGLE_TOP_WALL: &[u8] = include_bytes!(
+    "../../../../tests/parity/arachne-top-wall-inset-depth/stepped-rib-single-top-wall.3mf"
+);
+
+#[test]
+fn arachne_orders_regenerated_top_wall_paths_from_the_innermost_depth() {
+    compare(
+        "stepped-rib",
+        "2",
+        [STEPPED_RIB_ALL_WALLS, STEPPED_RIB_SINGLE_TOP_WALL],
+    );
+}
 
 #[test]
 fn guider_arachne_keeps_walls_outside_single_wall_top_surfaces() {
