@@ -30,6 +30,7 @@ import type { PrintConfigDef } from "./configDef.js";
 import { applyEdit } from "./platerEdit.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { ActualSpeedProfile, ColorRange, MovesSlider, MovesView, SliceResult, Toolpaths, ViewColors, ViewRange } from "./toolpaths.js";
+import { colorsProbe, packTextures, prepareViewerTextures } from "./toolpathTextures.js";
 import type { Scene } from "./types.js";
 import { handlePlaterSource } from "./workerPlaterSource.js";
 import { crash, trapped } from "./workerCrash.js";
@@ -116,12 +117,14 @@ function processedResult(output: SliceOutput): [SliceResult, Transferable[]] {
       segmentAngles: arrays.segmentAngles,
       travelsTime: vertices.travelsTime,
       estimatedTime: vertices.estimatedTime,
+      textures: packTextures(vertices, arrays),
     };
-    const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes, heightsWidths, segmentPositions, segmentAngles } = toolpaths;
+    const { values, ids, tags, options, moveTypeCounts, colors, roleColors: roles, optionColors: optionRgb, layerZs, extrusionRoles, extrusionRoleTimes, heightsWidths, segmentPositions, segmentAngles, textures } = toolpaths;
     const result: [SliceResult, Transferable[]] = [
       { gcode, toolpaths },
       [gcode.buffer, values.buffer, ids.buffer, tags.buffer, options.buffer, moveTypeCounts.buffer, colors.buffer, roles.buffer, optionRgb.buffer, layerZs.buffer,
-        extrusionRoles.buffer, extrusionRoleTimes.buffer, heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer],
+        extrusionRoles.buffer, extrusionRoleTimes.buffer, heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer,
+        ...(textures ? [textures.positions.buffer, textures.heightsWidthsAngles.buffer, textures.segments.buffer] : [])],
     ];
     replaceViewer(vertices);
     retained = true;
@@ -341,9 +344,12 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { viewType, visibleRoles, visibleOptions } = request;
       const colors = readColors(viewer, viewType, visibleRoles, visibleOptions);
-      const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null };
+      const value: ViewColors = { colors, range: JSON.parse(viewer.colorRange(viewType)) as ColorRange | null, colorsProbe: colorsProbe(viewer, colors) };
       return [value, [colors.buffer]];
     }
+    case "prepareViewerTextures":
+      prepareViewerTextures(request.maxTextureSize);
+      return [undefined, []];
     case "movesSlider": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");
       const { layers, visibleRoles, visibleOptions, higher } = request;
@@ -365,6 +371,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
         colors: readColors(viewer, viewType, visibleRoles, visibleOptions),
         marker: null,
       };
+      value.colorsProbe = colorsProbe(viewer, value.colors);
       const [vertex, windowVertex] = viewer.toolMarker();
       // Runs on every range change, as update_sequential_view_current does, shown or not.
       const actualSpeed = JSON.parse(viewer.actualSpeedProfile()) as ActualSpeedProfile;

@@ -55,7 +55,7 @@ function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRole
     };
   }, [toolpaths, lineType, viewType, hiddenRoles, visibleOptions]);
   if (!toolpaths) return null;
-  if (lineType) return { colors: toolpaths.colors, range: null };
+  if (lineType) return { colors: toolpaths.colors, range: null, colorsProbe: toolpaths.textures!.probes.colors };
   return state?.toolpaths === toolpaths ? state.colors : null;
 }
 
@@ -80,7 +80,7 @@ export function PreviewPage() {
   return (
     <div className="page">
       <Sidebar />
-      <ViewportView toolpaths={toolpaths} colors={moves?.colors ?? colors?.colors ?? null} enabled={moves} view={live?.filter ?? view} fit="objects">
+      <ViewportView toolpaths={toolpaths} colors={moves ?? colors} enabled={moves} view={live?.filter ?? view} fit="objects">
         <div className="preview-card" data-testid="slice-summary">
           <div className="preview-card-title">Slice result</div>
           {slice.status === "done" ? (

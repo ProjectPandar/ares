@@ -307,3 +307,12 @@ export interface MissingParent {
   name: string;
   parent: string;
 }
+
+export interface AresSlicerOptions {
+  /** A module worker running `@ares-slicer/wasm/worker`. */
+  worker: Worker;
+  /** URL of `@ares-slicer/wasm/ares_wasm_bg.wasm`. */
+  wasmUrl: string | URL;
+  /** Called once with the HardCrash text when the module traps; every call fails with it from then on. */
+  onCrash?: (message: string) => void;
+}
