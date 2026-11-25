@@ -1,0 +1,89 @@
+# Builds and publishes the lean GHCR CI toolchain container images (`base` and
+# `browsers`) so daily PR and merge_group jobs skip toolchain/browser installs.
+name: Build CI Toolchain
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_versions:
+        description: Number of tagged GHCR toolchain versions per variant to retain
+        type: string
+        default: "3"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/ci/toolchain-image.env"
+      - "scripts/ci/toolchain-image.sh"
+      - "scripts/ci/ci-toolchain.Dockerfile"
+      - "rust-toolchain.toml"
+      - ".github/workflows/toolchain-build.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: toolchain-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
+      - name: Verify toolchain pins match repository manifests
+        run: bash scripts/ci/toolchain-image.sh verify-pins
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+      - name: Build and push base and browsers toolchain images
+        run: |
+          set -euo pipefail
+          source scripts/ci/toolchain-image.env
+          base_ref="$(bash scripts/ci/toolchain-image.sh ref base)"
+          browsers_ref="$(bash scripts/ci/toolchain-image.sh ref browsers)"
+          build_args=(
+            --build-arg "RUST_VERSION=${RUST_VERSION}"
+            --build-arg "WASM_BINDGEN_VERSION=${WASM_BINDGEN_VERSION}"
+            --build-arg "WASM_BINDGEN_SHA256=${WASM_BINDGEN_SHA256}"
+            --build-arg "NEXTEST_VERSION=${NEXTEST_VERSION}"
+            --build-arg "NEXTEST_SHA256=${NEXTEST_SHA256}"
+            --build-arg "BUN_CANARY_VERSION=${BUN_CANARY_VERSION}"
+            --build-arg "BUN_CANARY_REVISION=${BUN_CANARY_REVISION}"
+            --build-arg "BUN_CANARY_SHA256=${BUN_CANARY_SHA256}"
+            --build-arg "HK_VERSION=${HK_VERSION}"
+            --build-arg "HK_SHA256=${HK_SHA256}"
+            --build-arg "PLAYWRIGHT_VERSION=${PLAYWRIGHT_VERSION}"
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}"
+            --cache-from "type=gha,scope=ci-toolchain"
+            --cache-to "type=gha,mode=max,scope=ci-toolchain"
+          )
+          docker buildx build -f scripts/ci/ci-toolchain.Dockerfile --target base \
+            "${build_args[@]}" -t "$base_ref" --push .
+          docker buildx build -f scripts/ci/ci-toolchain.Dockerfile --target browsers \
+            "${build_args[@]}" -t "$browsers_ref" --push .
+          echo "Published $base_ref and $browsers_ref"
+      - name: Prune stale GHCR toolchain versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY%%/*}"
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          base_tag="$(bash scripts/ci/toolchain-image.sh tag base)"
+          browsers_tag="$(bash scripts/ci/toolchain-image.sh tag browsers)"
+          keep="${{ inputs.keep_versions || '3' }}"
+          # Keep both current variant tags plus up to 2*keep recent versions total.
+          bash scripts/ci/oracle-image.sh prune \
+            --owner "$owner" \
+            --package "${repo_name}/ci-toolchain" \
+            --keep "$(( keep * 2 ))" \
+            --keep-tag "$base_tag" || true
+          echo "Retained $base_tag and $browsers_tag"
