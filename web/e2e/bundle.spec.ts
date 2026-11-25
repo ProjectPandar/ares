@@ -3,6 +3,7 @@ import { gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { expect, type Route } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const dist = fileURLToPath(new URL("../app/dist/", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/bundle/", import.meta.url));
@@ -46,11 +47,11 @@ test("Three.js is a lazily loaded chunk outside the initial bundle", async ({ pa
     .filter((image) => !image.complete || image.naturalWidth === 0).map((image) => image.src)),
   { message: "every first-screen Orca icon loads" }).toEqual([]);
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId("viewport").locator("canvas")).toHaveCount(0);
+  await expect(shownTab(page).getByTestId("viewport").locator("canvas")).toHaveCount(0);
   await page.screenshot({ path: `${artifacts}shell-before-three.png` });
 
   release();
-  await expect(page.getByTestId("viewport").locator("canvas")).toBeVisible();
+  await expect(shownTab(page).getByTestId("viewport").locator("canvas")).toBeVisible();
   await page.screenshot({ path: `${artifacts}viewport-after-three.png` });
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({

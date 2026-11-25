@@ -8,6 +8,7 @@ import { moving, smallFonts, tabSweep } from "./a11y";
 import { chromiumLaunch } from "./chromiumLaunch";
 import { act, choose, type Input, PRESETS } from "./lhPresets";
 import { expectFits, expectNoOverlap, pinch, swipe, undersized } from "./touch";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
@@ -18,7 +19,7 @@ const MODEL = `${repositoryRoot}tests/parity/cube10.stl`;
  * began has been drawn and no other is requested.
  */
 async function watchFrames(page: Page) {
-  const viewport = (await page.getByTestId("viewport").elementHandle())!;
+  const viewport = (await shownTab(page).getByTestId("viewport").elementHandle())!;
   const frames = await page.waitForFunction((element) => {
     if (element.hasAttribute("data-drawing")) return null;
     const state = {
@@ -167,7 +168,7 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   if (touch) {
     const top = page.getByRole("slider", { name: "Top layer" });
     // Gestures start at the 3D view's centre, so no overlay may cover it.
-    const canvas = page.locator("[data-testid=viewport] canvas");
+    const canvas = shownTab(page).locator("[data-testid=viewport] canvas");
     await expectFits(page, [top, button("Export G-code file"), tab("Prepare"), canvas]);
     // Single-finger orbit and two-finger zoom on the 3D view change what it draws.
     const box = (await canvas.boundingBox())!;

@@ -71,6 +71,8 @@ a { color: var(--accent-ink); }
 
 /* Pages */
 .page { display: flex; height: 100%; min-height: 0; }
+/* A shown tab pane lays out as part of the page; a hidden one keeps its state. */
+.tab-pane:not([hidden]) { display: contents; }
 
 /* Status line */
 .statusbar {

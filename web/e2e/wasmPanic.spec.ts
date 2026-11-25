@@ -142,7 +142,7 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   }), RECOVERY_DB);
   expect(recoveryRecords).toBe(0);
 
-  await page.getByRole("button", { name: "Slice plate" }).click();
+  await page.getByRole("navigation").getByRole("button", { name: "Slice plate" }).click();
   await expect(status).toContainText("Slice complete", { timeout: 240_000 });
   await page.screenshot({ path: `${artifacts}recovered.png` });
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({ message: expected, before, after, fetched, recoveryRecords }, null, 2)}\n`);

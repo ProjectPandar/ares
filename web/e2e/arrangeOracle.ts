@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { oraclePath } from "./oracleEnv";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -72,7 +73,7 @@ type Probe = { objects: { name: string; instances: { printable: boolean; matrix:
  * (0-based) only that plate's instances, the other plates listed empty, as `--slice` exports them.
  */
 export async function appArranged(page: Page, plate?: number): Promise<Arranged> {
-  const probe = JSON.parse((await page.locator(".viewport").getAttribute("data-instances"))!) as Probe;
+  const probe = JSON.parse((await shownTab(page).locator(".viewport").getAttribute("data-instances"))!) as Probe;
   const kept = (object: number, instance: number) =>
     plate === undefined || probe.plates[plate].some(([o, i]) => o === object && i === instance);
   const items = probe.objects.flatMap(({ name, instances }, object) => instances.flatMap(({ printable, matrix }, instance): [string, number[], boolean][] =>

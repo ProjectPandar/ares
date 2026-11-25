@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { shownTab } from "./shownTab";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/toolpath-draw-workload/", import.meta.url));
@@ -123,7 +124,7 @@ test("a layer range change draws one segment instance per enabled segment and up
   await page.getByRole("button", { name: "Slice plate", exact: true }).click();
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 600_000 });
   await page.getByRole("link", { name: "Preview", exact: true }).click();
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   const busy = page.getByTestId("moves-slider");
   await expect(viewport).toHaveAttribute("data-segment-geometry", /^\d+:/, { timeout: 120_000 });
   await expect(busy).toHaveAttribute("aria-busy", "false", { timeout: 120_000 });

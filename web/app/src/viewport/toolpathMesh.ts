@@ -1,6 +1,7 @@
 import type { Toolpaths } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import type { PreviewView } from "../state/store";
+import { disposeGeometries } from "./dispose";
 import { fragmentShader, vertexShader } from "./segmentShader";
 
 /** The preview state the toolpath shaders filter by. */
@@ -16,17 +17,42 @@ function vertexTexture(data: Float32Array | Uint8Array, [width, height]: [number
   return texture;
 }
 
+const VERTEX_TEXTURES = ["position_tex", "height_width_angle_tex", "color_tex"] as const;
+
+/**
+ * The segment material, built once per context as `ViewerImpl::init` compiles the segment program
+ * once (`ViewerImpl.cpp:790-867`); each mesh sets its textures.
+ */
+export function toolpathMaterial() {
+  return new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    vertexShader,
+    fragmentShader,
+    // Face culling is off while drawing segments (`ViewerImpl.cpp:1929,1942`).
+    side: THREE.DoubleSide,
+    uniforms: {
+      position_tex: { value: null },
+      height_width_angle_tex: { value: null },
+      color_tex: { value: null },
+      uLayers: { value: new THREE.Vector2(0, 0) },
+      uHiddenRoles: { value: 0 },
+      uOptions: { value: 0 },
+    },
+  });
+}
+
 /**
  * Toolpath segments as instanced libvgcode segment templates, one per
  * extrude / travel / wipe vertex from its predecessor (`ViewerImpl` segments).
  * The vertices live in per-vertex textures (`TextureData::set_positions`,
  * `set_heights_widths_angles`, `set_colors`, `ViewerImpl.cpp:384-541`), packed
  * in the slicer worker (`Toolpaths.textures`), and each instance draws the
- * segment from vertex `aSegment[n]`. Until `applyEnabled` runs, the
- * instances are every segment of the mesh. Layer range and visibility
+ * segment from vertex `aSegment[n]`. The mesh stays hidden until `applyEnabled`
+ * runs, as `ViewerImpl::load` applies the view before the first frame
+ * (`ViewerImpl.cpp:1296-1297`). Layer range and visibility
  * filtering also run in the vertex shader, so view changes only update uniforms.
  */
-export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
+export function buildToolpathMesh(toolpaths: Toolpaths, material: THREE.ShaderMaterial): THREE.Mesh {
   const { extent, positions, heightsWidthsAngles, segments, bounds: [minX, minY, minZ, maxX, maxY, maxZ] } = toolpaths.textures!;
   const size = extent[0] * extent[1];
   const bounds = new THREE.Box3(new THREE.Vector3(minX, minY, minZ), new THREE.Vector3(maxX, maxY, maxZ));
@@ -46,26 +72,23 @@ export function buildToolpathMesh(toolpaths: Toolpaths): THREE.Mesh {
     vertexTexture(heightsWidthsAngles, extent, THREE.FloatType),
     vertexTexture(new Uint8Array(size * 4), extent, THREE.UnsignedByteType),
   ];
-  const material = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    vertexShader,
-    fragmentShader,
-    // Face culling is off while drawing segments (`ViewerImpl.cpp:1929,1942`).
-    side: THREE.DoubleSide,
-    uniforms: {
-      position_tex: { value: textures[0] },
-      height_width_angle_tex: { value: textures[1] },
-      color_tex: { value: textures[2] },
-      uLayers: { value: new THREE.Vector2(0, 0) },
-      uHiddenRoles: { value: 0 },
-      uOptions: { value: 0 },
-    },
-  });
-  material.addEventListener("dispose", () => textures.forEach((texture) => texture.dispose()));
+  const { uniforms } = material;
+  VERTEX_TEXTURES.forEach((name, index) => (uniforms[name].value = textures[index]));
+  (uniforms.uLayers.value as THREE.Vector2).set(0, 0);
+  uniforms.uHiddenRoles.value = 0;
+  uniforms.uOptions.value = 0;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
+  mesh.visible = false;
   writeColors(mesh, toolpaths.colors);
   return mesh;
+}
+
+/** Frees the GPU buffers and textures of a toolpath mesh and its option markers; their materials stay. */
+export function releaseToolpathMesh(mesh: THREE.Mesh) {
+  disposeGeometries(mesh);
+  const { uniforms } = mesh.material as THREE.ShaderMaterial;
+  for (const name of VERTEX_TEXTURES) (uniforms[name].value as THREE.Texture).dispose();
 }
 
 /** Writes per-vertex RGB into the color texture (`TextureData::set_colors`, `ViewerImpl.cpp:490-541`). */
@@ -111,6 +134,7 @@ export function applyEnabled(mesh: THREE.Mesh, segments: Uint32Array, options: U
   const attribute = geometry.getAttribute("aSegment") as THREE.InstancedBufferAttribute;
   (attribute.array as Uint32Array).set(segments);
   geometry.instanceCount = segments.length;
+  mesh.visible = true;
   (mesh.material as THREE.Material).visible = segments.length > 0;
   if (segments.length > 0) {
     attribute.clearUpdateRanges();

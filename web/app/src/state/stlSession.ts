@@ -12,16 +12,34 @@ import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from 
  * scene, whose `settings` are the composed config.
  */
 export function openStlSession(file: ModelFile, scene: Scene, selection: PresetSelection, sources: CatalogSources): Promise<Scene> {
-  // Each canvas (Prepare, Preview) places the model when it mounts; the plater keeps the session
-  // it holds for the same inputs, as switching tabs reloads nothing upstream.
+  // The shell places the model for both tabs; the plater keeps the session it holds for the same
+  // inputs, as switching tabs reloads nothing upstream.
   const held = openedSession;
-  if (held && held.plater === useApp.getState().plater && held.file === file && held.selection === selection
-    && held.sources.vendors === sources.vendors && held.sources.presetImports === sources.presetImports) {
+  if (held && held.plater === useApp.getState().plater && sameInputs(held, file, selection, sources)) {
     return Promise.resolve(held.placed);
   }
-  const opening = openSession(file, scene, selection, sources);
-  stlSessionOpening = opening.catch(() => undefined);
-  return opening;
+  // A request for the same inputs while they are still opening takes that opening.
+  if (inFlight && sameInputs(inFlight, file, selection, sources)) return inFlight.placed;
+  const opening = { file, selection, sources, placed: openSession(file, scene, selection, sources) };
+  inFlight = opening;
+  // Plater::load_files places a loaded model before the plate is ready to slice; the status waits for
+  // the first session of a file.
+  useApp.setState({ openingStlSession: openedSession?.file !== file });
+  const settled = () => {
+    if (inFlight !== opening) return;
+    inFlight = null;
+    useApp.setState({ openingStlSession: false });
+  };
+  opening.placed.then(settled, settled);
+  stlSessionOpening = opening.placed.catch(() => undefined);
+  return opening.placed;
+}
+
+type SessionInputs = { file: ModelFile; selection: PresetSelection; sources: CatalogSources };
+
+function sameInputs(held: SessionInputs, file: ModelFile, selection: PresetSelection, sources: CatalogSources) {
+  return held.file === file && held.selection === selection
+    && held.sources.vendors === sources.vendors && held.sources.presetImports === sources.presetImports;
 }
 
 /**
@@ -31,7 +49,9 @@ export function openStlSession(file: ModelFile, scene: Scene, selection: PresetS
  */
 let stlSessionOpening: Promise<unknown> = Promise.resolve();
 /** The session the plater holds and the inputs it was opened for. */
-let openedSession: { plater: PlaterSession; file: ModelFile; selection: PresetSelection; sources: CatalogSources; placed: Scene } | null = null;
+let openedSession: (SessionInputs & { plater: PlaterSession; placed: Scene }) | null = null;
+/** The opening still running and its inputs. */
+let inFlight: (SessionInputs & { placed: Promise<Scene> }) | null = null;
 
 export function stlSessionOpened(): Promise<unknown> {
   return stlSessionOpening;

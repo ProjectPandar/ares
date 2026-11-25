@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
+import { shownTab } from "./shownTab";
 
 type View = "featureType" | "speed" | "speedTravels";
 type NativeVertex = { type: number; positionBits: number[] } & Record<View, number[]>;
@@ -64,7 +65,7 @@ export async function checkSegmentColors(page: Page, artifacts: string, speedTra
     expect(expected[speedView].differing, "Native Speed instances with differing end RGB").toBe(0);
   }
 
-  const viewport = page.getByTestId("viewport");
+  const viewport = shownTab(page).getByTestId("viewport");
   const select = page.getByTestId("view-type");
   const travel = page.getByTestId("legend").locator("[data-option=Travels]");
   const readOut = "instance end colors (count:fnv32 of start RGB, end RGB)";
