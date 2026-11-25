@@ -48,9 +48,9 @@
     "access": "public"
   },
   "scripts": {
-    "build:wasm": "node scripts/build-wasm.mjs",
+    "build:wasm": "bun scripts/build-wasm.mjs",
     "build": "vite build && tsc -p tsconfig.build.json",
-    "prepack": "npm run build && node -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "prepack": "bun run build && bun -e \"require('node:fs').copyFileSync('../../../LICENSES/AGPL-3.0.txt', 'LICENSE')\"",
+    "typecheck": "bun check --no-script -p tsconfig.json"
   }
 }

@@ -8,7 +8,7 @@ function twoBlocks({ width = "36", rib = "8", x = "110", y = "80" } = {}) {
   const corners = [[0, 0, 0], [5, 0, 0], [5, 7, 0], [0, 7, 0], [0, 0, 1], [5, 0, 1], [5, 7, 1], [0, 7, 1]];
   const faces = [[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4],
     [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]];
-  const vertices = corners.map(([x, y, z]) => `<vertex x="${x}" y="${y}" z="${z}"/>`).join("");
+  const vertices = corners.map(([vx, vy, vz]) => `<vertex x="${vx}" y="${vy}" z="${vz}"/>`).join("");
   const triangles = faces.map(([a, b, c]) => `<triangle v1="${a}" v2="${b}" v3="${c}"/>`).join("");
   const objects = [1, 2].map((id) => `<object id="${id}" type="model"><mesh><vertices>${vertices}</vertices><triangles>${triangles}</triangles></mesh></object>`).join("");
   const attributes = [1, 2].map((id) => `<object id="${id}"><metadata key="name" value="Block ${id}"/><metadata key="extruder" value="${id}"/><part id="${id}" subtype="normal_part"><metadata key="name" value="Block ${id}"/></part></object>`).join("");

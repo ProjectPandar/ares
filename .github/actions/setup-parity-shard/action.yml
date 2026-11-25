@@ -14,11 +14,15 @@ runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
+      with:
+        filter: blob:none
+        persist-credentials: false
     - uses: actions/checkout@v4
       with:
         repository: SoftFever/OrcaSlicer
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
         path: OrcaSlicer
+        filter: blob:none
         sparse-checkout: |
           resources/profiles
           src/libslic3r

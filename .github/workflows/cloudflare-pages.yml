@@ -9,49 +9,72 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   pages-build:
     name: pages-build
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/projectpandar/ares/ci-toolchain:browsers-1e03abfd9400
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
+          filter: blob:none
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
           ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
           path: OrcaSlicer
+          filter: blob:none
           persist-credentials: false
           sparse-checkout: resources/profiles
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - uses: dtolnay/rust-toolchain@1.99.0
-        with:
-          targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - name: Install matching wasm-bindgen CLI
-        run: |
-          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
-          cargo install wasm-bindgen-cli --version "$version" --locked
-      - run: npm ci --prefix web
-      - run: npm run build:pages --prefix web
-      - run: npm run lint --prefix web
-      - run: npm run typecheck --prefix web
-      - uses: actions/cache@v4
+      - name: Cache web node_modules
+        id: web-deps
+        uses: actions/cache@v4
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('web/package-lock.json') }}
-      - run: npm exec --prefix web -- playwright install --with-deps chromium
-      - run: npm run test:pages --prefix web
+          path: |
+            web/node_modules
+            web/app/node_modules
+            web/packages/ares-profiles/node_modules
+            web/packages/ares-wasm-js/node_modules
+          key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - name: Install web dependencies
+        if: steps.web-deps.outputs.cache-hit != 'true'
+        run: bun install --cwd web --frozen-lockfile
+      - name: Build Pages bundle
+        run: bun run --cwd web build:pages
+      - name: Lint and typecheck web
+        run: |
+          bun run --cwd web lint
+          bun run --cwd web typecheck
+      - name: Run web unit tests
+        run: |
+          mkdir -p "$RUNNER_TEMP/profile-tests"
+          ORCA_SLICER_DIR="$PWD/OrcaSlicer" \
+          ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
+            bun run --cwd web test:unit
+      - name: Run Pages Playwright suite
+        run: bun run --cwd web test:pages
+      - name: Cache Pages dist for main deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: web/app/dist
+          key: pages-dist-${{ github.run_id }}-${{ github.run_attempt }}
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PAGES_ENABLED == 'true'
@@ -59,31 +82,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: cloudflare-pages-production
     steps:
-      - uses: actions/checkout@v4
+      - name: Restore built Pages dist
+        uses: actions/cache/restore@v4
         with:
-          persist-credentials: false
-      - uses: actions/checkout@v4
-        with:
-          repository: SoftFever/OrcaSlicer
-          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
-          path: OrcaSlicer
-          persist-credentials: false
-          sparse-checkout: resources/profiles
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - uses: dtolnay/rust-toolchain@1.99.0
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-      - name: Install matching wasm-bindgen CLI
-        run: |
-          version=$(grep -A1 'name = "wasm-bindgen"' Cargo.lock | grep -m1 'version' | cut -d'"' -f2)
-          cargo install wasm-bindgen-cli --version "$version" --locked
-      - run: npm ci --prefix web
-      - run: npm run build:pages --prefix web
+          path: web/app/dist
+          key: pages-dist-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
       - name: Require Cloudflare Pages project variable
         env:
           PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}

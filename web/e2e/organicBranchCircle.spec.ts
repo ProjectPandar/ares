@@ -46,11 +46,11 @@ test("organic ramp support extrusion matches OrcaSlicer in the browser", async (
   const bytes = await page.evaluate(async (modulePath) => {
     const wasm: typeof import("../packages/ares-wasm-js/src/wasm/ares_wasm") = await import(modulePath);
     await wasm.default({ module_or_path: "/ares_wasm_bg.wasm" });
-    const [input, catalog] = await Promise.all([
+    const [input, presetCatalog] = await Promise.all([
       fetch("/ramp.3mf").then((response) => response.arrayBuffer()),
       fetch("/catalog.json").then((response) => response.text()),
     ]);
-    return Array.from(await wasm.sliceProjectPlateWithCatalog(new Uint8Array(input), undefined, undefined, catalog));
+    return Array.from(await wasm.sliceProjectPlateWithCatalog(new Uint8Array(input), undefined, undefined, presetCatalog));
   }, "/ares_wasm.js");
   const output = info.outputPath("browser.gcode");
   writeFileSync(output, Buffer.from(bytes));

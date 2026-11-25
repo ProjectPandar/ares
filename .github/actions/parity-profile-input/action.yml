@@ -8,6 +8,7 @@ runs:
         repository: SoftFever/OrcaSlicer
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
         path: OrcaProfileSource
+        filter: blob:none
         sparse-checkout: resources/profiles
         persist-credentials: false
     - name: Verify profile source identity and export explicit binding

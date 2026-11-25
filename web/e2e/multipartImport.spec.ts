@@ -43,7 +43,7 @@ function part(name: string, scale: readonly number[], offset: readonly number[])
     const first = Buffer.from(bytes.subarray(facet + 12, facet + 24));
     bytes.copy(bytes, facet + 12, facet + 24, facet + 36);
     first.copy(bytes, facet + 24);
-    const points = [12, 24, 36].map((offset) => [0, 4, 8].map((axis) => bytes.readFloatLE(facet + offset + axis)));
+    const points = [12, 24, 36].map((vertexOffset) => [0, 4, 8].map((axis) => bytes.readFloatLE(facet + vertexOffset + axis)));
     const a = points[1].map((value, axis) => value - points[0][axis]);
     const b = points[2].map((value, axis) => value - points[0][axis]);
     const normal = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];

@@ -18,8 +18,8 @@ for (const variant of ["incomplete sequence", "absent sequence"] as const) {
     await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
     const transfer = await page.evaluateHandle((encoded) => {
       const data = new DataTransfer();
-      const bytes = Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
-      data.items.add(new File([bytes], "synthetic-project.3mf"));
+      const decodedBytes = Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0));
+      data.items.add(new File([decodedBytes], "synthetic-project.3mf"));
       return data;
     }, bytes.toString("base64"));
     await page.getByTestId("workspace").dispatchEvent("drop", { dataTransfer: transfer });

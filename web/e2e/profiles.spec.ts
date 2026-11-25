@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename } from "node:path";
 import { gzipSync } from "node:zlib";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { expect } from "@playwright/test";
@@ -27,10 +28,10 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   rmSync(artifacts, { recursive: true, force: true });
   mkdirSync(installed, { recursive: true });
 
-  // npm pack (prepack regenerates dist from the checkout): data only, no runtime dependencies.
-  const pack = run("npm", ["pack", "--json", "--pack-destination", artifacts], `${web}packages/ares-profiles`);
-  const [packed] = JSON.parse(pack.slice(pack.lastIndexOf("\n[\n"))) as { filename: string; files: { path: string }[] }[];
-  run("tar", ["-xzf", `${artifacts}${packed.filename}`, "--strip-components=1", "-C", installed], artifacts);
+  // bun pm pack (prepack regenerates dist from the checkout): data only, no runtime dependencies.
+  const tarball = run("bun", ["pm", "pack", "--destination", artifacts, "--quiet"], `${web}packages/ares-profiles`).trim().split("\n").pop()!;
+  const packedFiles = run("tar", ["-tzf", tarball], artifacts).trim().split("\n").map((entry) => entry.replace(/^package\//, ""));
+  run("tar", ["-xzf", tarball, "--strip-components=1", "-C", installed], artifacts);
   const manifest = readJson(`${installed}package.json`);
   expect(manifest).toMatchObject({ name: "@ares-slicer/profiles", license: "AGPL-3.0-or-later", publishConfig: { access: "public" } });
   expect(manifest.dependencies ?? {}).toEqual({});
@@ -41,7 +42,7 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   const data = await import(pathToFileURL(`${installed}dist/index.js`).href);
   expect(data.ORCA_SLICER_COMMIT).toBe(run("git", ["rev-parse", "HEAD"], orca).trim());
   expect(data.vendors.map((vendor: { id: string }) => vendor.id)).toEqual(ids);
-  const vendorFiles = packed.files.map((file) => file.path).filter((path) => path.startsWith("dist/vendors/"));
+  const vendorFiles = packedFiles.filter((path) => path.startsWith("dist/vendors/"));
   expect(vendorFiles).toHaveLength(ids.length);
   let profileCount = 0;
   for (const id of ids) {
@@ -99,7 +100,7 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   }
 
   writeFileSync(`${artifacts}result.json`, `${JSON.stringify({
-    tarball: packed.filename,
+    tarball: basename(tarball),
     orcaSlicerCommit: data.ORCA_SLICER_COMMIT,
     vendors: ids.length,
     profiles: profileCount,
