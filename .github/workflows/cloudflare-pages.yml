@@ -19,31 +19,41 @@ defaults:
   run:
     shell: bash
 
+env:
+  ORCA_REF: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+  CARGO_INCREMENTAL: "0"
+
 jobs:
   pages-build:
     name: pages-build
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/projectpandar/ares/ci-toolchain:browsers-1e03abfd9400
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           filter: blob:none
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - name: Select PR scope
+        id: select
+        run: |
+          bash scripts/ci/select-pr-checks.sh \
+            --event "${{ github.event_name }}" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Skip Pages build when PR diff does not reach web or WASM
+        if: steps.select.outputs.run_web != 'true'
+        run: echo "PR diff (${{ steps.select.outputs.reason }}) does not reach web or WASM; full suite runs in merge_group."
+      - name: Setup pinned Bun canary
+        if: steps.select.outputs.run_web == 'true'
+        uses: ./.github/actions/setup-bun
+      - name: Checkout sparse OrcaSlicer
+        if: steps.select.outputs.run_web == 'true'
+        uses: ./.github/actions/checkout-orca-sparse
         with:
-          repository: SoftFever/OrcaSlicer
-          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
-          path: OrcaSlicer
-          filter: blob:none
-          persist-credentials: false
-          sparse-checkout: resources/profiles
-      - uses: Swatinem/rust-cache@v2
+          ref: ${{ env.ORCA_REF }}
       - name: Cache web node_modules
         id: web-deps
+        if: steps.select.outputs.run_web == 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -53,22 +63,60 @@ jobs:
             web/packages/ares-wasm-js/node_modules
           key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
       - name: Install web dependencies
-        if: steps.web-deps.outputs.cache-hit != 'true'
+        if: steps.select.outputs.run_web == 'true' && steps.web-deps.outputs.cache-hit != 'true'
         run: bun install --cwd web --frozen-lockfile
-      - name: Build Pages bundle
-        run: bun run --cwd web build:pages
-      - name: Format, lint, and typecheck web
+      - name: Cache content-addressed WASM package output
+        id: wasm-pkg
+        if: steps.select.outputs.run_web == 'true' && github.event_name != 'merge_group'
+        uses: actions/cache@v4
+        with:
+          path: web/packages/ares-wasm-js/src/wasm
+          key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
+      - name: Setup Rust wasm32 toolchain
+        if: steps.select.outputs.run_web == 'true' && (steps.wasm-pkg.outputs.cache-hit != 'true' || github.event_name == 'merge_group')
+        uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Setup wasm-bindgen CLI
+        if: steps.select.outputs.run_web == 'true' && (steps.wasm-pkg.outputs.cache-hit != 'true' || github.event_name == 'merge_group')
+        uses: taiki-e/install-action@wasm-bindgen-cli
+        with:
+          tool: wasm-bindgen-cli@0.2.121
+      - name: Restore Rust cache for WASM build
+        if: steps.select.outputs.run_web == 'true' && (steps.wasm-pkg.outputs.cache-hit != 'true' || github.event_name == 'merge_group')
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "pages-wasm"
+      - name: Build WASM package
+        if: steps.select.outputs.run_web == 'true' && (steps.wasm-pkg.outputs.cache-hit != 'true' || github.event_name == 'merge_group')
+        run: bun run --cwd web build:wasm
+      - name: Build web app and package Pages bundle
+        if: steps.select.outputs.run_web == 'true'
+        run: |
+          bun run --cwd web build
+          bun web/scripts/package-pages.mjs
+      - name: Format, lint, typecheck, and unit test web
+        if: steps.select.outputs.run_web == 'true'
         run: |
           bun run --cwd web fmt:check
           bun run --cwd web lint
           bun run --cwd web typecheck
-      - name: Run web unit tests
-        run: |
           mkdir -p "$RUNNER_TEMP/profile-tests"
           ORCA_SLICER_DIR="$PWD/OrcaSlicer" \
           ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
             bun run --cwd web test:unit
+      - name: Cache Playwright Chromium
+        id: pw-cache
+        if: steps.select.outputs.run_web == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - name: Install Playwright Chromium on cache miss
+        if: steps.select.outputs.run_web == 'true' && steps.pw-cache.outputs.cache-hit != 'true'
+        run: bunx --cwd web playwright install chromium
       - name: Run Pages Playwright suite
+        if: steps.select.outputs.run_web == 'true'
         run: bun run --cwd web test:pages
       - name: Cache Pages dist for main deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

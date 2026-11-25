@@ -24,93 +24,145 @@ env:
   CARGO_INCREMENTAL: "0"
 
 jobs:
-  format:
+  fast-checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           filter: blob:none
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           components: rustfmt
-      - run: cargo fmt --check
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/checkout-orca-sparse
+        with:
+          ref: ${{ env.ORCA_REF }}
+      - name: Cache web node_modules
+        id: web-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            web/node_modules
+            web/app/node_modules
+            web/packages/ares-profiles/node_modules
+            web/packages/ares-wasm-js/node_modules
+          key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+      - name: Install web dependencies
+        if: steps.web-deps.outputs.cache-hit != 'true'
+        run: bun install --cwd web --frozen-lockfile
+      - name: Restore cached WASM bindings for TS7 typecheck
+        uses: actions/cache/restore@v4
+        with:
+          path: web/packages/ares-wasm-js/src/wasm
+          key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
+          restore-keys: ares-wasm-pkg-${{ runner.os }}-
+      - name: Run merged fast checks with strict latency budgets
+        run: |
+          ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
+            bash scripts/ci/run-fast-checks.sh
 
-  native-nonparity:
+  rust-wasm-check:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          filter: blob:none
+          persist-credentials: false
+      - name: Select PR scope
+        id: select
+        run: |
+          bash scripts/ci/select-pr-checks.sh \
+            --event "${{ github.event_name }}" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - if: steps.select.outputs.run_rust_wasm == 'true'
+        uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - if: steps.select.outputs.run_rust_wasm == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-wasm-check"
+      - name: Check wasm32 targets
+        if: steps.select.outputs.run_rust_wasm == 'true'
+        run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
+
+  rust-clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          filter: blob:none
+          persist-credentials: false
+      - name: Select PR scope
+        id: select
+        run: |
+          bash scripts/ci/select-pr-checks.sh \
+            --event "${{ github.event_name }}" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - if: steps.select.outputs.run_rust_clippy == 'true'
+        uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          components: clippy
+      - if: steps.select.outputs.run_rust_clippy == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-clippy"
+      - name: Run Clippy on selected crates
+        if: steps.select.outputs.run_rust_clippy == 'true'
+        env:
+          RUST_CRATES: ${{ steps.select.outputs.rust_crates }}
+        run: |
+          set -euo pipefail
+          if [ "$RUST_CRATES" = "all" ]; then
+            cargo clippy --workspace --all-targets --all-features -- -D warnings
+          else
+            args=()
+            for c in $RUST_CRATES; do args+=(-p "$c"); done
+            cargo clippy "${args[@]}" --all-targets --all-features -- -D warnings
+          fi
+
+  rust-nonparity:
+    runs-on: ubuntu-latest
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           filter: blob:none
           persist-credentials: false
-      - uses: Swatinem/rust-cache@v2
-      - uses: actions/checkout@v4
+      - name: Select PR scope
+        id: select
+        run: |
+          bash scripts/ci/select-pr-checks.sh \
+            --event "${{ github.event_name }}" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
+      - if: steps.select.outputs.run_rust_nonparity == 'true'
+        uses: dtolnay/rust-toolchain@1.99.0
+      - if: steps.select.outputs.run_rust_nonparity == 'true'
+        uses: taiki-e/install-action@nextest
+      - if: steps.select.outputs.run_rust_nonparity == 'true'
+        uses: Swatinem/rust-cache@v2
         with:
-          repository: SoftFever/OrcaSlicer
+          shared-key: "rust-nonparity"
+      - if: steps.select.outputs.run_rust_nonparity == 'true'
+        uses: ./.github/actions/checkout-orca-sparse
+        with:
           ref: ${{ env.ORCA_REF }}
-          path: OrcaSlicer
-          filter: blob:none
-          sparse-checkout: |
-            resources/profiles
-            src/libslic3r
-            deps_src/glu-libtess
-            src/OrcaSlicer.cpp
-          persist-credentials: false
-      - name: Verify runtime GLU and configuration metadata prerequisites
-        run: |
-          set -euo pipefail
-          command -v gcc
-          command -v g++
-          test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
-          test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-          test "$(git -C OrcaSlicer rev-parse HEAD)" = "$ORCA_REF"
-          test -f OrcaSlicer/src/OrcaSlicer.cpp
-          for file in PrintConfig.cpp PrintConfig.hpp PrintConfigConstants.hpp MaterialType.cpp Preset.cpp; do
-            test -f "OrcaSlicer/src/libslic3r/$file"
-          done
-          context_artifacts=$(mktemp -d "$RUNNER_TEMP/configdef-context.XXXXXXXX")
-          enum_artifacts=$(mktemp -d "$RUNNER_TEMP/enum.XXXXXXXX")
-          printf 'ARES_CONFIGDEF_CONTEXT_ARTIFACTS=%s\nARES_ENUM_ARTIFACTS=%s\n' \
-            "$context_artifacts" "$enum_artifacts" >> "$GITHUB_ENV"
-      - name: Verify generated PrintConfigDef source is in sync
-        run: bun scripts/gen-configdef.mjs --check
-      - name: Check wasm32 targets
-        run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
-      - name: Run non-parity workspace tests without compiling orca_parity
-        run: |
-          set -euo pipefail
-          python3 - <<'PYEOF'
-          import json, subprocess
-          meta = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version", "1"], text=True))
-          other_pkgs = []
-          cli_args = ["-p", "ares-cli"]
-          for pkg in meta["packages"]:
-              if pkg["name"] != "ares-cli":
-                  other_pkgs.extend(["-p", pkg["name"]])
-              else:
-                  kinds = {k for t in pkg["targets"] for k in t["kind"]}
-                  if "lib" in kinds:
-                      cli_args.append("--lib")
-                  if "bin" in kinds:
-                      cli_args.append("--bins")
-                  for target in pkg["targets"]:
-                      if "test" in target["kind"] and target["name"] != "orca_parity":
-                          cli_args.extend(["--test", target["name"]])
-          if other_pkgs:
-              subprocess.check_call(["cargo", "nextest", "run", "--no-fail-fast", *other_pkgs])
-          if len(cli_args) > 2:
-              subprocess.check_call(["cargo", "nextest", "run", "--no-fail-fast", *cli_args])
-          PYEOF
-      - name: Workspace Clippy
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Run selected non-parity tests (excluding orca_parity)
+        if: steps.select.outputs.run_rust_nonparity == 'true'
+        env:
+          RUST_CRATES: ${{ steps.select.outputs.rust_crates }}
+        run: bash scripts/ci/run-nonparity-tests.sh
 
   build-parity:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
@@ -205,19 +257,9 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-orca-sparse
         with:
-          repository: SoftFever/OrcaSlicer
           ref: ${{ env.ORCA_REF }}
-          path: OrcaSlicer
-          filter: blob:none
-          sparse-checkout: |
-            resources/profiles
-            src/libslic3r
-            deps_src/glu-libtess
-            src/libvgcode
-            src/slic3r/GUI/LibVGCode
-          persist-credentials: false
       - uses: Swatinem/rust-cache@v2
       - name: Cache web node_modules
         id: web-deps
@@ -232,40 +274,8 @@ jobs:
       - name: Install web dependencies
         if: steps.web-deps.outputs.cache-hit != 'true'
         run: bun install --cwd web --frozen-lockfile
-      - name: Build release CLI and print_config_def in one Cargo invocation
-        run: cargo build --release -p ares-cli --bin ares -p ares-core --example print_config_def
-      - name: Verify generated PrintConfigDef metadata
-        run: |
-          bun scripts/gen-configdef.mjs --check
-          ./target/release/examples/print_config_def > target/print-config-def.json
-          bun scripts/verify-configdef.mjs target/print-config-def.json --report target/configdef-verification.json
-      - name: Generate ares-wasm E2E fixtures and panic probe
-        run: |
-          cargo nextest run -p ares-wasm --test compatible_presets --test decoded_settings --test encode_roundtrip
-          bun web/scripts/build-panic-probe.mjs
-      - name: Build WASM package, web app, format, lint, typecheck, and unit tests
-        run: |
-          bun run --cwd web build:wasm
-          bun run --cwd web build
-          bun run --cwd web fmt:check
-          bun run --cwd web lint
-          bun run --cwd web typecheck
-          mkdir -p "$RUNNER_TEMP/profile-tests"
-          ORCA_SLICER_DIR="$PWD/OrcaSlicer" \
-          ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
-            bun run --cwd web test:unit
-      - name: Pack prebuilt web and release CLI bundle
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/web-bundle"
-          tar --zstd -cf "$RUNNER_TEMP/web-bundle/web-dist.tar.zst" \
-            target/release/ares \
-            target/release/examples/print_config_def \
-            target/web-e2e \
-            web/packages/ares-wasm-js/dist \
-            web/packages/ares-profiles/dist \
-            web/app/dist
-          ls -lh "$RUNNER_TEMP/web-bundle/web-dist.tar.zst"
+      - name: Build CLI, WASM, web app, verify metadata, and pack bundle
+        run: bash scripts/ci/run-web-build.sh
       - uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/web-bundle
@@ -283,11 +293,8 @@ jobs:
           ghcr-token: ${{ github.token }}
       - name: Run desktop-streaming E2E
         run: |
-          bunx --cwd web playwright test \
-            --config playwright.config.ts \
-            --project desktop-streaming \
-            --workers 1 --retries 0 \
-            --output "$RUNNER_TEMP/web-results/streaming"
+          bunx --cwd web playwright test --config playwright.config.ts --project desktop-streaming \
+            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/streaming"
 
   web-desktop:
     name: web-desktop (${{ matrix.shard }}/2)
@@ -306,11 +313,8 @@ jobs:
           ghcr-token: ${{ github.token }}
       - name: Run desktop E2E shard ${{ matrix.shard }}/2
         run: |
-          bunx --cwd web playwright test \
-            --config playwright.config.ts \
-            --project desktop \
-            --workers 1 --retries 0 \
-            --shard="${{ matrix.shard }}/2" \
+          bunx --cwd web playwright test --config playwright.config.ts --project desktop \
+            --workers 1 --retries 0 --shard="${{ matrix.shard }}/2" \
             --output "$RUNNER_TEMP/web-results/desktop-${{ matrix.shard }}"
 
   web-packages-mobile:
@@ -333,25 +337,21 @@ jobs:
         run: cargo nextest run --no-run -p ares-cli --test orca_parity
       - name: Run packages E2E (workers=1)
         run: |
-          bunx --cwd web playwright test \
-            --config playwright.config.ts \
-            --project packages \
-            --workers 1 --retries 0 \
-            --output "$RUNNER_TEMP/web-results/packages"
+          bunx --cwd web playwright test --config playwright.config.ts --project packages \
+            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/packages"
       - name: Run mobile E2E (iphone, pixel, ipad)
         run: |
-          bunx --cwd web playwright test \
-            --config playwright.config.ts \
-            --project iphone --project pixel --project ipad \
-            --workers 1 --retries 0 \
-            --output "$RUNNER_TEMP/web-results/mobile"
+          bunx --cwd web playwright test --config playwright.config.ts --project iphone --project pixel --project ipad \
+            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/mobile"
 
   tier1-gate:
     name: tier1-gate
     if: always()
     needs:
-      - format
-      - native-nonparity
+      - fast-checks
+      - rust-wasm-check
+      - rust-clippy
+      - rust-nonparity
       - build-parity
       - parity-official
       - parity-seeded
@@ -363,10 +363,11 @@ jobs:
     steps:
       - name: Evaluate required Tier 1 checks
         env:
-          EVENT_NAME: ${{ github.event_name }}
           RUN_COMPLETE_SUITE: ${{ github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity') }}
-          RES_FORMAT: ${{ needs.format.result }}
-          RES_NONPARITY: ${{ needs.native-nonparity.result }}
+          RES_FAST: ${{ needs.fast-checks.result }}
+          RES_WASM: ${{ needs.rust-wasm-check.result }}
+          RES_CLIPPY: ${{ needs.rust-clippy.result }}
+          RES_NONPARITY: ${{ needs.rust-nonparity.result }}
           RES_BUILD_PARITY: ${{ needs.build-parity.result }}
           RES_OFFICIAL: ${{ needs.parity-official.result }}
           RES_SEEDED: ${{ needs.parity-seeded.result }}
@@ -376,21 +377,11 @@ jobs:
           RES_WEB_PKGS: ${{ needs.web-packages-mobile.result }}
         run: |
           set -euo pipefail
-          check_success() {
-            if [ "$2" != "success" ]; then
-              echo "FAILED: $1 = $2" >&2
-              return 1
-            fi
-            echo "OK: $1 = $2"
-          }
-          check_success format "$RES_FORMAT"
-          check_success native-nonparity "$RES_NONPARITY"
+          failed=0
+          chk() { if [ "$2" != "success" ]; then echo "FAILED: $1 = $2" >&2; failed=1; else echo "OK: $1 = $2"; fi; }
+          chk fast-checks "$RES_FAST"; chk rust-wasm-check "$RES_WASM"; chk rust-clippy "$RES_CLIPPY"; chk rust-nonparity "$RES_NONPARITY"
           if [ "$RUN_COMPLETE_SUITE" = "true" ]; then
-            check_success build-parity "$RES_BUILD_PARITY"
-            check_success parity-official "$RES_OFFICIAL"
-            check_success parity-seeded "$RES_SEEDED"
-            check_success web-build "$RES_WEB_BUILD"
-            check_success web-streaming "$RES_WEB_STREAM"
-            check_success web-desktop "$RES_WEB_DESKTOP"
-            check_success web-packages-mobile "$RES_WEB_PKGS"
+            chk build-parity "$RES_BUILD_PARITY"; chk parity-official "$RES_OFFICIAL"; chk parity-seeded "$RES_SEEDED"
+            chk web-build "$RES_WEB_BUILD"; chk web-streaming "$RES_WEB_STREAM"; chk web-desktop "$RES_WEB_DESKTOP"; chk web-packages-mobile "$RES_WEB_PKGS"
           fi
+          exit "$failed"

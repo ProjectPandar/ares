@@ -1,0 +1,33 @@
+name: Setup Pinned Bun Canary
+description: Restore exact pinned Bun canary binary from Actions cache (or SHA-256 verified tarball)
+runs:
+  using: composite
+  steps:
+    - name: Resolve pinned Bun canary key
+      id: pin
+      shell: bash
+      run: |
+        set -euo pipefail
+        source scripts/ci/toolchain-image.env
+        echo "version=${BUN_CANARY_VERSION}" >> "$GITHUB_OUTPUT"
+        echo "sha256=${BUN_CANARY_SHA256}" >> "$GITHUB_OUTPUT"
+    - name: Cache pinned Bun binary
+      id: bun-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ares-bun/bin
+        key: ares-bun-canary-${{ runner.os }}-${{ steps.pin.outputs.version }}-${{ steps.pin.outputs.sha256 }}
+    - name: Download pinned Bun canary on cache miss
+      if: steps.bun-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$HOME/.cache/ares-bun/bin"
+        curl -fsSL "https://registry.npmjs.org/@oven/bun-linux-x64/-/bun-linux-x64-${{ steps.pin.outputs.version }}.tgz" -o "$RUNNER_TEMP/bun.tgz"
+        echo "${{ steps.pin.outputs.sha256 }}  $RUNNER_TEMP/bun.tgz" | sha256sum -c -
+        tar -xzf "$RUNNER_TEMP/bun.tgz" --strip-components=2 -C "$HOME/.cache/ares-bun/bin" package/bin/bun
+        ln -sf "$HOME/.cache/ares-bun/bin/bun" "$HOME/.cache/ares-bun/bin/bunx"
+        rm -f "$RUNNER_TEMP/bun.tgz"
+    - name: Expose Bun on PATH
+      shell: bash
+      run: echo "$HOME/.cache/ares-bun/bin" >> "$GITHUB_PATH"

@@ -1,0 +1,45 @@
+name: Checkout Sparse OrcaSlicer
+description: Restore sparse OrcaSlicer v2.5.0 checkout from Actions cache (or blobless sparse clone on miss)
+inputs:
+  ref:
+    description: Pinned OrcaSlicer commit SHA
+    required: true
+    default: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+  paths:
+    description: Newline-separated sparse-checkout paths
+    required: false
+    default: |
+      resources/profiles
+      src/libslic3r
+      deps_src/glu-libtess
+      src/OrcaSlicer.cpp
+      src/libvgcode
+      src/slic3r/GUI/LibVGCode
+runs:
+  using: composite
+  steps:
+    - name: Compute sparse checkout key
+      id: key
+      shell: bash
+      env:
+        ORCA_REF: ${{ inputs.ref }}
+        SPARSE_PATHS: ${{ inputs.paths }}
+      run: |
+        hash="$(printf '%s\n%s\n' "$ORCA_REF" "$SPARSE_PATHS" | sha256sum | cut -c1-12)"
+        echo "cache_key=orca-sparse-v1-${ORCA_REF:0:12}-${hash}" >> "$GITHUB_OUTPUT"
+    - name: Restore cached OrcaSlicer sparse checkout
+      id: orca-cache
+      uses: actions/cache@v4
+      with:
+        path: OrcaSlicer
+        key: ${{ steps.key.outputs.cache_key }}
+    - name: Clone sparse OrcaSlicer on cache miss
+      if: steps.orca-cache.outputs.cache-hit != 'true'
+      uses: actions/checkout@v4
+      with:
+        repository: SoftFever/OrcaSlicer
+        ref: ${{ inputs.ref }}
+        path: OrcaSlicer
+        filter: blob:none
+        sparse-checkout: ${{ inputs.paths }}
+        persist-credentials: false
