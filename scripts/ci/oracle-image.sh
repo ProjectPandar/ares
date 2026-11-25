@@ -240,11 +240,12 @@ prune_ghcr() {
     endpoint="/users/$owner/packages/container/$encoded/versions"
     versions="$(gh api --paginate "$endpoint")"
   fi
-  python3 - "$keep" "$keep_tag" <<<"$versions" <<'PYEOF' | while IFS= read -r vid; do
-import json, sys
+  VERSIONS_JSON="$versions" python3 - "$keep" "$keep_tag" <<'PYEOF' | while IFS= read -r vid; do
+import json, os, sys
 keep = int(sys.argv[1])
 keep_tag = sys.argv[2]
-items = sorted(json.loads(sys.stdin.read()), key=lambda x: x["created_at"], reverse=True)
+raw = os.environ.get("VERSIONS_JSON", "").strip()
+items = sorted(json.loads(raw) if raw else [], key=lambda x: x["created_at"], reverse=True)
 kept = 0
 for item in items:
     tags = item.get("metadata", {}).get("container", {}).get("tags", [])
