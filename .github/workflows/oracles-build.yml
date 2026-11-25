@@ -57,24 +57,32 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           df -h /
       - uses: actions/checkout@v4
-      - uses: NixOS/nix-installer-action@main
+        with:
+          filter: blob:none
+          persist-credentials: false
+      - name: Restore cached oracle variant export
+        id: variant-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/imports/${{ matrix.variant }}
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-${{ matrix.variant }}
+      - if: steps.variant-cache.outputs.cache-hit != 'true'
+        uses: NixOS/nix-installer-action@main
       - name: Build and export custom oracle store path
+        if: steps.variant-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           out="$(ORCA_BUILD_CORES=4 bash scripts/ci/build-oracle.sh "${{ matrix.variant }}")"
           echo "Built ${{ matrix.variant }} -> $out"
-          mkdir -p "$RUNNER_TEMP/export"
-          printf '%s\n' "$out" > "$RUNNER_TEMP/export/store-path.txt"
+          export_dir="$RUNNER_TEMP/imports/${{ matrix.variant }}"
+          mkdir -p "$export_dir"
+          printf '%s\n' "$out" > "$export_dir/store-path.txt"
           # Split runtime closure into upstream cache.nixos.org paths vs custom oracle paths.
-          nix path-info -r "$out" > "$RUNNER_TEMP/export/all-paths.txt"
-          grep -E 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$RUNNER_TEMP/export/all-paths.txt" > "$RUNNER_TEMP/export/custom-paths.txt"
-          grep -vE 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$RUNNER_TEMP/export/all-paths.txt" > "$RUNNER_TEMP/export/upstream-paths.txt"
-          xargs -a "$RUNNER_TEMP/export/custom-paths.txt" nix-store --export | zstd -3 -T0 -o "$RUNNER_TEMP/export/custom.nar.zst"
-          ls -lh "$RUNNER_TEMP/export/custom.nar.zst"
-      - uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/export
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.variant }}
+          nix path-info -r "$out" > "$export_dir/all-paths.txt"
+          grep -E 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$export_dir/all-paths.txt" > "$export_dir/custom-paths.txt"
+          grep -vE 'orca-|opencascade-occt-8\.0\.1|libslvs-orca|wxinspector-orca' "$export_dir/all-paths.txt" > "$export_dir/upstream-paths.txt"
+          xargs -a "$export_dir/custom-paths.txt" nix-store --export | zstd -3 -T0 -o "$export_dir/custom.nar.zst"
+          ls -lh "$export_dir/custom.nar.zst"
 
   package-image:
     needs: [plan, build-variant]
@@ -88,11 +96,15 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           df -h /
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
           ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
           path: OrcaSlicer
+          filter: blob:none
           sparse-checkout: resources/profiles
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -102,32 +114,32 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/merged-oracle
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-merged-oracle
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-merged-oracle
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/seed-replay
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-seed-replay
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-seed-replay
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/plate-custom-gcodes
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-plate-custom-gcodes
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-plate-custom-gcodes
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/preheat-move-durations
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-preheat-move-durations
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-preheat-move-durations
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/segment-colors
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-segment-colors
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-segment-colors
           fail-on-cache-miss: true
       - uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/imports/preset-select
-          key: oracle-variant-${{ github.run_id }}-${{ github.run_attempt }}-preset-select
+          key: oracle-variant-${{ needs.plan.outputs.tag }}-preset-select
           fail-on-cache-miss: true
       - name: Import custom oracles, substitute nixpkgs deps, and stage OCI rootfs
         run: |
