@@ -2,19 +2,22 @@ name: Cloudflare Pages
 
 on:
   push:
+    branches: [main]
   pull_request:
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
-    runs-on:
-      group: Default
+  pages-build:
+    name: pages-build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
-          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19 # OrcaSlicer v2.5.0
+          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
           path: OrcaSlicer
           persist-credentials: false
           sparse-checkout: resources/profiles
@@ -43,15 +46,17 @@ jobs:
       - run: npm run build:pages --prefix web
       - run: npm run lint --prefix web
       - run: npm run typecheck --prefix web
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('web/package-lock.json') }}
       - run: npm exec --prefix web -- playwright install --with-deps chromium
       - run: npm run test:pages --prefix web
 
   deploy:
-    # Public hosting and the Pages project ares are approved; retain the opt-in gate.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_PAGES_ENABLED == 'true'
-    needs: build
-    runs-on:
-      group: Default
+    needs: pages-build
+    runs-on: ubuntu-latest
     environment: cloudflare-pages-production
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +65,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: SoftFever/OrcaSlicer
-          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19 # OrcaSlicer v2.5.0
+          ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
           path: OrcaSlicer
           persist-credentials: false
           sparse-checkout: resources/profiles
@@ -79,7 +84,7 @@ jobs:
           cargo install wasm-bindgen-cli --version "$version" --locked
       - run: npm ci --prefix web
       - run: npm run build:pages --prefix web
-      - name: Require the approved Pages project
+      - name: Require Cloudflare Pages project variable
         env:
           PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
         run: test -n "$PROJECT"

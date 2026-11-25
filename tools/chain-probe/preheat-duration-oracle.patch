@@ -1,0 +1,108 @@
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -147,4 +147,5 @@
+ #include "libslic3r/Exception.hpp"
+ #include "libslic3r/GCode/GCodeProcessor.hpp"
++#include "preheat-duration-oracle.hpp"
+ #include "libslic3r/GCode/GCodeStatistics.hpp"
+ #include "libslic3r/GCode/ToolOrdering.hpp"
+@@ -8600,4 +8601,6 @@
+ int main(int argc, char **argv)
+ {
++    if (argc == 5 && strcmp(argv[1], "--preheat-duration-oracle") == 0)
++        return preheat_duration_oracle::run(argv[2], argv[3], argv[4]);
+     for (int i = 1; i < argc; ++i) {
+         if (strcmp(argv[i], "--process-gcode") == 0 && i + 1 < argc) {
+--- /dev/null
++++ b/src/preheat-duration-oracle.hpp
+@@ -0,0 +1,90 @@
++#pragma once
++#include "libslic3r/LocalesUtils.hpp"
++#include "libslic3r/MultiNozzleUtils.hpp"
++#include "slic3r/GUI/LibVGCode/LibVGCodeWrapper.hpp"
++#include <cstring>
++#include <fstream>
++#include <iterator>
++#include <nlohmann/json.hpp>
++
++namespace preheat_duration_oracle {
++inline uint32_t bits(float value)
++{
++    uint32_t result;
++    std::memcpy(&result, &value, sizeof(result));
++    return result;
++}
++
++// Observe the public streaming result, without running a G-code rewriting pass.
++inline int run(const char* input_path, const char* output_path, const char* config_path)
++{
++    Slic3r::CNumericLocalesSetter locale;
++    Slic3r::DynamicPrintConfig loaded;
++    loaded.load_from_gcode_file(input_path, Slic3r::ForwardCompatibilitySubstitutionRule::Disable);
++    Slic3r::PrintConfig config;
++    config.apply(loaded, true);
++    Slic3r::DynamicPrintConfig applied;
++    applied.apply(config);
++    applied.save_to_json(config_path, "preheat-duration-applied-config", "project", "2.5.0");
++
++    // Import resolves the real public nozzle grouping from this same file's config.
++    // Only that grouping is reused; no imported move or timing becomes an expectation.
++    Slic3r::GCodeProcessor imported;
++    imported.process_file(input_path);
++    const auto grouping = imported.get_result().nozzle_group_result;
++    if (!grouping)
++        throw std::runtime_error("Native import did not resolve a nozzle grouping");
++
++    std::ifstream file(input_path, std::ios::binary);
++    if (!file)
++        throw std::runtime_error("cannot open input G-code");
++    const std::string gcode((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
++    Slic3r::GCodeProcessor processor;
++    processor.initialize(input_path);
++    processor.apply_config(config);
++    processor.initialize_from_context(grouping);
++    processor.initialize_result_moves();
++    processor.process_buffer(gcode);
++    processor.finalize(false);
++    const auto& result = processor.get_result();
++    nlohmann::json moves = nlohmann::json::array();
++    for (size_t index = 0; index < result.moves.size(); ++index) {
++        const auto& v = result.moves[index];
++        moves.push_back({{"index", index}, {"gcode_id", v.gcode_id}, {"type", int(v.type)},
++            {"role", int(v.extrusion_role)}, {"extruder_id", int(v.extruder_id)},
++            {"layer_id", v.layer_id}, {"internal_only", v.internal_only},
++            {"position_bits", {bits(v.position.x()), bits(v.position.y()), bits(v.position.z())}},
++            {"normal_time_bits", bits(v.time[size_t(Slic3r::PrintEstimatedStatistics::ETimeMode::Normal)])}});
++    }
++    const libvgcode::Viewer viewer;
++    const auto converted = libvgcode::convert(result, result.extruder_colors, {}, viewer);
++    nlohmann::json vertices = nlohmann::json::array();
++    for (size_t index = 0; index < converted.vertices.size(); ++index) {
++        const auto& v = converted.vertices[index];
++        vertices.push_back({{"index", index}, {"gcode_id", v.gcode_id}, {"type", int(v.type)},
++            {"role", int(v.role)}, {"extruder_id", int(v.extruder_id)}, {"layer_id", v.layer_id},
++            {"position_bits", {bits(v.position[0]), bits(v.position[1]), bits(v.position[2])}},
++            {"normal_time_bits", bits(v.times[size_t(libvgcode::ETimeMode::Normal)])},
++            {"stealth_time_bits", bits(v.times[size_t(libvgcode::ETimeMode::Stealth)])}});
++    }
++    nlohmann::json nozzles = nlohmann::json::array();
++    for (const auto filament : grouping->get_used_filaments()) {
++        const auto nozzle = grouping->get_first_nozzle_for_filament(filament);
++        if (!nozzle)
++            throw std::runtime_error("used Native filament has no nozzle");
++        nozzles.push_back({{"filament", filament}, {"extruder_id", nozzle->extruder_id},
++            {"nozzle_id", nozzle->group_id}, {"diameter", nozzle->diameter},
++            {"volume_type", int(nozzle->volume_type)}});
++    }
++    const nlohmann::json data = {
++        {"upstream", "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19"},
++        {"oracle", "public streaming GCodeProcessor::finalize(false), real libvgcode::convert; no GL execution"},
++        {"normal_total_bits", bits(result.print_statistics.modes[0].time)},
++        {"normal_prepare_bits", bits(result.print_statistics.modes[0].prepare_time)},
++        {"nozzles", nozzles}, {"moves", moves}, {"vertices", vertices}
++    };
++    std::ofstream output(output_path);
++    output << data.dump(2) << '\n';
++    return output ? 0 : 1;
++}
++}

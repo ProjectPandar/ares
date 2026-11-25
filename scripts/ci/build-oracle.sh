@@ -1,84 +1,38 @@
 #!/usr/bin/env bash
-# Builds one Native oracle variant for CI (matrix job calls it per variant)
-# and prints the resulting /nix/store path on the last line.
-# Requires nix with flakes and the hestia substituter already configured.
+# Builds one pinned OrcaSlicer v2.5.0 (40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19)
+# oracle variant or runtime dependency for CI and prints the resulting /nix/store
+# path(s) on stdout.
 set -euo pipefail
 
 variant="${1:?usage: build-oracle.sh <variant>}"
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 
-# Consumer jobs set ORACLE_SUBSTITUTE_ONLY=1: every path must come from the
-# hestia cache; a cache miss fails instead of compiling Orca locally.
-jobs_flag=(--cores 4 --max-jobs 1)
+jobs_flag=(--cores "${ORCA_BUILD_CORES:-4}" --max-jobs 1)
 if [ "${ORACLE_SUBSTITUTE_ONLY:-0}" = "1" ]; then
   jobs_flag=(--max-jobs 0)
 fi
 
-# Pinned nixpkgs identical to the local gate store path
-# /nix/store/9qzkr0n1671awz5sjrmbgzmbp0y58wpc-source
+# Pinned nixpkgs commit matching the release oracle toolchain
 # (narHash sha256-dveqXShac4ZH9whSBeFyP8GY4iQU6zpMIkyCgPUdLOY=).
 NIXPKGS_URL="github:NixOS/nixpkgs/dc56dcbed57fa354b45a3a68a4eedd74663ae5ce"
-nixpkgs="$(nix eval --raw --expr "(builtins.getFlake \"$NIXPKGS_URL\").outPath")"
+nixpkgs="${ORCA_PROCGCODE_NIXPKGS:-$(nix eval --raw --expr "(builtins.getFlake \"$NIXPKGS_URL\").outPath")}"
 
 case "$variant" in
-  merged-oracle|custom-gcode-overview|segment-colors)
+  merged-oracle|seed-replay|plate-custom-gcodes|preheat-move-durations|segment-colors|preset-select)
     ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
       exec nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
       --file "$repo/tools/chain-probe/$variant.nix"
     ;;
-esac
-
-# Fresh source tree from the pinned upstream tarball. Fetching the archive
-# keeps the nix src (and therefore the derivation hash) identical whether the
-# job checked out OrcaSlicer sparsely or not at all.
-ORCA_REV="8500fcdccaa10b5099ac20d252af3a7c560046f1" # v2.4.2
-src="$(mktemp -d /tmp/orca-src-XXXXXX)"
-curl --proto '=https' --tlsv1.2 -fL --retry 3 \
-  "https://github.com/SoftFever/OrcaSlicer/archive/$ORCA_REV.tar.gz" \
-  | tar xz --strip-components=1 -C "$src"
-git -C "$src" init -q .
-
-case "$variant" in
-  seed-replay)
-    # The approved seed-replay oracle carries all three initialization patches,
-    # not just seed-only (verified byte-identical to the accepted source tree).
-    git -C "$src" apply --unidiff-zero \
-      "$repo/scripts/orca-replay/seed-only.patch" \
-      "$repo/scripts/orca-replay/concentric-initialization.patch" \
-      "$repo/scripts/orca-replay/object-id-initialization.patch"
-    ORCA_REPLAY_SOURCE="$src" ORCA_REPLAY_NIXPKGS="$nixpkgs" \
-      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/scripts/orca-replay/build.nix"
+  gdb|patchelf|glibcLocales)
+    exec nix build "${jobs_flag[@]}" --no-link --print-out-paths "$NIXPKGS_URL#$variant"
     ;;
-  procgcode|procgcode-dynamics|marker-time|actual-speed-profile|role-times|segment-hw)
-    ORCA_PROCGCODE_SOURCE="$src" ORCA_PROCGCODE_NIXPKGS="$nixpkgs" \
-      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/tools/chain-probe/$variant.nix"
-    ;;
-  print-statistics|plate-custom-gcodes)
-    # Same source as the approved print-statistics oracle v4zhqnbm: the full
-    # seed-replay producer source (three init patches) + print-statistics.patch
-    # added by the nix recipe.
-    git -C "$src" apply --unidiff-zero \
-      "$repo/scripts/orca-replay/seed-only.patch" \
-      "$repo/scripts/orca-replay/concentric-initialization.patch" \
-      "$repo/scripts/orca-replay/object-id-initialization.patch"
-    ORCA_PRINT_STATISTICS_SOURCE="$src" ORCA_PRINT_STATISTICS_NIXPKGS="$nixpkgs" \
-    ORCA_PLATE_CUSTOM_GCODES_SOURCE="$src" ORCA_PLATE_CUSTOM_GCODES_NIXPKGS="$nixpkgs" \
-      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/tools/chain-probe/$variant.nix"
-    ;;
-  ksr-initialized)
-    git -C "$src" apply --unidiff-zero "$repo/tools/orca-probes/ksr-initialized-source.patch"
-    ORCA_KSR_INITIALIZED_SOURCE="$src" ORCA_KSR_INITIALIZED_NIXPKGS="$nixpkgs" \
-      nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths \
-      --file "$repo/tools/orca-probes/ksr-initialized.nix"
-    ;;
-  gdb|patchelf)
-    nix build "${jobs_flag[@]}" --no-link --print-out-paths "$NIXPKGS_URL#$variant"
+  official-libs)
+    NIX_PATH="nixpkgs=$nixpkgs" \
+      exec nix build --impure "${jobs_flag[@]}" --no-link --print-out-paths --expr \
+      'with import <nixpkgs> {}; builtins.map lib.getLib [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret glibc ]'
     ;;
   *)
-    echo "unknown variant: $variant" >&2
+    echo "unknown oracle variant: $variant" >&2
     exit 2
     ;;
 esac
