@@ -87,6 +87,30 @@ pub(crate) struct FacetsAnnotation {
 }
 
 impl FacetsAnnotation {
+    pub(crate) fn remap_states(&mut self, remap: impl Fn(u8) -> u8) {
+        let mut cursor = 0;
+        let mut codes = Vec::with_capacity(self.codes.len());
+        let mut entries = self.mapping.iter_mut().peekable();
+        while let Some(&code) = self.codes.get(cursor) {
+            if entries.peek().is_some_and(|entry| entry.1 == cursor) {
+                entries.next().unwrap().1 = codes.len();
+            }
+            cursor += 1;
+            if code & 3 != 0 {
+                codes.push(code);
+                continue;
+            }
+            let state =
+                remap(leaf_state(code, &self.codes, &mut cursor).expect("validated facet state"));
+            match state {
+                0..=2 => codes.push(state << 2),
+                3..=17 => codes.extend([12, state - 3]),
+                _ => codes.extend([12, 15, state - 18]),
+            }
+        }
+        self.codes = codes;
+    }
+
     pub(crate) fn used_states(&self) -> [bool; 17] {
         let mut states = [false; 17];
         let mut cursor = 0;

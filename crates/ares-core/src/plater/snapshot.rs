@@ -7,11 +7,14 @@ use std::collections::BTreeMap;
 use super::PlaterSession;
 use super::arrange_job::TowerPositions;
 use super::plate_list::PlateList;
-use crate::project::ModelSnapshot;
+use crate::project::{ModelSnapshot, SlotOptionsSnapshot};
 
 pub struct PlaterSnapshot {
     model: ModelSnapshot,
     filament: super::FilamentEdits,
+    slot_changes: Vec<super::SlotChange>,
+    slot_options: SlotOptionsSnapshot,
+    next_filament_colour: usize,
     plates: PlateList,
     arrange_orders: BTreeMap<(u32, u32), i32>,
     wipe_tower: Option<TowerPositions>,
@@ -23,6 +26,9 @@ impl PlaterSession {
         PlaterSnapshot {
             model: self.project.model_snapshot(),
             filament: self.filament_edits.clone(),
+            slot_changes: self.slot_changes.clone(),
+            slot_options: self.project.slot_options_snapshot(),
+            next_filament_colour: self.next_filament_colour,
             plates: self.plates.clone(),
             arrange_orders: self.arrange_orders.clone(),
             wipe_tower: self.wipe_tower.clone(),
@@ -33,6 +39,9 @@ impl PlaterSession {
     pub fn load_snapshot(&mut self, snapshot: &PlaterSnapshot) {
         self.project.load_model_snapshot(&snapshot.model);
         self.filament_edits.clone_from(&snapshot.filament);
+        self.slot_changes.clone_from(&snapshot.slot_changes);
+        self.project.restore_slot_options(&snapshot.slot_options);
+        self.next_filament_colour = snapshot.next_filament_colour;
         self.plates.clone_from(&snapshot.plates);
         self.arrange_orders.clone_from(&snapshot.arrange_orders);
         self.wipe_tower.clone_from(&snapshot.wipe_tower);

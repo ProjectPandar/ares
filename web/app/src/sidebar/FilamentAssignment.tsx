@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { assignFilament, filamentPalette, type FilamentSelection } from "../state/filamentAssignment";
+import { activeFilamentNames, assignFilament, filamentPalette, type FilamentSelection } from "../state/filamentAssignment";
 import { useApp } from "../state/store";
-import { filamentNames } from "./options";
+
 import "./filamentAssignment.css";
 
 
@@ -11,8 +11,8 @@ export function FilamentAssignment({ targets, onClose }: { targets: readonly Fil
   const selection = useApp((state) => state.presetSelection);
   const available = useApp((state) => Boolean(state.plater) && !state.arranging && state.slice.status !== "slicing");
   const settings = scene?.settings ?? null;
-  const names = selection?.filaments ?? filamentNames(settings);
-  const colours = filamentPalette(selection, settings);
+  const names = activeFilamentNames(selection, scene);
+  const colours = filamentPalette(selection, settings, scene?.filamentSlots);
   if (!available || names.length < 2) return null;
   if (targets.every(({ instance, object }) => instance !== undefined && object === targets[0].object)) return null;
   const volumes = targets.map(({ object, volume }) => scene?.objects.find(({ id }) => id === object)?.volumes.find(({ id }) => id === volume));

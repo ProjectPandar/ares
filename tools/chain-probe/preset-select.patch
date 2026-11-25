@@ -25,7 +25,7 @@
 +void sync_loaded_project_filament_config(DynamicConfig& proj_cfg)
 --- /dev/null
 +++ b/src/PresetSelectProbe.hpp
-@@ -0,0 +1,265 @@
+@@ -0,0 +1,284 @@
 +#ifndef ARES_PRESET_SELECT_PROBE_HPP
 +#define ARES_PRESET_SELECT_PROBE_HPP
 +
@@ -229,6 +229,22 @@
 +    presets.prints.update_dirty();
 +}
 +
++// Plater.cpp:5929, 5955, 5876. With no virtual tail the new slot is last,
++// and the merge removes only that slot from the preset bundle.
++inline unsigned edit_filament_slots(PresetBundle &presets, const Json &edits)
++{
++    if (!edits.is_array() || edits.size() != 2 || !edits[0].contains("append") || edits[1].at("remove_last") != true)
++        throw std::runtime_error("expected a physical filament append followed by removal of the last slot");
++    const size_t count = presets.num_physical_filaments();
++    const auto &printer = presets.printers.get_edited_preset();
++    if (printer.printer_technology() != ptFFF || !printer.config.opt_bool("single_extruder_multi_material") ||
++        count == 0 || count >= MAXIMUM_EXTRUDER_NUMBER || count != presets.filament_presets.size())
++        throw std::runtime_error("slot edits require a single-extruder multi-material project with only physical slots");
++    presets.set_num_filaments(unsigned(count + 1), edits[0].at("append").get<std::string>());
++    presets.update_num_filaments(unsigned(count));
++    return 2;
++}
++
 +inline int run(const char *request_path)
 +{
 +    try {
@@ -262,7 +278,8 @@
 +            GUI::sync_loaded_project_filament_config(presets.project_config);
 +            Json record = {{"filename", filename}, {"imported", imported},
 +                           {"materialized", materialized}};
-+            if (project.contains("wizard") || project.contains("select") || project.contains("process_edit")) {
++            if (project.contains("wizard") || project.contains("select") || project.contains("process_edit") ||
++                project.contains("filament_slot_edits")) {
 +                record["opened"] = bundle(presets);
 +                if (project.contains("wizard"))
 +                    wizard(presets, app, project.at("wizard"));
@@ -270,6 +287,8 @@
 +                    select(presets, app, project.at("select"));
 +                if (project.contains("process_edit"))
 +                    edit_process(presets, project.at("process_edit"));
++                if (project.contains("filament_slot_edits"))
++                    record["filament_slot_edits_applied"] = edit_filament_slots(presets, project.at("filament_slot_edits"));
 +            }
 +            record["result"] = bundle(presets);
 +            result["projects"].push_back(std::move(record));

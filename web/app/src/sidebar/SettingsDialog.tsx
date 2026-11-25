@@ -40,9 +40,20 @@ export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; s
   useEffect(() => dialog.current!.showModal(), []);
   const printer = tab.kind === "printer";
   const typed = useApp((state) => state.typedSettings);
-  const selection = useApp((state) => printer ? null : state.presetSelection);
+  const project = useApp((state) => printer ? undefined : state.scene?.filamentSettings);
+  const slots = useApp((state) => state.scene?.filamentSlots);
+  const selection = useApp((state) => printer || project ? null : state.presetSelection);
   const defs = useApp((state) => state.configDefs)!;
   const [fetched, setFetched] = useState<{ selection: typeof selection; values: OptionMap } | null>(null);
+  const [edited, setEdited] = useState<{ source: OptionMap; values: OptionMap } | null>(null);
+  useEffect(() => {
+    if (!project) return;
+    let stale = false;
+    void decodeOptions(defs, project).then((decoded) => {
+      if (!stale) setEdited({ source: project, values: { ...project, ...decoded } });
+    });
+    return () => { stale = true; };
+  }, [project, defs]);
   useEffect(() => {
     if (!selection) return;
     let stale = false;
@@ -63,12 +74,14 @@ export function SettingsDialog({ tab, settings, onClose }: { tab: SettingsTab; s
     });
     return () => { stale = true; };
   }, [selection, defs]);
-  const values = selection ? (fetched?.selection === selection ? fetched.values : null)
-    : settings && typed && tabValues(settings, typed, printer ? "printer" : "filament");
+  const values = project ? (edited?.source === project ? { ...settings?.project, ...typed?.project, ...edited.values } : null)
+    : selection ? (fetched?.selection === selection ? fetched.values : null)
+      : settings && typed && tabValues(settings, typed, printer ? "printer" : "filament");
   const title = printer ? "Printer settings" : "Filament settings";
   const presetKey = printer ? "printer_settings_id" : "filament_settings_id";
   const preset = selection ? (printer ? selection.printer : selection.filaments) : values?.[presetKey];
-  const name = Array.isArray(preset) ? preset[printer ? 0 : tab.slot] : preset;
+  const name = project && !printer ? slots?.slots[tab.slot]?.preset
+    : Array.isArray(preset) ? preset[printer ? 0 : tab.slot] : preset;
   return (
     <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title" onClose={onClose}>
       <header className="shortcuts-header">

@@ -19,6 +19,8 @@ pub struct PlaterSession {
     input: SessionInput,
     pub(super) project: Project,
     pub(super) filament_edits: super::FilamentEdits,
+    pub(super) slot_changes: Vec<super::SlotChange>,
+    pub(super) next_filament_colour: usize,
     pub(super) plates: PlateList,
     /// `ModelInstance::arrange_order` by `(object_id, instance_id)`; 0 until an arrange.
     pub(super) arrange_orders: BTreeMap<(u32, u32), i32>,
@@ -147,6 +149,8 @@ impl PlaterSession {
             plates,
             arrange_orders: BTreeMap::new(),
             filament_edits: BTreeMap::new(),
+            slot_changes: Vec::new(),
+            next_filament_colour: 0,
             wipe_tower: None,
             vendor_type: crate::profiles::VendorType::Unknown,
             // The plater selects plate 0 after loading (`Plater.cpp:10222, 10229`).
@@ -353,6 +357,7 @@ impl PlaterSession {
             instances: self.instance_changes(),
             deleted_objects: self.deleted_objects(),
             filament: self.filament_edits.clone(),
+            slot_changes: self.slot_changes.clone(),
         }
     }
 

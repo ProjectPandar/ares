@@ -146,7 +146,7 @@ pub(crate) fn prepare(
             palette_count: colors.len(),
         });
     }
-    let minima = minimum_volumes(settings, raw);
+    let minima = minimum_volumes(settings, raw, 0);
     if context.sparse_filament_slots && datasets.is_some() && minima.len() < colors.len() {
         return Err(SliceError::InvalidInput(
             "filament diameter count is shorter than the flush palette".to_owned(),
@@ -177,6 +177,55 @@ pub(crate) fn prepare(
         }
     }
     Ok(())
+}
+
+/// `Sidebar::auto_calc_flushing_volumes_internal` (Plater.cpp:7029–7128):
+/// initialize only the transitions touching a new physical slot.
+pub(crate) fn initialize_added_slot(
+    settings: &mut ProjectSettings,
+    raw: &ProjectSettingsRaw,
+    added: usize,
+    mixed: &[bool],
+) {
+    let filament = &settings.filament.gcode;
+    let colours: Vec<_> = filament
+        .filament_colour
+        .0
+        .iter()
+        .map(|colour| rgba(colour))
+        .collect();
+    let support = &filament.filament_is_support.0;
+    let count = colours.len();
+    for nozzle in 0..settings.project.print.flush_multiplier.0.len() {
+        let dataset = dataset(settings, raw, nozzle).unwrap_or_default();
+        let minima = minimum_volumes(settings, raw, nozzle);
+        let segment = &mut settings.project.print.flush_volumes_matrix.0
+            [nozzle * count * count..(nozzle + 1) * count * count];
+        let is_support = |index| {
+            support
+                .get(index)
+                .or_else(|| support.first())
+                .is_some_and(|flag| flag.0)
+        };
+        let volume = |from: usize, to: usize| {
+            if is_support(to) {
+                return 230.0;
+            }
+            let minimum = minima
+                .get(from)
+                .or_else(|| minima.first())
+                .copied()
+                .unwrap_or_default();
+            let computed = calculate(minimum, dataset, colours[from], colours[to]);
+            f64::from(computed.max(if is_support(from) { 700 } else { 0 }))
+        };
+        for (slot, &is_mixed) in mixed.iter().enumerate() {
+            if slot != added && !is_mixed {
+                segment[slot * count + added] = volume(slot, added);
+                segment[added * count + slot] = volume(added, slot);
+            }
+        }
+    }
 }
 
 fn at<T>(values: &[T], index: usize) -> &T {
@@ -237,15 +286,19 @@ fn dataset(settings: &ProjectSettings, raw: &ProjectSettingsRaw, nozzle: usize) 
 
 // Pure extraction of Plater.cpp:1251–1314. CLI deliberately calls this for
 // nozzle 0 before iterating all nozzles, not once per nozzle (3927).
-fn minimum_volumes(settings: &ProjectSettings, raw: &ProjectSettingsRaw) -> Vec<i32> {
+fn minimum_volumes(
+    settings: &ProjectSettings,
+    raw: &ProjectSettingsRaw,
+    nozzle: usize,
+) -> Vec<i32> {
     let printer = &settings.printer.gcode;
-    let nozzle_volume = match settings.printer.remaining.nozzle_volume.0[0] {
+    let nozzle_volume = match *at(&settings.printer.remaining.nozzle_volume.0, nozzle) {
         Nullable::Value(value) => value.0 as i32,
         Nullable::Nil => 0,
     };
     let level = printer.enable_long_retraction_when_cut.0;
-    let distance = printer.retraction_distances_when_cut.0[0].0 as i32;
-    let active = printer.long_retractions_when_cut.0[0].0;
+    let distance = at(&printer.retraction_distances_when_cut.0, nozzle).0 as i32;
+    let active = at(&printer.long_retractions_when_cut.0, nozzle).0;
     let overrides = &settings.filament.retract_overrides;
     (0..settings.filament.gcode.filament_diameter.0.len())
         .map(|i| {

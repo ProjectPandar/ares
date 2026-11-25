@@ -37,6 +37,8 @@ export function applyLayout(layout: PlaterLayout, currentPlate: number, objects:
       }),
       plates: layout.plates,
       wipeTower: layout.wipeTower,
+      filamentSlots: layout.filamentSlots,
+      filamentSettings: layout.filamentSettings,
     },
     currentPlate,
     ...invalidatedSlices(slice),

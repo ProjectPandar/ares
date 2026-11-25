@@ -1,4 +1,4 @@
-import type { FilamentTarget, ProjectSettings } from "@ares-slicer/wasm";
+import type { FilamentSlotEdit, FilamentSlots, FilamentTarget, ProjectSettings, Scene } from "@ares-slicer/wasm";
 import { filamentNames, stringList } from "../sidebar/options";
 import { applyLayout } from "./plates";
 import { useApp, type PresetSelection } from "./store";
@@ -6,8 +6,22 @@ import { takeSnapshot } from "./undoRedo";
 
 export type FilamentSelection = FilamentTarget & { instance?: number };
 
-export function filamentPalette(selection: PresetSelection | null, settings: ProjectSettings | null) {
+export function filamentPalette(selection: PresetSelection | null, settings: ProjectSettings | null, project?: FilamentSlots) {
+  if (project?.edited) return project.slots.map(({ colour }) => colour);
   return selection?.filamentProject?.filament_colour ?? stringList(settings?.filament, "filament_colour");
+}
+
+export function activeFilamentNames(selection: PresetSelection | null, scene: Scene | null) {
+  if (scene?.filamentSlots?.edited) return scene.filamentSlots.slots.map(({ preset }) => preset);
+  return selection?.filaments ?? filamentNames(scene?.settings ?? null);
+}
+
+export async function editFilamentSlots(edit: FilamentSlotEdit) {
+  const { plater, currentPlate } = useApp.getState();
+  if (!plater) return;
+  takeSnapshot();
+  const layout = await plater.editFilamentSlots(edit);
+  if (useApp.getState().plater === plater) applyLayout(layout, currentPlate);
 }
 
 export function sameTarget(a: FilamentSelection, b: FilamentSelection) {
@@ -28,7 +42,7 @@ export function chooseFilamentTarget(target: FilamentSelection, mode: "select" |
 export async function assignFilament(choice: { targets: readonly FilamentTarget[] } | { cell: FilamentTarget }, slot: number) {
   const { plater, presetSelection, scene, currentPlate } = useApp.getState();
   if (!plater) return;
-  const count = presetSelection?.filaments.length ?? filamentNames(scene?.settings ?? null).length;
+  const count = activeFilamentNames(presetSelection, scene).length;
   takeSnapshot();
   const layout = await ("cell" in choice ? plater.setFilamentCell(choice.cell, slot, count) : plater.setFilament(choice.targets, slot, count));
   if (useApp.getState().plater === plater) applyLayout(layout, currentPlate);

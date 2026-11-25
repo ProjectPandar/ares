@@ -38,7 +38,7 @@ pub use domain::{
     ImportedStl, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
     ProjectObject, ProjectVolume, ProjectVolumeType, StlUnit,
 };
-pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile};
+pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile, SlotOptionsSnapshot};
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use export::{export_3mf, export_arranged_sliced_3mf, export_project_3mf, export_sliced_3mf};
 pub use export_stl::{StlExport, export_stl, export_stls};

@@ -14,6 +14,8 @@ struct SceneMetadata<'a> {
     objects: Vec<SceneObject<'a>>,
     plates: Vec<ScenePlate>,
     settings: Option<SceneSettings<'a>>,
+    #[serde(rename = "filamentSlots", skip_serializing_if = "Option::is_none")]
+    filament_slots: Option<ares_core::FilamentSlots>,
 }
 
 #[derive(Serialize)]
@@ -144,11 +146,15 @@ fn project_scene(project: &Project) -> SceneData {
             instances: plate.instances().to_vec(),
         })
         .collect();
-    project_scene_with_plates(project, plates)
+    project_scene_with_plates(project, plates, None)
 }
 
 /// `project`'s scene with `plates` in place of its loaded plates.
-pub(crate) fn project_scene_with_plates(project: &Project, plates: Vec<ScenePlate>) -> SceneData {
+pub(crate) fn project_scene_with_plates(
+    project: &Project,
+    plates: Vec<ScenePlate>,
+    filament_slots: Option<ares_core::FilamentSlots>,
+) -> SceneData {
     let mut positions = Vec::new();
     let mut indices = Vec::new();
     let objects = project
@@ -192,6 +198,7 @@ pub(crate) fn project_scene_with_plates(project: &Project, plates: Vec<ScenePlat
     let settings = project.settings();
     let metadata = SceneMetadata {
         format: "3mf",
+        filament_slots,
         objects,
         plates,
         settings: Some(SceneSettings {
@@ -241,6 +248,7 @@ fn model_scene(model: &Model) -> SceneData {
     let identity = column_major(Transform3d::IDENTITY);
     let metadata = SceneMetadata {
         format: "stl",
+        filament_slots: None,
         objects: vec![SceneObject {
             id: 1,
             name: "model",

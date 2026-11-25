@@ -3,6 +3,16 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 impl PlaterSession {
+    /// Adds, deletes or merges a project slot in the current palette.
+    #[wasm_bindgen(js_name = editFilamentSlots)]
+    pub fn edit_filament_slots(&mut self, json: &str) -> Result<(), JsValue> {
+        let edit = serde_json::from_str(json).map_err(super::js_error)?;
+        self.session
+            .edit_filament_slots(edit)
+            .map(|_| ())
+            .map_err(super::js_error)
+    }
+
     /// Changes the filament for the named object or volume ids in selection order.
     #[wasm_bindgen(js_name = setFilament)]
     pub fn set_filament(&mut self, targets: &str, slot: i32, count: i32) -> Result<(), JsValue> {

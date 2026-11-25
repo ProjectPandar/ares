@@ -6,7 +6,8 @@ use crate::{ConfigOverrides, Placement, ProfileRequest, ProfileSliceRequest, Sli
 impl PlaterSession {
     /// Saves the edited model and its project presets without slicing any plate.
     pub fn save_project(&self, overrides: &ConfigOverrides) -> Result<Vec<u8>, SliceError> {
-        let (project, _) = self.source().load(overrides, None, None, (false, None))?;
+        let (mut project, _) = self.source().load(overrides, None, None, (false, None))?;
+        project.replay_slot_options(&self.slot_changes)?;
         self.save_with_config(project.documents().project_settings_raw.clone())
     }
 
@@ -26,7 +27,10 @@ impl PlaterSession {
             (request, composition),
             &NO_EDITS,
             |source| {
-                let project = crate::project_slice::load_profile_project(&source)?;
+                let mut project = crate::project_slice::load_profile_project(&source)?;
+                if source.refresh.is_some() {
+                    project.replay_slot_options(&self.slot_changes)?;
+                }
                 self.save_with_config(project.documents().project_settings_raw.clone())
             },
         )

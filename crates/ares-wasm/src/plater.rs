@@ -109,7 +109,11 @@ impl PlaterSession {
 
     /// The `loadScene` scene of the edited project, with the session's plates and origins.
     pub fn scene(&self) -> SceneData {
-        scene::project_scene_with_plates(self.session.project(), self.plates())
+        scene::project_scene_with_plates(
+            self.session.project(),
+            self.plates(),
+            Some(self.session.filament_slots()),
+        )
     }
 
     /// The installed system vendors (`PresetBundle::vendors`) the arrange job's vendor test reads.
