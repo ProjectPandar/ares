@@ -59,6 +59,17 @@ impl ProfileSelection {
         })
     }
 
+    pub(super) fn for_cli_stl_without_filaments(
+        process: Option<String>,
+        machine: Option<String>,
+    ) -> Self {
+        Self {
+            process,
+            machine,
+            filaments: Vec::new(),
+        }
+    }
+
     pub(super) fn for_project_without_filaments(
         process: Option<String>,
         machine: Option<String>,

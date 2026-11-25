@@ -165,7 +165,6 @@ pub(in crate::project::export) fn model_part(
         },
         transform: volume.transform(),
         matrix: volume.transform().then(volume.source_transform()),
-        use_f32_transform: false,
         source_file: metadata("source_file").to_owned(),
         source_object: metadata("source_object_id").parse().unwrap_or(-1),
         source_volume: metadata("source_volume_id").parse().unwrap_or(-1),

@@ -261,7 +261,7 @@ fn klipper_body(
 
 /// `get_instance_name` (`GCode.cpp:4378-4386`): sanitize the object name,
 /// compose `<name>_id_<object>_copy_<instance>`, then sanitize again.
-fn instance_name(object_name: &str, object_id: u32, instance_id: u32) -> String {
+pub(super) fn instance_name(object_name: &str, object_id: u32, instance_id: u32) -> String {
     let composed = format!(
         "{}_id_{object_id}_copy_{instance_id}",
         sanitize_instance_name(object_name)

@@ -87,9 +87,6 @@ pub(crate) fn load_input(
         Input::Imported(imported) => imported.clone(),
     };
     let mut project = Project::from_imported_stl(imported, settings, raw);
-    // The single non-project instance is dropped before default placement.
-    // OrcaSlicer.cpp:1978 and :5619–6064.
-    project.drop_instances_to_ground();
     let center =
         super::profile_entry::bed_center(&project.settings().printer.remaining.printable_area);
     project.center_instances_around_point(center);

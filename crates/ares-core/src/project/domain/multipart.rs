@@ -67,13 +67,14 @@ fn stl_object(name: &str, index: u32, volume: ProjectVolume) -> ProjectObject {
 
 impl Project {
     pub(crate) fn from_cli_stl_models(models: Vec<ImportedStl>) -> Self {
-        let filename = models[0].0.name.clone();
+        let filename = models[0].volume().name.clone();
+        let transforms: Vec<_> = models.iter().map(ImportedStl::ground_transform).collect();
         let model_count = models.len();
         let objects = models
             .into_iter()
             .enumerate()
             .map(|(index, imported)| {
-                let mut volume = imported.0;
+                let mut volume = imported.volume;
                 let name = volume.name.clone();
                 volume.id = index as u32;
                 volume.mesh_preparation.key = index as i32;
@@ -83,18 +84,14 @@ impl Project {
         let mut project = Self::from_stl_objects(&filename, objects);
         let mut labels = super::object_id::ObjectIdCounter::cli_stl_merge(model_count as u32);
         let mut instances = Vec::with_capacity(model_count);
-        for object in &mut project.objects {
+        for (object, transform) in project.objects.iter_mut().zip(transforms) {
             let identity = [object.id, 0, labels.clone_stl_instance()];
-            object.instances.push(ProjectInstance::new(
-                identity,
-                true,
-                true,
-                Transform3d::IDENTITY,
-            ));
+            object
+                .instances
+                .push(ProjectInstance::new(identity, true, true, transform));
             instances.push(identity);
         }
         project.initialize_plate(instances);
-        project.drop_instances_to_ground();
         project
     }
 

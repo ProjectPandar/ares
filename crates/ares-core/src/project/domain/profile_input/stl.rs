@@ -3,7 +3,6 @@ use crate::project::domain::object_id::ObjectIdCounter;
 use super::{
     FilamentSequences, ModelSettings, PlateMetadata, Project, ProjectDocuments, ProjectInstance,
     ProjectModel, ProjectObject, SelectedProfile, SliceError, SliceInfo, SliceInfoHeader,
-    Transform3d,
 };
 
 impl Project {
@@ -26,10 +25,7 @@ impl Project {
         overrides: &crate::ConfigOverrides,
     ) -> Result<(Self, crate::options::flush_matrix::PreparationContext), SliceError> {
         let (settings, raw, preparation) = super::stl_settings::compose(profile, overrides)?;
-        let mut project = Self::from_stl(input, filename, settings, raw)?;
-        // Non-project CLI import calls ensure_on_bed before arrangement (OrcaSlicer.cpp:1978).
-        project.drop_instances_to_ground();
-        Ok((project, preparation))
+        Ok((Self::from_stl(input, filename, settings, raw)?, preparation))
     }
 
     pub(crate) fn from_imported_stl_with_profiles(
@@ -59,14 +55,15 @@ impl Project {
         settings: crate::ProjectSettings,
         raw: crate::project::raw_settings::ProjectSettingsRaw,
     ) -> Self {
-        let volume = imported.0;
+        let transform = imported.ground_transform();
+        let volume = imported.volume;
         let filename = volume.source_model_path().to_owned();
         // STL.cpp creates the volume before the default instance, unlike 3MF build import.
         let mut object_ids = ObjectIdCounter::model_read();
         object_ids.add_object();
         object_ids.add_volume();
         let label_id = object_ids.add_instance();
-        let instance = ProjectInstance::new([1, 0, label_id], true, true, Transform3d::IDENTITY);
+        let instance = ProjectInstance::new([1, 0, label_id], true, true, transform);
         let object = ProjectObject::new(
             filename.to_owned(),
             1,

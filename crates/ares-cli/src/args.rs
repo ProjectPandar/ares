@@ -64,6 +64,7 @@ pub(crate) enum Commands {
 }
 
 #[derive(clap::Args)]
+#[command(group(ArgGroup::new("slice_destination").args(["outputdir", "export_3mf"]).multiple(true)))]
 pub(crate) struct DirectSliceArgs {
     #[command(flatten)]
     pub(crate) diagnostics: crate::diagnostics::DiagnosticLog,
@@ -71,7 +72,7 @@ pub(crate) struct DirectSliceArgs {
     #[arg(
         long = "slice",
         required_unless_present_any = ["export_settings", "export_3mf"],
-        requires = "outputdir",
+        requires = "slice_destination",
         allow_negative_numbers = true
     )]
     pub(crate) selection: Option<i32>,
@@ -83,10 +84,10 @@ pub(crate) struct DirectSliceArgs {
     /// Export effective settings to FILE, or to stdout with '-'.
     #[arg(long, value_name = "FILE")]
     pub(crate) export_settings: Option<PathBuf>,
-    /// Export an unsliced 3MF project.
-    #[arg(long, value_name = "3MF", conflicts_with_all = ["selection", "export_settings"])]
+    /// Export a 3MF project, including completed plates when --slice is used.
+    #[arg(long, value_name = "3MF", conflicts_with = "export_settings")]
     pub(crate) export_3mf: Option<PathBuf>,
-    /// Preserve orientation (0) when exporting an unsliced project.
+    /// Preserve orientation (0) when exporting a project.
     #[arg(long, requires = "export_3mf")]
     pub(crate) orient: Option<u8>,
 
@@ -157,12 +158,12 @@ fn parse_enable_timelapse(value: &str) -> Result<bool, &'static str> {
 #[derive(Parser)]
 #[command(group(
     ArgGroup::new("action")
-        .args(["selection", "export_3mf", "export_stl", "export_stls"])
+        .args(["selection", "export_stl", "export_stls"])
         .multiple(true)
 ))]
 #[command(group(
     ArgGroup::new("export_action")
-        .args(["export_3mf", "export_stl", "export_stls"])
+        .args(["export_stl", "export_stls"])
         .multiple(true)
 ))]
 pub(crate) struct SliceArgs {
@@ -248,7 +249,6 @@ pub(crate) struct SliceArgs {
         short = 'o',
         required_unless_present_any = [
             "selection",
-            "export_3mf",
             "export_stl",
             "export_stls",
             "repair"
@@ -258,9 +258,6 @@ pub(crate) struct SliceArgs {
     /// Slice all 3MF plates (0) or the given one-based plate number.
     #[arg(long = "slice", allow_negative_numbers = true, conflicts_with_all = ["output", "plate", "dump_moves"])]
     pub(crate) selection: Option<i32>,
-    /// Write an unsliced, headless FFF project instead of G-code.
-    #[arg(long, value_name = "3MF")]
-    pub(crate) export_3mf: Option<PathBuf>,
     /// Write one binary STL per object under the stl output subdirectory.
     #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", value_parser = native_bool)]
     pub(crate) export_stl: Option<bool>,

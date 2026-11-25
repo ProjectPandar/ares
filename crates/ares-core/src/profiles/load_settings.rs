@@ -48,7 +48,7 @@ pub(crate) fn export_settings(
 ) -> Result<crate::project::raw_settings::ProjectSettingsRaw, SliceError> {
     use crate::project::raw_settings::RawConfigValue;
 
-    let mut raw = compose_with_project(request, None, loaded_catalog(request)?, false)?
+    let mut raw = compose_with_project(request, None, loaded_catalog(request)?, (false, false))?
         .0
         .raw;
     // CLI::run inserts selected machine/process identity and the process's
@@ -158,11 +158,13 @@ pub(crate) fn compose_project_load_settings(
     let direct_stl = InputFormat::detect(input) != InputFormat::ThreeMf;
     let mut names = load_settings_preset_names(request, &catalog, direct_stl)?;
     names.embedded = project::retained_config(input, request, &names)?;
-    let stl = names.embedded.is_none()
-        && direct_stl
-        && request.filaments.iter().any(|file| file.label.is_empty());
-    let (mut composed, loaded_indices) =
-        compose_with_project(request, names.embedded.as_ref(), catalog, stl)?;
+    let sparse = direct_stl && request.filaments.iter().any(|file| file.label.is_empty());
+    let (mut composed, loaded_indices) = compose_with_project(
+        request,
+        names.embedded.as_ref(),
+        catalog,
+        (direct_stl, sparse),
+    )?;
     if !direct_stl {
         project::decode_filament_string_vectors(&mut composed.filament_raws)?;
         if loaded_indices.iter().copied().ne(0..loaded_indices.len()) {
@@ -185,7 +187,7 @@ fn compose_with_project(
     request: &LoadSettingsRequest<'_>,
     embedded: Option<&crate::project::raw_settings::ProjectSettingsRaw>,
     mut catalog: Catalog,
-    stl: bool,
+    (direct_stl, sparse): (bool, bool),
 ) -> Result<(ComposedSelection, Vec<usize>), SliceError> {
     let mut machine: Option<String> = None;
     let mut process: Option<String> = None;
@@ -254,9 +256,12 @@ fn compose_with_project(
     }
     let selection = match embedded {
         Some(config) => ProfileSelection::for_project_without_filaments(process, machine, config)?,
+        None if direct_stl && request.filaments.is_empty() => {
+            ProfileSelection::for_cli_stl_without_filaments(process, machine)
+        }
         None => ProfileSelection::new_partial(process, machine, filament_slots)?,
     };
-    let sparse = stl && loaded_indices.len() < request.filaments.len();
+    let sparse = embedded.is_none() && sparse && loaded_indices.len() < request.filaments.len();
     let mut composed = if sparse {
         catalog.compose_with_slots(&selection, Some((request.filaments.len(), &loaded_indices)))?
     } else {

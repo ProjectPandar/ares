@@ -18,6 +18,7 @@ pub(crate) struct ArchivePlate {
     pub(crate) filament_type: String,
     pub(crate) filament_id: String,
     pub(crate) nozzle_diameter: f32,
+    pub(crate) label_object_enabled: bool,
     pub(crate) project_settings: ProjectSettingsRaw,
     pub(crate) stl_model: Option<crate::project::export::SavedModel>,
 }
