@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Runs all small/fast checks in one job, lists EVERY failure (never stops at
-# the first failure), and enforces strict latency budgets on every check.
+# Runs all small/fast checks in one job (overlapping rust-fmt with web/script checks),
+# lists EVERY failure (never stops at the first failure), and enforces strict latency budgets.
 
 BUDGET_WEB_FMT_MS="${BUDGET_WEB_FMT_MS:-1000}"
 BUDGET_WEB_LINT_MS="${BUDGET_WEB_LINT_MS:-1000}"
@@ -11,31 +11,34 @@ BUDGET_WEB_UNIT_MS="${BUDGET_WEB_UNIT_MS:-5000}"
 BUDGET_CONFIGDEF_MS="${BUDGET_CONFIGDEF_MS:-2000}"
 BUDGET_SCRIPTS_MS="${BUDGET_SCRIPTS_MS:-2000}"
 BUDGET_RUST_FMT_MS="${BUDGET_RUST_FMT_MS:-15000}"
-BUDGET_TOTAL_RUN_MS="${BUDGET_TOTAL_RUN_MS:-25000}"
+BUDGET_TOTAL_RUN_MS="${BUDGET_TOTAL_RUN_MS:-20000}"
 
-now_ms() {
-  date +%s%3N
-}
+now_ms() { date +%s%3N; }
 
 run_start_ms="$(now_ms)"
 failures=()
 results=()
 
-run_check() {
-  local name="$1"
-  local budget_ms="$2"
-  shift 2
+# Pin RUSTUP_TOOLCHAIN so rustup does not auto-download clippy/wasm32 components
+# declared in rust-toolchain.toml during fmt/gen-configdef checks.
+export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-1.99.0}"
 
-  local t0 t1 dt rc log_file
-  log_file="$(mktemp)"
+# Run rust-fmt concurrently in the background while web & script checks execute.
+rust_fmt_log="$(mktemp)"
+rust_fmt_meta="$(mktemp)"
+(
   t0="$(now_ms)"
   set +e
-  "$@" >"$log_file" 2>&1
+  cargo fmt --check >"$rust_fmt_log" 2>&1
   rc=$?
   set -e
   t1="$(now_ms)"
-  dt=$((t1 - t0))
+  printf '%s %s\n' "$rc" "$((t1 - t0))" > "$rust_fmt_meta"
+) &
+rust_fmt_pid=$!
 
+record_result() {
+  local name="$1" budget_ms="$2" rc="$3" dt="$4" log_file="$5"
   if [ "$rc" -ne 0 ]; then
     echo "::error::[FAIL] ${name} exited ${rc} (${dt}ms)"
     cat "$log_file"
@@ -50,15 +53,34 @@ run_check() {
     echo "[PASS] ${name}: ${dt}ms (budget ${budget_ms}ms)"
     results+=("PASS  ${name}  ${dt}ms (budget ${budget_ms}ms)")
   fi
+}
+
+run_check() {
+  local name="$1" budget_ms="$2"
+  shift 2
+  local t0 t1 dt rc log_file
+  log_file="$(mktemp)"
+  t0="$(now_ms)"
+  set +e
+  "$@" >"$log_file" 2>&1
+  rc=$?
+  set -e
+  t1="$(now_ms)"
+  dt=$((t1 - t0))
+  record_result "$name" "$budget_ms" "$rc" "$dt" "$log_file"
   rm -f "$log_file"
 }
 
-run_check "rust-fmt" "$BUDGET_RUST_FMT_MS" cargo fmt --check
 run_check "web-fmt" "$BUDGET_WEB_FMT_MS" bun run --cwd web fmt:check
 run_check "web-lint" "$BUDGET_WEB_LINT_MS" bun run --cwd web lint
 
 if [ -f web/packages/ares-wasm-js/src/wasm/ares_wasm.d.ts ]; then
-  run_check "web-typecheck-ts7" "$BUDGET_WEB_CHECK_MS" bun run --cwd web typecheck
+  run_check "web-typecheck-ts7" "$BUDGET_WEB_CHECK_MS" bash -c '
+    set -euo pipefail
+    web/node_modules/.bin/tsc -p web/packages/ares-wasm-js/tsconfig.build.json
+    ORCA_SLICER_DIR="${ORCA_SLICER_DIR:-$PWD/OrcaSlicer}" bun run --cwd web --filter @ares-slicer/profiles build >/dev/null
+    bun run --cwd web typecheck
+  '
 else
   echo "::warning::Skipping full web-typecheck-ts7 in fast-checks: cached src/wasm not yet warmed on main (checked in pages-build)"
   results+=("SKIP  web-typecheck-ts7  0ms (awaiting main wasm-pkg cache warm)")
@@ -89,7 +111,13 @@ run_check "ci-scripts-syntax-and-pins" "$BUDGET_SCRIPTS_MS" bash -c '
   set -euo pipefail
   bash -n scripts/ci/*.sh
   bash scripts/ci/toolchain-image.sh verify-pins
+  bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
 '
+
+wait "$rust_fmt_pid" || true
+read -r rust_rc rust_dt < "$rust_fmt_meta"
+record_result "rust-fmt" "$BUDGET_RUST_FMT_MS" "$rust_rc" "$rust_dt" "$rust_fmt_log"
+rm -f "$rust_fmt_log" "$rust_fmt_meta"
 
 total_ms=$(($(now_ms) - run_start_ms))
 echo ""
