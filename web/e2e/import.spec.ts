@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { withoutCliGroups } from "./platerExport";
-import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/import/", import.meta.url));
@@ -157,10 +157,11 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
   const gcodePath = `${artifacts}${download.suggestedFilename()}`;
   await download.saveAs(gcodePath);
   const gcode = readFileSync(gcodePath);
-  const nativePath = `${artifacts}native.gcode`;
-  execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", nativePath, prisms]);
   const selection = openedSelection(prisms, `${artifacts}selection/`);
   if (selection) {
+    const nativePath = `${artifacts}native.gcode`;
+    const comparison = withGuiProjectOptions(prisms, selection, `${artifacts}reference/`);
+    execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", nativePath, comparison]);
     const expected = withoutCliGroups(withSelectedPresets(readFileSync(nativePath, "utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
     expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));

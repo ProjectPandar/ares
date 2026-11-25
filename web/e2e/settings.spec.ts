@@ -6,7 +6,7 @@ import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { withoutCliGroups } from "./platerExport";
-import { openedSelection, withSelectedPresets } from "./selectedPresetLines";
+import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
 import { FILAMENT_PAGES, PRINTER_PAGES } from "../app/src/sidebar/presetLayout";
 import { PROCESS_PAGES } from "../app/src/sidebar/processLayout";
 import type { LayoutPage } from "../app/src/sidebar/layoutTypes";
@@ -231,11 +231,12 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
   ]);
   const gcodePath = `${artifacts}${download.suggestedFilename()}`;
   await download.saveAs(gcodePath);
-  const native = `${artifacts}native.gcode`;
-  execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", native, fixture]);
   const browserHash = sha256(readFileSync(gcodePath));
   const selection = openedSelection(fixture, `${artifacts}selection/`);
   if (selection) {
+    const native = `${artifacts}native.gcode`;
+    const comparison = withGuiProjectOptions(fixture, selection, `${artifacts}reference/`);
+    execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", native, comparison]);
     const expected = withoutCliGroups(withSelectedPresets(readFileSync(native, "utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
     expect(browserHash, "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(sha256(Buffer.from(expected)));
