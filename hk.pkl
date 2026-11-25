@@ -1,0 +1,62 @@
+amends "package://github.com/jdx/hk/releases/download/v2.14.0/hk@2.14.0#/Config.pkl"
+
+local pre_commit_steps = new Mapping<String, Step> {
+  ["rustfmt"] {
+    glob = "**/*.rs"
+    check = "rustfmt --edition 2024 --check {{files}}"
+    fix = "rustfmt --edition 2024 {{files}}"
+  }
+  ["web-fmt"] {
+    dir = "web"
+    glob = List("packages/**", "app/**", "e2e/**", "pages/**")
+    exclude = List("**/dist/**", "packages/ares-wasm-js/src/wasm/**")
+    check = "bun fmt --no-script --check {{files}}"
+    fix = "bun fmt --no-script {{files}}"
+  }
+  ["web-lint"] {
+    dir = "web"
+    glob = List("packages/**/*.ts", "packages/**/*.mjs", "app/**/*.ts", "app/**/*.tsx", "e2e/**/*.ts", "e2e/**/*.mjs", "pages/**/*.ts")
+    exclude = List("**/dist/**", "packages/ares-wasm-js/src/wasm/**")
+    check = "bun lint --no-script --max-warnings=0 {{files}}"
+  }
+  ["ci-shell"] {
+    glob = "scripts/ci/*.sh"
+    check = "bash -n {{files}}"
+  }
+}
+
+local pre_push_steps = new Mapping<String, Step> {
+  ["cargo-fmt"] {
+    check = "cargo fmt --check"
+  }
+  ["web-fmt-all"] {
+    check = "bun run --cwd web fmt:check"
+  }
+  ["web-lint-all"] {
+    check = "bun run --cwd web lint"
+  }
+  ["web-shards-proof"] {
+    check = "bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4"
+  }
+  ["ci-scripts-and-pins"] {
+    check = "bash -n scripts/ci/*.sh && bash scripts/ci/toolchain-image.sh verify-pins"
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = false
+    stash = "git"
+    steps = pre_commit_steps
+  }
+  ["pre-push"] {
+    steps = pre_push_steps
+  }
+  ["check"] {
+    steps = pre_commit_steps
+  }
+  ["fix"] {
+    fix = true
+    steps = pre_commit_steps
+  }
+}
