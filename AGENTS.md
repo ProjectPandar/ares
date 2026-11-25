@@ -48,6 +48,12 @@ This rewrite-gate requirement applies to the continuing `PrintConfig.hpp` and `P
 遵循 Test Driven Development 进行代码的编写，需要使用原 OrcaSlicer 来做 End to end (E2E) 测试。
 使用 `cargo nextest run` 运行 Rust 测试；全量测试使用 `cargo nextest run --workspace`，不要用 `cargo test` 作为默认测试入口。Nextest 并行度由 `.config/nextest.toml` 配置为 `test-threads = "num-cpus"`。
 
+### 本地钩子（hk）与测试证据治理
+- 本地提交/推送校验由仓库根目录的 [hk.pkl](file:///home/indexyz/ares/hk.pkl)（`hk install`）通过 Git hooks 强制执行，而非仅靠文档提醒：`pre-commit` 对暂存文件做格式化与 lint；`pre-push` 在 9 秒内运行与 CI `fast-checks` 一致的检查。
+- 绝不隐藏失败：禁止添加测试重试、放宽超时或跳过不稳定测试；需要重试才能通过的检查本身就是 bug，必须根治。
+- 基于证据精简测试（连续两周记录）：将每次修复的测试失败标记为 **捕获到的回归（caught regression）** 或 **变更探测器（change detector）**。删除仅充当变更探测器的测试文件，并**禁止编写变更探测器模式测试**（例如断言私有内部实现细节、脆弱的 mock 调用次数、与可观测行为/OrcaSlicer 对齐无关的快照或硬编码内部结构）。
+- **绝不删除**涉及权限/安全（authorization）、隐私（privacy）、格式兼容/迁移（migration）或并发（concurrency）的测试。
+
 ## 项目要求
 - 目前的 Tier 1 平台为: WASM (浏览器), Windows, macOS, Linux. 需要支持这四个平台. 尤其是 WASM, 需要能在浏览器环境下运行切片
 - 项目方向是对 OrcaSlicer 的 `libslic3r` 和 `libvgcode` 做 source-cited Rust rewrite；后续 milestone 必须以明确的上游文件、类、函数或数据结构为边界推进，不允许把自研 Ares pipeline 当成主要设计目标。
