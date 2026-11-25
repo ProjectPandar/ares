@@ -17,30 +17,10 @@ runs:
       with:
         filter: blob:none
         persist-credentials: false
-    - uses: actions/checkout@v4
+    - uses: ./.github/actions/checkout-orca-sparse
       with:
-        repository: SoftFever/OrcaSlicer
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
-        path: OrcaSlicer
-        filter: blob:none
-        sparse-checkout: |
-          resources/profiles
-          src/libslic3r
-          deps_src/glu-libtess
-          src/libvgcode
-          src/slic3r/GUI/LibVGCode
-        persist-credentials: false
-    - name: Install pinned Bun canary
-      shell: bash
-      run: |
-        set -euo pipefail
-        source scripts/ci/toolchain-image.env
-        mkdir -p "$RUNNER_TEMP/bun/bin"
-        curl -fsSL "https://registry.npmjs.org/@oven/bun-linux-x64/-/bun-linux-x64-${BUN_CANARY_VERSION}.tgz" -o "$RUNNER_TEMP/bun.tgz"
-        echo "${BUN_CANARY_SHA256}  $RUNNER_TEMP/bun.tgz" | sha256sum -c -
-        tar -xzf "$RUNNER_TEMP/bun.tgz" --strip-components=2 -C "$RUNNER_TEMP/bun/bin" package/bin/bun
-        ln -sf "$RUNNER_TEMP/bun/bin/bun" "$RUNNER_TEMP/bun/bin/bunx"
-        echo "$RUNNER_TEMP/bun/bin" >> "$GITHUB_PATH"
+    - uses: ./.github/actions/setup-bun
     - name: Cache web node_modules
       id: web-deps
       uses: actions/cache@v4
