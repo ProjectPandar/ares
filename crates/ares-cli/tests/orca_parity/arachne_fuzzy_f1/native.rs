@@ -8,10 +8,13 @@ use std::{
 
 pub(super) struct NativeCase {
     pub(super) root: PathBuf,
-    pub(super) reference: Vec<u8>,
+    pub(super) reference: Option<Vec<u8>>,
     pub(super) settings: Value,
     pub(super) contract: Value,
     pub(super) strict: bool,
+    pub(super) native_stochastic_empty_layers: bool,
+    pub(super) native_return_code: Option<i64>,
+    pub(super) native_warning_message: Option<String>,
 }
 
 pub(super) fn prepare(
@@ -65,57 +68,108 @@ pub(super) fn prepare(
         .unwrap(),
     )
     .unwrap();
-    stages::run_live_with_env(
+    let stochastic_empty_layers = match stages::run_live_with_env(
         runner.bin(),
         args,
         &[("ORCA_REPLAY_SEED", &seed_wire)],
         stages::Stage::Slice,
         root,
-    )
-    .unwrap();
+    ) {
+        Ok(()) => false,
+        Err(error) if !strict && label == "small-padding" => {
+            let captured = error.captured.as_ref().unwrap();
+            assert_eq!(captured.code, Some(156), "Native admission: {root:?}");
+            let result: Value =
+                serde_json::from_slice(&fs::read(root.join("native/result.json")).unwrap())
+                    .unwrap();
+            let warning = result["sliced_plates"][0]["warning_message"]
+                .as_str()
+                .unwrap();
+            assert_eq!(result["return_code"], -100, "Native admission: {root:?}");
+            assert!(
+                warning.contains("The object has empty layers between 0.2 and 0.8"),
+                "Native admission: {root:?}"
+            );
+            fs::write(
+                root.join("native-stochastic-empty-layers.json"),
+                serde_json::to_vec_pretty(&json!({
+                    "return_code": result["return_code"],
+                    "warning_message": warning,
+                    "captured_code": captured.code,
+                    "captured_status": captured.status,
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+            true
+        }
+        Err(error) => panic!("Native admission: {root:?}: {error:?}"),
+    };
     let result: Value =
         serde_json::from_slice(&fs::read(root.join("native/result.json")).unwrap()).unwrap();
-    assert_eq!(result["return_code"], 0, "Native admission: {root:?}");
-    let reference = fs::read(root.join("native/plate_1.gcode")).unwrap();
-    let text = std::str::from_utf8(&reference).unwrap();
-    let effective: serde_json::Map<String, Value> = text
+    let (native_return_code, native_warning_message) = if stochastic_empty_layers {
+        (
+            Some(result["return_code"].as_i64().unwrap()),
+            Some(
+                result["sliced_plates"][0]["warning_message"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned(),
+            ),
+        )
+    } else {
+        assert_eq!(result["return_code"], 0, "Native admission: {root:?}");
+        (None, None)
+    };
+    let reference =
+        (!stochastic_empty_layers).then(|| fs::read(root.join("native/plate_1.gcode")).unwrap());
+    let effective: serde_json::Map<String, Value> = reference
+        .as_deref()
+        .map(std::str::from_utf8)
+        .transpose()
+        .unwrap()
+        .unwrap_or("")
         .lines()
         .filter_map(|line| {
             let (key, value) = line.strip_prefix("; ")?.split_once(" = ")?;
             Some((key.to_owned(), json!(value)))
         })
         .collect();
-    for key in [
-        "wall_generator",
-        "wall_loops",
-        "fuzzy_skin",
-        "fuzzy_skin_mode",
-        "fuzzy_skin_noise_type",
-        "fuzzy_skin_thickness",
-        "fuzzy_skin_point_distance",
-        "fuzzy_skin_first_layer",
-        "fuzzy_skin_ripples_per_layer",
-        "fuzzy_skin_ripple_offset",
-        "fuzzy_skin_layers_between_ripple_offset",
-    ] {
-        assert_eq!(
-            effective[key], settings[key],
-            "Native effective {key}: {root:?}"
-        );
+    if reference.is_some() {
+        for key in [
+            "wall_generator",
+            "wall_loops",
+            "fuzzy_skin",
+            "fuzzy_skin_mode",
+            "fuzzy_skin_noise_type",
+            "fuzzy_skin_thickness",
+            "fuzzy_skin_point_distance",
+            "fuzzy_skin_first_layer",
+            "fuzzy_skin_ripples_per_layer",
+            "fuzzy_skin_ripple_offset",
+            "fuzzy_skin_layers_between_ripple_offset",
+        ] {
+            assert_eq!(
+                effective[key], settings[key],
+                "Native effective {key}: {root:?}"
+            );
+        }
     }
-    fs::write(
-        root.join("native.effective.json"),
-        serde_json::to_vec_pretty(&effective).unwrap(),
-    )
-    .unwrap();
-    let observed = witness::capture(&reference);
-    fs::write(
-        root.join("native.wall-witness.json"),
-        serde_json::to_vec_pretty(&observed).unwrap(),
-    )
-    .unwrap();
-    if !strict {
-        witness::verify_diagnostic(&observed, &contract);
+    if let Some(reference) = &reference {
+        fs::write(
+            root.join("native.effective.json"),
+            serde_json::to_vec_pretty(&effective).unwrap(),
+        )
+        .unwrap();
+        let observed = witness::capture(reference);
+        fs::write(
+            root.join("native.wall-witness.json"),
+            serde_json::to_vec_pretty(&observed).unwrap(),
+        )
+        .unwrap();
+        if !strict {
+            witness::verify_diagnostic(&observed, &contract);
+        }
     }
     NativeCase {
         root: root.to_owned(),
@@ -123,5 +177,8 @@ pub(super) fn prepare(
         settings: Value::Object(settings),
         contract,
         strict,
+        native_stochastic_empty_layers: stochastic_empty_layers,
+        native_return_code,
+        native_warning_message,
     }
 }

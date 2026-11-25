@@ -40,16 +40,30 @@ pub(super) fn compare(case: NativeCase, project: &[u8]) {
     let api_comparison = case.strict.then(|| {
         api.as_ref()
             .map_err(|error| format!("API: {error:?}"))
-            .and_then(|g| crate::golden::compare_ordered_bytes_generator_only(&case.reference, g))
+            .and_then(|g| {
+                crate::golden::compare_ordered_bytes_generator_only(
+                    case.reference.as_ref().unwrap(),
+                    g,
+                )
+            })
     });
     let cli_comparison = case.strict.then(|| {
         cli_bytes
             .as_ref()
             .map_err(|error| format!("CLI: {error}"))
-            .and_then(|g| crate::golden::compare_ordered_bytes_generator_only(&case.reference, g))
+            .and_then(|g| {
+                crate::golden::compare_ordered_bytes_generator_only(
+                    case.reference.as_ref().unwrap(),
+                    g,
+                )
+            })
     });
     fs::write(root.join("comparison.json"),serde_json::to_vec_pretty(&json!({
-        "input_sha256":sha(project),"settings":case.settings,"native_sha256":sha(&case.reference),
+        "input_sha256":sha(project),"settings":case.settings,
+        "native_sha256":case.reference.as_ref().map(|g|sha(g)),
+        "native_stochastic_empty_layers":case.native_stochastic_empty_layers,
+        "native_return_code":case.native_return_code,
+        "native_warning_message":case.native_warning_message,
         "strict_parity_required":case.strict,
         "strict_parity_performed":case.strict && api.is_ok() && cli_bytes.is_ok(),
         "oracle_contract":if case.strict {"strict full ordered generator bytes"} else {"official stochastic diagnostic ONLY, never parity PASS"},

@@ -63,8 +63,10 @@ fn f1_context_seed_repeat_and_job_isolation() {
             .map_err(|e| format!("{e:?}"))
             .and_then(|g| crate::golden::compare_ordered_bytes_generator_only(reference, g))
     };
-    let zero_comparison = seeded.then(|| compare(&zero_native.reference, &zero));
-    let one_comparison = one_native.as_ref().map(|n| compare(&n.reference, &one));
+    let zero_comparison = seeded.then(|| compare(zero_native.reference.as_ref().unwrap(), &zero));
+    let one_comparison = one_native
+        .as_ref()
+        .map(|n| compare(n.reference.as_ref().unwrap(), &one));
     fs::write(
         root.join("context-evidence.json"),
         serde_json::to_vec_pretty(&json!({
