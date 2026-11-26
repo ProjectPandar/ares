@@ -5,7 +5,7 @@ mod types;
 
 pub(in crate::project_slice) use types::{
     ClassicTopSplitRecord, PostClassicTopSplitPrintObject, PreparedPostClassicTopSplit,
-    PreparedTopSplitSurface, TopSplitOutcome, TopSplitUpperSource,
+    PreparedTopSplitSurface,
 };
 
 use crate::{SliceError, geometry::ExPolygon};
@@ -77,12 +77,7 @@ fn prepare_record(
     config: ValidatedTopSplitConfig,
     scale: crate::geometry::CoordinateScale,
 ) -> Result<ClassicTopSplitRecord, SliceError> {
-    let upper_source = if config.interface_shells {
-        TopSplitUpperSource::SameRegion
-    } else {
-        TopSplitUpperSource::WholeLayer
-    };
-    let upper = selected_upper(object, input, upper_source);
+    let upper = selected_upper(object, input, config.interface_shells);
     let lower = record.printable_lower_slices.as_deref();
     let surfaces = record
         .surfaces
@@ -97,7 +92,6 @@ fn prepare_record(
                     upper: upper.as_deref(),
                     lower,
                     has_upper_layer: input.upper_layer_index.is_some(),
-                    upper_source,
                 },
             )
         })
@@ -112,7 +106,6 @@ struct SurfaceContext<'a> {
     upper: Option<&'a [ExPolygon]>,
     lower: Option<&'a [ExPolygon]>,
     has_upper_layer: bool,
-    upper_source: TopSplitUpperSource,
 }
 
 fn prepare_surface(
@@ -126,18 +119,20 @@ fn prepare_surface(
         upper,
         lower,
         has_upper_layer,
-        upper_source,
     } = context;
     let initial_loop_number = surface.loop_number;
     if initial_loop_number < 0 {
-        let mut output = empty_surface(
-            surface,
+        return Ok(PreparedTopSplitSurface {
+            source_index: surface.source_index,
             initial_loop_number,
-            TopSplitOutcome::NoLoops,
-            upper_source,
-        );
-        output.remaining = surface.polygons.clone();
-        return Ok(output);
+            effective_loop_number: initial_loop_number,
+            normal_first_offset: Vec::new(),
+            smaller_first_offset: Vec::new(),
+            thin_walls: Vec::new(),
+            remaining: surface.polygons.clone(),
+            top_fills: Vec::new(),
+            fill_clip: Vec::new(),
+        });
     }
 
     let first = first_outer::apply(&surface.polygons, record, scale)?;
@@ -152,21 +147,15 @@ fn prepare_surface(
             remaining: Vec::new(),
             top_fills: Vec::new(),
             fill_clip: Vec::new(),
-            outcome: TopSplitOutcome::Collapsed,
-            upper_source,
         });
     }
 
-    let mut remaining = first.normal.clone();
-    let outcome = if !config.only_one_wall_top {
-        TopSplitOutcome::Disabled
-    } else if surface.kind.is_bridge() {
-        TopSplitOutcome::Bridge
-    } else if !has_upper_layer {
-        TopSplitOutcome::NoUpperLayer
-    } else if initial_loop_number == 0 {
-        TopSplitOutcome::OneLoop
-    } else {
+    let remaining = first.normal.clone();
+    if config.only_one_wall_top
+        && !surface.kind.is_bridge()
+        && has_upper_layer
+        && initial_loop_number != 0
+    {
         let result = split::apply(
             &remaining,
             split::SplitContext {
@@ -177,7 +166,6 @@ fn prepare_surface(
                 scale,
             },
         )?;
-        remaining = result.non_top_polygons;
         return Ok(PreparedTopSplitSurface {
             source_index: surface.source_index,
             initial_loop_number,
@@ -185,13 +173,11 @@ fn prepare_surface(
             normal_first_offset: first.normal,
             smaller_first_offset: first.smaller,
             thin_walls: first.thin_walls,
-            remaining,
+            remaining: result.non_top_polygons,
             top_fills: result.top_fills,
             fill_clip: result.fill_clip,
-            outcome: TopSplitOutcome::Applied,
-            upper_source,
         });
-    };
+    }
 
     Ok(PreparedTopSplitSurface {
         source_index: surface.source_index,
@@ -203,46 +189,22 @@ fn prepare_surface(
         remaining,
         top_fills: Vec::new(),
         fill_clip: Vec::new(),
-        outcome,
-        upper_source,
     })
-}
-
-fn empty_surface(
-    surface: &PreparedClassicSurface,
-    loop_number: i32,
-    outcome: TopSplitOutcome,
-    upper_source: TopSplitUpperSource,
-) -> PreparedTopSplitSurface {
-    PreparedTopSplitSurface {
-        source_index: surface.source_index,
-        initial_loop_number: loop_number,
-        effective_loop_number: loop_number,
-        normal_first_offset: Vec::new(),
-        smaller_first_offset: Vec::new(),
-        thin_walls: Vec::new(),
-        remaining: Vec::new(),
-        top_fills: Vec::new(),
-        fill_clip: Vec::new(),
-        outcome,
-        upper_source,
-    }
 }
 
 fn selected_upper(
     object: &crate::project_slice::perimeters::types::PostPerimeterInputPrintObject,
     input: &PerimeterInputRecord,
-    source: TopSplitUpperSource,
+    interface_shells: bool,
 ) -> Option<Vec<ExPolygon>> {
-    match source {
-        TopSplitUpperSource::WholeLayer => object.upper_slices(input).map(|slices| slices.to_vec()),
-        TopSplitUpperSource::SameRegion => {
-            object.upper_same_region_surfaces(input).map(|surfaces| {
-                surfaces
-                    .iter()
-                    .map(|surface| surface.as_parts().1.clone())
-                    .collect()
-            })
-        }
+    if interface_shells {
+        object.upper_same_region_surfaces(input).map(|surfaces| {
+            surfaces
+                .iter()
+                .map(|surface| surface.as_parts().1.clone())
+                .collect()
+        })
+    } else {
+        object.upper_slices(input).map(|slices| slices.to_vec())
     }
 }

@@ -18,8 +18,8 @@ use crate::{
 use super::{
     cracks, extra_bridge,
     geometry::{
-        GeometryStep, expolygons, fresh, geometry_error, internal, observe, opening,
-        opening_offset, paths, safety_difference,
+        expolygons, fresh, geometry_error, internal, opening, opening_offset, paths,
+        safety_difference,
     },
     preflight,
     top_expansion::{self, TopExpansion},
@@ -272,12 +272,7 @@ pub(super) fn classify_with_fill(
     let mut top = if let Some(upper) = upper {
         fresh(
             RegionSurfaceKind::Top,
-            opening(
-                &safety_difference(comparison, upper, GeometryStep::TopSafetyDifference)?,
-                offset,
-                GeometryStep::TopShrink,
-                GeometryStep::TopExpand,
-            )?,
+            opening(&safety_difference(comparison, upper)?, offset)?,
         )
     } else {
         source
@@ -288,16 +283,7 @@ pub(super) fn classify_with_fill(
     let mut bottom = if let Some(lower) = lower {
         let mut surfaces = fresh(
             bottom_kind,
-            opening(
-                &safety_difference(
-                    comparison,
-                    lower.slices,
-                    GeometryStep::BottomSafetyDifference,
-                )?,
-                offset,
-                GeometryStep::BottomShrink,
-                GeometryStep::BottomExpand,
-            )?,
+            opening(&safety_difference(comparison, lower.slices)?, offset)?,
         );
         surfaces.extend(interface_bottom_surfaces(comparison, &lower, offset)?);
         surfaces
@@ -331,19 +317,10 @@ fn interface_bottom_surfaces(
         return Ok(Vec::new());
     };
     let supported = intersection_ex(comparison, lower.slices).map_err(geometry_error)?;
-    let other_region = safety_difference(
-        &supported,
-        own_lower,
-        GeometryStep::InterfaceBottomDifference,
-    )?;
+    let other_region = safety_difference(&supported, own_lower)?;
     Ok(fresh(
         RegionSurfaceKind::Bottom,
-        opening(
-            &other_region,
-            offset,
-            GeometryStep::BottomShrink,
-            GeometryStep::BottomExpand,
-        )?,
+        opening(&other_region, offset)?,
     ))
 }
 
@@ -352,20 +329,11 @@ pub(super) fn clipped_fill(
     boundaries: &[ExPolygon],
 ) -> Result<Vec<RegionSurface>, SliceError> {
     let mut output = Vec::new();
-    for (kind, step) in [
-        (RegionSurfaceKind::Top, GeometryStep::FillTopIntersection),
-        (
-            RegionSurfaceKind::Bottom,
-            GeometryStep::FillBottomIntersection,
-        ),
-        (
-            RegionSurfaceKind::BottomBridge,
-            GeometryStep::FillBottomBridgeIntersection,
-        ),
-        (
-            RegionSurfaceKind::Internal,
-            GeometryStep::FillInternalIntersection,
-        ),
+    for kind in [
+        RegionSurfaceKind::Top,
+        RegionSurfaceKind::Bottom,
+        RegionSurfaceKind::BottomBridge,
+        RegionSurfaceKind::Internal,
     ] {
         let group = slices
             .iter()
@@ -373,7 +341,6 @@ pub(super) fn clipped_fill(
             .map(|surface| surface.as_parts().1.clone())
             .collect::<Vec<_>>();
         if !group.is_empty() {
-            observe(step)?;
             let clipped = intersection_ex(&group, boundaries).map_err(geometry_error)?;
             output.extend(fresh(kind, clipped));
         }

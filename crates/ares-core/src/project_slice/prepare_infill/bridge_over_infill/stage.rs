@@ -3,7 +3,7 @@ use crate::{
     geometry::ClipperError,
     project_slice::{
         perimeters::flow::{FillFlowContext, FillFlowRole, resolve_fill_flow},
-        prepare_infill::external_surfaces::{self, PreparedPostExternalSurfaces},
+        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
     },
 };
 
@@ -20,16 +20,11 @@ pub(in crate::project_slice) struct PreparedPostBridgeCandidates {
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostExternalSurfaces,
 ) -> Result<PreparedPostBridgeCandidates, SliceError> {
-    match gather_objects(&predecessor) {
-        Ok(objects) => Ok(PreparedPostBridgeCandidates {
-            predecessor,
-            objects,
-        }),
-        Err(error) => {
-            external_surfaces::dispose(predecessor);
-            Err(error)
-        }
-    }
+    let objects = gather_objects(&predecessor)?;
+    Ok(PreparedPostBridgeCandidates {
+        predecessor,
+        objects,
+    })
 }
 
 fn gather_objects(

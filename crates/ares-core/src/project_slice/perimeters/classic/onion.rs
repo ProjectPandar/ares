@@ -95,7 +95,6 @@ fn prepare_record(
             })?;
             Ok(PreparedOnionSurface {
                 source_index: surface.source_index,
-                initial_loop_number: surface.initial_loop_number,
                 effective_loop_number: result.effective_loop_number,
                 shells: result.shells,
                 thin_wall_holes,

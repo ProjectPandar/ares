@@ -4,9 +4,8 @@ mod extra_bridge;
 mod surface_rewrite;
 
 use crate::{
-    SliceError,
-    geometry::ClipperError,
-    project_slice::prepare_infill::external_surfaces::{self, PreparedPostExternalSurfaces},
+    SliceError, geometry::ClipperError,
+    project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
 };
 
 use super::{PreparedPostBridgeCandidates, types::BridgeCandidateObject};
@@ -27,14 +26,10 @@ pub(in crate::project_slice) fn prepare(
         mut predecessor,
         mut objects,
     } = predecessor;
-    if let Err(error) = validate_capabilities(&predecessor, &objects)
-        .and_then(|()| candidate_expansion::prepare(&predecessor, &mut objects))
-        .and_then(|()| surface_rewrite::prepare(&mut predecessor, &objects))
-        .and_then(|()| extra_bridge::prepare(&mut predecessor))
-    {
-        external_surfaces::dispose(predecessor);
-        return Err(error);
-    }
+    validate_capabilities(&predecessor, &objects)?;
+    candidate_expansion::prepare(&predecessor, &mut objects)?;
+    surface_rewrite::prepare(&mut predecessor, &objects)?;
+    extra_bridge::prepare(&mut predecessor)?;
     let lightning_generators = objects
         .iter()
         .map(|object| object.lightning_generator.clone())
@@ -43,10 +38,6 @@ pub(in crate::project_slice) fn prepare(
         predecessor,
         lightning_generators,
     })
-}
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeOverInfill) {
-    external_surfaces::dispose(prepared.predecessor);
 }
 
 fn validate_capabilities(

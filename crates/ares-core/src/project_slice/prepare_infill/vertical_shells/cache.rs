@@ -8,12 +8,6 @@ use super::types::VerticalShellCache;
 
 const RANGE_ERROR: &str = "vertical-shell cache geometry is outside the supported Clipper range";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) enum GeometryStep {
-    Top,
-    Bottom,
-}
-
 pub(super) fn build(
     slices: &[RegionSurface],
     fill_expolygons: &[ExPolygon],
@@ -26,7 +20,6 @@ pub(super) fn build(
     let expansion = expansion(solid_infill_spacing);
     let top = filtered(slices, |kind| kind == RegionSurfaceKind::Top);
 
-    geometry_step(GeometryStep::Top);
     let top_surfaces = offset_expolygon_refs_paths(&top, expansion, JoinType::Miter, 3.0)
         .map_err(|_| range_error())?;
     let bottom = filtered(slices, |kind| {
@@ -36,7 +29,6 @@ pub(super) fn build(
         )
     });
 
-    geometry_step(GeometryStep::Bottom);
     let bottom_surfaces = offset_expolygon_refs_paths(&bottom, expansion, JoinType::Miter, 3.0)
         .map_err(|_| range_error())?;
     let holes = flatten(fill_expolygons);
@@ -88,5 +80,3 @@ pub(super) fn empty() -> VerticalShellCache {
 fn range_error() -> SliceError {
     SliceError::InvalidInput(RANGE_ERROR.to_owned())
 }
-
-fn geometry_step(_: GeometryStep) {}

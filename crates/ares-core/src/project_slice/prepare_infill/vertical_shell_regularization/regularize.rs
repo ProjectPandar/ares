@@ -1,10 +1,8 @@
 use crate::{
     SliceError,
-    geometry::{
-        ClipperError, FillRule, JoinType, offset_expolygons, offset2_ex_with_interstage, union_ex,
-    },
+    geometry::{FillRule, JoinType, offset_expolygons, offset2_ex, union_ex},
     project_slice::prepare_infill::{
-        vertical_shell_regularization::{GeometryStep, geometry_step, range_error},
+        vertical_shell_regularization::range_error,
         vertical_shell_trimming::types::VerticalShellTrim,
     },
 };
@@ -44,26 +42,17 @@ pub(super) fn regularize_record(
     }
 
     let radii = radii(solid_infill_spacing);
-    geometry_step(GeometryStep::Union)?;
     let united = union_ex(&trim.shell, FillRule::NonZero).map_err(|_| range_error())?;
 
-    geometry_step(GeometryStep::Offset2First)?;
-    let opened_and_closed = offset2_ex_with_interstage(
+    let opened_and_closed = offset2_ex(
         &united,
-        (
-            -radii.narrow_ensure,
-            radii.narrow_ensure + radii.narrow_sparse,
-            JoinType::Square,
-            DEFAULT_MITER_LIMIT,
-        ),
-        || {
-            geometry_step(GeometryStep::Offset2Second)
-                .map_err(|_| ClipperError::CoordinateOutOfRange)
-        },
+        -radii.narrow_ensure,
+        radii.narrow_ensure + radii.narrow_sparse,
+        JoinType::Square,
+        DEFAULT_MITER_LIMIT,
     )
     .map_err(|_| range_error())?;
 
-    geometry_step(GeometryStep::Shrink)?;
     let regularized_shell = offset_expolygons(
         &opened_and_closed,
         -(radii.narrow_sparse - radii.tiny_overlap),

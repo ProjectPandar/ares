@@ -2,13 +2,10 @@ use crate::{
     ProcessEnsureVerticalShellThickness, SliceError,
     geometry::CoordinateScale,
     project_slice::prepare_infill::{
-        horizontal_shell_promotion::{self, PreparedPostHorizontalShellPromotion},
-        horizontal_shell_propagation::{
-            PropagationEvent, record_commit, record_disposal, record_event,
-            types::{
-                PreparedPostHorizontalShellPropagation, WorkingFillRecord, WorkingObject,
-                WorkingProject,
-            },
+        horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,
+        horizontal_shell_propagation::types::{
+            PreparedPostHorizontalShellPropagation, WorkingFillRecord, WorkingObject,
+            WorkingProject,
         },
         surface_type_detection::types::PreparedSurfaceTypeRecord,
     },
@@ -20,11 +17,7 @@ pub(super) fn prepare(
     validate_alignment(&prepared);
 
     let mut working = build_working_graph(&prepared);
-    if let Err(error) = super::propagate::project(&prepared, &mut working) {
-        record_disposal();
-        horizontal_shell_promotion::dispose(prepared);
-        return Err(error);
-    }
+    super::propagate::project(&prepared, &mut working)?;
     Ok(commit_dirty(prepared, working))
 }
 
@@ -33,8 +26,7 @@ fn build_working_graph(prepared: &PreparedPostHorizontalShellPromotion) -> Worki
         .objects
         .iter()
         .zip(&prepared.predecessor.objects)
-        .enumerate()
-        .map(|(object_index, (object, traversal))| {
+        .map(|(object, traversal)| {
             let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
             let (_, inputs) = prelude.object.as_parts();
             let active = object.records.iter().zip(inputs).any(|(record, input)| {
@@ -48,10 +40,7 @@ fn build_working_graph(prepared: &PreparedPostHorizontalShellPromotion) -> Worki
                 object
                     .records
                     .iter()
-                    .enumerate()
-                    .map(|(layer_index, record)| {
-                        clone_working_record(object_index, layer_index, record.as_ref())
-                    })
+                    .map(|record| clone_working_record(record.as_ref()))
                     .collect()
             });
             WorkingObject { records }
@@ -60,17 +49,10 @@ fn build_working_graph(prepared: &PreparedPostHorizontalShellPromotion) -> Worki
     WorkingProject { objects }
 }
 
-fn clone_working_record(
-    object: usize,
-    layer: usize,
-    record: Option<&PreparedSurfaceTypeRecord>,
-) -> Option<WorkingFillRecord> {
-    record.map(|record| {
-        record_event(PropagationEvent::FillClone { object, layer });
-        WorkingFillRecord {
-            fill_surfaces: record.fill_surfaces.clone(),
-            dirty: false,
-        }
+fn clone_working_record(record: Option<&PreparedSurfaceTypeRecord>) -> Option<WorkingFillRecord> {
+    record.map(|record| WorkingFillRecord {
+        fill_surfaces: record.fill_surfaces.clone(),
+        dirty: false,
     })
 }
 
@@ -81,29 +63,15 @@ fn commit_dirty(
     let PreparedPostHorizontalShellPromotion {
         predecessor,
         mut objects,
-        caches,
-        projections,
-        trims,
-        regularizations,
-        filters,
     } = prepared;
-    for (object_index, (object, working_object)) in
-        objects.iter_mut().zip(working.objects).enumerate()
-    {
+    for (object, working_object) in objects.iter_mut().zip(working.objects) {
         let Some(working_records) = working_object.records else {
             continue;
         };
-        for (layer_index, (original, working)) in
-            object.records.iter_mut().zip(working_records).enumerate()
-        {
+        for (original, working) in object.records.iter_mut().zip(working_records) {
             match (original, working) {
                 (Some(original), Some(working)) if working.dirty => {
                     original.fill_surfaces = working.fill_surfaces;
-                    record_commit();
-                    record_event(PropagationEvent::DirtyCommit {
-                        object: object_index,
-                        layer: layer_index,
-                    });
                 }
                 (Some(_), Some(_)) | (None, None) => {}
                 _ => unreachable!("validated O26 slots remain aligned"),
@@ -113,11 +81,6 @@ fn commit_dirty(
     PreparedPostHorizontalShellPropagation {
         predecessor,
         objects,
-        caches,
-        projections,
-        trims,
-        regularizations,
-        filters,
     }
 }
 
@@ -136,29 +99,10 @@ fn validate_alignment(prepared: &PreparedPostHorizontalShellPromotion) {
         )
     );
     let object_count = prepared.objects.len();
-    assert_eq!(prepared.caches.len(), object_count);
-    assert_eq!(prepared.projections.len(), object_count);
-    assert_eq!(prepared.trims.len(), object_count);
-    assert_eq!(prepared.regularizations.len(), object_count);
-    assert_eq!(prepared.filters.len(), object_count);
     assert_eq!(prepared.predecessor.objects.len(), object_count);
 
-    for ((((((object, cache), projection), trim), regularization), filter), traversal) in prepared
-        .objects
-        .iter()
-        .zip(&prepared.caches)
-        .zip(&prepared.projections)
-        .zip(&prepared.trims)
-        .zip(&prepared.regularizations)
-        .zip(&prepared.filters)
-        .zip(&prepared.predecessor.objects)
-    {
+    for (object, traversal) in prepared.objects.iter().zip(&prepared.predecessor.objects) {
         let count = object.records.len();
-        assert_eq!(cache.records.len(), count);
-        assert_eq!(projection.records.len(), count);
-        assert_eq!(trim.records.len(), count);
-        assert_eq!(regularization.records.len(), count);
-        assert_eq!(filter.records.len(), count);
         let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
         let input_object = &prelude.object;
         let (compensated, inputs) = input_object.as_parts();
@@ -172,28 +116,9 @@ fn validate_alignment(prepared: &PreparedPostHorizontalShellPromotion) {
             input_object.identity()
         );
 
-        for (index, ((((((record, cache), projection), trim), regularization), filter), input)) in
-            object
-                .records
-                .iter()
-                .zip(&cache.records)
-                .zip(&projection.records)
-                .zip(&trim.records)
-                .zip(&regularization.records)
-                .zip(&filter.records)
-                .zip(inputs)
-                .enumerate()
-        {
-            match (
-                record,
-                cache,
-                projection,
-                trim,
-                regularization,
-                filter,
-                input,
-            ) {
-                (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(input)) => {
+        for (index, (record, input)) in object.records.iter().zip(inputs).enumerate() {
+            match (record, input) {
+                (Some(_), Some(input)) => {
                     assert_eq!(input_object.region_layer_record_index(input.current), index);
                     assert_eq!(input.planned_layer_index, input.current.layer_index);
                     assert_eq!(input.layer_id, plan.layers[input.current.layer_index].id);
@@ -207,7 +132,7 @@ fn validate_alignment(prepared: &PreparedPostHorizontalShellPromotion) {
                         input_object.identity()
                     );
                 }
-                (None, None, None, None, None, None, None) => {}
+                (None, None) => {}
                 _ => panic!("O26 slots remain aligned across the complete predecessor"),
             }
         }

@@ -7,8 +7,6 @@ use crate::{
     },
 };
 
-use super::record_commit;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum StagedDecision {
     Noop,
@@ -37,7 +35,6 @@ pub(super) fn commit(record: &mut PreparedSurfaceTypeRecord, decision: StagedDec
         return;
     }
 
-    record_commit();
     for surface in &mut record.fill_surfaces {
         if surface.as_parts().0 == RegionSurfaceKind::Internal {
             surface.retag(RegionSurfaceKind::InternalSolid);

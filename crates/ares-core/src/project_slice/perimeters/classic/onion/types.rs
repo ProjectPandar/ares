@@ -32,7 +32,6 @@ pub(in crate::project_slice) struct RawShellDepth {
 #[derive(Debug)]
 pub(in crate::project_slice) struct PreparedOnionSurface {
     pub(in crate::project_slice) source_index: usize,
-    pub(in crate::project_slice) initial_loop_number: i32,
     pub(in crate::project_slice) effective_loop_number: i32,
     pub(in crate::project_slice) shells: Vec<RawShellDepth>,
     /// First-shell hole order: normal offsets, then smaller-width offsets.
@@ -43,15 +42,4 @@ pub(in crate::project_slice) struct PreparedOnionSurface {
     /// `thin_walls` — carried from `PreparedTopSplitSurface` for the
     /// `traverse_loops` `variable_width` materialization (`detect_thin_wall`).
     pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
-}
-
-impl PostClassicOnionPrintObject {
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostClassicTopSplitPrintObject,
-        Vec<Option<ClassicOnionRecord>>,
-    ) {
-        (self.predecessor, self.records)
-    }
 }

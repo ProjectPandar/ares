@@ -229,7 +229,3 @@ fn contour_bounds(expolygon: &ExPolygon) -> Bounds {
         },
     )
 }
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostExtrusionIslands) {
-    super::fill_entities::dispose(prepared.predecessor);
-}

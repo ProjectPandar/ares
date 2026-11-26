@@ -6,7 +6,7 @@ use crate::{
             assign::{self, StagedAssignment},
             types::PreparedPostVerticalShellAssignment,
         },
-        vertical_shell_filtering::{self, PreparedPostVerticalShellFiltering},
+        vertical_shell_filtering::PreparedPostVerticalShellFiltering,
     },
 };
 
@@ -18,22 +18,12 @@ pub(super) fn prepare(
     prepared: PreparedPostVerticalShellFiltering,
 ) -> Result<PreparedPostVerticalShellAssignment, SliceError> {
     validate_alignment(&prepared);
-    let staged = match stage_assignments(&prepared) {
-        Ok(staged) => staged,
-        Err(error) => {
-            vertical_shell_filtering::dispose(prepared);
-            return Err(error);
-        }
-    };
+    let staged = stage_assignments(&prepared)?;
 
     let PreparedPostVerticalShellFiltering {
         predecessor,
         mut objects,
-        caches,
-        projections,
-        trims,
-        regularizations,
-        filters,
+        ..
     } = prepared;
     for (object, staged_object) in objects.iter_mut().zip(staged) {
         for (record, staged_record) in object.records.iter_mut().zip(staged_object.records) {
@@ -47,11 +37,6 @@ pub(super) fn prepare(
     Ok(PreparedPostVerticalShellAssignment {
         predecessor,
         objects,
-        caches,
-        projections,
-        trims,
-        regularizations,
-        filters,
     })
 }
 
@@ -92,27 +77,15 @@ fn validate_alignment(prepared: &PreparedPostVerticalShellFiltering) {
                 .printable_area,
         )
     );
-    assert_eq!(prepared.objects.len(), prepared.caches.len());
-    assert_eq!(prepared.objects.len(), prepared.projections.len());
-    assert_eq!(prepared.objects.len(), prepared.trims.len());
-    assert_eq!(prepared.objects.len(), prepared.regularizations.len());
     assert_eq!(prepared.objects.len(), prepared.filters.len());
     assert_eq!(prepared.objects.len(), prepared.predecessor.objects.len());
-    for ((((((object, cache), projection), trim), regularization), filter), traversal) in prepared
+    for ((object, filter), traversal) in prepared
         .objects
         .iter()
-        .zip(&prepared.caches)
-        .zip(&prepared.projections)
-        .zip(&prepared.trims)
-        .zip(&prepared.regularizations)
         .zip(&prepared.filters)
         .zip(&prepared.predecessor.objects)
     {
         let count = object.records.len();
-        assert_eq!(cache.records.len(), count);
-        assert_eq!(projection.records.len(), count);
-        assert_eq!(trim.records.len(), count);
-        assert_eq!(regularization.records.len(), count);
         assert_eq!(filter.records.len(), count);
         let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
         let input_object = &prelude.object;
@@ -125,28 +98,15 @@ fn validate_alignment(prepared: &PreparedPostVerticalShellFiltering) {
         assert_eq!(plan.source_object_index, input_object.identity().0);
         assert_eq!(plan.transform_index, input_object.identity().1);
 
-        for (index, ((((((record, cache), projection), trim), regularization), filter), input)) in
-            object
-                .records
-                .iter()
-                .zip(&cache.records)
-                .zip(&projection.records)
-                .zip(&trim.records)
-                .zip(&regularization.records)
-                .zip(&filter.records)
-                .zip(inputs)
-                .enumerate()
+        for (index, ((record, filter), input)) in object
+            .records
+            .iter()
+            .zip(&filter.records)
+            .zip(inputs)
+            .enumerate()
         {
-            match (
-                record,
-                cache,
-                projection,
-                trim,
-                regularization,
-                filter,
-                input,
-            ) {
-                (Some(_), Some(_), Some(_), Some(_), Some(_), Some(_), Some(input)) => {
+            match (record, filter, input) {
+                (Some(_), Some(_), Some(input)) => {
                     assert_eq!(input_object.region_layer_record_index(input.current), index);
                     assert_eq!(input.planned_layer_index, input.current.layer_index);
                     assert_eq!(input.layer_id, plan.layers[input.current.layer_index].id);
@@ -160,7 +120,7 @@ fn validate_alignment(prepared: &PreparedPostVerticalShellFiltering) {
                         input_object.identity()
                     );
                 }
-                (None, None, None, None, None, None, None) => {}
+                (None, None, None) => {}
                 _ => panic!("O24 slots remain aligned across the complete predecessor"),
             }
         }

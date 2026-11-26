@@ -4,7 +4,7 @@ use crate::{
     project_slice::{
         prepare_infill::{
             surface_type_detection::types::PreparedSurfaceTypeRecord,
-            vertical_shell_assignment::{GeometryStep, geometry_step, range_error, record_commit},
+            vertical_shell_assignment::range_error,
             vertical_shell_filtering::types::VerticalShellTinyFilter,
             vertical_shell_trimming::trim::polygons_internal,
         },
@@ -34,13 +34,10 @@ pub(super) fn stage_record(
     let internal = collect_kind(record, RegionSurfaceKind::Internal);
     let internal_void = collect_kind(record, RegionSurfaceKind::InternalVoid);
 
-    geometry_step(GeometryStep::SolidIntersection)?;
     let new_internal_solid = intersection_polygons_ex(&internal_paths, &filter.filtered_shell)
         .map_err(|_| range_error())?;
-    geometry_step(GeometryStep::InternalDifference)?;
     let new_internal =
         difference_ex(&internal, &filter.filtered_shell).map_err(|_| range_error())?;
-    geometry_step(GeometryStep::InternalVoidDifference)?;
     let new_internal_void =
         difference_ex(&internal_void, &filter.filtered_shell).map_err(|_| range_error())?;
 
@@ -61,7 +58,6 @@ pub(super) fn commit(record: &mut PreparedSurfaceTypeRecord, staged: StagedAssig
         return;
     };
 
-    record_commit();
     record.fill_surfaces.retain(|surface| {
         matches!(
             surface.as_parts().0,

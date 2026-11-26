@@ -140,10 +140,6 @@ impl Project {
     pub(crate) fn documents(&self) -> &ProjectDocuments {
         &self.documents
     }
-
-    pub(crate) fn has_painted_layer_height_profile(&self) -> bool {
-        self.documents.has_painted_layer_height_profile
-    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

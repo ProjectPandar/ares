@@ -3,7 +3,7 @@ use crate::{
     project_slice::prepare_infill::{
         horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,
         horizontal_shell_propagation::{
-            PropagationEvent, gather, geometry, record_event,
+            gather, geometry,
             types::{NeighborOutcome, SOURCE_KINDS, SourceKind, WorkingObject, WorkingProject},
             window,
         },
@@ -45,16 +45,8 @@ fn propagate_source(
     else {
         return Ok(());
     };
-    record_event(PropagationEvent::RecordVisit {
-        object: object_index,
-        layer: source_index,
-    });
     let options = prelude.object.region_options(source_input);
     if options.ensure_vertical_shell_thickness == ProcessEnsureVerticalShellThickness::EnsureAll {
-        record_event(PropagationEvent::EnsureAllSkip {
-            object: object_index,
-            layer: source_index,
-        });
         return Ok(());
     }
     for kind in SOURCE_KINDS {
@@ -88,11 +80,6 @@ fn propagate_kind(
     if !window::source_enabled(count) {
         return Ok(());
     }
-    record_event(PropagationEvent::SourceKindVisit {
-        object: object_index,
-        layer: source_index,
-        kind,
-    });
     let working_records = working
         .records
         .as_mut()
@@ -123,12 +110,6 @@ fn propagate_kind(
                 layer_index: neighbor_layer,
             },
         );
-        record_event(PropagationEvent::NeighborVisit {
-            object: object_index,
-            source: source_index,
-            neighbor: neighbor_index,
-            kind,
-        });
         let outcome = {
             let neighbor_fill = working_records[neighbor_index]
                 .as_ref()
@@ -156,12 +137,6 @@ fn propagate_kind(
                     .expect("an absent neighbor cannot produce an intersection");
                 neighbor.fill_surfaces = fill_surfaces;
                 neighbor.dirty = true;
-                record_event(PropagationEvent::Rebuild {
-                    object: object_index,
-                    source: source_index,
-                    neighbor: neighbor_index,
-                    kind,
-                });
             }
         }
     }

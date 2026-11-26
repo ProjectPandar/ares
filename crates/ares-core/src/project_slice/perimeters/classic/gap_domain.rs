@@ -11,7 +11,6 @@ pub(in crate::project_slice) use types::{
 use crate::{
     SliceError,
     geometry::{ClipperError, ExPolygon, JoinType, difference_ex, offset2_ex, opening_ex},
-    project_slice::incomplete_sink,
 };
 
 use super::{
@@ -29,20 +28,7 @@ const MITER_LIMIT: f64 = 3.0;
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicPerimeterAppend,
 ) -> Result<PreparedPostClassicGapDomain, SliceError> {
-    let staged = match stage(&prepared) {
-        Ok(staged) => staged,
-        Err(error) => {
-            let PreparedPostClassicPerimeterAppend {
-                predecessor,
-                objects,
-            } = prepared;
-            for object in objects {
-                incomplete_sink::consume_perimeter_append_object(object);
-            }
-            incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
-            return Err(error);
-        }
-    };
+    let staged = stage(&prepared)?;
     let PreparedPostClassicPerimeterAppend {
         predecessor,
         objects,
