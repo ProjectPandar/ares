@@ -57,24 +57,10 @@ run_check() {
   rm -f "$log_file"
 }
 
-# Run sub-second single-process web fmt & lint with 100% dedicated CPU before
-# spawning background cargo fmt (avoids 4-vCPU contention spiking lint >1000ms).
+# Run tightly budgeted web fmt, lint, and TS7 typecheck with dedicated CPU before
+# spawning background cargo fmt (avoids 4-vCPU contention spiking lint/check over budget).
 run_check "web-fmt" "$BUDGET_WEB_FMT_MS" bun --cwd web fmt --no-script --check packages app e2e pages
 run_check "web-lint" "$BUDGET_WEB_LINT_MS" bun --cwd web lint --no-script --max-warnings=0 packages app e2e pages
-
-# Now overlap rust-fmt in the background with typecheck, unit tests, and configdef sync.
-rust_fmt_log="$(mktemp)"
-rust_fmt_meta="$(mktemp)"
-(
-  t0="$(now_ms)"
-  set +e
-  cargo fmt --check >"$rust_fmt_log" 2>&1
-  rc=$?
-  set -e
-  t1="$(now_ms)"
-  printf '%s %s\n' "$rc" "$((t1 - t0))" > "$rust_fmt_meta"
-) &
-rust_fmt_pid=$!
 
 if [ -f web/packages/ares-wasm-js/src/wasm/ares_wasm.d.ts ]; then
   run_check "web-typecheck-ts7" "$BUDGET_WEB_CHECK_MS" bash -c '
@@ -87,6 +73,20 @@ else
   echo "::warning::Skipping full web-typecheck-ts7 in fast-checks: cached src/wasm not yet warmed on main (checked in pages-build)"
   results+=("SKIP  web-typecheck-ts7  0ms (awaiting main wasm-pkg cache warm)")
 fi
+
+# Now overlap rust-fmt in the background with unit tests, configdef sync, and CI script checks.
+rust_fmt_log="$(mktemp)"
+rust_fmt_meta="$(mktemp)"
+(
+  t0="$(now_ms)"
+  set +e
+  cargo fmt --check >"$rust_fmt_log" 2>&1
+  rc=$?
+  set -e
+  t1="$(now_ms)"
+  printf '%s %s\n' "$rc" "$((t1 - t0))" > "$rust_fmt_meta"
+) &
+rust_fmt_pid=$!
 
 if [ -d "${ORCA_SLICER_DIR:-OrcaSlicer}/resources/profiles" ]; then
   mkdir -p "${ARES_PROFILE_TEST_ARTIFACTS:-/tmp/ares-profile-tests}"
