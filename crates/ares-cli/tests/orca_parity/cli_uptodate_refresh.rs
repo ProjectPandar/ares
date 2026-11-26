@@ -12,6 +12,8 @@ use serde_json::{Value, json};
 
 #[path = "cli_uptodate_refresh/machine_gcodes.rs"]
 mod machine_gcodes;
+#[path = "cli_uptodate_refresh/preset_identity.rs"]
+mod preset_identity;
 
 use crate::{
     load_settings_3mf::load_settings_3mf_fixture,
