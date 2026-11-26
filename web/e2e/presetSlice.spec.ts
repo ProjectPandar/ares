@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
-import { nativeEnv, oraclePath } from "./oracleEnv";
+import { nativeEnv, oraclePath, runParityNextest } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import {
   withDifferences,
@@ -149,27 +149,12 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   // slices cube10.stl pre-placed at the center of the rectangular LH Stinger bed (printable_area
   // 18x38..218x238), where Plater::priv::load_model_objects puts a model loaded on an empty plate.
   const nativeRoot = `${mkdtempSync(`${tmpdir()}/ares-web-preset-oracle-`)}/`;
-  execFileSync(
-    "cargo",
-    [
-      "nextest",
-      "run",
-      "-p",
-      "ares-cli",
-      "-E",
-      "test(profile_entry_3mf_load_settings) | test(profile_entry_stl_center_placement)",
-    ],
-    {
-      cwd: repositoryRoot,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        ARES_ORCA_BIN: launcher,
-        ...(seeded ? {} : nativeEnv(orca!)),
-        ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
-      },
-    },
-  );
+  runParityNextest(repositoryRoot, "test(profile_entry_3mf_load_settings) | test(profile_entry_stl_center_placement)", {
+    ...process.env,
+    ARES_ORCA_BIN: launcher,
+    ...(seeded ? {} : nativeEnv(orca!)),
+    ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+  });
   const runs = readdirSync(nativeRoot)
     .filter((name) => name.startsWith("orca-runner-"))
     .map((name) => `${nativeRoot}${name}/`);

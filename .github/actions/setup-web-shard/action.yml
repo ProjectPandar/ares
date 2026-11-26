@@ -10,6 +10,10 @@ inputs:
   ghcr-token:
     description: GitHub token for GHCR login
     required: true
+  parity-archive-key:
+    description: Optional Actions cache key for the prebuilt orca-parity nextest archive
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -17,6 +21,26 @@ runs:
       with:
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
     - uses: ./.github/actions/setup-bun
+    - if: inputs.parity-archive-key != ''
+      uses: taiki-e/install-action@nextest
+    - if: inputs.parity-archive-key != ''
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/parity-archive
+        key: ${{ inputs.parity-archive-key }}
+        fail-on-cache-miss: true
+    - name: Place ares binary and expose parity nextest archive
+      if: inputs.parity-archive-key != ''
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$GITHUB_WORKSPACE/target/debug" "$RUNNER_TEMP/enum-artifacts"
+        cp "$RUNNER_TEMP/parity-archive/ares" "$GITHUB_WORKSPACE/target/debug/ares"
+        chmod +x "$GITHUB_WORKSPACE/target/debug/ares"
+        {
+          echo "ARES_PARITY_NEXTEST_ARCHIVE=$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+          echo "ARES_ENUM_ARTIFACTS=$RUNNER_TEMP/enum-artifacts"
+        } >> "$GITHUB_ENV"
     - name: Cache web node_modules
       id: web-deps
       uses: actions/cache@v4

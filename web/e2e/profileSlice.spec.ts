@@ -1,11 +1,10 @@
-import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
-import { nativeEnv, oraclePath } from "./oracleEnv";
+import { nativeEnv, oraclePath, runParityNextest } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { withDifferences, withPlaterConfigLines, withPlaterTower } from "./platerExport";
 import { lhModels, nativeSelection, presetSelectProbe } from "./presetSelectOracle";
@@ -39,27 +38,12 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
   // The public profile-entry tests resolve original vendor leaves through isolated Native
   // preset data. The STL test retains the selection, pre-placed model and Native stream;
   // the 3MF override test applies layer_height after preset loading and retains its project.
-  execFileSync(
-    "cargo",
-    [
-      "nextest",
-      "run",
-      "-p",
-      "ares-cli",
-      "-E",
-      "test(profile_entry_stl_load_settings) | test(profile_entry_3mf_override_parity)",
-    ],
-    {
-      cwd: repositoryRoot,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        ARES_ORCA_BIN: launcher,
-        ...(seeded ? {} : nativeEnv(orca!)),
-        ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
-      },
-    },
-  );
+  runParityNextest(repositoryRoot, "test(profile_entry_stl_load_settings) | test(profile_entry_3mf_override_parity)", {
+    ...process.env,
+    ARES_ORCA_BIN: launcher,
+    ...(seeded ? {} : nativeEnv(orca!)),
+    ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+  });
   const runs = readdirSync(nativeRoot)
     .filter((name) => name.startsWith("orca-runner-"))
     .map((name) => `${nativeRoot}${name}/`);
