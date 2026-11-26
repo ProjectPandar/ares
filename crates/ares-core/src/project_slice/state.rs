@@ -58,7 +58,11 @@ pub(super) fn load_project_source(
         source.overrides,
         source.refresh,
         source.system_catalog,
-        (check_post_process, source.loaded),
+        (
+            check_post_process,
+            source.skip_modified_gcodes,
+            source.loaded,
+        ),
     )?;
     if let Some(custom_gcodes) = source.custom_gcodes {
         project.replace_plate_custom_gcodes(custom_gcodes);

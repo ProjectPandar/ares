@@ -1,6 +1,8 @@
 mod filament;
 pub(crate) use filament::loaded_filament_ordinary_values;
 pub(in crate::profiles) mod keys;
+mod lookup;
+use lookup::PresetLookup;
 pub(super) mod preset;
 pub(in crate::profiles) use filament::{dev_key, is_vector};
 pub(crate) use preset::connection as is_connection_option;
@@ -84,43 +86,11 @@ pub(crate) enum ProjectPresetPolicy {
 }
 
 #[derive(Clone, Copy)]
-pub(super) enum PresetLookup<'a> {
-    Catalog(&'a Catalog),
-    Native {
-        presets: &'a NativeRefreshPresets,
+pub(super) enum RefreshSource<'a> {
+    Catalog {
+        catalog: &'a LoadedCatalog,
         skip_modified_gcodes: bool,
     },
-}
-
-impl PresetLookup<'_> {
-    fn system(
-        self,
-        kind: super::ProfileKind,
-        name: &str,
-        slot: usize,
-    ) -> Result<Option<ProjectSettingsRaw>, SliceError> {
-        let catalog = match self {
-            Self::Catalog(catalog) => Some(catalog),
-            Self::Native { presets, .. } => {
-                if let Some(file) = presets.file(kind, slot) {
-                    return Ok(Some(file.raw.clone()));
-                }
-                presets
-                    .system_catalog
-                    .as_ref()
-                    .map(|handle| handle.catalog())
-            }
-        };
-        match catalog {
-            Some(catalog) => preset::system_config(catalog, kind, name),
-            None => Ok(None),
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub(super) enum RefreshSource<'a> {
-    Catalog(&'a LoadedCatalog),
     Native {
         presets: &'a NativeRefreshPresets,
         skip_modified_gcodes: bool,
@@ -138,9 +108,13 @@ pub(crate) struct ProjectPresetRefresh<'a> {
 pub(super) fn direct_refresh(
     catalog: &Catalog,
     raw: &ProjectSettingsRaw,
+    skip_modified_gcodes: bool,
 ) -> Result<(ProjectSettingsRaw, bool), SliceError> {
     preset::refresh(
-        PresetLookup::Catalog(catalog),
+        PresetLookup::Catalog {
+            catalog,
+            skip_modified_gcodes,
+        },
         raw,
         false,
         preset::RefreshScope::Project(None),
@@ -152,7 +126,10 @@ pub(super) fn direct_refresh_filaments(
     raw: &ProjectSettingsRaw,
 ) -> Result<ProjectSettingsRaw, SliceError> {
     preset::refresh(
-        PresetLookup::Catalog(catalog),
+        PresetLookup::Catalog {
+            catalog,
+            skip_modified_gcodes: false,
+        },
         raw,
         false,
         preset::RefreshScope::Filaments,
@@ -217,13 +194,35 @@ impl<'a> ProjectPresetRefresh<'a> {
         }
     }
 
+    pub(crate) fn with_skip_modified_gcodes(mut self, enabled: bool) -> Self {
+        if matches!(self.policy, ProjectPresetPolicy::Cli { .. }) {
+            match &mut self.source {
+                RefreshSource::Catalog {
+                    skip_modified_gcodes,
+                    ..
+                }
+                | RefreshSource::Native {
+                    skip_modified_gcodes,
+                    ..
+                } => *skip_modified_gcodes = enabled,
+            }
+        }
+        self
+    }
+
     pub(crate) fn is_native(self) -> bool {
         matches!(self.source, RefreshSource::Native { .. })
     }
 
     fn lookup(self) -> PresetLookup<'a> {
         match self.source {
-            RefreshSource::Catalog(catalog) => PresetLookup::Catalog(&catalog.catalog),
+            RefreshSource::Catalog {
+                catalog,
+                skip_modified_gcodes,
+            } => PresetLookup::Catalog {
+                catalog: &catalog.catalog,
+                skip_modified_gcodes,
+            },
             RefreshSource::Native {
                 presets,
                 skip_modified_gcodes,
@@ -278,7 +277,7 @@ impl<'a> ProjectPresetRefresh<'a> {
         }
         match self.policy {
             ProjectPresetPolicy::Always => {
-                let RefreshSource::Catalog(catalog) = self.source else {
+                let RefreshSource::Catalog { catalog, .. } = self.source else {
                     unreachable!("plater selection has a catalog")
                 };
                 let (raw, selection) =

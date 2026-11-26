@@ -118,7 +118,11 @@ impl ProjectInput<'_> {
         overrides: &ConfigOverrides,
         refresh: Option<crate::profiles::ProjectPresetRefresh<'_>>,
         system_catalog: Option<&crate::PresetCatalogHandle>,
-        (validate_post_process, loaded): (bool, Option<Box<crate::project::LoadedProfileProject>>),
+        (validate_post_process, skip_modified_gcodes, loaded): (
+            bool,
+            bool,
+            Option<Box<crate::project::LoadedProfileProject>>,
+        ),
     ) -> Result<
         (
             crate::Project,
@@ -154,7 +158,12 @@ impl ProjectInput<'_> {
                     && refresh.is_none()
                     && (saved_cli || system_catalog.is_some())
                 {
-                    apply_direct_catalog(&mut project, system_catalog, overrides)?;
+                    apply_direct_catalog(
+                        &mut project,
+                        system_catalog,
+                        overrides,
+                        skip_modified_gcodes,
+                    )?;
                 }
                 Ok((project, preparation.for_overrides(overrides)))
             }
@@ -170,7 +179,7 @@ impl ProjectInput<'_> {
                         overrides,
                         refresh,
                         system_catalog,
-                        (validate_post_process, loaded),
+                        (validate_post_process, skip_modified_gcodes, loaded),
                     )?;
                     project.place_assembly_plates();
                     Ok((project, preparation))
@@ -207,10 +216,11 @@ fn apply_direct_catalog(
     project: &mut crate::Project,
     catalog: Option<&crate::PresetCatalogHandle>,
     overrides: &ConfigOverrides,
+    skip_modified_gcodes: bool,
 ) -> Result<(), crate::SliceError> {
     let embedded = &project.documents().project_settings_raw;
     let (mut raw, retained_thumbnails) = match catalog {
-        Some(catalog) => catalog.refresh_direct(embedded)?,
+        Some(catalog) => catalog.refresh_direct(embedded, skip_modified_gcodes)?,
         None => (embedded.clone(), false),
     };
     crate::profiles::apply_retained_preset_defaults(&mut raw, None)?;

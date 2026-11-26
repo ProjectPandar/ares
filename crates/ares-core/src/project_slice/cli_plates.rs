@@ -106,7 +106,13 @@ fn slice_project_plates(
     let run = |mut source_input: ProjectSource<'_>| {
         if let Some(profile) = source_input.profile.as_mut() {
             profile.enable_timelapse = context.enable_timelapse;
+            profile.retained_refresh = profile
+                .retained_refresh
+                .map(|refresh| refresh.with_skip_modified_gcodes(skip_modified_gcodes));
         }
+        source_input.refresh = source_input
+            .refresh
+            .map(|refresh| refresh.with_skip_modified_gcodes(skip_modified_gcodes));
         let mut source_input = ProjectSource {
             loaded,
             max_triangle_count: 0,
@@ -203,7 +209,8 @@ fn slice_project_plates(
                 plate: selected,
                 overrides,
                 refresh: Some(crate::profiles::ProjectPresetRefresh::native(
-                    refresh, false,
+                    refresh,
+                    skip_modified_gcodes,
                 )),
                 ..ProjectSource::from(input)
             }),

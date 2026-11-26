@@ -25,6 +25,10 @@ const GCODES_KEY_SET: [&str; 12] = [
 ];
 const MACHINE_GCODES: &[&str] = GCODES_KEY_SET.split_at(10).0;
 
+pub(super) fn is_gcode_key(key: &str) -> bool {
+    GCODES_KEY_SET.contains(&key)
+}
+
 pub(super) enum RefreshScope<'a> {
     Project(Option<&'a crate::ProjectSettings>),
     Filaments,
@@ -39,6 +43,8 @@ pub(super) fn refresh(
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
     let dirty = strings(project, "different_settings_to_system");
+    let mut dirty_out = dirty.clone();
+    let mut dirty_changed = false;
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
     let mut retained_thumbnails = false;
@@ -74,22 +80,18 @@ pub(super) fn refresh(
         let Some(mut system) = lookup.system(kind, name, slot)? else {
             continue;
         };
-        let skip_machine_gcodes = uptodate
-            && kind == ProfileKind::Machine
-            && matches!(
-                lookup,
-                PresetLookup::Native { presets, skip_modified_gcodes: true }
-                    if presets.file(kind, slot).is_some()
-            );
+        let skip_gcodes =
+            uptodate && lookup.skip_modified_gcodes() && lookup.is_native_file(kind, slot);
         let mut protected = dirty_keys(&dirty, slot)?;
-        // `load_default_gcodes_to_config` (CLI:671–704,3240) supplies
-        // definition defaults for absent scripts in nonempty Native config.
-        // Only the protected scripts need them for this keep-set exception.
-        let defaultable_scripts = if skip_machine_gcodes && system.entries().next().is_some() {
-            MACHINE_GCODES
-        } else {
-            &[]
-        };
+        // `load_default_gcodes_to_config` (CLI:671–709,3239,3389) supplies
+        // defaults for absent machine scripts in nonempty Native config;
+        // TYPE_PRINT adds none.
+        let defaultable_scripts =
+            if skip_gcodes && kind == ProfileKind::Machine && system.entries().next().is_some() {
+                MACHINE_GCODES
+            } else {
+                &[]
+            };
         for &key in defaultable_scripts {
             if protected.contains(key)
                 && !system.contains_key(key)
@@ -103,7 +105,7 @@ pub(super) fn refresh(
             if bookkeeping(key) || connection(key) {
                 continue;
             }
-            if skip_machine_gcodes && MACHINE_GCODES.contains(&key.as_str()) {
+            if skip_gcodes && is_gcode_key(key) {
                 released |= protected.remove(key);
             }
             if project.contains_key(key) && (!refresh_unlisted || protected.contains(key.as_str()))
@@ -115,23 +117,27 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
         if released {
-            // CLI:3244–3253 serializes the remaining authored set, not the
-            // synthetic identity protections used by the merge.
+            // CLI:3244–3253,3394–3403 serialize the remaining authored set,
+            // not the synthetic identity protections used by the merge.
             let mut remaining = authored_dirty_keys(&dirty, slot)?;
             remaining.retain(|key| protected.contains(key));
-            let mut columns = dirty.clone();
-            columns[slot] = dirty_columns::encode(remaining.into_iter().collect())?;
-            result.insert_strings("different_settings_to_system", &columns);
+            dirty_out[slot] = dirty_columns::encode(remaining.into_iter().collect())?;
+            dirty_changed = true;
         }
     }
-    // CLI:2295,2793: a supplied named machine skips retained filament refresh.
-    if supplied.is_some_and(|p| {
-        (!p.printer_settings_id.0.is_empty() && matches!(lookup, PresetLookup::Catalog(_)))
-            || !p.filament_settings_id.0.is_empty()
-    }) {
+    // CLI:2295,2693,2793: a supplied named machine skips catalog filament refresh
+    // (but still allows Native --uptodate-filaments / filament_full files);
+    // explicit --load-filaments replaces instead of refreshing.
+    let machine_replaced = supplied.is_some_and(|p| !p.printer_settings_id.0.is_empty());
+    if supplied.is_some_and(|p| !p.filament_settings_id.0.is_empty())
+        || (machine_replaced && matches!(lookup, PresetLookup::Catalog { .. }))
+    {
+        if dirty_changed {
+            result.insert_strings("different_settings_to_system", &dirty_out);
+        }
         return Ok((result, retained_thumbnails));
     }
-    let filaments = names
+    let mut filaments = names
         .iter()
         .enumerate()
         .map(|(slot, name)| {
@@ -139,12 +145,23 @@ pub(super) fn refresh(
             // CLI:2805–2807: a resolver miss keeps the imported filament slot.
             if name.is_empty() {
                 Ok(None)
+            } else if machine_replaced {
+                Ok(lookup.native_file(ProfileKind::Filament, slot))
             } else {
                 lookup.system(ProfileKind::Filament, name, slot)
             }
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
-    filament::apply(&mut result, project, &filaments, &dirty, refresh_unlisted)?;
+    filament::apply(
+        &mut result,
+        project,
+        &mut filaments,
+        (&dirty, &mut dirty_out, &mut dirty_changed),
+        (refresh_unlisted, lookup.skip_modified_gcodes()),
+    )?;
+    if dirty_changed {
+        result.insert_strings("different_settings_to_system", &dirty_out);
+    }
     Ok((result, retained_thumbnails))
 }
 
@@ -277,7 +294,10 @@ pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<S
     }
 }
 
-fn authored_dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<String>, SliceError> {
+pub(super) fn authored_dirty_keys(
+    dirty: &[String],
+    slot: usize,
+) -> Result<BTreeSet<String>, SliceError> {
     let token = dirty.get(slot).map(String::as_str).unwrap_or("");
     crate::options::unescape_strings_cstyle(token)
         .map(|keys| keys.into_iter().collect())

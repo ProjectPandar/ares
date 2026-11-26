@@ -153,8 +153,9 @@ impl PresetCatalogHandle {
     pub(crate) fn refresh_direct(
         &self,
         raw: &ProjectSettingsRaw,
+        skip_modified_gcodes: bool,
     ) -> Result<(ProjectSettingsRaw, bool), SliceError> {
-        super::project_refresh::direct_refresh(&self.catalog, raw)
+        super::project_refresh::direct_refresh(&self.catalog, raw, skip_modified_gcodes)
     }
 
     pub(crate) fn refresh_direct_filaments(
