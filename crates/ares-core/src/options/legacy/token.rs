@@ -48,6 +48,12 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         *opt_key = "change_filament_gcode".to_owned();
     } else if opt_key == "bridge_fan_speed" {
         *opt_key = "overhang_fan_speed".to_owned();
+    } else if opt_key == "tpms_adaptive" {
+        *opt_key = "adaptive_infill_mode".to_owned();
+    } else if opt_key == "tpms_interior_density" {
+        *opt_key = "adaptive_infill_interior_density".to_owned();
+    } else if opt_key == "tpms_adaptive_gradient" {
+        *opt_key = "adaptive_infill_gradient".to_owned();
     } else if opt_key == "infill_extruder" {
         *opt_key = "sparse_infill_filament".to_owned();
     } else if opt_key == "solid_infill_extruder" {
@@ -123,7 +129,9 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
     ]
     .contains(&opt_key.as_str())
     {
-        *value = value.replace("Normal", "Standard").replace("Big Traffic", "High Flow");
+        *value = value
+            .replace("Normal", "Standard")
+            .replace("Big Traffic", "High Flow");
     } else if opt_key == "extruder_type" {
         *value = value.replace("DirectDrive", "Direct Drive");
     } else if opt_key == "enable_power_loss_recovery" {

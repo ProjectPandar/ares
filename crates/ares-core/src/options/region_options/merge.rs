@@ -132,6 +132,15 @@ fn apply_overrides(
     if let Some(order) = source.bottom_surface_fill_order {
         options.bottom_surface_fill_order = order;
     }
+    if let Some(mode) = source.adaptive_infill_mode {
+        options.adaptive_infill_mode = mode;
+    }
+    if let Some(density) = source.adaptive_infill_interior_density {
+        options.adaptive_infill_interior_density = density;
+    }
+    if let Some(gradient) = source.adaptive_infill_gradient {
+        options.adaptive_infill_gradient = gradient;
+    }
 
     if let Some(extruder) = source.extruder.filter(|value| value.0 > 0) {
         apply_fallbacks!(options, mask, extruder;

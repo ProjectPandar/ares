@@ -1,7 +1,42 @@
 use crate::{
-    FloatOrPercent, ProcessInfillPattern, RegionOptions, geometry::CoordinateScale,
-    project_slice::group_fills::SurfaceFillParams,
+    ExtrusionRole, FloatOrPercent, ProcessAdaptiveInfillGradient, ProcessAdaptiveInfillMode,
+    ProcessInfillPattern, RegionOptions,
+    fill::adaptive_infill_field::is_adaptive_infill_pattern,
+    geometry::CoordinateScale,
+    project_slice::group_fills::{SurfaceFillParams, SurfaceFillPattern},
 };
+
+pub(super) fn apply_adaptive_infill_fields(params: &mut SurfaceFillParams, region: &RegionOptions) {
+    // Fill.cpp:1024-1034: only TPMS sparse infill is graded; reset otherwise
+    // because `params` is reused across surfaces. Adaptive density replaces
+    // `gyroid_optimized`.
+    let adaptive_pattern = matches!(
+        params.pattern,
+        SurfaceFillPattern::Configured(pattern) if is_adaptive_infill_pattern(pattern)
+    );
+    params.adaptive_infill_mode =
+        if adaptive_pattern && params.extrusion_role == ExtrusionRole::InternalInfill {
+            region.adaptive_infill_mode
+        } else {
+            ProcessAdaptiveInfillMode::Disabled
+        };
+    let adaptive_active = params.adaptive_infill_mode != ProcessAdaptiveInfillMode::Disabled;
+    params.adaptive_infill_interior_density = if adaptive_active {
+        (region.adaptive_infill_interior_density.0 as f32).max(1.0)
+    } else {
+        0.0
+    };
+    params.adaptive_infill_gradient = if adaptive_active {
+        region.adaptive_infill_gradient
+    } else {
+        ProcessAdaptiveInfillGradient::Linear
+    };
+    params.gyroid_optimized = matches!(
+        params.pattern,
+        SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid)
+    ) && region.gyroid_optimized.0
+        && !adaptive_active;
+}
 
 pub(super) fn apply_pattern_fields(
     params: &mut SurfaceFillParams,

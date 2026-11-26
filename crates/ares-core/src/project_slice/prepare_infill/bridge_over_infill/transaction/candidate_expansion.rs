@@ -107,8 +107,8 @@ pub(super) fn prepare_object(
             },
         )?;
     }
-    // PrintObject.cpp:2728-2735: original candidates, before anchor generation
-    // and surface rewrite; the resulting tree also survives to make_fills.
+    // PrintObject.cpp:3364-3365: original candidates before anchor generation;
+    // both octrees and adaptive infill fields survive to `make_fills`.
     crate::project_slice::fill_entities::adaptive::prepare_octrees(
         crate::project_slice::fill_entities::adaptive::SupportPreparation {
             traversal: &predecessor.predecessor.predecessor,
@@ -119,6 +119,10 @@ pub(super) fn prepare_object(
             spacing: &predecessor.object_spacings[object_index],
         },
     )?;
+    candidates.adaptive_infill_fields =
+        crate::project_slice::prepare_infill::adaptive_fields::prepare_adaptive_infill_fields(
+            prelude, scale,
+        );
     if candidates.surfaces_by_layer.is_empty() {
         return Ok(());
     }
@@ -126,14 +130,7 @@ pub(super) fn prepare_object(
         .iter()
         .map(|region| region.as_parts().1)
         .collect::<Vec<_>>();
-    let lightning_generator = candidates.lightning_generator.as_deref();
-    let infill_lines = prepare_infill_lines(
-        predecessor,
-        object_index,
-        candidates,
-        view,
-        lightning_generator,
-    )?;
+    let infill_lines = prepare_infill_lines(predecessor, object_index, candidates, view)?;
     let clusters =
         cluster_candidate_object(candidates, &plan.layers, &region_options, nozzles, scale)?;
     let deep_layers = plan

@@ -17,6 +17,9 @@ pub(in crate::project_slice) struct PreparedPostBridgeOverInfill {
     /// emit (`PrintObject.cpp:2711` builds it once and `make_fills` reuses it).
     pub(in crate::project_slice) lightning_generators:
         Vec<Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>>,
+    /// `prepare_adaptive_infill_fields` per object (`PrintObject.cpp:3365`).
+    pub(in crate::project_slice) adaptive_infill_fields:
+        Vec<crate::fill::adaptive_infill_field::AdaptiveInfillFields>,
 }
 
 pub(in crate::project_slice) fn prepare(
@@ -34,9 +37,14 @@ pub(in crate::project_slice) fn prepare(
         .iter()
         .map(|object| object.lightning_generator.clone())
         .collect();
+    let adaptive_infill_fields = objects
+        .into_iter()
+        .map(|object| object.adaptive_infill_fields)
+        .collect();
     Ok(PreparedPostBridgeOverInfill {
         predecessor,
         lightning_generators,
+        adaptive_infill_fields,
     })
 }
 

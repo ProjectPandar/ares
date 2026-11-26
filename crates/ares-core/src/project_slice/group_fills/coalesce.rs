@@ -127,6 +127,21 @@ fn compare(left: &SurfaceFillParams, right: &SurfaceFillParams) -> Ordering {
         .then_with(|| compare_f32(left.skin_infill_depth, right.skin_infill_depth))
         .then_with(|| compare_f32(left.infill_overhang_angle, right.infill_overhang_angle))
         .then_with(|| left.gyroid_optimized.cmp(&right.gyroid_optimized))
+        .then_with(|| {
+            crate::fill::adaptive_infill_field::mode_index(left.adaptive_infill_mode).cmp(
+                &crate::fill::adaptive_infill_field::mode_index(right.adaptive_infill_mode),
+            )
+        })
+        .then_with(|| {
+            compare_f32(
+                left.adaptive_infill_interior_density,
+                right.adaptive_infill_interior_density,
+            )
+        })
+        .then_with(|| {
+            gradient_rank(left.adaptive_infill_gradient)
+                .cmp(&gradient_rank(right.adaptive_infill_gradient))
+        })
         .then_with(|| compare_f64(left.smooth_factor, right.smooth_factor))
         .then_with(|| (left.fill_order as u8).cmp(&(right.fill_order as u8)))
 }
@@ -185,6 +200,14 @@ const fn pattern_rank(pattern: SurfaceFillPattern) -> u8 {
             ProcessInfillPattern::OctagramSpiral => 28,
         },
         SurfaceFillPattern::ConcentricInternal => 29,
+    }
+}
+
+const fn gradient_rank(gradient: crate::ProcessAdaptiveInfillGradient) -> u8 {
+    match gradient {
+        crate::ProcessAdaptiveInfillGradient::Linear => 0,
+        crate::ProcessAdaptiveInfillGradient::Quadratic => 1,
+        crate::ProcessAdaptiveInfillGradient::Exponential => 2,
     }
 }
 

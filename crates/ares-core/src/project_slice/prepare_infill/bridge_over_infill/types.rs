@@ -30,4 +30,7 @@ pub(in crate::project_slice) struct BridgeCandidateObject {
     /// `sparse_anchoring` anchor lines and the `fill_entities` emit.
     pub(in crate::project_slice) lightning_generator:
         Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>,
+    /// `prepare_adaptive_infill_fields` (`PrintObject.cpp:1274-1304,3365`).
+    pub(in crate::project_slice) adaptive_infill_fields:
+        crate::fill::adaptive_infill_field::AdaptiveInfillFields,
 }
