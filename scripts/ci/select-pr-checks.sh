@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Diff-based PR check selector.
-# - On merge_group / push / workflow_dispatch: ALWAYS runs the complete suite.
+# Diff-based check selector.
+# - On merge_group: runs the 100% complete suite unless EVERY changed file in
+#   base_sha..HEAD is strictly a pure Markdown doc (docs/**/*.md, README.md,
+#   AGENTS.md, CONTRIBUTING.md, CHANGELOG.md; never THIRD_PARTY_NOTICES.md).
+#   Fails closed to full on missing/empty diff or any non-doc file.
+# - On push / workflow_dispatch: ALWAYS runs the complete suite.
 # - On pull_request: narrows PR feedback to targets reachable from the diff,
 #   failing closed to a full rerun for trigger files or any unknown path.
 
@@ -36,6 +40,8 @@ emit_full() {
   echo "selection: mode=full reason=${reason}" >&2
   emit mode full
   emit full_rerun true
+  emit run_complete_suite true
+  emit docs_only false
   emit run_rust_wasm true
   emit run_rust_clippy true
   emit run_rust_nonparity true
@@ -46,7 +52,14 @@ emit_full() {
   exit 0
 }
 
-if [ "$EVENT_NAME" != "pull_request" ]; then
+is_pure_doc_file() {
+  case "$1" in
+    docs/*.md|README.md|AGENTS.md|CONTRIBUTING.md|CHANGELOG.md) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if [ "$EVENT_NAME" != "pull_request" ] && [ "$EVENT_NAME" != "merge_group" ]; then
   emit_full "event:${EVENT_NAME:-non-pr}"
 fi
 
@@ -55,6 +68,18 @@ if [ -n "$FILES_LIST" ]; then
   while IFS= read -r line; do
     [ -n "$line" ] && changed_files+=("$line")
   done < "$FILES_LIST"
+elif [ "$EVENT_NAME" = "merge_group" ]; then
+  if [ -z "$BASE_SHA" ]; then
+    emit_full "merge-group-no-base-sha"
+  fi
+  if ! git rev-parse --verify -q "$BASE_SHA" >/dev/null 2>&1; then
+    git fetch --no-tags --filter=blob:none --depth=1 origin "$BASE_SHA" >/dev/null 2>&1 || true
+  fi
+  if git rev-parse --verify -q "$BASE_SHA" >/dev/null 2>&1; then
+    mapfile -t changed_files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+  else
+    emit_full "merge-group-missing-base-sha"
+  fi
 else
   # On GitHub pull_request events, HEAD is the synthetic merge commit refs/pull/N/merge
   # whose first parent (HEAD^1) is the exact target branch commit.
@@ -76,6 +101,27 @@ fi
 
 if [ "${#changed_files[@]}" -eq 0 ]; then
   emit_full "empty-diff"
+fi
+
+if [ "$EVENT_NAME" = "merge_group" ]; then
+  for f in "${changed_files[@]}"; do
+    if ! is_pure_doc_file "$f"; then
+      emit_full "merge-group-non-doc:${f}"
+    fi
+  done
+  echo "selection: mode=docs-only event=merge_group files=${#changed_files[@]}" >&2
+  emit mode docs-only
+  emit full_rerun false
+  emit run_complete_suite false
+  emit docs_only true
+  emit run_rust_wasm false
+  emit run_rust_clippy false
+  emit run_rust_nonparity false
+  emit rust_crates none
+  emit run_web false
+  emit wasm_rebuild false
+  emit reason "merge-group-docs-only"
+  exit 0
 fi
 
 run_rust_wasm=false
@@ -182,6 +228,8 @@ echo "selection: mode=selected files=${#changed_files[@]} reasons=${unique_reaso
 
 emit mode selected
 emit full_rerun false
+emit run_complete_suite false
+emit docs_only false
 emit run_rust_wasm "$run_rust_wasm"
 emit run_rust_clippy "$run_rust_clippy"
 emit run_rust_nonparity "$run_rust_nonparity"

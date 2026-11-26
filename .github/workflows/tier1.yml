@@ -1,8 +1,6 @@
 name: Tier 1
 
 on:
-  push:
-    branches: [main]
   pull_request:
   merge_group:
     types: [checks_requested]
@@ -24,6 +22,20 @@ env:
   CARGO_INCREMENTAL: "0"
 
 jobs:
+  merge-scope:
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    outputs:
+      run_complete_suite: ${{ steps.select.outputs.run_complete_suite }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          filter: blob:none
+          persist-credentials: false
+      - id: select
+        run: bash scripts/ci/select-pr-checks.sh --event merge_group --base "${{ github.event.merge_group.base_sha }}" --github-output "$GITHUB_OUTPUT"
+
   fast-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -72,12 +84,12 @@ jobs:
           fetch-depth: 2
           filter: blob:none
           persist-credentials: false
-      - name: Select PR scope
+      - name: Select PR/merge_group scope
         id: select
         run: |
           bash scripts/ci/select-pr-checks.sh \
             --event "${{ github.event_name }}" \
-            --base "${{ github.event.pull_request.base.sha }}" \
+            --base "${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}" \
             --github-output "$GITHUB_OUTPUT"
       - if: steps.select.outputs.run_rust_wasm == 'true'
         uses: dtolnay/rust-toolchain@1.99.0
@@ -99,12 +111,12 @@ jobs:
           fetch-depth: 2
           filter: blob:none
           persist-credentials: false
-      - name: Select PR scope
+      - name: Select PR/merge_group scope
         id: select
         run: |
           bash scripts/ci/select-pr-checks.sh \
             --event "${{ github.event_name }}" \
-            --base "${{ github.event.pull_request.base.sha }}" \
+            --base "${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}" \
             --github-output "$GITHUB_OUTPUT"
       - if: steps.select.outputs.run_rust_clippy == 'true'
         uses: dtolnay/rust-toolchain@1.99.0
@@ -131,12 +143,12 @@ jobs:
           fetch-depth: 2
           filter: blob:none
           persist-credentials: false
-      - name: Select PR scope
+      - name: Select PR/merge_group scope
         id: select
         run: |
           bash scripts/ci/select-pr-checks.sh \
             --event "${{ github.event_name }}" \
-            --base "${{ github.event.pull_request.base.sha }}" \
+            --base "${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}" \
             --github-output "$GITHUB_OUTPUT"
       - if: steps.select.outputs.run_rust_nonparity == 'true'
         uses: dtolnay/rust-toolchain@1.99.0
@@ -157,7 +169,8 @@ jobs:
         run: bash scripts/ci/run-nonparity-tests.sh
 
   build-parity:
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    needs: merge-scope
+    if: "!cancelled() && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
     runs-on: ubuntu-latest
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
@@ -187,7 +200,6 @@ jobs:
   parity-official:
     name: parity-official (${{ matrix.shard }}/8)
     needs: build-parity
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -209,7 +221,6 @@ jobs:
   parity-seeded:
     name: parity-seeded (${{ matrix.shard }}/8)
     needs: build-parity
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -229,7 +240,8 @@ jobs:
         run: cargo-nextest nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-seeded --partition "hash:${{ matrix.shard }}/8"
 
   web-build:
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    needs: merge-scope
+    if: "!cancelled() && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
     runs-on: ubuntu-latest
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
@@ -277,7 +289,6 @@ jobs:
 
   web-streaming:
     needs: web-build
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -295,7 +306,6 @@ jobs:
   web-desktop:
     name: web-desktop (${{ matrix.shard }}/4)
     needs: [web-build, build-parity]
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -320,8 +330,8 @@ jobs:
           restore-keys: web-desktop-timings-main-
       - name: Run timing-balanced desktop E2E shard ${{ matrix.shard }}/4
         run: bash scripts/ci/run-web-desktop-shard.sh "${{ matrix.shard }}" 4
-      - name: Save updated web E2E timings on main/merge_group
-        if: github.event_name == 'merge_group' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      - name: Save updated web E2E timings on merge_group
+        if: github.event_name == 'merge_group'
         uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/web-timings
@@ -329,7 +339,6 @@ jobs:
 
   web-packages-mobile:
     needs: [web-build, build-parity]
-    if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -350,23 +359,14 @@ jobs:
   tier1-gate:
     name: tier1-gate
     if: always()
-    needs:
-      - fast-checks
-      - rust-wasm-check
-      - rust-clippy
-      - rust-nonparity
-      - build-parity
-      - parity-official
-      - parity-seeded
-      - web-build
-      - web-streaming
-      - web-desktop
-      - web-packages-mobile
+    needs: [merge-scope, fast-checks, rust-wasm-check, rust-clippy, rust-nonparity, build-parity, parity-official, parity-seeded, web-build, web-streaming, web-desktop, web-packages-mobile]
     runs-on: ubuntu-latest
     steps:
       - name: Evaluate required Tier 1 checks
         env:
-          RUN_COMPLETE_SUITE: ${{ github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity') }}
+          IS_MERGE_GROUP: ${{ github.event_name == 'merge_group' }}
+          RUN_COMPLETE_SUITE: ${{ (github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity') }}
+          RES_SCOPE: ${{ needs.merge-scope.result }}
           RES_FAST: ${{ needs.fast-checks.result }}
           RES_WASM: ${{ needs.rust-wasm-check.result }}
           RES_CLIPPY: ${{ needs.rust-clippy.result }}
@@ -382,6 +382,7 @@ jobs:
           set -euo pipefail
           failed=0
           chk() { if [ "$2" != "success" ]; then echo "FAILED: $1 = $2" >&2; failed=1; else echo "OK: $1 = $2"; fi; }
+          if [ "$IS_MERGE_GROUP" = "true" ]; then chk merge-scope "$RES_SCOPE"; fi
           chk fast-checks "$RES_FAST"; chk rust-wasm-check "$RES_WASM"; chk rust-clippy "$RES_CLIPPY"; chk rust-nonparity "$RES_NONPARITY"
           if [ "$RUN_COMPLETE_SUITE" = "true" ]; then
             chk build-parity "$RES_BUILD_PARITY"; chk parity-official "$RES_OFFICIAL"; chk parity-seeded "$RES_SEEDED"
