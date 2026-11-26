@@ -1,24 +1,21 @@
 use super::SOURCE_EPSILON_MM;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, arc, extrusion, fan,
-    features::{PathProperties, feature_description, is_bridge_feature},
-    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
+    features::PathProperties,
+    format::{push_axis, push_extrusion, push_offset},
 };
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
-pub(super) fn segment_lengths(
-    points: &[(i64, i64)],
+#[inline]
+fn scaled_segment_length(
+    a: (i64, i64),
+    b: (i64, i64),
     scale: crate::geometry::CoordinateScale,
-) -> Vec<f64> {
+) -> f64 {
     // Line::length() * SCALING_FACTOR: subtract before converting to mm.
-    points
-        .windows(2)
-        .map(|pair| {
-            let dx = (pair[1].0 - pair[0].0) as f64;
-            let dy = (pair[1].1 - pair[0].1) as f64;
-            (dx * dx + dy * dy).sqrt() * scale.factor()
-        })
-        .collect()
+    let dx = (b.0 - a.0) as f64;
+    let dy = (b.1 - a.1) as f64;
+    (dx * dx + dy * dy).sqrt() * scale.factor()
 }
 
 pub(super) struct Emission<'a, 'b> {
@@ -26,7 +23,6 @@ pub(super) struct Emission<'a, 'b> {
     pub(super) points: &'a [(f64, f64)],
     pub(super) local_points: &'a [(f64, f64)],
     pub(super) timelapse_context: crate::project_slice::gcode_emit::timelapse::Context<'b>,
-    pub(super) segment_lengths: &'a [f64],
     pub(super) uncut_lengths: &'a [f64],
     pub(super) scaled: (&'a [(i64, i64)], crate::geometry::CoordinateScale),
     pub(super) fitting: &'a [FittedMove],
@@ -43,8 +39,6 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
         points,
         local_points,
         timelapse_context,
-
-        segment_lengths,
         uncut_lengths,
         scaled: (scaled_points, scale),
         fitting,
@@ -56,49 +50,53 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
     } = emission;
 
     fan::update_for_constant_path(output, properties, path_overhang_fan_active, state);
+    if !state.options.enable_arc_fitting || fitting.is_empty() {
+        for endpoint in 1..points.len() {
+            let length =
+                scaled_segment_length(scaled_points[endpoint - 1], scaled_points[endpoint], scale);
+            if length < SOURCE_EPSILON_MM {
+                continue;
+            }
+            let end = arc::Point {
+                x: points[endpoint].0,
+                y: points[endpoint].1,
+            };
+            if force_no_extrusion {
+                extrusion::force_no_extrusion_segment(output, end, state);
+            } else {
+                state.mark_belt_line(
+                    output,
+                    properties.width,
+                    (scaled_points[endpoint - 1], scaled_points[endpoint]),
+                    scale,
+                );
+                let uncut_length = uncut_lengths.get(endpoint - 1).copied().unwrap_or(length);
+                extrusion::linear_segment(output, end, (length, uncut_length), properties, state);
+            }
+            let (x, y) = local_points[endpoint];
+            crate::project_slice::gcode_emit::layers::farthest::check_and_insert(
+                output,
+                state,
+                (x + state.origin.0, y + state.origin.1),
+                timelapse_context,
+            )?;
+        }
+        output.extend_from_slice(b";_EXTRUDE_END\n");
+        state.last_scaled_position = last_scaled;
+        state.last_position_defined = true;
+        state.scarf_z = Some(state.layer_z);
+        return Ok(());
+    }
+
     let arc_points = points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
-    let segments = if state.options.enable_arc_fitting && !fitting.is_empty() {
-        // Upstream replays the precomputed fitting result at export time
-        // (`GCode.cpp:6992`); paths with no fitting (brim, skirt, clipped
-        // tails) emit straight segments and are never fitted here.
-        arc::from_fitting(&arc_points, fitting, state.origin, state.extruder_offset)
-    } else {
-        points
-            .windows(2)
-            .zip(segment_lengths.iter())
-            .map(|(pair, &length)| arc::Segment::Line {
-                end: arc::Point {
-                    x: pair[1].0,
-                    y: pair[1].1,
-                },
-                length,
-            })
-            .collect()
-    };
-    let comment = if state.options.gcode_comments {
-        let bridge = if is_bridge_feature(properties.feature) {
-            " (bridge)"
-        } else {
-            ""
-        };
-        format!(" ; {}{bridge}", feature_description(properties.feature))
-    } else {
-        String::new()
-    };
-    let straight = [FittedMove {
-        start: 0,
-        end: points.len() - 1,
-        arc: None,
-    }];
-    let endpoint_fitting = if state.options.enable_arc_fitting && !fitting.is_empty() {
-        fitting
-    } else {
-        &straight
-    };
-    let endpoints = endpoint_fitting.iter().flat_map(|fitted| {
+    // Upstream replays the precomputed fitting result at export time
+    // (`GCode.cpp:6992`); paths with no fitting (brim, skirt, clipped
+    // tails) emit straight segments and are never fitted here.
+    let segments = arc::from_fitting(&arc_points, fitting, state.origin, state.extruder_offset);
+    let endpoints = fitting.iter().flat_map(|fitted| {
         let first = if fitted.arc.is_some() {
             fitted.end
         } else {
@@ -148,18 +146,26 @@ pub(super) fn emit(emission: Emission<'_, '_>) -> Result<(), crate::SliceError> 
                     arc_segment.length,
                 );
                 let extrusion = extrusion::coordinate(state, extrusion);
-                let command = if arc_segment.clockwise { "G2" } else { "G3" };
-                output.extend_from_slice(
-                    format!(
-                        "{command} X{} Y{} I{} J{} E{}{comment}\n",
-                        format_axis(arc_segment.end.x - state.xy_offset.0),
-                        format_axis(arc_segment.end.y - state.xy_offset.1),
-                        format_offset(arc_segment.center.x - arc_segment.start.x),
-                        format_offset(arc_segment.center.y - arc_segment.start.y),
-                        format_extrusion(extrusion)
-                    )
-                    .as_bytes(),
+                output.extend_from_slice(if arc_segment.clockwise {
+                    b"G2 X"
+                } else {
+                    b"G3 X"
+                });
+                push_axis(output, arc_segment.end.x - state.xy_offset.0);
+                output.extend_from_slice(b" Y");
+                push_axis(output, arc_segment.end.y - state.xy_offset.1);
+                output.extend_from_slice(b" I");
+                push_offset(output, arc_segment.center.x - arc_segment.start.x);
+                output.extend_from_slice(b" J");
+                push_offset(output, arc_segment.center.y - arc_segment.start.y);
+                output.extend_from_slice(b" E");
+                push_extrusion(output, extrusion);
+                extrusion::push_feature_comment(
+                    output,
+                    state.options.gcode_comments,
+                    properties.feature,
                 );
+                output.push(b'\n');
                 state.x = arc_segment.end.x;
                 state.y = arc_segment.end.y;
                 state.wipe_start = Some(arc_segment.end);
