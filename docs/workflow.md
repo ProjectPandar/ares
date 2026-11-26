@@ -1,9 +1,9 @@
 # Multi-agent workflow and recovery
 
-Handoff document for the coordinator (COORD). It describes how COORD and the workers run, and how
-to bring everything back after a machine crash or reboot. It covers the process only. Current
-assignments are kept in the coordinator ledger and the inbox, not here. Update this file whenever
-a workflow rule changes.
+Handoff document for the coordinator (COORD). It describes how COORD and the workers run, how
+changes land on `main` through GitHub Merge Queue, and how to bring everything back after a
+machine crash or reboot. It covers the process only. Current assignments are kept in the
+coordinator ledger and the inbox, not here. Update this file whenever a workflow rule changes.
 
 Machine-specific locations are written as placeholders:
 
@@ -18,8 +18,8 @@ Machine-specific locations are written as placeholders:
 
 | Role | Agent | Terminal name | Notes |
 |---|---|---|---|
-| COORD | Claude Code | (session root) | Assigns, reviews, decides, merges, pushes main. Sole reviewer. |
-| W1-W6 | pi, `magpie/zero-ai-coding-gpt/gpt-6.1-sol`, 256k | `worker1` … `worker6` | Fixed workers. W5 is the batch integrator. |
+| COORD | Claude Code | (session root) | Assigns, reviews, decides, opens/enqueues PRs into Merge Queue. Sole reviewer. |
+| W1-W6 | pi, `magpie/zero-ai-coding-gpt/gpt-6.1-sol`, 256k | `worker1` … `worker6` | Fixed workers. W5 handles batch/release PR assembly and optional local qualification. |
 | WEB | Claude Code, `claude-opus-5-5`, effort high | `web` | Fixed web/UI worker with its own long-lived worktree. |
 | W7+ | pi, same model | `worker7` … | Dynamic workers. Launched when work queues up, killed when their task is merged. |
 
@@ -32,7 +32,7 @@ write `Wn -> COORD: …`.
   wiped on reboot, or at the top level of the home directory.
 - `$COORD_DIR` holds the coordinator state:
   - `inbox.log`, which workers append to with `bin/notify.sh <name> "<line>"`, and `mark`, the last line read.
-  - The decision ledger, `b42-candidates.txt`. It records every RR, verdict, batch composition and user decision.
+  - The decision ledger, `b42-candidates.txt`. It records every RR, verdict, PR/Merge Queue landing, and user decision.
   - `TODO.md`, the work the user queued for after the current tasks. The patrol dispatches it when a worker frees up.
   - `briefs/`, the task briefs. `briefs/dynamic-worker-rules.md` is the onboarding brief for new workers.
   - `bin/`:
@@ -42,9 +42,8 @@ write `Wn -> COORD: …`.
     - the Orca launchers.
   - `parity-250.env` and `parity-seeded-250.env`, the official and seeded Native comparison environments.
   - `moonraker-250.env`, including `ARES_MOONRAKER_LEGACY_METADATA_PY` for Moonraker v0.9.3 metadata extraction.
-  - `gcroots/`, the Nix GC roots for every Native oracle build. A nightly GC deletes unrooted store paths.
-  - `orca-cache/`, the shared persistent Native output cache.
-  - `fulls/` and `evidence/`, the batch run roots.
+  - `gcroots/`, the Nix GC roots for every local Native oracle build. A nightly GC deletes unrooted store paths.
+  - `orca-cache/`, the shared persistent local Native output cache.
   - An upstream Orca history bare repository, used with `git --git-dir=… show <rev>:<path>`.
   - A rooted python3, always run with `-I`.
 - `$EVIDENCE/<worker>/<task>/` holds worker logs and artifacts.
@@ -69,10 +68,10 @@ Workers run in herdr-core terminals managed by `hc`.
      before relaunching, so that no session has two writers.
 2. **Coordinator.** Start Claude Code in the main checkout and resume the previous session
    (`claude --resume`). Then:
-   - Run `CronList`. If there is no patrol job, recreate it (see Patrol).
+   - Recreate the patrol cron job if missing (see Patrol).
    - Arm the inbox Monitor (see Patrol).
    - Read the new inbox lines: `tail -n +$(( $(cat $COORD_DIR/mark) + 1 )) $COORD_DIR/inbox.log`.
-   - Read the last ~50 lines of the ledger.
+   - Read the last ~50 lines of the ledger and check open PRs / Merge Queue (`gh pr list`, `gh run list --event merge_group`).
 3. **Fixed workers.** Relaunch each one with its previous session so it keeps its context. Use the
    newest session file for that worker under `$PI_SESSIONS/<cwd-key>/`.
    ```sh
@@ -87,15 +86,15 @@ Workers run in herdr-core terminals managed by `hc`.
 4. **Dynamic workers.** Relaunch only those whose task is still open in the ledger, starting from
    their brief.
 5. **Lost state checks.**
-   - `/tmp` is gone, so any run that wrote there must be redone.
-   - Native oracles: every store path in the env files must exist and be rooted under
+   - `/tmp` is gone, so any local run that wrote there must be redone.
+   - Local Native oracles: every store path in the env files must exist and be rooted under
      `$COORD_DIR/gcroots/`.
      - A Native launch that fails with exit 255 and empty output means a store path is missing.
      - Rebuild it with `nix build -o $COORD_DIR/gcroots/<name>`.
    - Git, in the main checkout:
-     - Run `git worktree prune` and `git fetch origin`.
-     - Check that local main equals origin/main.
-   - Interrupted batch runs are not resumed partially. W5 reruns the batch FULL.
+     - Run `git worktree prune`, `git fetch origin`, and `git pull --ff-only origin main`.
+     - Verify local `main` equals `origin/main`.
+   - Check active GitHub Merge Queue entries (`gh pr list --json number,state,mergeStateStatus,autoMergeRequest`); if a queued PR failed, diagnose, push the fix, and re-enqueue.
 6. **Report** to the user what was restored and what has to be rerun.
 
 ## Patrol
@@ -103,29 +102,29 @@ Workers run in herdr-core terminals managed by `hc`.
 There are two mechanisms. Both are session-only: they die with the coordinator session, so
 recreate them after every restart or context reset.
 
-- **Inbox Monitor.** It expires every 30 minutes; re-arm it each time.
+- **Inbox Monitor.** Re-arm it whenever it expires.
   ```sh
   f=$COORD_DIR/inbox.log; n=$(wc -l < $f); while true; do m=$(wc -l < $f); if [ "$m" -gt "$n" ]; then tail -n +$((n+1)) $f | head -n $((m-n)) | awk '{print substr($0,1,600); fflush()}'; n=$m; elif [ "$m" -lt "$n" ]; then echo "INBOX SHRANK $n -> $m"; n=$m; fi; sleep 2; done
   ```
-- **Patrol cron.** It runs about every 15 minutes, at off-minutes (e.g. `4,19,34,49 * * * *`). Each run:
+- **Patrol cron.** Runs every 15 minutes at off-minutes (e.g. `4,19,34,49 * * * *`). Each run:
   1. Handle every new inbox line (RRs, questions), then update `mark`. Re-arm the Monitor if it expired.
   2. Run `hc ls` and read each worker's pane.
      - Answer open dialogs.
-     - Look for stalls, errors and rule violations.
+     - Look for stalls, errors, and rule violations.
      - Give an idle fixed worker its next task (check `TODO.md`), or tell the user.
   3. Kill dynamic workers that are idle with no open task, and record each one in the ledger.
-  4. Move the current batch forward once its inputs are ready.
+  4. Check open PRs and GitHub Merge Queue runs (`gh pr list`, `gh run list --event merge_group`); fast-forward local `main` once a PR merges.
 
 ## Assigning work
 
 - Every slice is a source-cited rewrite of an upstream `libslic3r` / `libvgcode` boundary (see
   `AGENTS.md`).
 - Before dispatching:
-  - Verify the premise against main.
-  - Dedupe: grep the origin branches and the ledger for the same upstream lines.
+  - Verify the premise against `main`.
+  - Dedupe: grep open PRs, origin branches, and the ledger for the same upstream lines.
 - Write larger tasks as a brief in `$COORD_DIR/briefs/`. A brief covers:
   - the goal;
-  - the upstream files, functions and lines;
+  - the upstream files, functions, and lines;
   - the included and deferred behaviour;
   - how it is verified.
 
@@ -140,257 +139,138 @@ recreate them after every restart or context reset.
 
 ## Slice workflow (worker side)
 
-1. Create a new worktree under `$WORKTREES` from the base COORD names, on the worker's own branch.
-   - Link `OrcaSlicer` in the worktree root to the upstream checkout; the Orca probe builds read it there.
+1. Create a new worktree under `$WORKTREES` from the base COORD names (`main` or an agreed
+   predecessor), on the worker's own branch.
+   - Link `OrcaSlicer` in the worktree root to the pinned upstream checkout; local probes read it there.
    - Give each worktree its own `CARGO_TARGET_DIR`, so concurrent builds do not lock or overwrite each other.
-2. Commit in this order:
+   - Ensure local `hk` git hooks (`hk.pkl`) are active (`hk install` in the repository).
+2. Commit in TDD order:
    1. the spec in `docs/architecture/`;
-   2. a failing test;
-   3. the fix.
+   2. a failing test (RED);
+   3. the fix (GREEN).
 
-   The upstream reference is the pinned Orca release.
-3. Run these checks:
-   - only the affected cases, in both modes. Use each mode's canonical environment with the run's
-     own build and affinity settings, including seeded replay affinity;
-   - select focused tests by substring. The tip's test inventory must include every base ID and may
-     add IDs only under module paths the chain adds or modifies;
-   - before focused verification, check that the worktree's upstream source link points to the pinned
-     revision. Disclose a failed preflight as not executed (neither PASS nor FAIL), fix it, and continue
-     from that point without counting it as a rerun;
-   - `cargo fmt`;
+   The upstream reference is the pinned Orca release (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`).
+3. Run focused local checks before pushing:
+   - affected parity cases in both modes (official and seeded), using each mode's canonical
+     environment, reference flags, Moonraker env, shared `ARES_ORCA_CACHE_DIR`, and `pin-runner.sh`
+     affinity;
+   - before focused verification, verify the worktree's `OrcaSlicer` link points to the pinned
+     revision; disclose any failed preflight as not executed rather than PASS/FAIL;
+   - `cargo fmt --check`;
    - `cargo clippy --workspace --all-targets -- -D warnings`;
-   - wasm32 and web checks, when those parts are touched.
-4. Push the branch. Send one RR line through `notify.sh` with:
-   - branch, tip and base;
-   - the commits;
-   - the results;
-   - the RR file path.
-
-   Then wait.
+   - `cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm`;
+   - web static checks (`bun run --cwd web fmt:check`, `lint`, `typecheck`, `test:unit`) and
+     focused Playwright specs when web or WASM code is touched.
+4. Push the branch to `origin` (local `hk` `pre-push` hook runs in `< 9s`). Send one RR line
+   through `notify.sh` with branch, tip, base, commits, verification results, and RR file path,
+   then wait for COORD review.
 
 ## Review (COORD)
 
 For each RR, check:
-- **History.**
-  - The three-dot diff `git diff main...tip` and every commit message.
-  - Base ancestry: `git merge-base --is-ancestor main tip`, or the agreed base (a pending integration tip). A
-    branch still based on the unsquashed commits of a landed batch is rebased first (step 6 of the batch rules).
-- **Author and trailer.** The author is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`, and each commit has exactly one trailer,
-  `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
-- **Hygiene.** Grep the messages and the diff, docs included. Each commit must be clean on its own. Flag any of:
+- **History.** The three-dot diff `git diff main...tip`, every commit message, and base ancestry
+  (`git merge-base --is-ancestor main tip`, or the agreed predecessor).
+- **Author and trailer.** Author/committer is `5aaee9 <7685264+5aaee9@users.noreply.github.com>`,
+  and each commit has exactly one trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Hygiene.** Grep commit messages and diff (docs included). Flag any of:
   - worker and batch labels, COORD, coordinator;
   - RR, RED, GREEN, FULL, STOP, gate, queued;
   - approved, review, pending, frozen, qualify/qualification, integrated, evidence;
   - CPU numbers, local paths;
   - `#[allow]` / `#[expect]`.
-- **Code.** Compare it against the cited upstream lines. Reject any of:
-  - comparator weakening, masks or fitted expectations;
-  - Native goldens;
-  - assertions that Ares differs from Native;
-  - files over 400 lines.
-- **Clippy.** It was run with `--all-targets`.
+- **Code.** Compare against cited upstream lines. Reject comparator weakening, masks, fitted
+  expectations, committed Native goldens, assertions that Ares differs from Native, and
+  non-generated files over 400 lines.
+- **Clippy & static.** Verify `--all-targets` Clippy, wasm32 check, and web static checks.
 
-Record the verdict in the ledger, and tell the worker which batch the chain goes into.
+Record the verdict in the ledger, then advance the accepted chain to a PR for GitHub Merge Queue.
 
-## Batches and merging
+## Merging via GitHub Merge Queue
 
-1. A batch contains the chains accepted before it starts. Later ones go to the next batch.
-2. W5:
-   - stacks the chains linearly on main (the range-diff must be identical);
-   - stacks a release commit last: `chore: release 0.1.<N>` for batch N. It sets `version` in `[workspace.package]`
-     of the root `Cargo.toml` and in `web/app/package.json` (plus the `app` entry of `web/package-lock.json`), and
-     updates `Cargo.lock` with `cargo update -w --offline`;
-   - runs fmt, clippy --all-targets and the wasm32 check on the stacked tip, again on every restacked tip;
-   - runs `cargo check --workspace --all-targets` at every chain's `<end>`, because each one becomes a commit on main.
-     An `<end>` that does not build is reported to COORD, who reorders the chains or merges it with the chains it
-     depends on into one commit;
-   - pushes an integration ref.
+`main` is protected by a GitHub Ruleset requiring linear history, a Pull Request, and **GitHub
+Merge Queue** with the two required status checks `tier1-gate` and `pages-build`. Direct pushes to
+`main` are disabled. Full CI architecture, latency budgets, shard completeness proofs, and GHCR
+oracle image details live in [docs/ci-merge-queue.md](ci-merge-queue.md).
 
-   Before the FULL, W5 runs the non-parity gate once: the workspace tests outside the parity suite, plus the web
-   static checks. Any failure there stops the batch.
+### Standard PR flow (single accepted chain)
 
-   After COORD's go, W5 runs the dual FULL: official and seeded, pinned by `pin-runner.sh`, on the batch CPUs given in the ledger.
-   The web full runs against the pinned Orca release resources, with the seeded replay CPU (`ORCA_REPLAY_CPU`) inside
-   the browser phase's CPU range.
-3. COORD compares the results with the previous baseline:
-   - zero PASS→FAIL is required;
-   - new tests must pass;
-   - no rerun to change an outcome.
+1. **Prepare clean PR commits.** On top of `origin/main`, produce one clean linear commit per
+   logical slice (squashing worker TDD iterations when appropriate via `git commit-tree` or rebase,
+   preserving exact verified tree, `5aaee9` author/committer, single `Co-Authored-By` trailer, and
+   clean message with zero internal labels). Push the PR branch and open a PR targeting `main`
+   (`gh pr create --base main`).
+2. **PR fast loop (`pull_request`, ~30–60s).** `Tier 1` runs `fast-checks` (merged `cargo fmt`,
+   `bun fmt`, `bun lint`, TS7 `bun check`, `bun test --randomize`, shard proofs with strict ms
+   budgets) in parallel with diff-selected `rust-wasm-check`, `rust-clippy`, and `rust-nonparity`
+   (`scripts/ci/select-pr-checks.sh`), while `Cloudflare Pages` runs `pages-build`.
+   - When an on-demand full parity check is desired before queuing, add the `run-full-parity`
+     label to the PR.
+3. **Enqueue into Merge Queue.** Once review is complete and PR checks pass, arm Merge Queue:
+   ```sh
+   gh pr merge <pr-number> --auto --rebase
+   ```
+   GitHub rebases the PR onto the latest `main` in a speculative `merge_group` ref.
+4. **Complete Merge Queue gate (`merge_group`, 100% of suite).** `merge_group` unconditionally
+   bypasses PR diff selection and runs all 29 jobs on public `ubuntu-latest` runners:
+   - `fast-checks`, `rust-wasm-check`, `rust-clippy`, `rust-nonparity`;
+   - `build-parity` (builds `orca_parity` nextest archive + `target/debug/ares` and proves 100%
+     8-shard completeness for both official and seeded profiles);
+   - 8 `parity-official` shards + 8 `parity-seeded` shards using the pinned, SHA-256-verified GHCR
+     `ci-oracles` v2.5.0 image (zero Nix installation) and SHA-verified Moonraker extractors;
+   - `web-build` (release CLI, `gen-configdef --check`, `verify-configdef.mjs`, WASM + web app +
+     unit tests + desktop shard completeness proof);
+   - `web-streaming`, 4 timing-balanced `web-desktop` shards, and `web-packages-mobile`
+     (reusing the prebuilt `orca_parity` archive, `--workers 1 --retries 0`);
+   - `tier1-gate` and `Cloudflare Pages` (`pages-build`).
+5. **Auto-merge & production deploy.** When `tier1-gate` and `pages-build` both pass 100% green,
+   GitHub Merge Queue fast-forwards `main` with linear history, automatically triggering
+   `Cloudflare Pages` production `deploy`.
+6. **Handling Merge Queue failures.**
+   - Never retry flaky jobs, relax budgets/timeouts, skip tests, or weaken comparators.
+   - Inspect failing job logs (`gh run view <run-id> --log-failed` or
+     `gh api --allow-escape-sequences repos/ProjectPandar/ares/actions/jobs/<job-id>/logs`).
+   - Fix the root cause cleanly on the PR branch. While a PR is still active in the Merge Queue,
+     branch pushes are blocked (`GH006`); dequeue first via GraphQL `dequeuePullRequest` if needed,
+     push the fix, and re-arm `gh pr merge <pr-number> --auto --rebase`.
+7. **Post-merge sync.** After Merge Queue lands a PR:
+   - Fast-forward local `main`: `git fetch origin && git pull --ff-only origin main`.
+   - Remove finished PR worktrees (`git worktree remove`) and rebase active worker branches onto
+     updated `origin/main` (`git rebase origin/main`).
 
-   Failures are attributed by chain (bisect).
-   - A case whose Native output differs between repeated Native runs on the same input is Native nondeterminism. It
-     is not counted as an Ares PASS→FAIL, but only with the repeated Native outputs as proof, and only by COORD's
-     decision.
-4. COORD verifies the exact tip over the whole range: fast-forward, trailers, hygiene and clippy. A hygiene fix to
-   an accepted commit is a rewrite that needs the user's approval; the rewritten tip may differ from the tested tip
-   only in the cleaned files, and the range-diff must show only the rewritten commits.
-5. COORD lands the batch with one squash commit per chain, in stack order, plus the release commit:
-   - No tag keeps the unsquashed commits; record the tested tip and each chain's `<end>` in the ledger.
-   - A chain is one accepted RR line; a follow-up stacked right after its chain (such as a test fix) belongs to that
-     chain's commit.
-   - For each chain, take the stacked commit that ends it (`<end>`) and create
-     `git commit-tree <end>^{tree} -p <previous squash commit>`, starting from main. Each tree equals the stacked
-     tree at that point, so the last one equals the tested tip's tree (`git rev-parse <tip>^{tree}`); nothing is
-     re-tested because the bytes are identical.
-   - Message: a title summarising the chain's change, then one `- <subject>` line per original commit
-     (`git log --reverse --format='- %s' <previous end>..<end>`), then the single trailer. No batch numbers or other
-     internal labels; the author is the usual one.
-   - Fast-forward main to the last commit and push main to origin (never force).
-   - Pushing main deploys the web app to Cloudflare Pages.
-   - Other branches only build and test.
-6. Branches built on commits of a squashed batch move onto main with `git rebase --onto main <tested tip>`; the
-   trees are identical, so this applies only the branch's own commits. A branch built on an earlier point of the
-   stack uses that chain's squash commit and `<end>` instead.
+### Batch / release PRs (`chore: release 0.1.<N>`)
 
-### Re-freeze and parallel verification
+When multiple accepted chains should land together as a versioned batch/release (or share
+dependencies):
 
-When a tested tip is re-frozen after a source change:
+1. W5 stacks the accepted chains linearly onto `origin/main` (one clean commit per accepted chain,
+   verifying every commit endpoint compiles with `cargo check --workspace --all-targets`) and
+   appends the release commit `chore: release 0.1.<N>` updating:
+   - `[workspace.package].version` in root `Cargo.toml`;
+   - `version` in `web/app/package.json` (and `web/bun.lock` if updated);
+   - `Cargo.lock` via `cargo update -w --offline`.
+2. W5 runs static checks (`cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
+   `wasm32` check, web `fmt:check`/`lint`/`typecheck`/`test:unit`) on the stacked tip and pushes
+   the release PR branch.
+3. COORD audits the complete PR commit range (authors, single trailer, hygiene, LOC `<= 400`),
+   opens the release PR targeting `main`, and enqueues it via `gh pr merge <pr> --auto --rebase`.
+4. GitHub Merge Queue runs the full 29-job suite and lands the release atomically onto `main`.
+   Optional local machine verification (`$COORD_DIR/bin/batch/` against local Nix oracles) may be
+   used for heavy local profiling or bisecting, but never replaces the mandatory Merge Queue gate.
 
-- Compare every endpoint commit SHA with the previous freeze. Reuse a `check-ends` result only when the endpoint
-  SHA is identical; any unexpected endpoint difference is a HOLD and must be investigated before proceeding.
-- Run `static` and `incremental` concurrently. Run the browser and core lanes in one stage after confirming that
-  their worktrees, targets, caches, application directories, and preview port are isolated.
-- `probe_coverage` accepts leading whitespace before an `artifacts:` line (`^\s*artifacts:`). A missing artifact
-  line or a Native receipt with a nonzero exit remains unverified and must block a PASS.
-- Before accepting a freeze, verify that the tested tip contains the required release commit and its version
-  update. A tip without that release commit is incomplete.
+### Oracle and toolchain image updates
 
-## Batch script entry points
-
-The batch scripts are installed outside the repository. Set `$BATCH_SCRIPTS` to their
-installation directory and use one JSON configuration to name the repository, base and tip,
-ordered chains, resource checkout and revision, environments, baselines, CPU allocations,
-ports and artifact directories. Paths in that configuration must be absolute. Use complete
-commit SHAs and fresh worktree paths under `$WORKTREES`.
-
-Every entry point requires a distinct attempt name:
-
-```sh
-"$BATCH_SCRIPTS/restack" ranges.json --attempt source-plan --plan
-"$BATCH_SCRIPTS/restack" ranges.json --attempt source-stack
-```
-
-`--plan` records intended work without compiling or executing tests. It does not prove that
-ranges apply without conflicts. Remove it only when that stage is authorized. `collect`
-reads existing results and does not take `--plan`.
-
-| Entry point | Input and action |
-|---|---|
-| `restack` | Read ordered `{id, range: "START..END", title}` entries. Rebase each range onto the preceding result in a detached worktree with recorded-resolution reuse disabled. On conflict, save hunks, index stages and the stopped patch, then abort and stop. Never skip a chain or resolve a conflict automatically. After every chain succeeds, write `LINEAR-CONFIG.json`. |
-| `assemble` | Consume a linear configuration. Prove adjacent ancestry intervals cover every source commit exactly once, then replay them in order. Apply an optional final release commit last. |
-| `check-ends` | Run `cargo check --workspace --all-targets` at every chain endpoint and the optional release endpoint. Retain every exit, including compiler failures. |
-| `static` | Run formatting, workspace/all-target Clippy with warnings denied, and the core/WASM target check on the exact tip. |
-| `incremental` | Select tests from actual inventories and run both base and candidate once in both parity modes. Count only entries whose filter status is `matches`. Never reuse an earlier base execution. |
-| `nonparity` | Run the default workspace selection excluding `orca_parity` once each on the base and tip. Pass the same frozen official environment used for preparation, without pre-merging policy bindings. The runner verifies those suppliers and applies them to every partition on both revisions, keeping incident overrides local to their partition. Admission requires the recorded environment to equal the preparation environment plus the unique policy bindings. Use separate worktrees and CPUs disjoint from the `full` lanes. |
-| `prepare` | Build Native binaries and browser artifacts in separate worktrees. Retain dependency order within each lane, both parity inventories and artifact hashes. |
-| `full` | Require exact-tip endpoint, static, paired incremental and paired non-parity results plus the prepared manifest hash. Consume that manifest once and run official, seeded and browser lanes on disjoint CPU allocations without retries. |
-| `collect` | Compare inventories and results with the baselines. Write summary JSON, complete nonPASS frames and a report. Partial coverage cannot qualify. |
-| `land` | Require external approval bound to the tested tip. Create one local commit per chain with `git commit-tree`, followed by the optional release commit. Verify the final tree equals the tested tree. Print the push command without executing it. |
-
-- After resolving a replay conflict, resume using the stopped chain's index, never a later
-  index. For a seal-only restart, use `seal-<idx>`.
-- During replay, take the union for pure add/add registry conflicts and fix unambiguous compile
-  migrations directly (missing struct fields, renamed accessors, type adaptations, or added failure
-  report fields), recording these fixes in the notes. Collect all other conflicts into one HOLD and
-  wait for the coordinator's ruling.
-- The target side's restructured layout is canonical. Carry over the incoming feature additively
-  without restoring functions removed on the target side.
-- After an amend or a replay rewrite, regenerate the range-diff and show it to the coordinator again.
-  Do not reuse the old range-diff.
-- A replay seal requires a passing `cargo clippy --workspace --all-targets -- -D warnings`.
-
-After `restack`, use its generated linear configuration for `assemble`. Change only destination
-worktree and output paths when allocating the next stage. If `assemble` changes commit IDs,
-use its exact resulting tip and endpoints for subsequent stages. Any source restack invalidates
-previous endpoint, static, incremental, non-parity and prepared results.
-
-```sh
-"$BATCH_SCRIPTS/assemble" linear.json --attempt assembly
-"$BATCH_SCRIPTS/check-ends" execution.json --attempt endpoints
-"$BATCH_SCRIPTS/static" execution.json --attempt static
-"$BATCH_SCRIPTS/incremental" execution.json --attempt paired
-"$BATCH_SCRIPTS/nonparity" execution.json --attempt workspace
-"$BATCH_SCRIPTS/prepare" execution.json --attempt artifacts
-"$BATCH_SCRIPTS/full" execution.json --attempt verification
-"$BATCH_SCRIPTS/collect" execution.json --attempt report
-"$BATCH_SCRIPTS/land" execution.json --attempt local-landing
-```
-
-These commands show the order, not blanket authorization to run every stage. Freeze the
-prepared manifest path/hash and prerequisite result hashes in the execution configuration
-before `full`. Keep canonical environments and SHA-contract suppliers byte-identical. Do not
-wrap suppliers to set affinity. The outer runner supplies the replay CPU inside its lane.
-
-### Paired workspace results
-
-Use `cargo nextest run --workspace -E 'not binary(=orca_parity)'` with no retries. The overlap
-with Native probes and browser preparation fixtures is intentional. Freeze each revision's
-selected test IDs and check them against actual terminal results. Report new and removed IDs
-separately. Skips, missing or unexpected results, and regressions from PASS do not qualify.
-
-Both process exits must be 0 or 100 and agree with the reported outcomes. An inherited failure
-is eligible for an exception only when the ID, missing supplier and owner are in the policy
-frozen by hash before execution, and the failure message on both revisions identifies that
-exact missing supplier. A new failure, or a failure for any other reason, blocks progression.
-Report exceptions separately as failures; they do not count as coverage.
-
-### Preparation requirements
-
-- Every worktree must contain an `OrcaSlicer` resource symlink to the configured pinned upstream
-  checkout. Verify the link target and resource revision before building.
-- Set `CARGO_TARGET_DIR` to `<worktree>/target` for every Cargo command in that worktree.
-  Native and browser lanes have separate worktrees, not separate target directories elsewhere.
-  Fixtures and browser producers discover sibling binaries and generated files under this root.
-- Build Native binaries alongside the ordered browser preparation lane. The browser lane runs
-  dependency installation, the release CLI build, Rust fixtures, the print-config-definition
-  producer, WASM, app assets, the fixture binary and test inventory listing. Do not copy prior
-  bindings or distribution files to make preparation pass.
-- Read the expected version from `[workspace.package].version` in the prepared worktree's
-  `Cargo.toml`. Require its `Ares <version>` marker in the target release WASM, the package
-  `dist/ares_wasm_bg.wasm`, and every app `dist/assets/ares_wasm_bg*.wasm`. Scan all files in
-  `web/packages/ares-wasm-js/dist` and `web/app/dist/assets` for other Ares generator versions.
-  Missing required files, missing current markers or mixed versions HOLD before manifest creation.
-  This scan covers generated outputs, not arbitrary historical strings throughout the repository.
-- Set `web_environment.ARES_E2E_NIXPKGS` to the pinned nixpkgs source. Run Playwright through
-  `web/e2e/webkit-env.sh`, including mobile WebKit projects, so the bundled browser receives its
-  runtime libraries. Also provide the explicit SHA-bound Native suppliers in the web environment.
-- Use `web/playwright.config.ts` from the tested repository. Override workers, retries, output
-  directories and reporters through Playwright CLI flags. Do not generate an out-of-tree config.
-  Keep the configured port consistent with the repository's baseURL and preview server URL.
-  The `full` browser lane defaults to `--workers 2` (configurable via CLI flags), while the
-  `packages` project remains at `workers: 1`.
-- Parity lanes default `ARES_ORCA_CACHE_DIR` to the shared read-through `$COORD_DIR/orca-cache`
-  directory with normalized `LC_ALL=C`. Cached outputs under `native-cache-v2` are verified
-  cryptographically against producer identity and request content digests on every hit; probe
-  suites and double-replay determinism checks stay live.
-- Before launching the browser lane and after its owned processes exit, run
-  `ss -H -ltn 'sport = :<port>'`. The check passes only when the command succeeds and its output
-  is empty. TIME_WAIT sockets are not listeners. Never kill unrelated processes to free a port.
-
-### Outcomes and closeout
-
-Supply the required Native probe environment variables. A skipped reference comparison is not a PASS.
-
-Each attempt directory is exclusive. Keep failed attempts, commands, raw logs and actual exits.
-A preparation failure is not a test result. Do not retry an executed test to replace its outcome.
-For paired verification, keep official base, official tip, seeded base and seeded tip in four separate
-run directories. An overwritten log invalidates its result and requires repeating the affected run.
-
-Stop owned processes on an unapproved baseline PASS becoming nonPASS, a failing unpaired new
-test, an abnormal terminal outcome, an unapproved Native signal or a CPU escape. Preserve the
-stopping frame, signals, interrupted terminals and missing tests. A stopped run remains incomplete.
-
-Report actual PASS-to-FAIL changes, new tests, removals, approved predecessor/successor pairs and
-inventory counts. Keep complete browser errors, configuration streams and artifacts. An explicit
-exception permits proceeding but does not turn an actual FAIL into PASS. Baseline carry-forward
-or rename approval establishes neither byte equality nor causal attribution. Never weaken a
-comparator or silently omit a test.
+- Updating pinned OrcaSlicer v2.5.0 oracle patches/recipes triggers `.github/workflows/oracles-build.yml`
+  on `main`, publishing a new content-addressed `ghcr.io/projectpandar/ares/ci-oracles:<tag>`
+  digest and pruning stale tags. Update `ORACLE_IMAGE_DIGEST` in `scripts/ci/oracle-image.env`
+  via a normal PR once published.
+- Updating runner toolchain pins triggers `.github/workflows/toolchain-build.yml` on `main`.
 
 ## Standing rules
 
 - **Git.**
-  - Never force-push main. `--force-with-lease` only on a worker's own branch.
-  - Never `--no-verify`.
+  - Never push directly to `main` and never force-push `main`. `--force-with-lease` only on a
+    worker's own branch.
+  - Never `--no-verify` and never bypass `hk` hooks or Merge Queue required checks.
   - Don't amend accepted commits without asking.
   - Never `rm -rf` a variable path.
 - **Secrets.**
@@ -401,11 +281,10 @@ comparator or silently omit a test.
   - No committed Native outputs.
   - Output must not depend on core count.
   - Upstream undefined behaviour is not ported.
-  - Load the canonical reference flags for every focused, paired or full parity verification run. A
-    skipped or missing required Native comparison does not count as PASS.
+  - Load canonical reference flags for every local parity run; skipped required Native comparisons
+    never count as PASS.
+  - Zero test retries, zero relaxed budgets/timeouts, zero change-detector tests (see `AGENTS.md`).
 - **Native instrumentation.** Use only `printf` instrumentation compiled into a local upstream build.
   Do not use a debugger or debugger scripts.
 - **Approval.** Destructive or outward-facing actions need the user's approval.
-- **Archives.** A helper that writes into shared archives or caches prints its argv in a dry run first; check the
-  order of the output and input arguments before the real run.
 - **Reporting.** Report to the user briefly, in Chinese.
