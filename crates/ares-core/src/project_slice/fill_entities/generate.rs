@@ -150,12 +150,11 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
-                let adaptive_field = adaptive_fields.get(fill.params.adaptive_infill_mode);
                 super::gyroid::append(
                     &mut output,
                     fill,
                     (layer.print_z, layer.height),
-                    adaptive_field,
+                    adaptive_fields,
                     traversal.scale,
                 )?;
             }
@@ -223,10 +222,22 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
-                super::tpms_fk::append(&mut output, fill, layer.print_z, traversal.scale)?;
+                super::tpms_fk::append(
+                    &mut output,
+                    fill,
+                    (layer.print_z, layer.height),
+                    adaptive_fields,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
-                super::tpms_d::append(&mut output, fill, layer.print_z, traversal.scale)?;
+                super::tpms_d::append(
+                    &mut output,
+                    fill,
+                    (layer.print_z, layer.height),
+                    adaptive_fields,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::LateralLattice) => {
                 super::lateral_lattice::append(

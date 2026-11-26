@@ -5,7 +5,7 @@
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::multiline::{MultilineFillParams, fill_surface as fill_multiline_surface},
-    geometry::{JoinType, Point, Polyline, offset_expolygon},
+    geometry::{Point, Polyline},
     project_slice::group_fills::SurfaceFillPattern,
 };
 
@@ -13,15 +13,14 @@ mod lightning;
 
 /// `match fill.params.pattern` dispatch — tail arms (TriHexagon onward).
 /// Extracted verbatim from `generate_sparse_infill_polylines_for_anchoring`.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn dispatch_tail(
-    pattern: SurfaceFillPattern,
-    fill: crate::project_slice::group_fills::SurfaceFill,
+    (pattern, fill): (
+        SurfaceFillPattern,
+        crate::project_slice::group_fills::SurfaceFill,
+    ),
     traversal: &crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
-    layer_index: usize,
-    z: f64,
-    object_reference: Point,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    (object_index, layer_index, z, object_reference): (usize, usize, f64, Point),
+    context: super::AnchoringContext<'_>,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
     let multiline_params =
@@ -123,63 +122,28 @@ pub(super) fn dispatch_tail(
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
-            let params = crate::fill::tpms_d::TpmsDFillParams {
-                spacing: fill.params.spacing,
-                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-                angle: fill.params.angle,
-                layer_z: z,
-                multiline: fill.params.multiline,
-                anchor_length: fill.params.anchor_length,
-                anchor_length_max: fill.params.anchor_length_max,
-                dont_sort: false,
-            };
-            // FillBase.cpp:105-118 contracts each zero-overlap anchor surface.
-            let delta = (-0.5 * params.spacing / traversal.scale.factor()) as f32;
-            for expolygon in fill.expolygons {
-                for domain in offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
-                    .map_err(super::super::transaction::geometry_error)?
-                {
-                    result.extend(
-                        crate::fill::tpms_d::fill_tpmsd_surface(&domain, &params, traversal.scale)
-                            .map_err(super::super::transaction::geometry_error)?,
-                    );
-                }
-            }
+            super::tpms::append_tpms_d(
+                fill,
+                traversal,
+                (object_index, layer_index, z),
+                context.adaptive_fields,
+                result,
+            )?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
-            let params = crate::fill::tpms_fk::TpmsFKFillParams {
-                spacing: fill.params.spacing,
-                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-                angle: fill.params.angle,
-                layer_z: z,
-                multiline: fill.params.multiline,
-                anchor_length: fill.params.anchor_length,
-                anchor_length_max: fill.params.anchor_length_max,
-                dont_sort: false,
-            };
-            // Fill::fill_surface offsets the zero-overlap anchor domain
-            // before FillTpmsFK::_fill_surface_single, as emission does.
-            let delta = (-0.5 * params.spacing / traversal.scale.factor()) as f32;
-            for expolygon in fill.expolygons {
-                for domain in offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
-                    .map_err(super::super::transaction::geometry_error)?
-                {
-                    result.extend(
-                        crate::fill::tpms_fk::fill_tpmsfk_surface(
-                            &domain,
-                            &params,
-                            traversal.scale,
-                        )
-                        .map_err(super::super::transaction::geometry_error)?,
-                    );
-                }
-            }
+            super::tpms::append_tpms_fk(
+                fill,
+                traversal,
+                (object_index, layer_index, z),
+                context.adaptive_fields,
+                result,
+            )?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning) => {
             // `FillLightning::Filler::_fill_surface_single` — the anchor
             // lines are the tree's convertToLines clipped to the surface
             // (`FillLightning.cpp:17`), same as the emit path.
-            let Some(generator) = lightning_generator else {
+            let Some(generator) = context.lightning_generator else {
                 return Ok(());
             };
             lightning::append(&fill, generator, layer_index, traversal.scale, result)?;

@@ -66,7 +66,7 @@ pub(crate) fn fill_surface(
     Ok(output)
 }
 
-fn fill_component(
+pub(crate) fn fill_component(
     surface: &ExPolygon,
     params: GyroidFillParams,
     scale: CoordinateScale,
