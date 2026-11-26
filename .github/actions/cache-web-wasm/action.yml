@@ -1,0 +1,25 @@
+name: Cache WebAssembly Build Outputs
+description: Cache the separate shipped and panic-probe builds by their exact inputs
+outputs:
+  wasm-hit:
+    description: Exact shipped package hit
+    value: ${{ steps.wasm.outputs.cache-hit }}
+  panic-probe-hit:
+    description: Exact panic-probe hit
+    value: ${{ steps.panic-probe.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: Cache panic-probe WebAssembly and JavaScript
+      id: panic-probe
+      uses: actions/cache@v4
+      with:
+        path: target/web-e2e/panic-probe
+        key: panic-probe-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/**', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'scripts/ci/toolchain-image.env', 'web/package.json', 'web/bun.lock', 'web/bunfig.toml', 'web/tsconfig.json', 'web/packages/ares-wasm-js/package.json', 'web/packages/ares-wasm-js/tsconfig*.json', 'web/packages/ares-wasm-js/src/**', '!web/packages/ares-wasm-js/src/wasm/**', 'web/scripts/build-panic-probe.mjs') }}
+    - name: Cache shipped WebAssembly package
+      id: wasm
+      uses: actions/cache@v4
+      with:
+        path: web/packages/ares-wasm-js/src/wasm
+        # Same path and key as Cloudflare Pages.
+        key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
