@@ -1,8 +1,6 @@
 name: Tier 1
 
 on:
-  push:
-    branches: [main]
   pull_request:
   merge_group:
     types: [checks_requested]
@@ -320,8 +318,8 @@ jobs:
           restore-keys: web-desktop-timings-main-
       - name: Run timing-balanced desktop E2E shard ${{ matrix.shard }}/4
         run: bash scripts/ci/run-web-desktop-shard.sh "${{ matrix.shard }}" 4
-      - name: Save updated web E2E timings on main/merge_group
-        if: github.event_name == 'merge_group' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      - name: Save updated web E2E timings on merge_group
+        if: github.event_name == 'merge_group'
         uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/web-timings

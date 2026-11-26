@@ -96,7 +96,7 @@ jobs:
           bun run --cwd web build
           bun web/scripts/package-pages.mjs
       - name: Format, lint, typecheck, and unit test web
-        if: steps.select.outputs.run_web == 'true'
+        if: steps.select.outputs.run_web == 'true' && github.event_name != 'push'
         run: |
           bun run --cwd web fmt:check
           bun run --cwd web lint
@@ -107,16 +107,16 @@ jobs:
             bun run --cwd web test:unit
       - name: Cache Playwright Chromium
         id: pw-cache
-        if: steps.select.outputs.run_web == 'true'
+        if: steps.select.outputs.run_web == 'true' && github.event_name != 'push'
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
       - name: Install Playwright Chromium on cache miss
-        if: steps.select.outputs.run_web == 'true' && steps.pw-cache.outputs.cache-hit != 'true'
+        if: steps.select.outputs.run_web == 'true' && github.event_name != 'push' && steps.pw-cache.outputs.cache-hit != 'true'
         run: bunx --cwd web playwright install chromium
       - name: Run Pages Playwright suite
-        if: steps.select.outputs.run_web == 'true'
+        if: steps.select.outputs.run_web == 'true' && github.event_name != 'push'
         run: bun run --cwd web test:pages
       - name: Cache Pages dist for main deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
