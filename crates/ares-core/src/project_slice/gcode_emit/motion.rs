@@ -44,7 +44,7 @@ pub(in crate::project_slice) use overhang::{
     CurlEstimate, CurledLine, ExternalEntityPoints, estimate_object,
 };
 pub(super) use shared_reversals::{EmissionPhase, SharedLayerId};
-pub(super) use skirt_brim::{SkirtLoopParameters, emit_brim_loop, emit_skirt_loop};
+pub(super) use skirt_brim::{SkirtLoopParameters, emit_belt_brim, emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
     AvoidCrossingGeometry, EmitState, LayerBegin, LayerGeometry, LiftMode, append_exclude_end,
     append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,

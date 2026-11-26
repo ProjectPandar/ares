@@ -146,6 +146,7 @@ pub(super) fn append_layer_change(
     output: &mut Vec<u8>,
     state: &mut super::motion::EmitState,
     template_context: LayerTemplateContext<'_>,
+    mark_fan_change: bool,
 ) -> Result<(), SliceError> {
     let LayerTemplateContext {
         traversal,
@@ -224,6 +225,8 @@ pub(super) fn append_layer_change(
             output.push(b'\n');
         }
     }
-    output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");
+    if mark_fan_change {
+        output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");
+    }
     Ok(())
 }

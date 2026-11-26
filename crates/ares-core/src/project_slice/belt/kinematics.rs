@@ -15,19 +15,19 @@ use super::{
 
 /// Post-stage shear/scale machine-frame transform (`GCode/MachineFrameTransform.{hpp,cpp}`).
 #[derive(Clone, Copy, Debug)]
-pub(in crate::project_slice) struct MachineFrameTransform {
-    matrix: Option<Transform3d>,
+pub(crate) struct MachineFrameTransform {
+    matrices: Option<(Transform3d, Transform3d)>,
 }
 
 impl MachineFrameTransform {
     /// `MachineFrameTransform::init_from_config` (`GCode/MachineFrameTransform.cpp:11-73`).
-    pub(in crate::project_slice) fn from_printer(printer: &PrinterRemainingOptions) -> Self {
+    pub(crate) fn from_printer(printer: &PrinterRemainingOptions) -> Self {
         if !printer.belt_printer.0 {
-            return Self { matrix: None };
+            return Self { matrices: None };
         }
         let axis = printer.belt_slice_rotation;
         if !matches!(axis, BeltRotationAxis::X | BeltRotationAxis::Y) {
-            return Self { matrix: None };
+            return Self { matrices: None };
         }
         let angle_deg = if printer.belt_frame_tilt_decouple.0 {
             printer.belt_frame_tilt_angle.0
@@ -35,11 +35,11 @@ impl MachineFrameTransform {
             printer.belt_slice_rotation_angle.0
         };
         if angle_deg.abs() <= EPSILON {
-            return Self { matrix: None };
+            return Self { matrices: None };
         }
         let (sin_a, cos_a) = deg2rad(angle_deg).sin_cos();
         if sin_a.abs() <= EPSILON {
-            return Self { matrix: None };
+            return Self { matrices: None };
         }
         let cot_a = cos_a / sin_a;
         let inv_sin = 1.0 / sin_a.abs();
@@ -63,18 +63,46 @@ impl MachineFrameTransform {
             BeltRotationAxis::None | BeltRotationAxis::Z => unreachable!("checked above"),
         });
         if is_approx_identity(combined) {
-            return Self { matrix: None };
+            return Self { matrices: None };
         }
+        let sin = inv_sin.recip();
+        let inverse = Transform3d::from_rows(match axis {
+            BeltRotationAxis::X => [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, sin, 0.0, 0.0],
+                [0.0, -cot_a * sin, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            BeltRotationAxis::Y => [
+                [sin, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [cot_a * sin, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            BeltRotationAxis::None | BeltRotationAxis::Z => unreachable!("checked above"),
+        });
         Self {
-            matrix: Some(combined),
+            matrices: Some((combined, inverse)),
         }
     }
 
     /// `MachineFrameTransform::apply` (`GCode/MachineFrameTransform.cpp:75-80`).
     #[inline]
-    pub(in crate::project_slice) fn apply(self, pos: Point3d) -> Point3d {
-        self.matrix
-            .map_or(pos, |matrix| matrix.transform_point(pos))
+    pub(in crate::project_slice) fn apply(&self, pos: Point3d) -> Point3d {
+        self.matrices
+            .as_ref()
+            .map_or(pos, |(matrix, _)| matrix.transform_point(pos))
+    }
+
+    pub(crate) fn is_active(&self) -> bool {
+        self.matrices.is_some()
+    }
+
+    /// `MachineFrameTransform.cpp:82-87`: undo only the final machine frame, not remap.
+    pub(crate) fn apply_inverse(&self, pos: Point3d) -> Point3d {
+        self.matrices
+            .as_ref()
+            .map_or(pos, |(_, inverse)| inverse.transform_point(pos))
     }
 }
 

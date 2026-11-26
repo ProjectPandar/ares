@@ -63,7 +63,10 @@ pub(super) fn geometry(
     for entry in entries {
         if let Some(index) = entry.object_layer {
             let object = &traversal.objects[entry.object_index];
-            let layer_slices = object.slices(index).expect("object layer retains slices");
+            // A coincident belt brim retains the physical layer even without a slice.
+            let Some(layer_slices) = object.slices(index) else {
+                continue;
+            };
             slices.extend_from_slice(layer_slices);
             if !layer_slices.is_empty() {
                 spacing += object
@@ -95,9 +98,9 @@ pub(super) fn boundary_slices(
         let Some(index) = entry.object_layer else {
             continue;
         };
-        let layer_slices = traversal.objects[entry.object_index]
-            .slices(index)
-            .expect("object layer retains slices");
+        let Some(layer_slices) = traversal.objects[entry.object_index].slices(index) else {
+            continue;
+        };
         for instance in &instances[entry.object_index] {
             let dx = instance.shift.x();
             let dy = instance.shift.y();

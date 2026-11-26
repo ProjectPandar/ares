@@ -1,4 +1,5 @@
 //! GCode.cpp layer-chunk emission, extracted without changing command ordering.
+mod belt_brim;
 mod boundary;
 mod brim_emit;
 mod context;
@@ -140,6 +141,7 @@ pub(super) fn append(
         label_inventory,
         labels,
         object_layer_counts,
+        belt_brim,
         mut skirt_schedule,
         tool_ordering,
         layer_count,
@@ -260,7 +262,7 @@ pub(super) fn append(
     let mut chunk_index = 0;
     let mut final_chunk = None;
     let mut status_layer = 0;
-    include!("layers/drive.rs");
+    include!("layers/drive.inc");
     cooling.finish(output);
     // `GCode.cpp:3440-3441` (ByLayer; the per-object completion
     // `:3359-3361` reaches the same point at the final object): once

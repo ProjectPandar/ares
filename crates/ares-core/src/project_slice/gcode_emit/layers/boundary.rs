@@ -76,6 +76,7 @@ pub(super) struct LayerBoundary<'a> {
     /// printing every object's layer 0 qualifies.
     pub(super) first_layer: bool,
     pub(super) belt_past_first_layer: Option<bool>,
+    pub(super) belt_prologue: bool,
     pub(super) second_layer_done: &'a mut bool,
     /// The live writer bed-temperature cache
     /// (`GCodeWriter::m_last_bed_temperature`, GCodeWriter.cpp:168-175) —
@@ -107,6 +108,7 @@ pub(super) fn append<'a>(
         layer_height,
         first_layer,
         belt_past_first_layer,
+        belt_prologue,
         second_layer_done,
         bed_cache,
         custom_gcode,
@@ -120,9 +122,14 @@ pub(super) fn append<'a>(
     // `m_max_layer_z = max(...)` update BEFORE the
     // before-layer-change/timelapse templates render (`GCode.cpp:4636`).
     state.max_layer_z = state.max_layer_z.max(layer_z as f32);
+    let z = format_processor_float(layer_z);
     let header = format!(
         "{}\n{}\n",
-        tags.z(&format_processor_float(layer_z)),
+        if belt_prologue {
+            format!(";Z:{z}")
+        } else {
+            tags.z(&z)
+        },
         tags.height(&format_processor_float(layer_height)),
     );
     output.extend_from_slice(header.as_bytes());
@@ -144,7 +151,8 @@ pub(super) fn append<'a>(
         first_layer_bounds,
     };
     // `GCode.cpp:6710`: exclusive with the traditional inserts.
-    let timelapse_at_layer_change = !state.traditional_timelapse
+    let timelapse_at_layer_change = !belt_prologue
+        && !state.traditional_timelapse
         && !tags.is_bbl()
         && !traversal
             .resolved
@@ -277,7 +285,9 @@ pub(super) fn append<'a>(
             max_layer_z: f64::from(state.max_layer_z),
             context: layer_change_template,
         },
+        !belt_prologue,
     )?;
+
     // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
     // between the layer-change gcode and the acceleration reset, so it
     // precedes `begin_layer`'s M204.
@@ -286,7 +296,8 @@ pub(super) fn append<'a>(
     // `first_layer` (`GCode.cpp:4589`) — sequential printing resets the
     // flag at every object boundary (`GCode.cpp:3367`), so each object's
     // first non-first layer runs the block once, not just global chunk 1.
-    let second_layer_reset = belt_past_first_layer.unwrap_or(!first_layer) && !*second_layer_done;
+    let second_layer_reset =
+        !belt_prologue && belt_past_first_layer.unwrap_or(!first_layer) && !*second_layer_done;
     // `GCode.cpp:4777-4779`: the second-layer block emits the configured
     // power-loss-recovery mode command (`GCodeWriter.cpp:505-522` —
     // `M1003` on BBL machines, `M413` on Marlin 2 firmware) before the
@@ -330,6 +341,9 @@ pub(super) fn append<'a>(
             second_layer_reset,
         },
     );
+    if belt_prologue {
+        return Ok(BoundaryAdvance { timelapse_context });
+    }
     // `GCode.cpp:4772-4773`: the first-layer block closes with the
     // junction deviation — after the initial-layer acceleration and
     // jerk emits above (`:4761-4774`, M204 -> M205 X/Y -> M205 J) —

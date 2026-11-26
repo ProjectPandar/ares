@@ -4,7 +4,7 @@ pub(super) mod back_transform;
 pub(super) mod kinematics;
 
 use crate::{
-    BeltRotationAxis, Point3d, ProcessBrimType, ProcessDraftShield, ProcessPrintSequence, Project,
+    BeltRotationAxis, Point3d, ProcessDraftShield, ProcessPrintSequence, Project,
     ProjectVolumeType, RemapAxis, SliceError,
     geometry::CoordinateScale,
     options::PrinterRemainingOptions,
@@ -12,6 +12,9 @@ use crate::{
 };
 
 pub(super) const EPSILON: f64 = 1e-4;
+
+pub(super) mod brim;
+mod floor_context;
 
 fn unsupported(feature: &str) -> SliceError {
     SliceError::UnsupportedProjectFeature(format!("belt_printer: {feature}"))
@@ -51,9 +54,7 @@ pub(super) fn admit(
     {
         return Err(unsupported("materials"));
     }
-    if object.object.brim_type != ProcessBrimType::NoBrim {
-        return Err(unsupported("brim"));
-    }
+
     if object.object.enable_support.0
         || object.object.raft_layers.0 != 0
         || object.object.enforce_support_layers.0 != 0
