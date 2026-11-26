@@ -67,10 +67,13 @@ impl ScalarField {
         let fy = (self.freq as f64 * y) as f32;
         let fz = (self.freq as f64 * self.z) as f32;
         // Fischer–Koch S: cos(2x)sin(y)cos(z) + cos(2y)sin(z)cos(x) +
-        // cos(2z)sin(x)cos(y) = 0 (FillTpmsFK.cpp:43).
-        (2.0 * fx).cos() * fy.sin() * fz.cos()
-            + (2.0 * fy).cos() * fz.sin() * fx.cos()
-            + (2.0 * fz).cos() * fx.sin() * fy.cos()
+        // cos(2z)sin(x)cos(y) = 0 (FillTpmsFK.cpp:27-30).
+        let (sin_x, cos_x) = crate::scalar_math::sincosf::sin_cos(fx);
+        let (sin_y, cos_y) = crate::scalar_math::sincosf::sin_cos(fy);
+        let (sin_z, cos_z) = crate::scalar_math::sincosf::sin_cos(fz);
+        crate::scalar_math::sincosf::cos(2.0 * fx) * sin_y * cos_z
+            + crate::scalar_math::sincosf::cos(2.0 * fy) * sin_z * cos_x
+            + crate::scalar_math::sincosf::cos(2.0 * fz) * sin_x * cos_y
     }
 
     // `to_Point` = raster Coord → scaled Point; `to_Pointf` → unscaled mm.
