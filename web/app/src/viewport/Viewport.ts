@@ -1,25 +1,17 @@
-import { type Scene, type Toolpaths, VERTEX_VALUES, type VolumeType } from "@ares-slicer/wasm";
+import type { Scene, Toolpaths } from "@ares-slicer/wasm";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlates, type PlateMaterials, recolorPlates } from "./bed";
-import { disposeGeometries, disposeTree } from "./dispose";
-import { type GizmoMode, Gizmos } from "./gizmos";
-import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
 import type { BedShape } from "./bedShape";
 import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
-import { buildInstances, type ModelMaterials } from "./models";
-import { buildOptionMarkers } from "./optionMarkers";
+import { disposeGeometries } from "./dispose";
+import { type GizmoMode, Gizmos } from "./gizmos";
+import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
+import { applySelectionMaterials, buildInstances, type ModelMaterials, updateInstances } from "./models";
 import { attachPicking } from "./picking";
 import { type SharedGl, sharedGl } from "./sharedGl";
-import { buildToolMarker, placeToolMarker } from "./toolMarker";
-import {
-  applyEnabled,
-  applyPreviewView,
-  applyVertexColors,
-  buildToolpathMesh,
-  releaseToolpathMesh,
-  type ToolpathFilter,
-} from "./toolpathMesh";
+import type { ToolpathFilter } from "./toolpathMesh";
+import { ViewportToolpaths } from "./viewportToolpaths";
 
 THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
 
@@ -47,10 +39,7 @@ export class Viewport {
   readonly #resize: ResizeObserver;
   readonly #models = new THREE.Group();
   #bed = new THREE.Group();
-  #toolpaths: THREE.Mesh | null = null;
-  readonly #toolMarker = buildToolMarker();
-  #toolpathColors: Uint8Array | null = null;
-  #previewView: ToolpathFilter | null = null;
+  readonly #toolpaths: ViewportToolpaths;
   #bedShape: BedShape = {
     polygon: [
       [0, 0],
@@ -112,7 +101,8 @@ export class Viewport {
     key.position.set(-0.6, -1, 1.4);
     const fill = new THREE.DirectionalLight(0xffffff, 0.5);
     fill.position.set(1, 0.8, 0.6);
-    this.#scene.add(hemisphere, key, fill, this.#models, this.#bed, this.#toolMarker);
+    this.#scene.add(hemisphere, key, fill, this.#models, this.#bed);
+    this.#toolpaths = new ViewportToolpaths(this.#gl, this.#scene, container);
     this.#gizmos = new Gizmos(this.#scene, this.#camera, container);
     this.#resize = new ResizeObserver(() => this.#fitCanvas());
     this.#resize.observe(container);
@@ -175,7 +165,7 @@ export class Viewport {
     this.#bed = buildPlates(shape, origins, current, this.#plateMaterials);
     this.#scene.add(this.#bed);
     this.container.dataset.plates = JSON.stringify({ origins, current });
-    this.#placeToolpaths();
+    this.#toolpaths.place(this.#origin);
     this.render();
   }
 
@@ -183,23 +173,9 @@ export class Viewport {
     return this.#plateOrigins[this.#currentPlate] ?? [0, 0];
   }
 
-  /** A plate's G-code is in its own coordinates; the preview draws it on the current plate. */
-  #placeToolpaths() {
-    if (!this.#toolpaths) return;
-    this.#toolpaths.position.set(...this.#origin, 0);
-    this.#toolpaths.updateMatrix();
-  }
-
   setScene(scene: Scene | null, colours: readonly string[]) {
     this.#modelMaterials.setFilaments(colours);
-    if (scene && scene.positions === this.#positions && this.#moveInstances(scene)) {
-      const objects = new Map(scene.objects.map((object) => [object.id, object]));
-      this.#models.traverse((node) => {
-        if (!(node instanceof THREE.Mesh)) return;
-        const object = objects.get(node.userData.objectId as number);
-        const volume = object?.volumes.find(({ id }) => id === node.userData.volumeId);
-        if (volume) node.userData.filament = volume.effectiveFilament;
-      });
+    if (scene && scene.positions === this.#positions && updateInstances(this.#models, scene)) {
       this.setSelected(this.#selected);
       return;
     }
@@ -211,17 +187,6 @@ export class Viewport {
     }
     this.#models.updateMatrixWorld(true);
     this.setSelected(this.#selected);
-  }
-
-  /** Plater edits: the same objects with new instance matrices. */
-  #moveInstances(scene: Scene) {
-    const groups = this.#models.children;
-    const matrices = scene.objects.flatMap((object) => object.instances.map((instance) => instance.matrix));
-    if (groups.length !== matrices.length) return false;
-    groups.forEach((group, index) => group.matrix.fromArray(matrices[index]));
-    this.#models.updateMatrixWorld(true);
-    this.#placeGizmo();
-    return true;
   }
 
   /** The open gizmo on the selected object's first instance, while instances can be edited. */
@@ -256,14 +221,7 @@ export class Viewport {
   setSelected(objectId: number | null) {
     this.#selected = objectId;
     this.#placeGizmo();
-    this.#models.traverse((node) => {
-      if (node instanceof THREE.Mesh)
-        node.material = this.#modelMaterials.get(
-          node.userData.volumeType as VolumeType,
-          node.userData.objectId === objectId,
-          node.userData.filament as number,
-        );
-    });
+    applySelectionMaterials(this.#models, this.#modelMaterials, objectId);
     this.render();
   }
 
@@ -272,80 +230,33 @@ export class Viewport {
     return this.#renderer.capabilities.maxTextureSize;
   }
 
-  /**
-   * GCodeViewer::init on the Preview canvas's first render (GLCanvas3D.cpp:2558): sends the
-   * toolpath and option-marker programs to compile, once per context. Three.js reads their
-   * status on first use, so nothing here waits for the compile.
-   */
   compileToolpathPrograms() {
-    if (this.#gl.toolpathsCompiled) return;
-    this.#gl.toolpathsCompiled = true;
-    const geometry = new THREE.InstancedBufferGeometry();
-    const meshes = new THREE.Group().add(
-      new THREE.Mesh(geometry, this.#gl.toolpaths),
-      new THREE.Mesh(geometry, this.#gl.optionMarkers),
-    );
-    this.#renderer.compile(meshes, this.#camera, this.#scene);
-    geometry.dispose();
+    this.#toolpaths.compilePrograms(this.#camera);
   }
 
   setToolpaths(toolpaths: Toolpaths | null) {
-    if (this.#toolpaths) {
-      this.#scene.remove(this.#toolpaths);
-      releaseToolpathMesh(this.#toolpaths);
-    }
-    this.#toolpaths = null;
-    this.#toolMarker.visible = false;
-    delete this.container.dataset.optionMarkers;
-    delete this.container.dataset.segmentSizes;
-    delete this.container.dataset.segmentGeometry;
-    delete this.container.dataset.segmentColors;
-    if (toolpaths) {
-      this.#toolpaths = buildToolpathMesh(toolpaths, this.#gl.toolpaths);
-      this.#toolpathColors = toolpaths.colors;
-      const markers = buildOptionMarkers(toolpaths, this.#gl.optionMarkers);
-      this.#toolpaths.add(markers.mesh);
-      this.#scene.add(this.#toolpaths);
-      this.#placeToolpaths();
-      this.container.dataset.optionMarkers = JSON.stringify(markers.counts);
-      const { probes } = toolpaths.textures!;
-      this.container.dataset.segmentSizes = probes.sizes;
-      this.container.dataset.segmentGeometry = probes.geometry;
-      this.container.dataset.segmentColors = probes.colors;
-    }
-    if (this.#previewView) this.setPreviewView(this.#previewView);
-    else this.render();
+    this.#toolpaths.set(toolpaths, this.#origin);
+    this.render();
   }
 
   /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its E2E probe (`ViewColors.colorsProbe`). */
   setToolpathColors(colors: Uint8Array, probe: string) {
-    if (!this.#toolpaths || colors === this.#toolpathColors) return;
-    this.#toolpathColors = colors;
-    applyVertexColors(this.#toolpaths, colors);
-    this.container.dataset.segmentColors = probe;
-    this.render();
+    if (this.#toolpaths.setColors(colors, probe)) this.render();
   }
 
   /** Shows only the enabled segments and option markers of the current toolpaths. */
   setEnabled(segments: Uint32Array, options: Uint32Array, vertexCount: number) {
-    if (!this.#toolpaths) return;
-    applyEnabled(this.#toolpaths, segments, options, vertexCount);
-    this.render();
+    if (this.#toolpaths.setEnabled(segments, options, vertexCount)) this.render();
   }
 
   /** Shows the tool marker at vertex `vertex` of `toolpaths`, or hides it. */
   setToolMarker(toolpaths: Toolpaths, vertex: number | null) {
-    this.#toolMarker.visible = vertex !== null;
-    if (vertex !== null) {
-      const [x, y, z] = toolpaths.values.subarray(vertex * VERTEX_VALUES.length);
-      placeToolMarker(this.#toolMarker, x + this.#origin[0], y + this.#origin[1], z);
-    }
+    this.#toolpaths.setMarker(toolpaths, vertex, this.#origin);
     this.render();
   }
 
   setPreviewView(view: ToolpathFilter) {
-    this.#previewView = view;
-    if (this.#toolpaths) applyPreviewView(this.#toolpaths, view);
+    this.#toolpaths.setPreviewView(view);
     this.render();
   }
 
@@ -384,7 +295,8 @@ export class Viewport {
     const box = new THREE.Box3();
     if (target === "objects") {
       box.setFromObject(this.#models);
-      if (this.#toolpaths) box.union(this.#toolpaths.geometry.boundingBox!.clone().translate(this.#toolpaths.position));
+      const toolpathBox = this.#toolpaths.boundingBox();
+      if (toolpathBox) box.union(toolpathBox);
     } else {
       const origins = target === "plates" ? this.#plateOrigins : [this.#origin];
       for (const [ox, oy] of origins) {
@@ -422,9 +334,8 @@ export class Viewport {
     this.#controls.dispose();
     disposeGeometries(this.#models);
     disposeGeometries(this.#bed);
-    disposeTree(this.#toolMarker);
     this.#gizmos.dispose();
-    if (this.#toolpaths) releaseToolpathMesh(this.#toolpaths);
+    this.#toolpaths.dispose();
   }
 
   #fitCanvas() {

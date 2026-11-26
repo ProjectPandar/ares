@@ -27,8 +27,11 @@
     "!dist/wasm",
     "!dist/platerEdit.d.ts",
     "!dist/workerPlaterSource.d.ts",
+    "!dist/workerCatalog.d.ts",
+    "!dist/workerClient.d.ts",
     "!dist/workerCrash.d.ts",
     "!dist/workerTransfer.d.ts",
+    "!dist/workerViewer.d.ts",
     "!dist/toolpathTextures.d.ts"
   ],
   "exports": {
