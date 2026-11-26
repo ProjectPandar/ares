@@ -157,7 +157,7 @@ impl Processor<'_> {
     fn tag(&mut self, line: &str, following: &[&str], output: &mut String) {
         static TAG: LazyLock<Regex> = LazyLock::new(|| {
             Regex::new(
-                r"; PA_CHANGE:T(\d+) MM3MM:([0-9]*\.[0-9]+) ACCEL:(\d+) BR:(\d+) RC:(\d+) OV:(\d+)",
+                r"; PA_CHANGE:T([0-9]+) MM3MM:([0-9]*\.[0-9]+) ACCEL:([0-9]+) BR:([0-9]+) RC:([0-9]+) OV:([0-9]+)",
             )
             .expect("upstream PA tag expression")
         });
