@@ -7,6 +7,9 @@ use std::collections::{HashMap, hash_map::Entry};
 use super::{Point, crossing_grid::CrossingGrid};
 
 pub(super) fn remove(path: &mut [usize], points: &[Point]) -> bool {
+    if path.len() <= 3 {
+        return false;
+    }
     let mut grid = CrossingGrid::new(path, points);
     // Source size_t multiplication followed by static_cast<int>, including
     // the signed cap; keep the same low 32 bits on browser WASM as on Native.

@@ -75,10 +75,22 @@ pub(in crate::project_slice::gcode_emit) fn collect(
     }
     // Bucket identity remains independent of the model-order field.
     let print = &traversal.resolved.views.full.process.print;
-    let order = if print.print_sequence == crate::ProcessPrintSequence::ByLayer
-        && print.print_order == crate::ProcessPrintOrder::Default
-    {
-        super::object_order::reference_order(&centers, traversal.scale)
+    let order = if print.print_sequence == crate::ProcessPrintSequence::ByLayer {
+        match print.print_order {
+            crate::ProcessPrintOrder::Default => {
+                super::object_order::reference_order(&centers, traversal.scale)
+            }
+            crate::ProcessPrintOrder::Snake => super::object_order::snake_order(&centers),
+            crate::ProcessPrintOrder::BestOfStrategies => {
+                super::object_order::best_of_order(&centers, traversal.scale)
+            }
+            crate::ProcessPrintOrder::AsObjectList => {
+                let mut order =
+                    super::object_order::chain_instance_order(&centers, seed(traversal));
+                order.reverse();
+                order
+            }
+        }
     } else {
         let mut order = super::object_order::chain_instance_order(&centers, seed(traversal));
         order.reverse();

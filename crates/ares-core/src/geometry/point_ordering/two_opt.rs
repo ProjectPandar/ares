@@ -33,6 +33,9 @@ impl Edges {
 
 pub(super) fn improve(path: &mut [usize], points: &[Point]) -> bool {
     let count = path.len();
+    if count <= 2 {
+        return false;
+    }
     let mut edges = Edges::new(path, points);
     let mut improved = false;
     for _ in 0..10 {

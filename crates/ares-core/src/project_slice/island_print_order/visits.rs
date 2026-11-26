@@ -27,11 +27,13 @@ struct IslandOrderNode {
 pub(in crate::project_slice) fn produce(
     instances: &[InstanceInput<'_>],
     wt_pos: Point,
+    print_order: crate::ProcessPrintOrder,
     scale: CoordinateScale,
 ) -> Vec<InstanceVisit> {
     let nodes = nodes(instances, scale);
     let points = nodes.iter().map(|node| node.pos).collect::<Vec<_>>();
-    let tour = crate::geometry::chain_points_with_postprocessing(&points, Some(wt_pos), scale);
+    let tour =
+        crate::geometry::order_points_with_strategy(&points, print_order, Some(wt_pos), scale);
     let mut visits: Vec<InstanceVisit> = Vec::new();
     let mut seen = vec![false; instances.len()];
     let mut last = vec![None; instances.len()];
