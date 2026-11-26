@@ -8,20 +8,7 @@ pub(super) fn validate(
         if resolved.object.brim_type == crate::ProcessBrimType::LeadingEdgeOnly {
             return unsupported("brim_type: leading_edge_only");
         }
-        if resolved.object.support_ironing_pattern == crate::ProcessInfillPattern::SpiralInset {
-            return unsupported("support_ironing_pattern: spiralinset");
-        }
         for region in &resolved.all_regions {
-            for (key, pattern) in [
-                (
-                    "internal_solid_infill_pattern",
-                    region.internal_solid_infill_pattern,
-                ),
-                ("sparse_infill_pattern", region.sparse_infill_pattern),
-                ("ironing_pattern", region.ironing_pattern),
-            ] {
-                validate_pattern(key, pattern)?;
-            }
             validate_adaptive_infill(
                 region.sparse_infill_pattern,
                 region.sparse_infill_density.0,
@@ -50,23 +37,6 @@ pub(super) fn validate(
 }
 
 pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(), SliceError> {
-    for (key, pattern) in [
-        (
-            "internal_solid_infill_pattern",
-            settings.process.region.internal_solid_infill_pattern,
-        ),
-        (
-            "sparse_infill_pattern",
-            settings.process.region.sparse_infill_pattern,
-        ),
-        ("ironing_pattern", settings.process.region.ironing_pattern),
-        (
-            "support_ironing_pattern",
-            settings.process.object.support_ironing_pattern,
-        ),
-    ] {
-        validate_pattern(key, pattern)?;
-    }
     validate_adaptive_infill(
         settings.process.region.sparse_infill_pattern,
         settings.process.region.sparse_infill_density.0,
@@ -95,13 +65,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
         return Err(SliceError::UnsupportedProjectFeature(
             "filament_map_mode: Nozzle Manual".to_owned(),
         ));
-    }
-    Ok(())
-}
-
-fn validate_pattern(key: &str, pattern: crate::ProcessInfillPattern) -> Result<(), SliceError> {
-    if pattern == crate::ProcessInfillPattern::SpiralInset {
-        return unsupported(&format!("{key}: spiralinset"));
     }
     Ok(())
 }

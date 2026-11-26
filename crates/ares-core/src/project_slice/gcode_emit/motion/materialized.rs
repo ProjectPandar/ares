@@ -37,6 +37,7 @@ pub(super) fn emit_subpath(
         ExtrusionRole::Perimeter => "Inner wall",
         ExtrusionRole::OverhangPerimeter => "Overhang wall",
         ExtrusionRole::GapFill => "Gap infill",
+        ExtrusionRole::InternalInfill => "Sparse infill",
         ExtrusionRole::SolidInfill => "Internal solid infill",
         ExtrusionRole::TopSolidInfill => "Top surface",
         ExtrusionRole::BottomSurface => "Bottom surface",

@@ -213,6 +213,7 @@ fn gap(entity: &GapFillEntity, visit: &mut impl FnMut(&Polyline3, ExtrusionRole)
             | WallRole::Perimeter
             | WallRole::OverhangPerimeter
             | WallRole::GapFill
+            | WallRole::InternalInfill
             | WallRole::BottomSurface => continue,
         };
         visit(&path.polyline, role);

@@ -283,8 +283,44 @@ pub(in crate::project_slice) fn surface_polylines(
             request.params,
             request.call.scale,
         ),
-        ProcessInfillPattern::SpiralInset
-        | ProcessInfillPattern::Lightning
+        // `FillSpiralInset::_fill_surface_single` classic overload
+        // (`FillBase.cpp:69,131-150`, `Fill.cpp:1831,1913`,
+        // `SupportCommon.cpp:2038,2058`).
+        ProcessInfillPattern::SpiralInset => {
+            let density = (0.01_f64 * f64::from(request.params.density)) as f32;
+            let delta = request
+                .call
+                .scale
+                .scaled_delta(request.params.overlap - 0.5 * request.params.spacing)
+                as f32;
+            let domains = crate::geometry::offset_expolygon(
+                &request.expolygon,
+                delta,
+                crate::geometry::JoinType::Miter,
+                3.0,
+            )
+            .map_err(super::geometry_error)?;
+            let mut spacing = request.params.spacing;
+            let mut output = Vec::new();
+            for domain in domains {
+                output.extend(
+                    crate::fill::spiral_inset::classic(
+                        domain,
+                        &crate::fill::FillParams {
+                            density,
+                            multiline: request.params.multiline,
+                            dont_adjust: request.call.dont_adjust,
+                        },
+                        &mut spacing,
+                        request.params.fill_order,
+                        request.call.scale,
+                    )
+                    .map_err(super::geometry_error)?,
+                );
+            }
+            Ok(output)
+        }
+        ProcessInfillPattern::Lightning
         | ProcessInfillPattern::AdaptiveCubic
         | ProcessInfillPattern::SupportCubic => Err(SliceError::UnsupportedProjectFeature(
             "support_ironing_pattern".into(),
