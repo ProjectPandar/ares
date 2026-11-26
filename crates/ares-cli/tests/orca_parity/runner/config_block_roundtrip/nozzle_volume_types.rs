@@ -139,11 +139,23 @@ fn shared_nozzle_type_map_is_wider_than_physical_gui_choices() {
         !substitutions.iter().any(|entry| entry.key == KEYS[2]),
         "{substitutions:?}"
     );
+    let schema_bytes = ares_core::print_config_def_json();
+    let schema: Value = serde_json::from_slice(schema_bytes).unwrap();
+    let schema_entry = |key: &str| {
+        schema["options"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["key"] == key)
+            .unwrap()
+    };
     for key in &KEYS[..2] {
         let metadata = ares_core::option_metadata(key).unwrap();
         assert_eq!(metadata.enum_values, names);
-        assert_eq!(metadata.enum_labels, names);
-        assert_eq!(metadata.enum_keys, ids);
+        let gui = schema_entry(key);
+        assert_eq!(gui["enum_values"], json!(names));
+        assert_eq!(gui["enum_labels"], json!(names));
+        assert_eq!(gui["enum_keys"], json!(ids));
     }
     let physical = ares_core::option_metadata(KEYS[2]).unwrap();
     let physical_names: Vec<_> = names
@@ -156,13 +168,11 @@ fn shared_nozzle_type_map_is_wider_than_physical_gui_choices() {
         .filter_map(|(name, id)| (*name != "Hybrid").then_some(*id))
         .collect();
     assert_eq!(physical.enum_values, physical_names);
-    assert_eq!(physical.enum_labels, physical_names);
-    assert_eq!(physical.enum_keys, physical_ids);
-    std::fs::write(
-        runner.work.join("nozzle-gui-schema.json"),
-        ares_core::print_config_def_json(),
-    )
-    .unwrap();
+    let physical_gui = schema_entry(KEYS[2]);
+    assert_eq!(physical_gui["enum_values"], json!(physical_names));
+    assert_eq!(physical_gui["enum_labels"], json!(physical_names));
+    assert_eq!(physical_gui["enum_keys"], json!(physical_ids));
+    std::fs::write(runner.work.join("nozzle-gui-schema.json"), schema_bytes).unwrap();
 }
 
 #[test]

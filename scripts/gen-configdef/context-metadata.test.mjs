@@ -5,8 +5,9 @@ import { closeSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'nod
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { inflateRawSync } from 'node:zlib';
 
-import { renderMetadata } from './output.mjs';
+import { renderPrintConfigDefJson } from './export.mjs';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 const targets = [
@@ -17,8 +18,9 @@ const targets = [
     'machine_unload_filament_time', 'preheat_time', 'slow_down_layer_time',
 ];
 const hash = (value) => createHash('sha256').update(value).digest('hex');
-const blocks = (text) => new Map([...text.matchAll(/    OptionMetadata \{\n        key: "([^"]+)",[\s\S]*?\n    \},/g)]
-    .map((match) => [match[1], match[0]]));
+const byKey = (jsonBuffer) => new Map(
+    JSON.parse(jsonBuffer.toString('utf8')).options.map((entry) => [entry.key, JSON.stringify(entry)]),
+);
 
 test('pinned source generation reproduces all twelve committed contextual records', () => {
     assert(process.env.ARES_CONFIGDEF_TEST_ARTIFACTS, 'set ARES_CONFIGDEF_TEST_ARTIFACTS to a fresh directory');
@@ -36,22 +38,25 @@ test('pinned source generation reproduces all twelve committed contextual record
     writeFileSync(join(artifacts, 'stderr.log'), result.stderr);
     assert.equal(result.status, 0, result.stderr.toString());
     const options = JSON.parse(readFileSync(stdoutPath, 'utf8')).options;
-    const generated = renderMetadata(options);
-    writeFileSync(join(artifacts, 'generated-metadata.rs'), generated);
-    const committedText = readFileSync(join(repo, 'crates/ares-core/src/options/registry/definitions/metadata.rs'), 'utf8');
-    const committedBlocks = blocks(committedText);
-    const generatedBlocks = blocks(generated);
+    const generated = renderPrintConfigDefJson(options, repo);
+    writeFileSync(join(artifacts, 'generated-print-config-def.json'), generated);
+    const committedDeflate = readFileSync(
+        join(repo, 'crates/ares-core/src/options/registry/definitions/print_config_def.json.deflate'),
+    );
+    const committed = inflateRawSync(committedDeflate);
+    const committedEntries = byKey(committed);
+    const generatedEntries = byKey(generated);
     const selected = Object.fromEntries(targets.map((key) => [key, {
-        committed: hash(committedBlocks.get(key)), generated: hash(generatedBlocks.get(key)),
+        committed: hash(committedEntries.get(key)), generated: hash(generatedEntries.get(key)),
     }]));
     writeFileSync(join(artifacts, 'target-blocks.json'), JSON.stringify(selected, null, 2) + '\n');
     for (const key of targets) {
-        assert.equal(generatedBlocks.get(key), committedBlocks.get(key), key);
+        assert.equal(generatedEntries.get(key), committedEntries.get(key), key);
     }
     const mixed = options.find((entry) => entry.key === 'fan_cooling_layer_time');
     assert.equal(mixed.sidetext, 's');
     writeFileSync(join(artifacts, 'verification.json'), JSON.stringify({
         source: source.stdout.toString().trim(), verifiedBlocks: targets.length,
-        generatedSHA256: hash(generated), committedSHA256: hash(committedText), mixedUnit: mixed.sidetext,
+        generatedSHA256: hash(generated), committedSHA256: hash(committed), mixedUnit: mixed.sidetext,
     }, null, 2) + '\n');
 });
