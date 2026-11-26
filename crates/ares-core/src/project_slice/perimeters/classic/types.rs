@@ -49,21 +49,6 @@ pub(in crate::project_slice) struct ClassicPreludeRecord {
 pub(in crate::project_slice) struct PreparedClassicSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) kind: RegionSurfaceKind,
-    pub(in crate::project_slice) thickness: f64,
-    pub(in crate::project_slice) thickness_layers: u16,
-    pub(in crate::project_slice) bridge_angle: f64,
-    pub(in crate::project_slice) extra_perimeters: u16,
     pub(in crate::project_slice) loop_number: i32,
     pub(in crate::project_slice) polygons: Vec<ExPolygon>,
-}
-
-impl PostClassicPreludePrintObject {
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostPerimeterInputPrintObject,
-        Vec<Option<ClassicPreludeRecord>>,
-    ) {
-        (self.object, self.records)
-    }
 }

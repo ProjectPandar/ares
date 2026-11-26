@@ -9,7 +9,7 @@ use crate::{
     project_slice::{
         perimeters::types::PerimeterInputRecord,
         prepare_infill::horizontal_shell_propagation::{
-            GeometryStep, gather, geometry_step, range_error, rebuild, types::NeighborOutcome,
+            gather, range_error, rebuild, types::NeighborOutcome,
         },
         region_slices::RegionSurface,
     },
@@ -28,7 +28,6 @@ pub(super) fn process_neighbor(
     solid: &mut Vec<Polygon>,
 ) -> Result<NeighborOutcome, SliceError> {
     let internal = gather::neighbor_internal_paths(context.neighbor_fill);
-    geometry_step(GeometryStep::SafetyIntersection)?;
     let mut new_internal_solid = intersection_polygons_paths_with_safety_offset(solid, &internal)
         .map_err(|_| range_error())?;
     if new_internal_solid.is_empty() {
@@ -37,22 +36,14 @@ pub(super) fn process_neighbor(
 
     let factor = first_factor(context.options);
     if factor > 0.0 {
-        geometry_step(GeometryStep::NeighborExternalWidthScale)?;
         let neighbor = context
             .neighbor_input
             .expect("a None neighbor cannot produce an intersection");
         let margin = scaled_width(context.scale, neighbor.ext_perimeter_flow.width)? * factor;
-        geometry_step(GeometryStep::FirstOpeningShrink)?;
-        let opened = opening_with_step(
-            &new_internal_solid,
-            margin,
-            GeometryStep::FirstOpeningExpand,
-        )?;
-        geometry_step(GeometryStep::FirstTooNarrowDifference)?;
+        let opened = opening_with_margin(&new_internal_solid, margin)?;
         let too_narrow =
             difference_polygons_paths(&new_internal_solid, &opened).map_err(|_| range_error())?;
         if !too_narrow.is_empty() {
-            geometry_step(GeometryStep::FirstTrimDifference)?;
             let trimmed = difference_polygons_paths(&new_internal_solid, &too_narrow)
                 .map_err(|_| range_error())?;
             *solid = trimmed.clone();
@@ -60,23 +51,14 @@ pub(super) fn process_neighbor(
         }
     }
 
-    geometry_step(GeometryStep::SourceSolidWidthScale)?;
     let margin = scaled_width(context.scale, context.source_input.solid_infill_flow.width)?
         * second_factor(context.options);
-    geometry_step(GeometryStep::SecondOpeningShrink)?;
-    let opened = opening_with_step(
-        &new_internal_solid,
-        margin,
-        GeometryStep::SecondOpeningExpand,
-    )?;
-    geometry_step(GeometryStep::SecondTooNarrowDifference)?;
+    let opened = opening_with_margin(&new_internal_solid, margin)?;
     let too_narrow =
         difference_polygons_paths(&new_internal_solid, &opened).map_err(|_| range_error())?;
     if !too_narrow.is_empty() {
-        geometry_step(GeometryStep::RepairExpansion)?;
         let expanded = repair_expansion(&too_narrow, margin)?;
         let local_internal = gather::repair_clip_paths(context.neighbor_fill);
-        geometry_step(GeometryStep::RepairIntersection)?;
         let repaired =
             intersection_polygons_paths(&expanded, &local_internal).map_err(|_| range_error())?;
         new_internal_solid.extend(repaired);
@@ -85,16 +67,9 @@ pub(super) fn process_neighbor(
     rebuild::neighbor(context.neighbor_fill, new_internal_solid).map(NeighborOutcome::Rebuilt)
 }
 
-fn opening_with_step(
-    paths: &[Polygon],
-    margin: f32,
-    expansion_step: GeometryStep,
-) -> Result<Vec<Polygon>, SliceError> {
-    {
-        let _ = expansion_step;
-        opening_paths(paths, margin, margin + SAFETY_OFFSET, JoinType::Miter, 5.0)
-            .map_err(|_| range_error())
-    }
+fn opening_with_margin(paths: &[Polygon], margin: f32) -> Result<Vec<Polygon>, SliceError> {
+    opening_paths(paths, margin, margin + SAFETY_OFFSET, JoinType::Miter, 5.0)
+        .map_err(|_| range_error())
 }
 
 fn repair_expansion(paths: &[Polygon], margin: f32) -> Result<Vec<Polygon>, SliceError> {

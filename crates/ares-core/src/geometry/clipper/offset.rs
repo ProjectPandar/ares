@@ -10,7 +10,7 @@ pub(crate) use execute::{
 };
 pub(crate) use expolygon::{
     closing_ex, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
-    offset_expolygons_paths, offset2_ex, offset2_ex_with_interstage, opening_ex,
+    offset_expolygons_paths, offset2_ex, opening_ex,
 };
 pub(crate) use opening::opening_paths;
 

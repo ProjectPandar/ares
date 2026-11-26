@@ -152,8 +152,7 @@ fn prepare_surfaces(
     order
         .into_iter()
         .map(|source_index| {
-            let (kind, expolygon, thickness, thickness_layers, bridge_angle, extra_perimeters) =
-                sources[source_index].as_parts();
+            let (kind, expolygon, _, _, _, extra_perimeters) = sources[source_index].as_parts();
             let mut polygons = Vec::new();
             append_simplified_expolygon(
                 expolygon.clone(),
@@ -168,10 +167,6 @@ fn prepare_surfaces(
             Ok(PreparedClassicSurface {
                 source_index,
                 kind,
-                thickness,
-                thickness_layers,
-                bridge_angle,
-                extra_perimeters,
                 loop_number,
                 polygons,
             })

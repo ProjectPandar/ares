@@ -14,7 +14,7 @@ pub(in crate::project_slice) use types::{
     PreparedRawPathSurface, RawPathNode,
 };
 
-use crate::{SliceError, project_slice::incomplete_sink};
+use crate::SliceError;
 
 use super::traversal::PreparedPostClassicTraversal;
 
@@ -29,13 +29,7 @@ pub(in crate::project_slice) fn finish(
     prepared: Box<PreparedPostClassicTraversal>,
     context: &mut crate::SlicerContext,
 ) -> Result<PreparedPostClassicRawPaths, SliceError> {
-    let objects = match prepare_sidecars(&prepared, context) {
-        Ok(objects) => objects,
-        Err(error) => {
-            incomplete_sink::consume_boxed_post_classic_traversal(prepared);
-            return Err(error);
-        }
-    };
+    let objects = prepare_sidecars(&prepared, context)?;
     Ok(PreparedPostClassicRawPaths {
         predecessor: prepared,
         objects,
@@ -48,13 +42,7 @@ fn prepare_sidecars(
 ) -> Result<Vec<PreparedRawPathObject>, SliceError> {
     let mut objects = Vec::with_capacity(prepared.objects.len());
     for object in &prepared.objects {
-        match prepare_object(object, prepared.scale, context) {
-            Ok(object) => objects.push(object),
-            Err(error) => {
-                consume_objects(objects);
-                return Err(error);
-            }
-        }
+        objects.push(prepare_object(object, prepared.scale, context)?);
     }
     Ok(objects)
 }
@@ -82,13 +70,13 @@ fn prepare_object(
     for group in &input.groups {
         let record_index = input.region_layer_record_index(group.owner);
         let record = object.records[record_index].as_ref().unwrap();
-        match prepare_record(object, record_index, record, scale, context) {
-            Ok(record) => records[record_index] = Some(record),
-            Err(error) => {
-                consume_records(records);
-                return Err(error);
-            }
-        }
+        records[record_index] = Some(prepare_record(
+            object,
+            record_index,
+            record,
+            scale,
+            context,
+        )?);
     }
     Ok(PreparedRawPathObject { records })
 }
@@ -102,7 +90,7 @@ fn prepare_record(
 ) -> Result<PreparedRawPathRecord, SliceError> {
     let mut surfaces = Vec::with_capacity(record.surfaces.len());
     for surface in &record.surfaces {
-        match tree::materialize_surface(
+        surfaces.push(tree::materialize_surface(
             object,
             crate::project_slice::perimeters::classic::materialize::RecordContext {
                 record_index,
@@ -111,31 +99,7 @@ fn prepare_record(
             surface,
             scale,
             context,
-        ) {
-            Ok(surface) => surfaces.push(surface),
-            Err(error) => {
-                consume_surfaces(surfaces);
-                return Err(error);
-            }
-        }
+        )?);
     }
     Ok(PreparedRawPathRecord { surfaces })
-}
-
-fn consume_surfaces(surfaces: Vec<PreparedRawPathSurface>) {
-    for surface in surfaces {
-        tree::consume_nodes(surface.roots);
-    }
-}
-
-fn consume_records(records: Vec<Option<PreparedRawPathRecord>>) {
-    for record in records.into_iter().flatten() {
-        consume_surfaces(record.surfaces);
-    }
-}
-
-fn consume_objects(objects: Vec<PreparedRawPathObject>) {
-    for object in objects {
-        consume_records(object.records);
-    }
 }

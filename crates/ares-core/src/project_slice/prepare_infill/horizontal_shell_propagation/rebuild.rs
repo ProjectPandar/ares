@@ -5,9 +5,7 @@ use crate::{
         difference_ex_polygons_with_safety_offset, union_ex,
     },
     project_slice::{
-        prepare_infill::horizontal_shell_propagation::{
-            GeometryStep, gather, geometry_step, range_error,
-        },
+        prepare_infill::horizontal_shell_propagation::{gather, range_error},
         region_slices::{RegionSurface, RegionSurfaceKind},
     },
 };
@@ -23,7 +21,6 @@ pub(super) fn neighbor(
         }
     }
 
-    geometry_step(GeometryStep::SolidUnion)?;
     let unioned = union_ex(&new_internal_solid, FillRule::NonZero).map_err(|_| range_error())?;
     let mut output = unioned
         .iter()
@@ -39,7 +36,6 @@ pub(super) fn neighbor(
             (kind == RegionSurfaceKind::Internal).then(|| expolygon.clone())
         })
         .collect::<Vec<_>>();
-    geometry_step(GeometryStep::InternalSafetyDifference)?;
     let remaining_internal =
         difference_ex_polygons_with_safety_offset(&original_internal, &polygons_internal)
             .map_err(|_| range_error())?;
@@ -56,7 +52,6 @@ pub(super) fn neighbor(
             .iter()
             .map(|surface| surface.as_parts().1.clone())
             .collect::<Vec<_>>();
-        geometry_step(GeometryStep::ExternalGroupDifference)?;
         let fragments =
             difference_ex_polygons(&geometry, &polygons_internal).map_err(|_| range_error())?;
         output.extend(

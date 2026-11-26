@@ -13,8 +13,6 @@ use crate::{
     },
 };
 
-use super::{GeometryStep, geometry_step};
-
 const EPSILON: f64 = 1e-4;
 const MITER_LIMIT: f64 = 3.0;
 const RANGE_ERROR: &str =
@@ -105,7 +103,6 @@ fn gather_top(
                 < input.options.top_shell_thickness.0 - EPSILON)
     {
         visited = true;
-        geometry_step(GeometryStep::TopVisit)?;
         combine_cache(projection, input.cache(stopped), true)?;
         stopped += 1;
     }
@@ -114,10 +111,6 @@ fn gather_top(
             input.cache(index).unwrap().top_surfaces,
             &input.lslices[stopped],
             input.external_spacing,
-            (
-                GeometryStep::TopAnchorOffset,
-                GeometryStep::TopAnchorIntersection,
-            ),
             projection,
         )?;
     }
@@ -146,7 +139,6 @@ fn gather_bottom(
             break;
         }
         visited = true;
-        geometry_step(GeometryStep::BottomVisit)?;
         combine_cache(projection, input.cache(neighbor), false)?;
         stopped -= 1;
     }
@@ -155,10 +147,6 @@ fn gather_bottom(
             input.cache(index).unwrap().bottom_surfaces,
             &input.lslices[stopped as usize],
             input.external_spacing,
-            (
-                GeometryStep::BottomAnchorOffset,
-                GeometryStep::BottomAnchorIntersection,
-            ),
             projection,
         )?;
     }
@@ -188,7 +176,6 @@ pub(super) fn combine_holes(holes: &mut Vec<Polygon>, next: &[Polygon]) -> Resul
     if holes.is_empty() || next.is_empty() {
         holes.clear();
     } else {
-        geometry_step(GeometryStep::HoleIntersection)?;
         *holes = intersection_polygons_paths(holes, next).map_err(|_| range_error())?;
     }
     Ok(())
@@ -199,7 +186,6 @@ pub(super) fn combine_shells(shell: &mut Vec<Polygon>, next: &[Polygon]) -> Resu
         shell.extend_from_slice(next);
     } else if !next.is_empty() {
         shell.extend_from_slice(next);
-        geometry_step(GeometryStep::ShellUnion)?;
         *shell = union_polygons_paths(shell).map_err(|_| range_error())?;
     }
     Ok(())
@@ -209,10 +195,8 @@ fn anchor(
     source: &[Polygon],
     lslices: &[ExPolygon],
     external_spacing: i64,
-    steps: (GeometryStep, GeometryStep),
     projection: &mut VerticalShellProjection,
 ) -> Result<(), SliceError> {
-    geometry_step(steps.0)?;
     let expanded = offset_paths(
         source,
         external_spacing as f32,
@@ -221,7 +205,6 @@ fn anchor(
     )
     .map_err(|_| range_error())?;
     let clip = flatten(lslices);
-    geometry_step(steps.1)?;
     let anchored = intersection_polygons_paths(&expanded, &clip).map_err(|_| range_error())?;
     combine_shells(&mut projection.shell, &anchored)
 }

@@ -1,9 +1,6 @@
 use crate::{
-    SliceError,
-    geometry::ClipperError,
-    project_slice::prepare_infill::horizontal_shell_propagation::{
-        self, PreparedPostHorizontalShellPropagation,
-    },
+    SliceError, geometry::ClipperError,
+    project_slice::prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
 };
 
 use super::{parameters::ProcessExternalSurfacesConfig, process::process_external_surfaces};
@@ -17,10 +14,7 @@ pub(in crate::project_slice) struct PreparedPostExternalSurfaces {
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostHorizontalShellPropagation,
 ) -> Result<PreparedPostExternalSurfaces, SliceError> {
-    if let Err(error) = process_records(&mut predecessor) {
-        horizontal_shell_propagation::dispose(predecessor);
-        return Err(geometry_error(error));
-    }
+    process_records(&mut predecessor).map_err(geometry_error)?;
     let object_spacings = predecessor
         .objects
         .iter()
@@ -46,10 +40,6 @@ pub(in crate::project_slice) fn prepare(
         predecessor,
         object_spacings,
     })
-}
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostExternalSurfaces) {
-    horizontal_shell_propagation::dispose(prepared.predecessor);
 }
 
 fn process_records(

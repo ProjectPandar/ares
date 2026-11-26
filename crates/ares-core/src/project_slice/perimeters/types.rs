@@ -175,15 +175,6 @@ impl PostPerimeterInputPrintObject {
         (&self.object, &self.records)
     }
 
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostCompensationPrintObject,
-        Vec<Option<PerimeterInputRecord>>,
-    ) {
-        (self.object, self.records)
-    }
-
     pub(in crate::project_slice) fn current_surfaces(
         &self,
         record: &PerimeterInputRecord,

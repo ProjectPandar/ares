@@ -22,23 +22,6 @@ pub(in crate::project_slice) struct ClassicTopSplitRecord {
     pub(in crate::project_slice) surfaces: Vec<PreparedTopSplitSurface>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) enum TopSplitUpperSource {
-    WholeLayer,
-    SameRegion,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) enum TopSplitOutcome {
-    Disabled,
-    NoLoops,
-    Collapsed,
-    OneLoop,
-    Bridge,
-    NoUpperLayer,
-    Applied,
-}
-
 #[derive(Debug)]
 pub(in crate::project_slice) struct PreparedTopSplitSurface {
     pub(in crate::project_slice) source_index: usize,
@@ -56,17 +39,4 @@ pub(in crate::project_slice) struct PreparedTopSplitSurface {
     pub(in crate::project_slice) remaining: Vec<ExPolygon>,
     pub(in crate::project_slice) top_fills: Vec<ExPolygon>,
     pub(in crate::project_slice) fill_clip: Vec<ExPolygon>,
-    pub(in crate::project_slice) outcome: TopSplitOutcome,
-    pub(in crate::project_slice) upper_source: TopSplitUpperSource,
-}
-
-impl PostClassicTopSplitPrintObject {
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostClassicPreludePrintObject,
-        Vec<Option<ClassicTopSplitRecord>>,
-    ) {
-        (self.predecessor, self.records)
-    }
 }

@@ -18,22 +18,6 @@ const MITER_LIMIT: f64 = 3.0;
 const GEOMETRY_ERROR: &str =
     "Classic infill-boundary geometry is outside the supported Clipper range";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) enum GeometryStep {
-    Simplify,
-    AggregateUnion,
-    OrdinaryOffset,
-    TopOffset,
-    TopIntersection,
-    TopOverlapOffset,
-    TopUnion,
-    SurfaceAppend,
-    ExtraPerimeterGuard,
-    NoOverlapTwo,
-    NoOverlapOne,
-    FinalTopUnion,
-}
-
 pub(super) fn stage_record(
     source: &[PreparedGapExtrusionSurface],
     top: &[PreparedTopSplitSurface],
@@ -108,15 +92,12 @@ pub(super) fn stage_surface(
 ) -> Result<StagedSurfaceOutput, SliceError> {
     let mut polygons = Vec::new();
     for expolygon in &source.remaining {
-        observe(GeometryStep::Simplify)?;
         polygons.extend(
             simplify_expolygon_polygons(expolygon, validated.overlap.scaled_resolution)
                 .map_err(geometry_error)?,
         );
     }
-    observe(GeometryStep::AggregateUnion)?;
     let not_filled = union_ex(&polygons, FillRule::NonZero).map_err(geometry_error)?;
-    observe(GeometryStep::OrdinaryOffset)?;
     let ordinary = offset2_ex(
         &not_filled,
         validated.ordinary_first,
@@ -126,7 +107,6 @@ pub(super) fn stage_surface(
     )
     .map_err(geometry_error)?;
 
-    observe(GeometryStep::TopOffset)?;
     let top_offset = offset_expolygons(
         &top.top_fills,
         validated.top_offset,
@@ -134,12 +114,10 @@ pub(super) fn stage_surface(
         MITER_LIMIT,
     )
     .map_err(geometry_error)?;
-    observe(GeometryStep::TopIntersection)?;
     let top_infill = intersection_ex(&top.fill_clip, &top_offset).map_err(geometry_error)?;
     let infill = if top.top_fills.is_empty() {
         ordinary
     } else {
-        observe(GeometryStep::TopOverlapOffset)?;
         let expanded_top = offset_expolygons(
             &top_infill,
             validated.top_overlap,
@@ -147,22 +125,16 @@ pub(super) fn stage_surface(
             MITER_LIMIT,
         )
         .map_err(geometry_error)?;
-        observe(GeometryStep::TopUnion)?;
         union_expolygons(&ordinary, &expanded_top).map_err(geometry_error)?
     };
     let fill_surfaces = infill.into_iter().map(RegionSurface::internal).collect();
-    observe(GeometryStep::SurfaceAppend)?;
 
-    observe(GeometryStep::ExtraPerimeterGuard)?;
-    observe_extra_perimeters_guard();
     let ordinary_no_overlap = match validated.no_overlap {
         NoOverlapOffset::Two { first, second } => {
-            observe(GeometryStep::NoOverlapTwo)?;
             offset2_ex(&not_filled, first, second, JoinType::Miter, MITER_LIMIT)
                 .map_err(geometry_error)?
         }
         NoOverlapOffset::One { delta } => {
-            observe(GeometryStep::NoOverlapOne)?;
             offset_expolygons(&not_filled, delta, JoinType::Miter, MITER_LIMIT)
                 .map_err(geometry_error)?
         }
@@ -170,7 +142,6 @@ pub(super) fn stage_surface(
     let fill_no_overlap = if top.top_fills.is_empty() {
         ordinary_no_overlap
     } else {
-        observe(GeometryStep::FinalTopUnion)?;
         union_expolygons(&ordinary_no_overlap, &top_infill).map_err(geometry_error)?
     };
     Ok(StagedSurfaceOutput {
@@ -180,18 +151,8 @@ pub(super) fn stage_surface(
 }
 
 fn geometry_error(_: crate::geometry::ClipperError) -> SliceError {
-    geometry_error_value()
-}
-
-fn geometry_error_value() -> SliceError {
     SliceError::InvalidInput(GEOMETRY_ERROR.to_owned())
 }
-
-fn observe(_step: GeometryStep) -> Result<(), SliceError> {
-    Ok(())
-}
-
-fn observe_extra_perimeters_guard() {}
 
 pub(super) struct StagedSurfaceOutput {
     pub(super) fill_surfaces: Vec<RegionSurface>,

@@ -1,5 +1,4 @@
 mod cache;
-mod cleanup;
 mod physical_cache;
 mod stage;
 
@@ -14,13 +13,7 @@ use crate::{
 pub(in crate::project_slice) fn prepare(
     prepared: PreparedPostFillSurfacePreparation,
 ) -> Result<PreparedPostVerticalShellCache, SliceError> {
-    let caches = match stage::project(&prepared) {
-        Ok(caches) => caches,
-        Err(error) => {
-            cleanup::predecessor(prepared);
-            return Err(error);
-        }
-    };
+    let caches = stage::project(&prepared)?;
     let PreparedPostFillSurfacePreparation {
         predecessor,
         objects,
@@ -30,8 +23,4 @@ pub(in crate::project_slice) fn prepare(
         objects,
         caches,
     })
-}
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostVerticalShellCache) {
-    cleanup::successor(prepared);
 }

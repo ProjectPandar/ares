@@ -253,7 +253,3 @@ pub(in crate::project_slice) fn internal_surfaces(
         .flat_map(|record| &record.slices)
         .collect()
 }
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostIslandPrintOrder) {
-    super::extrusion_islands::dispose(prepared.predecessor);
-}

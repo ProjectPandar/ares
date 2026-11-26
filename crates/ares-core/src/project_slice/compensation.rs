@@ -110,10 +110,6 @@ impl PostCompensationPrintObject {
         (&self.post_regions, &self.lslices)
     }
 
-    pub(super) fn into_parts(self) -> (PostRegionPrintObject, Vec<Vec<ExPolygon>>) {
-        (self.post_regions, self.lslices)
-    }
-
     pub(super) fn raw_slices(&self, region_index: usize, layer_index: usize) -> &[ExPolygon] {
         &self.raw_slices[region_index][layer_index]
     }

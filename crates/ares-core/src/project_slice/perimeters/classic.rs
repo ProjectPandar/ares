@@ -25,13 +25,11 @@ pub(in crate::project_slice) use chained_loops::PreparedPostClassicChainedLoops;
 pub(in crate::project_slice) use entity_collections::PreparedPostClassicEntityCollections;
 pub(in crate::project_slice) use gap_domain::PreparedPostClassicGapDomain;
 pub(in crate::project_slice) use gap_extrusion::PreparedPostClassicGapExtrusion;
-pub(in crate::project_slice) use hierarchy::{
-    PostClassicHierarchyPrintObject, PreparedPostClassicHierarchy,
-};
+pub(in crate::project_slice) use hierarchy::PreparedPostClassicHierarchy;
 pub(in crate::project_slice) use infill_boundary::PreparedPostClassicInfillBoundary;
 pub(in crate::project_slice) use materialize::PreparedPostClassicRawPaths;
 pub(in crate::project_slice) use medial_gap::PreparedPostClassicMedialGap;
-pub(in crate::project_slice) use onion::{PostClassicOnionPrintObject, PreparedPostClassicOnion};
+pub(in crate::project_slice) use onion::PreparedPostClassicOnion;
 pub(in crate::project_slice) use perimeter_append::PreparedPostClassicPerimeterAppend;
 pub(in crate::project_slice) use top_split::PreparedPostClassicTopSplit;
 pub(in crate::project_slice) use top_split::{

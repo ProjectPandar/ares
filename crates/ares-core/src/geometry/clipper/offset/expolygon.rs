@@ -95,15 +95,7 @@ pub(crate) fn offset2_ex(
     kind: JoinType,
     limit: f64,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    offset2_ex_with_interstage(polygons, (first, second, kind, limit), || Ok(()))
-}
-pub(crate) fn offset2_ex_with_interstage(
-    polygons: &[ExPolygon],
-    (first, second, kind, limit): (f32, f32, JoinType, f64),
-    interstage: impl FnOnce() -> Result<(), ClipperError>,
-) -> Result<Vec<ExPolygon>, ClipperError> {
     let first: c2::Paths64 = normalized(polygons, first, kind, limit);
-    interstage()?;
     let mut paths = Vec::with_capacity(first.len());
     for path in &first {
         append_path(
