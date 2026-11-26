@@ -81,6 +81,7 @@ export type WorkerRequest =
       options: string;
     }
   | { id: number; kind: "sliceStl"; input: Uint8Array; options: string }
+  | { id: number; kind: "exportPlateSlicedFile"; input: Uint8Array; filename: string }
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
   | { id: number; kind: "loadPresetBundle"; catalog: string }

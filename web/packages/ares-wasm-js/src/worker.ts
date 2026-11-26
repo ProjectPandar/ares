@@ -4,6 +4,7 @@ import init, {
   type PlaterSnapshot,
   type PresetCatalog,
   decodeConfigValue,
+  exportPlateSlicedFile,
   encodeConfigValue,
   filterCompatiblePresets,
   guideModels,
@@ -96,6 +97,10 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       replaceViewer();
       const result: SliceResult = { gcode: owned(await slice_stl(request.input, request.options)), toolpaths: null };
       return [result, [result.gcode.buffer]];
+    }
+    case "exportPlateSlicedFile": {
+      const archive = owned(await exportPlateSlicedFile(request.input, request.filename));
+      return [archive, [archive.buffer]];
     }
     case "parsePresetBundle":
       return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];

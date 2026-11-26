@@ -140,7 +140,7 @@ function HelpMenu({ onShortcuts, onAbout }: { onShortcuts: () => void; onAbout: 
  * also offers "Slice all" (`eSliceAll`, Plater::priv::on_action_slice_all) and exports every
  * sliced plate.
  */
-export function TabBar() {
+export function TabBar({ onPrint }: { onPrint: () => void }) {
   const { engine, scene, slice, presetSelection, plateSlices } = useApp();
   const slicing = slice.status === "slicing";
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
@@ -182,6 +182,10 @@ export function TabBar() {
         )}
         <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>
           Export G-code file
+        </button>
+        {/* SideButton "Print plate" (Plater::send_gcode): a physical printer first, then the send dialog. */}
+        <button className="side-button" onClick={onPrint} disabled={slice.status !== "done"}>
+          Print plate
         </button>
         {multiPlate && (
           <button

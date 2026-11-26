@@ -10,6 +10,13 @@ import type { ModelFile, Theme, ViewMode } from "./store";
 const CONFIG_KEY = "ares.config";
 const VERSION = 1;
 
+/** A Pandar Hub tenant: `print_host` and `printhost_apikey` of a `Pandar` host type. */
+export interface PrintHost {
+  hubUrl: string;
+  tenantId: string;
+  token: string;
+}
+
 /** Per-printer settings (AppConfig::set_printer_setting, AppConfig.hpp:239-249). */
 export interface PrinterSettings {
   /** `print` */
@@ -48,6 +55,8 @@ export interface StoredConfig {
   preferredFilamentMapMode: "Auto For Flush" | "Auto For Match" | "Manual";
   /** Section `arrange` (GLCanvas3D.cpp:1526-1561), app-config strings by key; absent in older records. */
   arrange?: Record<string, string>;
+  /** The physical printer (PhysicalPrinterDialog): a Pandar Hub print host; absent until set. */
+  printHost?: PrintHost;
 }
 
 const DEFAULTS: StoredConfig = {
@@ -101,7 +110,12 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     Object.values(value.nozzleVolumeTypes).every(isStrings) &&
     ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string) &&
     (value.arrange === undefined ||
-      (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string")))
+      (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string"))) &&
+    (value.printHost === undefined ||
+      (isRecord(value.printHost) &&
+        [value.printHost.hubUrl, value.printHost.tenantId, value.printHost.token].every(
+          (item) => typeof item === "string",
+        )))
   );
 }
 
