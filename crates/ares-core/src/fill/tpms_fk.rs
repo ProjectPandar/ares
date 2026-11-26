@@ -23,6 +23,7 @@ const RSIZE_F: f64 = 0.004;
 /// `SCALING_FACTOR` at use-site.
 pub(super) const SPARSE_INFILL_RESOLUTION: f64 = 0.04;
 
+#[derive(Clone, Copy)]
 pub(crate) struct TpmsFKFillParams {
     pub(crate) spacing: f64,
     pub(crate) density: f32,

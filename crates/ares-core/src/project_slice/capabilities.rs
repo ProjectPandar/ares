@@ -19,11 +19,6 @@ pub(super) fn validate(
             ] {
                 validate_pattern(key, pattern)?;
             }
-            validate_adaptive_infill(
-                region.sparse_infill_pattern,
-                region.sparse_infill_density.0,
-                region.adaptive_infill_mode,
-            )?;
         }
     }
     if resolved_objects.iter().any(|resolved| {
@@ -64,11 +59,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
     ] {
         validate_pattern(key, pattern)?;
     }
-    validate_adaptive_infill(
-        settings.process.region.sparse_infill_pattern,
-        settings.process.region.sparse_infill_density.0,
-        settings.process.region.adaptive_infill_mode,
-    )?;
     if settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual {
         return Err(SliceError::UnsupportedProjectFeature(
             "filament_map_mode: Nozzle Manual".to_owned(),
@@ -82,26 +72,6 @@ fn validate_pattern(key: &str, pattern: crate::ProcessInfillPattern) -> Result<(
         return unsupported(&format!("{key}: spiralinset"));
     }
     Ok(())
-}
-
-fn validate_adaptive_infill(
-    pattern: crate::ProcessInfillPattern,
-    density: f64,
-    mode: crate::ProcessAdaptiveInfillMode,
-) -> Result<(), SliceError> {
-    if mode == crate::ProcessAdaptiveInfillMode::Disabled || density <= 0.0 || density >= 100.0 {
-        return Ok(());
-    }
-    match pattern {
-        crate::ProcessInfillPattern::Gyroid
-            if mode == crate::ProcessAdaptiveInfillMode::SteppedShells =>
-        {
-            unsupported("adaptive_infill_mode: stepped_shells")
-        }
-        crate::ProcessInfillPattern::TpmsD => unsupported("adaptive_infill_mode: tpmsd"),
-        crate::ProcessInfillPattern::TpmsFk => unsupported("adaptive_infill_mode: tpmsfk"),
-        _ => Ok(()),
-    }
 }
 
 fn unsupported<T>(key: &str) -> Result<T, SliceError> {

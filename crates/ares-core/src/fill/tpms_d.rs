@@ -20,6 +20,7 @@ const DENSITY_ADJUST: f64 = 2.1;
 const PATTERN_TOLERANCE: f64 = 0.1;
 const EPSILON: f64 = 1.0e-4;
 
+#[derive(Clone, Copy)]
 pub(crate) struct TpmsDFillParams {
     pub(crate) spacing: f64,
     pub(crate) density: f32,
