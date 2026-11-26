@@ -36,11 +36,22 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> (Vec<Adjustment>, usize)
         let index = state.tool_map[current_tool];
         let config = adjustments[index].config;
         if line.kind != 0 {
+            let comment_start = text.iter().position(|&byte| byte == b';');
+            let command = comment_start.map_or(text, |index| &text[..index]);
             let mut new_position = state.position;
-            parse_position(text, state.position, &mut new_position, &mut line.kind);
+            parse_position(command, state.position, &mut new_position, &mut line.kind);
 
-            let external_perimeter = contains(text, EXTERNAL_PERIMETER);
-            let wipe = contains(text, WIPE);
+            let (external_perimeter, wipe, set_speed) = match comment_start {
+                Some(index) => {
+                    let comment = &text[index..];
+                    (
+                        contains(comment, EXTERNAL_PERIMETER),
+                        contains(comment, WIPE),
+                        contains(comment, SET_SPEED),
+                    )
+                }
+                None => (false, false, false),
+            };
             if external_perimeter {
                 line.kind |= TYPE_EXTERNAL_PERIMETER;
             }
@@ -48,7 +59,6 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> (Vec<Adjustment>, usize)
                 line.kind |= TYPE_WIPE;
             }
 
-            let set_speed = contains(text, SET_SPEED);
             if set_speed {
                 layer_had_extrusion = true;
             }
@@ -125,12 +135,11 @@ fn command_type(line: &[u8]) -> u32 {
 }
 
 fn parse_position(
-    line: &[u8],
+    command: &[u8],
     current_position: [f32; 7],
     position: &mut [f32; 7],
     kind: &mut u32,
 ) {
-    let command = line.split(|byte| *byte == b';').next().unwrap_or(line);
     for token in command[3.min(command.len())..]
         .split(|byte| byte.is_ascii_whitespace())
         .filter(|token| !token.is_empty())

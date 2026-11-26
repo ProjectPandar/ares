@@ -112,15 +112,14 @@ impl CoolingLine {
     }
 }
 
-pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mut State) -> f32 {
-    let layer = output.split_off(layer_start);
-    let (mut adjustments, current_tool) = parse::layer(&layer, state);
+pub(super) fn rewrite_layer(layer: &[u8], output: &mut Vec<u8>, state: &mut State) -> f32 {
+    let (mut adjustments, current_tool) = parse::layer(layer, state);
     let layer_time = slowdown::apply(&mut adjustments);
     let mut lines = adjustments
         .iter()
         .flat_map(|adjustment| &adjustment.lines)
         .collect::<Vec<_>>();
-    rewrite::append(output, &layer, &mut lines, state.configs[0].keep_markers);
+    rewrite::append(output, layer, &mut lines, state.configs[0].keep_markers);
     state.current_tool = current_tool;
     layer_time
 }
