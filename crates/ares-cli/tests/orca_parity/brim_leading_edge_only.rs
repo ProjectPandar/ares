@@ -1,15 +1,11 @@
 //! Whole-G-code parity for `BrimType::btLeadingEdgeOnly` on flat-bed printers
 //! (`PrintConfig.hpp:466`, `Brim.cpp:506-508`, `PerimeterGenerator.cpp:3204-3212`,
-//! `Support/SupportCommon.cpp:420-422`) and fail-closed admission on belt printers
-//! while `BeltBrim.cpp` remains unported.
+//! `Support/SupportCommon.cpp:420-422`) and tilted belt printers (`BeltBrim.cpp`).
 
 use crate::runner::{OrcaRunner, native_api_cli::NativeCase};
-use ares_core::{GenerationMetadata, SliceError, SlicerContext};
+use ares_core::GenerationMetadata;
 use serde_json::{Map, Value, json};
-use std::{
-    fs,
-    io::{Cursor, Read, Write},
-};
+use std::io::{Cursor, Read, Write};
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 const TWO_HOLES: &[u8] = include_bytes!("../../../../tests/parity/outer-only-brim/two-holes.3mf");
@@ -292,7 +288,10 @@ fn leading_edge_only_zero_width_and_object_override_match_native() {
 }
 
 #[test]
-fn leading_edge_only_belt_printer_fails_closed() {
+fn leading_edge_only_belt_printer_matches_native() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
     let project = patch_project(
         CUBE_CONTROL,
         &[
@@ -308,43 +307,21 @@ fn leading_edge_only_belt_printer_fails_closed() {
         ],
         None,
     );
-    let api = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(ares_core::slice_project(
-            &project,
-            GenerationMetadata::default(),
-            SlicerContext::new(1),
-        ));
-    assert!(
-        matches!(&api, Err(SliceError::UnsupportedProjectFeature(detail)) if detail == "belt_printer: brim"),
-        "expected belt_printer: brim rejection, got {api:?}"
+    let native = NativeCase::slice(&runner, &project, "leading-edge-belt-");
+    assert_eq!(
+        native.native.matches(";TYPE:Brim\n").count(),
+        2,
+        "expected leading-edge-only belt brim markers in {:?}",
+        native.root
     );
-
-    let work = tempfile::Builder::new()
-        .prefix("leading-edge-belt-reject-")
-        .tempdir_in(crate::artifacts::root_from_env().unwrap())
-        .unwrap()
-        .keep();
-    let out = work.join("out");
-    fs::create_dir(&out).unwrap();
-    fs::write(work.join("input.3mf"), &project).unwrap();
-    let cli = std::process::Command::new(env!("CARGO_BIN_EXE_ares"))
-        .current_dir(&work)
-        .args(["--slice", "1", "--outputdir", "out", "input.3mf"])
-        .output()
-        .unwrap();
-    fs::write(work.join("ares.stdout"), &cli.stdout).unwrap();
-    fs::write(work.join("ares.stderr"), &cli.stderr).unwrap();
-    assert!(!cli.status.success(), "belt leading-edge brim accepted");
-    assert!(
-        String::from_utf8_lossy(&cli.stderr).contains("belt_printer: brim"),
-        "unexpected stderr in {work:?}: {}",
-        String::from_utf8_lossy(&cli.stderr)
-    );
-    assert!(
-        !out.join("plate_1.gcode").exists(),
-        "rejected belt leading-edge brim wrote G-code in {work:?}"
+    let (api, _) = native.compare(GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0));
+    assert_eq!(
+        std::str::from_utf8(&api)
+            .unwrap()
+            .matches(";TYPE:Brim\n")
+            .count(),
+        2,
+        "expected leading-edge-only belt brim markers in Ares output {:?}",
+        native.root
     );
 }

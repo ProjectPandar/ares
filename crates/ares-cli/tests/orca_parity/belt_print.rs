@@ -1,4 +1,7 @@
-//! BeltSliceStrategy, GCode::collect_layers_to_print, and BeltKinematics.
+//! BeltSliceStrategy, GCode::collect_layers_to_print, BeltBrim, and BeltKinematics.
+
+#[path = "belt_print/brim.rs"]
+mod brim;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -87,11 +90,6 @@ fn emits_belt_first_layer_bands_with_no_slowdown_ramp() {
             ("slow_down_layers", json!("0")),
         ],
     );
-}
-
-#[test]
-fn rejects_belt_brim_without_gcode() {
-    rejects("brim", &[("brim_type", json!("auto_brim"))]);
 }
 
 #[test]
