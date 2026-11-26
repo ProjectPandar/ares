@@ -265,6 +265,15 @@ export class AresSlicer {
     return this.#client.call({ kind: "encodeConfigValues", entries: entries.map(([key, value]) => [key, value]) });
   }
 
+  /**
+   * The print-job `.gcode.3mf` of plate 1 of a saved single-plate project (the bytes
+   * `saveProjectWithProfiles` returns), as OrcaSlicer `Plater::send_gcode` writes it:
+   * sliced G-code without the model. `filename` is the project file name.
+   */
+  exportPlateSlicedFile(project: Uint8Array, filename: string): Promise<Uint8Array> {
+    return this.#client.call({ kind: "exportPlateSlicedFile", input: project.slice(), filename });
+  }
+
   /** Slices an STL model with Ares slice options. */
   sliceStl(input: Uint8Array, options: Record<string, unknown> = {}): Promise<SliceResult> {
     return this.#client.call({ kind: "sliceStl", input: input.slice(), options: JSON.stringify(options) });

@@ -1,0 +1,35 @@
+/* PhysicalPrinterDialog and PrintHostSendDialog. */
+.print-host-dialog {
+  width: min(440px, 92vw);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.print-host-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+.print-host-body {
+  display: grid;
+  gap: 8px;
+  padding: 12px 16px 0;
+  font-size: 12px;
+}
+.print-host-body p {
+  margin: 0;
+}
+.print-host-type {
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+.print-host-field {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.print-host-dialog .vendor-footer {
+  padding: 4px 0 12px;
+}

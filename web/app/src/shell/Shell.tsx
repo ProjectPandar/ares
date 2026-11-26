@@ -4,12 +4,14 @@ import { exportGcode, importFiles, selectObject, slicePlate } from "../state/act
 import { PreparePage } from "../prepare/PreparePage";
 import { PreviewPage } from "../preview/PreviewPage";
 import { Sidebar } from "../sidebar/Sidebar";
+import { printHost } from "../state/printHost";
 import { useApp } from "../state/store";
 import { usePlacedScene } from "../viewport/usePlacedScene";
 import { AboutDialog } from "./AboutDialog";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
 import { MultipartDialog } from "./MultipartDialog";
+import { PhysicalPrinterDialog, PrintHostSendDialog } from "./PrintHostDialogs";
 import { EngineCrashDialog } from "./EngineCrashDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
@@ -27,6 +29,7 @@ export function Shell() {
   const [dragging, setDragging] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [printDialog, setPrintDialog] = useState<"host" | "send" | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -75,7 +78,7 @@ export function Shell() {
         onShortcuts={() => setShortcutsOpen(true)}
         onAbout={() => setAboutOpen(true)}
       />
-      <TabBar />
+      <TabBar onPrint={() => setPrintDialog(printHost() ? "send" : "host")} />
       <main
         className="workspace"
         data-testid="workspace"
@@ -118,6 +121,18 @@ export function Shell() {
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <EngineCrashDialog />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
+      {printDialog === "host" && (
+        <PhysicalPrinterDialog
+          onClose={() => setPrintDialog((open) => (open === "host" ? null : open))}
+          onSaved={() => setPrintDialog("send")}
+        />
+      )}
+      {printDialog === "send" && (
+        <PrintHostSendDialog
+          onClose={() => setPrintDialog((open) => (open === "send" ? null : open))}
+          onEditHost={() => setPrintDialog("host")}
+        />
+      )}
       {wizard && (
         <Suspense>
           <SetupWizard

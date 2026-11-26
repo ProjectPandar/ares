@@ -27,8 +27,11 @@ export function saveProjectBlocker({
   return undefined;
 }
 
-/** Browser equivalent of Plater::save_project: both menu commands download the current scene. */
-export async function saveProject() {
+/**
+ * The current scene as saved-project bytes (Plater::save_project) and the project file stem, or
+ * undefined when the project changed meanwhile.
+ */
+export async function projectBytes(): Promise<{ bytes: Uint8Array<ArrayBuffer>; stem: string } | undefined> {
   const opening = stlSessionOpened();
   const selectedFile = useApp.getState().file;
   await opening;
@@ -37,30 +40,37 @@ export async function saveProject() {
   if (file !== selectedFile || saveProjectBlocker(state)) return;
   const stillOpen = () =>
     useApp.getState().file === file && useApp.getState().plater === plater && opening === stlSessionOpened();
+  let bytes: Uint8Array<ArrayBuffer>;
+  if (presetSelection) {
+    const { catalog, profiles, request } = await profileSliceRequest(scene!, presetSelection, overrides);
+    if (!stillOpen()) return;
+    bytes = await plater!.saveProjectWithProfiles(catalog, profiles, request);
+  } else {
+    const tokens = await overrideTokens(overrides);
+    const catalog = file!.kind === "stl-batch" ? null : await catalogJson(state);
+    if (!stillOpen()) return;
+    bytes =
+      catalog === null
+        ? await plater!.saveProject(tokens)
+        : await plater!.saveProjectWithProfiles(catalog, FROM_PROJECT, {
+            seed: 0,
+            placement: "none",
+            overrides: tokens,
+          });
+  }
+  if (!stillOpen()) return undefined;
+  const stem = file!.name.replace(/\.(3mf|stl)$/i, "").replace(/[/\\\0]/g, "_");
+  return { bytes, stem: stem || "Untitled" };
+}
+
+/** Browser equivalent of Plater::save_project: both menu commands download the current scene. */
+export async function saveProject() {
+  const file = useApp.getState().file;
   useApp.setState({ saveError: undefined });
   try {
-    let bytes: Uint8Array<ArrayBuffer>;
-    if (presetSelection) {
-      const { catalog, profiles, request } = await profileSliceRequest(scene!, presetSelection, overrides);
-      if (!stillOpen()) return;
-      bytes = await plater!.saveProjectWithProfiles(catalog, profiles, request);
-    } else {
-      const tokens = await overrideTokens(overrides);
-      const catalog = file!.kind === "stl-batch" ? null : await catalogJson(state);
-      if (!stillOpen()) return;
-      bytes =
-        catalog === null
-          ? await plater!.saveProject(tokens)
-          : await plater!.saveProjectWithProfiles(catalog, FROM_PROJECT, {
-              seed: 0,
-              placement: "none",
-              overrides: tokens,
-            });
-    }
-    if (!stillOpen()) return;
-    const stem = file!.name.replace(/\.(3mf|stl)$/i, "").replace(/[/\\\0]/g, "_");
-    download(bytes, `${stem || "Untitled"}.3mf`, "model/3mf");
+    const project = await projectBytes();
+    if (project) download(project.bytes, `${project.stem}.3mf`, "model/3mf");
   } catch (error) {
-    if (stillOpen()) useApp.setState({ saveError: (error as Error).message });
+    if (useApp.getState().file === file) useApp.setState({ saveError: (error as Error).message });
   }
 }

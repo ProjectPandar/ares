@@ -92,6 +92,18 @@ pub async fn slice_project_plate_processed_bytes(
     slice_project_plate_processed_with_catalog_bytes(input, plate, overrides_json, None).await
 }
 
+/// The print-job `.gcode.3mf` of plate 1 of a saved project: `Plater::send_gcode`
+/// (`Plater.cpp:21240`) / CLI `--min-save --slice 1 --export-3mf`.
+#[wasm_bindgen(js_name = exportPlateSlicedFile)]
+pub async fn export_plate_sliced_file(
+    input: Vec<u8>,
+    filename: String,
+) -> Result<Vec<u8>, JsValue> {
+    ares_core::export_saved_sliced_3mf(&input, &filename, true, ares_core::SlicerContext::new(0))
+        .await
+        .map_err(slice_error_js)
+}
+
 fn slice_error_js(error: SliceError) -> JsValue {
     JsValue::from_str(&error.to_string())
 }
