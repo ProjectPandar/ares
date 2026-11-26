@@ -218,7 +218,7 @@ LABEL org.opencontainers.image.description="Pinned OrcaSlicer v2.5.0 CI oracle c
 COPY nix /nix
 COPY opt /opt
 EOF
-  docker build -f "$staging/Dockerfile" -t "$image" "$staging"
+  docker buildx build --provenance=false --sbom=false --load -f "$staging/Dockerfile" -t "$image" "$staging"
 }
 
 prune_ghcr() {
@@ -257,7 +257,11 @@ for item in items:
     if keep_tag and keep_tag in tags:
         kept += 1
         continue
-    if tags and kept < keep:
+    if not tags:
+        # Never blindly delete untagged manifests: multi-manifest OCI indexes
+        # reference untagged child platform/attestation manifests by digest.
+        continue
+    if kept < keep:
         kept += 1
         continue
     print(item["id"])
