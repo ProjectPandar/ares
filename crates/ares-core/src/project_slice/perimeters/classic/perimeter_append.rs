@@ -82,15 +82,14 @@ fn transform_object(
                     // `is_outer_wall_first` / first-layer outer-brim reverse
                     // over the whole entity table, so island order and
                     // per-island wall order flip together).
-                    // `outer_walls_first_for_brim` (`:3204-3211`): layer 0,
-                    // `brim_width > 0`, outer-kind brim. Upstream's third
-                    // kind `btLeadingEdgeOnly` (belt printers) is not
-                    // decoded by Ares yet — it fails closed at config
-                    // decode — so the arm is unreachable here.
+                    // `outer_walls_first_for_brim` (`:3204-3212`): layer 0,
+                    // `brim_width > 0`, outer-kind brim.
                     let wall_sequence = if traversal_record.layer_id == 0
                         && matches!(
                             object_options.brim_type,
-                            ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+                            ProcessBrimType::OuterOnly
+                                | ProcessBrimType::OuterAndInner
+                                | ProcessBrimType::LeadingEdgeOnly
                         )
                         && object_options.brim_width.0 > 0.0
                     {
@@ -231,7 +230,9 @@ fn classify_inactive(
         }
     } else if !matches!(
         object.brim_type,
-        ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+        ProcessBrimType::OuterOnly
+            | ProcessBrimType::OuterAndInner
+            | ProcessBrimType::LeadingEdgeOnly
     ) {
         InactiveOuterBrimReordering::DifferentBrimType {
             brim_type: object.brim_type,
