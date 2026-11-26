@@ -1,5 +1,8 @@
 //! `PerimeterGenerator::process_no_bridge` chbBridges and `Layer::make_perimeters`.
 
+#[path = "counterbore_partiallybridge/candidate_direction.rs"]
+mod candidate_direction;
+
 use super::{OrcaRunner, cache_identity, profile_entry};
 use ares_core::{ConfigOverrides, SliceError};
 use serde_json::{Value, json};
