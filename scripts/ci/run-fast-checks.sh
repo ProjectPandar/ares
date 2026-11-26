@@ -70,8 +70,8 @@ if [ -f web/packages/ares-wasm-js/src/wasm/ares_wasm.d.ts ]; then
     bun run --cwd web typecheck
   '
 else
-  echo "::warning::Skipping full web-typecheck-ts7 in fast-checks: cached src/wasm not yet warmed on main (checked in pages-build)"
-  results+=("SKIP  web-typecheck-ts7  0ms (awaiting main wasm-pkg cache warm)")
+  echo "::warning::Skipping full web-typecheck-ts7 in fast-checks: no cached src/wasm for these crates yet (checked in pages-build)"
+  results+=("SKIP  web-typecheck-ts7  0ms (no exact wasm-pkg cache)")
 fi
 
 # Now overlap rust-fmt in the background with unit tests, configdef sync, and CI script checks.

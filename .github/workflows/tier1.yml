@@ -67,7 +67,6 @@ jobs:
         with:
           path: web/packages/ares-wasm-js/src/wasm
           key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
-          restore-keys: ares-wasm-pkg-${{ runner.os }}-
       - name: Run merged fast checks with strict latency budgets
         run: ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" bash scripts/ci/run-fast-checks.sh
 
