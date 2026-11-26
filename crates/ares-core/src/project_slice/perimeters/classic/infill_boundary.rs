@@ -12,11 +12,8 @@ pub(in crate::project_slice) use types::{
 
 use crate::{
     SliceError,
-    project_slice::{
-        incomplete_sink,
-        perimeters::classic::gap_extrusion::{
-            PreparedGapExtrusionObject, PreparedGapExtrusionRecord, PreparedPostClassicGapExtrusion,
-        },
+    project_slice::perimeters::classic::gap_extrusion::{
+        PreparedGapExtrusionObject, PreparedGapExtrusionRecord, PreparedPostClassicGapExtrusion,
     },
 };
 use types::{StagedObject, StagedRecord, ValidatedProject};
@@ -24,20 +21,8 @@ use types::{StagedObject, StagedRecord, ValidatedProject};
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapExtrusion,
 ) -> Result<PreparedPostClassicInfillBoundary, SliceError> {
-    let validated = match preflight::validate(&prepared) {
-        Ok(validated) => validated,
-        Err(error) => {
-            consume_predecessor(prepared);
-            return Err(error);
-        }
-    };
-    let staged = match stage(&prepared, &validated) {
-        Ok(staged) => staged,
-        Err(error) => {
-            consume_predecessor(prepared);
-            return Err(error);
-        }
-    };
+    let validated = preflight::validate(&prepared)?;
+    let staged = stage(&prepared, &validated)?;
     let PreparedPostClassicGapExtrusion {
         predecessor,
         objects,
@@ -138,15 +123,4 @@ fn move_record(
         fill_no_overlap: staged.fill_no_overlap,
         overlap: staged.overlap,
     }
-}
-
-fn consume_predecessor(prepared: PreparedPostClassicGapExtrusion) {
-    let PreparedPostClassicGapExtrusion {
-        predecessor,
-        objects,
-    } = prepared;
-    for object in objects {
-        incomplete_sink::consume_gap_extrusion_object(object);
-    }
-    incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
 }

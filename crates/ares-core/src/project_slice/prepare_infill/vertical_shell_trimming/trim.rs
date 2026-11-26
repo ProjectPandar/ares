@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-use super::{GeometryStep, geometry_step, range_error};
+use super::range_error;
 
 pub(super) fn trim_record(
     record: &PreparedSurfaceTypeRecord,
@@ -24,21 +24,16 @@ pub(super) fn trim_record(
         return Ok(VerticalShellTrim { shell: Vec::new() });
     }
     let polygons_internal = polygons_internal(record);
-    geometry_step(GeometryStep::SafetyOffset)?;
-    geometry_step(GeometryStep::SafetyIntersection)?;
     let mut shell =
         intersection_polygons_paths_with_safety_offset(&projection.shell, &polygons_internal)
             .map_err(|_| range_error())?;
-    geometry_step(GeometryStep::Difference)?;
     shell.extend(
         difference_polygons_paths(&polygons_internal, &projection.holes)
             .map_err(|_| range_error())?,
     );
-    geometry_step(GeometryStep::EmptyGate)?;
     if shell.is_empty() {
         return Ok(VerticalShellTrim { shell });
     }
-    geometry_step(GeometryStep::SolidAppend)?;
     shell.extend(solid_paths(record));
     Ok(VerticalShellTrim { shell })
 }

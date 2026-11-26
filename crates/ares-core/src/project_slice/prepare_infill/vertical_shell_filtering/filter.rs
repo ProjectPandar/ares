@@ -6,7 +6,7 @@ use crate::{
     },
     project_slice::prepare_infill::{
         surface_type_detection::types::PreparedSurfaceTypeRecord,
-        vertical_shell_filtering::{GeometryStep, geometry_step, range_error},
+        vertical_shell_filtering::range_error,
         vertical_shell_regularization::{self, types::VerticalShellRegularization},
         vertical_shell_trimming::{self, types::VerticalShellTrim},
     },
@@ -76,7 +76,6 @@ pub(super) fn filter_record(
         });
     }
 
-    geometry_step(GeometryStep::NeighborIntersection)?;
     let object_volume = intersection_polygons_paths(
         &flatten_expolygons(previous_lslices.unwrap_or_default()),
         &flatten_expolygons(next_lslices.unwrap_or_default()),
@@ -85,23 +84,18 @@ pub(super) fn filter_record(
 
     let internal = vertical_shell_trimming::trim::polygons_internal(current);
     let limits = thresholds(solid_infill_spacing, scale);
-    geometry_step(GeometryStep::ClosingGrow)?;
     let epsilon = limits.epsilon_quotient as f32;
     let grown = offset_paths(&internal, epsilon, JoinType::Miter, DEFAULT_MITER_LIMIT)
         .map_err(|_| range_error())?;
-    geometry_step(GeometryStep::ClosingShrink)?;
     let internal_volume = offset_paths(&grown, -epsilon, JoinType::Miter, DEFAULT_MITER_LIMIT)
         .map_err(|_| range_error())?;
-    record_volume_snapshot(&object_volume, &internal_volume);
 
     let mut filtered_shell = Vec::with_capacity(regularization.regularized_shell.len());
     for candidate in &regularization.regularized_shell {
-        geometry_step(GeometryStep::CandidateScan)?;
         let area = candidate.area();
         let hidden_or_tiny = if area < f64::from(limits.small) {
             true
         } else if area < f64::from(limits.large) {
-            geometry_step(GeometryStep::VisibilityDifference)?;
             difference_polygons_paths(&flatten_expolygon(candidate), &object_volume)
                 .map_err(|_| range_error())?
                 .is_empty()
@@ -110,7 +104,6 @@ pub(super) fn filter_record(
         };
 
         let remove = if hidden_or_tiny {
-            geometry_step(GeometryStep::CandidateExpansion)?;
             let expanded = offset_paths(
                 &flatten_expolygon(candidate),
                 limits.minimum,
@@ -118,7 +111,6 @@ pub(super) fn filter_record(
                 DEFAULT_MITER_LIMIT,
             )
             .map_err(|_| range_error())?;
-            geometry_step(GeometryStep::ProtectionDifference)?;
             difference_polygons_paths(&internal_volume, &expanded)
                 .map_err(|_| range_error())?
                 .len()
@@ -130,7 +122,6 @@ pub(super) fn filter_record(
             filtered_shell.push(candidate.clone());
         }
     }
-    geometry_step(GeometryStep::EmptyGate)?;
     Ok(VerticalShellTinyFilter { filtered_shell })
 }
 
@@ -148,5 +139,3 @@ fn flatten_expolygon(expolygon: &ExPolygon) -> Vec<Polygon> {
     paths.extend(expolygon.holes().iter().cloned());
     paths
 }
-
-fn record_volume_snapshot(_object_volume: &[Polygon], _internal_volume: &[Polygon]) {}

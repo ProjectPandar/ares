@@ -13,18 +13,10 @@ pub(in crate::project_slice) fn prepare(
     let traversal = &horizontal.predecessor;
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
     let scale = traversal.scale;
-    let result = horizontal
+    horizontal
         .objects
         .iter_mut()
         .zip(&traversal.objects)
-        .try_for_each(|(object, traversal)| process::apply(object, traversal, nozzles, scale));
-    if let Err(error) = result {
-        transaction::dispose(predecessor);
-        return Err(error);
-    }
+        .try_for_each(|(object, traversal)| process::apply(object, traversal, nozzles, scale))?;
     Ok(PreparedPostInfillCombination { predecessor })
-}
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostInfillCombination) {
-    transaction::dispose(prepared.predecessor);
 }

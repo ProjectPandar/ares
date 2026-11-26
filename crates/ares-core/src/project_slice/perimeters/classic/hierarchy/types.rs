@@ -42,17 +42,6 @@ pub(in crate::project_slice) struct PreparedHierarchySurface {
     pub(in crate::project_slice) remaining_holes: Vec<Vec<PerimeterGeneratorLoop>>,
 }
 
-impl PostClassicHierarchyPrintObject {
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostClassicOnionPrintObject,
-        Vec<Option<ClassicHierarchyRecord>>,
-    ) {
-        (self.predecessor, self.records)
-    }
-}
-
 pub(super) struct LoopBuckets {
     pub(super) contours: Vec<Vec<PerimeterGeneratorLoop>>,
     pub(super) holes: Vec<Vec<PerimeterGeneratorLoop>>,

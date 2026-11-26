@@ -146,17 +146,6 @@ impl PendingPathBranch {
     }
 }
 
-impl PostClassicTraversalPrintObject {
-    pub(in crate::project_slice) fn into_parts(
-        self,
-    ) -> (
-        PostClassicHierarchyPrintObject,
-        Vec<Option<ClassicTraversalRecord>>,
-    ) {
-        (self.predecessor, self.records)
-    }
-}
-
 #[derive(Clone, Copy)]
 pub(super) struct RouteFlows {
     pub(super) perimeter: Flow,

@@ -23,7 +23,3 @@ pub(in crate::project_slice) fn prepare(
 ) -> Result<PreparedPostExternalSurfaces, SliceError> {
     stage::prepare(predecessor)
 }
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostExternalSurfaces) {
-    stage::dispose(prepared);
-}

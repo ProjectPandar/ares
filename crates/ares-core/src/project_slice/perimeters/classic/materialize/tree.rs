@@ -98,19 +98,8 @@ pub(super) fn materialize_surface(
             .expect("the root level remains until return");
         if !frame.flat_done {
             frame.flat_done = true;
-            frame.paths = match materialize_flat_level(
-                object,
-                &record_context,
-                frame.seeds,
-                scale,
-                context,
-            ) {
-                Ok(paths) => paths,
-                Err(error) => {
-                    consume_frames(frames);
-                    return Err(error);
-                }
-            };
+            frame.paths =
+                materialize_flat_level(object, &record_context, frame.seeds, scale, context)?;
             if is_root && !surface.thin_walls.is_empty() {
                 // PerimeterGenerator.cpp:258-278: sibling loops consume fuzzy draws first.
                 thin_entities = materialize_thin_walls(&surface.thin_walls, record, context)?;
@@ -210,7 +199,7 @@ fn materialize_flat_level(
     );
     let mut paths = Vec::with_capacity(seeds.len());
     for seed in seeds {
-        match materialize_seed(
+        let mut paths_for_seed = materialize_seed(
             object,
             super::RecordContext {
                 record_index: record_context.record_index,
@@ -219,21 +208,12 @@ fn materialize_flat_level(
             seed,
             scale,
             context,
-        ) {
-            Ok(mut paths_for_seed) => {
-                if overhang && !paths_for_seed.is_empty() {
-                    let first = paths_for_seed[0].polyline.points[0];
-                    chain_and_reorder_extrusion_paths(&mut paths_for_seed, [first.x, first.y]);
-                }
-                paths.push(paths_for_seed);
-            }
-            Err(error) => {
-                for level_paths in paths {
-                    consume_paths(level_paths);
-                }
-                return Err(error);
-            }
+        )?;
+        if overhang && !paths_for_seed.is_empty() {
+            let first = paths_for_seed[0].polyline.points[0];
+            chain_and_reorder_extrusion_paths(&mut paths_for_seed, [first.x, first.y]);
         }
+        paths.push(paths_for_seed);
     }
     Ok(paths)
 }
@@ -313,43 +293,5 @@ fn entity_endpoints(entity: &ExtrusionEntity) -> [[Coord; 2]; 2] {
                 .unwrap_or(first);
             [[first.x, first.y], [last.x, last.y]]
         }
-    }
-}
-
-fn consume_frames(frames: Vec<LevelFrame<'_>>) {
-    for frame in frames {
-        for paths in frame.paths {
-            consume_paths(paths);
-        }
-        for children in frame.children {
-            consume_nodes(children);
-        }
-    }
-}
-
-fn consume_paths(paths: Vec<ExtrusionPath>) {
-    for path in paths {
-        let _ = (
-            path.polyline.points,
-            path.role,
-            path.mm3_per_mm,
-            path.width,
-            path.height,
-        );
-    }
-}
-
-pub(in crate::project_slice) fn consume_nodes(mut nodes: Vec<RawPathNode>) {
-    while let Some(mut node) = nodes.pop() {
-        for path in node.paths {
-            let _ = (
-                path.polyline.points,
-                path.role,
-                path.mm3_per_mm,
-                path.width,
-                path.height,
-            );
-        }
-        nodes.append(&mut node.children);
     }
 }

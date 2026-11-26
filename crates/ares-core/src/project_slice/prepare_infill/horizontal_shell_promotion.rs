@@ -1,4 +1,3 @@
-mod cleanup;
 mod promote;
 mod stage;
 
@@ -16,12 +15,3 @@ pub(in crate::project_slice) fn prepare(
 ) -> Result<PreparedPostHorizontalShellPromotion, SliceError> {
     stage::prepare(prepared)
 }
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostHorizontalShellPromotion) {
-    record_disposal();
-    cleanup::successor(prepared);
-}
-
-fn record_commit() {}
-
-fn record_disposal() {}

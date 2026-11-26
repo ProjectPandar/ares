@@ -26,7 +26,6 @@ mod fill_entities;
 pub(crate) mod gcode_emit;
 mod group_fills;
 mod hole_to_polyhole;
-mod incomplete_sink;
 mod island_print_order;
 mod largest_contours;
 mod layers;
@@ -275,24 +274,12 @@ fn slice_plate(
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
     let mut filled = fill_entities::prepare(prepared)?;
     contour_z::prepare(&mut filled, context);
-    let mut warnings = match support_material::check_necessity(&filled, context) {
-        Ok(warnings) => warnings,
-        Err(error) => {
-            fill_entities::dispose(filled);
-            return Err(error);
-        }
-    };
+    let mut warnings = support_material::check_necessity(&filled, context)?;
     if let Some(sliced_plate) = sliced_plate.as_deref_mut() {
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
-    let support_layers = match support_material::generate(&filled, context) {
-        Ok(layers) => layers,
-        Err(error) => {
-            fill_entities::dispose(filled);
-            return Err(error);
-        }
-    };
+    let support_layers = support_material::generate(&filled, context)?;
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
     ordered.support_layers = support_layers;
@@ -357,7 +344,6 @@ fn consume_post_island_print_order(
 ) -> Result<ProcessedGCode, SliceError> {
     let mut output = gcode_emit::emit(&mut prepared, generation, context, warnings, archive)?;
     output.result.apply_filament_config(prepared.filament());
-    island_print_order::dispose(prepared);
     Ok(output)
 }
 

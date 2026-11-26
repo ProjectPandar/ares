@@ -17,7 +17,6 @@ pub(in crate::project_slice) use types::{
 use crate::{
     SliceError,
     geometry::{ExPolygon, ThickPolyline, difference_ex_polygons},
-    project_slice::incomplete_sink,
 };
 
 use super::{
@@ -37,20 +36,8 @@ pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicMedialGap,
 ) -> Result<PreparedPostClassicGapExtrusion, SliceError> {
     let scale = prepared.predecessor.scale;
-    let validated = match preflight::validate(&prepared, scale) {
-        Ok(validated) => validated,
-        Err(error) => {
-            consume_predecessor(prepared);
-            return Err(error);
-        }
-    };
-    let staged = match stage(&prepared, &validated) {
-        Ok(staged) => staged,
-        Err(error) => {
-            consume_predecessor(prepared);
-            return Err(error);
-        }
-    };
+    let validated = preflight::validate(&prepared, scale)?;
+    let staged = stage(&prepared, &validated)?;
     let PreparedPostClassicMedialGap {
         predecessor,
         objects,
@@ -222,17 +209,6 @@ fn move_surface(
         gap_fill: staged.gap_fill,
         remaining: staged.remaining,
     }
-}
-
-fn consume_predecessor(prepared: PreparedPostClassicMedialGap) {
-    let PreparedPostClassicMedialGap {
-        predecessor,
-        objects,
-    } = prepared;
-    for object in objects {
-        incomplete_sink::consume_medial_gap_object(object);
-    }
-    incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
 }
 
 struct StagedObject {

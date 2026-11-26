@@ -46,7 +46,7 @@ pub(in crate::project_slice) use types::{
 use crate::{
     SliceError,
     project_slice::prepare_infill::{
-        combine_infill::{self, PreparedPostInfillCombination},
+        combine_infill::PreparedPostInfillCombination,
         external_surfaces::PreparedPostExternalSurfaces,
     },
 };
@@ -126,19 +126,12 @@ pub(in crate::project_slice) fn prepare(
             })
             .collect::<Result<Vec<_>, _>>()
     };
-    match result {
-        Ok(mut objects) => {
-            move_thin_fills(&mut objects, &mut predecessor.predecessor.predecessor);
-            Ok(PreparedPostFillEntities {
-                predecessor,
-                objects,
-            })
-        }
-        Err(error) => {
-            combine_infill::dispose(predecessor);
-            Err(error)
-        }
-    }
+    let mut objects = result?;
+    move_thin_fills(&mut objects, &mut predecessor.predecessor.predecessor);
+    Ok(PreparedPostFillEntities {
+        predecessor,
+        objects,
+    })
 }
 
 fn move_thin_fills(
@@ -168,10 +161,6 @@ fn move_thin_fills(
                 .push(thin_start..layer.thin_fills.len());
         }
     }
-}
-
-pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {
-    combine_infill::dispose(prepared.predecessor);
 }
 
 pub(in crate::project_slice) fn simplify_before_ordering(

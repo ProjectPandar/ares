@@ -12,20 +12,13 @@ pub(in crate::project_slice) use types::{
 };
 
 use crate::{
-    SliceError,
-    project_slice::{incomplete_sink, perimeters::layer_region::PreparedPostLayerRegionPerimeters},
+    SliceError, project_slice::perimeters::layer_region::PreparedPostLayerRegionPerimeters,
 };
 
 pub(in crate::project_slice) fn prepare(
     prepared: PreparedPostLayerRegionPerimeters,
 ) -> Result<PreparedPostSurfaceTypeDetection, SliceError> {
-    let staged = match stage::project(&prepared) {
-        Ok(staged) => staged,
-        Err(error) => {
-            dispose_predecessor(prepared);
-            return Err(error);
-        }
-    };
+    let staged = stage::project(&prepared)?;
     let PreparedPostLayerRegionPerimeters {
         predecessor,
         objects,
@@ -53,15 +46,4 @@ pub(in crate::project_slice) fn prepare(
         predecessor: predecessor.into_classic(),
         objects,
     })
-}
-
-fn dispose_predecessor(prepared: PreparedPostLayerRegionPerimeters) {
-    let PreparedPostLayerRegionPerimeters {
-        predecessor,
-        objects,
-    } = prepared;
-    for object in objects {
-        incomplete_sink::consume_layer_region_perimeter_object(object);
-    }
-    incomplete_sink::consume_boxed_post_classic_traversal(predecessor.into_classic());
 }

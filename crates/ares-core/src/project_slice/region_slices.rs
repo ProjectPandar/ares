@@ -37,10 +37,6 @@ impl PostRegionPrintObject {
     pub(super) fn as_parts(&self) -> (&PlannedPrintObject, &[VolumeSlices], &[PostRegion]) {
         (&self.plan, &self.volume_slices, &self.regions)
     }
-
-    pub(super) fn into_parts(self) -> (PlannedPrintObject, Vec<VolumeSlices>, Vec<PostRegion>) {
-        (self.plan, self.volume_slices, self.regions)
-    }
 }
 
 pub(super) struct PostRegion {

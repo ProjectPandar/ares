@@ -12,7 +12,6 @@ pub(in crate::project_slice) use types::{
 use crate::{
     SliceError,
     geometry::{CoordinateScale, ThickPolyline, medial_axis},
-    project_slice::incomplete_sink,
 };
 
 use super::gap_domain::{
@@ -25,20 +24,7 @@ const VORONOI_ERROR: &str = "Classic medial-axis Voronoi construction failed";
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapDomain,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
-    let staged = match stage(&prepared) {
-        Ok(staged) => staged,
-        Err(error) => {
-            let PreparedPostClassicGapDomain {
-                predecessor,
-                objects,
-            } = prepared;
-            for object in objects {
-                incomplete_sink::consume_gap_domain_object(object);
-            }
-            incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
-            return Err(error);
-        }
-    };
+    let staged = stage(&prepared)?;
     let PreparedPostClassicGapDomain {
         predecessor,
         objects,
