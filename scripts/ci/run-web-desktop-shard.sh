@@ -9,7 +9,7 @@ TMP_ROOT="${RUNNER_TEMP:-/tmp}"
 mkdir -p "${TMP_ROOT}/web-results" "${TMP_ROOT}/web-timings"
 mapfile -t specs < <(bun scripts/ci/balance-web-shards.mjs select \
   --web-dir web --project desktop --shard "$SHARD" --total "$TOTAL" \
-  --timings "${TMP_ROOT}/web-timings/desktop.json")
+  --timings "${TMP_ROOT}/web-timings")
 
 # Anchor each spec path so e.g. slice.spec.ts does not substring-match presetSlice.spec.ts.
 spec_filters=()
@@ -24,5 +24,4 @@ bunx --cwd web playwright test --config playwright.config.ts --project desktop \
 
 bun scripts/ci/balance-web-shards.mjs record \
   --report "${TMP_ROOT}/web-results/desktop-${SHARD}.json" \
-  --timings "${TMP_ROOT}/web-timings/desktop.json" \
-  --out "${TMP_ROOT}/web-timings/desktop.json"
+  --out "${TMP_ROOT}/web-timings/shard-${SHARD}.json"

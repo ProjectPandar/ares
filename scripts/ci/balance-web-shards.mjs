@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // LPT timing-balanced Playwright shard planner, completeness prover, and timing recorder.
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -52,6 +52,20 @@ async function discoverSpecs(webDir, projectName) {
 
 function loadTimings(timingsPath) {
   if (!timingsPath || !existsSync(timingsPath)) return {};
+  if (statSync(timingsPath).isDirectory()) {
+    const entries = readdirSync(timingsPath)
+      .filter((f) => f.endsWith(".json"))
+      .map((name) => {
+        const full = join(timingsPath, name);
+        return { name, full, mtimeMs: statSync(full).mtimeMs };
+      })
+      .sort((a, b) => a.mtimeMs - b.mtimeMs || a.name.localeCompare(b.name));
+    const merged = {};
+    for (const entry of entries) {
+      Object.assign(merged, JSON.parse(readFileSync(entry.full, "utf8")));
+    }
+    return merged;
+  }
   return JSON.parse(readFileSync(timingsPath, "utf8"));
 }
 

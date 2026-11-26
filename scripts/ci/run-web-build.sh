@@ -24,8 +24,8 @@ ORCA_SLICER_DIR="$PWD/OrcaSlicer" \
 ARES_PROFILE_TEST_ARTIFACTS="${TMP_ROOT}/profile-tests" \
   bun run --cwd web test:unit
 
-mkdir -p "${TMP_ROOT}/web-bundle"
-tar --zstd -cf "${TMP_ROOT}/web-bundle/web-dist.tar.zst" \
+mkdir -p target/ci-web-bundle
+tar --zstd -cf target/ci-web-bundle/web-dist.tar.zst \
   target/release/ares \
   target/release/examples/print_config_def \
   target/web-e2e \
@@ -33,4 +33,4 @@ tar --zstd -cf "${TMP_ROOT}/web-bundle/web-dist.tar.zst" \
   web/packages/ares-wasm-js/dist \
   web/packages/ares-profiles/dist \
   web/app/dist
-ls -lh "${TMP_ROOT}/web-bundle/web-dist.tar.zst"
+ls -lh target/ci-web-bundle/web-dist.tar.zst

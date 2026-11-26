@@ -1,0 +1,25 @@
+name: Restore Web E2E Shard Timings
+description: Restore all per-shard desktop timing baselines so shards do not overwrite each other
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/web-timings/shard-1.json
+        key: web-desktop-timings-v2-shard-1-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: web-desktop-timings-v2-shard-1-
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/web-timings/shard-2.json
+        key: web-desktop-timings-v2-shard-2-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: web-desktop-timings-v2-shard-2-
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/web-timings/shard-3.json
+        key: web-desktop-timings-v2-shard-3-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: web-desktop-timings-v2-shard-3-
+    - uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}/web-timings/shard-4.json
+        key: web-desktop-timings-v2-shard-4-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: web-desktop-timings-v2-shard-4-

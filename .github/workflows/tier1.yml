@@ -61,19 +61,7 @@ jobs:
       - uses: ./.github/actions/checkout-orca-sparse
         with:
           ref: ${{ env.ORCA_REF }}
-      - name: Cache web node_modules
-        id: web-deps
-        uses: actions/cache@v4
-        with:
-          path: |
-            web/node_modules
-            web/app/node_modules
-            web/packages/ares-profiles/node_modules
-            web/packages/ares-wasm-js/node_modules
-          key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
-      - name: Install web dependencies
-        if: steps.web-deps.outputs.cache-hit != 'true'
-        run: bun install --cwd web --frozen-lockfile
+      - uses: ./.github/actions/setup-web-deps
       - name: Restore cached WASM bindings for TS7 typecheck
         uses: actions/cache/restore@v4
         with:
@@ -81,9 +69,7 @@ jobs:
           key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
           restore-keys: ares-wasm-pkg-${{ runner.os }}-
       - name: Run merged fast checks with strict latency budgets
-        run: |
-          ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" \
-            bash scripts/ci/run-fast-checks.sh
+        run: ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" bash scripts/ci/run-fast-checks.sh
 
   rust-wasm-check:
     needs: merge-scope
@@ -246,6 +232,8 @@ jobs:
     needs: merge-scope
     if: "!cancelled() && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
     runs-on: ubuntu-latest
+    outputs:
+      browsers_image: ${{ steps.toolchain.outputs.browsers_image }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
@@ -254,6 +242,9 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
+      - name: Resolve pinned CI browser container image
+        id: toolchain
+        run: bash scripts/ci/toolchain-image.sh verify-pins && echo "browsers_image=$(bash scripts/ci/toolchain-image.sh ref browsers)" >> "$GITHUB_OUTPUT"
       - uses: dtolnay/rust-toolchain@1.99.0
         with:
           targets: wasm32-unknown-unknown
@@ -268,27 +259,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: "pages-wasm"
-      - name: Cache web node_modules
-        id: web-deps
-        uses: actions/cache@v4
-        with:
-          path: |
-            web/node_modules
-            web/app/node_modules
-            web/packages/ares-profiles/node_modules
-            web/packages/ares-wasm-js/node_modules
-          key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
-      - name: Install web dependencies
-        if: steps.web-deps.outputs.cache-hit != 'true'
-        run: bun install --cwd web --frozen-lockfile
+      - uses: ./.github/actions/setup-web-deps
       - name: Build CLI, WASM, web app, verify metadata, and pack bundle
-        run: |
-          bash scripts/ci/run-web-build.sh
-          bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
+        run: bash scripts/ci/run-web-build.sh && bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
       - uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/web-bundle
+          path: target/ci-web-bundle
           key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Clean temporary web bundle before Rust cache save
+        run: rm -rf target/ci-web-bundle
 
   web-streaming:
     needs: web-build
@@ -325,23 +304,19 @@ jobs:
           browsers: chromium
           ghcr-token: ${{ github.token }}
           parity-archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Restore main web E2E timing baseline
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ runner.temp }}/web-timings
-          key: web-desktop-timings-main-${{ github.sha }}
-          restore-keys: web-desktop-timings-main-
+      - uses: ./.github/actions/restore-web-timings
       - name: Run timing-balanced desktop E2E shard ${{ matrix.shard }}/4
         run: bash scripts/ci/run-web-desktop-shard.sh "${{ matrix.shard }}" 4
       - name: Save updated web E2E timings on merge_group
         if: github.event_name == 'merge_group'
         uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/web-timings
-          key: web-desktop-timings-main-${{ github.sha }}-shard-${{ matrix.shard }}
+          path: ${{ runner.temp }}/web-timings/shard-${{ matrix.shard }}.json
+          key: web-desktop-timings-v2-shard-${{ matrix.shard }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-  web-packages-mobile:
-    needs: [web-build, build-parity]
+  web-packages:
+    needs: [merge-scope, web-build, build-parity]
+    if: "!cancelled() && needs.web-build.result == 'success' && needs.build-parity.result == 'success' && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -351,18 +326,42 @@ jobs:
       - uses: ./.github/actions/setup-web-shard
         with:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
-          browsers: chromium webkit
+          browsers: chromium
           ghcr-token: ${{ github.token }}
           parity-archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Run packages E2E (workers=1)
         run: bunx --cwd web playwright test --config playwright.config.ts --project packages --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/packages"
+
+  web-mobile:
+    needs: [merge-scope, web-build]
+    if: "!cancelled() && needs.web-build.result == 'success' && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.web-build.outputs.browsers_image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --shm-size=2g
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
+      - uses: ./.github/actions/setup-web-deps
+      - uses: actions/cache/restore@v4
+        with:
+          path: target/ci-web-bundle
+          key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
+          fail-on-cache-miss: true
+      - name: Unpack prebuilt web bundle
+        run: tar --zstd -xf target/ci-web-bundle/web-dist.tar.zst -C "$GITHUB_WORKSPACE" && rm -rf target/ci-web-bundle
       - name: Run mobile E2E (iphone, pixel, ipad)
         run: bunx --cwd web playwright test --config playwright.config.ts --project iphone --project pixel --project ipad --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/mobile"
 
   tier1-gate:
     name: tier1-gate
     if: always()
-    needs: [merge-scope, fast-checks, rust-wasm-check, rust-clippy, rust-nonparity, build-parity, parity-official, parity-seeded, web-build, web-streaming, web-desktop, web-packages-mobile]
+    needs: [merge-scope, fast-checks, rust-wasm-check, rust-clippy, rust-nonparity, build-parity, parity-official, parity-seeded, web-build, web-streaming, web-desktop, web-packages, web-mobile]
     runs-on: ubuntu-latest
     steps:
       - name: Evaluate required Tier 1 checks
@@ -381,7 +380,8 @@ jobs:
           RES_WEB_BUILD: ${{ needs.web-build.result }}
           RES_WEB_STREAM: ${{ needs.web-streaming.result }}
           RES_WEB_DESKTOP: ${{ needs.web-desktop.result }}
-          RES_WEB_PKGS: ${{ needs.web-packages-mobile.result }}
+          RES_WEB_PKGS: ${{ needs.web-packages.result }}
+          RES_WEB_MOBILE: ${{ needs.web-mobile.result }}
         run: |
           set -euo pipefail
           failed=0
@@ -392,6 +392,6 @@ jobs:
           fi
           if [ "$RUN_COMPLETE_SUITE" = "true" ]; then
             chk build-parity "$RES_BUILD_PARITY"; chk parity-official "$RES_OFFICIAL"; chk parity-seeded "$RES_SEEDED"
-            chk web-build "$RES_WEB_BUILD"; chk web-streaming "$RES_WEB_STREAM"; chk web-desktop "$RES_WEB_DESKTOP"; chk web-packages-mobile "$RES_WEB_PKGS"
+            chk web-build "$RES_WEB_BUILD"; chk web-streaming "$RES_WEB_STREAM"; chk web-desktop "$RES_WEB_DESKTOP"; chk web-packages "$RES_WEB_PKGS"; chk web-mobile "$RES_WEB_MOBILE"
           fi
           exit "$failed"
