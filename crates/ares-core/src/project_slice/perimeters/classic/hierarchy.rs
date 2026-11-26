@@ -9,7 +9,10 @@ pub(in crate::project_slice) use types::{
 use super::onion::{PostClassicOnionPrintObject, PreparedPostClassicOnion};
 use types::{ClassicHierarchyRecord, PreparedHierarchySurface};
 
-pub(super) fn finish(prepared: PreparedPostClassicOnion) -> PreparedPostClassicHierarchy {
+pub(super) fn finish(
+    prepared: PreparedPostClassicOnion,
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicHierarchy, crate::SliceError> {
     let PreparedPostClassicOnion {
         project,
         resolved,
@@ -20,30 +23,30 @@ pub(super) fn finish(prepared: PreparedPostClassicOnion) -> PreparedPostClassicH
     let objects = objects
         .into_iter()
         .map(|predecessor| {
-            let records = prepare_object(&predecessor);
-            PostClassicHierarchyPrintObject {
+            let records = prepare_object(&predecessor, cancel)?;
+            Ok(PostClassicHierarchyPrintObject {
                 predecessor,
                 records,
-            }
+            })
         })
-        .collect();
-    PreparedPostClassicHierarchy {
+        .collect::<Result<Vec<_>, crate::SliceError>>()?;
+    Ok(PreparedPostClassicHierarchy {
         project,
         resolved,
         config_block,
         scale,
         objects,
-    }
+    })
 }
 
 fn prepare_object(
     predecessor: &PostClassicOnionPrintObject,
-) -> Vec<Option<ClassicHierarchyRecord>> {
-    predecessor
-        .records
-        .iter()
-        .map(|record| {
-            record.as_ref().map(|record| ClassicHierarchyRecord {
+    cancel: &crate::CancelToken,
+) -> Result<Vec<Option<ClassicHierarchyRecord>>, crate::SliceError> {
+    crate::parallel::par_range_map_try(predecessor.records.len(), cancel, |index| {
+        Ok(predecessor.records[index]
+            .as_ref()
+            .map(|record| ClassicHierarchyRecord {
                 surfaces: record
                     .surfaces
                     .iter()
@@ -62,7 +65,6 @@ fn prepare_object(
                         }
                     })
                     .collect(),
-            })
-        })
-        .collect()
+            }))
+    })
 }

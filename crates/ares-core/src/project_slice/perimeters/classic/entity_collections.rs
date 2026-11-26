@@ -27,7 +27,8 @@ use super::{
 };
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicChainedLoops,
-) -> PreparedPostClassicEntityCollections {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicEntityCollections, crate::SliceError> {
     let PreparedPostClassicChainedLoops {
         predecessor,
         objects,
@@ -36,24 +37,23 @@ pub(in crate::project_slice) fn finish(
     let objects = objects
         .into_iter()
         .enumerate()
-        .map(|(index, loops)| transform_object(loops, &predecessor.objects[index]))
-        .collect();
-    PreparedPostClassicEntityCollections {
+        .map(|(index, loops)| transform_object(loops, &predecessor.objects[index], cancel))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(PreparedPostClassicEntityCollections {
         predecessor,
         objects,
-    }
+    })
 }
 
 fn transform_object(
     loops: PreparedChainedLoopObject,
     traversal: &PostClassicTraversalPrintObject,
-) -> PreparedEntityCollectionObject {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedEntityCollectionObject, crate::SliceError> {
     assert_eq!(loops.records.len(), traversal.records.len());
-    let records = loops
-        .records
-        .into_iter()
-        .enumerate()
-        .map(|(index, loops)| match (loops, &traversal.records[index]) {
+    let indexed: Vec<_> = loops.records.into_iter().enumerate().collect();
+    let records = crate::parallel::par_map_try(indexed, cancel, |(index, loops)| {
+        Ok(match (loops, &traversal.records[index]) {
             (None, None) => None,
             (Some(loops), Some(seeds)) => Some(transform_record(
                 loops,
@@ -62,8 +62,8 @@ fn transform_object(
             )),
             _ => panic!("O5/O8 optional record alignment is invariant"),
         })
-        .collect();
-    PreparedEntityCollectionObject { records }
+    })?;
+    Ok(PreparedEntityCollectionObject { records })
 }
 
 fn transform_record(

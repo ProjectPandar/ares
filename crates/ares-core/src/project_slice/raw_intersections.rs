@@ -71,8 +71,7 @@ pub(super) fn prepare_projected_objects(
 }
 
 pub(super) fn slice_projected_objects(
-    source_objects: &[ProjectObject],
-    resolved_objects: &[ResolvedProjectObject],
+    (source_objects, resolved_objects): (&[ProjectObject], &[ResolvedProjectObject]),
     projected_objects: Vec<ProjectedPrintObject>,
     scale: CoordinateScale,
     (filament, logical_count, process_variant_indices): (
@@ -80,12 +79,14 @@ pub(super) fn slice_projected_objects(
         usize,
         &[usize],
     ),
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<LoopedPrintObject>, SliceError> {
     let max_gap_scaled = scale
         .checked_scale(2.0)
         .expect("2 mm loop-repair radius must fit the selected coordinate scale");
     let mut looped_objects = Vec::with_capacity(projected_objects.len());
     for projected_object in projected_objects {
+        cancel.check()?;
         let (mut plan, projected_volumes) = projected_object.into_parts();
         let source = &source_objects[plan.source_object_index];
         let resolved = resolved_objects
@@ -123,6 +124,7 @@ pub(super) fn slice_projected_objects(
             .collect::<Vec<_>>();
         let mut volumes = Vec::with_capacity(projected_volumes.len());
         for projected_volume in projected_volumes {
+            cancel.check()?;
             let source_volume = &source.volumes()[projected_volume.source_volume_index];
             let slicing_transform = centered_object_transform
                 .then(source_volume.transform())
@@ -182,15 +184,12 @@ pub(super) fn slice_projected_objects(
             }
             // TriangleMeshSlicer.cpp:1997-2038: raw lines belong to one mesh;
             // make_loops:1616-1666 chains and repairs each layer before return.
-            let layers = layers
-                .into_iter()
-                .map(|lines| {
-                    make_loops(
-                        chain_lines_by_triangle_connectivity(lines, &coplanar_edges),
-                        max_gap_scaled,
-                    )
-                })
-                .collect();
+            let layers = crate::parallel::par_map_try(layers, cancel, |lines| {
+                Ok(make_loops(
+                    chain_lines_by_triangle_connectivity(lines, &coplanar_edges),
+                    max_gap_scaled,
+                ))
+            })?;
             volumes.push(LoopedVolumeIntersections {
                 source_volume_index: projected_volume.source_volume_index,
                 volume_ordinal: projected_volume.volume_ordinal.0.get(),

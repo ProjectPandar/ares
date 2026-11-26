@@ -8,7 +8,9 @@ use super::{
 
 pub(super) fn prepare_post_closing(
     input: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClosing, SliceError> {
+    cancel.check()?;
     let state::ProjectSliceState {
         project,
         resolved,
@@ -16,7 +18,7 @@ pub(super) fn prepare_post_closing(
         scale,
         looped_objects,
     } = match input {
-        PlateInput::Applied(plate) => plate.prepare()?,
+        PlateInput::Applied(plate) => plate.prepare(cancel)?,
         PlateInput::Source(mut source) => {
             let mut report = source.sliced_plate.take();
             let state = if let Some(profile) = source.profile {
@@ -26,9 +28,10 @@ pub(super) fn prepare_post_closing(
                     report
                         .as_deref_mut()
                         .map(|report| &mut report.upward_machines),
+                    cancel,
                 )?
             } else {
-                state::prepare_project_source(*source)?
+                state::prepare_project_source(*source, cancel)?
             };
             if let Some(report) = report {
                 state::slice_report(&state.project, &state.resolved, report)?;
@@ -40,14 +43,17 @@ pub(super) fn prepare_post_closing(
             state
         }
     };
+    cancel.check()?;
     let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
     let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
         looped_objects,
         &resolved.objects,
         spiral_mode,
     )?;
+    cancel.check()?;
     let pre_closing_objects =
         pre_closing_unions::apply_project_pre_closing_unions(slicing_mode_objects)?;
+    cancel.check()?;
     let objects = closing::apply_project_closing(pre_closing_objects, &resolved.objects, scale)?;
     Ok(PreparedPostClosing {
         project,
@@ -60,16 +66,20 @@ pub(super) fn prepare_post_closing(
 
 pub(super) fn prepare_post_largest_contours(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClosing, SliceError> {
-    let mut prepared = prepare_post_closing(project)?;
+    let mut prepared = prepare_post_closing(project, cancel)?;
+    cancel.check()?;
     largest_contours::apply_project_largest_contours(&mut prepared.objects);
     Ok(prepared)
 }
 
 pub(super) fn prepare_post_simplification(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClosing, SliceError> {
-    let mut prepared = prepare_post_largest_contours(project)?;
+    let mut prepared = prepare_post_largest_contours(project, cancel)?;
+    cancel.check()?;
     let resolution = prepared.resolved.views.full.process.print.resolution.0;
     simplification::apply_project_simplification(
         &mut prepared.objects,
@@ -81,6 +91,7 @@ pub(super) fn prepare_post_simplification(
 
 pub(super) fn prepare_post_regions(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostRegions, SliceError> {
     let PreparedPostClosing {
         project,
@@ -88,7 +99,8 @@ pub(super) fn prepare_post_regions(
         config_block,
         scale,
         objects,
-    } = prepare_post_simplification(project)?;
+    } = prepare_post_simplification(project, cancel)?;
+    cancel.check()?;
     let mut painting = Vec::new();
     let objects = {
         let mut contexts = resolved
@@ -152,8 +164,10 @@ pub(super) fn prepare_post_regions(
 
 pub(super) fn prepare_post_top_empty_layers(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostRegions, SliceError> {
-    let mut prepared = prepare_post_regions(project)?;
+    let mut prepared = prepare_post_regions(project, cancel)?;
+    cancel.check()?;
     top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
     // PrintObjectSlice.cpp:958–960 rejects an empty sliced object before perimeters.
     if prepared
@@ -176,8 +190,10 @@ pub(super) fn prepare_post_top_empty_layers(
 
 pub(super) fn prepare_post_conical_overhang(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostRegions, SliceError> {
-    let mut prepared = prepare_post_top_empty_layers(project)?;
+    let mut prepared = prepare_post_top_empty_layers(project, cancel)?;
+    cancel.check()?;
     conical_overhang::apply_project_conical_overhang(
         &mut prepared.objects,
         &prepared.resolved.objects,
@@ -188,8 +204,10 @@ pub(super) fn prepare_post_conical_overhang(
 
 pub(super) fn prepare_post_painted(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostRegions, SliceError> {
-    let mut prepared = prepare_post_conical_overhang(project)?;
+    let mut prepared = prepare_post_conical_overhang(project, cancel)?;
+    cancel.check()?;
     region_slices::painted::apply_project(&mut prepared)?;
     region_slices::painted::apply_fuzzy_project(&mut prepared)?;
     Ok(prepared)
@@ -197,8 +215,10 @@ pub(super) fn prepare_post_painted(
 
 pub(super) fn prepare_post_interlocking(
     project: PlateInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostRegions, SliceError> {
-    let mut prepared = prepare_post_painted(project)?;
+    let mut prepared = prepare_post_painted(project, cancel)?;
+    cancel.check()?;
     let contexts = prepared
         .resolved
         .objects
@@ -206,6 +226,7 @@ pub(super) fn prepare_post_interlocking(
         .flat_map(|resolved| resolved.print_objects.iter().map(move |_| resolved));
     // PrintObjectSlice.cpp:1243 consumes the post-MMU region surfaces before compensation.
     for (object, resolved) in prepared.objects.iter_mut().zip(contexts) {
+        cancel.check()?;
         region_slices::interlocking::apply(
             object,
             &resolved.object,

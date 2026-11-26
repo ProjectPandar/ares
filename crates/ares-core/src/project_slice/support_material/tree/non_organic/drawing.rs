@@ -73,7 +73,10 @@ pub(super) struct DrawnLayers {
 }
 
 impl Drawing<'_> {
-    pub(super) fn draw_node_areas(&mut self) -> Result<DrawnLayers, ClipperError> {
+    pub(super) fn draw_node_areas(
+        &mut self,
+        cancel: &crate::CancelToken,
+    ) -> Result<DrawnLayers, crate::SliceError> {
         let shapes = NodeShapes::new(self.contacts, self.object, self.scale);
         // TreeSupport.cpp:2184 uses the raw configured width, not the resolved flow width.
         let width = match self.object.support_line_width {
@@ -81,69 +84,13 @@ impl Drawing<'_> {
             FloatOrPercent::Percent(value) => value.0,
         };
         let max_move_sq = self.scale.scaled_delta(width / 2.0).powi(2);
-        let mut output = Vec::with_capacity(self.heights.len());
-        for (layer, height) in self.heights.iter().enumerate() {
-            let nodes = &self.contacts.layers[layer];
-            if nodes.is_empty() {
-                output.push(LayerAreas::default());
-                continue;
-            }
-            if height.height < 0.0001 {
-                output.push(LayerAreas {
-                    print_z: height.print_z,
-                    height: height.height,
-                    ..LayerAreas::default()
-                });
-                continue;
-            }
-            let mut collision = DrawCollision {
-                object: self.object,
-                outlines: &self.data.outlines,
-                layers: self.layers,
-                object_layer: height.object_layer,
-                top_z_distance: self.top_z_distance,
-                xy_distance: self.data.xy_distance,
-                scale: self.scale,
-                base: Vec::new(),
-                sharp_tail: Vec::new(),
-            };
-            let (mut areas, extra_wall_areas) = NodeDrawing {
-                shapes: &shapes,
-                collision: &mut collision,
-                top_interface_layers: self.counts.top,
-                raft_layers: self.raft_layers,
-                buildplate_only: self.object.support_on_build_plate_only.0,
-                scale: self.scale,
-                max_move_sq,
-            }
-            .run(self.arena, nodes)?;
-            areas.print_z = height.print_z;
-            areas.height = height.height;
-            self.close_roofs(&mut areas, &mut collision)?;
-            if shapes.square {
-                self.simplify_base(&mut areas)?;
-            }
-            if !areas.base.is_empty()
-                && !self.object.support_on_build_plate_only.0
-                && (self.bottom_gap > 0.0001 || self.counts.bottom > 0)
-            {
-                BottomInterfaces {
-                    object_layers: self.object_layers,
-                    tops: self.tops,
-                    bottoms: self.bottoms,
-                    heights: self.heights,
-                    gap: self.bottom_gap,
-                    nominal_height: self.nominal_height,
-                    interface_layers: self.counts.bottom,
-                    base_interface_layers: self.counts.bottom_base,
-                    support_width: self.support_width,
-                    scale: self.scale,
-                }
-                .apply(&mut areas, layer, height.object_layer)?;
-            }
-            self.finish_layer(&mut areas, &extra_wall_areas, layer)?;
-            output.push(areas);
-        }
+        let shared = &*self;
+        let mut output =
+            crate::parallel::par_range_map_try(shared.heights.len(), cancel, |layer| {
+                shared
+                    .draw_single_layer(layer, &shapes, max_move_sq)
+                    .map_err(tree_error)
+            })?;
         groups::sequence_interfaces(
             &mut output,
             self.object.support_interface_pattern
@@ -173,7 +120,8 @@ impl Drawing<'_> {
                     base_pattern_spacing: self.object.support_base_pattern_spacing.0,
                     settings: self.lightning_settings,
                 }
-                .generate(&output)?,
+                .generate(&output)
+                .map_err(tree_error)?,
             )
         } else {
             None
@@ -186,7 +134,8 @@ impl Drawing<'_> {
                 line_width_scaled: self.scale.scaled_delta(self.line_width),
                 scale: self.scale,
             }
-            .run(&mut output)?;
+            .run(&mut output)
+            .map_err(tree_error)?;
         }
         output.retain(|layer| {
             let remove = layer.height < 0.0001;
@@ -196,6 +145,73 @@ impl Drawing<'_> {
             layers: output,
             lightning,
         })
+    }
+
+    fn draw_single_layer(
+        &self,
+        layer: usize,
+        shapes: &NodeShapes,
+        max_move_sq: f64,
+    ) -> Result<LayerAreas, ClipperError> {
+        let height = &self.heights[layer];
+        let nodes = &self.contacts.layers[layer];
+        if nodes.is_empty() {
+            return Ok(LayerAreas::default());
+        }
+        if height.height < 0.0001 {
+            return Ok(LayerAreas {
+                print_z: height.print_z,
+                height: height.height,
+                ..LayerAreas::default()
+            });
+        }
+        let mut collision = DrawCollision {
+            object: self.object,
+            outlines: &self.data.outlines,
+            layers: self.layers,
+            object_layer: height.object_layer,
+            top_z_distance: self.top_z_distance,
+            xy_distance: self.data.xy_distance,
+            scale: self.scale,
+            base: Vec::new(),
+            sharp_tail: Vec::new(),
+        };
+        let (mut areas, extra_wall_areas) = NodeDrawing {
+            shapes,
+            collision: &mut collision,
+            top_interface_layers: self.counts.top,
+            raft_layers: self.raft_layers,
+            buildplate_only: self.object.support_on_build_plate_only.0,
+            scale: self.scale,
+            max_move_sq,
+        }
+        .run(self.arena, nodes)?;
+        areas.print_z = height.print_z;
+        areas.height = height.height;
+        self.close_roofs(&mut areas, &mut collision)?;
+        if shapes.square {
+            self.simplify_base(&mut areas)?;
+        }
+        if !areas.base.is_empty()
+            && !self.object.support_on_build_plate_only.0
+            && (self.bottom_gap > 0.0001 || self.counts.bottom > 0)
+        {
+            BottomInterfaces {
+                object_layers: self.object_layers,
+                tops: self.tops,
+                bottoms: self.bottoms,
+                heights: self.heights,
+                gap: self.bottom_gap,
+                nominal_height: self.nominal_height,
+                interface_layers: self.counts.bottom,
+                base_interface_layers: self.counts.bottom_base,
+                support_width: self.support_width,
+                scale: self.scale,
+            }
+            .apply(&mut areas, layer, height.object_layer)?;
+        }
+        self.finish_layer(&mut areas, &extra_wall_areas, layer)?;
+        Ok(areas)
     }
 
     fn finish_layer(
@@ -284,6 +300,10 @@ impl Drawing<'_> {
         areas.base = intersection_ex_polygons(&areas.base, self.bed)?;
         Ok(())
     }
+}
+
+fn tree_error(error: ClipperError) -> crate::SliceError {
+    crate::SliceError::InvalidInput(format!("tree support geometry: {error:?}"))
 }
 
 fn difference_clipped(

@@ -63,6 +63,62 @@ impl TreeModelVolumes<'_> {
         &self.avoidance_caches[usize::from(to_model)][kind.index()]
     }
 
+    pub(super) fn calculate_avoidance_batch_par(
+        &mut self,
+        keys: &[(Coord, usize)],
+        to_build_plate: bool,
+        to_model: bool,
+        cancel: &crate::CancelToken,
+    ) -> Result<(), crate::SliceError> {
+        let mut tasks = Vec::with_capacity(
+            (usize::from(to_build_plate) + usize::from(to_model)) * keys.len() * 3,
+        );
+        for index in 0..keys.len() * 6 {
+            let kind = [
+                AvoidanceType::Slow,
+                AvoidanceType::FastSafe,
+                AvoidanceType::Fast,
+            ][index % 3];
+            let (radius, max_layer) = keys[index / 6];
+            let destination = (index / 3) & 1 != 0;
+            let begin = self
+                .avoidance_cache(kind, destination)
+                .max_calculated_layer(radius)
+                .map_or(1, |layer| layer + 1);
+            if begin <= max_layer
+                && (if destination {
+                    to_model
+                } else {
+                    to_build_plate
+                })
+                && (kind != AvoidanceType::FastSafe || radius < self.holefree_limit())
+            {
+                tasks.push((radius, max_layer, kind, destination, begin));
+            }
+        }
+        let shared = &*self;
+        let computed = crate::parallel::par_map_try(
+            tasks,
+            cancel,
+            |(radius, max_layer, kind, destination, begin)| {
+                let data = shared.propagate_avoidance_cached(
+                    radius,
+                    begin..max_layer + 1,
+                    (kind, destination),
+                    cancel,
+                )?;
+                Ok((radius, begin, kind, destination, data))
+            },
+        )?;
+        for (radius, begin, kind, destination, data) in computed {
+            if let Some(data) = data {
+                self.avoidance_caches[usize::from(destination)][kind.index()]
+                    .insert(radius, begin, data);
+            }
+        }
+        Ok(())
+    }
+
     pub(super) fn calculate_avoidance_batch(
         &mut self,
         keys: &[(Coord, usize)],

@@ -49,7 +49,9 @@ pub(super) fn draw_branch_slices(
     graph: &mut [VecDeque<SupportElement>],
     interface: &mut InterfacePlacer<'_>,
     scale: CoordinateScale,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<Slice>, SliceError> {
+    cancel.check()?;
     let config = interface.config;
     organic_smooth_branches_avoid_collisions(volumes, config, interface.slicing, graph, scale);
     volumes.clear_all_but_object_collision();
@@ -67,8 +69,10 @@ pub(super) fn draw_branch_slices(
     let mut slice_z = Vec::new();
     let mut sliced_trees = Vec::with_capacity(trees.len());
     for branches in trees {
+        cancel.check()?;
         let mut tree = aggregation::TreeSlices::default();
         for branch in branches {
+            cancel.check()?;
             let Some(mut slices) = drawing.slice_branch(&branch, &mut mesh, &mut slice_z)? else {
                 continue;
             };
@@ -78,7 +82,7 @@ pub(super) fn draw_branch_slices(
             }
             tree.insert(slices);
         }
-        tree.union_branches().map_err(geometry_error)?;
+        tree.union_branches(cancel)?;
         sliced_trees.push(tree);
     }
     Ok(aggregation::combine_trees(sliced_trees))

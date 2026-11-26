@@ -366,6 +366,7 @@ pub(crate) fn slice_error_to_failure(
         | SliceError::GcodePathConflict(_)
         | SliceError::OptionStlModelRead(_)
         | SliceError::ProjectSlicingIncomplete
+        | SliceError::Canceled
         | SliceError::UnsupportedProjectFeature(_) => CliFailure::Legacy(Box::new(error)),
         SliceError::InvalidPresetFile(_) | SliceError::PresetAdmission(_) => {
             CliFailure::config_file_error(

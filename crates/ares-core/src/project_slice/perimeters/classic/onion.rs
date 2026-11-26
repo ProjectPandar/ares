@@ -14,6 +14,7 @@ use super::{ClassicTopSplitRecord, PostClassicTopSplitPrintObject, PreparedPostC
 
 pub(super) fn finish(
     prepared: PreparedPostClassicTopSplit,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicOnion, SliceError> {
     let validated = config::validate_project(&prepared)?;
     let PreparedPostClassicTopSplit {
@@ -27,7 +28,7 @@ pub(super) fn finish(
         .into_iter()
         .zip(validated)
         .map(|(predecessor, configs)| {
-            let records = prepare_object(&predecessor, &configs, scale)?;
+            let records = prepare_object(&predecessor, &configs, scale, cancel)?;
             Ok(PostClassicOnionPrintObject {
                 predecessor,
                 records,
@@ -47,17 +48,15 @@ fn prepare_object(
     predecessor: &PostClassicTopSplitPrintObject,
     configs: &[Option<ValidatedOnionConfig>],
     scale: CoordinateScale,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<Option<ClassicOnionRecord>>, SliceError> {
-    predecessor
-        .records
-        .iter()
-        .zip(configs)
-        .map(|(record, config)| match (record, config) {
+    crate::parallel::par_range_map_try(predecessor.records.len(), cancel, |index| {
+        match (&predecessor.records[index], &configs[index]) {
             (Some(record), Some(config)) => prepare_record(record, *config, scale).map(Some),
             (None, None) => Ok(None),
             _ => unreachable!("Task 22O.3 preflight slots must remain aligned"),
-        })
-        .collect()
+        }
+    })
 }
 
 fn prepare_record(

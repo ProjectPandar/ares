@@ -17,7 +17,7 @@ pub(super) fn fuzzify(
         layer_height,
         scale,
     }: Layer,
-    context: &mut SlicerContext,
+    context: Option<&mut SlicerContext>,
     closed: bool,
 ) {
     if config.base.noise_type == FuzzySkinNoiseType::Ripple {
@@ -26,6 +26,7 @@ pub(super) fn fuzzify(
         }
         return;
     }
+    let context = context.expect("seeded fuzzy skin requires sequential SlicerContext");
     let minimum_step = config.point_distance as f64 * 3.0 / 4.0;
     let random_step = config.point_distance as f64 / 2.0;
     let min_extrusion_width =

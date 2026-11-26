@@ -30,7 +30,9 @@ pub(super) struct ProjectSliceState {
 
 pub(super) fn prepare_project_source(
     source: super::ProjectSource<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<ProjectSliceState, SliceError> {
+    cancel.check()?;
     let plate = source.plate;
     let validation = (
         source.validate_print,
@@ -39,12 +41,13 @@ pub(super) fn prepare_project_source(
     );
     let overrides = source.overrides;
     let (project, preparation) = load_project_source(source)?;
+    cancel.check()?;
     prepare_loaded_project_slice_with_validation(
         project,
-        plate,
-        None,
+        (plate, None),
         validation,
         Some((&preparation, overrides)),
+        cancel,
     )
 }
 
@@ -125,11 +128,12 @@ pub(super) fn load_project_source(
 
 pub(super) fn prepare_loaded_project_slice_with_validation(
     project: Project,
-    plate: Option<u32>,
-    selected_printer: Option<&str>,
+    (plate, selected_printer): (Option<u32>, Option<&str>),
     validation: (bool, i32, bool),
     preparation: Option<(&Preparation, &crate::ConfigOverrides)>,
+    cancel: &crate::CancelToken,
 ) -> Result<ProjectSliceState, SliceError> {
+    cancel.check()?;
     super::capabilities::validate_settings(project.settings())?;
     let project = crate::plater::initialize_slice_plates(project);
     let project = crate::plater::fit_slice_wipe_tower(project, plate)?;
@@ -140,7 +144,7 @@ pub(super) fn prepare_loaded_project_slice_with_validation(
         preparation,
         |_| {},
     )?
-    .prepare()
+    .prepare(cancel)
 }
 
 pub(super) struct AppliedPlate {
@@ -207,7 +211,11 @@ impl AppliedPlate {
         slice_report(&self.project, &self.resolved, report)
     }
 
-    pub(super) fn prepare(self) -> Result<ProjectSliceState, SliceError> {
+    pub(super) fn prepare(
+        self,
+        cancel: &crate::CancelToken,
+    ) -> Result<ProjectSliceState, SliceError> {
+        cancel.check()?;
         let Self { project, resolved } = self;
         // OrcaSlicer writes the config block into every sliced G-code and uses it
         // as the machine/layer template placeholder source (`GCode.cpp` config
@@ -233,8 +241,7 @@ impl AppliedPlate {
         let projected_objects =
             prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
         let looped_objects = slice_projected_objects(
-            project.objects(),
-            &resolved.objects,
+            (project.objects(), &resolved.objects),
             projected_objects,
             scale,
             (
@@ -242,6 +249,7 @@ impl AppliedPlate {
                 resolved.logical_filament_count,
                 resolved.process_variant_indices.as_slice(),
             ),
+            cancel,
         )?;
         Ok(ProjectSliceState {
             project,

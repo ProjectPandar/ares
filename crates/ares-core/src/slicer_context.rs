@@ -1,8 +1,48 @@
 mod rng;
 pub(crate) use rng::Mt19937;
 
-use crate::ThumbnailData;
-use std::fmt;
+use crate::{SliceError, ThumbnailData};
+use std::{
+    fmt,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
+
+/// `PrintBase::canceled()` / `PrintTryCancel` (`PrintBase.hpp:367-377,508-514,550-555`):
+/// lightweight, thread-safe cooperative cancellation token.
+#[derive(Clone, Debug, Default)]
+pub struct CancelToken(Arc<AtomicBool>);
+
+impl CancelToken {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Marks the computation canceled (`PrintBase::cancel`, `PrintBase.hpp:510`).
+    #[inline]
+    pub fn cancel(&self) {
+        self.0.store(true, Ordering::Relaxed);
+    }
+
+    /// Returns `true` if cancellation was requested (`PrintBase::canceled`, `PrintBase.hpp:508`).
+    #[inline]
+    pub fn is_canceled(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
+
+    /// Returns `Err(SliceError::Canceled)` when canceled (`PrintBase::throw_if_canceled`,
+    /// `PrintBase.hpp:552`).
+    #[inline]
+    pub fn check(&self) -> Result<(), SliceError> {
+        if self.is_canceled() {
+            Err(SliceError::Canceled)
+        } else {
+            Ok(())
+        }
+    }
+}
 
 /// `PrintBase::SlicingStatus` (`PrintBase.hpp:443-481`): the slice's progress, its current
 /// stage text and the scene flags. The warning fields are not ported.
@@ -23,6 +63,7 @@ impl SlicingStatus<'_> {
 pub struct SlicerContext<'a> {
     seed: u32,
     rng: Mt19937,
+    cancel: CancelToken,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
     pub(crate) max_triangle_count: i32,
@@ -41,6 +82,7 @@ impl<'a> SlicerContext<'a> {
         Self {
             seed,
             rng: Mt19937::new(seed),
+            cancel: CancelToken::new(),
             status: None,
             thumbnail_images: Vec::new(),
             max_triangle_count: 0,
@@ -177,6 +219,31 @@ impl<'a> SlicerContext<'a> {
                 flags,
             }),
         }
+    }
+
+    /// Attaches a caller-owned [`CancelToken`] to this slice (`PrintBase::cancel` /
+    /// `PrintBase::throw_if_canceled`, `PrintBase.hpp:510,552`).
+    #[must_use]
+    pub fn with_cancel_token(mut self, token: CancelToken) -> Self {
+        self.cancel = token;
+        self
+    }
+
+    /// Returns a cloned [`CancelToken`] handle sharing this context's cancellation state
+    /// (`PrintBase::make_try_cancel`, `PrintBase.hpp:554`).
+    pub fn cancel_token(&self) -> CancelToken {
+        self.cancel.clone()
+    }
+
+    pub(crate) fn cancel_ref(&self) -> &CancelToken {
+        &self.cancel
+    }
+
+    /// Returns `Err(SliceError::Canceled)` if cancellation was requested
+    /// (`PrintBase::throw_if_canceled`, `PrintBase.hpp:552`).
+    #[inline]
+    pub fn check_canceled(&self) -> Result<(), SliceError> {
+        self.cancel.check()
     }
 
     pub(crate) fn thumbnail_images(&self) -> &[ThumbnailData] {

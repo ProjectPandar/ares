@@ -31,32 +31,35 @@ pub(super) struct PreparedPostPerimeterInputs {
 
 pub(super) fn prepare_post_perimeter_inputs<'a>(
     project: impl ProjectBytes<'a>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostPerimeterInputs, SliceError> {
-    finish_post_perimeter_inputs(prepare_post_compensation(project)?)
+    finish_post_perimeter_inputs(prepare_post_compensation(project, cancel)?)
 }
 
 pub(super) fn prepare_post_classic_prelude<'a>(
     project: impl ProjectBytes<'a>,
+    cancel: &crate::CancelToken,
 ) -> Result<classic::PreparedPostClassicPrelude, SliceError> {
-    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project)?)
+    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project, cancel)?, cancel)
 }
 
 fn classic_infill_boundary(
     prelude: classic::PreparedPostClassicPrelude,
     context: &mut crate::SlicerContext,
 ) -> Result<classic::PreparedPostClassicInfillBoundary, SliceError> {
-    let top_split = classic::finish_classic_top_split(prelude)?;
-    let onion = classic::finish_classic_onion(top_split)?;
-    let hierarchy = classic::finish_classic_hierarchy(onion);
-    let traversal = classic::finish_classic_traversal(hierarchy)?;
+    let cancel = context.cancel_token();
+    let top_split = classic::finish_classic_top_split(prelude, &cancel)?;
+    let onion = classic::finish_classic_onion(top_split, &cancel)?;
+    let hierarchy = classic::finish_classic_hierarchy(onion, &cancel)?;
+    let traversal = classic::finish_classic_traversal(hierarchy, &cancel)?;
     let raw_paths = classic::finish_classic_raw_paths(Box::new(traversal), context)?;
-    let chained_loops = classic::finish_classic_chained_loops(raw_paths);
-    let entity_collections = classic::finish_classic_entity_collections(chained_loops);
-    let perimeter_append = classic::finish_classic_perimeter_append(entity_collections);
-    let gap_domain = classic::finish_classic_gap_domain(perimeter_append)?;
-    let medial_gap = classic::finish_classic_medial_gap(gap_domain)?;
-    let gap_extrusion = classic::finish_classic_gap_extrusion(medial_gap)?;
-    classic::finish_classic_infill_boundary(gap_extrusion)
+    let chained_loops = classic::finish_classic_chained_loops(raw_paths, &cancel)?;
+    let entity_collections = classic::finish_classic_entity_collections(chained_loops, &cancel)?;
+    let perimeter_append = classic::finish_classic_perimeter_append(entity_collections, &cancel)?;
+    let gap_domain = classic::finish_classic_gap_domain(perimeter_append, &cancel)?;
+    let medial_gap = classic::finish_classic_medial_gap(gap_domain, &cancel)?;
+    let gap_extrusion = classic::finish_classic_gap_extrusion(medial_gap, &cancel)?;
+    classic::finish_classic_infill_boundary(gap_extrusion, &cancel)
 }
 
 pub(super) fn prepare_post_layer_region_perimeters<'a>(
@@ -67,7 +70,8 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
     // (`LayerRegion.cpp:104-115`); the classic chain remains the shared
     // context spine and arachne records materialize through
     // `PerimeterGenerator::process_arachne` (`PerimeterGenerator.cpp:2093`).
-    let prelude = prepare_post_classic_prelude(project)?;
+    context.check_canceled()?;
+    let prelude = prepare_post_classic_prelude(project, context.cancel_ref())?;
     // `Print.cpp:3420-3448` slices every object (`PrintObjectSlice.cpp:889`), then makes the
     // walls of every object (`PrintObject.cpp:528`).
     for _ in &prelude.objects {
@@ -76,16 +80,20 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
             format_args!("Slicing mesh"),
             crate::SlicingStatus::RELOAD_SCENE,
         );
+        context.check_canceled()?;
     }
     for _ in &prelude.objects {
         context.set_status(15, format_args!("Generating walls"), 0);
+        context.check_canceled()?;
     }
     let arachne = arachne::materialize::finish(&prelude, context)?;
+    context.check_canceled()?;
     let has_arachne = arachne
         .objects
         .iter()
         .any(|object| object.records.iter().any(Option::is_some));
     let infill_boundary = classic_infill_boundary(prelude, context)?;
+    context.check_canceled()?;
     let mut prepared =
         layer_region::finish_with_arachne(infill_boundary, has_arachne.then_some(arachne));
     for (source, output) in prepared
@@ -95,6 +103,7 @@ pub(super) fn prepare_post_layer_region_perimeters<'a>(
         .iter()
         .zip(&mut prepared.objects)
     {
+        context.check_canceled()?;
         let input = &source
             .predecessor
             .predecessor

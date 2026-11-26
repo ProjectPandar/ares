@@ -90,15 +90,17 @@ impl LayerOwnership {
 
 pub(super) fn generate_grid_support_geometry(
     input: &GridSupportInput<'_>,
-) -> Result<GeneratedSupportGeometry, ClipperError> {
+    cancel: &crate::CancelToken,
+) -> Result<GeneratedSupportGeometry, crate::SliceError> {
+    cancel.check()?;
     let object = input.placement.object;
     let has_support = object.enable_support.0 || object.enforce_support_layers.0 != 0;
     let mut covered = if has_support && object.support_on_build_plate_only.0 {
-        Some(buildplate_covered(input.layers, input.scale)?)
+        Some(buildplate_covered(input.layers, input.scale).map_err(grid_error)?)
     } else {
         None
     };
-    let blockers = expand_blockers(input.blockers, input.scale)?;
+    let blockers = expand_blockers(input.blockers, input.scale, cancel)?;
     let annotations = (0..input.layers.len())
         .map(|index| LayerAnnotations {
             buildplate_covered: covered.as_ref().map(|layers| layers[index].as_slice()),
@@ -120,7 +122,9 @@ pub(super) fn generate_grid_support_geometry(
         },
         input.extrusion_width_scaled,
         &mut sharp_tails,
+        cancel,
     )?;
+    cancel.check()?;
     let mut output = GeneratedSupportGeometry {
         ownership: LayerOwnership::Distinct,
         support_layers: Vec::new(),
@@ -170,7 +174,9 @@ pub(super) fn generate_grid_support_geometry(
         &mut tops,
         covered.as_deref_mut(),
         &trimming,
-    )?;
+    )
+    .map_err(grid_error)?;
+    cancel.check()?;
     let mut bases =
         raft_and_intermediate_support_layers(&input.placement, &bottom.contacts, &mut tops);
     trim_support_layers_by_object(
@@ -181,7 +187,9 @@ pub(super) fn generate_grid_support_geometry(
             height: layer.height,
             polygons: &mut layer.polygons,
         }),
-    )?;
+    )
+    .map_err(grid_error)?;
+    cancel.check()?;
     generate_base_layers(
         &BaseLayersInput {
             planned: input.placement.layers,
@@ -191,8 +199,10 @@ pub(super) fn generate_grid_support_geometry(
             trimming: &trimming,
         },
         &mut bases,
-    )?;
-    trim_top_contacts_by_bottom_contacts(&bottom.contacts, &mut tops)?;
+    )
+    .map_err(grid_error)?;
+    cancel.check()?;
+    trim_top_contacts_by_bottom_contacts(&bottom.contacts, &mut tops).map_err(grid_error)?;
     let interfaces = generate_grid_interface_layers(
         &GridInterfacesInput {
             style: super::style::resolve(object.support_type, object.support_style),
@@ -203,7 +213,9 @@ pub(super) fn generate_grid_support_geometry(
             bottoms: &bottom.contacts,
         },
         &mut bases,
-    )?;
+    )
+    .map_err(grid_error)?;
+    cancel.check()?;
     output.tops = tops;
     output.bottoms = bottom.contacts;
     output.bases = bases;
@@ -223,9 +235,14 @@ pub(super) fn generate_grid_support_geometry(
         &mut output.interfaces,
         &mut output.base_interfaces,
         &mut output.bases,
-    )?;
+    )
+    .map_err(grid_error)?;
     output.support_layers = generate_support_layers(&mut output);
     Ok(output)
+}
+
+fn grid_error(error: ClipperError) -> crate::SliceError {
+    crate::SliceError::InvalidInput(format!("support project geometry: {error:?}"))
 }
 
 fn annotation_at(layers: &[Vec<Polygon>], index: usize) -> &[Polygon] {
@@ -240,21 +257,21 @@ fn annotation_at(layers: &[Vec<Polygon>], index: usize) -> &[Polygon] {
 fn expand_blockers(
     layers: &[Vec<Polygon>],
     scale: CoordinateScale,
-) -> Result<Vec<Vec<Polygon>>, ClipperError> {
+    cancel: &crate::CancelToken,
+) -> Result<Vec<Vec<Polygon>>, crate::SliceError> {
     let expansion = (1000.0 * (1e-4 / scale.factor())) as f32;
-    layers
-        .iter()
-        .map(|polygons| {
-            if polygons.is_empty() {
-                Ok(Vec::new())
-            } else {
-                offset_paths(
-                    &union_polygons_paths(polygons)?,
-                    expansion,
-                    JoinType::Miter,
-                    3.0,
-                )
-            }
-        })
-        .collect()
+    crate::parallel::par_range_map_try(layers.len(), cancel, |index| {
+        let polygons = &layers[index];
+        if polygons.is_empty() {
+            Ok(Vec::new())
+        } else {
+            offset_paths(
+                &union_polygons_paths(polygons).map_err(grid_error)?,
+                expansion,
+                JoinType::Miter,
+                3.0,
+            )
+            .map_err(grid_error)
+        }
+    })
 }
