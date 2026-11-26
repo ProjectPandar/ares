@@ -20,6 +20,11 @@ pub(super) fn strip_pressure_markers(gcode: &str) -> String {
         if line == ";_EXTRUDE_END" {
             continue;
         }
+        if !line.contains(";_") {
+            out.push_str(line);
+            out.push('\n');
+            continue;
+        }
         let mut cleaned = line.to_owned();
         let mut changed = false;
         for tag in TAGS {
@@ -29,13 +34,16 @@ pub(super) fn strip_pressure_markers(gcode: &str) -> String {
             }
         }
         if changed {
-            cleaned = cleaned.trim_end().to_owned();
-            if cleaned.is_empty() {
+            let trimmed = cleaned.trim_end();
+            if trimmed.is_empty() {
                 continue;
             }
+            out.push_str(trimmed);
+            out.push('\n');
+        } else {
+            out.push_str(&cleaned);
+            out.push('\n');
         }
-        out.push_str(&cleaned);
-        out.push('\n');
     }
     out
 }

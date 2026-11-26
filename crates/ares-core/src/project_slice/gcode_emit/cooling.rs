@@ -21,26 +21,31 @@ pub(super) enum DeferredRoleFan {
 }
 
 pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRoleFan) {
-    let marker = match target {
-        DeferredRoleFan::Baseline => format!("{ROLE_FAN_MARKER_PREFIX}BASE__\n"),
+    use std::io::Write;
+    output.extend_from_slice(ROLE_FAN_MARKER_PREFIX.as_bytes());
+    match target {
+        DeferredRoleFan::Baseline => output.extend_from_slice(b"BASE__\n"),
         DeferredRoleFan::Conditional { speed, force } => {
             let force = if force { "FORCE_" } else { "" };
-            format!("{ROLE_FAN_MARKER_PREFIX}CONDITIONAL_{force}{speed}__\n")
+            let _ = writeln!(output, "CONDITIONAL_{force}{speed}__");
         }
-        DeferredRoleFan::SupportInterface(speed) => {
-            let value = speed.map_or_else(|| "END".to_owned(), |speed| speed.to_string());
-            format!("{ROLE_FAN_MARKER_PREFIX}SUPPORT_INTERFACE_{value}__\n")
+        DeferredRoleFan::SupportInterface(Some(speed)) => {
+            let _ = writeln!(output, "SUPPORT_INTERFACE_{speed}__");
         }
-        DeferredRoleFan::Ironing(speed) => {
-            let value = speed.map_or_else(|| "END".to_owned(), |speed| speed.to_string());
-            format!("{ROLE_FAN_MARKER_PREFIX}IRONING_{value}__\n")
+        DeferredRoleFan::SupportInterface(None) => {
+            output.extend_from_slice(b"SUPPORT_INTERFACE_END__\n");
+        }
+        DeferredRoleFan::Ironing(Some(speed)) => {
+            let _ = writeln!(output, "IRONING_{speed}__");
+        }
+        DeferredRoleFan::Ironing(None) => {
+            output.extend_from_slice(b"IRONING_END__\n");
         }
         DeferredRoleFan::Fixed { speed, force } => {
             let force = if force { "FORCE_" } else { "" };
-            format!("{ROLE_FAN_MARKER_PREFIX}FIXED_{force}{speed}__\n")
+            let _ = writeln!(output, "FIXED_{force}{speed}__");
         }
-    };
-    output.extend_from_slice(marker.as_bytes());
+    }
 }
 
 pub(super) struct CoolingState {
@@ -153,22 +158,22 @@ impl CoolingState {
         if !flush {
             return;
         }
-        let mut layer = std::mem::take(&mut self.buffered_gcode);
-        let layer_start = output.len();
+        let mut raw = std::mem::take(&mut self.buffered_gcode);
         // `CoolingBuffer.cpp:824` calls `change_extruder_set_fan(true)`
         // before iterating the layer's lines: the layer baseline uses
         // `m_current_extruder` at layer entry (the previous layer's last
         // tool), not the tool this layer's text ends on.
         let entry_tool = self.feedrate.current_tool();
         if self.belt_fan_off {
-            role_fans::mark_belt_fan_carry(&mut layer);
+            role_fans::mark_belt_fan_carry(&mut raw);
         }
-        let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
+        let mut layer = Vec::with_capacity(raw.len());
+        let layer_time = feedrate::rewrite_layer(&raw, &mut layer, &mut self.feedrate);
+        drop(raw);
         if equalized {
             let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
             layer = stripped.into_bytes();
         }
-        output.extend_from_slice(&layer);
         let tool = entry_tool;
         let part_speed = self
             .ramp(tool)
@@ -186,21 +191,6 @@ impl CoolingState {
             } else {
                 Vec::new()
             };
-        // `CoolingBuffer.cpp:834`: even empty final input updates the fan.
-        let marker_len = if layer.is_empty() {
-            0
-        } else {
-            PART_FAN_MARKER.len()
-        };
-        let marker_start = if layer.is_empty() {
-            layer_start
-        } else {
-            layer_start
-                + output[layer_start..]
-                    .windows(PART_FAN_MARKER.len())
-                    .position(|window| window == PART_FAN_MARKER)
-                    .unwrap()
-        };
         if !replacement.is_empty() {
             self.current_part_speed = Some(part_speed);
         }
@@ -228,24 +218,22 @@ impl CoolingState {
                 .as_bytes(),
             );
         }
-        output.splice(marker_start..marker_start + marker_len, replacement);
-        while let Some(offset) = output[layer_start..]
-            .windows(PART_FAN_MARKER.len())
-            .position(|window| window == PART_FAN_MARKER)
-        {
-            let start = layer_start + offset;
-            output.drain(start..start + PART_FAN_MARKER.len());
+        // `CoolingBuffer.cpp:834`: even empty final input updates the fan.
+        if layer.is_empty() {
+            output.extend_from_slice(&replacement);
+        } else {
+            self.stream_layer_with_fans(
+                &layer,
+                output,
+                &replacement,
+                role_fans::RoleFanContext {
+                    baseline: part_speed,
+                    layer_index,
+                    tool: entry_tool,
+                    layer_time: f64::from(layer_time),
+                },
+            );
         }
-        self.resolve_role_fans(
-            output,
-            layer_start,
-            role_fans::RoleFanContext {
-                baseline: part_speed,
-                layer_index,
-                tool: entry_tool,
-                layer_time: f64::from(layer_time),
-            },
-        );
         // `CoolingBuffer.cpp:840-850`: after TYPE_SET_TOOL, the retained
         // baseline follows the last buffered tool of this layer.
         let end_tool = self.feedrate.current_tool();
