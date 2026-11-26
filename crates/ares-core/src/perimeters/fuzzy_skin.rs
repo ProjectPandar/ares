@@ -1,6 +1,5 @@
-use super::fuzzy_skin_noise::{fuzzify_closed_polyline, ripple_closed_polyline};
 use crate::{
-    Point2, ProcessFuzzySkinType, ProcessNoiseType, RegionOptions,
+    ProcessFuzzySkinType, ProcessNoiseType, RegionOptions,
     geometry::{CoordinateScale, Point},
 };
 
@@ -47,22 +46,6 @@ pub(crate) struct FuzzySkinLayer {
 }
 
 impl FuzzySkinConfig {
-    pub(crate) const fn disabled() -> Self {
-        Self {
-            kind: FuzzySkinKind::Disabled,
-            noise_type: FuzzySkinNoiseType::Classic,
-            thickness_mm: 0.2,
-            point_distance_mm: 0.3,
-            scale_mm: 1.0,
-            octaves: 4,
-            persistence: 0.5,
-            ripples_per_layer: 15,
-            ripple_offset_percent: 50.0,
-            layers_between_ripple_offset: 1,
-            first_layer: false,
-        }
-    }
-
     pub(crate) fn from_region(region: &RegionOptions) -> Self {
         Self {
             kind: match region.fuzzy_skin {
@@ -111,52 +94,6 @@ impl FuzzySkinConfig {
             );
         }
         super::fuzzy_skin_seeded::fuzzify((points, closed), self, print_z, scale, context.rng())
-    }
-
-    pub(crate) fn external_points(
-        self,
-        points: Vec<Point2>,
-        layer_id: usize,
-        print_z: f64,
-    ) -> Vec<Point2> {
-        if self.fuzzifies_external(layer_id) {
-            self.fuzzified_points(points, layer_id, print_z)
-        } else {
-            points
-        }
-    }
-
-    pub(crate) fn internal_wall_points(
-        self,
-        points: Vec<Point2>,
-        layer_id: usize,
-        print_z: f64,
-    ) -> Vec<Point2> {
-        if self.fuzzifies_internal_wall(layer_id) {
-            self.fuzzified_points(points, layer_id, print_z)
-        } else {
-            points
-        }
-    }
-
-    pub(crate) fn fuzzified_points(
-        self,
-        points: Vec<Point2>,
-        layer_id: usize,
-        print_z: f64,
-    ) -> Vec<Point2> {
-        match self.noise_type {
-            FuzzySkinNoiseType::Ripple => ripple_closed_polyline(&points, self, layer_id),
-            noise_type => fuzzify_closed_polyline(&points, self, layer_id, print_z, noise_type),
-        }
-    }
-
-    fn fuzzifies_external(self, layer_id: usize) -> bool {
-        self.should_fuzzify(layer_id, 0, true)
-    }
-
-    fn fuzzifies_internal_wall(self, layer_id: usize) -> bool {
-        self.should_fuzzify(layer_id, 1, true)
     }
 
     pub(crate) fn should_fuzzify(

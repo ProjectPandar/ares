@@ -1,5 +1,3 @@
-use crate::{Point2, SliceError};
-
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize)]
 pub enum ExtrusionRole {
     None,
@@ -99,53 +97,5 @@ impl ExtrusionRole {
             self,
             Self::BridgeInfill | Self::InternalBridgeInfill | Self::OverhangPerimeter
         )
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ExtrusionPath {
-    role: ExtrusionRole,
-    points: Vec<Point2>,
-}
-
-impl ExtrusionPath {
-    pub fn new(role: ExtrusionRole, points: Vec<Point2>) -> Result<Self, SliceError> {
-        if points.is_empty() {
-            return Err(SliceError::InvalidInput(
-                "extrusion path requires at least one point".to_owned(),
-            ));
-        }
-        Ok(Self { role, points })
-    }
-
-    pub const fn role(&self) -> ExtrusionRole {
-        self.role
-    }
-
-    pub fn points(&self) -> &[Point2] {
-        &self.points
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct ExtrusionEntityCollection {
-    paths: Vec<ExtrusionPath>,
-}
-
-impl ExtrusionEntityCollection {
-    pub fn from_paths(paths: Vec<ExtrusionPath>) -> Self {
-        Self { paths }
-    }
-
-    pub fn paths(&self) -> &[ExtrusionPath] {
-        &self.paths
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.paths.is_empty()
-    }
-
-    pub fn len(&self) -> usize {
-        self.paths.len()
     }
 }

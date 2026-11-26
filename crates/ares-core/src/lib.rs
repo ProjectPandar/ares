@@ -1,13 +1,10 @@
 mod arachne;
 pub mod arrangement;
-mod bridges;
 mod brims;
-mod contours;
 mod downward;
 mod extrusion_entity;
 mod extrusions;
 mod fill;
-mod gap_fills;
 mod gcode_junction_deviation;
 mod gcode_power_loss_recovery;
 pub mod gcode_processor;
@@ -20,7 +17,6 @@ mod model;
 
 mod options;
 mod perimeters;
-mod planning;
 pub mod plater;
 mod print;
 mod print_apply;
@@ -29,20 +25,14 @@ mod project;
 pub(crate) mod project_slice;
 mod scalar_math;
 mod segments;
-mod skirts;
 mod slice_error;
 mod slicer_context;
 mod stl;
-mod surface;
 
-pub use bridges::BridgeOptions;
-pub use brims::{BrimOptions, BrimPath, BrimType, LayerBrims, generate_brims};
 pub use geometry::{ConvexHull3d, convex_hull_3d};
 
-pub use contours::{Contour, LayerContours, stitch_layer_slices};
 pub use downward::{DownwardMachine, compatible_downward_machines};
-pub use extrusion_entity::{ExtrusionEntityCollection, ExtrusionPath, ExtrusionRole};
-pub use gap_fills::{GapFillPath, LayerGapFills, generate_gap_fills};
+pub use extrusion_entity::ExtrusionRole;
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
     SlicedArchive, SlicedArchiveObject,
@@ -66,29 +56,29 @@ pub use options::{
     ConfigOverrides, CsvTable, DefaultBedType, DifferentExtrudersSupport, ExtruderIndexIdMapLookup,
     ExtruderType, ExtruderTypes, ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions,
     FilamentPrintSourceOptions, FilamentRegionSourceOptions, FilamentRetractOverrideOptions,
-    FilamentTypeDisplay, FlatMatrix, FloatOrPercent, GCodeFlavor, GCodeOptions, HardwareOptions,
-    ImexToolLayout, InputShaperType, MachineEnvelopeOptions, Millimeters, MultiToMulti2Update,
-    MultiToMultiUpdate, NozzleType, NozzleVolumeType, NozzleVolumeTypes, Nullable, NullableFloats,
-    NullableInts, NullableNozzleTypes, NullablePrinterTechnologies, ObjectOptions, OrcaBool,
-    OrcaBools, OrcaFloat, OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents,
-    OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList,
-    PowerLossRecoveryMode, PresetMetadata, PrintHostType, PrinterExtruderMultipleFilamentUpdate,
-    PrinterExtruderUpdate, PrinterGCodeSourceOptions, PrinterModel, PrinterNotes, PrinterOptions,
-    PrinterRemainingOptions, PrinterStructure, PrinterTechnologies, PrinterTechnology,
-    ProcessBrimType, ProcessCounterboreHoleBridging, ProcessDraftShield,
-    ProcessEnsureVerticalShellThickness, ProcessExtraBridgeLayer, ProcessFuzzySkinMode,
-    ProcessFuzzySkinType, ProcessGCodeSourceOptions, ProcessGapFillTarget, ProcessInfillPattern,
-    ProcessInternalBridgeFilter, ProcessIroningType, ProcessNoiseType, ProcessObjectSourceOptions,
-    ProcessOptions, ProcessPerimeterGenerator, ProcessPrintOrder, ProcessPrintSequence,
-    ProcessPrintSourceOptions, ProcessRegionSourceOptions, ProcessSeamPosition,
-    ProcessSeamScarfType, ProcessSkirtType, ProcessSlicingMode, ProcessSupportBasePattern,
-    ProcessSupportInterfacePattern, ProcessSupportStyle, ProcessSupportType, ProcessTimelapseType,
-    ProcessTopSurfaceExpansionDirection, ProcessWallDirection, ProcessWallSequence,
-    ProcessWipeTowerWallType, ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
-    ProjectPresetSourceOptions, ProjectPrimeVolumeMode, ProjectPrintSourceOptions,
-    ProjectRuntimeOptions, ProjectSettings, RammingParameters, RawOverhangFanThreshold,
-    RegionOptions, RetractLiftEnforce, RetractLiftEnforces, SliceOptions, SpaceTuple,
-    ThumbnailDefinitions, VariantStride, WipeTowerType, ZHopType, ZHopTypes,
+    FilamentTypeDisplay, FlatMatrix, FloatOrPercent, GCodeFlavor, GCodeOptions, ImexToolLayout,
+    InputShaperType, MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate,
+    NozzleType, NozzleVolumeType, NozzleVolumeTypes, Nullable, NullableFloats, NullableInts,
+    NullableNozzleTypes, NullablePrinterTechnologies, ObjectOptions, OrcaBool, OrcaBools,
+    OrcaFloat, OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString,
+    OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList, PowerLossRecoveryMode,
+    PresetMetadata, PrintHostType, PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate,
+    PrinterGCodeSourceOptions, PrinterModel, PrinterNotes, PrinterOptions, PrinterRemainingOptions,
+    PrinterStructure, PrinterTechnologies, PrinterTechnology, ProcessBrimType,
+    ProcessCounterboreHoleBridging, ProcessDraftShield, ProcessEnsureVerticalShellThickness,
+    ProcessExtraBridgeLayer, ProcessFuzzySkinMode, ProcessFuzzySkinType, ProcessGCodeSourceOptions,
+    ProcessGapFillTarget, ProcessInfillPattern, ProcessInternalBridgeFilter, ProcessIroningType,
+    ProcessNoiseType, ProcessObjectSourceOptions, ProcessOptions, ProcessPerimeterGenerator,
+    ProcessPrintOrder, ProcessPrintSequence, ProcessPrintSourceOptions, ProcessRegionSourceOptions,
+    ProcessSeamPosition, ProcessSeamScarfType, ProcessSkirtType, ProcessSlicingMode,
+    ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
+    ProcessSupportType, ProcessTimelapseType, ProcessTopSurfaceExpansionDirection,
+    ProcessWallDirection, ProcessWallSequence, ProcessWipeTowerWallType, ProjectBedType,
+    ProjectFilamentMapMode, ProjectGCodeSourceOptions, ProjectPresetSourceOptions,
+    ProjectPrimeVolumeMode, ProjectPrintSourceOptions, ProjectRuntimeOptions, ProjectSettings,
+    RammingParameters, RawOverhangFanThreshold, RegionOptions, RetractLiftEnforce,
+    RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride,
+    WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use options::{
     BeltRotationAxis, FanDirection, FilamentPresetSourceOptions, ImexVizTheme,
@@ -99,11 +89,6 @@ pub use options::{
     decode_config_value, decode_config_value_by_key, encode_config_value,
     encode_config_value_by_key,
 };
-pub use perimeters::{
-    LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,
-    WallGenerator, WallSequence, generate_perimeters,
-};
-pub use planning::{Layer, plan_layers};
 pub use plater::{
     ArrangeScope, ArrangeSettings, FilamentSlot, FilamentSlotEdit, FilamentSlots, FilamentTarget,
     PlaterEdits, PlaterPlate, PlaterSession, PlaterSlice, PlaterSnapshot, ScaleEdit, StlFile,
@@ -170,13 +155,11 @@ pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,
     slice_project_plate_processed_with_catalog, slice_project_plate_with_catalog,
 };
-pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
-pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
+pub(crate) use segments::Point2;
 pub use slice_error::{
     PresetAdmissionError, PresetAdmissionReason, PrintValidationKind, SliceError,
 };
 pub use slicer_context::{SlicerContext, SlicingStatus};
-pub use surface::{Surface, SurfaceType};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InputFormat {

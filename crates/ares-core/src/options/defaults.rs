@@ -1,9 +1,2 @@
-pub(super) const DEFAULT_LAYER_HEIGHT: f64 = 0.2;
-pub(super) const MIN_LAYER_HEIGHT: f64 = 1e-6;
 pub(super) const DEFAULT_NOZZLE_DIAMETERS: &[f64] = &[0.4];
-pub(super) const DEFAULT_FILAMENT_DIAMETERS: &[f64] = &[1.75];
-pub(super) const DEFAULT_MIN_LAYER_HEIGHTS: &[f64] = &[0.07];
-pub(super) const DEFAULT_MAX_LAYER_HEIGHTS: &[f64] = &[0.0];
 pub(super) const DEFAULT_IS_INFILL_FIRST: bool = false;
-pub(super) const DEFAULT_SKIRT_LOOPS: u32 = 1;
-pub(super) const DEFAULT_SKIRT_HEIGHT: u32 = 1;
