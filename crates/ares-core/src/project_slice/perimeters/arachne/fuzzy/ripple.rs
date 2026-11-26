@@ -49,7 +49,7 @@ pub(super) fn fuzzify(
         while distance < segment_end {
             let ratio = (distance - accumulated) / length_mm;
             let phase = count * TAU * (distance - anchor) / perimeter + (TAU + shift);
-            let displacement = phase.sin() * amplitude / scale.factor();
+            let displacement = crate::scalar_math::sin_f64(phase) * amplitude / scale.factor();
             let point = Point::new(
                 start.point.x() + (dx * ratio) as i64,
                 start.point.y() + (dy * ratio) as i64,
