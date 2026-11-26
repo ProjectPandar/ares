@@ -64,3 +64,6 @@ export declare function loadPrinterModels(): Promise<VendorProfiles[]>;
 
 /** Loads one vendor's index and preset files; bundlers emit one chunk per vendor. */
 export declare function loadVendor(id: string): Promise<VendorProfiles>;
+
+/** Loads the same vendor data as JSON text, without parsing it as JavaScript objects. */
+export declare function loadVendorJson(id: string): Promise<string>;

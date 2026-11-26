@@ -34,7 +34,15 @@ const summaries = ids.map((id) => {
   for (const list of LISTS) {
     for (const { sub_path: subPath } of index[list] ?? []) files[subPath] = readJson(`${profiles}/${id}/${subPath}`);
   }
-  writeFileSync(`${dist}vendors/${moduleName(id)}.js`, jsonModule({ id, index, files }));
+  writeFileSync(
+    `${dist}vendors/${moduleName(id)}.js`,
+    `export const json = ${JSON.stringify(JSON.stringify({ id, index, files }))};
+let parsed;
+export function profiles() {
+  return parsed ??= JSON.parse(json);
+}
+`,
+  );
   const modelList = index.machine_model_list ?? [];
   if (modelList.length > 0) {
     const modelFiles = Object.fromEntries(modelList.map(({ sub_path: subPath }) => [subPath, files[subPath]]));
@@ -59,10 +67,18 @@ export async function loadPrinterModels() {
   return (await import("./models.js")).default;
 }
 
-export async function loadVendor(id) {
+async function loadVendorModule(id) {
   const load = loaders[id];
   if (!load) throw new Error("Unknown OrcaSlicer vendor: " + id);
-  return (await load()).default;
+  return load();
+}
+
+export async function loadVendor(id) {
+  return (await loadVendorModule(id)).profiles();
+}
+
+export async function loadVendorJson(id) {
+  return (await loadVendorModule(id)).json;
 }
 `,
 );

@@ -36,10 +36,26 @@ test("opening a project selects its presets, and a model file keeps the selected
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", FIRST_RUN_CONFIG.printer);
   expect(await storedPrinter(page)).toBe(FIRST_RUN_CONFIG.printer);
 
+  // The opened project must show its own printer as soon as its title appears.
+  const newlyOpenedPrinter = await page.evaluateHandle(() => ({
+    title: new Promise<string | null>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (document.querySelector(".titlebar-title")?.textContent !== "default-prisms.3mf - Ares") return;
+        observer.disconnect();
+        resolve(document.querySelector('button[aria-label="Printer preset"]')?.getAttribute("title") ?? null);
+      });
+      observer.observe(document.querySelector("header.titlebar")!, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    }),
+  }));
   // A project's config becomes the current presets (PresetBundle::load_config_model,
   // Plater.cpp:9622): every combo shows the preset it selects as its Project presets entry.
   await page.getByTestId("import-input").setInputFiles(PROJECT);
   await expect(status).toHaveText("Ready to slice");
+  expect(await newlyOpenedPrinter.evaluate(({ title }) => title)).toBe(printer);
   await expect(combo(page, "Printer preset")).toHaveText(printer);
   await expect(combo(page, "Process preset")).toHaveText(processPreset);
   await combo(page, "Printer preset").click();
