@@ -51,14 +51,14 @@ export type WorkerRequest =
       input: Uint8Array;
       plate: number | undefined;
       overrides: string;
-      catalog: string | undefined;
+      catalog: string | number | undefined;
     }
   | {
       id: number;
       kind: "sliceWithProfiles";
       input: Uint8Array;
       filename: string;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -67,7 +67,7 @@ export type WorkerRequest =
       kind: "placementScene";
       input: Uint8Array;
       filename: string;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -76,7 +76,7 @@ export type WorkerRequest =
       kind: "profileSettings";
       input: Uint8Array;
       filename: string;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -84,7 +84,7 @@ export type WorkerRequest =
   | { id: number; kind: "exportPlateSlicedFile"; input: Uint8Array; filename: string }
   | { id: number; kind: "parsePresetBundle"; input: Uint8Array; filename: string }
   | { id: number; kind: "filterCompatiblePresets"; catalog: string; printer: string; process: string | undefined }
-  | { id: number; kind: "loadPresetBundle"; catalog: string }
+  | { id: number; kind: "loadPresetBundle"; catalog: string | number }
   | { id: number; kind: "catalogCreate"; catalogId: number }
   | { id: number; kind: "catalogAddVendor"; catalogId: number; input: Uint8Array }
   | { id: number; kind: "catalogAddImport"; catalogId: number; input: Uint8Array; filename: string }
@@ -138,7 +138,7 @@ export type WorkerRequest =
       sessionId: number;
       input: Uint8Array;
       filename: string;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -149,7 +149,7 @@ export type WorkerRequest =
       sessionId: number;
       inputs: Uint8Array[];
       batch: string;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -157,7 +157,7 @@ export type WorkerRequest =
       id: number;
       kind: "platerProfileSettings";
       sessionId: number;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -176,7 +176,7 @@ export type WorkerRequest =
       kind: "platerSliceWithProfiles";
       sessionId: number;
       plate: number | undefined;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -185,7 +185,7 @@ export type WorkerRequest =
       id: number;
       kind: "platerSaveProjectWithProfiles";
       sessionId: number;
-      catalog: string;
+      catalog: string | number;
       selection: string;
       options: string;
     }
@@ -198,7 +198,13 @@ export type WorkerRequest =
   | { id: number; kind: "encodeConfigValues"; entries: [string, ConfigValue][] }
   | { id: number; kind: "viewRange"; layers: [number, number]; visibleRoles: number; visibleOptions: number }
   | { id: number; kind: "viewColors"; viewType: string; visibleRoles: number; visibleOptions: number }
-  | { id: number; kind: "prepareViewerTextures"; maxTextureSize: number }
+  | {
+      id: number;
+      kind: "prepareViewerTextures";
+      maxTextureSize: number;
+      probes?: boolean;
+      includeRawArrays?: boolean;
+    }
   | {
       id: number;
       kind: "movesSlider";

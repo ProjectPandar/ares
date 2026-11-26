@@ -1,6 +1,19 @@
 import { PresetCatalog } from "./wasm/ares_wasm.js";
 import type { WorkerRequest } from "./protocol.js";
 
+/** Cached handle for the most recent raw `catalogJson` string caller (reused across repeated calls). */
+let cachedJsonCatalog: { json: string; handle: PresetCatalog } | undefined;
+
+/** Returns the worker's WASM `PresetCatalog` handle for a `catalogId` or a cached `catalogJson` string. */
+export function catalogHandleFor(source: string | number, catalogs: Map<number, PresetCatalog>): PresetCatalog {
+  if (typeof source === "number") return catalogs.get(source)!;
+  if (cachedJsonCatalog?.json === source) return cachedJsonCatalog.handle;
+  const handle = PresetCatalog.fromJson(source);
+  cachedJsonCatalog?.handle.free();
+  cachedJsonCatalog = { json: source, handle };
+  return handle;
+}
+
 export type CatalogRequest = Extract<
   WorkerRequest,
   {

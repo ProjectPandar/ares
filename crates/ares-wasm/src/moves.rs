@@ -14,14 +14,21 @@ pub struct SliceOutput {
     pub(crate) vertices: VertexBuffers,
     print_statistics: Option<PrintEstimatedStatistics>,
     estimation: crate::estimation::Estimation,
-    extruder_colors: Vec<String>,
-    filament_diameters: Vec<f32>,
-    filament_densities: Vec<f32>,
     pub(crate) custom_gcode_overview: Vec<CustomGCodeOverviewRow>,
 }
 
 mod processed;
 mod ranges;
+
+impl SliceOutput {
+    /// `GCodeProcessorResult::print_statistics` as UTF-8 JSON bytes
+    /// (`PrintEstimatedStatistics`, `GCodeProcessor.hpp:46-78`).
+    pub fn take_print_statistics(&mut self) -> Vec<u8> {
+        self.print_statistics.take().map_or_else(Vec::new, |stats| {
+            serde_json::to_vec(&stats).expect("PrintEstimatedStatistics serializes")
+        })
+    }
+}
 
 #[wasm_bindgen]
 impl SliceOutput {
@@ -40,38 +47,10 @@ impl SliceOutput {
         std::mem::take(&mut self.vertices)
     }
 
-    /// `GCodeProcessorResult::print_statistics` as UTF-8 JSON bytes
-    /// (`PrintEstimatedStatistics`, `GCodeProcessor.hpp:46-78`).
-    #[wasm_bindgen(js_name = takePrintStatistics)]
-    pub fn take_print_statistics(&mut self) -> Vec<u8> {
-        self.print_statistics.take().map_or_else(Vec::new, |stats| {
-            serde_json::to_vec(&stats).expect("PrintEstimatedStatistics serializes")
-        })
-    }
-
     /// Legend estimation footer inputs as JSON (`GCodeViewer.cpp:4547-4644`).
     #[wasm_bindgen(getter)]
     pub fn estimation(&self) -> String {
         serde_json::to_string(&self.estimation).expect("Estimation serializes")
-    }
-
-    /// `GCodeProcessorResult::extruder_colors`
-    /// (`GCodeProcessor.cpp:2321-2343`).
-    #[wasm_bindgen(js_name = takeExtruderColors)]
-    pub fn take_extruder_colors(&mut self) -> Vec<String> {
-        std::mem::take(&mut self.extruder_colors)
-    }
-
-    /// `GCodeProcessorResult::filament_diameters` (`GCodeProcessor.hpp:252`).
-    #[wasm_bindgen(js_name = takeFilamentDiameters)]
-    pub fn take_filament_diameters(&mut self) -> Vec<f32> {
-        std::mem::take(&mut self.filament_diameters)
-    }
-
-    /// `GCodeProcessorResult::filament_densities` (`GCodeProcessor.hpp:254`).
-    #[wasm_bindgen(js_name = takeFilamentDensities)]
-    pub fn take_filament_densities(&mut self) -> Vec<f32> {
-        std::mem::take(&mut self.filament_densities)
     }
 }
 

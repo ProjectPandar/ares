@@ -54,7 +54,7 @@ function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRole
     };
   }, [toolpaths, lineType, viewType, hiddenRoles, visibleOptions]);
   if (!toolpaths) return null;
-  if (lineType) return { colors: toolpaths.colors, range: null, colorsProbe: toolpaths.textures!.probes.colors };
+  if (lineType) return { colors: toolpaths.colors, range: null, colorsProbe: toolpaths.textures?.probes?.colors };
   return state?.toolpaths === toolpaths ? state.colors : null;
 }
 

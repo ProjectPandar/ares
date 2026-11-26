@@ -5,6 +5,7 @@ import type {
   MOVE_TYPES,
   ToolpathTextures,
   VERTEX_VALUES,
+  ViewerTextureOptions,
 } from "./toolpaths.js";
 import type { VertexArrays } from "./workerTransfer.js";
 
@@ -22,14 +23,25 @@ const WIPE: IndexOf<typeof MOVE_TYPES, "Wipe"> = 9;
 const CUSTOM: IndexOf<typeof EXTRUSION_ROLES, "Custom"> = 14;
 const STRIDE: (typeof VERTEX_VALUES)["length"] = 16;
 const KIND_OPTION: typeof KindOption = 32;
+const CHUNK_SIZE = 1_048_576;
 
 /** The texture extent limit of `AresSlicer.prepareViewerTextures`; until it is set, no textures are packed. */
 let maxTextureSize: number | undefined;
+/** Whether E2E FNV-1a probes are computed and returned with packed textures and recolors. */
+let probesEnabled = false;
+/** Whether raw 24 B/vertex arrays (`heightsWidths`, `segmentPositions`, `segmentAngles`) are also kept alongside packed textures. */
+let keepRawArrays = false;
 /** End vertex of each drawn segment of the packed vertices, for the colors probe of their later colors. */
 const drawnSegments = new WeakMap<VertexBuffers, Uint32Array>();
 
-export function prepareViewerTextures(size: number) {
+export function prepareViewerTextures(size: number, options?: ViewerTextureOptions) {
   maxTextureSize = size;
+  probesEnabled = options?.probes === true;
+  keepRawArrays = options?.includeRawArrays === true;
+}
+
+export function rawSegmentArraysRequested(): boolean {
+  return maxTextureSize === undefined || keepRawArrays;
 }
 
 /**
@@ -47,20 +59,43 @@ export function packTextures(vertices: VertexBuffers, arrays: VertexArrays): Too
   const size = extent[0] * extent[1];
   const positions = new Float32Array(size * 4);
   const heightsWidthsAngles = new Float32Array(size * 4);
-  for (let v = 0; v < vertexCount; v++) {
-    const s3 = 3 * v;
-    const s4 = 4 * v;
-    const s2 = 2 * v;
-    positions[s4] = segmentPositions[s3];
-    positions[s4 + 1] = segmentPositions[s3 + 1];
-    positions[s4 + 2] = segmentPositions[s3 + 2];
-    positions[s4 + 3] = ids[s2 + 1];
-    heightsWidthsAngles[s4] = heightsWidths[s2];
-    heightsWidthsAngles[s4 + 1] = heightsWidths[s2 + 1];
-    heightsWidthsAngles[s4 + 2] = segmentAngles[v];
-    heightsWidthsAngles[s4 + 3] = tags[s4 + 1] === EXTRUDE ? tags[s4] : KIND_OPTION + options[v];
+  if (segmentPositions.length > 0) {
+    for (let v = 0; v < vertexCount; v++) {
+      const s3 = 3 * v;
+      const s4 = 4 * v;
+      const s2 = 2 * v;
+      positions[s4] = segmentPositions[s3];
+      positions[s4 + 1] = segmentPositions[s3 + 1];
+      positions[s4 + 2] = segmentPositions[s3 + 2];
+      positions[s4 + 3] = ids[s2 + 1];
+      heightsWidthsAngles[s4] = heightsWidths[s2];
+      heightsWidthsAngles[s4 + 1] = heightsWidths[s2 + 1];
+      heightsWidthsAngles[s4 + 2] = segmentAngles[v];
+      heightsWidthsAngles[s4 + 3] = tags[s4 + 1] === EXTRUDE ? tags[s4] : KIND_OPTION + options[v];
+    }
+  } else {
+    for (let first = 0; first < vertexCount; first += CHUNK_SIZE) {
+      const chunk = Math.min(CHUNK_SIZE, vertexCount - first);
+      const segPos = vertices.segmentPositionsRange(first, chunk);
+      const hw = vertices.heightsWidthsRange(first, chunk);
+      const ang = vertices.segmentAnglesRange(first, chunk);
+      for (let j = 0; j < chunk; j++) {
+        const v = first + j;
+        const s4 = 4 * v;
+        const j3 = 3 * j;
+        const j2 = 2 * j;
+        positions[s4] = segPos[j3];
+        positions[s4 + 1] = segPos[j3 + 1];
+        positions[s4 + 2] = segPos[j3 + 2];
+        positions[s4 + 3] = ids[2 * v + 1];
+        heightsWidthsAngles[s4] = hw[j2];
+        heightsWidthsAngles[s4 + 1] = hw[j2 + 1];
+        heightsWidthsAngles[s4 + 2] = ang[j];
+        heightsWidthsAngles[s4 + 3] = tags[s4 + 1] === EXTRUDE ? tags[s4] : KIND_OPTION + options[v];
+      }
+    }
   }
-  const vertex = new Uint32Array(vertexCount);
+  const vertex = probesEnabled ? new Uint32Array(vertexCount) : null;
   const segment = new Uint32Array(vertexCount);
   // GCodeViewer::load paths box: every extrusion role except Custom (prime lines).
   const bounds = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
@@ -81,29 +116,34 @@ export function packTextures(vertices: VertexBuffers, arrays: VertexArrays): Too
       expand(a);
       expand(b);
     }
-    vertex[count] = i;
+    if (vertex) vertex[count] = i;
     segment[count] = i - 1;
     count++;
   }
-  const ends = count === vertexCount ? vertex : vertex.slice(0, count);
   const segments = count === vertexCount ? segment : segment.slice(0, count);
-  drawnSegments.set(vertices, ends);
+  let probes: ToolpathTextures["probes"];
+  if (vertex) {
+    const ends = count === vertexCount ? vertex : vertex.slice(0, count);
+    drawnSegments.set(vertices, ends);
+    probes = {
+      sizes: segmentSizesProbe(ends, heightsWidthsAngles),
+      geometry: segmentGeometryProbe(ends, positions, heightsWidthsAngles),
+      colors: segmentColorsProbe(ends, colors),
+    };
+  }
   return {
     extent,
     positions,
     heightsWidthsAngles,
     segments,
     bounds,
-    probes: {
-      sizes: segmentSizesProbe(ends, heightsWidths),
-      geometry: segmentGeometryProbe(ends, segmentPositions, segmentAngles),
-      colors: segmentColorsProbe(ends, colors),
-    },
+    ...(probes ? { probes } : {}),
   };
 }
 
-/** The colors probe of `colors` over the drawn segments of `vertices`; none for vertices packed without textures. */
+/** The colors probe of `colors` over the drawn segments of `vertices`; none when probes are disabled or without textures. */
 export function colorsProbe(vertices: VertexBuffers, colors: Uint8Array): string | undefined {
+  if (!probesEnabled) return undefined;
   const ends = drawnSegments.get(vertices);
   return ends && segmentColorsProbe(ends, colors);
 }
@@ -129,8 +169,14 @@ function probe(vertices: Uint32Array, passes: [Uint8Array, (i: number) => number
  * E2E probe of the segment end sizes: segment count and the FNV-1a 32 hash of
  * the f32 bits `[start height, start width, end height, end width]` per segment.
  */
-function segmentSizesProbe(vertices: Uint32Array, heightsWidths: Float32Array) {
-  return probe(vertices, [[bytesOf(heightsWidths), (i) => 8 * (i - 1), 16]]);
+function segmentSizesProbe(vertices: Uint32Array, heightsWidthsAngles: Float32Array) {
+  const bytes = bytesOf(heightsWidthsAngles);
+  let hash = 0x811c9dc5;
+  for (const i of vertices) {
+    hash = fnv(hash, bytes, 16 * (i - 1), 16 * (i - 1) + 8);
+    hash = fnv(hash, bytes, 16 * i, 16 * i + 8);
+  }
+  return `${vertices.length}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
 /**
@@ -138,13 +184,17 @@ function segmentSizesProbe(vertices: Uint32Array, heightsWidths: Float32Array) {
  * hash of the f32 bytes of every start position, then every end position, then
  * every `[start angle, end angle]`.
  */
-function segmentGeometryProbe(vertices: Uint32Array, segmentPositions: Float32Array, segmentAngles: Float32Array) {
-  const positions = bytesOf(segmentPositions);
-  return probe(vertices, [
-    [positions, (i) => 12 * (i - 1), 12],
-    [positions, (i) => 12 * i, 12],
-    [bytesOf(segmentAngles), (i) => 4 * (i - 1), 8],
-  ]);
+function segmentGeometryProbe(vertices: Uint32Array, positions: Float32Array, heightsWidthsAngles: Float32Array) {
+  const posBytes = bytesOf(positions);
+  const hwaBytes = bytesOf(heightsWidthsAngles);
+  let hash = 0x811c9dc5;
+  for (const i of vertices) hash = fnv(hash, posBytes, 16 * (i - 1), 16 * (i - 1) + 12);
+  for (const i of vertices) hash = fnv(hash, posBytes, 16 * i, 16 * i + 12);
+  for (const i of vertices) {
+    hash = fnv(hash, hwaBytes, 16 * (i - 1) + 8, 16 * (i - 1) + 12);
+    hash = fnv(hash, hwaBytes, 16 * i + 8, 16 * i + 12);
+  }
+  return `${vertices.length}:${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
 /**

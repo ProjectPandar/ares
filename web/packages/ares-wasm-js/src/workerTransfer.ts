@@ -34,7 +34,7 @@ export type VertexArrays = Pick<
   "values" | "ids" | "tags" | "options" | "colors" | "heightsWidths" | "segmentPositions" | "segmentAngles"
 >;
 
-export function readVertexArrays(vertices: VertexBuffers): VertexArrays {
+export function readVertexArrays(vertices: VertexBuffers, includeRawArrays: boolean): VertexArrays {
   const count = vertices.count;
   return {
     values: readRanges(new Float32Array(16 * count), 16, (first, size) => vertices.valuesRange(first, size)),
@@ -42,12 +42,14 @@ export function readVertexArrays(vertices: VertexBuffers): VertexArrays {
     tags: readRanges(new Uint8Array(4 * count), 4, (first, size) => vertices.tagsRange(first, size)),
     options: readRanges(new Uint8Array(count), 1, (first, size) => vertices.optionsRange(first, size)),
     colors: readColors(vertices, "FeatureType", 0xffffffff, vertices.visibleOptions),
-    heightsWidths: readRanges(new Float32Array(2 * count), 2, (first, size) =>
-      vertices.heightsWidthsRange(first, size),
-    ),
-    segmentPositions: readRanges(new Float32Array(3 * count), 3, (first, size) =>
-      vertices.segmentPositionsRange(first, size),
-    ),
-    segmentAngles: readRanges(new Float32Array(count), 1, (first, size) => vertices.segmentAnglesRange(first, size)),
+    heightsWidths: includeRawArrays
+      ? readRanges(new Float32Array(2 * count), 2, (first, size) => vertices.heightsWidthsRange(first, size))
+      : new Float32Array(0),
+    segmentPositions: includeRawArrays
+      ? readRanges(new Float32Array(3 * count), 3, (first, size) => vertices.segmentPositionsRange(first, size))
+      : new Float32Array(0),
+    segmentAngles: includeRawArrays
+      ? readRanges(new Float32Array(count), 1, (first, size) => vertices.segmentAnglesRange(first, size))
+      : new Float32Array(0),
   };
 }
