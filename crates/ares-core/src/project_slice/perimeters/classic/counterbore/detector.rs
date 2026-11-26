@@ -137,13 +137,21 @@ fn candidates(polygon: &ExPolygon, edges: &[Polyline]) -> Vec<f64> {
     angles
 }
 
+const EPSILON: f64 = 1e-4;
+
 fn direction(line: Line) -> f64 {
-    let angle = line.orientation();
-    if angle >= PI { angle - PI } else { angle }
+    let angle = ((line.b.y() - line.a.y()) as f64).atan2((line.b.x() - line.a.x()) as f64);
+    if (angle - PI).abs() < EPSILON {
+        0.0
+    } else if angle < 0.0 {
+        angle + PI
+    } else {
+        angle
+    }
 }
 fn parallel(a: f64, b: f64) -> bool {
     let difference = (a - b).abs();
-    let tolerance = PI / 180.0;
+    let tolerance = PI / 180.0 + EPSILON;
     difference < tolerance || (difference - PI).abs() < tolerance
 }
 fn rotate_point(point: Point, angle: f64) -> Point {
