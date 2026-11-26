@@ -119,20 +119,34 @@ pub(in crate::project_slice) fn emit(
     );
     let initial_filaments = machine::first_filaments::resolve(traversal, &schedule.tool_ordering);
     let nozzle_groups = std::mem::take(&mut schedule.tool_ordering.nozzle_groups);
-    let mut export_config = Vec::new();
-    crate::options::write_config_block(
-        &traversal.resolved.views,
-        (
-            match (archive, &archive_facts) {
-                (Some(ArchiveSource::Saved), Some(facts)) => &facts.project_settings,
-                _ => &traversal.project.documents().project_settings_raw,
-            },
-            traversal.project.documents().config_composer,
-        ),
-        traversal.project.current_plate_index(),
-        Some(initial_filaments.compat_temperatures(traversal)),
-        &mut export_config,
-    )?;
+    let compat_temperatures = initial_filaments.compat_temperatures(traversal);
+    let export_config = if !matches!(
+        (archive, &archive_facts),
+        (Some(ArchiveSource::Saved), Some(_))
+    ) && let Some(base) = traversal.config_block.as_deref()
+        && let Some(patched) = crate::options::config_block_with_compat_temperatures(
+            base,
+            &traversal.resolved.views,
+            compat_temperatures,
+        ) {
+        patched
+    } else {
+        let mut export_config = Vec::new();
+        crate::options::write_config_block(
+            &traversal.resolved.views,
+            (
+                match (archive, &archive_facts) {
+                    (Some(ArchiveSource::Saved), Some(facts)) => &facts.project_settings,
+                    _ => &traversal.project.documents().project_settings_raw,
+                },
+                traversal.project.documents().config_composer,
+            ),
+            traversal.project.current_plate_index(),
+            Some(compat_temperatures),
+            &mut export_config,
+        )?;
+        export_config
+    };
     let mut state = state::build(state::EmitStateInputs {
         traversal,
         prepared,
@@ -262,25 +276,53 @@ pub(in crate::project_slice) fn emit(
     );
     output.push(b'\n');
     // Initial preamble bypasses FanMover (`GCode.cpp:4495,5192–5220`).
-    if fan_mover_handle.is_some()
-        || state
+    let run_adaptive_pa = !traversal.resolved.views.full.process.print.spiral_mode.0
+        && state
             .extruders
             .ids()
             .iter()
-            .any(|&tool| adaptive_pa::enabled(&traversal.resolved.views.full, tool))
-    {
-        let mut layers = output.split_off(filtered_layers_start);
-        let tail = layers.split_off(fan_layers_end - filtered_layers_start);
-        if let Some(mover) = fan_mover_handle.as_mut() {
-            let fan_layers = layers.split_off(fan_layers_start - filtered_layers_start);
-            layers.extend(fan_chunks::process_layer_chunks(
+            .any(|&tool| adaptive_pa::enabled(&traversal.resolved.views.full, tool));
+    match (fan_mover_handle.as_mut(), run_adaptive_pa) {
+        (None, false) => {}
+        (Some(mover), false) => {
+            let mut rebuilt = Vec::with_capacity(output.len());
+            rebuilt.extend_from_slice(&output[..fan_layers_start]);
+            fan_chunks::process_layer_chunks_into(
                 mover,
-                fan_layers,
+                &output[fan_layers_start..fan_layers_end],
                 state.tags.layer_change(),
-            ));
+                &mut rebuilt,
+            );
+            rebuilt.extend_from_slice(&output[fan_layers_end..]);
+            output = rebuilt;
         }
-        output.extend(adaptive_pa::process(layers, traversal, &state));
-        output.extend(tail);
+        (None, true) => {
+            let mut rebuilt = Vec::with_capacity(output.len());
+            rebuilt.extend_from_slice(&output[..filtered_layers_start]);
+            adaptive_pa::process_into(
+                &output[filtered_layers_start..fan_layers_end],
+                traversal,
+                &state,
+                &mut rebuilt,
+            );
+            rebuilt.extend_from_slice(&output[fan_layers_end..]);
+            output = rebuilt;
+        }
+        (Some(mover), true) => {
+            let mut fan_layers = Vec::with_capacity(fan_layers_end - filtered_layers_start);
+            fan_layers.extend_from_slice(&output[filtered_layers_start..fan_layers_start]);
+            fan_chunks::process_layer_chunks_into(
+                mover,
+                &output[fan_layers_start..fan_layers_end],
+                state.tags.layer_change(),
+                &mut fan_layers,
+            );
+            let mut rebuilt = Vec::with_capacity(output.len());
+            rebuilt.extend_from_slice(&output[..filtered_layers_start]);
+            adaptive_pa::process_into(&fan_layers, traversal, &state, &mut rebuilt);
+            rebuilt.extend_from_slice(&output[fan_layers_end..]);
+            output = rebuilt;
+        }
     }
     let mut result = super::orchestration_finish::finish(
         output,

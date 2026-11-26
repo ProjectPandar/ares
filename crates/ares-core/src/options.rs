@@ -7,7 +7,8 @@ mod config_export;
 pub(crate) mod flush_matrix;
 mod flush_volume;
 pub(crate) use config_export::{
-    collect_config_entries, escape_scalar_string, escape_string_vector_element, write_config_block,
+    collect_config_entries, config_block_with_compat_temperatures, escape_scalar_string,
+    escape_string_vector_element, write_config_block,
 };
 pub(crate) use typed_legacy::{LegacyAction, find_explicit_rule, is_obsolete_input};
 mod config_types;
