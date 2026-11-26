@@ -122,4 +122,5 @@ legs! {
     tpmsd_ironing_matches_native => "tpmsd",
     tpmsfk_ironing_matches_native => "tpmsfk",
     gyroid_ironing_matches_native => "gyroid",
+    spiral_inset_ironing_matches_native => "spiralinset",
 }
