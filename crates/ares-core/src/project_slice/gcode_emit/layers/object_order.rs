@@ -2,16 +2,35 @@
 
 use crate::project_slice::perimeters::classic::shortest_path::chain_segments_constrained_with_optional_start;
 
-/// ShortestPath.cpp:2533–2555, reached from default by-layer GCode.cpp:3658.
+/// ShortestPath.cpp:2533–2555, reached from default by-layer GCode.cpp:3683.
 pub(super) fn reference_order(
     centers: &[(i64, i64)],
     scale: crate::geometry::CoordinateScale,
 ) -> Vec<usize> {
-    let points = centers
+    let points = to_points(centers);
+    crate::geometry::chain_points_with_postprocessing(&points, None, scale)
+}
+
+/// OrderingStrategies.cpp:445–448, reached from by-layer GCode.cpp:3685.
+pub(super) fn snake_order(centers: &[(i64, i64)]) -> Vec<usize> {
+    let points = to_points(centers);
+    crate::geometry::chain_instances_snake(&points, None)
+}
+
+/// OrderingStrategies.cpp:492–495, reached from by-layer GCode.cpp:3687.
+pub(super) fn best_of_order(
+    centers: &[(i64, i64)],
+    scale: crate::geometry::CoordinateScale,
+) -> Vec<usize> {
+    let points = to_points(centers);
+    crate::geometry::chain_instances_best_of(&points, None, scale)
+}
+
+fn to_points(centers: &[(i64, i64)]) -> Vec<crate::geometry::Point> {
+    centers
         .iter()
         .map(|&(x, y)| crate::geometry::Point::new(x, y))
-        .collect::<Vec<_>>();
-    crate::geometry::chain_points_with_postprocessing(&points, None, scale)
+        .collect()
 }
 
 pub(super) fn chain_instance_order(centers: &[(i64, i64)], start_near: (i64, i64)) -> Vec<usize> {

@@ -49,7 +49,12 @@ pub(super) fn plan(
             occupied: occupied(entry),
         })
         .collect::<Vec<_>>();
-    let visits = visits::produce(&inputs, wipe_start(traversal), traversal.scale);
+    let visits = visits::produce(
+        &inputs,
+        wipe_start(traversal),
+        print.print_order,
+        traversal.scale,
+    );
     InstanceTour { instances, visits }
 }
 
