@@ -176,6 +176,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/parity-archive"
           cargo nextest archive -p ares-cli --test orca_parity --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+          cp target/debug/ares "$RUNNER_TEMP/parity-archive/ares"
           bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-official 8
           bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-seeded 8
       - uses: actions/cache/save@v4

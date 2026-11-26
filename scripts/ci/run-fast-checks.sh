@@ -23,20 +23,6 @@ results=()
 # declared in rust-toolchain.toml during fmt/gen-configdef checks.
 export RUSTUP_TOOLCHAIN="${RUSTUP_TOOLCHAIN:-1.99.0}"
 
-# Run rust-fmt concurrently in the background while web & script checks execute.
-rust_fmt_log="$(mktemp)"
-rust_fmt_meta="$(mktemp)"
-(
-  t0="$(now_ms)"
-  set +e
-  cargo fmt --check >"$rust_fmt_log" 2>&1
-  rc=$?
-  set -e
-  t1="$(now_ms)"
-  printf '%s %s\n' "$rc" "$((t1 - t0))" > "$rust_fmt_meta"
-) &
-rust_fmt_pid=$!
-
 record_result() {
   local name="$1" budget_ms="$2" rc="$3" dt="$4" log_file="$5"
   if [ "$rc" -ne 0 ]; then
@@ -71,8 +57,24 @@ run_check() {
   rm -f "$log_file"
 }
 
-run_check "web-fmt" "$BUDGET_WEB_FMT_MS" bun run --cwd web fmt:check
-run_check "web-lint" "$BUDGET_WEB_LINT_MS" bun run --cwd web lint
+# Run sub-second single-process web fmt & lint with 100% dedicated CPU before
+# spawning background cargo fmt (avoids 4-vCPU contention spiking lint >1000ms).
+run_check "web-fmt" "$BUDGET_WEB_FMT_MS" bun --cwd web fmt --no-script --check packages app e2e pages
+run_check "web-lint" "$BUDGET_WEB_LINT_MS" bun --cwd web lint --no-script --max-warnings=0 packages app e2e pages
+
+# Now overlap rust-fmt in the background with typecheck, unit tests, and configdef sync.
+rust_fmt_log="$(mktemp)"
+rust_fmt_meta="$(mktemp)"
+(
+  t0="$(now_ms)"
+  set +e
+  cargo fmt --check >"$rust_fmt_log" 2>&1
+  rc=$?
+  set -e
+  t1="$(now_ms)"
+  printf '%s %s\n' "$rc" "$((t1 - t0))" > "$rust_fmt_meta"
+) &
+rust_fmt_pid=$!
 
 if [ -f web/packages/ares-wasm-js/src/wasm/ares_wasm.d.ts ]; then
   run_check "web-typecheck-ts7" "$BUDGET_WEB_CHECK_MS" bash -c '
