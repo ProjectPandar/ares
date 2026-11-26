@@ -81,7 +81,7 @@ fn ripple_phase_shift_rad(config: FuzzySkinConfig, layer_id: usize) -> f64 {
         return 0.0;
     }
     let period_index = layer_id / config.layers_between_ripple_offset;
-    (period_index as f64 * config.ripple_offset_percent / 100.0 * std::f64::consts::TAU)
+    (period_index as f64 * (config.ripple_offset_percent / 100.0) * std::f64::consts::TAU)
         % std::f64::consts::TAU
 }
 
