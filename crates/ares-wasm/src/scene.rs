@@ -155,8 +155,19 @@ pub(crate) fn project_scene_with_plates(
     plates: Vec<ScenePlate>,
     filament_slots: Option<ares_core::FilamentSlots>,
 ) -> SceneData {
-    let mut positions = Vec::new();
-    let mut indices = Vec::new();
+    let (total_vertices, total_triangles) = project
+        .objects()
+        .iter()
+        .flat_map(|object| object.volumes())
+        .fold((0usize, 0usize), |(vertices, triangles), volume| {
+            let mesh = volume.mesh();
+            (
+                vertices + mesh.vertices().len(),
+                triangles + mesh.triangles().len(),
+            )
+        });
+    let mut positions = Vec::with_capacity(total_vertices * 3);
+    let mut indices = Vec::with_capacity(total_triangles * 3);
     let objects = project
         .objects()
         .iter()

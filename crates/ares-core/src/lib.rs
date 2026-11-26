@@ -148,8 +148,8 @@ pub use project_slice::{
     slice_cli_project_plate_validated, slice_cli_project_plate_validated_with_catalog,
     slice_cli_project_plate_with_refresh, slice_cli_project_plates,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
-    slice_project_plate_validated, slice_project_plate_validated_with_catalog,
-    slice_project_plate_with_archive,
+    slice_project_plate_processed_validated_with_custom_gcodes, slice_project_plate_validated,
+    slice_project_plate_validated_with_catalog, slice_project_plate_with_archive,
 };
 pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,

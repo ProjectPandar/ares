@@ -1,5 +1,5 @@
 use crate::MoveBuffers;
-use ares_core::gcode_processor::ChunkedMoves;
+use ares_core::gcode_processor::{ChunkedMoves, PrintEstimatedStatistics};
 use ares_vgcode::{
     CustomGCodeOverviewRow, FilamentLegend, GCodeExtrusionRole, MovesSlider, OptionType,
     SequentialView, ViewerImpl,
@@ -12,8 +12,8 @@ pub struct SliceOutput {
     gcode: Vec<u8>,
     moves: ChunkedMoves,
     pub(crate) vertices: VertexBuffers,
-    print_statistics: Vec<u8>,
-    estimation: String,
+    print_statistics: Option<PrintEstimatedStatistics>,
+    estimation: crate::estimation::Estimation,
     extruder_colors: Vec<String>,
     filament_diameters: Vec<f32>,
     filament_densities: Vec<f32>,
@@ -44,13 +44,15 @@ impl SliceOutput {
     /// (`PrintEstimatedStatistics`, `GCodeProcessor.hpp:46-78`).
     #[wasm_bindgen(js_name = takePrintStatistics)]
     pub fn take_print_statistics(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.print_statistics)
+        self.print_statistics.take().map_or_else(Vec::new, |stats| {
+            serde_json::to_vec(&stats).expect("PrintEstimatedStatistics serializes")
+        })
     }
 
     /// Legend estimation footer inputs as JSON (`GCodeViewer.cpp:4547-4644`).
     #[wasm_bindgen(getter)]
     pub fn estimation(&self) -> String {
-        self.estimation.clone()
+        serde_json::to_string(&self.estimation).expect("Estimation serializes")
     }
 
     /// `GCodeProcessorResult::extruder_colors`

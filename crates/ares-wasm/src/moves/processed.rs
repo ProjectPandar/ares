@@ -25,12 +25,7 @@ impl SliceOutput {
         let mut viewer = ViewerImpl::default();
         viewer.load(data);
         let filament_legend = filament_legend(&viewer, result);
-        // `PrintEstimatedStatistics` passes through as JSON — volumes in
-        // mm³ dense-indexed by filament id; `total_used_filament` in mm.
-        let print_statistics = serde_json::to_vec(&output.result.print_statistics)
-            .expect("PrintEstimatedStatistics serializes");
-        let estimation = serde_json::to_string(&crate::estimation::Estimation::from(&output))
-            .expect("Estimation serializes");
+        let estimation = crate::estimation::Estimation::from(&output);
         let mut vertices = VertexBuffers::from_viewer(viewer, palettes);
         vertices.move_type_counts = move_type_counts;
         vertices.filament_legend = filament_legend;
@@ -38,7 +33,7 @@ impl SliceOutput {
             gcode: output.gcode,
             moves: output.result.moves,
             vertices,
-            print_statistics,
+            print_statistics: Some(output.result.print_statistics),
             estimation,
             extruder_colors: output.result.extruder_colors,
             filament_diameters: output.result.filament_diameters,
