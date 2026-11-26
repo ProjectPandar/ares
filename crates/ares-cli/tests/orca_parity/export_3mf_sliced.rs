@@ -47,6 +47,18 @@ fn cli_sliced_3mf_with_two_objects_matches_native_archive() {
     sliced_archive_matches_native(SlicedInput::Saved(SavedShape::TwoObjects));
 }
 
+// Plater::send_gcode (Plater.cpp:21240) and --min-save (OrcaSlicer.cpp:8402-8403) both add
+// SaveStrategy::SkipModel: the print-job file a print host receives.
+#[test]
+fn cli_min_save_sliced_3mf_from_saved_project_matches_native_archive() {
+    sliced_archive_matches_native(SlicedInput::MinSave(SavedShape::Single));
+}
+
+#[test]
+fn cli_min_save_sliced_3mf_with_two_objects_matches_native_archive() {
+    sliced_archive_matches_native(SlicedInput::MinSave(SavedShape::TwoObjects));
+}
+
 #[test]
 fn cli_sliced_3mf_from_arranged_stls_matches_native_archive() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
@@ -147,6 +159,7 @@ enum SlicedInput {
     Stl,
     ChamferedStl,
     Saved(SavedShape),
+    MinSave(SavedShape),
 }
 
 #[derive(Clone, Copy)]
@@ -157,7 +170,8 @@ enum SavedShape {
 }
 
 fn sliced_archive_matches_native(input: SlicedInput) {
-    let saved = matches!(input, SlicedInput::Saved(_));
+    let saved = matches!(input, SlicedInput::Saved(_) | SlicedInput::MinSave(_));
+    let min_save = matches!(input, SlicedInput::MinSave(_));
     let chamfered = matches!(input, SlicedInput::ChamferedStl);
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -168,7 +182,7 @@ fn sliced_archive_matches_native(input: SlicedInput) {
     for dir in [&native_cwd, &ares_cwd] {
         fs::create_dir_all(dir.join("out")).unwrap();
     }
-    if let SlicedInput::Saved(shape) = input {
+    if let SlicedInput::Saved(shape) | SlicedInput::MinSave(shape) = input {
         let source = root.join("source/cwd");
         fs::create_dir_all(source.join("out")).unwrap();
         write_saved_input(&runner, &source);
@@ -195,6 +209,9 @@ fn sliced_archive_matches_native(input: SlicedInput) {
     if !saved {
         argv.extend(SETTINGS);
     }
+    if min_save {
+        argv.push("--min-save");
+    }
     argv.extend([
         "--slice",
         "1",
@@ -208,7 +225,8 @@ fn sliced_archive_matches_native(input: SlicedInput) {
         input,
         SlicedInput::Saved(SavedShape::TwoObjects | SavedShape::TwoObjectsWithParts)
     ));
-    assert_eq!(native.len(), 12 + split_files);
+    // SkipModel drops the object files and their relationships (bbs_3mf.cpp:7404,7465).
+    assert_eq!(native.len(), if min_save { 11 } else { 12 + split_files });
     let ares = Path::new(env!("CARGO_BIN_EXE_ares"));
     assert_eq!(
         invoke(ares, &ares_cwd, &argv),

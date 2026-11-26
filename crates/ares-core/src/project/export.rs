@@ -4,12 +4,14 @@ mod json_float;
 mod project_settings;
 mod saved_presets;
 mod scene;
+mod sliced;
 mod stl;
 mod xml;
 mod zip_records;
 
 pub use scene::export_project_3mf;
 pub(crate) use scene::write as write_plater_project;
+pub use sliced::{export_saved_sliced_3mf, export_sliced_3mf, print_object_id};
 pub use stl::export_imported_stl_3mf;
 
 use std::io::{Cursor, Seek, Write};
@@ -17,7 +19,7 @@ use std::io::{Cursor, Seek, Write};
 use md5::{Digest, Md5};
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{LoadSettingsRequest, ProcessedGCode, SliceError};
+use crate::{LoadSettingsRequest, SliceError};
 pub(crate) use geometry::{SavedModel, placed_stl_model};
 pub(crate) use project_settings::direct_stl_settings;
 
@@ -30,6 +32,14 @@ pub(crate) fn write_project_settings_raw(
     saved: bool,
 ) -> Result<Vec<u8>, SliceError> {
     project_settings::write_raw(raw, saved)
+}
+
+/// The G-code members of a sliced package. `skip_model` is `SaveStrategy::SkipModel`
+/// (`bbs_3mf.cpp:6328`), set by the CLI `--min-save` (`OrcaSlicer.cpp:8402-8403`) and by
+/// `Plater::send_gcode` (`Plater.cpp:21240`).
+struct Sliced {
+    members: Vec<SlicedMembers>,
+    skip_model: bool,
 }
 
 struct SlicedMembers {
@@ -85,69 +95,6 @@ pub fn export_3mf(
     let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
     let settings = project_settings::write(&presets)?;
     write_package(&[object], settings, None, (None, None), None)
-}
-
-pub fn export_sliced_3mf(
-    input: &[u8],
-    filename: &str,
-    mut processed: ProcessedGCode,
-    first_print_object_id: u32,
-) -> Result<Vec<u8>, SliceError> {
-    if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
-        return Err(invalid(
-            "export requires a source filename without a directory",
-        ));
-    }
-    let mut archive = processed
-        .archive
-        .take()
-        .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    let model = if let Some(model) = archive.stl_model.take() {
-        if archive.filament_color.is_empty()
-            && let Some(color) = processed.result.extruder_colors.first()
-        {
-            archive.filament_color.clone_from(color);
-        }
-        model
-    } else {
-        if !filename.to_ascii_lowercase().ends_with(".3mf") {
-            return Err(deferred(
-                "sliced export requires a saved 3MF or a captured STL model",
-            ));
-        }
-        geometry::load_saved(input)?
-    };
-    let mut identify_ids = vec![None; model.objects.len()];
-    let mismatch = || invalid("captured plate does not match model objects");
-    for object in &archive.objects {
-        let id = identify_ids
-            .get_mut(object.model_index)
-            .ok_or_else(mismatch)?;
-        if id.replace(object.identify_id).is_some() {
-            return Err(mismatch());
-        }
-    }
-    if identify_ids.iter().any(Option::is_none) {
-        return Err(mismatch());
-    }
-    let sliced = SlicedMembers {
-        plate: 1,
-        object_ids: archive
-            .objects
-            .iter()
-            .map(|object| (object.model_index, object.identify_id))
-            .collect(),
-        plate_json: xml::plate_json(&archive, first_print_object_id),
-        slice_info: xml::slice_info(&archive, &processed, 1).into_bytes(),
-        gcode: processed.gcode,
-    };
-    write_package(
-        &model.objects,
-        archive.project_settings,
-        Some(vec![sliced]),
-        (model.orca_version.as_deref(), None),
-        None,
-    )
 }
 
 pub fn export_arranged_sliced_3mf(
@@ -230,7 +177,10 @@ pub fn export_arranged_sliced_3mf(
     write_package(
         &model.objects,
         archives[0].1.project_settings.clone(),
-        Some(sliced),
+        Some(Sliced {
+            members: sliced,
+            skip_model: false,
+        }),
         (model.orca_version.as_deref(), None),
         None,
     )
@@ -239,7 +189,7 @@ pub fn export_arranged_sliced_3mf(
 fn write_package(
     objects: &[geometry::Object],
     settings: Vec<u8>,
-    sliced: Option<Vec<SlicedMembers>>,
+    sliced: Option<Sliced>,
     (orca_version, saved_instance_id): (Option<&str>, Option<u32>),
     scene: Option<&scene::SceneLayout<'_>>,
 ) -> Result<Vec<u8>, SliceError> {
@@ -259,9 +209,17 @@ fn write_package(
             }
         })
         .collect::<Vec<_>>();
+    let skip_model = sliced.as_ref().is_some_and(|sliced| sliced.skip_model);
+    let sliced = sliced.map(|sliced| sliced.members);
     let sliced_output = sliced.is_some();
-    let model_settings =
-        xml::model_settings(&objects, sliced.as_deref(), saved_instance_id, scene).into_bytes();
+    let model_settings = xml::model_settings(
+        &objects,
+        sliced.as_deref(),
+        saved_instance_id,
+        scene,
+        skip_model,
+    )
+    .into_bytes();
     let mut entries = vec![(
         "[Content_Types].xml".to_owned(),
         xml::content_types().into_bytes(),
@@ -274,18 +232,21 @@ fn write_package(
             )
         }));
     }
-    entries.extend([
-        (
-            MODEL.to_owned(),
-            xml::main_model(&objects, orca_version).into_bytes(),
-        ),
-        (
+    // bbs_3mf.cpp:7404,7437,7465: SkipModel writes no object resources, build items, object
+    // files or their relationships.
+    let model_objects = if skip_model { &[][..] } else { &objects[..] };
+    entries.push((
+        MODEL.to_owned(),
+        xml::main_model(model_objects, orca_version).into_bytes(),
+    ));
+    if !skip_model {
+        entries.push((
             "3D/_rels/3dmodel.model.rels".to_owned(),
             xml::relationships(objects.iter().map(|object| object.path.as_str())).into_bytes(),
-        ),
-    ]);
+        ));
+    }
     entries.extend(
-        objects
+        model_objects
             .iter()
             .map(|object| (object.path.clone(), xml::mesh_model(object).into_bytes())),
     );

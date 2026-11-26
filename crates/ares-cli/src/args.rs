@@ -90,6 +90,9 @@ pub(crate) struct DirectSliceArgs {
     /// Preserve orientation (0) when exporting a project.
     #[arg(long, requires = "export_3mf")]
     pub(crate) orient: Option<u8>,
+    /// Export a sliced 3MF without the model (SaveStrategy::SkipModel), as a print-job file.
+    #[arg(long, requires = "export_3mf")]
+    pub(crate) min_save: bool,
 
     /// Maximum triangle count per plate for direct STL slicing (0 means unlimited).
     #[arg(long, allow_negative_numbers = true)]

@@ -123,7 +123,13 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
         }
         out.push_str("   </components>\n  </object>\n");
     }
-    out.push_str(" </resources>\n <build p:UUID=\"2c7c17d8-22b5-4d84-8835-1976022ea369\">\n");
+    out.push_str(" </resources>\n");
+    // bbs_3mf.cpp:7857-7860: an empty build list is a self-closing tag.
+    if objects.is_empty() {
+        out.push_str(" <build/>\n</model>\n");
+        return out;
+    }
+    out.push_str(" <build p:UUID=\"2c7c17d8-22b5-4d84-8835-1976022ea369\">\n");
     for object in objects {
         let id = object.id;
         for instance in &object.object.instances {
@@ -181,9 +187,12 @@ pub(super) fn model_settings(
     sliced: Option<&[SlicedMembers]>,
     saved_instance_id: Option<u32>,
     scene: Option<&SceneLayout<'_>>,
+    skip_model: bool,
 ) -> String {
     let mut out = format!("{DECL}<config>\n");
-    for object in objects {
+    // bbs_3mf.cpp:8305,8575,8617: SkipModel writes no objects, plate instances or assemble block.
+    let model_objects = if skip_model { &[][..] } else { objects };
+    for object in model_objects {
         let id = object.id;
         let auto_drop = u8::from(object.object.auto_drop);
         writeln!(out, "  <object id=\"{id}\" auto_drop=\"{auto_drop}\">").unwrap();
@@ -227,13 +236,16 @@ pub(super) fn model_settings(
         writeln!(out, "  <plate>\n    <metadata key=\"plater_id\" value=\"{plate_id}\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"{gcode_file}\"/>").unwrap();
         let saved_object = saved_instance_id.map(|id| (0, id));
         let object_ids = plate.map_or(saved_object.as_slice(), |plate| plate.object_ids.as_slice());
-        for &(model_index, identify_id) in object_ids {
+        for &(model_index, identify_id) in if skip_model { &[][..] } else { object_ids } {
             let id = objects[model_index].id;
             writeln!(out, "    <model_instance>\n      <metadata key=\"object_id\" value=\"{id}\"/>\n      <metadata key=\"instance_id\" value=\"0\"/>\n      <metadata key=\"identify_id\" value=\"{identify_id}\"/>\n    </model_instance>").unwrap();
         }
         out.push_str("  </plate>\n");
     }
-    out.push_str("  <assemble>\n  </assemble>\n</config>\n");
+    if !skip_model {
+        out.push_str("  <assemble>\n  </assemble>\n");
+    }
+    out.push_str("</config>\n");
     out
 }
 
