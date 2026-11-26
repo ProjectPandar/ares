@@ -2,6 +2,8 @@
 
 #[path = "counterbore_partiallybridge/candidate_direction.rs"]
 mod candidate_direction;
+#[path = "counterbore_partiallybridge/opening_width.rs"]
+mod opening_width;
 
 use super::{OrcaRunner, cache_identity, profile_entry};
 use ares_core::{ConfigOverrides, SliceError};
