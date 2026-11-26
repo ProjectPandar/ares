@@ -35,6 +35,7 @@ fn apply(path: &mut ExtrusionPath, mesh: &IndexedMesh, context: &Context<'_>) {
         ExtrusionRole::TopSolidInfill => crate::ExtrusionRole::TopSolidInfill,
         ExtrusionRole::OverhangPerimeter
         | ExtrusionRole::GapFill
+        | ExtrusionRole::InternalInfill
         | ExtrusionRole::SolidInfill
         | ExtrusionRole::BottomSurface => return,
     };

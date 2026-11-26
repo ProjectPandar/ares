@@ -4,23 +4,6 @@ pub(super) fn validate(
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
 ) -> Result<(), SliceError> {
-    for resolved in resolved_objects {
-        if resolved.object.support_ironing_pattern == crate::ProcessInfillPattern::SpiralInset {
-            return unsupported("support_ironing_pattern: spiralinset");
-        }
-        for region in &resolved.all_regions {
-            for (key, pattern) in [
-                (
-                    "internal_solid_infill_pattern",
-                    region.internal_solid_infill_pattern,
-                ),
-                ("sparse_infill_pattern", region.sparse_infill_pattern),
-                ("ironing_pattern", region.ironing_pattern),
-            ] {
-                validate_pattern(key, pattern)?;
-            }
-        }
-    }
     if resolved_objects.iter().any(|resolved| {
         source_objects[resolved.source_object_index]
             .layer_height_profile()
@@ -42,34 +25,10 @@ pub(super) fn validate(
 }
 
 pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(), SliceError> {
-    for (key, pattern) in [
-        (
-            "internal_solid_infill_pattern",
-            settings.process.region.internal_solid_infill_pattern,
-        ),
-        (
-            "sparse_infill_pattern",
-            settings.process.region.sparse_infill_pattern,
-        ),
-        ("ironing_pattern", settings.process.region.ironing_pattern),
-        (
-            "support_ironing_pattern",
-            settings.process.object.support_ironing_pattern,
-        ),
-    ] {
-        validate_pattern(key, pattern)?;
-    }
     if settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual {
         return Err(SliceError::UnsupportedProjectFeature(
             "filament_map_mode: Nozzle Manual".to_owned(),
         ));
-    }
-    Ok(())
-}
-
-fn validate_pattern(key: &str, pattern: crate::ProcessInfillPattern) -> Result<(), SliceError> {
-    if pattern == crate::ProcessInfillPattern::SpiralInset {
-        return unsupported(&format!("{key}: spiralinset"));
     }
     Ok(())
 }

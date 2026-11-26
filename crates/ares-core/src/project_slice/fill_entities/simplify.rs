@@ -5,7 +5,7 @@ use crate::{
     geometry::{CoordinateScale, Point, douglas_peucker},
     project_slice::perimeters::classic::{
         gap_extrusion::GapFillEntity,
-        materialize::{ExtrusionPath, Point3},
+        materialize::{ExtrusionPath, ExtrusionRole as MaterializedRole, Point3},
     },
 };
 
@@ -59,15 +59,17 @@ fn simplify_gap_entity(
     arc_fitting: crate::ArcFittingMode,
     spiral_mode: bool,
 ) {
-    if !simplify_before_ordering(arc_fitting, spiral_mode, false) {
-        return;
-    }
-    match entity {
-        GapFillEntity::Path(path) => simplify_extrusion_path(path, tolerance),
-        GapFillEntity::Loop(paths) => {
-            for path in paths {
-                simplify_extrusion_path(path, tolerance);
-            }
+    let paths = match entity {
+        GapFillEntity::Path(path) => std::slice::from_mut(path),
+        GapFillEntity::Loop(paths) => paths.as_mut_slice(),
+    };
+    for path in paths {
+        if simplify_before_ordering(
+            arc_fitting,
+            spiral_mode,
+            path.role == MaterializedRole::InternalInfill,
+        ) {
+            simplify_extrusion_path(path, tolerance);
         }
     }
 }
