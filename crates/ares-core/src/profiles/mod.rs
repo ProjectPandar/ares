@@ -32,7 +32,8 @@ pub use catalog::LoadedPresetSources;
 pub(crate) use catalog::VendorType;
 pub use catalog::{
     CurrentPrinter, GuideFilament, GuideModel, InstalledPrinters, PresetCatalogHandle,
-    PresetValues, PrinterModelInfo, SelectablePrinter, guide_models,
+    PresetInheritanceSource, PresetValues, PrinterModelInfo, SelectablePrinter, VendorManifest,
+    guide_models, preset_inheritance_source,
 };
 pub use compatible::{FilteredPresets, MissingParent, filter_compatible_presets};
 pub use composition::{

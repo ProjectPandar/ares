@@ -54,7 +54,7 @@ pub(crate) fn check(
     args: &crate::SliceArgs,
     plate: &ares_core::SlicedPlate,
     input_file: &str,
-    input: &[u8],
+    substitutions: &[ares_core::ConfigSubstitution],
     upward: &[String],
 ) -> Result<(), CliFailure> {
     let id = args.plate.unwrap_or(1);
@@ -68,7 +68,7 @@ pub(crate) fn check(
     };
     let failure = failure
         .with_upward_report(upward.to_vec())
-        .with_config_substitutions(input_file, crate::substitutions(input));
+        .with_config_substitutions(input_file, substitutions.to_vec());
     #[cfg(target_os = "linux")]
     let failure = failure.with_slicing_warnings(id, plate.warnings.clone());
     Err(failure)
@@ -98,7 +98,7 @@ pub(crate) fn check_direct(
     #[cfg(target_os = "linux")] output: &Path,
     (plate_index, plate): (u32, &SlicedPlate),
     upward: &[String],
-    project: Option<(&str, &[u8])>,
+    project: Option<(&str, &[ares_core::ConfigSubstitution])>,
 ) -> Result<(), CliFailure> {
     let mut pending = plate.warnings.as_slice();
     while let Some((warning, remaining)) = pending.split_first() {
@@ -137,8 +137,8 @@ pub(crate) fn check_direct(
             (warning, false),
         )
         .with_upward_report(upward.to_vec());
-        if let Some((file, bytes)) = project {
-            failure = failure.with_config_substitutions(file, crate::substitutions(bytes));
+        if let Some((file, substitutions)) = project {
+            failure = failure.with_config_substitutions(file, substitutions.to_vec());
         }
         #[cfg(target_os = "linux")]
         let failure = failure.with_slicing_warnings(

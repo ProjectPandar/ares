@@ -150,18 +150,17 @@ pub(super) fn selection(input: &str) -> Result<Option<ProjectPresetPolicy>, Slic
     enum LoadAndSelect {
         Always,
     }
-    let fields: std::collections::BTreeMap<String, crate::project::raw_settings::RawConfigValue> =
-        serde_json::from_str(input).map_err(|error| {
-            SliceError::InvalidInput(format!("invalid selection JSON: {error}"))
-        })?;
+    let fields: serde_json::Map<String, serde_json::Value> = serde_json::from_str(input)
+        .map_err(|error| SliceError::InvalidInput(format!("invalid selection JSON: {error}")))?;
     if !fields.contains_key("from_project") {
         return Ok(None);
     }
-    let derived: Derived = serde_json::from_str(input).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "project-derived and explicit selections are exclusive: {error}"
-        ))
-    })?;
+    let derived: Derived =
+        serde_json::from_value(serde_json::Value::Object(fields)).map_err(|error| {
+            SliceError::InvalidInput(format!(
+                "project-derived and explicit selections are exclusive: {error}"
+            ))
+        })?;
     if !derived.from_project {
         return Err(SliceError::InvalidInput(
             "from_project must be true".to_owned(),

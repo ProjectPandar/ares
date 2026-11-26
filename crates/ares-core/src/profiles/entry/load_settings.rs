@@ -50,7 +50,7 @@ pub fn export_stl_settings(
         sliced_plate: &mut Default::default(),
     };
     with_load_settings_source(
-        (ProjectInput::ImportedStl(&model), &[]),
+        (ProjectInput::ImportedStl(&model), &[], None),
         request,
         None,
         |source| {
@@ -105,8 +105,12 @@ pub(super) fn slice_load_settings_source(
     (metadata, record_moves): (GenerationMetadata, bool),
     context: SlicerContext<'_>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
+    let embedded_raw = loaded
+        .as_deref()
+        .and_then(crate::project::LoadedProfileProject::embedded_raw)
+        .cloned();
     with_load_settings_source(
-        (ProjectInput::Bytes(input), input),
+        (ProjectInput::Bytes(input), input, embedded_raw.as_ref()),
         request,
         refresh
             .map(|presets| ProjectPresetRefresh::native(presets, context.skip_modified_gcodes())),
@@ -164,7 +168,7 @@ pub async fn slice_assembly(
         .map(|processed| processed.gcode);
     }
     let bytes = assembly.archive().map_or(&[][..], |file| file.bytes);
-    with_load_settings_source((input, bytes), request, None, |source| {
+    with_load_settings_source((input, bytes, None), request, None, |source| {
         slice_source(source, metadata, false, context)
     })
     .map(|processed| processed.gcode)
@@ -194,7 +198,7 @@ pub async fn slice_stl_with_load_settings_for_export(
     context: SlicerContext<'_>,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     with_load_settings_source(
-        (ProjectInput::ImportedStl(model), &[]),
+        (ProjectInput::ImportedStl(model), &[], None),
         request,
         None,
         |source| {
@@ -218,7 +222,7 @@ pub async fn slice_imported_stl_with_load_settings_processed(
     record_moves: bool,
 ) -> Result<crate::ProcessedGCode, SliceError> {
     with_load_settings_source(
-        (ProjectInput::ImportedStl(model), &[]),
+        (ProjectInput::ImportedStl(model), &[], None),
         request,
         None,
         |source| slice_source(source, metadata, record_moves, context),
@@ -226,7 +230,11 @@ pub async fn slice_imported_stl_with_load_settings_processed(
 }
 
 pub(crate) fn with_load_settings_source<T>(
-    (input, bytes): (ProjectInput<'_>, &[u8]),
+    (input, bytes, embedded_raw): (
+        ProjectInput<'_>,
+        &[u8],
+        Option<&crate::project::raw_settings::ProjectSettingsRaw>,
+    ),
     request: LoadSettingsSliceRequest<'_>,
     refresh: Option<ProjectPresetRefresh<'_>>,
     body: impl FnOnce(ProjectSource<'_>) -> Result<T, SliceError>,
@@ -254,7 +262,7 @@ pub(crate) fn with_load_settings_source<T>(
         settings,
         filaments,
     };
-    let (composed, load_names) = compose_project_load_settings(bytes, &request)?;
+    let (composed, load_names) = compose_project_load_settings((bytes, embedded_raw), &request)?;
     let catalog = catalog_json
         .map(crate::profiles::project_selection::loaded_catalog)
         .transpose()?;

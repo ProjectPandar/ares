@@ -53,6 +53,14 @@ impl UpwardMachineSource {
         }
         let root = PackagePath::root();
         let fields = fields(&archive.read(&root.resolve("Metadata/project_settings.config")?)?)?;
+        Ok(Some(Self::from_fields(fields)))
+    }
+
+    pub(super) fn from_raw_settings(raw: &ProjectSettingsRaw) -> Result<Self, SliceError> {
+        Ok(Self::from_fields(fields_from_raw(raw)?))
+    }
+
+    fn from_fields(fields: MachineFields) -> Self {
         let group = fields
             .inherits_group
             .as_deref()
@@ -79,12 +87,12 @@ impl UpwardMachineSource {
                 )
             })
             .collect();
-        Ok(Some(Self {
+        Self {
             system_printer,
             system_process,
             system_filaments,
             embedded: fields.upward_compatible_machine,
-        }))
+        }
     }
 
     pub fn system_printer(&self) -> &str {
@@ -176,6 +184,10 @@ fn fields(json: &[u8]) -> Result<MachineFields, SliceError> {
         .map_err(|error| {
         SliceError::InvalidInput(format!("invalid machine source JSON: {error}"))
     })?;
+    fields_from_raw(&raw)
+}
+
+fn fields_from_raw(raw: &ProjectSettingsRaw) -> Result<MachineFields, SliceError> {
     let mut selected = ProjectSettingsRaw::default();
     selected.extend(
         raw.entries()

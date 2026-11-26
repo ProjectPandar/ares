@@ -98,6 +98,7 @@ pub(super) fn load(
     content_types: &ContentTypes,
     archive_paths: &BTreeSet<PackagePath>,
     root: PackagePath,
+    mut prefetched_root: Option<(PackagePath, Vec<u8>)>,
 ) -> Result<ModelGraph, SliceError> {
     let mut import_paths = BTreeMap::from([(String::new(), root.clone())]);
     let mut queue = VecDeque::from([root.clone()]);
@@ -109,7 +110,13 @@ pub(super) fn load(
             continue;
         }
         require_model_content_type(content_types, &path)?;
-        let bytes = archive.read(&path)?;
+        let bytes = match prefetched_root
+            .as_mut()
+            .filter(|(cached, _)| *cached == path)
+        {
+            Some((_, cached)) => std::mem::take(cached),
+            None => archive.read(&path)?,
+        };
         let document = if path == root {
             deserialize_xml::<ModelDocument>(&bytes, XmlRole::Model)?
         } else {

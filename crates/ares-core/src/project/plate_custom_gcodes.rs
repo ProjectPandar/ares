@@ -1,6 +1,8 @@
 //! The project's per-plate custom G-codes (`Model::plates_custom_gcodes`,
 //! `Model.hpp:1562-1570`), loaded from `Metadata/custom_gcode_per_layer.xml`
 //! (`bbs_3mf.cpp:220`, `:3208-3292`).
+mod json;
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::Display,

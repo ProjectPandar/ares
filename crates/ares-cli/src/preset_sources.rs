@@ -1,14 +1,47 @@
 //! Host half of PresetBundle.cpp:614–650, 654–688 source-manifest loading.
 use crate::failure::CliFailure;
-use ares_core::{LoadSettingsFile, LoadedPresetSources};
-use serde_json::{Value, json};
+use ares_core::{
+    LoadSettingsFile, LoadedPresetSources, PresetInheritanceSource, ProfileKind, SourceIdentity,
+    VendorManifest, preset_inheritance_source,
+};
+use serde_json::Value;
 use std::{
     collections::BTreeSet,
     fs, io,
     path::{Path, PathBuf},
 };
 
-fn source_identity(file: &fs::File) -> io::Result<ares_core::SourceIdentity> {
+pub(crate) struct ReadPresetFile {
+    pub label: String,
+    pub json: String,
+    pub source_identity: Option<SourceIdentity>,
+}
+
+impl ReadPresetFile {
+    pub(crate) fn as_load_settings_file(&self) -> LoadSettingsFile<'_> {
+        LoadSettingsFile {
+            label: &self.label,
+            json: &self.json,
+            source_identity: self.source_identity.as_ref(),
+        }
+    }
+}
+
+pub(crate) fn as_load_settings_files(files: &[ReadPresetFile]) -> Vec<LoadSettingsFile<'_>> {
+    files
+        .iter()
+        .map(ReadPresetFile::as_load_settings_file)
+        .collect()
+}
+
+pub(crate) fn read_preset_list(value: Option<&str>) -> Result<Vec<ReadPresetFile>, CliFailure> {
+    match value {
+        Some(list) => read_preset_files(&crate::split_native_list(list)),
+        None => Ok(Vec::new()),
+    }
+}
+
+fn source_identity(file: &fs::File) -> io::Result<SourceIdentity> {
     let mut bytes = Vec::new();
     #[cfg(unix)]
     {
@@ -47,12 +80,19 @@ fn source_identity(file: &fs::File) -> io::Result<ares_core::SourceIdentity> {
             "preset source identity is unsupported on this host",
         ));
     }
-    Ok(ares_core::SourceIdentity::from_host_bytes(
-        bytes.into_boxed_slice(),
-    ))
+    Ok(SourceIdentity::from_host_bytes(bytes.into_boxed_slice()))
 }
 
-fn read_preset_source(path: &Path) -> io::Result<(String, ares_core::SourceIdentity)> {
+fn read_file_with_identity(path: &Path) -> io::Result<(Vec<u8>, SourceIdentity)> {
+    use std::io::Read;
+    let mut file = fs::File::open(path)?;
+    let identity = source_identity(&file)?;
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes)?;
+    Ok((bytes, identity))
+}
+
+fn read_preset_source(path: &Path) -> io::Result<(String, SourceIdentity)> {
     use std::io::Read;
     let mut file = fs::File::open(path)?;
     let identity = source_identity(&file)?;
@@ -61,16 +101,29 @@ fn read_preset_source(path: &Path) -> io::Result<(String, ares_core::SourceIdent
     Ok((json, identity))
 }
 
+/// Reads all vendor sub-path files referenced by `manifest` under `root/<id>/`.
+pub(crate) fn read_vendor_files(
+    root: &Path,
+    manifest: &VendorManifest,
+) -> io::Result<Vec<(String, Vec<u8>)>> {
+    let vendor_dir = root.join(manifest.id());
+    manifest
+        .sub_paths()
+        .map(|sub_path| {
+            let bytes = fs::read(vendor_dir.join(sub_path))?;
+            Ok((sub_path.to_owned(), bytes))
+        })
+        .collect()
+}
+
 /// Reads the referenced preset files, keeping the path for upstream error
 /// text (`Loading setting file "x" failed: ...`, `OrcaSlicer.cpp:2021-2023`).
 /// Empty labels stay empty (dropped list slots).
-pub(super) fn read_preset_files(
-    labels: &[&str],
-) -> Result<Vec<(String, String, Option<ares_core::SourceIdentity>)>, CliFailure> {
+pub(super) fn read_preset_files(labels: &[&str]) -> Result<Vec<ReadPresetFile>, CliFailure> {
     labels
         .iter()
         .map(|label| {
-            let (json, identity) = if label.is_empty() {
+            let (json, source_identity) = if label.is_empty() {
                 (String::new(), None)
             } else {
                 let (json, identity) = read_preset_source(Path::new(label)).map_err(|error| {
@@ -81,7 +134,11 @@ pub(super) fn read_preset_files(
                 })?;
                 (json, Some(identity))
             };
-            Ok(((*label).to_owned(), json, identity))
+            Ok(ReadPresetFile {
+                label: (*label).to_owned(),
+                json,
+                source_identity,
+            })
         })
         .collect()
 }
@@ -97,19 +154,16 @@ pub(super) fn load<'a>(
         if file.json.is_empty() {
             continue;
         }
-        let document: Value = serde_json::from_str(file.json)?;
-        if document["inherits"].as_str().is_none_or(str::is_empty) {
-            continue;
-        }
-        if matches!(document["from"].as_str(), Some("user" | "User")) {
-            if !users_loaded && let Some(datadir) = datadir {
-                load_user_presets(datadir, &mut sources)?;
-                users_loaded = true;
+        match preset_inheritance_source(file.json)? {
+            None => continue,
+            Some(PresetInheritanceSource::User) => {
+                if !users_loaded && let Some(datadir) = datadir {
+                    load_user_presets(datadir, &mut sources)?;
+                    users_loaded = true;
+                }
+                continue;
             }
-            continue;
-        }
-        if document["from"].as_str() != Some("system") {
-            continue;
+            Some(PresetInheritanceSource::System) => {}
         }
         let mut source = PathBuf::new();
         for component in std::path::absolute(file.label)?.components() {
@@ -187,9 +241,9 @@ fn load_user_presets(
     };
     let root = datadir.join("user").join(user);
     for (kind, directory) in [
-        ("machine", "machine"),
-        ("process", "process"),
-        ("filament", "filament"),
+        (ProfileKind::Machine, "machine"),
+        (ProfileKind::Process, "process"),
+        (ProfileKind::Filament, "filament"),
     ] {
         let path = root.join(directory);
         if !path.is_dir() {
@@ -202,7 +256,7 @@ fn load_user_presets(
 
 fn load_user_directory(
     directory: &Path,
-    kind: &str,
+    kind: ProfileKind,
     sources: &mut LoadedPresetSources,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let base = directory.join("base");
@@ -218,20 +272,13 @@ fn load_user_directory(
         let Ok((json, identity)) = read_preset_source(&path) else {
             continue;
         };
-        let Ok(mut document) = serde_json::from_str::<Value>(&json) else {
-            continue;
-        };
-        if !document.is_object() {
-            continue;
-        }
-        document["type"] = Value::String(kind.to_owned());
         entries.push((
             path.file_stem().unwrap().to_str().unwrap().to_owned(),
-            document.to_string(),
+            json,
             identity,
         ));
     }
-    sources.add_user_collection(&entries)?;
+    sources.add_user_directory(kind, &entries)?;
     Ok(())
 }
 
@@ -241,39 +288,24 @@ fn add_vendor(
     root: &Path,
     id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let manifest = root.join(format!("{id}.json"));
-    if !loaded.insert(manifest.clone()) {
+    let manifest_path = root.join(format!("{id}.json"));
+    if !loaded.insert(manifest_path.clone()) {
         return Ok(());
     }
-    let index: Value = serde_json::from_slice(&fs::read(manifest)?)?;
-    let mut files = serde_json::Map::new();
-    let mut identities = Vec::new();
-    for key in [
-        "machine_model_list",
-        "machine_list",
-        "process_list",
-        "filament_list",
-    ] {
-        let Some(entries) = index[key].as_array() else {
-            continue;
-        };
-        for entry in entries {
-            let sub_path = entry["sub_path"].as_str().ok_or_else(|| {
-                io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "vendor manifest sub_path is missing",
-                )
-            })?;
-            let path = root.join(id).join(sub_path);
-            let (json, identity) = read_preset_source(&path)?;
-            let document: Value = serde_json::from_str(&json)?;
-            identities.push((sub_path.to_owned(), identity));
-            files.insert(sub_path.to_owned(), document);
-        }
-    }
-    sources.add_vendor(
-        &json!({"id": id, "index": index, "files": files}).to_string(),
-        &identities,
+    let manifest = VendorManifest::parse(id, &fs::read(manifest_path)?)?;
+    let vendor_dir = root.join(id);
+    let files = manifest
+        .sub_paths()
+        .map(|sub_path| {
+            let (bytes, identity) = read_file_with_identity(&vendor_dir.join(sub_path))?;
+            Ok::<_, io::Error>((sub_path.to_owned(), bytes, identity))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    sources.add_vendor_manifest(
+        manifest,
+        files.iter().map(|(sub_path, bytes, identity)| {
+            (sub_path.as_str(), bytes.as_slice(), identity.clone())
+        }),
     )?;
     Ok(())
 }

@@ -1,13 +1,15 @@
 use std::{fs, io, path::Path};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsRequest,
     LoadSettingsSliceRequest, SlicedPlate, SlicedStlPlate, SlicerContext,
 };
 
 use crate::{
-    args::DirectSliceArgs, failure::CliFailure, preset_sources::read_preset_files, settings_export,
-    split_native_list,
+    args::DirectSliceArgs,
+    failure::CliFailure,
+    preset_sources::{as_load_settings_files, read_preset_list},
+    settings_export,
 };
 
 pub(crate) mod arrange;
@@ -185,36 +187,10 @@ pub(super) async fn run(
             }]
         }
     } else {
-        let settings = read_preset_files(
-            &args
-                .load_settings
-                .as_deref()
-                .map(split_native_list)
-                .unwrap_or_default(),
-        )?;
-        let filaments = read_preset_files(
-            &args
-                .load_filaments
-                .as_deref()
-                .map(split_native_list)
-                .unwrap_or_default(),
-        )?;
-        let settings = settings
-            .iter()
-            .map(|(label, json, source_identity)| LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            })
-            .collect::<Vec<_>>();
-        let mut filaments = filaments
-            .iter()
-            .map(|(label, json, source_identity)| LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            })
-            .collect::<Vec<_>>();
+        let settings_files = read_preset_list(args.load_settings.as_deref())?;
+        let filament_files = read_preset_list(args.load_filaments.as_deref())?;
+        let settings = as_load_settings_files(&settings_files);
+        let mut filaments = as_load_settings_files(&filament_files);
         if args.load_defaultfila && !filaments.is_empty() {
             let first = filaments
                 .iter()

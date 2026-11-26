@@ -59,7 +59,6 @@ pub use cli_plates::{
     slice_cli_project_plates,
 };
 pub use cli_stl::{SlicedStlPlate, StlPlateFailure, slice_stl_models_with_load_settings};
-pub(crate) use validated::validate_post_process;
 pub use validated::{
     CliProjectSliceRequest, DirectProjectSliceRequest, slice_cli_project_plate_validated,
     slice_cli_project_plate_validated_with_catalog, slice_cli_project_plate_with_refresh,
@@ -67,6 +66,7 @@ pub use validated::{
     slice_project_plate_processed_validated_with_custom_gcodes, slice_project_plate_validated,
     slice_project_plate_validated_with_catalog, slice_project_plate_with_archive,
 };
+pub(crate) use validated::{slice_loaded_project_plate_with_archive, validate_post_process};
 
 /// Loads the project for a selected-profile request without slicing it —
 /// the same load path `prepare_profile_slice` uses, exposed for the

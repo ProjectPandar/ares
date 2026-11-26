@@ -39,12 +39,78 @@ impl LoadedPresetSources {
         &mut self,
         entries: &[(String, String, SourceIdentity)],
     ) -> Result<(), SliceError> {
-        let mut documents = Vec::with_capacity(entries.len());
+        let mut parsed = Vec::with_capacity(entries.len());
         for (collection_name, json, identity) in entries {
-            let mut document: ProfileDocument =
+            let document: ProfileDocument =
                 serde_json::from_str(json).map_err(|error| invalid(error.to_string()))?;
-            let authored_name = std::mem::replace(&mut document.name, collection_name.clone());
             let kind = ProfileKind::parse(&document.kind)?;
+            parsed.push((collection_name.as_str(), kind, document, identity));
+        }
+        self.push_user_documents(parsed)
+    }
+
+    /// `Preset.cpp:2032–2115`: resolve one typed user directory directly from
+    /// raw JSON strings without rewriting `"type"` through an intermediate JSON
+    /// value. Non-object or malformed files are ignored like upstream's loader.
+    pub fn add_user_directory(
+        &mut self,
+        kind: ProfileKind,
+        entries: &[(String, String, SourceIdentity)],
+    ) -> Result<(), SliceError> {
+        #[derive(serde::Deserialize)]
+        struct RawUserDocument {
+            #[serde(default)]
+            name: Option<String>,
+            #[serde(default)]
+            inherits: Option<String>,
+            #[serde(default)]
+            instantiation: Option<String>,
+            #[serde(
+                rename = "include",
+                default,
+                deserialize_with = "super::document::deserialize_includes"
+            )]
+            includes: Vec<String>,
+            #[serde(rename = "type", default)]
+            _ignored_type: serde::de::IgnoredAny,
+            #[serde(flatten)]
+            fields:
+                std::collections::BTreeMap<String, crate::project::raw_settings::RawConfigValue>,
+        }
+        let kind_str = match kind {
+            ProfileKind::Machine => "machine",
+            ProfileKind::Process => "process",
+            ProfileKind::Filament => "filament",
+        };
+        let mut parsed = Vec::with_capacity(entries.len());
+        for (collection_name, json, identity) in entries {
+            let Ok(raw) = serde_json::from_str::<RawUserDocument>(json) else {
+                continue;
+            };
+            let Some(name) = raw.name else {
+                return Err(invalid("missing field `name`".to_owned()));
+            };
+            let document = ProfileDocument {
+                kind: kind_str.to_owned(),
+                name,
+                inherits: raw.inherits,
+                instantiation: raw.instantiation,
+                includes: raw.includes,
+                preserve_default_thumbnails: false,
+                fields: raw.fields,
+            };
+            parsed.push((collection_name.as_str(), kind, document, identity));
+        }
+        self.push_user_documents(parsed)
+    }
+
+    fn push_user_documents(
+        &mut self,
+        entries: Vec<(&str, ProfileKind, ProfileDocument, &SourceIdentity)>,
+    ) -> Result<(), SliceError> {
+        let mut documents = Vec::with_capacity(entries.len());
+        for (collection_name, kind, mut document, identity) in entries {
+            let authored_name = std::mem::replace(&mut document.name, collection_name.to_owned());
             if !user::valid_version(&document) {
                 continue;
             }
@@ -118,6 +184,49 @@ impl LoadedPresetSources {
     ) -> Result<(), SliceError> {
         let vendor: VendorInput =
             serde_json::from_str(json).map_err(|error| invalid(error.to_string()))?;
+        let identity_map: std::collections::BTreeMap<&str, &SourceIdentity> = identities
+            .iter()
+            .map(|(path, identity)| (path.as_str(), identity))
+            .collect();
+        self.push_vendor_input(vendor, &identity_map)
+    }
+
+    /// Adds one vendor from its parsed manifest and raw `(sub_path, bytes, identity)`
+    /// files directly, avoiding JSON envelope re-serialization.
+    pub fn add_vendor_manifest<'a>(
+        &mut self,
+        manifest: super::VendorManifest,
+        files: impl IntoIterator<Item = (&'a str, &'a [u8], SourceIdentity)>,
+    ) -> Result<(), SliceError> {
+        let mut parsed = std::collections::BTreeMap::new();
+        let mut owned_identities = Vec::new();
+        for (sub_path, bytes, identity) in files {
+            let document: ProfileDocument =
+                serde_json::from_slice(crate::profiles::without_utf8_bom(bytes))
+                    .map_err(|error| invalid(error.to_string()))?;
+            let path = sub_path.to_owned();
+            parsed.insert(path.clone(), document);
+            owned_identities.push((path, identity));
+        }
+        let identity_map: std::collections::BTreeMap<&str, &SourceIdentity> = owned_identities
+            .iter()
+            .map(|(path, identity)| (path.as_str(), identity))
+            .collect();
+        self.push_vendor_input(
+            VendorInput {
+                id: manifest.id,
+                index: manifest.index,
+                files: parsed,
+            },
+            &identity_map,
+        )
+    }
+
+    fn push_vendor_input(
+        &mut self,
+        vendor: VendorInput,
+        identities: &std::collections::BTreeMap<&str, &SourceIdentity>,
+    ) -> Result<(), SliceError> {
         let scope = Scope::Vendor(self.catalog.vendor_names.len());
         let entries = [
             (ProfileKind::Machine, &vendor.index.machine_list),
@@ -134,8 +243,7 @@ impl LoadedPresetSources {
             if document.instantiation.as_deref() == Some("false") {
                 continue;
             }
-            if let Some((_, identity)) = identities.iter().find(|(path, _)| path == &entry.sub_path)
-            {
+            if let Some(&identity) = identities.get(entry.sub_path.as_str()) {
                 bindings.push((kind, document.name.clone(), identity.clone()));
             }
         }

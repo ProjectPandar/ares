@@ -2,16 +2,15 @@ use std::{fs, io, path::Path};
 
 use ares_core::{
     CliPresetProject, CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides,
-    GenerationMetadata, LoadSettingsFile, LoadSettingsSliceRequest, Placement, ProcessedGCode,
+    ConfigSubstitution, GenerationMetadata, LoadSettingsSliceRequest, Placement, ProcessedGCode,
     SliceError, SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
 };
 
 use crate::{
     args::DirectSliceArgs,
     failure::{CliFailure, slice_error_to_failure},
-    preset_sources::read_preset_files,
+    preset_sources::{as_load_settings_files, read_preset_list},
     slice_plates::{self, PlateOptions},
-    split_native_list,
 };
 
 pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
@@ -102,22 +101,40 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     }
     enum ProjectPresets<'a> {
         Replace(Option<&'a str>, Option<&'a str>),
-        Saved(
-            Option<UpwardMachineSource>,
-            Option<Vec<u8>>,
-            Option<Box<ares_core::PresetCatalogHandle>>,
-        ),
+        Saved {
+            project: CliPresetProject<'a>,
+            source: Option<UpwardMachineSource>,
+            machine: Option<Vec<u8>>,
+            catalog: Option<Box<ares_core::PresetCatalogHandle>>,
+        },
     }
     let presets = match files {
         (None, None) => {
+            let mut project = CliPresetProject::open(&bytes, true).map_err(|error| {
+                slice_error_to_failure(
+                    error,
+                    &output,
+                    #[cfg(target_os = "linux")]
+                    plate,
+                )
+            })?;
             let resources = crate::installed_resources::resolve(None)?;
-            let (source, machine) = crate::compatible_machine::load(&bytes, &resources)?;
+            let source = project
+                .take_upward_source()
+                .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
+            let machine =
+                crate::compatible_machine::read_machine_full(source.as_ref(), &resources)?;
             let catalog = crate::project_presets::retained_printer_catalog(
                 &resources,
                 source.as_ref(),
                 false,
             )?;
-            ProjectPresets::Saved(source, machine, catalog.map(Box::new))
+            ProjectPresets::Saved {
+                project,
+                source,
+                machine,
+                catalog: catalog.map(Box::new),
+            }
         }
         (settings, filaments) => ProjectPresets::Replace(settings, filaments),
     };
@@ -136,9 +153,9 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     )?;
     let mut sliced_plate = SlicedPlate::default();
     let mut upward_machines = Vec::new();
-    let processed = match presets {
+    let (processed, substitutions) = match presets {
         ProjectPresets::Replace(settings, filaments) => {
-            let processed = slice_with_replacement(
+            let (processed, substitutions) = slice_with_replacement(
                 (input, &bytes, plate, &output),
                 (settings, filaments, datadir),
                 context,
@@ -146,11 +163,16 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 args.export_statistics,
             )?;
             upward_machines = std::mem::take(&mut sliced_plate.upward_machines);
-            processed
+            (processed, substitutions)
         }
-        ProjectPresets::Saved(source, machine, catalog) => {
-            ares_core::slice_cli_project_plate_validated_with_catalog(
-                &bytes,
+        ProjectPresets::Saved {
+            project,
+            source,
+            machine,
+            catalog,
+        } => {
+            let substitutions = project.substitutions().to_vec();
+            let processed = project.slice_project(
                 CliProjectSliceRequest {
                     plate: Some(plate),
                     overrides: &ConfigOverrides::default(),
@@ -164,13 +186,13 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                     sliced_plate: &mut sliced_plate,
                 },
                 GenerationMetadata::default(),
-                catalog.as_deref(),
+                (catalog.as_deref(), None),
                 context,
-            )
-            .await
+            );
+            (processed, substitutions)
         }
-    }
-    .map_err(|error| {
+    };
+    let processed = processed.map_err(|error| {
         if let Some(failure) = crate::failure::slicing::path_conflict(
             &error,
             &mut args.diagnostics,
@@ -181,7 +203,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             &sliced_plate,
         ) {
             return failure
-                .with_config_substitutions(&input.to_string_lossy(), crate::substitutions(&bytes))
+                .with_config_substitutions(&input.to_string_lossy(), substitutions.clone())
                 .with_upward_report(upward_machines.clone())
                 .with_downward_report(downward_machines.clone());
         }
@@ -205,7 +227,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         failure
     })?;
     let input_file = input.to_string_lossy();
-    let project = Some((input_file.as_ref(), bytes.as_slice()));
+    let project = Some((input_file.as_ref(), substitutions.as_slice()));
     crate::failure::slicing::check_direct(
         (&mut args.diagnostics, args.no_check, args.strict),
         #[cfg(target_os = "linux")]
@@ -226,7 +248,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         upward_machines: &upward_machines,
         downward_machines: &downward_machines,
     }
-    .write(&input_file, crate::substitutions(&bytes));
+    .write(&input_file, substitutions);
     Ok(())
 }
 
@@ -236,29 +258,16 @@ fn slice_with_replacement(
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
-) -> Result<Result<ProcessedGCode, SliceError>, CliFailure> {
+) -> Result<(Result<ProcessedGCode, SliceError>, Vec<ConfigSubstitution>), CliFailure> {
     let admitted = match CliPresetProject::admit(bytes, &context) {
         Ok(project) => project,
-        Err(error) => return Ok(Err(error)),
+        Err(error) => return Ok((Err(error), Vec::new())),
     };
-    let settings = read_preset_files(&settings.map(split_native_list).unwrap_or_default())?;
-    let filaments = read_preset_files(&filaments.map(split_native_list).unwrap_or_default())?;
-    let settings = settings
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect::<Vec<_>>();
-    let filaments = filaments
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect::<Vec<_>>();
+    let substitutions = admitted.substitutions().to_vec();
+    let settings_files = read_preset_list(settings)?;
+    let filament_files = read_preset_list(filaments)?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let loaded_sources = datadir
         .map(|datadir| {
             slice_plates::sources_for_slice(
@@ -274,7 +283,7 @@ fn slice_with_replacement(
         .file_name()
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?
         .to_string_lossy();
-    Ok(admitted.slice_with_load_settings_processed(
+    let result = admitted.slice_with_load_settings_processed(
         LoadSettingsSliceRequest {
             filename: &filename,
             catalog_json: None,
@@ -291,5 +300,6 @@ fn slice_with_replacement(
         GenerationMetadata::default(),
         context,
         record_moves,
-    ))
+    );
+    Ok((result, substitutions))
 }
