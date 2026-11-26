@@ -6,7 +6,8 @@ mod opening;
 use super::{ClipperError, FillRule, PolyTree, backend};
 use crate::geometry::{Point, Polygon, clipper2 as c2};
 pub(crate) use execute::{
-    offset_lines, offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths,
+    offset_lines, offset_open_paths, offset_paths, offset_paths_tree, offset_raw_expolygon_paths,
+    raw_offset_paths,
 };
 pub(crate) use expolygon::{
     closing_ex, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
@@ -203,6 +204,22 @@ fn prepare(paths: &[Polygon], delta: f32, end: c2::EndType) -> c2::Paths64 {
     let shortest = (f64::from(delta) * 0.005).abs();
     for path in paths {
         append_path(&mut output, path.points(), shortest, end);
+    }
+    output
+}
+fn prepare_expolygons(
+    paths: &[crate::geometry::ExPolygon],
+    delta: f32,
+    end: c2::EndType,
+) -> c2::Paths64 {
+    let count = paths.iter().map(|path| 1 + path.holes().len()).sum();
+    let mut output = Vec::with_capacity(count);
+    let shortest = (f64::from(delta) * 0.005).abs();
+    for path in paths {
+        append_path(&mut output, path.contour().points(), shortest, end);
+        for hole in path.holes() {
+            append_path(&mut output, hole.points(), shortest, end);
+        }
     }
     output
 }

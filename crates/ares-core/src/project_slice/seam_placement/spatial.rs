@@ -25,15 +25,20 @@ impl PointKdTree {
         Self { nodes }
     }
 
-    pub(super) fn in_radius(&self, points: &[Vec3], target: Vec3, radius: f32) -> Vec<usize> {
+    pub(super) fn in_radius_for_each(
+        &self,
+        points: &[Vec3],
+        target: Vec3,
+        radius: f32,
+        visit: impl FnMut(usize),
+    ) {
         let mut search = PointRadiusSearch {
             points,
             target,
             radius_squared: radius * radius,
-            output: Vec::new(),
+            visit,
         };
         search.visit(self, 0, 0);
-        search.output
     }
 
     pub(super) fn closest(&self, points: &[Vec3], target: Vec3) -> usize {
@@ -78,21 +83,21 @@ impl PointClosestSearch<'_> {
     }
 }
 
-struct PointRadiusSearch<'a> {
+struct PointRadiusSearch<'a, F> {
     points: &'a [Vec3],
     target: Vec3,
     radius_squared: f32,
-    output: Vec<usize>,
+    visit: F,
 }
 
-impl PointRadiusSearch<'_> {
+impl<F: FnMut(usize)> PointRadiusSearch<'_, F> {
     fn visit(&mut self, tree: &PointKdTree, node: usize, dimension: usize) {
         if node >= tree.nodes.len() || tree.nodes[node] == NONE {
             return;
         }
         let index = tree.nodes[node];
         if (self.target - self.points[index]).norm_squared() < self.radius_squared {
-            self.output.push(index);
+            (self.visit)(index);
         }
         let delta = self.target.axis(dimension) - self.points[index].axis(dimension);
         let both = delta * delta < self.radius_squared + KD_EPSILON;

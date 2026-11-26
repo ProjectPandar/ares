@@ -72,28 +72,32 @@ impl GlobalVisibility {
     }
 
     pub(super) fn at(&self, position: Vec3) -> f32 {
-        let nearby = self
-            .sample_tree
-            .in_radius(&self.samples.positions, position, self.radius);
-        if nearby.is_empty() {
-            return 1.0;
-        }
+        let mut found = false;
         let mut total_weight = 0.0;
         let mut total_visibility = 0.0;
-        for index in nearby {
-            let sample = self.samples.positions[index];
-            let normal = self.samples.normals[index];
-            let plane_distance = (position - sample).dot(normal).abs();
-            // `SeamPlacer.cpp:341-342` adds two separately rounded contributions.
-            let delta = position - sample;
-            // SeamPlacer.cpp:342 Eigen squaredNorm: Native asm 0x1017941–0x1017965
-            // reduces y²+z² before x²; keep this order local to the distance weight.
-            let eigen_yz_then_x_squared_norm =
-                (delta.y * delta.y + delta.z * delta.z) + delta.x * delta.x;
-            let weight = (self.radius - plane_distance)
-                + (self.radius - eigen_yz_then_x_squared_norm.sqrt());
-            total_visibility += weight * self.values[index];
-            total_weight += weight;
+        self.sample_tree.in_radius_for_each(
+            &self.samples.positions,
+            position,
+            self.radius,
+            |index| {
+                found = true;
+                let sample = self.samples.positions[index];
+                let normal = self.samples.normals[index];
+                let plane_distance = (position - sample).dot(normal).abs();
+                // `SeamPlacer.cpp:341-342` adds two separately rounded contributions.
+                let delta = position - sample;
+                // SeamPlacer.cpp:342 Eigen squaredNorm: Native asm 0x1017941–0x1017965
+                // reduces y²+z² before x²; keep this order local to the distance weight.
+                let eigen_yz_then_x_squared_norm =
+                    (delta.y * delta.y + delta.z * delta.z) + delta.x * delta.x;
+                let weight = (self.radius - plane_distance)
+                    + (self.radius - eigen_yz_then_x_squared_norm.sqrt());
+                total_visibility += weight * self.values[index];
+                total_weight += weight;
+            },
+        );
+        if !found {
+            return 1.0;
         }
         total_visibility / total_weight
     }

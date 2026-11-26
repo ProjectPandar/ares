@@ -14,6 +14,20 @@ pub(crate) fn offset_paths(
     );
     Ok(backend::polygons(&output))
 }
+pub(crate) fn offset_raw_expolygon_paths(
+    paths: &[crate::geometry::ExPolygon],
+    delta: f32,
+    kind: JoinType,
+    limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let output: c2::Paths64 = closed(
+        prepare_expolygons(paths, delta, c2::EndType::Polygon),
+        delta,
+        kind,
+        limit,
+    );
+    Ok(backend::polygons(&output))
+}
 pub(crate) fn offset_paths_tree(
     paths: &[Polygon],
     delta: f32,

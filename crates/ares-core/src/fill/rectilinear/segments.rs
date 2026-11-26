@@ -104,10 +104,6 @@ pub(crate) fn prepare_rectilinear_contours(
     })
 }
 
-#[expect(
-    clippy::excessive_nesting,
-    reason = "source slicing walks retained contours, segments, then vertical lines"
-)]
 pub(crate) fn populate_vertical_lines(
     slice: &mut RectilinearSlice,
     count: usize,
@@ -132,27 +128,75 @@ pub(crate) fn populate_vertical_lines(
         for segment_index in 0..points.len() {
             let first = points[(segment_index + points.len() - 1) % points.len()];
             let second = points[segment_index];
-            for line in &mut slice.lines {
-                if let Some(position) =
-                    intersection_position(points, segment_index, first, second, line.x)?
-                {
-                    line.intersections.push(SegmentIntersection {
-                        point: Point::new(line.x, position.rounded()?),
-                        position,
-                        contour_index,
-                        segment_index,
-                        kind: kind(contour.inner, second.x() > first.x()),
-                        previous: None,
-                        next: None,
-                    });
-                }
+            if first.x() == second.x() {
+                continue;
             }
+            let bounds = if first.x() < second.x() {
+                (first.x(), second.x())
+            } else {
+                (second.x(), first.x())
+            };
+            let range = segment_line_range(bounds, x0, spacing, count);
+            if range.is_empty() {
+                continue;
+            }
+            add_segment_intersections(
+                &mut slice.lines[range],
+                points,
+                (contour_index, contour.inner, segment_index),
+                (first, second),
+            )?;
         }
     }
     for line in &mut slice.lines {
         line.intersections
             .sort_by(|first, second| first.position.compare(second.position));
         remove_overlapping_vertices(line, &slice.contours);
+    }
+    Ok(())
+}
+
+fn segment_line_range(
+    (left, right): (i64, i64),
+    x0: i64,
+    spacing: i64,
+    count: usize,
+) -> std::ops::Range<usize> {
+    if count == 0 || spacing <= 0 {
+        return 0..count;
+    }
+    let step = i128::from(spacing);
+    let origin = i128::from(x0);
+    let start = (i128::from(left) - origin + step - 1)
+        .div_euclid(step)
+        .max(0);
+    let end = (i128::from(right) - origin).div_euclid(step) + 1;
+    if start >= end || start >= count as i128 {
+        return 0..0;
+    }
+    start as usize..end.min(count as i128) as usize
+}
+
+fn add_segment_intersections(
+    lines: &mut [SegmentedLine],
+    points: &[Point],
+    (contour_index, inner, segment_index): (usize, bool, usize),
+    (first, second): (Point, Point),
+) -> Result<(), ClipperError> {
+    let intersection_kind = kind(inner, second.x() > first.x());
+    for line in lines {
+        if let Some(position) = intersection_position(points, segment_index, first, second, line.x)?
+        {
+            line.intersections.push(SegmentIntersection {
+                point: Point::new(line.x, position.rounded()?),
+                position,
+                contour_index,
+                segment_index,
+                kind: intersection_kind,
+                previous: None,
+                next: None,
+            });
+        }
     }
     Ok(())
 }
