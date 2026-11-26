@@ -15,6 +15,7 @@ pub(crate) mod compatibility;
 mod compensation;
 pub(crate) use archive_plate::{
     ArchivePlate, ArchiveSource, slice_source, slice_source_with_archive,
+    slice_source_with_custom_gcodes,
 };
 mod conical_overhang;
 mod contour_z;
@@ -63,8 +64,8 @@ pub use validated::{
     CliProjectSliceRequest, DirectProjectSliceRequest, slice_cli_project_plate_validated,
     slice_cli_project_plate_validated_with_catalog, slice_cli_project_plate_with_refresh,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
-    slice_project_plate_validated, slice_project_plate_validated_with_catalog,
-    slice_project_plate_with_archive,
+    slice_project_plate_processed_validated_with_custom_gcodes, slice_project_plate_validated,
+    slice_project_plate_validated_with_catalog, slice_project_plate_with_archive,
 };
 
 /// Loads the project for a selected-profile request without slicing it —
@@ -226,7 +227,10 @@ pub async fn slice_project_plate_processed_with_catalog(
 fn slice_plate(
     generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext<'_>,
-    mut sliced_plate: Option<&mut SlicedPlate>,
+    (mut sliced_plate, plate_custom_gcodes): (
+        Option<&mut SlicedPlate>,
+        Option<&mut Vec<crate::gcode_processor::CustomGCodeItem>>,
+    ),
     archive: Option<ArchiveSource>,
     prepare: impl FnOnce(
         Option<&mut SlicedPlate>,
@@ -285,6 +289,9 @@ fn slice_plate(
     ordered.support_layers = support_layers;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
+    if let Some(custom_gcodes) = plate_custom_gcodes {
+        *custom_gcodes = ordered.plate_custom_gcodes();
+    }
     let output =
         consume_post_island_print_order(ordered, generation, context, &mut warnings, archive);
     if let Some(sliced_plate) = sliced_plate {

@@ -72,6 +72,21 @@ impl PreparedPostIslandPrintOrder {
             .filament
             .gcode
     }
+
+    pub(in crate::project_slice) fn plate_custom_gcodes(
+        &self,
+    ) -> Vec<crate::gcode_processor::CustomGCodeItem> {
+        self.predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .project
+            .curr_plate_custom_gcodes()
+            .gcodes
+    }
 }
 
 /// Per-layer candidate data for the Nearest seam selection at emit time

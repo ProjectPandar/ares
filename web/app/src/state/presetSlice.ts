@@ -23,13 +23,14 @@ export async function profileRequest(
   { printer, process, filaments, filamentProject }: PresetSelection,
   sources: CatalogSources,
   plate = scene.plates[0]?.id,
+  includeOverrides = true,
 ) {
   const catalog = await catalogJson(sources);
   const options: ProfileSliceOptions = {
     plate,
     seed: 0,
     placement: scene.format === "stl" ? "center" : "none",
-    overrides: filamentProject ? await overrideTokens(filamentProject) : undefined,
+    overrides: includeOverrides && filamentProject ? await overrideTokens(filamentProject) : undefined,
   };
   return { catalog, selection: { machine: printer, process: process!, filaments }, options };
 }
@@ -39,11 +40,12 @@ export async function profileRequest(
  * `serialize()` text (the Field.cpp commit), typed values are encoded by the engine.
  */
 export async function overrideTokens(overrides: ConfigOverrides): Promise<Record<string, string | string[]>> {
+  const edits = Object.entries(overrides);
+  if (edits.length === 0) return {};
   const isText = (value: OptionValue): value is string | string[] =>
     typeof value === "string" || (Array.isArray(value) && value.every((element) => typeof element === "string"));
-  const edits = Object.entries(overrides);
   const typed = edits.filter(([, value]) => !isText(value));
-  const encoded = await slicer.encodeConfigValues(typed);
+  const encoded = typed.length > 0 ? await slicer.encodeConfigValues(typed) : [];
   return Object.fromEntries([
     ...edits.filter((edit): edit is [string, string | string[]] => isText(edit[1])),
     ...typed.map(([key], at) => [key, encoded[at]]),
@@ -63,7 +65,11 @@ export async function profileSliceRequest(
   overrides: ConfigOverrides,
   plate?: number,
 ) {
-  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, useApp.getState(), plate);
+  const {
+    catalog,
+    selection: profiles,
+    options,
+  } = await profileRequest(scene, selection, useApp.getState(), plate, false);
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
   // So are the dual-nozzle volume types and filament map.
   const project: ConfigOverrides = {

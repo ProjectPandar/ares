@@ -1,19 +1,7 @@
 use crate::SliceOutput;
-use ares_core::{SliceError, gcode_processor::CustomGCodeItem};
+use ares_core::gcode_processor::CustomGCodeItem;
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
-
-/// The editor's item list (`GCodeViewer.cpp:4478-4479`):
-/// `model().get_curr_plate_custom_gcodes().gcodes` of the sliced plate.
-pub(crate) fn plate_custom_gcodes(
-    input: &[u8],
-    plate: Option<u32>,
-) -> Result<Vec<CustomGCodeItem>, SliceError> {
-    Ok(ares_core::load_project(input)?
-        .select_plate(plate)?
-        .curr_plate_custom_gcodes()
-        .gcodes)
-}
 
 /// ares-vgcode `CustomGCodeOverviewRow`; the f32 time widens to f64 so the
 /// JSON carries its exact value.

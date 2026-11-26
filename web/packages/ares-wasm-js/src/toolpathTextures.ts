@@ -48,12 +48,17 @@ export function packTextures(vertices: VertexBuffers, arrays: VertexArrays): Too
   const positions = new Float32Array(size * 4);
   const heightsWidthsAngles = new Float32Array(size * 4);
   for (let v = 0; v < vertexCount; v++) {
-    positions.set(segmentPositions.subarray(3 * v, 3 * v + 3), 4 * v);
-    positions[4 * v + 3] = ids[2 * v + 1];
-    heightsWidthsAngles[4 * v] = heightsWidths[2 * v];
-    heightsWidthsAngles[4 * v + 1] = heightsWidths[2 * v + 1];
-    heightsWidthsAngles[4 * v + 2] = segmentAngles[v];
-    heightsWidthsAngles[4 * v + 3] = tags[4 * v + 1] === EXTRUDE ? tags[4 * v] : KIND_OPTION + options[v];
+    const s3 = 3 * v;
+    const s4 = 4 * v;
+    const s2 = 2 * v;
+    positions[s4] = segmentPositions[s3];
+    positions[s4 + 1] = segmentPositions[s3 + 1];
+    positions[s4 + 2] = segmentPositions[s3 + 2];
+    positions[s4 + 3] = ids[s2 + 1];
+    heightsWidthsAngles[s4] = heightsWidths[s2];
+    heightsWidthsAngles[s4 + 1] = heightsWidths[s2 + 1];
+    heightsWidthsAngles[s4 + 2] = segmentAngles[v];
+    heightsWidthsAngles[s4 + 3] = tags[s4 + 1] === EXTRUDE ? tags[s4] : KIND_OPTION + options[v];
   }
   const vertex = new Uint32Array(vertexCount);
   const segment = new Uint32Array(vertexCount);
@@ -80,13 +85,14 @@ export function packTextures(vertices: VertexBuffers, arrays: VertexArrays): Too
     segment[count] = i - 1;
     count++;
   }
-  const ends = vertex.subarray(0, count);
+  const ends = count === vertexCount ? vertex : vertex.slice(0, count);
+  const segments = count === vertexCount ? segment : segment.slice(0, count);
   drawnSegments.set(vertices, ends);
   return {
     extent,
     positions,
     heightsWidthsAngles,
-    segments: segment.subarray(0, count),
+    segments,
     bounds,
     probes: {
       sizes: segmentSizesProbe(ends, heightsWidths),
