@@ -203,7 +203,7 @@ jobs:
           archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
           ghcr-token: ${{ github.token }}
       - name: Run parity-official shard ${{ matrix.shard }}/8
-        run: cargo nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-official --partition "hash:${{ matrix.shard }}/8"
+        run: cargo-nextest nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-official --partition "hash:${{ matrix.shard }}/8"
 
   parity-seeded:
     name: parity-seeded (${{ matrix.shard }}/8)
@@ -225,7 +225,7 @@ jobs:
           archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
           ghcr-token: ${{ github.token }}
       - name: Run parity-seeded shard ${{ matrix.shard }}/8
-        run: cargo nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-seeded --partition "hash:${{ matrix.shard }}/8"
+        run: cargo-nextest nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-seeded --partition "hash:${{ matrix.shard }}/8"
 
   web-build:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')

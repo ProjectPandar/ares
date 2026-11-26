@@ -62,4 +62,5 @@ runs:
         command -v g++
         test -f OrcaSlicer/deps_src/glu-libtess/src/tess.c
         test -f OrcaSlicer/deps_src/glu-libtess/include/glu-libtess.h
-        python3 tests/parity/profile-inputs/check.py
+        ARES_PARITY_NEXTEST_ARCHIVE="$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" \
+          python3 tests/parity/profile-inputs/check.py

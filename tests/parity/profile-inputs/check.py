@@ -12,7 +12,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 
-UPSTREAM = '345efec64c7b95a05ce5cf96df0dde66a158835c'
+UPSTREAM = '40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19'
 CASE = 'per_object_skirt_support_raft::per_object_skirt_control_matches_native'
 REPO = Path(__file__).resolve().parents[3]
 
@@ -51,10 +51,20 @@ def main():
             if root is not None:
                 env['ARES_PARITY_PROFILE_RESOURCES_DIR'] = str(root)
             env['CARGO_TERM_COLOR'] = 'never'
-            result = subprocess.run([
-                'cargo', 'nextest', 'run', '-p', 'ares-cli', '--test', 'orca_parity',
-                '-E', f'test({CASE})', '--no-fail-fast', '--test-threads', '1',
-            ], cwd=REPO, env=env, capture_output=True, text=True)
+            archive = os.environ.get('ARES_PARITY_NEXTEST_ARCHIVE')
+            if archive:
+                cmd = [
+                    'cargo-nextest', 'nextest', 'run',
+                    '--archive-file', archive,
+                    '--workspace-remap', str(REPO),
+                    '-E', f'test({CASE})', '--no-fail-fast', '--test-threads', '1',
+                ]
+            else:
+                cmd = [
+                    'cargo', 'nextest', 'run', '-p', 'ares-cli', '--test', 'orca_parity',
+                    '-E', f'test({CASE})', '--no-fail-fast', '--test-threads', '1',
+                ]
+            result = subprocess.run(cmd, cwd=REPO, env=env, capture_output=True, text=True)
             log = result.stdout + result.stderr
             path = artifacts / f'profile-input-{label}.log'
             path.write_text(log)
