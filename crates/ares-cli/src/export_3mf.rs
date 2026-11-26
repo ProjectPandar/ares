@@ -106,7 +106,15 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
             ares_core::export_3mf(input, filename, presets)
         }
     }
-    .map_err(|err| failed(err.to_string()))?;
+    .map_err(|err| match err {
+        ares_core::SliceError::ProcessNotCompatible => crate::failure::slice_error_to_failure(
+            err,
+            &output,
+            #[cfg(target_os = "linux")]
+            0,
+        ),
+        other => failed(other.to_string()),
+    })?;
     fs::write(&output, archive).map_err(|err| failed(err.to_string()))
 }
 

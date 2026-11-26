@@ -9,12 +9,17 @@ pub(super) struct DifferentSettingsContext<'a> {
     pub(super) embedded: Option<&'a RawConfigValue>,
     pub(super) len: usize,
     pub(super) slots: FilamentSlots<'a>,
+    pub(super) loaded_kinds: (bool, bool),
     pub(super) switch_compatible_printers: bool,
 }
 
 impl DifferentSettingsContext<'_> {
     pub(super) fn slot(&self, index: usize) -> RawConfigValue {
+        let (has_process, has_machine) = self.loaded_kinds;
         if index == 0 {
+            if has_process {
+                return RawConfigValue::Text(String::new());
+            }
             let existing = self
                 .embedded
                 .and_then(|value| value.element(0))
@@ -35,7 +40,11 @@ impl DifferentSettingsContext<'_> {
             }
             return RawConfigValue::Text(keys.join(";"));
         }
-        if index == self.len - 1 || self.slots.source(index - 1).is_some() {
+        if index == self.len - 1 {
+            if has_machine {
+                return RawConfigValue::Text(String::new());
+            }
+        } else if self.slots.source(index - 1).is_some() {
             return RawConfigValue::Text(String::new());
         }
         self.embedded

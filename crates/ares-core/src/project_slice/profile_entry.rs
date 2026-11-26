@@ -192,13 +192,22 @@ pub(crate) fn load_profile_slice(
     // loaded-names adjudication for the `--load-settings` composite
     // (branches 1-2); the catalog/profile entry has no CLI file loop
     // (its adjudication semantics are a deferred slice — no gate).
+    let loaded_from_3mf = matches!(
+        project.input,
+        super::ProjectInput::Bytes(bytes) | super::ProjectInput::SavedCliBytes(bytes)
+            if crate::InputFormat::detect(bytes) == crate::InputFormat::ThreeMf
+    ) || matches!(
+        project.input,
+        super::ProjectInput::Assembly(assembly) if assembly.archive().is_some()
+    );
     if let Some(names) = profile.load_names
-        && names.embedded.is_none()
+        && !loaded_from_3mf
     {
         super::compatibility::reject_incompatible_load_settings(
             &loaded.documents().project_settings_raw,
             names,
             profile.raw,
+            false,
         )?;
     }
     if project.validate_config {

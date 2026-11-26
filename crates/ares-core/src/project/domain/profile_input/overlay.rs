@@ -57,7 +57,10 @@ pub(super) fn machine_switch(
     bbl_family_3mf: bool,
 ) -> Option<MachineSwitch> {
     let loaded_machine = settings.project.preset.printer_settings_id.0.as_str();
-    if loaded_machine.is_empty() || !settings.project.preset.print_settings_id.0.is_empty() {
+    if !bbl_family_3mf
+        || loaded_machine.is_empty()
+        || !settings.project.preset.print_settings_id.0.is_empty()
+    {
         return None;
     }
     let embedded_printer = embedded_raw
@@ -302,42 +305,37 @@ pub(super) fn merged_profile_raw(
             RawConfigValue::List(indices),
         ));
     }
-    if let Some(group) = inherits_group(profile_raw, embedded_raw, embedded_count, slots) {
+    let loaded_kinds = (
+        !settings.project.preset.print_settings_id.0.is_empty(),
+        !settings.project.preset.printer_settings_id.0.is_empty(),
+    );
+    if let Some(group) = inherits_group(
+        profile_raw,
+        embedded_raw,
+        embedded_count,
+        slots,
+        loaded_kinds,
+    ) {
         inserts.push(("inherits_group".to_owned(), group));
     }
-    // `:2838,:2978,:3161`: the process slot, loaded filament slots, and the
-    // machine slot are cleared; unloaded filament slots stay embedded.
-    {
-        let len = embedded_count + 2;
-        let context = DifferentSettingsContext {
-            embedded: embedded_raw.get("different_settings_to_system"),
-            len,
-            slots,
-            switch_compatible_printers: machine_switch.is_some(),
-        };
-        let values = (0..len).map(|index| context.slot(index)).collect();
-        inserts.push((
-            "different_settings_to_system".to_owned(),
-            RawConfigValue::List(values),
-        ));
-    }
+    let len = embedded_count + 2;
+    let context = DifferentSettingsContext {
+        embedded: embedded_raw.get("different_settings_to_system"),
+        len,
+        slots,
+        loaded_kinds,
+        switch_compatible_printers: machine_switch.is_some(),
+    };
+    inserts.push((
+        "different_settings_to_system".to_owned(),
+        RawConfigValue::List((0..len).map(|index| context.slot(index)).collect()),
+    ));
     // `:3259-3271`: expression groups are embedded_count-indexed with
     // reserved process/machine slots; loaded filament conditions fill the
     // middle slots.
-    // `cli_metadata::filament_conditions` lays the loaded conditions at
-    // [process | filaments | machine] for the machine group and
-    // [filaments] for the process group.
     for (key, len, offset) in [
-        (
-            "compatible_machine_expression_group",
-            embedded_count + 2,
-            1usize,
-        ),
-        (
-            "compatible_process_expression_group",
-            embedded_count,
-            0usize,
-        ),
+        ("compatible_machine_expression_group", embedded_count + 2, 1),
+        ("compatible_process_expression_group", embedded_count, 0),
     ] {
         let Some(group) = profile_raw.get(key) else {
             continue;
@@ -352,7 +350,11 @@ pub(super) fn merged_profile_raw(
         merged.insert(key, value);
     }
 
-    device::apply(&mut merged, filament_raws, selected == embedded_count)?;
+    device::apply(
+        &mut merged,
+        filament_raws,
+        selected > 0 && selected == embedded_count,
+    )?;
     Ok(merged)
 }
 

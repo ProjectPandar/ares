@@ -6,7 +6,6 @@ pub(super) fn export_saved(
     input: &[u8],
     presets: LoadSettingsRequest<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    project_settings::require_complete_selection(&presets)?;
     let project = crate::profiles::project_for_3mf_export(input, &presets)?;
     let [object] = project.objects() else {
         return Err(deferred("expected one saved object"));
