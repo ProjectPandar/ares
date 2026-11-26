@@ -263,31 +263,31 @@ fn find_next_in_layer(
     );
     let continuation = continuation.contours();
     let layer = &layers[layer_index];
-    let nearby = layer
-        .point_tree
-        .in_radius(&layer.positions, projected, max_distance);
     let mut selected = None;
-    for index in nearby {
-        let perimeter_index = layer.candidates.points[index].perimeter_index;
-        // SeamPlacer.cpp:1766-1775 filters before initializing either index.
-        if !continuation.is_empty() && !continuation.contains(&perimeter_index) {
-            continue;
-        }
-        let (best, nearest) = selected.get_or_insert((index, index));
-        if layer.choices[perimeter_index].finalized {
-            continue;
-        }
-        if is_better(layer, index, *best)
-            || layer.choices[layer.candidates.points[*best].perimeter_index].finalized
-        {
-            *best = index;
-        }
-        if distance_squared(layer, index, projected) < distance_squared(layer, *nearest, projected)
-            || layer.choices[layer.candidates.points[*nearest].perimeter_index].finalized
-        {
-            *nearest = index;
-        }
-    }
+    layer
+        .point_tree
+        .in_radius_for_each(&layer.positions, projected, max_distance, |index| {
+            let perimeter_index = layer.candidates.points[index].perimeter_index;
+            // SeamPlacer.cpp:1766-1775 filters before initializing either index.
+            if !continuation.is_empty() && !continuation.contains(&perimeter_index) {
+                return;
+            }
+            let (best, nearest) = selected.get_or_insert((index, index));
+            if layer.choices[perimeter_index].finalized {
+                return;
+            }
+            if is_better(layer, index, *best)
+                || layer.choices[layer.candidates.points[*best].perimeter_index].finalized
+            {
+                *best = index;
+            }
+            if distance_squared(layer, index, projected)
+                < distance_squared(layer, *nearest, projected)
+                || layer.choices[layer.candidates.points[*nearest].perimeter_index].finalized
+            {
+                *nearest = index;
+            }
+        });
     let (best, nearest) = selected?;
     if layer.choices[layer.candidates.points[nearest].perimeter_index].finalized {
         return None;

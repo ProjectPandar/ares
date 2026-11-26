@@ -115,12 +115,7 @@ pub(super) fn safety_offset_polygons(paths: &[Polygon]) -> Result<Vec<Polygon>, 
     offset_paths(paths, SAFETY_OFFSET, JoinType::Miter, 3.0)
 }
 fn safety_offset_expolygons(paths: &[ExPolygon]) -> Result<Vec<Polygon>, ClipperError> {
-    let paths: Vec<_> = paths
-        .iter()
-        .flat_map(|p| std::iter::once(p.contour()).chain(p.holes()))
-        .cloned()
-        .collect();
-    safety_offset_polygons(&paths)
+    super::offset::offset_raw_expolygon_paths(paths, SAFETY_OFFSET, JoinType::Miter, 3.0)
 }
 pub(crate) fn difference_ex_with_safety_offset(
     subject: &[ExPolygon],
