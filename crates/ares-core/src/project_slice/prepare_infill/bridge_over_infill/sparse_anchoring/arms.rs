@@ -349,13 +349,14 @@ pub(super) fn dispatch(
         }
         pattern => {
             return super::arms_tail::dispatch_tail(
-                pattern,
-                fill,
+                (pattern, fill),
                 traversal,
-                layer_index,
-                z,
-                object_reference,
-                lightning_generator,
+                (object_index, layer_index, z, object_reference),
+                super::AnchoringContext {
+                    lightning_generator,
+                    adaptive_fields,
+                    grid_bounds,
+                },
                 result,
             );
         }

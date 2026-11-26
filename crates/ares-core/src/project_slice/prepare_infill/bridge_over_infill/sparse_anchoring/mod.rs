@@ -7,6 +7,7 @@ mod gyroid;
 mod honeycomb;
 mod linear;
 mod plane_path;
+mod tpms;
 
 use crate::{
     SliceError,

@@ -209,11 +209,21 @@ pub(in crate::project_slice) fn surface_polylines(
         }
         ProcessInfillPattern::TpmsD => {
             let fill = surface_fill(request);
-            super::tpms_d::polylines(&fill, request.print_z, request.call.scale)
+            super::tpms_d::polylines(
+                &fill,
+                (request.print_z, request.layer_height),
+                None,
+                request.call.scale,
+            )
         }
         ProcessInfillPattern::TpmsFk => {
             let fill = surface_fill(request);
-            super::tpms_fk::polylines(&fill, request.print_z, request.call.scale)
+            super::tpms_fk::polylines(
+                &fill,
+                (request.print_z, request.layer_height),
+                None,
+                request.call.scale,
+            )
         }
         ProcessInfillPattern::LateralHoneycomb => {
             let fill = surface_fill(request);

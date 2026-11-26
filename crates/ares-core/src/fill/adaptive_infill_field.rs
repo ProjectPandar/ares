@@ -6,7 +6,9 @@ mod grid;
 mod query;
 mod reach;
 mod scale;
+pub(crate) mod shells;
 pub(crate) mod tpms;
+mod tpms_fill;
 
 use std::sync::Arc;
 
