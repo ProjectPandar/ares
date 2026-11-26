@@ -9,11 +9,20 @@ pub(crate) struct BoundedResolvedProjectConfig {
     pub(crate) filament_variant_checkpoint: ProjectSettings,
     pub(crate) applied_filament_map: OrcaInts,
     pub(crate) process_nozzle_assignments: Option<Vec<Option<crate::options::ProcessNozzle>>>,
+    pub(crate) manual_nozzle_maps: Option<ManualNozzleMaps>,
     pub(crate) process_variant_indices: Vec<usize>,
     pub(crate) logical_filament_count: usize,
     pub(crate) usage: BoundedProjectUsage,
     pub(crate) print_object_count: usize,
     pub(crate) objects: Vec<ResolvedProjectObject>,
+}
+
+/// GCode.cpp:10900–10919 reads the grouping result, not the saved project maps.
+#[derive(Debug, Default, PartialEq)]
+pub(crate) struct ManualNozzleMaps {
+    pub(crate) extruders: OrcaInts,
+    pub(crate) volumes: OrcaInts,
+    pub(crate) nozzles: OrcaInts,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

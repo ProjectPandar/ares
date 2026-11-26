@@ -133,7 +133,6 @@ fn precheck(
     if plates.is_empty() {
         return Ok(Vec::new());
     }
-    super::capabilities::validate_settings(project.settings())?;
     // OrcaSlicer.cpp:2042–2074: STL events are keyed to index 0.
     if let Some(custom_gcodes) = context.custom_gcodes.take() {
         project.replace_plate_custom_gcodes(custom_gcodes);

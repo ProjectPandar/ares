@@ -3,6 +3,7 @@ use super::{OrderingScope, RaftSchedule, ToolOrdering, collect_layers, finish_la
 #[path = "filament_group/mod.rs"]
 mod filament_group;
 mod geometry;
+mod manual_nozzle;
 use crate::project_slice::gcode_emit::wipe_tower::estimate::config::DynamicPrintConfig;
 use crate::{
     ProcessPrintSequence, ProjectFilamentMapMode, SliceError,
@@ -48,18 +49,29 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
             wire.split([';', ','])
                 .any(|count| count.parse::<i32>().is_ok_and(|value| value > 1))
         });
-    let automatic = filament_group::check_scope(
-        &traversal.resolved.views.full,
-        is_bbl,
-        &used,
-        traversal.objects.len(),
-        multiple_nozzles,
-    )?;
+    let current = &traversal.resolved.views.full;
+    let manual_group = (current.project.gcode.filament_map_mode
+        == ProjectFilamentMapMode::NozzleManual)
+        .then(|| {
+            manual_nozzle::Grouping::resolve(
+                current,
+                &traversal.project.documents().project_settings_raw,
+                &used,
+            )
+        });
+    let automatic = manual_group.is_none()
+        && filament_group::check_scope(
+            current,
+            is_bbl,
+            &used,
+            traversal.objects.len(),
+            multiple_nozzles,
+        )?;
     let mut nozzle_groups = None;
     let mut assignments_published = false;
-    let current = &traversal.resolved.views.full;
     let sequential = current.process.print.print_sequence == ProcessPrintSequence::ByObject;
-    let single_head_auto = current.project.print.nozzle_diameter.0.len() == 1
+    let single_head_auto = manual_group.is_none()
+        && current.project.print.nozzle_diameter.0.len() == 1
         && current.project.gcode.filament_map_mode != ProjectFilamentMapMode::Manual;
     // Print.cpp:3704–3739 publishes static automatic maps in by-object mode.
     let non_bbl_multi_head_auto_for_flush = !is_bbl
@@ -71,13 +83,20 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         || single_head_auto
         || non_bbl_multi_head_auto_for_flush
     {
-        let changed = filament_map_recommend::apply_used_tpu_map(
-            &mut traversal.resolved.views.full,
-            &used,
-            is_bbl,
-        );
+        let changed = manual_group.is_none()
+            && filament_map_recommend::apply_used_tpu_map(
+                &mut traversal.resolved.views.full,
+                &used,
+                is_bbl,
+            );
         // ToolOrdering.cpp:3054–3084 also writes static maps in Manual mode.
-        let static_views = if automatic {
+        let static_views = if let Some(group) = &manual_group {
+            group.write_back(
+                &mut traversal.resolved.filament_variant_checkpoint,
+                &traversal.resolved.views.full,
+                &used,
+            )?
+        } else if automatic {
             let config = DynamicPrintConfig::new(&traversal.resolved.views.full)?;
             let geometry =
                 geometric_unprintables(&horizontal.objects, traversal, objects, &config)?;
@@ -105,14 +124,15 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         assignments_published = static_views.is_some();
         if static_views.is_some()
             || changed
-            || (traversal
-                .resolved
-                .views
-                .full
-                .project
-                .gcode
-                .filament_map_mode
-                != ProjectFilamentMapMode::Manual
+            || (manual_group.is_none()
+                && traversal
+                    .resolved
+                    .views
+                    .full
+                    .project
+                    .gcode
+                    .filament_map_mode
+                    != ProjectFilamentMapMode::Manual
                 && traversal.resolved.applied_filament_map
                     != traversal.resolved.views.full.project.gcode.filament_map)
         {
@@ -160,12 +180,29 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
         }
     }
     let mut ordering = finish_layers(traversal, layers, bottom_z, max_height, false)?;
+    if let Some(group) = manual_group {
+        // Print.cpp:3705–3743 also publishes the print-wide result when
+        // sequential manual printing skips write-back.
+        nozzle_groups = Some(group.groups);
+        traversal.resolved.manual_nozzle_maps = Some(group.maps);
+        assignments_published = true;
+    }
     if let Some(groups) = nozzle_groups {
         ordering.nozzle_groups = groups;
     }
     traversal.resolved.process_nozzle_assignments = assignments_published.then(|| {
+        let nozzle_map = traversal.resolved.manual_nozzle_maps.as_ref().map_or(
+            &traversal
+                .resolved
+                .views
+                .full
+                .project
+                .gcode
+                .filament_nozzle_map,
+            |maps| &maps.nozzles,
+        );
         super::nozzle_group::process_assignments(
-            &traversal.resolved.views.full,
+            nozzle_map,
             &ordering.nozzle_groups,
             traversal.resolved.logical_filament_count,
         )
