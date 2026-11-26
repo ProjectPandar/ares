@@ -118,15 +118,7 @@ jobs:
         if: steps.select.outputs.run_rust_clippy == 'true'
         env:
           RUST_CRATES: ${{ steps.select.outputs.rust_crates }}
-        run: |
-          set -euo pipefail
-          if [ "$RUST_CRATES" = "all" ]; then
-            cargo clippy --workspace --all-targets --all-features -- -D warnings
-          else
-            args=()
-            for c in $RUST_CRATES; do args+=(-p "$c"); done
-            cargo clippy "${args[@]}" --all-targets --all-features -- -D warnings
-          fi
+        run: bash scripts/ci/run-clippy.sh
 
   rust-nonparity:
     runs-on: ubuntu-latest
@@ -182,11 +174,8 @@ jobs:
           shared-key: "rust-nonparity"
       - name: Build and archive orca_parity test binary
         run: |
-          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/parity-archive"
-          cargo nextest archive -p ares-cli --test orca_parity \
-            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
-          ls -lh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
+          cargo nextest archive -p ares-cli --test orca_parity --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
           bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-official 8
           bash scripts/ci/verify-parity-shards.sh "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" parity-seeded 8
       - uses: actions/cache/save@v4
@@ -204,6 +193,10 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: ./.github/actions/setup-parity-shard
         with:
           mode: official
@@ -222,6 +215,10 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: ./.github/actions/setup-parity-shard
         with:
           mode: seeded
@@ -282,15 +279,17 @@ jobs:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: ./.github/actions/setup-web-shard
         with:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
           browsers: chromium
           ghcr-token: ${{ github.token }}
       - name: Run desktop-streaming E2E
-        run: |
-          bunx --cwd web playwright test --config playwright.config.ts --project desktop-streaming \
-            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/streaming"
+        run: bunx --cwd web playwright test --config playwright.config.ts --project desktop-streaming --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/streaming"
 
   web-desktop:
     name: web-desktop (${{ matrix.shard }}/4)
@@ -302,6 +301,10 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: ./.github/actions/setup-web-shard
         with:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
@@ -330,6 +333,10 @@ jobs:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          persist-credentials: false
       - uses: ./.github/actions/setup-web-shard
         with:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
@@ -343,13 +350,9 @@ jobs:
       - name: Prebuild orca_parity fixture binary for package specs
         run: cargo nextest run --no-run -p ares-cli --test orca_parity
       - name: Run packages E2E (workers=1)
-        run: |
-          bunx --cwd web playwright test --config playwright.config.ts --project packages \
-            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/packages"
+        run: bunx --cwd web playwright test --config playwright.config.ts --project packages --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/packages"
       - name: Run mobile E2E (iphone, pixel, ipad)
-        run: |
-          bunx --cwd web playwright test --config playwright.config.ts --project iphone --project pixel --project ipad \
-            --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/mobile"
+        run: bunx --cwd web playwright test --config playwright.config.ts --project iphone --project pixel --project ipad --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/mobile"
 
   tier1-gate:
     name: tier1-gate

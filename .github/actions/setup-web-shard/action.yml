@@ -13,10 +13,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
-      with:
-        filter: blob:none
-        persist-credentials: false
     - uses: ./.github/actions/checkout-orca-sparse
       with:
         ref: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
