@@ -139,7 +139,7 @@ impl FanMover {
             data.e = e_start;
             data.de = motion.de;
         }
-        self.buffer.push(data);
+        self.buffer.push_back(data);
     }
 
     /// `_put_in_middle_G1` (FanMover.cpp:124-140): split the buffered line
@@ -185,7 +185,7 @@ impl FanMover {
     /// `_print_in_middle_G1` (FanMover.cpp:171-212): flush the front line
     /// (optionally split) with the fan command inside.
     fn print_in_middle(&mut self, index: usize, nb_sec: f32, fan_line: &str) {
-        let item = self.buffer.remove(index);
+        let item = self.buffer.remove(index).expect("valid buffer index");
         self.buffer_time_size -= f64::from(item.time);
         if nb_sec < item.time * 0.1 {
             self.output.push_str(&item.raw);
@@ -222,7 +222,7 @@ impl FanMover {
         while index < self.buffer.len() && past_sec > 0.0 {
             past_sec -= self.buffer[index].time;
             if self.buffer[index].fan_speed >= 0 && self.buffer[index].fan_speed < min_speed {
-                let removed = self.buffer.remove(index);
+                let removed = self.buffer.remove(index).expect("valid buffer index");
                 self.buffer_time_size -= f64::from(removed.time);
             } else {
                 index += 1;

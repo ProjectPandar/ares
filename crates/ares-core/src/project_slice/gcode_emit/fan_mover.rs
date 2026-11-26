@@ -7,6 +7,8 @@ mod fan;
 mod helpers;
 mod motion;
 
+use std::collections::VecDeque;
+
 use crate::{ExtrusionRole, GCodeFlavor};
 
 use helpers::set_fan_line;
@@ -63,7 +65,7 @@ pub(crate) struct FanMover {
     relative_e: bool,
     flavor: GCodeFlavor,
     gcode_comments: bool,
-    buffer: Vec<BufferData>,
+    buffer: VecDeque<BufferData>,
     buffer_time_size: f64,
     front_buffer_fan_speed: i16,
     back_buffer_fan_speed: i16,
@@ -99,7 +101,7 @@ impl FanMover {
             relative_e,
             flavor,
             gcode_comments,
-            buffer: Vec::new(),
+            buffer: VecDeque::new(),
             buffer_time_size: 0.0,
             // FanMover.hpp:51-52: both buffer fan speeds start at 0 (the
             // initial state IS "fan off"), so a chunk-leading `M106 S0`
@@ -117,7 +119,7 @@ impl FanMover {
         }
     }
 
-    pub(crate) fn process_gcode(&mut self, gcode: &str, flush: bool) -> String {
+    pub(crate) fn process_gcode_into(&mut self, gcode: &str, flush: bool, out: &mut Vec<u8>) {
         self.output.clear();
         self.buffer_time_size = 0.0;
         for data in &self.buffer {
@@ -129,7 +131,7 @@ impl FanMover {
         if flush {
             self.flush_remaining();
         }
-        std::mem::take(&mut self.output)
+        out.extend_from_slice(self.output.as_bytes());
     }
 
     fn process_line(&mut self, raw: &str) {
@@ -186,26 +188,25 @@ impl FanMover {
             self.advance_kickstart(time);
         }
 
-        while !self.buffer.is_empty()
+        while let Some(front_time) = self.buffer.front().map(|data| data.time)
             && (need_flush
                 || self.nb_seconds_delay <= f32::EPSILON
-                || self.buffer_time_size - f64::from(self.buffer[0].time)
+                || self.buffer_time_size - f64::from(front_time)
                     > f64::from(self.nb_seconds_delay - f32::EPSILON))
         {
-            let front = self.buffer.remove(0);
+            let front = self.buffer.pop_front().expect("checked front");
             self.buffer_time_size -= f64::from(front.time);
             self.emit_front(front);
         }
     }
 
     fn flush_remaining(&mut self) {
-        while let Some(front) = self.buffer.first().cloned() {
+        while let Some(front) = self.buffer.pop_front() {
             if front.fan_speed >= 0 {
                 self.front_buffer_fan_speed = front.fan_speed;
             }
             self.output.push_str(&front.raw);
             self.output.push('\n');
-            self.buffer.remove(0);
         }
     }
 

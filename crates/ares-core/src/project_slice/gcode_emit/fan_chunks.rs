@@ -7,25 +7,23 @@ use super::fan_mover::FanMover;
 /// reserved-layer-tag chunk, with the leading M106/M107 lines walked back
 /// into the chunk that owns them (upstream `change_extruder_set_fan(true)`
 /// prepends the fan to the rebuilt layer text).
-pub(super) fn process_layer_chunks(
+pub(super) fn process_layer_chunks_into(
     mover: &mut FanMover,
-    layers: Vec<u8>,
+    layers: &[u8],
     layer_change: &str,
-) -> Vec<u8> {
-    let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
-    let mut flushed = String::with_capacity(text.len());
+    out: &mut Vec<u8>,
+) {
+    let text = std::str::from_utf8(layers).expect("generated G-code is UTF-8");
     let mut chunk_start = 0;
     for (offset, _) in text.match_indices("\n;") {
         let line_end = offset + 1;
         if text[line_end..].starts_with(layer_change) {
-            let boundary = walk_back_fan_lines(&text, chunk_start, line_end);
-            let chunk = &text[chunk_start..boundary];
-            flushed.push_str(&mover.process_gcode(chunk, true));
+            let boundary = walk_back_fan_lines(text, chunk_start, line_end);
+            mover.process_gcode_into(&text[chunk_start..boundary], true, out);
             chunk_start = boundary;
         }
     }
-    flushed.push_str(&mover.process_gcode(&text[chunk_start..], true));
-    flushed.into_bytes()
+    mover.process_gcode_into(&text[chunk_start..], true, out);
 }
 
 fn walk_back_fan_lines(text: &str, chunk_start: usize, line_end: usize) -> usize {

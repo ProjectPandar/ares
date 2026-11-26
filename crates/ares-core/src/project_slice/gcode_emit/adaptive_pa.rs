@@ -8,7 +8,7 @@ mod scan;
 use super::PreparedPostClassicTraversal;
 use crate::options::ProjectSettings;
 use regex::Regex;
-use std::fmt::Write;
+use std::io::Write;
 use std::sync::LazyLock;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -41,11 +41,12 @@ fn at<T>(values: &[T], tool: usize) -> &T {
     values.get(tool).unwrap_or(&values[0])
 }
 
-pub(super) fn process(
-    layers: Vec<u8>,
+pub(super) fn process_into(
+    layers: &[u8],
     traversal: &PreparedPostClassicTraversal,
     state: &super::motion::EmitState,
-) -> Vec<u8> {
+    out: &mut Vec<u8>,
+) {
     let full = &traversal.resolved.views.full;
     if !state
         .extruders
@@ -54,7 +55,8 @@ pub(super) fn process(
         .any(|&tool| enabled(full, tool))
         || full.process.print.spiral_mode.0
     {
-        return layers;
+        out.extend_from_slice(layers);
+        return;
     }
     let filament = &full.filament.gcode;
     let mut processor = Processor {
@@ -81,32 +83,31 @@ pub(super) fn process(
         modal_speed: 0.0,
         last_tool: None,
     };
-    let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
-    let mut result = String::with_capacity(text.len());
+    let text = std::str::from_utf8(layers).expect("generated G-code is UTF-8");
     let marker = format!("{}\n", super::tags::Tags::of(traversal).layer_change());
     let mut chunk_start = None;
     let mut resets = state.adaptive_pa_resets.iter().peekable();
     let mut layer = 0;
+    let mut lines = Vec::new();
     for (offset, _) in text.match_indices(&marker) {
         if offset != 0 && text.as_bytes()[offset - 1] != b'\n' {
             continue;
         }
         if let Some(start) = chunk_start {
             processor.reset(layer, &mut resets);
-            processor.layer(&text[start..offset], &mut result);
+            processor.layer(&text[start..offset], &mut lines, out);
             layer += 1;
         } else {
-            result.push_str(&text[..offset]);
+            out.extend_from_slice(&layers[..offset]);
         }
         chunk_start = Some(offset);
     }
     if let Some(start) = chunk_start {
         processor.reset(layer, &mut resets);
-        processor.layer(&text[start..], &mut result);
+        processor.layer(&text[start..], &mut lines, out);
     } else {
-        result.push_str(&text);
+        out.extend_from_slice(layers);
     }
-    result.into_bytes()
 }
 
 struct Processor<'a> {
@@ -130,8 +131,9 @@ impl Processor<'_> {
         }
     }
 
-    fn layer(&mut self, text: &str, output: &mut String) {
-        let lines: Vec<_> = text.split_terminator('\n').collect();
+    fn layer<'a>(&mut self, text: &'a str, lines: &mut Vec<&'a str>, output: &mut Vec<u8>) {
+        lines.clear();
+        lines.extend(text.split_terminator('\n'));
         let mut wiping = false;
         for (index, line) in lines.iter().enumerate() {
             if line.contains("WIPE_START") {
@@ -147,14 +149,15 @@ impl Processor<'_> {
                 wiping = false;
             }
             if !line.starts_with("; PA_CHANGE") {
-                writeln!(output, "{line}").unwrap();
+                output.extend_from_slice(line.as_bytes());
+                output.push(b'\n');
                 continue;
             }
             self.tag(line, &lines[index + 1..], output);
         }
     }
 
-    fn tag(&mut self, line: &str, following: &[&str], output: &mut String) {
+    fn tag(&mut self, line: &str, following: &[&str], output: &mut Vec<u8>) {
         static TAG: LazyLock<Regex> = LazyLock::new(|| {
             Regex::new(
                 r"; PA_CHANGE:T([0-9]+) MM3MM:([0-9]*\.[0-9]+) ACCEL:([0-9]+) BR:([0-9]+) RC:([0-9]+) OV:([0-9]+)",
@@ -195,34 +198,38 @@ impl Processor<'_> {
                 predicted = at(&filament.adaptive_pressure_advance_bridges.0, tool).0;
             }
             if predicted < 0.0 && comments {
-                output.push_str(
-                    "; APA: Interpolation failed, using fallback pressure advance value\n",
+                output.extend_from_slice(
+                    b"; APA: Interpolation failed, using fallback pressure advance value\n",
                 );
             }
             if predicted < 0.0 {
                 predicted = default;
             }
         } else if comments {
-            output.push_str(if self.models.contains_key(&tool) {
-                "; APA: Interpolator setup failed, using default pressure advance\n"
+            output.extend_from_slice(if self.models.contains_key(&tool) {
+                b"; APA: Interpolator setup failed, using default pressure advance\n"
             } else {
-                "; APA: Tool doesnt have APA enabled\n"
+                b"; APA: Tool doesnt have APA enabled\n"
             });
         }
         if comments {
-            writeln!(output, "{line}").unwrap();
+            output.extend_from_slice(line.as_bytes());
+            output.push(b'\n');
             if bridge && at(&filament.adaptive_pressure_advance_bridges.0, tool).0 > 1e-4 {
-                output.push_str("; APA Model Override (bridge)\n");
+                output.extend_from_slice(b"; APA Model Override (bridge)\n");
             }
             writeln!(output, "; APA Current Speed: {:.6}\n; APA Next Speed: {:.6}\n; APA Max Next Speed: {:.6}\n; APA Speed Used: {used_speed:.6}\n; APA Flow rate: {:.6}\n; APA Prev PA: {:.6} New PA: {predicted:.6}",
                     speeds.current, speeds.next, speeds.maximum, flow * speeds.maximum, self.previous).unwrap();
         }
         if changed_tool || (predicted - self.previous).abs() > 1e-4 {
-            output.push_str(&super::pressure_advance::command(
-                predicted,
-                self.full.printer.gcode.gcode_flavor,
-                self.is_bbl,
-            ));
+            output.extend_from_slice(
+                super::pressure_advance::command(
+                    predicted,
+                    self.full.printer.gcode.gcode_flavor,
+                    self.is_bbl,
+                )
+                .as_bytes(),
+            );
             self.previous = predicted;
         }
     }
