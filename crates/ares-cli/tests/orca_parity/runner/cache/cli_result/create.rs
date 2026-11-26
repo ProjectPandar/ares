@@ -66,13 +66,17 @@ impl OrcaRunner {
             }
             Err(failure) => return Err(failure),
             Ok(()) if kind.code() == 0 => {
-                // The isolated work directory contains exactly this successful command.
+                // The isolated work directory contains the command's evidence directory plus its .log file.
                 let evidence = fs::read_dir(&command_work)
                     .map_err(|error| io(stage, error))?
-                    .next()
-                    .unwrap()
-                    .map_err(|error| io(stage, error))?
-                    .path();
+                    .filter_map(|entry| entry.ok().map(|e| e.path()))
+                    .find(|path| path.join("status.json").is_file())
+                    .ok_or_else(|| {
+                        io(
+                            stage,
+                            "missing Native successful command evidence directory",
+                        )
+                    })?;
                 let status: Value =
                     serde_json::from_slice(&stages::read(&evidence.join("status.json"), stage)?)
                         .map_err(|error| io(stage, error))?;
