@@ -10,14 +10,14 @@ mod pair;
 mod touching;
 mod trim;
 
-use crate::geometry::{ExPolygon, Line, LineDistanceTree, Point, Polyline};
+use crate::geometry::{ExPolygon, Line, LineDistanceTree, Point, Polyline, points_length};
 use geometry::{
     Thresholds, candidate_dir, distance_point_to_segment_squared, dot, left_of, line_dir,
     projects_interior,
 };
 use hook::{HookParams, add_hook, collision_segments};
 use pair::{connect_pair, nearest_fresh, resolve_merged, split_at};
-use trim::{polyline_length, trim_endpoint};
+use trim::trim_endpoint;
 
 /// `FillAdaptive.cpp:562-570`.
 #[derive(Clone, Copy, Debug)]
@@ -138,7 +138,7 @@ pub(crate) fn connect_lines_using_hooks(
         if num_tjoints == 0 {
             continue;
         }
-        let line_len = polyline_length(&working[index]);
+        let line_len = points_length(&working[index]);
         let (drop, anchor) = if num_tjoints == 1 {
             (
                 line_len < thresholds.drop_single_side,

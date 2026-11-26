@@ -68,12 +68,6 @@ pub(super) fn candidate_dir(line: Line) -> (f64, f64) {
     line_dir(line, true)
 }
 
-pub(super) fn length(line: &Line) -> f64 {
-    let dx = (line.b.x() - line.a.x()) as f64;
-    let dy = (line.b.y() - line.a.y()) as f64;
-    (dx * dx + dy * dy).sqrt()
-}
-
 pub(super) fn dot(x: f64, y: f64, dir: (f64, f64)) -> f64 {
     x * dir.0 + y * dir.1
 }

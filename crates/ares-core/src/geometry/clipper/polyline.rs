@@ -30,10 +30,9 @@ pub(crate) fn open_polyline_inside_expolygon(
     subject: &Polyline,
     clip: &ExPolygon,
 ) -> Result<bool, ClipperError> {
-    let clip = backend::expolygon_paths(std::slice::from_ref(clip));
-    Ok(backend::clip_open_paths(
+    Ok(backend::clip_open(
         std::slice::from_ref(subject),
-        &clip,
+        std::slice::from_ref(clip),
         ClipOperation::Difference,
     )?
     .is_empty())
@@ -43,8 +42,7 @@ fn closed(
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let paths: Vec<_> = subject.iter().map(Polygon::split_at_first_point).collect();
-    let mut result = backend::clip_open(&paths, clip, kind)?;
+    let mut result = backend::clip_closed_as_open(subject, clip, kind)?;
     recombine_polylines(&mut result);
     Ok(result)
 }

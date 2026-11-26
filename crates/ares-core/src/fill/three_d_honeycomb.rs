@@ -86,7 +86,7 @@ fn fill_component(
     let clip = expolygon_polygons(&expolygon);
     let mut polylines = intersection_open_polylines(&polylines, &clip)?;
     let minimum_length = (0.8 * params.spacing) / scale.factor();
-    polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
+    polylines.retain(|polyline| polyline.length() >= minimum_length);
     if polylines.is_empty() {
         return Ok(Vec::new());
     }
@@ -191,16 +191,4 @@ fn expolygon_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
     std::iter::once(expolygon.contour().clone())
         .chain(expolygon.holes().iter().cloned())
         .collect()
-}
-
-fn polyline_length(polyline: &Polyline) -> f64 {
-    polyline
-        .points()
-        .windows(2)
-        .map(|points| {
-            let x = (points[1].x() - points[0].x()) as f64;
-            let y = (points[1].y() - points[0].y()) as f64;
-            (x * x + y * y).sqrt()
-        })
-        .sum()
 }

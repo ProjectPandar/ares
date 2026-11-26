@@ -11,23 +11,112 @@ pub(super) fn operation(operation: ClipOperation) -> c2::ClipType {
     }
 }
 
-pub(super) fn to_path(points: &[Point]) -> c2::Path64 {
-    points
-        .iter()
-        .map(|p| c2::Point64::new(p.x(), p.y()))
-        .collect()
+fn feed_points(
+    clipper: &mut c2::Clipper64,
+    points: impl IntoIterator<Item = c2::Point64>,
+    is_clip: bool,
+) {
+    if is_clip {
+        clipper.add_clip_points(points);
+    } else {
+        clipper.add_subject_points(points);
+    }
 }
 
-pub(super) fn paths(polygons: &[Polygon]) -> c2::Paths64 {
-    polygons.iter().map(|p| to_path(p.points())).collect()
+fn to_point64(point: &Point) -> c2::Point64 {
+    c2::Point64::new(point.x(), point.y())
 }
 
-pub(super) fn expolygon_paths(polygons: &[ExPolygon]) -> c2::Paths64 {
-    polygons
-        .iter()
-        .flat_map(|p| std::iter::once(p.contour()).chain(p.holes()))
-        .map(|p| to_path(p.points()))
-        .collect()
+pub(super) trait PointPaths {
+    fn vertex_count(&self) -> usize;
+    fn feed_into(&self, clipper: &mut c2::Clipper64, is_clip: bool);
+}
+
+impl PointPaths for () {
+    fn vertex_count(&self) -> usize {
+        0
+    }
+
+    fn feed_into(&self, _clipper: &mut c2::Clipper64, _is_clip: bool) {}
+}
+
+impl PointPaths for &[Polygon] {
+    fn vertex_count(&self) -> usize {
+        self.iter().map(|polygon| polygon.points().len()).sum()
+    }
+
+    fn feed_into(&self, clipper: &mut c2::Clipper64, is_clip: bool) {
+        for polygon in *self {
+            feed_points(clipper, polygon.points().iter().map(to_point64), is_clip);
+        }
+    }
+}
+
+impl PointPaths for &[ExPolygon] {
+    fn vertex_count(&self) -> usize {
+        self.iter()
+            .map(|polygon| {
+                polygon.contour().points().len()
+                    + polygon
+                        .holes()
+                        .iter()
+                        .map(|hole| hole.points().len())
+                        .sum::<usize>()
+            })
+            .sum()
+    }
+
+    fn feed_into(&self, clipper: &mut c2::Clipper64, is_clip: bool) {
+        for polygon in *self {
+            feed_points(
+                clipper,
+                polygon.contour().points().iter().map(to_point64),
+                is_clip,
+            );
+            for hole in polygon.holes() {
+                feed_points(clipper, hole.points().iter().map(to_point64), is_clip);
+            }
+        }
+    }
+}
+
+impl PointPaths for &[&ExPolygon] {
+    fn vertex_count(&self) -> usize {
+        self.iter()
+            .map(|polygon| {
+                polygon.contour().points().len()
+                    + polygon
+                        .holes()
+                        .iter()
+                        .map(|hole| hole.points().len())
+                        .sum::<usize>()
+            })
+            .sum()
+    }
+
+    fn feed_into(&self, clipper: &mut c2::Clipper64, is_clip: bool) {
+        for polygon in *self {
+            feed_points(
+                clipper,
+                polygon.contour().points().iter().map(to_point64),
+                is_clip,
+            );
+            for hole in polygon.holes() {
+                feed_points(clipper, hole.points().iter().map(to_point64), is_clip);
+            }
+        }
+    }
+}
+
+impl<A: PointPaths, B: PointPaths> PointPaths for (A, B) {
+    fn vertex_count(&self) -> usize {
+        self.0.vertex_count() + self.1.vertex_count()
+    }
+
+    fn feed_into(&self, clipper: &mut c2::Clipper64, is_clip: bool) {
+        self.0.feed_into(clipper, is_clip);
+        self.1.feed_into(clipper, is_clip);
+    }
 }
 
 pub(super) fn polygon(path: &c2::Path64) -> Polygon {
@@ -44,52 +133,75 @@ pub(super) fn configured() -> c2::Clipper64 {
     clipper
 }
 
-pub(super) fn clip_paths(
-    subject: c2::Paths64,
-    clip: c2::Paths64,
+pub(super) fn clip_paths<S: PointPaths, C: PointPaths>(
+    subject: S,
+    clip: C,
     kind: ClipOperation,
     fill: FillRule,
 ) -> Result<Vec<Polygon>, ClipperError> {
     let mut clipper = configured();
-    clipper.add_subject(&subject);
-    clipper.add_clip(&clip);
+    clipper.reserve_vertices(subject.vertex_count() + clip.vertex_count());
+    subject.feed_into(&mut clipper, false);
+    clip.feed_into(&mut clipper, true);
     let mut output = c2::Paths64::new();
     clipper.execute(operation(kind), fill, &mut output, None);
     Ok(polygons(&output))
 }
 
-pub(super) fn clip_tree(
-    subject: c2::Paths64,
-    clip: c2::Paths64,
+pub(super) fn clip_tree<S: PointPaths, C: PointPaths>(
+    subject: S,
+    clip: C,
     kind: ClipOperation,
     fill: FillRule,
 ) -> Result<PolyTree, ClipperError> {
     let mut clipper = configured();
-    clipper.add_subject(&subject);
-    clipper.add_clip(&clip);
+    clipper.reserve_vertices(subject.vertex_count() + clip.vertex_count());
+    subject.feed_into(&mut clipper, false);
+    clip.feed_into(&mut clipper, true);
     let mut output = c2::PolyTree64::new();
     let mut open = c2::Paths64::new();
     clipper.execute_tree(operation(kind), fill, &mut output, &mut open);
     Ok(PolyTree::new(output))
 }
 
-pub(super) fn clip_open(
+pub(super) fn clip_open<C: PointPaths>(
     subject: &[Polyline],
+    clip: C,
+    kind: ClipOperation,
+) -> Result<Vec<Polyline>, ClipperError> {
+    let subject_vertices: usize = subject.iter().map(|p| p.points().len()).sum();
+    let mut clipper = configured();
+    clipper.reserve_vertices(subject_vertices + clip.vertex_count());
+    for polyline in subject {
+        clipper.add_open_subject_points(polyline.points().iter().map(to_point64));
+    }
+    clip.feed_into(&mut clipper, true);
+    execute_open(clipper, kind)
+}
+
+pub(super) fn clip_closed_as_open(
+    subject: &[Polygon],
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    clip_open_paths(subject, &self::paths(clip), kind)
+    let subject_vertices: usize = subject
+        .iter()
+        .map(|polygon| polygon.points().len() + usize::from(!polygon.points().is_empty()))
+        .sum();
+    let mut clipper = configured();
+    clipper.reserve_vertices(subject_vertices + clip.vertex_count());
+    for polygon in subject {
+        let points = polygon.points();
+        clipper.add_open_subject_points(points.iter().chain(points.first()).map(to_point64));
+    }
+    clip.feed_into(&mut clipper, true);
+    execute_open(clipper, kind)
 }
 
-pub(super) fn clip_open_paths(
-    subject: &[Polyline],
-    clip: &c2::Paths64,
+fn execute_open(
+    mut clipper: c2::Clipper64,
     kind: ClipOperation,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let paths = subject.iter().map(|p| to_path(p.points())).collect();
-    let mut clipper = configured();
-    clipper.add_open_subject(&paths);
-    clipper.add_clip(clip);
     let mut closed = c2::Paths64::new();
     let mut open = c2::Paths64::new();
     clipper.execute(
