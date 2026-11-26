@@ -1,52 +1,28 @@
 //! BeltKinematics::to_machine and GCodeWriter's coupled-axis words.
 
-use crate::{Point3d, RemapAxis, options::PrinterRemainingOptions, project_slice::belt};
+use crate::{
+    Point3d, options::PrinterRemainingOptions, project_slice::belt::kinematics::BeltKinematics,
+};
 
 use super::{EmitState, format::push_axis};
 
 pub(in crate::project_slice::gcode_emit) struct BeltWriter {
-    rotation: belt::BeltRotation,
-    axes: [(usize, RemapAxis); 3],
-    max: [f64; 3],
+    kinematics: BeltKinematics,
 }
 
 impl BeltWriter {
     pub(in crate::project_slice::gcode_emit) fn new(
         printer: &PrinterRemainingOptions,
     ) -> Option<Self> {
-        let rotation = belt::BeltRotation::from_printer(printer)?;
-        let axes = belt::remap_axes(printer);
-        let (max_x, max_y) = printer
-            .printable_area
-            .0
-            .iter()
-            .fold((f64::NEG_INFINITY, f64::NEG_INFINITY), |(x, y), point| {
-                (x.max(point.x), y.max(point.y))
-            });
-        Some(Self {
-            rotation,
-            axes,
-            max: [max_x, max_y, printer.printable_height.0],
-        })
+        BeltKinematics::from_printer(printer).map(|kinematics| Self { kinematics })
     }
 
-    pub(super) fn origin(&self, (x, y): (f64, f64)) -> (f64, f64) {
-        let point = self
-            .rotation
-            .forward()
-            .transform_point(Point3d::new(x, y, 0.));
-        (point.x, point.y)
+    pub(super) fn origin(&self, origin: (f64, f64)) -> (f64, f64) {
+        self.kinematics.project_origin(origin)
     }
 
     fn apply(&self, point: Point3d) -> [f64; 3] {
-        let point = self.rotation.inverse().transform_point(point);
-        let point = [point.x, point.y, point.z];
-        let remapped = self.axes.map(|(index, axis)| match axis {
-            RemapAxis::PosX | RemapAxis::PosY | RemapAxis::PosZ => point[index],
-            RemapAxis::NegX | RemapAxis::NegY | RemapAxis::NegZ => -point[index],
-            RemapAxis::RevX | RemapAxis::RevY | RemapAxis::RevZ => self.max[index] - point[index],
-        });
-        self.rotation.machine_frame(remapped)
+        self.kinematics.to_machine(point)
     }
 }
 
