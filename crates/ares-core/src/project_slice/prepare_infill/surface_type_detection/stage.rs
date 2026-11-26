@@ -1,6 +1,6 @@
 use crate::{
     SliceError,
-    geometry::{ExPolygon, intersection_ex},
+    geometry::{ExPolygon, intersection_ex, intersection_ex_refs_ex},
     project_slice::{
         perimeters::{
             classic::PostClassicTraversalPrintObject,
@@ -18,7 +18,7 @@ use crate::{
 use super::{
     cracks, extra_bridge,
     geometry::{
-        expolygons, fresh, geometry_error, internal, opening, opening_offset, paths,
+        expolygon_refs, expolygons, fresh, geometry_error, internal, opening, opening_offset,
         safety_difference,
     },
     preflight,
@@ -298,8 +298,8 @@ pub(super) fn classify_with_fill(
     if let Some(expansion) = expansion {
         top_expansion::apply(expansion, &mut top, &bottom, comparison)?;
     }
-    let mut top_bottom = paths(&top);
-    top_bottom.extend(paths(&bottom));
+    let mut top_bottom = expolygon_refs(&top);
+    top_bottom.extend(expolygon_refs(&bottom));
     let mut slices = internal(&previous, &top_bottom)?;
     slices.extend(top);
     slices.extend(bottom);
@@ -338,10 +338,10 @@ pub(super) fn clipped_fill(
         let group = slices
             .iter()
             .filter(|surface| surface.as_parts().0 == kind)
-            .map(|surface| surface.as_parts().1.clone())
+            .map(|surface| surface.as_parts().1)
             .collect::<Vec<_>>();
         if !group.is_empty() {
-            let clipped = intersection_ex(&group, boundaries).map_err(geometry_error)?;
+            let clipped = intersection_ex_refs_ex(&group, boundaries).map_err(geometry_error)?;
             output.extend(fresh(kind, clipped));
         }
     }

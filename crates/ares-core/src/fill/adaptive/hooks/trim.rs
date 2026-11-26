@@ -1,14 +1,6 @@
-//! Polyline length and endpoint trimming (`FillAdaptive.cpp:993-1000`).
+//! Endpoint trimming (`FillAdaptive.cpp:993-1000`).
 
-use super::geometry::length;
-use crate::geometry::{Line, Point};
-
-pub(super) fn polyline_length(points: &[Point]) -> f64 {
-    points
-        .windows(2)
-        .map(|pair| length(&Line::new(pair[0], pair[1])))
-        .sum()
-}
+use crate::geometry::Point;
 
 /// `:993-1000` — move `points`' front (or back) endpoint inward by
 /// `1.155·trim` toward the current opposite endpoint (truncating casts).

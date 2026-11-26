@@ -10,33 +10,21 @@ fn run(
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    backend::clip_paths(
-        backend::paths(subject),
-        backend::paths(clip),
-        kind,
-        FillRule::NonZero,
-    )
+    backend::clip_paths(subject, clip, kind, FillRule::NonZero)
 }
 pub(crate) fn union_polygons_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
-    run(paths, &[], ClipOperation::Union)
+    backend::clip_paths(paths, (), ClipOperation::Union, FillRule::NonZero)
 }
 pub(crate) fn union_even_odd_polygons_paths(
     paths: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
-    backend::clip_paths(
-        backend::paths(paths),
-        Vec::new(),
-        ClipOperation::Union,
-        FillRule::EvenOdd,
-    )
+    backend::clip_paths(paths, (), ClipOperation::Union, FillRule::EvenOdd)
 }
 pub(crate) fn union_polygons_paths_pair(
     first: &[Polygon],
     second: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let mut paths = backend::paths(first);
-    paths.extend(backend::paths(second));
-    backend::clip_paths(paths, Vec::new(), ClipOperation::Union, FillRule::NonZero)
+    backend::clip_paths((first, second), (), ClipOperation::Union, FillRule::NonZero)
 }
 pub(crate) fn intersection_polygons_paths(
     subject: &[Polygon],
@@ -49,12 +37,7 @@ pub(crate) fn intersection_polygons_paths_with_fill(
     clip: &[Polygon],
     fill: FillRule,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    backend::clip_paths(
-        backend::paths(subject),
-        backend::paths(clip),
-        ClipOperation::Intersection,
-        fill,
-    )
+    backend::clip_paths(subject, clip, ClipOperation::Intersection, fill)
 }
 pub(crate) fn difference_polygons_paths(
     subject: &[Polygon],

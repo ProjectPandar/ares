@@ -5,22 +5,42 @@
 use super::*;
 
 impl ClipperBase {
+    pub fn reserve_vertices(&mut self, additional: usize) {
+        self.vertex_arena.reserve(additional);
+    }
+
     /// `clipper.engine.cpp:637–742,862–866`: preserve the input and minima walks.
     pub fn add_paths(&mut self, paths: &Paths64, polytype: PathType, is_open: bool) {
         self.has_open_paths |= is_open;
         self.minima_list_sorted = false;
         self.vertex_arena.reserve(paths.iter().map(Vec::len).sum());
         for path in paths {
-            self.add_input_path(path, polytype, is_open);
+            self.add_input_path_iter(path.iter().copied(), polytype, is_open);
         }
     }
 
+    pub fn add_path_points(
+        &mut self,
+        points: impl IntoIterator<Item = Point64>,
+        polytype: PathType,
+        is_open: bool,
+    ) {
+        self.has_open_paths |= is_open;
+        self.minima_list_sorted = false;
+        self.add_input_path_iter(points, polytype, is_open);
+    }
+
     // AddPaths_:647–676, including the unadjusted count after closing-duplicate removal.
-    fn add_input_path(&mut self, path: &Path64, polytype: PathType, is_open: bool) {
+    fn add_input_path_iter(
+        &mut self,
+        points: impl IntoIterator<Item = Point64>,
+        polytype: PathType,
+        is_open: bool,
+    ) {
         let start = self.vertex_arena.len();
         let mut previous: Option<usize> = None;
         let mut count = 0;
-        for &point in path {
+        for point in points {
             match previous {
                 Some(previous) if self.vertex_arena[previous].pt == point => continue,
                 Some(previous) => self.vertex_arena[previous].next = self.vertex_arena.len(),

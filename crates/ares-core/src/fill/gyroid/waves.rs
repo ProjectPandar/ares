@@ -3,7 +3,7 @@
 
 use super::super::checked_rotate::{rotate_points, rotate_points_with_trig};
 use super::{EPSILON, WaveContext, WavePlacement};
-use crate::geometry::{ClipperError, ExPolygon, Line, Point, Polygon, Polyline};
+use crate::geometry::{ClipperError, ExPolygon, Point, Polygon, Polyline};
 
 pub(super) fn make_one_period(context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
     let limit = 2.0 * std::f64::consts::PI;
@@ -124,14 +124,6 @@ pub(super) fn translate(polylines: &mut [Polyline], offset: Point) -> Result<(),
         );
     }
     Ok(())
-}
-
-pub(super) fn polyline_length(polyline: &Polyline) -> f64 {
-    polyline
-        .points()
-        .windows(2)
-        .map(|points| Line::new(points[0], points[1]).length())
-        .sum()
 }
 
 pub(super) fn rotate_expolygon(
