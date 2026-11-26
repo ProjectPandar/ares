@@ -9,7 +9,7 @@ use crate::{
         perimeters::classic::{
             entity_collections::ExtrusionEntity,
             gap_extrusion::GapFillEntity,
-            materialize::{ExtrusionPath, Point3, Polyline3},
+            materialize::{ExtrusionPath, ExtrusionRole as MaterializedRole, Point3, Polyline3},
         },
     },
 };
@@ -210,12 +210,10 @@ fn simplify_path3(
     if path.z_contoured {
         return;
     }
-    simplify_polyline3(
-        &mut path.polyline,
-        scale,
-        tolerance,
-        arc_fitting.fits(false),
-    );
+    let is_sparse = path.role == MaterializedRole::InternalInfill;
+    let fits = arc_fitting.fits(is_sparse);
+    let tolerance = if fits && is_sparse { 0.04 } else { tolerance };
+    simplify_polyline3(&mut path.polyline, scale, tolerance, fits);
 }
 
 fn simplify_polyline3(

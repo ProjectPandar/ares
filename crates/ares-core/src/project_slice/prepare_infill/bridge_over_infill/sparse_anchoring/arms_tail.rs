@@ -5,7 +5,7 @@
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::multiline::{MultilineFillParams, fill_surface as fill_multiline_surface},
-    geometry::{Point, Polyline},
+    geometry::{JoinType, Point, Polyline, offset_expolygon},
     project_slice::group_fills::SurfaceFillPattern,
 };
 
@@ -138,6 +138,33 @@ pub(super) fn dispatch_tail(
                 context.adaptive_fields,
                 result,
             )?;
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::SpiralInset) => {
+            // Fill.cpp:1593,1646-1679 / FillBase.cpp:134: classic zero-overlap
+            // contraction and outside-in spiral chaining.
+            let params = crate::fill::FillParams {
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                dont_adjust: false,
+            };
+            let delta = (-0.5 * fill.params.spacing / traversal.scale.factor()) as f32;
+            for expolygon in fill.expolygons {
+                let mut spacing = fill.params.spacing;
+                let domains = offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
+                    .map_err(super::super::transaction::geometry_error)?;
+                for domain in domains {
+                    result.extend(
+                        crate::fill::spiral_inset::classic(
+                            domain,
+                            &params,
+                            &mut spacing,
+                            crate::ProcessSurfaceFillOrder::Default,
+                            traversal.scale,
+                        )
+                        .map_err(super::super::transaction::geometry_error)?,
+                    );
+                }
+            }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning) => {
             // `FillLightning::Filler::_fill_surface_single` — the anchor

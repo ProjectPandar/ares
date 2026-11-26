@@ -29,13 +29,14 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let params = fill.params;
     let density = (0.01 * f64::from(params.density)) as f32;
-    let mut spacing = params.spacing;
     let role = match params.extrusion_role {
         ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
         ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
+        ExtrusionRole::InternalInfill => MaterializedRole::InternalInfill,
         _ => MaterializedRole::SolidInfill,
     };
     for expolygon in fill.expolygons {
+        let mut spacing = params.spacing;
         let domains = offset_expolygon(
             &expolygon,
             scale.scaled_delta(params.overlap - 0.5 * spacing) as f32,
@@ -89,6 +90,9 @@ pub(super) fn append(
             scale,
             role,
         )?;
+        if params.flow_ratio != 1.0 {
+            apply_flow_ratio(&mut generated.entities, params.flow_ratio);
+        }
         if params.fill_order != ProcessSurfaceFillOrder::Default {
             keep_order(&mut generated.entities);
         }
@@ -112,6 +116,19 @@ pub(super) fn append(
         });
     }
     Ok(())
+}
+
+fn apply_flow_ratio(entities: &mut [GapFillEntity], ratio: f64) {
+    for entity in entities {
+        match entity {
+            GapFillEntity::Path(path) => path.mm3_per_mm *= ratio,
+            GapFillEntity::Loop(paths) => {
+                for path in paths {
+                    path.mm3_per_mm *= ratio;
+                }
+            }
+        }
+    }
 }
 
 fn keep_order(entities: &mut [GapFillEntity]) {
