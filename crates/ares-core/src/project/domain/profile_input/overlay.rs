@@ -309,12 +309,13 @@ pub(super) fn merged_profile_raw(
     // machine slot are cleared; unloaded filament slots stay embedded.
     {
         let len = embedded_count + 2;
-        let context = DifferentSettingsContext {
-            embedded: embedded_raw.get("different_settings_to_system"),
+        let context = DifferentSettingsContext::new(
+            merged.get("different_settings_to_system"),
             len,
             slots,
-            switch_compatible_printers: machine_switch.is_some(),
-        };
+            &settings.project.preset,
+            machine_switch.is_some(),
+        );
         let values = (0..len).map(|index| context.slot(index)).collect();
         inserts.push((
             "different_settings_to_system".to_owned(),

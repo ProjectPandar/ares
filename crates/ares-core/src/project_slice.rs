@@ -79,7 +79,7 @@ pub(crate) fn load_profile_project(source: &ProjectSource<'_>) -> Result<Project
                 source.overrides,
                 Some(refresh),
                 source.system_catalog,
-                (source.validate_print, None),
+                (source.validate_print, source.skip_modified_gcodes, None),
             )
             .map(|(project, _)| project);
     }

@@ -12,8 +12,9 @@ pub(super) struct Slot<'a> {
     pub(super) filament_count: usize,
     pub(super) range: (usize, usize, usize),
     pub(super) restore: &'a [Option<usize>],
-    pub(super) protected: &'a BTreeSet<String>,
+    pub(super) protected: &'a mut BTreeSet<String>,
     pub(super) refresh_unlisted: bool,
+    pub(super) skip_modified_gcodes: bool,
 }
 
 pub(super) fn apply(
@@ -21,7 +22,7 @@ pub(super) fn apply(
     project: &ProjectSettingsRaw,
     config: &ProjectSettingsRaw,
     context: Slot<'_>,
-) -> Result<(), SliceError> {
+) -> Result<bool, SliceError> {
     let Slot {
         index: slot,
         filament_count: count,
@@ -29,13 +30,18 @@ pub(super) fn apply(
         restore,
         protected,
         refresh_unlisted,
+        skip_modified_gcodes,
     } = context;
     let variant_keys = crate::filament_options_with_variant();
+    let mut released = false;
     for (key, source) in config.entries() {
         let kept = if refresh_unlisted {
+            if skip_modified_gcodes && super::preset::is_gcode_key(key) {
+                released |= protected.remove(key);
+            }
             protected.contains(key)
         } else {
-            project.contains_key(key)
+            !(skip_modified_gcodes && super::preset::is_gcode_key(key)) && project.contains_key(key)
         };
         if let Some((group, length, index)) = match key.as_str() {
             "compatible_printers_condition" => {
@@ -103,5 +109,5 @@ pub(super) fn apply(
             result.insert(key.clone(), RawConfigValue::List(values));
         }
     }
-    Ok(())
+    Ok(released)
 }

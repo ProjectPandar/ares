@@ -169,6 +169,9 @@ fn slice_validated_profile_source(
             orient,
             sliced_plate,
             upward,
+            refresh: source
+                .refresh
+                .map(|refresh| refresh.with_skip_modified_gcodes(context.skip_modified_gcodes())),
             ..source
         };
         source.validate_print = true;
@@ -293,7 +296,10 @@ pub(crate) fn with_edited_profile_source<T>(
             plate,
             profile: None,
             refresh: Some(super::ProjectPresetRefresh {
-                source: super::project_refresh::RefreshSource::Catalog(&catalog),
+                source: super::project_refresh::RefreshSource::Catalog {
+                    catalog: &catalog,
+                    skip_modified_gcodes: false,
+                },
                 policy,
                 filename,
                 placement,

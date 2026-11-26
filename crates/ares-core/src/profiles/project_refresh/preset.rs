@@ -25,6 +25,10 @@ const GCODES_KEY_SET: [&str; 12] = [
 ];
 const MACHINE_GCODES: &[&str] = GCODES_KEY_SET.split_at(10).0;
 
+pub(super) fn is_gcode_key(key: &str) -> bool {
+    GCODES_KEY_SET.contains(&key)
+}
+
 pub(super) enum RefreshScope<'a> {
     Project(Option<&'a crate::ProjectSettings>),
     Filaments,
@@ -39,6 +43,8 @@ pub(super) fn refresh(
     let names = strings(project, "filament_settings_id");
     let inherited = strings(project, "inherits_group");
     let dirty = strings(project, "different_settings_to_system");
+    let mut dirty_out = dirty.clone();
+    let mut dirty_changed = false;
     let refresh_unlisted = uptodate || dirty.iter().any(|entry| !entry.is_empty());
     let mut result = project.clone();
     let mut retained_thumbnails = false;
@@ -70,46 +76,38 @@ pub(super) fn refresh(
         if name.is_empty() {
             continue;
         }
-        let native_file = match lookup {
-            PresetLookup::Native { presets, .. } if uptodate => presets.file(kind, slot),
-            _ => None,
-        };
+        let native_file_name = uptodate
+            .then(|| lookup.native_file_name(kind, slot))
+            .flatten();
         // CLI:3182-3185: a resolver miss keeps the project's values.
         let Some(mut system) = lookup.system(kind, name, slot)? else {
             continue;
         };
-        let skip_machine_gcodes = native_file.is_some()
-            && kind == ProfileKind::Machine
-            && matches!(
-                lookup,
-                PresetLookup::Native {
-                    skip_modified_gcodes: true,
-                    ..
-                }
-            );
+        let skip_gcodes = native_file_name.is_some() && lookup.skip_modified_gcodes();
         // CLI:3216-3222,3348-3365 decode only authored overrides for flat
         // refresh files; `load_project_preset` (`:3179`) adds identity keys.
-        let mut protected = if native_file.is_some() {
+        let mut protected = if native_file_name.is_some() {
             authored_dirty_keys(&dirty, slot)?
         } else {
             dirty_keys(&dirty, slot)?
         };
-        if let Some(file) = native_file {
+        if let Some(config_name) = native_file_name {
             // CLI:2561,2615,2644,2684 stage `config_name` onto the preset's
             // settings ID before `update_full_config` (`:3099-3161`).
             system.insert(
                 identity_key.to_owned(),
-                RawConfigValue::Text(file.name().to_owned()),
+                RawConfigValue::Text(config_name.to_owned()),
             );
         }
-        // `load_default_gcodes_to_config` (CLI:671–704,3240) supplies
-        // definition defaults for absent scripts in nonempty Native config.
-        // Only the protected scripts need them for this keep-set exception.
-        let defaultable_scripts = if skip_machine_gcodes && system.entries().next().is_some() {
-            MACHINE_GCODES
-        } else {
-            &[]
-        };
+        // `load_default_gcodes_to_config` (CLI:671–709,3239,3389) supplies
+        // defaults for absent machine scripts in nonempty Native config;
+        // TYPE_PRINT adds none.
+        let defaultable_scripts =
+            if skip_gcodes && kind == ProfileKind::Machine && system.entries().next().is_some() {
+                MACHINE_GCODES
+            } else {
+                &[]
+            };
         for &key in defaultable_scripts {
             if protected.contains(key)
                 && !system.contains_key(key)
@@ -121,14 +119,14 @@ pub(super) fn refresh(
         let mut released = false;
         for (key, value) in system.entries() {
             let skip_bookkeeping =
-                bookkeeping(key) && !(native_file.is_some() && key == identity_key);
+                bookkeeping(key) && !(native_file_name.is_some() && key == identity_key);
             if skip_bookkeeping || connection(key) {
                 continue;
             }
-            if skip_machine_gcodes && MACHINE_GCODES.contains(&key.as_str()) {
+            if skip_gcodes && is_gcode_key(key) {
                 released |= protected.remove(key);
             }
-            let kept = if native_file.is_some() {
+            let kept = if native_file_name.is_some() {
                 protected.contains(key.as_str())
             } else {
                 project.contains_key(key) && (!refresh_unlisted || protected.contains(key.as_str()))
@@ -141,20 +139,24 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
         if released {
-            // CLI:3244–3253 serializes the remaining authored set.
-            let mut columns = dirty.clone();
-            columns[slot] = dirty_columns::encode(protected.into_iter().collect())?;
-            result.insert_strings("different_settings_to_system", &columns);
+            // CLI:3244–3253,3394–3403 serialize the remaining authored set.
+            dirty_out[slot] = dirty_columns::encode(protected.into_iter().collect())?;
+            dirty_changed = true;
         }
     }
-    // CLI:2295,2793: a supplied named machine skips retained filament refresh.
-    if supplied.is_some_and(|p| {
-        (!p.printer_settings_id.0.is_empty() && matches!(lookup, PresetLookup::Catalog(_)))
-            || !p.filament_settings_id.0.is_empty()
-    }) {
+    // CLI:2295,2693,2793: a supplied named machine skips catalog filament refresh
+    // (but still allows Native --uptodate-filaments / filament_full files);
+    // explicit --load-filaments replaces instead of refreshing.
+    let machine_replaced = supplied.is_some_and(|p| !p.printer_settings_id.0.is_empty());
+    if supplied.is_some_and(|p| !p.filament_settings_id.0.is_empty())
+        || (machine_replaced && matches!(lookup, PresetLookup::Catalog { .. }))
+    {
+        if dirty_changed {
+            result.insert_strings("different_settings_to_system", &dirty_out);
+        }
         return Ok((result, retained_thumbnails));
     }
-    let filaments = names
+    let mut filaments = names
         .iter()
         .enumerate()
         .map(|(slot, name)| {
@@ -162,12 +164,23 @@ pub(super) fn refresh(
             // CLI:2805–2807: a resolver miss keeps the imported filament slot.
             if name.is_empty() {
                 Ok(None)
+            } else if machine_replaced {
+                Ok(lookup.native_file(ProfileKind::Filament, slot))
             } else {
                 lookup.system(ProfileKind::Filament, name, slot)
             }
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
-    filament::apply(&mut result, project, &filaments, &dirty, refresh_unlisted)?;
+    filament::apply(
+        &mut result,
+        project,
+        &mut filaments,
+        (&dirty, &mut dirty_out, &mut dirty_changed),
+        (refresh_unlisted, lookup.skip_modified_gcodes()),
+    )?;
+    if dirty_changed {
+        result.insert_strings("different_settings_to_system", &dirty_out);
+    }
     Ok((result, retained_thumbnails))
 }
 
@@ -300,7 +313,10 @@ pub(in crate::profiles) fn strings(raw: &ProjectSettingsRaw, key: &str) -> Vec<S
     }
 }
 
-fn authored_dirty_keys(dirty: &[String], slot: usize) -> Result<BTreeSet<String>, SliceError> {
+pub(super) fn authored_dirty_keys(
+    dirty: &[String],
+    slot: usize,
+) -> Result<BTreeSet<String>, SliceError> {
     let token = dirty.get(slot).map(String::as_str).unwrap_or("");
     crate::options::unescape_strings_cstyle(token)
         .map(|keys| keys.into_iter().collect())

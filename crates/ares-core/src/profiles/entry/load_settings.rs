@@ -110,7 +110,12 @@ pub(super) fn slice_load_settings_source(
         request,
         refresh
             .map(|presets| ProjectPresetRefresh::native(presets, context.skip_modified_gcodes())),
-        |source| {
+        |mut source| {
+            if let Some(profile) = source.profile.as_mut() {
+                profile.retained_refresh = profile.retained_refresh.map(|refresh| {
+                    refresh.with_skip_modified_gcodes(context.skip_modified_gcodes())
+                });
+            }
             slice_source(
                 ProjectSource { loaded, ..source },
                 metadata,
@@ -273,7 +278,10 @@ pub(crate) fn with_load_settings_source<T>(
                 catalog
                     .as_ref()
                     .map(|catalog| crate::profiles::ProjectPresetRefresh {
-                        source: crate::profiles::project_refresh::RefreshSource::Catalog(catalog),
+                        source: crate::profiles::project_refresh::RefreshSource::Catalog {
+                            catalog,
+                            skip_modified_gcodes: false,
+                        },
                         policy: ProjectPresetPolicy::Cli { uptodate },
                         filename,
                         placement,
