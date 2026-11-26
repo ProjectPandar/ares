@@ -49,11 +49,12 @@ pub(super) fn create_polyholes(
             // (:177-179) float angle math; `Point(double,double)` rounds.
             let angle = rotation * i_poly as f32
                 + (std::f32::consts::PI * 2.0 * i_edge as f32) / nb_edges as f32;
+            let (sin_angle, cos_angle) = crate::scalar_math::sincosf::sin_cos(angle);
             // coord_t + float is float arithmetic upstream; the
             // `Point(double,double)` ctor then rounds to `coord_t`.
             points.push(Point::new(
-                (center.x() as f32 + new_radius * angle.cos()).round() as i64,
-                (center.y() as f32 + new_radius * angle.sin()).round() as i64,
+                (center.x() as f32 + new_radius * cos_angle).round() as i64,
+                (center.y() as f32 + new_radius * sin_angle).round() as i64,
             ));
         }
         let mut polygon = Polygon::new(points);
