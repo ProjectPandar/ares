@@ -1,7 +1,10 @@
 // Ports the used filament data of AGPL-licensed OrcaSlicer
 // `src/slic3r/GUI/GCodeViewer.cpp` `render_legend` for the ColorPrint view.
 
-use crate::{Color, ColorPrintLegend, ViewerImpl, color_print_legend};
+use crate::{Color, ColorPrintLegend};
+#[cfg(feature = "ares-core-convert")]
+use crate::{ViewerImpl, color_print_legend};
+#[cfg(feature = "ares-core-convert")]
 use ares_core::gcode_processor::GCodeProcessorResult;
 
 /// `displayed_columns` in header order (`GCodeViewer.cpp:3749-3767`).
@@ -36,6 +39,7 @@ pub struct FilamentLegend {
 /// 3749-3767, 4044-4094`). Dense statistics omit a bucket with zero volume,
 /// matching `UsedFilaments::process_*_cache` (`GCodeProcessor.cpp:1558-1600`).
 /// Unit conversion and formatting belong to the display layer.
+#[cfg(feature = "ares-core-convert")]
 pub fn filament_legend(viewer: &ViewerImpl, result: &GCodeProcessorResult) -> FilamentLegend {
     let statistics = &result.print_statistics;
     let used = viewer.get_used_extruders_ids();

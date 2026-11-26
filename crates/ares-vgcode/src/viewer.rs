@@ -11,11 +11,15 @@ use crate::{
 mod color_print;
 mod colors;
 mod custom_gcode_overview;
+#[cfg(feature = "ares-core-convert")]
+pub use color_print::color_print_legend;
 pub use color_print::{
     ColorPrintLegend, ColorPrintRange, ExtruderColorPrints, MissingColorVolume, PartialTime,
-    PartialTimeKind, PrintedColor, color_print_legend,
+    PartialTimeKind, PrintedColor,
 };
-pub use custom_gcode_overview::{CustomGCodeOverviewRow, custom_gcode_overview};
+pub use custom_gcode_overview::CustomGCodeOverviewRow;
+#[cfg(feature = "ares-core-convert")]
+pub use custom_gcode_overview::custom_gcode_overview;
 mod enabled;
 mod heights_widths;
 mod view_range;

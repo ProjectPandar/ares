@@ -1,9 +1,12 @@
 // Ports the Custom G-code overview of AGPL OrcaSlicer GCodeViewer::render_legend
 // (GCodeViewer.cpp:4477-4546) and find_close_layer_idx (GCodeViewer.cpp:108-125).
+#[cfg(feature = "ares-core-convert")]
 use crate::{Layers, TimeMode};
+#[cfg(feature = "ares-core-convert")]
 use ares_core::gcode_processor::{CustomGCodeItem, CustomGCodeType};
 
 /// `IMSlider.hpp:24`.
+#[cfg(feature = "ares-core-convert")]
 const EPSILON: f64 = 0.0011;
 
 /// One overview row: the type label, the printed layer number (`layer + 1`,
@@ -16,6 +19,7 @@ pub struct CustomGCodeOverviewRow {
 }
 
 /// One row per item, in list order.
+#[cfg(feature = "ares-core-convert")]
 pub fn custom_gcode_overview(
     items: &[CustomGCodeItem],
     layers: &Layers,
@@ -50,6 +54,7 @@ pub fn custom_gcode_overview(
 
 /// The nearer neighbour of `lower_bound(z)` within `eps` (a tie goes to the
 /// upper one), or `-1`.
+#[cfg(feature = "ares-core-convert")]
 fn find_close_layer_idx(zs: &[f64], z: f64, eps: f64) -> i32 {
     if zs.is_empty() {
         return -1;
