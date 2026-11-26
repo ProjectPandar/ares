@@ -1,6 +1,9 @@
 use super::*;
 use crate::runner::CaseInputs;
 
+#[path = "initialized_bridge_direction/atan2_determinism.rs"]
+mod atan2_determinism;
+
 #[path = "initialized_bridge_direction/rehash.rs"]
 mod rehash;
 
