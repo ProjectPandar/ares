@@ -14,6 +14,8 @@ mod mm_flush_into_infill_labels;
 mod p1s_bylayer_brim;
 #[path = "print_order_as_obj_list.rs"]
 mod print_order_as_obj_list;
+#[path = "print_order_strategies.rs"]
+mod print_order_strategies;
 #[path = "retract_internal_regions_routed.rs"]
 mod retract_internal_regions_routed;
 

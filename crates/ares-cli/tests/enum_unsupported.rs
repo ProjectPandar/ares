@@ -167,7 +167,5 @@ macro_rules! unsupported_states {
 
 unsupported_states! {
     internal_solid_spiral_inset: "internal_solid_infill_pattern", "spiralinset";
-    best_of_order: "print_order", "best_of";
-    snake_order: "print_order", "snake";
     nozzle_manual: "filament_map_mode", "Nozzle Manual";
 }
