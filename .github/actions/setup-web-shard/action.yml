@@ -43,13 +43,21 @@ runs:
     - name: Unpack prebuilt web and release CLI bundle
       shell: bash
       run: tar --zstd -xf "$RUNNER_TEMP/web-bundle/web-dist.tar.zst" -C "$GITHUB_WORKSPACE"
-    - uses: actions/cache@v4
+    - name: Cache Playwright browsers
+      id: pw-cache
+      uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ inputs.browsers }}-${{ hashFiles('web/bun.lock') }}
+        key: playwright-${{ inputs.browsers }}-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
     - name: Install Playwright browsers
+      if: steps.pw-cache.outputs.cache-hit != 'true' || contains(inputs.browsers, 'webkit')
       shell: bash
-      run: bunx --cwd web playwright install --with-deps ${{ inputs.browsers }}
+      run: |
+        if [[ "${{ inputs.browsers }}" == *webkit* ]]; then
+          bunx --cwd web playwright install --with-deps ${{ inputs.browsers }}
+        else
+          bunx --cwd web playwright install ${{ inputs.browsers }}
+        fi
     - name: Cache official OrcaSlicer v2.5.0 AppImage
       uses: actions/cache@v4
       with:
