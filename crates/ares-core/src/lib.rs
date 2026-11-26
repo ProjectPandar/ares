@@ -17,6 +17,7 @@ mod mesh_slicer;
 mod model;
 
 mod options;
+pub(crate) mod parallel;
 mod perimeters;
 pub mod plater;
 mod print;
@@ -168,7 +169,7 @@ pub(crate) use segments::Point2;
 pub use slice_error::{
     PresetAdmissionError, PresetAdmissionReason, PrintValidationKind, SliceError,
 };
-pub use slicer_context::{SlicerContext, SlicingStatus};
+pub use slicer_context::{CancelToken, SlicerContext, SlicingStatus};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum InputFormat {

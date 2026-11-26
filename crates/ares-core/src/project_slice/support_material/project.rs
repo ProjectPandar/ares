@@ -45,24 +45,14 @@ pub(in crate::project_slice) fn generate(
     let max_object_layers = traversal
         .objects
         .iter()
-        .map(|object| {
-            object
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object
-                .as_parts()
-                .0
-                .as_parts()
-                .0
-                .plan
-                .layers
-                .len()
+        .map(|o| {
+            let input = &o.predecessor.predecessor.predecessor.predecessor.object;
+            input.as_parts().0.as_parts().0.plan.layers.len()
         })
         .fold(0, usize::max);
     let mut output = Vec::with_capacity(traversal.objects.len());
     for (index, source) in traversal.objects.iter().enumerate() {
+        context.check_canceled()?;
         let input = &source
             .predecessor
             .predecessor
@@ -94,6 +84,7 @@ pub(in crate::project_slice) fn generate(
         }
         if plan.layers.len() > 1 || object.raft_layers.0 > 0 {
             context.set_status(50, format_args!("Generating support"), 0);
+            context.check_canceled()?;
         }
         let source_object = &traversal.project.objects()[plan.source_object_index];
         let resolved_object = &traversal.resolved.objects[resolved_index];
@@ -312,6 +303,7 @@ pub(in crate::project_slice) fn generate(
                     counts: &counts,
                     scale,
                 },
+                context.cancel_ref(),
             )?);
             continue;
         }
@@ -341,50 +333,51 @@ pub(in crate::project_slice) fn generate(
                 parameters.interface_flow.nozzle_diameter,
             )
         };
-        let mut geometry = generate_grid_support_geometry(&GridSupportInput {
-            toolpath_parameters: &parameters,
-            placement: ContactPlacement {
-                parameters: slicing,
-                object,
-                independent_support_layer_height: settings
-                    .process
-                    .print
-                    .independent_support_layer_height
-                    .0,
-                support_layer_height_min: height_min,
-                layers: &plan.layers,
+        let mut geometry = generate_grid_support_geometry(
+            &GridSupportInput {
+                toolpath_parameters: &parameters,
+                placement: ContactPlacement {
+                    parameters: slicing,
+                    object,
+                    independent_support_layer_height: settings
+                        .process
+                        .print
+                        .independent_support_layer_height
+                        .0,
+                    support_layer_height_min: height_min,
+                    layers: &plan.layers,
+                },
+                layers: &layers,
+                enforcers: &enforcers,
+                blockers: &blockers,
+                top_surfaces: &top_surfaces,
+                bridging_heights: &bridging_heights,
+                trim_regions: &trim_regions,
+                interface_counts: &counts,
+                extrusion_width_scaled: extrusion_width / scale.factor(),
+                bottom_interface_height: f64::from(bottom_interface_flow.height),
+                support_width_scaled: (f64::from(parameters.base_flow.width) / scale.factor())
+                    as i64 as f32,
+                gap_xy: object.support_object_xy_distance.0,
+                gap_xy_first_layer: object.support_object_first_layer_gap.0,
+                first_layer_flow_width_scaled: (f64::from(parameters.first_layer_flow.width)
+                    / scale.factor()) as i64,
+                has_brim,
+                grid: SupportGridParams {
+                    snug: super::style::resolve(object.support_type, object.support_style)
+                        == ProcessSupportStyle::Snug,
+                    angle: object.support_angle.0 * std::f64::consts::PI / 180.0,
+                    ..SupportGridParams::new(
+                        object.support_base_pattern_spacing.0
+                            + f64::from(parameters.base_flow.spacing),
+                        f64::from(parameters.base_flow.spacing),
+                        1.0 / scale.factor(),
+                    )
+                },
+                scale,
             },
-            layers: &layers,
-            enforcers: &enforcers,
-            blockers: &blockers,
-            top_surfaces: &top_surfaces,
-            bridging_heights: &bridging_heights,
-            trim_regions: &trim_regions,
-            interface_counts: &counts,
-            extrusion_width_scaled: extrusion_width / scale.factor(),
-            bottom_interface_height: f64::from(bottom_interface_flow.height),
-            support_width_scaled: (f64::from(parameters.base_flow.width) / scale.factor()) as i64
-                as f32,
-            gap_xy: object.support_object_xy_distance.0,
-            gap_xy_first_layer: object.support_object_first_layer_gap.0,
-            first_layer_flow_width_scaled: (f64::from(parameters.first_layer_flow.width)
-                / scale.factor()) as i64,
-            has_brim,
-            grid: SupportGridParams {
-                snug: super::style::resolve(object.support_type, object.support_style)
-                    == ProcessSupportStyle::Snug,
-                angle: object.support_angle.0 * std::f64::consts::PI / 180.0,
-                ..SupportGridParams::new(
-                    object.support_base_pattern_spacing.0 + f64::from(parameters.base_flow.spacing),
-                    f64::from(parameters.base_flow.spacing),
-                    1.0 / scale.factor(),
-                )
-            },
-            scale,
-        })
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("support project geometry: {error:?}"))
-        })?;
+            context.cancel_ref(),
+        )?;
         output.push(generate_grid_support_toolpaths(
             &mut geometry,
             &ToolpathInput {
@@ -394,6 +387,7 @@ pub(in crate::project_slice) fn generate(
                 counts: &counts,
                 scale,
             },
+            context.cancel_ref(),
         )?);
     }
     Ok(output)

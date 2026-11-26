@@ -25,7 +25,8 @@ use super::{
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicEntityCollections,
-) -> PreparedPostClassicPerimeterAppend {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicPerimeterAppend, crate::SliceError> {
     let PreparedPostClassicEntityCollections {
         predecessor,
         objects,
@@ -51,13 +52,13 @@ pub(in crate::project_slice) fn finish(
                 .find(|object| object.source_object_index == source_object_index)
                 .expect("an O10 object retains its resolved source object")
                 .object;
-            transform_object(source, traversal, object_options, predecessor.scale)
+            transform_object(source, traversal, object_options, predecessor.scale, cancel)
         })
-        .collect();
-    PreparedPostClassicPerimeterAppend {
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(PreparedPostClassicPerimeterAppend {
         predecessor,
         objects,
-    }
+    })
 }
 
 fn transform_object(
@@ -65,58 +66,49 @@ fn transform_object(
     traversal: &PostClassicTraversalPrintObject,
     object_options: &ObjectOptions,
     scale: CoordinateScale,
-) -> PreparedPerimeterAppendObject {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPerimeterAppendObject, crate::SliceError> {
     assert_eq!(source.records.len(), traversal.records.len());
-    let records = source
-        .records
-        .into_iter()
-        .enumerate()
-        .map(
-            |(index, source)| match (source, &traversal.records[index]) {
-                (None, None) => None,
-                (Some(source), Some(traversal_record)) => {
-                    let (region, touch_distance) = region_context(traversal, index, scale);
-                    let inactive = classify_inactive(traversal_record, object_options);
-                    // First physical layer, not the compatible-region
-                    // record slot (`PerimeterGenerator.cpp:1858-1865`
-                    // `is_outer_wall_first` / first-layer outer-brim reverse
-                    // over the whole entity table, so island order and
-                    // per-island wall order flip together).
-                    // `outer_walls_first_for_brim` (`:3204-3212`): layer 0,
-                    // `brim_width > 0`, outer-kind brim.
-                    let wall_sequence = if traversal_record.layer_id == 0
-                        && matches!(
-                            object_options.brim_type,
-                            ProcessBrimType::OuterOnly
-                                | ProcessBrimType::OuterAndInner
-                                | ProcessBrimType::LeadingEdgeOnly
-                        )
-                        && object_options.brim_width.0 > 0.0
-                    {
-                        ProcessWallSequence::OuterInner
-                    } else {
-                        region.wall_sequence
-                    };
-                    let reorient = SurfaceReorient {
-                        record: traversal_record,
-                        region,
-                        lower: traversal.printable_lower_slices(index),
-                        scale,
-                        touch_distance,
-                    };
-                    Some(transform_record(
-                        source,
-                        inactive,
-                        wall_sequence,
-                        traversal_record.layer_id,
-                        reorient,
-                    ))
-                }
-                _ => panic!("O9/O5 optional record alignment is invariant"),
-            },
-        )
-        .collect();
-    PreparedPerimeterAppendObject { records }
+    let indexed: Vec<_> = source.records.into_iter().enumerate().collect();
+    let records = crate::parallel::par_map_try(indexed, cancel, |(index, source)| {
+        Ok(match (source, &traversal.records[index]) {
+            (None, None) => None,
+            (Some(source), Some(traversal_record)) => {
+                let (region, touch_distance) = region_context(traversal, index, scale);
+                let inactive = classify_inactive(traversal_record, object_options);
+                // First physical layer (`PerimeterGenerator.cpp:1858-1865`, `:3204-3212`).
+                let wall_sequence = if traversal_record.layer_id == 0
+                    && matches!(
+                        object_options.brim_type,
+                        ProcessBrimType::OuterOnly
+                            | ProcessBrimType::OuterAndInner
+                            | ProcessBrimType::LeadingEdgeOnly
+                    )
+                    && object_options.brim_width.0 > 0.0
+                {
+                    ProcessWallSequence::OuterInner
+                } else {
+                    region.wall_sequence
+                };
+                let reorient = SurfaceReorient {
+                    record: traversal_record,
+                    region,
+                    lower: traversal.printable_lower_slices(index),
+                    scale,
+                    touch_distance,
+                };
+                Some(transform_record(
+                    source,
+                    inactive,
+                    wall_sequence,
+                    traversal_record.layer_id,
+                    reorient,
+                ))
+            }
+            _ => panic!("O9/O5 optional record alignment is invariant"),
+        })
+    })?;
+    Ok(PreparedPerimeterAppendObject { records })
 }
 
 fn transform_record(

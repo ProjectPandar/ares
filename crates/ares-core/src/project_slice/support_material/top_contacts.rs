@@ -29,7 +29,8 @@ pub(super) fn top_contact_layers(
     input: &TopContactsInput<'_>,
     extrusion_width_scaled: f64,
     sharp_tails: &mut [SharpTails],
-) -> Result<Vec<TopContactLayer>, ClipperError> {
+    cancel: &crate::CancelToken,
+) -> Result<Vec<TopContactLayer>, crate::SliceError> {
     let object = input.placement.object;
     if object.enable_support.0
         && !matches!(
@@ -49,18 +50,26 @@ pub(super) fn top_contact_layers(
     };
     let mut overhangs = vec![Vec::new(); num_layers];
     let mut cantilevers = vec![Vec::new(); num_layers];
-    for layer_index in start..num_layers {
-        let detected = detect_overhangs(
-            &OverhangDetection {
-                layer_index,
-                layer: &input.layers[layer_index],
-                lower: layer_index.checked_sub(1).map(|index| &input.layers[index]),
-                object,
-                annotations: &input.annotations[layer_index],
-                scale: input.scale,
-            },
-            &mut sharp_tails[layer_index],
-        )?;
+    let detected =
+        crate::parallel::par_range_map_try(num_layers.saturating_sub(start), cancel, |offset| {
+            let layer_index = start + offset;
+            let mut layer_tails = SharpTails::default();
+            let detected = detect_overhangs(
+                &OverhangDetection {
+                    layer_index,
+                    layer: &input.layers[layer_index],
+                    lower: layer_index.checked_sub(1).map(|index| &input.layers[index]),
+                    object,
+                    annotations: &input.annotations[layer_index],
+                    scale: input.scale,
+                },
+                &mut layer_tails,
+            )
+            .map_err(grid_error)?;
+            Ok((layer_index, layer_tails, detected))
+        })?;
+    for (layer_index, layer_tails, detected) in detected {
+        sharp_tails[layer_index] = layer_tails;
         overhangs[layer_index] = detected.polygons;
         cantilevers[layer_index] = detected.cantilevers;
     }
@@ -78,7 +87,8 @@ pub(super) fn top_contact_layers(
             },
             &mut sharp_tails[..num_layers],
             &mut overhangs,
-        )?;
+        )
+        .map_err(grid_error)?;
     }
     if object.support_remove_small_overhang.0 {
         remove_small_overhangs(
@@ -87,15 +97,17 @@ pub(super) fn top_contact_layers(
             &cantilevers,
             start,
             extrusion_width_scaled,
-        )?;
+        )
+        .map_err(grid_error)?;
     }
-    fill_grid_top_contacts(input, overhangs)
+    fill_grid_top_contacts(input, overhangs, cancel)
 }
 
 fn fill_grid_top_contacts(
     input: &TopContactsInput<'_>,
     overhangs: Vec<Vec<ExPolygon>>,
-) -> Result<Vec<TopContactLayer>, ClipperError> {
+    cancel: &crate::CancelToken,
+) -> Result<Vec<TopContactLayer>, crate::SliceError> {
     let object = input.placement.object;
     let has_support = object.enable_support.0 || object.enforce_support_layers.0 != 0;
     let has_raft = input.placement.parameters.base_raft_layers
@@ -104,13 +116,13 @@ fn fill_grid_top_contacts(
     let num_layers = if has_support { input.layers.len() } else { 1 };
     let start = if has_raft { 0 } else { 1 };
     let zero_gap_top = input.placement.parameters.zero_gap_interface_top;
-    let mut contacts = Vec::new();
-    for (layer_index, overhangs) in overhangs
+    let indexed = overhangs
         .into_iter()
         .enumerate()
         .take(num_layers)
         .skip(start)
-    {
+        .collect::<Vec<_>>();
+    let per_layer = crate::parallel::par_map_try(indexed, cancel, |(layer_index, overhangs)| {
         let lower_slices = if layer_index == 0 {
             &[][..]
         } else {
@@ -127,15 +139,16 @@ fn fill_grid_top_contacts(
                 gap_xy_scaled: (object.support_object_xy_distance.0 / input.scale.factor()) as f32,
             },
             &mut overhangs,
-        )?;
+        )
+        .map_err(grid_error)?;
         if detected.polygons.is_empty() && overhangs.is_empty() {
-            continue;
+            return Ok(None);
         }
         let Some((mut layer, mut bridging_layer)) = input
             .placement
             .new_contact_layer(layer_index, input.bridging_heights[layer_index])
         else {
-            continue;
+            return Ok(None);
         };
         fill_grid_contact_layer(
             &mut layer,
@@ -155,7 +168,8 @@ fn fill_grid_top_contacts(
                 overhang_polygons: overhangs,
                 enforcer_polygons: detected.enforcer_polygons,
             },
-        )?;
+        )
+        .map_err(grid_error)?;
         if let Some(bridging) = &mut bridging_layer {
             bridging.polygons.clone_from(&layer.polygons);
             bridging
@@ -168,6 +182,10 @@ fn fill_grid_top_contacts(
                 .enforcer_polygons
                 .clone_from(&layer.enforcer_polygons);
         }
+        Ok(Some((layer, bridging_layer)))
+    })?;
+    let mut contacts = Vec::new();
+    for (layer, bridging_layer) in per_layer.into_iter().flatten() {
         // Preserve native per-object slot enumeration before the Z sort.
         contacts.push(layer);
         contacts.extend(bridging_layer);
@@ -177,4 +195,9 @@ fn fill_grid_top_contacts(
         input.placement.parameters.first_print_layer_height,
         input.placement.support_layer_height_min,
     )
+    .map_err(grid_error)
+}
+
+fn grid_error(error: ClipperError) -> crate::SliceError {
+    crate::SliceError::InvalidInput(format!("support project geometry: {error:?}"))
 }

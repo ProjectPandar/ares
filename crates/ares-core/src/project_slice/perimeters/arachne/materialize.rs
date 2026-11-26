@@ -47,6 +47,7 @@ pub(in crate::project_slice) fn finish(
         .objects
         .iter()
         .map(|object| {
+            context.check_canceled()?;
             let (source_object_index, _) = object.object.identity();
             let object_options = &prelude
                 .resolved
@@ -55,38 +56,97 @@ pub(in crate::project_slice) fn finish(
                 .find(|resolved| resolved.source_object_index == source_object_index)
                 .expect("the prelude object retains its resolved source")
                 .object;
-            let inputs = object.object.as_parts().1;
-            let mut records = (0..inputs.len()).map(|_| None).collect::<Vec<_>>();
-            // `Layer.cpp::make_perimeters` runs physical-layer compatible groups
-            // in discovery order. Keep that RNG draw order while storing output
-            // in the existing region-major record slots.
-            let mut order = (0..inputs.len()).collect::<Vec<_>>();
-            order.sort_by_key(|&slot| object.object.record_groups[slot]);
-            for slot in order {
-                let (Some(input), Some(prelude_record)) = (inputs[slot], &object.records[slot])
-                else {
-                    continue;
-                };
-                if input.dispatch != PerimeterDispatch::Arachne {
-                    continue;
-                }
-                records[slot] = Some(materialize_record(
-                    &object.object,
-                    (&input, prelude_record),
+            let print_params = config::PrintParameters {
+                enable_arc_fitting,
+                resolution,
+                nozzle_diameters,
+                scale: prelude.scale,
+            };
+            let records = if object_uses_seeded_fuzzy(&object.object) {
+                materialize_object_sequential(object, object_options, print_params, context)?
+            } else {
+                materialize_object_parallel(
+                    object,
                     object_options,
-                    config::PrintParameters {
-                        enable_arc_fitting,
-                        resolution,
-                        nozzle_diameters,
-                        scale: prelude.scale,
-                    },
-                    context,
-                )?);
-            }
+                    print_params,
+                    context.cancel_ref(),
+                )?
+            };
             Ok(PreparedArachneObject { records })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
     Ok(PreparedArachnePerimeters { objects })
+}
+
+fn materialize_object_sequential(
+    object: &crate::project_slice::perimeters::classic::PostClassicPreludePrintObject,
+    object_options: &crate::ObjectOptions,
+    print_params: config::PrintParameters<'_>,
+    context: &mut crate::SlicerContext,
+) -> Result<Vec<Option<PreparedLayerRegionPerimeterRecord>>, SliceError> {
+    let inputs = object.object.as_parts().1;
+    let mut records = (0..inputs.len()).map(|_| None).collect::<Vec<_>>();
+    // `Layer.cpp::make_perimeters` runs physical-layer compatible groups
+    // in discovery order. Keep that RNG draw order while storing output
+    // in the existing region-major record slots.
+    let mut order = (0..inputs.len()).collect::<Vec<_>>();
+    order.sort_by_key(|&slot| object.object.record_groups[slot]);
+    for slot in order {
+        context.check_canceled()?;
+        records[slot] =
+            materialize_slot(object, slot, object_options, print_params, Some(context))?;
+    }
+    Ok(records)
+}
+
+fn materialize_object_parallel(
+    object: &crate::project_slice::perimeters::classic::PostClassicPreludePrintObject,
+    object_options: &crate::ObjectOptions,
+    print_params: config::PrintParameters<'_>,
+    cancel: &crate::CancelToken,
+) -> Result<Vec<Option<PreparedLayerRegionPerimeterRecord>>, SliceError> {
+    let inputs = object.object.as_parts().1;
+    crate::parallel::par_range_map_try(inputs.len(), cancel, |slot| {
+        materialize_slot(object, slot, object_options, print_params, None)
+    })
+}
+
+fn materialize_slot(
+    object: &crate::project_slice::perimeters::classic::PostClassicPreludePrintObject,
+    slot: usize,
+    object_options: &crate::ObjectOptions,
+    print_params: config::PrintParameters<'_>,
+    context: Option<&mut crate::SlicerContext>,
+) -> Result<Option<PreparedLayerRegionPerimeterRecord>, SliceError> {
+    let inputs = object.object.as_parts().1;
+    let (Some(input), Some(prelude_record)) = (inputs[slot], &object.records[slot]) else {
+        return Ok(None);
+    };
+    if input.dispatch != PerimeterDispatch::Arachne {
+        return Ok(None);
+    }
+    materialize_record(
+        &object.object,
+        (&input, prelude_record),
+        object_options,
+        print_params,
+        context,
+    )
+    .map(Some)
+}
+
+fn object_uses_seeded_fuzzy(object: &PostPerimeterInputPrintObject) -> bool {
+    object.as_parts().1.iter().flatten().any(|input| {
+        input.dispatch == PerimeterDispatch::Arachne
+            && object.compatible_fuzzy_regions(input).any(|(region, _)| {
+                let cfg = crate::perimeters::FuzzySkinConfig::from_region(region);
+                !matches!(
+                    cfg.kind,
+                    crate::perimeters::FuzzySkinKind::None
+                        | crate::perimeters::FuzzySkinKind::Disabled
+                ) && cfg.noise_type != crate::perimeters::FuzzySkinNoiseType::Ripple
+            })
+    })
 }
 
 fn materialize_record(
@@ -99,7 +159,7 @@ fn materialize_record(
         nozzle_diameters,
         scale,
     }: config::PrintParameters<'_>,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<PreparedLayerRegionPerimeterRecord, SliceError> {
     let region = object.region_options(input);
     let lower_slices = prelude_record.printable_lower_slices.as_deref();
@@ -236,7 +296,7 @@ fn materialize_record(
                 lower_slices: lower_slices.unwrap_or(&[]),
                 scale,
             },
-            context,
+            context.as_deref_mut(),
         )?;
         // `this->loops->append(extrusion_coll)` only when non-empty
         // (`PerimeterGenerator.cpp:2470-2474`).

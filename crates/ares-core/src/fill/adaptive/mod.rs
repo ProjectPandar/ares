@@ -6,9 +6,8 @@ pub(crate) mod hooks;
 mod multiline;
 pub(crate) mod octree;
 
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub(crate) enum OctreeKind {
@@ -21,15 +20,15 @@ pub(crate) enum OctreeKind {
 /// Lives on the slice context (`PreparedPostClassicTraversal`), so
 /// every slice API call works with its own trees — repeated calls with
 /// multiple projects never share or leak cache entries across calls, and
-/// nothing needs a global reset. Interior mutability: the fill phases all
-/// borrow the traversal shared on one thread.
+/// nothing needs a global reset. Interior mutability uses a mutex so
+/// per-layer fill generation can share the traversal across rayon threads.
 pub(crate) struct AdaptiveOctreeCache(
-    RefCell<HashMap<(usize, u64, OctreeKind), Arc<octree::Octree>>>,
+    Mutex<HashMap<(usize, u64, OctreeKind), Arc<octree::Octree>>>,
 );
 
 impl AdaptiveOctreeCache {
     pub(crate) fn new() -> Self {
-        Self(RefCell::new(HashMap::new()))
+        Self(Mutex::new(HashMap::new()))
     }
 
     pub(crate) fn get_or_build(
@@ -37,7 +36,7 @@ impl AdaptiveOctreeCache {
         key: (usize, u64, OctreeKind),
         build: impl FnOnce() -> octree::Octree,
     ) -> Arc<octree::Octree> {
-        let mut cache = self.0.borrow_mut();
+        let mut cache = self.0.lock().expect("adaptive octree cache poisoned");
         cache
             .entry(key)
             .or_insert_with(|| Arc::new(build()))
@@ -51,13 +50,14 @@ impl AdaptiveOctreeCache {
     ) -> Result<Arc<octree::Octree>, E> {
         use std::collections::hash_map::Entry;
 
-        match self.0.borrow_mut().entry(key) {
+        let mut cache = self.0.lock().expect("adaptive octree cache poisoned");
+        match cache.entry(key) {
             Entry::Occupied(entry) => Ok(entry.get().clone()),
             Entry::Vacant(entry) => Ok(entry.insert(Arc::new(build()?)).clone()),
         }
     }
 
     pub(crate) fn get(&self, key: (usize, u64, OctreeKind)) -> Arc<octree::Octree> {
-        self.0.borrow()[&key].clone()
+        self.0.lock().expect("adaptive octree cache poisoned")[&key].clone()
     }
 }

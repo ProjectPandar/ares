@@ -43,6 +43,7 @@ pub(in crate::project_slice) struct ArachneRecordConfig {
 }
 
 /// Print-level inputs to `PerimeterGenerator::process_arachne`.
+#[derive(Clone, Copy)]
 pub(in crate::project_slice) struct PrintParameters<'a> {
     pub(in crate::project_slice) enable_arc_fitting: bool,
     pub(in crate::project_slice) resolution: f64,

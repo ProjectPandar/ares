@@ -19,6 +19,7 @@ use crate::project_slice::perimeters::types::PerimeterInputRecord;
 
 pub(super) fn finish(
     prepared: PreparedPostClassicPrelude,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicTopSplit, SliceError> {
     let validated = config::validate_project(&prepared)?;
     let PreparedPostClassicPrelude {
@@ -32,7 +33,7 @@ pub(super) fn finish(
         .into_iter()
         .zip(validated)
         .map(|(predecessor, configs)| {
-            let records = prepare_object(&predecessor, &configs, scale)?;
+            let records = prepare_object(&predecessor, &configs, scale, cancel)?;
             Ok(PostClassicTopSplitPrintObject {
                 predecessor,
                 records,
@@ -52,22 +53,18 @@ fn prepare_object(
     predecessor: &PostClassicPreludePrintObject,
     configs: &[Option<ValidatedTopSplitConfig>],
     scale: crate::geometry::CoordinateScale,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<Option<ClassicTopSplitRecord>>, SliceError> {
     let inputs = predecessor.object.as_parts().1;
-    inputs
-        .iter()
-        .zip(&predecessor.records)
-        .zip(configs)
-        .map(
-            |((input, prelude), config)| match (input, prelude, config) {
-                (Some(input), Some(prelude), Some(config)) => {
-                    prepare_record(&predecessor.object, input, prelude, *config, scale).map(Some)
-                }
-                (None, None, None) => Ok(None),
-                _ => unreachable!("Task 22O.2 preflight slots must remain aligned"),
-            },
-        )
-        .collect()
+    crate::parallel::par_range_map_try(inputs.len(), cancel, |index| {
+        match (&inputs[index], &predecessor.records[index], &configs[index]) {
+            (Some(input), Some(prelude), Some(config)) => {
+                prepare_record(&predecessor.object, input, prelude, *config, scale).map(Some)
+            }
+            (None, None, None) => Ok(None),
+            _ => unreachable!("Task 22O.2 preflight slots must remain aligned"),
+        }
+    })
 }
 
 fn prepare_record(

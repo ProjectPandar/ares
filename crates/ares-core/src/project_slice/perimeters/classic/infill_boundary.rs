@@ -20,9 +20,10 @@ use types::{StagedObject, StagedRecord, ValidatedProject};
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapExtrusion,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicInfillBoundary, SliceError> {
     let validated = preflight::validate(&prepared)?;
-    let staged = stage(&prepared, &validated)?;
+    let staged = stage(&prepared, &validated, cancel)?;
     let PreparedPostClassicGapExtrusion {
         predecessor,
         objects,
@@ -41,6 +42,7 @@ pub(in crate::project_slice) fn finish(
 fn stage(
     prepared: &PreparedPostClassicGapExtrusion,
     validated: &ValidatedProject,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<StagedObject>, SliceError> {
     prepared
         .objects
@@ -51,14 +53,13 @@ fn stage(
             let top_split = &traversal.predecessor.predecessor.predecessor;
             assert_eq!(source.records.len(), top_split.records.len());
             assert_eq!(source.records.len(), validated.records.len());
-            let records = source
-                .records
-                .iter()
-                .zip(&top_split.records)
-                .zip(&validated.records)
-                .enumerate()
-                .map(
-                    |(index, ((source, top), validated))| match (source, top, validated) {
+            let records =
+                crate::parallel::par_range_map_try(source.records.len(), cancel, |index| {
+                    match (
+                        &source.records[index],
+                        &top_split.records[index],
+                        &validated.records[index],
+                    ) {
                         (None, None, None) => Ok(None),
                         (Some(source), Some(top), Some(validated)) => {
                             let extra =
@@ -76,9 +77,8 @@ fn stage(
                             .map(Some)
                         }
                         _ => panic!("O15 staged record alignment is invariant"),
-                    },
-                )
-                .collect::<Result<Vec<_>, _>>()?;
+                    }
+                })?;
             Ok(StagedObject { records })
         })
         .collect()

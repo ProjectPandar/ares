@@ -27,8 +27,9 @@ const MITER_LIMIT: f64 = 3.0;
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicPerimeterAppend,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicGapDomain, SliceError> {
-    let staged = stage(&prepared)?;
+    let staged = stage(&prepared, cancel)?;
     let PreparedPostClassicPerimeterAppend {
         predecessor,
         objects,
@@ -44,7 +45,10 @@ pub(in crate::project_slice) fn finish(
     })
 }
 
-fn stage(prepared: &PreparedPostClassicPerimeterAppend) -> Result<Vec<StagedObject>, SliceError> {
+fn stage(
+    prepared: &PreparedPostClassicPerimeterAppend,
+    cancel: &crate::CancelToken,
+) -> Result<Vec<StagedObject>, SliceError> {
     assert_eq!(prepared.objects.len(), prepared.predecessor.objects.len());
     prepared
         .objects
@@ -55,21 +59,20 @@ fn stage(prepared: &PreparedPostClassicPerimeterAppend) -> Result<Vec<StagedObje
             let prelude = &onion.predecessor.predecessor;
             assert_eq!(source.records.len(), onion.records.len());
             assert_eq!(source.records.len(), prelude.records.len());
-            let records = source
-                .records
-                .iter()
-                .zip(&onion.records)
-                .zip(&prelude.records)
-                .map(
-                    |((source, onion), prelude)| match (source, onion, prelude) {
+            let records =
+                crate::parallel::par_range_map_try(source.records.len(), cancel, |index| {
+                    match (
+                        &source.records[index],
+                        &onion.records[index],
+                        &prelude.records[index],
+                    ) {
                         (None, None, None) => Ok(None),
                         (Some(source), Some(onion), Some(prelude)) => {
                             stage_record(source, onion, prelude).map(Some)
                         }
                         _ => panic!("O11 predecessor record alignment is invariant"),
-                    },
-                )
-                .collect::<Result<Vec<_>, SliceError>>()?;
+                    }
+                })?;
             Ok(StagedObject { records })
         })
         .collect()

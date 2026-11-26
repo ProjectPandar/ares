@@ -8,11 +8,15 @@ mod tree;
 
 use crate::project_slice::fill_entities::PreparedPostFillEntities;
 
-pub(super) fn prepare(prepared: &mut PreparedPostFillEntities, context: &mut crate::SlicerContext) {
+pub(super) fn prepare(
+    prepared: &mut PreparedPostFillEntities,
+    context: &mut crate::SlicerContext,
+) -> Result<(), crate::SliceError> {
     let combined = &prepared.predecessor;
     let external = &combined.predecessor.predecessor;
     let traversal = &external.predecessor.predecessor;
     for (object_index, layers) in prepared.objects.iter_mut().enumerate() {
+        context.check_canceled()?;
         let (resolved, group) = traversal.print_object_config(object_index);
         if !resolved
             .all_regions
@@ -22,6 +26,7 @@ pub(super) fn prepare(prepared: &mut PreparedPostFillEntities, context: &mut cra
             continue;
         }
         context.set_status(40, format_args!("Z contouring"), 0);
+        context.check_canceled()?;
         let mesh = mesh::IndexedMesh::from_object(
             &traversal.project.objects()[resolved.source_object_index],
             group,
@@ -38,6 +43,7 @@ pub(super) fn prepare(prepared: &mut PreparedPostFillEntities, context: &mut cra
         let (plan, _, regions) = post_regions.as_parts();
         let count = layers.len();
         for (layer_index, layer) in layers.iter_mut().enumerate().skip(1) {
+            context.check_canceled()?;
             entities::prepare_layer(
                 layer,
                 &plan.layers[layer_index],
@@ -54,6 +60,8 @@ pub(super) fn prepare(prepared: &mut PreparedPostFillEntities, context: &mut cra
                 ),
                 0,
             );
+            context.check_canceled()?;
         }
     }
+    Ok(())
 }

@@ -134,6 +134,7 @@ pub(super) struct PreparedPostCompensation {
 
 pub(super) fn prepare_post_compensation<'a>(
     project: impl ProjectBytes<'a>,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostCompensation, SliceError> {
     let PreparedPostRegions {
         project,
@@ -142,7 +143,8 @@ pub(super) fn prepare_post_compensation<'a>(
         scale,
         objects,
         painting,
-    } = prepare_post_interlocking(project.into_plate_input())?;
+    } = prepare_post_interlocking(project.into_plate_input(), cancel)?;
+    cancel.check()?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
     let objects = apply_project_compensation(

@@ -16,7 +16,8 @@ use super::materialize::{
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicRawPaths,
-) -> PreparedPostClassicChainedLoops {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicChainedLoops, crate::SliceError> {
     let PreparedPostClassicRawPaths {
         predecessor,
         objects,
@@ -25,30 +26,29 @@ pub(in crate::project_slice) fn finish(
     let objects = objects
         .into_iter()
         .enumerate()
-        .map(|(index, raw)| transform_object(raw, &predecessor.objects[index]))
-        .collect();
-    PreparedPostClassicChainedLoops {
+        .map(|(index, raw)| transform_object(raw, &predecessor.objects[index], cancel))
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(PreparedPostClassicChainedLoops {
         predecessor,
         objects,
-    }
+    })
 }
 
 fn transform_object(
     raw: PreparedRawPathObject,
     traversal: &super::traversal::PostClassicTraversalPrintObject,
-) -> PreparedChainedLoopObject {
+    cancel: &crate::CancelToken,
+) -> Result<PreparedChainedLoopObject, crate::SliceError> {
     assert_eq!(raw.records.len(), traversal.records.len());
-    let records = raw
-        .records
-        .into_iter()
-        .enumerate()
-        .map(|(index, raw)| match (raw, &traversal.records[index]) {
+    let indexed: Vec<_> = raw.records.into_iter().enumerate().collect();
+    let records = crate::parallel::par_map_try(indexed, cancel, |(index, raw)| {
+        Ok(match (raw, &traversal.records[index]) {
             (None, None) => None,
             (Some(raw), Some(traversal)) => Some(transform_record(raw, traversal)),
             _ => panic!("O5/O7 optional record alignment is invariant"),
         })
-        .collect();
-    PreparedChainedLoopObject { records }
+    })?;
+    Ok(PreparedChainedLoopObject { records })
 }
 
 fn transform_record(

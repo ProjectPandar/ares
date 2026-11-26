@@ -19,6 +19,7 @@ pub(super) struct LayerCache<E> {
     pub(super) base_interface: Option<ExtrudedLayer<E>>,
 }
 
+#[derive(Clone, Copy)]
 pub(super) struct LayerCacheIndices {
     bottom: i32,
     top: i32,

@@ -88,7 +88,7 @@ pub(in crate::project_slice::support_material) fn generate(
         input.scale,
     )
     .map_err(error)?;
-    let overhangs = detect(input, config.raft_layers.len()).map_err(error)?;
+    let overhangs = detect(input, config.raft_layers.len(), context.cancel_ref())?;
     let maximum = overhangs
         .iter()
         .enumerate()
@@ -99,7 +99,7 @@ pub(in crate::project_slice::support_material) fn generate(
         .unwrap_or(0);
     let support_count = (maximum as i32 - config.z_distance_top_layers as i32).max(0) as usize;
     if support_count > 0 {
-        volumes.precalculate(support_count).map_err(error)?;
+        volumes.precalculate(support_count, context.cancel_ref())?;
     }
     let layer_count = support_count.max(config.raft_layers.len());
     let mut roofs = RoofLayers::new(layer_count);
@@ -126,11 +126,24 @@ pub(in crate::project_slice::support_material) fn generate(
         generation::generate(objects, &mut volumes, &mut interface, &mut graph).map_err(error)?;
         // `TreeSupport3D.cpp:3622`.
         context.set_status(60, format_args!("Generating support"), 0);
-        pathing::create_layer_pathing(&mut volumes, &config, &mut graph, input.scale)
-            .map_err(error)?;
+        context.check_canceled()?;
+        pathing::create_layer_pathing(
+            &mut volumes,
+            &config,
+            &mut graph,
+            input.scale,
+            context.cancel_ref(),
+        )?;
+        context.check_canceled()?;
         nodes::create_nodes_from_area(&mut volumes, &config, &mut graph).map_err(error)?;
-        let slices =
-            drawing::draw_branch_slices(&mut volumes, &mut graph, &mut interface, input.scale)?;
+        context.check_canceled()?;
+        let slices = drawing::draw_branch_slices(
+            &mut volumes,
+            &mut graph,
+            &mut interface,
+            input.scale,
+            context.cancel_ref(),
+        )?;
         drawing::allocate_layers(
             slices,
             graph.len(),
@@ -149,6 +162,7 @@ pub(in crate::project_slice::support_material) fn generate(
     }
     // `TreeSupport3D.cpp:3700`.
     context.set_status(69, format_args!("Generating support"), 0);
+    context.check_canceled()?;
     let mut geometry = output::geometry(&mut roofs);
     geometry.rafts = generate_raft_base(
         &AdhesionInput {
@@ -174,7 +188,11 @@ pub(in crate::project_slice::support_material) fn generate(
     Ok(geometry)
 }
 
-fn detect(input: &TreeInput<'_>, raft_count: usize) -> Result<Vec<Vec<Polygon>>, ClipperError> {
+fn detect(
+    input: &TreeInput<'_>,
+    raft_count: usize,
+    cancel: &crate::CancelToken,
+) -> Result<Vec<Vec<Polygon>>, SliceError> {
     let mut overhangs = vec![Vec::new(); raft_count + input.slices.len()];
     if !input.object.enable_support.0 {
         return Ok(overhangs);
@@ -184,25 +202,32 @@ fn detect(input: &TreeInput<'_>, raft_count: usize) -> Result<Vec<Vec<Polygon>>,
         input.layers,
         input.extrusion_width,
         input.scale,
-    )?;
+    )
+    .map_err(error)?;
     let start = web_time::Instant::now();
     for layer in 0..input.layers.len() {
-        smart.detect_layer(layer, || start.elapsed().as_secs_f64())?;
+        cancel.check()?;
+        smart
+            .detect_layer(layer, || start.elapsed().as_secs_f64())
+            .map_err(error)?;
     }
-    smart.propagate_sharp_tails()?;
-    smart.collect_cluster_overhangs()?;
+    smart.propagate_sharp_tails().map_err(error)?;
+    smart.collect_cluster_overhangs().map_err(error)?;
     for layer in 0..input.layers.len() {
-        smart.finalize_layer(
-            layer,
-            FinalLayerInputs {
-                lower_slices: layer
-                    .checked_sub(1)
-                    .map(|index| input.slices[index].as_slice()),
-                regions: &input.bridges[layer],
-                blockers: input.blockers.get(layer).map(Vec::as_slice),
-                enforcers: input.enforcers.get(layer).map(Vec::as_slice),
-            },
-        )?;
+        cancel.check()?;
+        smart
+            .finalize_layer(
+                layer,
+                FinalLayerInputs {
+                    lower_slices: layer
+                        .checked_sub(1)
+                        .map(|index| input.slices[index].as_slice()),
+                    regions: &input.bridges[layer],
+                    blockers: input.blockers.get(layer).map(Vec::as_slice),
+                    enforcers: input.enforcers.get(layer).map(Vec::as_slice),
+                },
+            )
+            .map_err(error)?;
         for (polygon, kind) in smart.layers[layer]
             .overhangs
             .iter()
@@ -215,7 +240,8 @@ fn detect(input: &TreeInput<'_>, raft_count: usize) -> Result<Vec<Vec<Polygon>>,
                     input.scale.scaled_delta(0.2) as f32,
                     JoinType::Miter,
                     3.0,
-                )?;
+                )
+                .map_err(error)?;
             }
             overhangs[layer + raft_count].extend(polygons);
         }

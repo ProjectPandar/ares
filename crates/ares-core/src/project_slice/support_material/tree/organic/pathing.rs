@@ -18,14 +18,19 @@ pub(super) fn create_layer_pathing(
     config: &TreeSettings,
     move_bounds: &mut [VecDeque<SupportElement>],
     scale: CoordinateScale,
-) -> Result<(), ClipperError> {
+    cancel: &crate::CancelToken,
+) -> Result<(), crate::SliceError> {
     let mut last_merge_layer = move_bounds.len();
     let mut new_element = false;
     let max_merge_every = (5000 / config.maximum_move_distance.max(100))
         .min(1000 / config.maximum_move_distance_slow.max(20))
         .min(3000 / config.mesh.layer_height) as usize;
     let mut merge_every = 1;
+    let geometry_error = |error: ClipperError| {
+        crate::SliceError::InvalidInput(format!("organic support geometry: {error:?}"))
+    };
     for layer in (1..move_bounds.len()).rev() {
+        cancel.check()?;
         let (below, above) = move_bounds.split_at_mut(layer);
         let previous = &mut above[0];
         if previous.is_empty() {
@@ -59,7 +64,8 @@ pub(super) fn create_layer_pathing(
                 parents: previous,
             },
             scale,
-        )?;
+        )
+        .map_err(geometry_error)?;
         let current = &mut below[layer - 1];
         influence_areas.retain_mut(|element| {
             if element.areas.influence_areas.is_empty() {
@@ -79,7 +85,8 @@ pub(super) fn create_layer_pathing(
         if merge_this_layer {
             let count_before_merge = influence_areas.len();
             if count_before_merge > 1 {
-                merge_influence_areas(volumes, config, layer, &mut influence_areas, scale)?;
+                merge_influence_areas(volumes, config, layer, &mut influence_areas, scale)
+                    .map_err(geometry_error)?;
             }
             let reduced_by_merging = count_before_merge > influence_areas.len();
             last_merge_layer = layer;
@@ -91,7 +98,8 @@ pub(super) fn create_layer_pathing(
             if element.areas.influence_areas.is_empty() {
                 continue;
             }
-            let influence_area = safe_union(&element.areas.influence_areas, &[], scale)?;
+            let influence_area =
+                safe_union(&element.areas.influence_areas, &[], scale).map_err(geometry_error)?;
             current.push_back(SupportElement {
                 state: element.state,
                 parents: element.parents,

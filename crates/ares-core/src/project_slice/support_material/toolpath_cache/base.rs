@@ -13,9 +13,9 @@ use crate::project_slice::{
 use crate::{ExtrusionRole, ProcessSupportBasePattern, ProcessSupportStyle, SliceError};
 
 impl LayerCache<SupportExtrusionEntity> {
-    pub(in crate::project_slice::support_material) fn fill_grid_base(
+    pub(in crate::project_slice::support_material) fn fill_grid_base_extrusions(
         &mut self,
-        geometry: &mut GeneratedSupportGeometry,
+        geometry: &GeneratedSupportGeometry,
         input: &SupportFillInput<'_>,
     ) -> Result<(), SliceError> {
         if let Some(base) = &mut self.base
@@ -94,6 +94,13 @@ impl LayerCache<SupportExtrusionEntity> {
                 )
             }));
         }
+        Ok(())
+    }
+
+    pub(in crate::project_slice::support_material) fn merge_grid_base_interface(
+        &mut self,
+        geometry: &mut GeneratedSupportGeometry,
+    ) -> Result<(), SliceError> {
         if let (Some(base), Some(base_interface)) = (&mut self.base, &mut self.base_interface)
             && !base.polygons_to_extrude(geometry).is_empty()
             && !base_interface.polygons_to_extrude(geometry).is_empty()

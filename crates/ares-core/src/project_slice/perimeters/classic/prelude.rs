@@ -23,15 +23,37 @@ pub(super) fn prepare_object(
     object: &mut PostPerimeterInputPrintObject,
     validated: ValidatedClassicObject,
     scale: CoordinateScale,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<Option<ClassicPreludeRecord>>, SliceError> {
+    let has_counterbore = object.as_parts().1.iter().flatten().any(|record| {
+        object.region_options(record).counterbore_hole_bridging
+            != crate::ProcessCounterboreHoleBridging::None
+    });
+    if !has_counterbore {
+        let records = object.as_parts().1;
+        return crate::parallel::par_range_map_try(records.len(), cancel, |index| {
+            match (&records[index], &validated.records[index]) {
+                (Some(record), Some(config)) => {
+                    prepare_record_shared(object, record, *config, scale, Vec::new()).map(Some)
+                }
+                (None, None) => Ok(None),
+                _ => unreachable!("Classic validation slots must remain aligned with Task 22N"),
+            }
+        });
+    }
     let records = object.as_parts().1.to_vec();
     records
         .iter()
         .zip(validated.records)
-        .map(|(record, config)| match (record, config) {
-            (Some(record), Some(config)) => prepare_record(object, record, config, scale).map(Some),
-            (None, None) => Ok(None),
-            _ => unreachable!("Classic validation slots must remain aligned with Task 22N"),
+        .map(|(record, config)| {
+            cancel.check()?;
+            match (record, config) {
+                (Some(record), Some(config)) => {
+                    prepare_record(object, record, config, scale).map(Some)
+                }
+                (None, None) => Ok(None),
+                _ => unreachable!("Classic validation slots must remain aligned with Task 22N"),
+            }
         })
         .collect()
 }
@@ -41,6 +63,69 @@ fn prepare_record(
     record: &PerimeterInputRecord,
     config: ValidatedClassicConfig,
     scale: CoordinateScale,
+) -> Result<ClassicPreludeRecord, SliceError> {
+    let perimeter_spacing = scaled_flow(scale, record.perimeter_flow.spacing)?;
+    let external_width = scaled_flow(scale, record.ext_perimeter_flow.width)?;
+    let printable_lower_slices = object
+        .lower_slices(record)
+        .map(|lower| {
+            super::super::printable_slices::printable_slices(
+                lower,
+                config.printable_min_width,
+                scale,
+            )
+        })
+        .transpose()
+        .map_err(geometry_error)?;
+    let counterbore_fill = super::counterbore::process(
+        object,
+        record,
+        printable_lower_slices.as_deref(),
+        (perimeter_spacing, external_width),
+        scale,
+    )?;
+    finish_record(
+        object,
+        record,
+        (config, scale),
+        printable_lower_slices,
+        counterbore_fill,
+    )
+}
+
+fn prepare_record_shared(
+    object: &PostPerimeterInputPrintObject,
+    record: &PerimeterInputRecord,
+    config: ValidatedClassicConfig,
+    scale: CoordinateScale,
+    counterbore_fill: Vec<ExPolygon>,
+) -> Result<ClassicPreludeRecord, SliceError> {
+    let printable_lower_slices = object
+        .lower_slices(record)
+        .map(|lower| {
+            super::super::printable_slices::printable_slices(
+                lower,
+                config.printable_min_width,
+                scale,
+            )
+        })
+        .transpose()
+        .map_err(geometry_error)?;
+    finish_record(
+        object,
+        record,
+        (config, scale),
+        printable_lower_slices,
+        counterbore_fill,
+    )
+}
+
+fn finish_record(
+    object: &PostPerimeterInputPrintObject,
+    record: &PerimeterInputRecord,
+    (config, scale): (ValidatedClassicConfig, CoordinateScale),
+    printable_lower_slices: Option<Vec<ExPolygon>>,
+    counterbore_fill: Vec<ExPolygon>,
 ) -> Result<ClassicPreludeRecord, SliceError> {
     let perimeter_width = scaled_flow(scale, record.perimeter_flow.width)?;
     let perimeter_spacing = scaled_flow(scale, record.perimeter_flow.spacing)?;
@@ -69,25 +154,7 @@ fn prepare_record(
         as f32;
     let smaller_external_flow = record.ext_perimeter_flow.with_width(smaller_width)?;
 
-    let printable_lower_slices = object
-        .lower_slices(record)
-        .map(|lower| {
-            super::super::printable_slices::printable_slices(
-                lower,
-                config.printable_min_width,
-                scale,
-            )
-        })
-        .transpose()
-        .map_err(geometry_error)?;
     let lower = printable_lower_slices.as_deref();
-    let counterbore_fill = super::counterbore::process(
-        object,
-        record,
-        lower,
-        (perimeter_spacing, external_width),
-        scale,
-    )?;
     let lower_slices_polygons = if config.detect_overhang_wall {
         lower
             .map(|lower| offset_paths(lower, 0.5 * config.support_nozzle_diameter, scale))

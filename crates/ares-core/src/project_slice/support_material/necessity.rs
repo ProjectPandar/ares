@@ -17,6 +17,7 @@ pub(in crate::project_slice) fn check(
     let settings = &traversal.resolved.views.full;
     let mut warnings = Vec::new();
     for source in &traversal.objects {
+        context.check_canceled()?;
         let input = &source
             .predecessor
             .predecessor
@@ -37,6 +38,7 @@ pub(in crate::project_slice) fn check(
             continue;
         }
         context.set_status(50, format_args!("Checking support necessity"), 0);
+        context.check_canceled()?;
         let layers = plan
             .layers
             .iter()
