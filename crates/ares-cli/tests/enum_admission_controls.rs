@@ -97,3 +97,20 @@ fn shared_infill_type_map_does_not_broaden_sparse_gui_and_wire_names() {
     let work = enum_declarations_support::artifacts("shared-map-controls");
     std::fs::write(work.join("verified.json"), b"{\"verified\":true}\n").unwrap();
 }
+
+#[tokio::test]
+async fn project_level_sparse_spiral_inset_is_rejected_by_config_validation() {
+    let input = enum_declarations_support::input("sparse_infill_pattern", "spiralinset");
+    let error = ares_core::slice_project(
+        &input,
+        ares_core::GenerationMetadata::default(),
+        ares_core::SlicerContext::new(1),
+    )
+    .await
+    .expect_err("PrintConfig.cpp:12499 rejects project-level sparse_infill_pattern=spiralinset");
+    assert!(
+        matches!(&error, ares_core::SliceError::InvalidValuesInProject(detail)
+            if detail.contains("sparse_infill_pattern") && detail.contains("spiralinset")),
+        "expected InvalidValuesInProject config validation error, got {error:?}"
+    );
+}

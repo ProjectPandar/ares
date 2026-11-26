@@ -211,3 +211,10 @@ fn support_ironing_pattern_archimedeanchords() {
 fn support_ironing_pattern_hilbertcurve() {
     leg("hilbertcurve", "hilbertcurve");
 }
+
+/// Domain: `FillSpiralInset` ironing — classic outside-in spiral filler
+/// (`FillSpiralInset.cpp:310-345`, `SupportCommon.cpp:2038`).
+#[test]
+fn support_ironing_pattern_spiral_inset() {
+    leg("spiralinset", "spiralinset");
+}

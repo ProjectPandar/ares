@@ -166,6 +166,5 @@ macro_rules! unsupported_states {
 }
 
 unsupported_states! {
-    internal_solid_spiral_inset: "internal_solid_infill_pattern", "spiralinset";
     nozzle_manual: "filament_map_mode", "Nozzle Manual";
 }
