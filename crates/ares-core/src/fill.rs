@@ -8,6 +8,7 @@ pub(crate) struct FillParams {
 }
 
 pub(crate) mod adaptive;
+pub(crate) mod adaptive_infill_field;
 pub(crate) mod base_support;
 pub(crate) mod checked_rotate;
 pub(crate) mod concentric_sparse;

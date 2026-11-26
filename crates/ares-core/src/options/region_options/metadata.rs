@@ -11,11 +11,11 @@ use serde::{
 
 use super::super::{
     FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat, OrcaFloatsNullable, OrcaInt, OrcaInts,
-    OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
-    ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
-    ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
-    ProcessWallSequence,
+    OrcaString, OrcaStrings, Percent, ProcessAdaptiveInfillGradient, ProcessAdaptiveInfillMode,
+    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
+    ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
+    ProcessSeamScarfType, ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection,
+    ProcessWallDirection, ProcessWallSequence,
 };
 
 pub(super) trait RegionMetadataCodec: Sized {
@@ -41,6 +41,8 @@ lexical_codecs!(
     OrcaFloat,
     OrcaInt,
     Percent,
+    ProcessAdaptiveInfillGradient,
+    ProcessAdaptiveInfillMode,
     ProcessCounterboreHoleBridging,
     ProcessEnsureVerticalShellThickness,
     ProcessFuzzySkinMode,

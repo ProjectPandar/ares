@@ -108,6 +108,7 @@ pub(in crate::project_slice) fn prepare(
                     .lightning_generators
                     .get(object_index)
                     .and_then(|g| g.as_ref());
+                let adaptive_fields = &predecessor.predecessor.adaptive_infill_fields[object_index];
                 (0..plan.layers.len())
                     .map(|layer_index| {
                         generate::generate_layer_with_active(
@@ -117,7 +118,7 @@ pub(in crate::project_slice) fn prepare(
                             generate::layer_options(
                                 external,
                                 object_index,
-                                lightning_generator.map(|g| g.as_ref()),
+                                (lightning_generator.map(|g| g.as_ref()), adaptive_fields),
                                 grid_bounds,
                             ),
                         )

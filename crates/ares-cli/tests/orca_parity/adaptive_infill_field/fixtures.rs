@@ -129,28 +129,7 @@ pub(super) fn build_3mf(
                 bytes = text.replace(target, &replacement).into_bytes();
             }
             "Metadata/project_settings.config" => {
-                let mut settings: Value = serde_json::from_slice(&bytes).unwrap();
-                let map = settings.as_object_mut().unwrap();
-                map.insert("layer_height".into(), json!("0.2"));
-                map.insert("top_shell_layers".into(), json!("2"));
-                map.insert("bottom_shell_layers".into(), json!("2"));
-                map.insert("wall_loops".into(), json!("2"));
-                map.insert("sparse_infill_pattern".into(), json!("gyroid"));
-                map.insert("sparse_infill_density".into(), json!("30%"));
-                map.insert("adaptive_infill_mode".into(), json!("disabled"));
-                map.insert("adaptive_infill_interior_density".into(), json!("5%"));
-                map.insert("adaptive_infill_gradient".into(), json!("linear"));
-                for (key, value) in settings_patch {
-                    match value {
-                        Some(v) => {
-                            map.insert((*key).into(), v.clone());
-                        }
-                        None => {
-                            map.remove(*key);
-                        }
-                    }
-                }
-                bytes = serde_json::to_vec_pretty(&settings).unwrap();
+                bytes = patch_project_settings(&bytes, settings_patch);
             }
             "Metadata/model_settings.config" if !object_metadata.is_empty() => {
                 let text = String::from_utf8(bytes).unwrap();
@@ -170,6 +149,28 @@ pub(super) fn build_3mf(
         output.write_all(&bytes).unwrap();
     }
     output.finish().unwrap().into_inner()
+}
+
+fn patch_project_settings(bytes: &[u8], settings_patch: &[(&str, Option<Value>)]) -> Vec<u8> {
+    let mut settings: Value = serde_json::from_slice(bytes).unwrap();
+    let map = settings.as_object_mut().unwrap();
+    map.insert("layer_height".into(), json!("0.2"));
+    map.insert("top_shell_layers".into(), json!("2"));
+    map.insert("bottom_shell_layers".into(), json!("2"));
+    map.insert("wall_loops".into(), json!("2"));
+    map.insert("sparse_infill_pattern".into(), json!("gyroid"));
+    map.insert("sparse_infill_density".into(), json!("30%"));
+    map.insert("adaptive_infill_mode".into(), json!("disabled"));
+    map.insert("adaptive_infill_interior_density".into(), json!("5%"));
+    map.insert("adaptive_infill_gradient".into(), json!("linear"));
+    for (key, value) in settings_patch {
+        if let Some(v) = value {
+            map.insert((*key).into(), v.clone());
+        } else {
+            map.remove(*key);
+        }
+    }
+    serde_json::to_vec_pretty(&settings).unwrap()
 }
 
 fn push_box(

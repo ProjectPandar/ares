@@ -160,8 +160,8 @@ pub(in crate::project_slice) fn surface_polylines(
             let fill = surface_fill(request);
             super::gyroid::polylines(
                 &fill,
-                request.print_z,
-                request.layer_height,
+                (request.print_z, request.layer_height),
+                None,
                 request.call.scale,
             )
         }

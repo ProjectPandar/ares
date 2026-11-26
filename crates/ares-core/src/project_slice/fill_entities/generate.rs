@@ -14,6 +14,8 @@ use super::types::LayerFillEntities;
 pub(in crate::project_slice) struct LayerGenerationOptions<'a> {
     pub(in crate::project_slice) lightning_generator:
         Option<&'a crate::fill::lightning::generator::Generator>,
+    pub(in crate::project_slice) adaptive_fields:
+        &'a crate::fill::adaptive_infill_field::AdaptiveInfillFields,
     pub(in crate::project_slice) grid_bounds: Option<crate::geometry::BoundingBox>,
     pub(in crate::project_slice) object_spacing: &'a super::adaptive::ObjectSpacing,
 }
@@ -26,6 +28,7 @@ pub(in crate::project_slice) fn generate_layer_with_active(
 ) -> Result<LayerFillEntities, SliceError> {
     let LayerGenerationOptions {
         lightning_generator,
+        adaptive_fields,
         grid_bounds,
         object_spacing,
     } = options;
@@ -147,11 +150,12 @@ pub(in crate::project_slice) fn generate_layer_with_active(
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
+                let adaptive_field = adaptive_fields.get(fill.params.adaptive_infill_mode);
                 super::gyroid::append(
                     &mut output,
                     fill,
-                    layer.print_z,
-                    layer.height,
+                    (layer.print_z, layer.height),
+                    adaptive_field,
                     traversal.scale,
                 )?;
             }
@@ -370,11 +374,15 @@ pub(in crate::project_slice) fn generate_layer_with_active(
 pub(in crate::project_slice) fn layer_options<'a>(
     prepared: &'a PreparedPostExternalSurfaces,
     object_index: usize,
-    lightning_generator: Option<&'a crate::fill::lightning::generator::Generator>,
+    generators: (
+        Option<&'a crate::fill::lightning::generator::Generator>,
+        &'a crate::fill::adaptive_infill_field::AdaptiveInfillFields,
+    ),
     grid_bounds: Option<crate::geometry::BoundingBox>,
 ) -> LayerGenerationOptions<'a> {
     LayerGenerationOptions {
-        lightning_generator,
+        lightning_generator: generators.0,
+        adaptive_fields: generators.1,
         grid_bounds,
         object_spacing: &prepared.object_spacings[object_index],
     }

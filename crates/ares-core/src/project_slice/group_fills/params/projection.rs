@@ -3,7 +3,7 @@ mod sticky;
 
 use rotation::projected_angle;
 pub(in crate::project_slice) use rotation::{reset_rand_state, template_rotation_angle};
-use sticky::{anchor_lengths, apply_pattern_fields};
+use sticky::{anchor_lengths, apply_adaptive_infill_fields, apply_pattern_fields};
 
 use crate::{
     ExtrusionRole, FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
@@ -130,10 +130,7 @@ pub(super) fn project_surface(
     } else {
         0.0
     };
-    params.gyroid_optimized = matches!(
-        params.pattern,
-        SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid)
-    ) && context.region.gyroid_optimized.0;
+    apply_adaptive_infill_fields(params, context.region);
     let (angle, fixed_angle) = projected_angle(context, kind, params.extrusion_role)?;
     params.angle = angle;
     params.fixed_angle = fixed_angle;
@@ -230,6 +227,9 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         horiz_move: 0.0,
         infill_overhang_angle: 60.0,
         gyroid_optimized: false,
+        adaptive_infill_mode: crate::ProcessAdaptiveInfillMode::Disabled,
+        adaptive_infill_interior_density: 0.0,
+        adaptive_infill_gradient: crate::ProcessAdaptiveInfillGradient::Linear,
         infill_complete_top: false,
         smooth_factor: 0.0,
         resolution: 0.0,
