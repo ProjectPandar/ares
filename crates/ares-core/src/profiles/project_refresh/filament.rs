@@ -9,12 +9,15 @@ use crate::{
 pub(super) fn apply(
     result: &mut ProjectSettingsRaw,
     project: &ProjectSettingsRaw,
-    filaments: &[Option<ProjectSettingsRaw>],
-    dirty: &[String],
-    refresh_unlisted: bool,
+    filaments: &mut [Option<ProjectSettingsRaw>],
+    (dirty, dirty_out, dirty_changed): (&[String], &mut [String], &mut bool),
+    (refresh_unlisted, skip_modified_gcodes): (bool, bool),
 ) -> Result<(), SliceError> {
     if filaments.iter().all(Option::is_none) {
         return Ok(());
+    }
+    for config in filaments.iter_mut().flatten() {
+        load_default_filament_gcodes(config)?;
     }
     let count = filaments.len();
     let last_id = i32::try_from(count).unwrap();
@@ -53,8 +56,11 @@ pub(super) fn apply(
             start += old_count;
             continue;
         };
-        let protected = preset::dirty_keys(dirty, slot + 1)?;
-        let variants = vector(config.get("filament_extruder_variant").unwrap());
+        let mut protected = preset::dirty_keys(dirty, slot + 1)?;
+        let variants = match config.get("filament_extruder_variant") {
+            Some(value) => vector(value),
+            None => vector(&keys::default_value("filament_extruder_variant")?.unwrap()),
+        };
         let old_variants = result
             .get("filament_extruder_variant")
             .map(vector)
@@ -65,7 +71,7 @@ pub(super) fn apply(
                 (start..start + old_count).find(|index| old_variants.get(*index) == Some(variant))
             })
             .collect::<Vec<_>>();
-        slot::apply(
+        let released = slot::apply(
             result,
             project,
             config,
@@ -74,10 +80,20 @@ pub(super) fn apply(
                 filament_count: count,
                 range: (start, old_count, variants.len()),
                 restore: &restore,
-                protected: &protected,
+                protected: &mut protected,
                 refresh_unlisted,
+                skip_modified_gcodes,
             },
         )?;
+        if refresh_unlisted && released {
+            // OrcaSlicer.cpp:3804–3811: rewrite only this slot's column,
+            // never the synthesized keep_project set.
+            let mut remaining = preset::authored_dirty_keys(dirty, slot + 1)?;
+            remaining.retain(|key| protected.contains(key));
+            dirty_out[slot + 1] =
+                crate::options::overrides::dirty_columns::encode(remaining.into_iter().collect())?;
+            *dirty_changed = true;
+        }
         groups[slot].1 = variants.len();
         start += variants.len();
     }
@@ -100,6 +116,31 @@ pub(super) fn apply(
         filaments.iter().map(Option::as_ref),
         (!refresh_unlisted).then_some(project),
     )?;
+    Ok(())
+}
+
+/// `load_default_gcodes_to_config(config, TYPE_FILAMENT)` (`OrcaSlicer.cpp:710–729,3590`):
+/// absent scripts take `PrintConfigDef`'s `" "` default; empty `[]` resizes to `[""]`.
+fn load_default_filament_gcodes(config: &mut ProjectSettingsRaw) -> Result<(), SliceError> {
+    if config.entries().next().is_none() {
+        return Ok(());
+    }
+    for key in ["filament_start_gcode", "filament_end_gcode"] {
+        match config.get(key) {
+            None => {
+                if let Some(value) = keys::default_value(key)? {
+                    config.insert(key.to_owned(), value);
+                }
+            }
+            Some(RawConfigValue::List(values)) if values.is_empty() => {
+                config.insert(
+                    key.to_owned(),
+                    RawConfigValue::List(vec![RawConfigValue::Text(String::new())]),
+                );
+            }
+            Some(_) => {}
+        }
+    }
     Ok(())
 }
 

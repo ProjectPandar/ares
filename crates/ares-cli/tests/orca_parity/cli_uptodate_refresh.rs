@@ -10,10 +10,18 @@ use std::{
 
 use serde_json::{Value, json};
 
+#[path = "cli_uptodate_refresh/catalog_filament_gcodes.rs"]
+mod catalog_filament_gcodes;
+#[path = "cli_uptodate_refresh/filament_gcodes.rs"]
+mod filament_gcodes;
+#[path = "cli_uptodate_refresh/gcodes_support.rs"]
+mod gcodes_support;
 #[path = "cli_uptodate_refresh/machine_gcodes.rs"]
 mod machine_gcodes;
 #[path = "cli_uptodate_refresh/preset_identity.rs"]
 mod preset_identity;
+#[path = "cli_uptodate_refresh/process_gcodes.rs"]
+mod process_gcodes;
 
 use crate::{
     load_settings_3mf::load_settings_3mf_fixture,

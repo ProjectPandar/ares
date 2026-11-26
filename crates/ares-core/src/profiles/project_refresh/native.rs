@@ -28,10 +28,11 @@ impl NativeRefreshFile {
             ));
         }
         raw.handle_legacy();
+        // Config.cpp:941-1065 loads every PrintConfigDef option from a preset JSON file.
         let mut options = ProjectSettingsRaw::default();
         options.extend(
             raw.entries()
-                .filter(|(key, _)| super::preset_owns_option(kind, key))
+                .filter(|(key, _)| crate::option_definition(key).is_some())
                 .map(|(key, value)| (key.clone(), value.clone())),
         );
         options
