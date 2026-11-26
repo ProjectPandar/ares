@@ -59,7 +59,7 @@ pub(super) fn ripple_scaled_closed_polyline(
             let phase = config.ripples_per_layer as f64 * std::f64::consts::TAU * (sample - anchor)
                 / perimeter
                 + phase_at_anchor;
-            let displacement = phase.sin() * amplitude / scale.factor();
+            let displacement = crate::scalar_math::sin_f64(phase) * amplitude / scale.factor();
             let base_x = start.x() + (dx * ratio) as i64;
             let base_y = start.y() + (dy * ratio) as i64;
             output.push(crate::geometry::Point::new(
