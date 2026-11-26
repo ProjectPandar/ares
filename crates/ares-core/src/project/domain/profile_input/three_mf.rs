@@ -44,14 +44,15 @@ impl Project {
             crate::project_slice::validate_post_process(&project)?;
         }
 
-        let retained_names = load_names.filter(|names| names.embedded.is_some());
-        if let Some(names) = retained_names {
+        if let Some(names) = load_names {
             crate::project_slice::compatibility::reject_incompatible_load_settings(
                 &embedded_raw,
                 names,
                 profile_raw,
+                project.documents.bbl_family_3mf,
             )?;
         }
+        let retained_names = load_names.filter(|names| names.embedded.is_some());
         // OrcaSlicer.cpp:3005 precedes retained preset refresh at :3164–3200.
         if retained_names.is_some()
             && let Some(report) = upward_report
@@ -67,22 +68,33 @@ impl Project {
         }
 
         let selected = settings.project.preset.filament_settings_id.0.len();
-        let embedded_count = project
+        let project_embedded_count = project
             .settings()
             .project
             .preset
             .filament_settings_id
             .0
             .len();
-        // OrcaSlicer.cpp:2528-2529 uses the loaded count only for zero. The plater's selection (no
-        // `--load-settings` names) saves full_fff_config, one filament per selected preset
-        // (PresetBundle.cpp:5651-5660, Plater.cpp:19779), so its count is the selection's.
+        // OrcaSlicer.cpp:1759,1893,2528-2529: only BBL-family 3MFs initialize
+        // filament_count from the archive; unmarked archives start at 0 and take
+        // load_filament_count when filaments are supplied. The plater's selection
+        // (no `--load-settings` names) saves full_fff_config, one filament per
+        // selected preset (PresetBundle.cpp:5651-5660, Plater.cpp:19779).
+        let embedded_count = if load_names.is_some() && !project.documents.bbl_family_3mf {
+            0
+        } else {
+            project_embedded_count
+        };
         let filament_count = if embedded_count == 0 || load_names.is_none() {
             selected
         } else {
             embedded_count
         };
-        if filament_count == 0 {
+        let non_bbl_retained_filaments = load_names.is_some()
+            && !project.documents.bbl_family_3mf
+            && selected == 0
+            && project_embedded_count > 0;
+        if filament_count == 0 && !non_bbl_retained_filaments {
             return Err(SliceError::InvalidInput(
                 "project embeds no filament selection".to_owned(),
             ));
@@ -108,7 +120,11 @@ impl Project {
             Some(refresh) => refresh.retained(&embedded_raw, settings)?,
             None => embedded_raw.clone(),
         };
-        crate::profiles::apply_retained_preset_defaults(&mut merge_base, Some(settings))?;
+        // OrcaSlicer.cpp:1759,3168: load_project_preset only runs for non-empty
+        // BBL-loaded system names.
+        if project.documents.bbl_family_3mf {
+            crate::profiles::apply_retained_preset_defaults(&mut merge_base, Some(settings))?;
+        }
         let mut merged = merged_profile_raw(
             &embedded_raw,
             merge_base,

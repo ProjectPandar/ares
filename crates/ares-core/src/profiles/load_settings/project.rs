@@ -17,25 +17,85 @@ pub(crate) fn project_for_3mf_export(
     request: &LoadSettingsRequest<'_>,
 ) -> Result<Project, SliceError> {
     super::validate_stl_export_presets(request)?;
-    let (composed, names) = super::compose_project_load_settings(input, request)?;
-    let profile = SelectedProfile {
-        settings: composed.profile.settings(),
-        profile_raw: &composed.raw,
-        filament_raws: &composed.filament_raws,
-        validate_post_process: true,
-        enable_timelapse: false,
-        load_names: Some(&names),
-        retained_refresh: None,
-        full_fff_config: None,
+    let (composed, names) = if request.settings.is_empty() && request.filaments.is_empty() {
+        (
+            None,
+            LoadedPresetNames {
+                machine: None,
+                printer_model: String::new(),
+                process: None,
+                embedded: Some(read_embedded_config(input)?),
+                direct_stl_machine: None,
+                filament_indices: Vec::new(),
+            },
+        )
+    } else {
+        let (composed, names) = super::compose_project_load_settings(input, request)?;
+        (Some(composed), names)
     };
-    Project::from_3mf_with_profiles(
+    let mut default_settings = crate::ProjectSettings::default();
+    default_settings
+        .project
+        .preset
+        .printer_settings_id
+        .0
+        .clear();
+    default_settings.project.preset.print_settings_id.0.clear();
+    default_settings
+        .project
+        .preset
+        .filament_settings_id
+        .0
+        .clear();
+    default_settings.project.gcode.filament_ids.0.clear();
+    let empty_raw = ProjectSettingsRaw::default();
+    let profile = match &composed {
+        Some(composed) => SelectedProfile {
+            settings: composed.profile.settings(),
+            profile_raw: &composed.raw,
+            filament_raws: &composed.filament_raws,
+            validate_post_process: true,
+            enable_timelapse: false,
+            load_names: Some(&names),
+            retained_refresh: None,
+            full_fff_config: None,
+        },
+        None => SelectedProfile {
+            settings: &default_settings,
+            profile_raw: &empty_raw,
+            filament_raws: &[],
+            validate_post_process: true,
+            enable_timelapse: false,
+            load_names: Some(&names),
+            retained_refresh: None,
+            full_fff_config: None,
+        },
+    };
+    let (project, _) = Project::from_3mf_with_profiles(
         (input, None),
         profile,
         &ConfigOverrides::default(),
         (None, &crate::plater::NO_EDITS),
         None,
-    )
-    .map(|(project, _)| project)
+    )?;
+    if names.machine.is_some() && names.process.is_none() && project.documents().bbl_family_3mf {
+        let embedded = match &names.embedded {
+            Some(config) => config.clone(),
+            None => read_embedded_config(input)?,
+        };
+        let original = embedded
+            .get("print_settings_id")
+            .and_then(|value| value.element(0))
+            .and_then(RawConfigValue::token)
+            .unwrap_or_default();
+        if !original.is_empty() && project.settings().project.preset.print_settings_id.0 != original
+        {
+            return Err(invalid(
+                "unsupported 3MF export: machine-switch project-embedded preset".to_owned(),
+            ));
+        }
+    }
+    Ok(project)
 }
 
 pub(super) fn retained_config(
@@ -49,12 +109,15 @@ pub(super) fn retained_config(
     {
         return Ok(None);
     }
+    read_embedded_config(input).map(Some)
+}
+
+fn read_embedded_config(input: &[u8]) -> Result<ProjectSettingsRaw, SliceError> {
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
     let path = PackagePath::root().resolve("Metadata/project_settings.config")?;
-    let config = serde_json::from_slice(&archive.read(&path)?).map_err(|error| {
+    serde_json::from_slice(&archive.read(&path)?).map_err(|error| {
         SliceError::InvalidInput(format!("invalid embedded project settings: {error}"))
-    })?;
-    Ok(Some(config))
+    })
 }
 
 /// CLI preset strings pass through `set_deserialize` (Config.cpp:987,
