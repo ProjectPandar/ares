@@ -85,30 +85,46 @@ Do not reproduce the unchecked access to the first model when there is none.
   in `project/plate_custom_gcodes.rs` at the loaded-project seam in
   `project_slice` for both direct and profile-overlay routes, before
   print-state preparation. The existing archive parser and event emission
-  stay unchanged. This part does not require Native preset file routing.
+  stay unchanged.
+- Retained machine and process refresh (`OrcaSlicer.cpp:3212–3256`,
+  `:3345–3406`) runs through `profiles/project_refresh/native.rs` and
+  `profiles/project_refresh/preset.rs::refresh` when `--uptodate` is active,
+  no named replacement of that kind was supplied via `--load-settings`, and a
+  Native refresh file is present for that kind. `NativeRefreshFile::from_json`
+  admits every `PrintConfigDef` option (`ConfigBase::load_from_json`,
+  `Config.cpp:941–1065`) so a process refresh file can supply any key in
+  `gcodes_key_set`. Machine refresh materializes absent printer scripts via
+  `load_default_gcodes_to_config(TYPE_PRINTER)` (`:678–709`); process refresh
+  invokes `load_default_gcodes_to_config(TYPE_PRINT)` which adds no synthetic
+  scripts, so only keys supplied by the process source are affected. Rewriting
+  `different_settings_to_system` updates columns cumulatively across retained
+  machine, process, and filament slots, and `project/domain/profile_input/overlay.rs`
+  plus `overlay/cli_bookkeeping.rs` preserve retained columns while clearing
+  only explicitly replaced kinds/slots. Selected-plate CLI execution
+  (`project_slice/cli_plates.rs`) forwards the same CLI bit into the shared
+  retained refresh path.
+- Retained filament refresh (`OrcaSlicer.cpp:2775–2815,3510–3811`, skip branch
+  `:3670–3681`) runs through `profiles/project_refresh.rs`,
+  `profiles/project_refresh/preset.rs::refresh`,
+  `profiles/project_refresh/filament.rs::apply`, and
+  `profiles/project_refresh/filament/slot.rs::apply` for both file-driven
+  (`--uptodate-filaments` / `filament_full`) and ordinary catalog-backed
+  retained slots (forwarded via `project_slice/source.rs` and `state.rs` on
+  CLI routes). Each nonempty filament source materializes absent or empty
+  `filament_start_gcode` / `filament_end_gcode` via
+  `load_default_gcodes_to_config(TYPE_FILAMENT)` (`:710–729,3590`: absent
+  takes the `PrintConfigDef` default `" "`, empty array `[]` resizes to `""`).
+  In the declared-edit branch (`refresh_unlisted`), released keys are removed
+  only from that slot's `different_settings_to_system` column (`:3804–3811`).
+  In the no-declared-changes `keep_project` branch (`!refresh_unlisted`),
+  `filament_start_gcode` / `filament_end_gcode` are released to the system
+  preset value without writing `keep_project` back as an override column.
+  Explicit `--load-filaments` replacements remain unaffected. Do not extend
+  the policy to GUI/WASM profile selection (`ProjectPresetPolicy::Always`) or
+  non-CLI callers.
 
 ### Deferred
 
-- Put the automatic retained-filament exception in the existing CLI path
-  through `profiles/project_refresh/preset.rs::refresh` and
-  `profiles/project_refresh/filament/slot.rs::apply`. It does not require
-  file routing, but the catalog-backed edited project differs in unrelated
-  machine config serialization even without the flag. Keep that separate
-  from event removal and require a passing whole-output control before
-  changing the retained merge. Do not extend the policy to GUI/WASM profile
-  selection or alter the existing catalog supply.
-
-- The source-file retain branches need the Native retained-preset refresh
-  path (`ares-cli/src/native_refresh.rs`, core
-  `profiles/project_refresh/native.rs` and the retained merge). The existing
-  catalog-only `--uptodate` adapter cannot stand in for
-  `--uptodate-settings` or `--uptodate-filaments`: the merge must know which
-  kinds/slots came from an actual refresh file. Add the machine/process and
-  file-driven filament cases once that path is available. The saved-project
-  CLI requests are the temporary adapters for this same upstream boundary.
-  Connecting the policy to the separate `slice_plates` selection/output
-  route depends on that route sharing retained refresh; do not make a
-  second refresh implementation just for plate selection.
 - Defer external event-file admission to its existing port, Native warning
   log text, unsliced project export, and adjacent preset selection rules.
   Do not add filtering of explicitly supplied presets, CLI option
@@ -132,35 +148,43 @@ The cases must execute against Native in official and seeded modes.
    the `Custom` item, and `=false` is identical to omission. Also check
    an unchanged project without a `Custom` event with and without the flag.
 
-### Deferred preset verification
+2. **Saved machine script with retained refresh.** Reuse the single-plate
+   saved-project fixture and flattened file layout from the retained-refresh
+   CLI cases. Put a short distinct harmless command in `machine_start_gcode`
+   and list the key in the last override column alongside a non-G-code
+   machine override. Give the matching refresh source a different nonempty
+   command. Run `--uptodate --uptodate-settings <machine.json>` with and
+   without the flag, plus `=false`, an unedited control, a no-`--uptodate`
+   control, an explicit `--load-settings` replacement, a process-file-only
+   fallback control, and empty vs absent source scripts.
 
-**Ordinary retained filament.** Use a fixture whose named filament is
-resolvable on both sides (matched Native system preset and Ares catalog).
-Give its saved slot a distinct `filament_start_gcode`, without passing
-`--load-filaments`. With no refresh flags, show that omission keeps the
-saved script and the skip flag uses the system script. Exercise both a
-recorded edit and the no-declared-changes `keep_project` case. Check that a
-non-G-code override is retained and other slots are not replaced by this
-slot's source.
+3. **Saved process script with retained refresh.** Reuse the flattened
+   refresh layout with a `gcodes_key_set` script (such as
+   `layer_change_gcode`) listed in `different_settings_to_system[0]`
+   alongside a non-G-code process override. Verify omitted-flag control,
+   enabled release and column `[0]` rewrite when `process.json` supplies
+   the script, no release when `process.json` omits the script, `=false`
+   equivalence, catalog-only fallback without a process refresh file, and
+   explicit `--load-settings` process replacement remaining unaffected.
 
-**Saved machine script with retained refresh.** Reuse the single-plate
-saved-project fixture and flattened file layout from the retained-refresh
-CLI cases. Give the project a user machine name inheriting a differently
-named system machine. Put a short distinct harmless command in its
-`machine_start_gcode` and list the key in the last override column. Give
-the matching refresh source a different nonempty command; retain a
-second non-G-code machine override in that column. Run
-`--uptodate --uptodate-settings <machine.json>` with and without the flag;
-also run the modified project with the flag but without `--uptodate`.
-Assert first on Native's pre-config command and override column: the
-command changes to the source only in the enabled retained-refresh
-case and only the script key leaves the column. An unchanged control
-stores the same start script as the source, without marking it; run it
-with and without the flag and require identical output for the pair.
-Compare Ares with Native separately in all cases. Reuse the file-driven
-fixture for a retained filament with a nonempty source script and an
-explicit replacement control to ensure the flag only affects retained
-slots. Keep these cases separate from the plate event witness.
+4. **File-driven retained filament refresh.** Reuse the flattened refresh
+   layout with `filament_start_gcode` and `filament_end_gcode` marked in the
+   filament override column alongside a non-G-code filament override. Verify
+   omitted-flag control, enabled release with source values (`[""]`, `[]`
+   resized to `""`, absent defaulted to `" "`, and nonempty scripts),
+   single-slot column rewrite on multi-filament inputs, selected-plate
+   (`--slice 1`) routing, and explicit `--load-filaments` replacement
+   remaining unaffected.
+
+5. **Ordinary catalog-backed retained filament refresh.** Use fixtures whose
+   named filaments resolve on both sides (matched Native system presets and
+   Ares catalog) without `--uptodate` or `--load-filaments`. Verify passing
+   whole-G-code omitted-flag controls first, then `--skip-modified-gcodes`
+   for both declared-edit dirty columns (removing only the released script
+   key from that slot's column) and no-declared-changes `keep_project`
+   (updating the script without writing `keep_project` back to
+   `different_settings_to_system`), plus multi-filament slot isolation and
+   preservation of non-G-code overrides.
 
 Use fail-first CLI tests for each slice, then run the affected parity cases
 in both modes and the normal formatting, workspace Clippy, and WASM checks.
