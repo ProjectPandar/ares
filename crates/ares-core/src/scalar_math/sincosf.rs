@@ -42,6 +42,10 @@ pub(crate) fn sin(angle: f32) -> f32 {
     sample(angle, false)
 }
 
+pub(crate) fn cos(angle: f32) -> f32 {
+    sample(angle, true)
+}
+
 pub(crate) fn sin_cos(angle: f32) -> (f32, f32) {
     (sample(angle, false), sample(angle, true))
 }
