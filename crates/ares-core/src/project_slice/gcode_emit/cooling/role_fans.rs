@@ -1,7 +1,8 @@
 //! Role requests resolve against the flushing LayerResult's id and baseline.
 
 use super::{
-    CoolingState, ROLE_FAN_MARKER_PREFIX, additional_fan_pwm, clamped_part_speed, part_fan_pwm,
+    CoolingState, PART_FAN_MARKER, ROLE_FAN_MARKER_PREFIX, additional_fan_pwm, clamped_part_speed,
+    part_fan_pwm,
 };
 
 const FORCE_RESUME_FAN: &str = ";_FORCE_RESUME_FAN_SPEED\n";
@@ -50,50 +51,34 @@ pub(super) struct RoleFanContext {
 }
 
 impl CoolingState {
-    pub(super) fn resolve_role_fans(
+    pub(super) fn stream_layer_with_fans(
         &mut self,
+        layer: &[u8],
         output: &mut Vec<u8>,
-        layer_start: usize,
+        part_fan_replacement: &[u8],
         context: RoleFanContext,
     ) {
         let RoleFanContext {
-            baseline,
+            mut baseline,
             layer_index,
-            tool,
+            mut tool,
             layer_time,
         } = context;
-        let prefix = self.feedrate.toolchange_prefix().as_bytes().to_vec();
+        let prefix = self.feedrate.toolchange_prefix().as_bytes();
         let tool_bound = self.feedrate.tool_bound();
-        let mut baseline = baseline;
-        let mut tool = tool;
         let mut layer_open = layer_index >= self.ramp(tool).close_fan_first_layers() as usize;
         let mut role_speed = None;
         let mut support_speed = None;
         let mut ironing_speed = None;
-        let mut cursor = layer_start;
-        loop {
-            let role = output[cursor..]
-                .windows(ROLE_FAN_MARKER_PREFIX.len())
-                .position(|window| window == ROLE_FAN_MARKER_PREFIX.as_bytes());
-            let resume = output[cursor..]
-                .windows(FORCE_RESUME_FAN.len())
-                .position(|window| window == FORCE_RESUME_FAN.as_bytes());
-            // `find_set_tool` returns an absolute position; marker scans
-            // are relative to `cursor`. Normalize so `.min()` compares
-            // like units and `start = cursor + offset` stays valid.
-            let set_tool = find_set_tool(output, cursor, &prefix, tool, tool_bound)
-                .map(|(offset, _)| offset - cursor);
-            let Some(offset) = role.into_iter().chain(resume).chain(set_tool).min() else {
-                break;
-            };
-            let start = cursor + offset;
-            if set_tool == Some(offset) {
-                let end = output[start..]
-                    .iter()
-                    .position(|byte| *byte == b'\n')
-                    .map_or(output.len(), |offset| start + offset + 1);
-                let (_, new_tool) = find_set_tool(output, cursor, &prefix, tool, tool_bound)
-                    .expect("matched event is a tool change");
+        let mut part_fan_replacement = Some(part_fan_replacement);
+        output.reserve(layer.len() + part_fan_replacement.map_or(0, <[u8]>::len));
+
+        for line in layer.split_inclusive(|&byte| byte == b'\n') {
+            if line == PART_FAN_MARKER {
+                output.extend_from_slice(part_fan_replacement.take().unwrap_or_default());
+                continue;
+            }
+            if let Some(new_tool) = match_set_tool(line, prefix, tool, tool_bound) {
                 tool = new_tool;
                 layer_open = layer_index >= self.ramp(tool).close_fan_first_layers() as usize;
                 // CoolingBuffer.cpp:840-850: TYPE_SET_TOOL runs
@@ -109,17 +94,21 @@ impl CoolingState {
                     tool,
                 );
                 baseline = part_speed;
-                let inserted = replacement.len();
-                output.splice(start..start, replacement);
-                cursor = end + inserted;
+                output.extend_from_slice(&replacement);
+                output.extend_from_slice(line);
                 continue;
             }
-            let start = cursor + offset;
-            let end = output[start..]
-                .iter()
-                .position(|byte| *byte == b'\n')
-                .map_or(output.len(), |offset| start + offset + 1);
-            let marker = std::str::from_utf8(&output[start..end]).unwrap();
+            let Some(marker_pos) = find_marker_start(line) else {
+                output.extend_from_slice(line);
+                continue;
+            };
+            output.extend_from_slice(&line[..marker_pos]);
+            let marker_bytes = &line[marker_pos..];
+            if marker_bytes == PART_FAN_MARKER {
+                output.extend_from_slice(part_fan_replacement.take().unwrap_or_default());
+                continue;
+            }
+            let marker = std::str::from_utf8(marker_bytes).unwrap();
             if matches!(marker, BELT_BAND_START | BELT_BAND_END | BELT_FAN_CARRY) {
                 self.belt_fan_off = match marker {
                     BELT_BAND_START => true,
@@ -130,16 +119,15 @@ impl CoolingState {
                     .or(support_speed)
                     .or(ironing_speed)
                     .unwrap_or(baseline);
-                let replacement = self.set_gated_part_fan(target);
-                cursor = start + replacement.len();
-                output.splice(start..end, replacement);
+                output.extend_from_slice(&self.set_gated_part_fan(target));
                 continue;
             }
             if marker == FORCE_RESUME_FAN {
-                let replacement =
-                    self.resume_fan_commands(role_speed, support_speed, ironing_speed);
-                cursor = start + replacement.len();
-                output.splice(start..end, replacement);
+                output.extend_from_slice(&self.resume_fan_commands(
+                    role_speed,
+                    support_speed,
+                    ironing_speed,
+                ));
                 continue;
             }
             let support_value = marker
@@ -147,9 +135,7 @@ impl CoolingState {
                 .and_then(|value| value.strip_suffix("__\n"));
             if support_value == Some("END") && support_speed.is_none() {
                 // CoolingBuffer.cpp:875 leaves an inactive END as an ordinary line.
-                let retained = b";_SUPP_INTERFACE_FAN_END\n";
-                cursor = start + retained.len();
-                output.splice(start..end, retained.iter().copied());
+                output.extend_from_slice(b";_SUPP_INTERFACE_FAN_END\n");
                 continue;
             }
             let ironing_value = marker
@@ -201,13 +187,9 @@ impl CoolingState {
                     || ironing_end
                     || marker.contains("_BASE__")
                     || marker.contains("_FORCE_"));
-            let replacement = if emit {
-                self.set_gated_part_fan(target)
-            } else {
-                Vec::new()
-            };
-            cursor = start + replacement.len();
-            output.splice(start..end, replacement);
+            if emit {
+                output.extend_from_slice(&self.set_gated_part_fan(target));
+            }
         }
     }
 }
@@ -221,36 +203,37 @@ struct SetToolContext {
     layer_open: bool,
 }
 
-/// Next `T<tool>`-style toolchange line at or after `cursor` whose parsed
-/// tool differs from `current` — the `TYPE_SET_TOOL` gate in
-/// `CoolingBuffer.cpp:506-510` / `840-850` (`tool < tool_map.len()`,
-/// `tool != current`).
-fn find_set_tool(
-    output: &[u8],
-    cursor: usize,
-    prefix: &[u8],
-    current: usize,
-    tool_bound: usize,
-) -> Option<(usize, usize)> {
-    let mut line_start = cursor;
-    while line_start < output.len() {
-        if output[line_start..].starts_with(prefix) {
-            let digits = &output[line_start + prefix.len()..];
-            let length = digits.iter().take_while(|b| b.is_ascii_digit()).count();
-            if length > 0
-                && let Ok(tool) = std::str::from_utf8(&digits[..length])
-                    .unwrap()
-                    .parse::<usize>()
-                && tool < tool_bound
-                && tool != current
-            {
-                return Some((line_start, tool));
-            }
+/// Matches a `T<tool>`-style toolchange line whose parsed tool differs from
+/// `current` — the `TYPE_SET_TOOL` gate in `CoolingBuffer.cpp:506-510` /
+/// `840-850` (`tool < tool_map.len()`, `tool != current`).
+fn match_set_tool(line: &[u8], prefix: &[u8], current: usize, tool_bound: usize) -> Option<usize> {
+    let digits = line.strip_prefix(prefix)?;
+    let length = digits.iter().take_while(|b| b.is_ascii_digit()).count();
+    if length == 0 {
+        return None;
+    }
+    let tool = std::str::from_utf8(&digits[..length])
+        .unwrap()
+        .parse::<usize>()
+        .ok()?;
+    (tool < tool_bound && tool != current).then_some(tool)
+}
+
+/// Finds the first cooling marker (`PART_FAN_MARKER`, `ROLE_FAN_MARKER_PREFIX`,
+/// or `FORCE_RESUME_FAN`) within a single `\n`-terminated line.
+fn find_marker_start(line: &[u8]) -> Option<usize> {
+    let mut offset = 0;
+    while let Some(rel) = line[offset..].iter().position(|&byte| byte == b';') {
+        let pos = offset + rel;
+        let tail = &line[pos..];
+        if tail.get(1) == Some(&b'_')
+            && (tail == PART_FAN_MARKER
+                || tail.starts_with(ROLE_FAN_MARKER_PREFIX.as_bytes())
+                || tail == FORCE_RESUME_FAN.as_bytes())
+        {
+            return Some(pos);
         }
-        line_start += output[line_start..]
-            .iter()
-            .position(|byte| *byte == b'\n')?
-            + 1;
+        offset = pos + 1;
     }
     None
 }
