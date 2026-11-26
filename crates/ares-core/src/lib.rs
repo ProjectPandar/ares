@@ -1,10 +1,3 @@
-#[cfg_attr(
-    not(test),
-    allow(
-        dead_code,
-        reason = "O98-O101 Arachne prerequisites activate with concentric internal fill"
-    )
-)]
 mod arachne;
 pub mod arrangement;
 mod bridges;
