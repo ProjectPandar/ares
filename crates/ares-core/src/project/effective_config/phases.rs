@@ -75,7 +75,12 @@ fn resolve_with_observer(
         full: materialized,
         checkpoint: filament_variant_checkpoint,
         process_variant_indices,
-    } = materialize(first, MaterializationPass::First, observer)?;
+    } = materialize(
+        first,
+        &project.documents().project_settings_raw,
+        MaterializationPass::First,
+        observer,
+    )?;
     first = materialized;
     let first_validated = validate_materialized_project(&first, project)?;
     let grouped = group_print_object_transforms(project.objects());
@@ -187,10 +192,12 @@ fn resolve_with_observer(
     );
     // Temporary applied-map snapshot until ToolOrdering runs after validation.
     let applied_filament_map = first.project.gcode.filament_map.clone();
-    crate::options::filament_map_recommend::prepare_multi_extruder_cli_defaults(&mut first);
-    // ToolOrdering::initialize re-derives the map before G-code export
-    // (ToolOrdering.cpp:1288-1303; Print::update_filament_maps_to_config).
-    crate::options::filament_map_recommend::apply_recommended_filament_map(&mut first);
+    if first.project.gcode.filament_map_mode != crate::ProjectFilamentMapMode::NozzleManual {
+        crate::options::filament_map_recommend::prepare_multi_extruder_cli_defaults(&mut first);
+        // ToolOrdering::initialize re-derives the map before G-code export
+        // (ToolOrdering.cpp:1288-1303; Print::update_filament_maps_to_config).
+        crate::options::filament_map_recommend::apply_recommended_filament_map(&mut first);
+    }
     // PrintApply.cpp:1379–1386 and BeltTransform.hpp::physical_tilt.
     let printer = &mut first.printer.remaining;
     if printer.belt_printer.0 {
@@ -216,6 +223,7 @@ fn resolve_with_observer(
         filament_variant_checkpoint,
         applied_filament_map,
         process_nozzle_assignments: None,
+        manual_nozzle_maps: None,
         process_variant_indices,
         logical_filament_count: first_validated.logical_filament_count,
         usage,
@@ -244,10 +252,12 @@ fn resolve_candidates(
 
 fn materialize(
     source: ProjectSettings,
+    raw: &crate::project::raw_settings::ProjectSettingsRaw,
     pass: MaterializationPass,
     observer: &mut impl PhaseObserver,
 ) -> Result<MaterializedProjectVariants, SliceError> {
-    let materialized = materialize_project_variants(&source, &source.project.gcode.filament_map)?;
+    let materialized =
+        materialize_project_variants(&source, &source.project.gcode.filament_map, raw)?;
     observer.materialize(pass, &source, &materialized.full);
     Ok(materialized)
 }

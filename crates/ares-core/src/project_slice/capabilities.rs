@@ -24,15 +24,6 @@ pub(super) fn validate(
     Ok(())
 }
 
-pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(), SliceError> {
-    if settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "filament_map_mode: Nozzle Manual".to_owned(),
-        ));
-    }
-    Ok(())
-}
-
 fn unsupported<T>(key: &str) -> Result<T, SliceError> {
     Err(SliceError::UnsupportedProjectFeature(key.to_owned()))
 }

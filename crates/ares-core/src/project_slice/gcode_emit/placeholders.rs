@@ -1,5 +1,6 @@
 mod bounds;
 mod cut_retraction;
+mod manual_nozzle;
 mod retraction;
 mod timestamp;
 
@@ -60,6 +61,7 @@ pub(super) fn base_config(
     }
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    manual_nozzle::insert_maps(&mut config, traversal.resolved.manual_nozzle_maps.as_ref());
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal, layer_count);
     config.insert(

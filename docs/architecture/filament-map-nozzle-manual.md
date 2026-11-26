@@ -8,9 +8,12 @@ This slice ports `FilamentMapMode::fmmNozzleManual` from OrcaSlicer v2.5.0
 manual mode, not automatic grouping constrained by user assignments.
 
 - `Format/bbs_3mf.cpp:4673–4707`: the plate's mode and extruder map override
-  the project defaults. `filament_volume_maps` also overrides the project
-  volume map; plate volume entries greater than High Flow become Standard.
-  The importer does not read a plate `filament_nozzle_map` metadata key.
+  the project defaults. A 3MF plate with no saved mode uses Auto For Flush
+  for export, as initialized by `PartPlate::init` (`PartPlate.cpp:248–264`);
+  loading the project still retains its declared mode. `filament_volume_maps`
+  overrides the project volume map; plate volume entries greater than High
+  Flow become Standard. The importer does not read a plate
+  `filament_nozzle_map` metadata key.
 - `GCode/ToolOrdering.cpp:1778–1796`: require both nozzle and volume vectors
   to match the filament colour count. Use zero-based extruder requests,
   sorted slice-used filaments, and the first diameter (0.4 mm when absent).
@@ -27,6 +30,8 @@ manual mode, not automatic grouping constrained by user assignments.
   only for used slots. If grouping is empty, do not overwrite the authored
   maps. `Print.cpp:3705–3743` publishes grouping for sequential prints with
   multiple objects without writing back the maps in manual modes.
+- `GCode.cpp:3421,6733,10900–10919`: the templates read the published group
+  maps, including an empty group. The saved config block remains independent.
 
 ## Rust destination
 

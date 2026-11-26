@@ -6,7 +6,9 @@ mod filament_select;
 pub(crate) use filament_maps::update_static_filament_maps;
 mod index;
 mod nozzle;
+mod nozzle_inventory;
 pub(crate) use nozzle::{ProcessNozzle, process_nozzle_config_index};
+pub(crate) use nozzle_inventory::{NozzleInventory, parse_nozzle_counts};
 mod printer;
 mod process;
 mod select;
@@ -16,6 +18,7 @@ pub(crate) use index::{canonical_variant, get_index_for_extruder};
 use crate::{
     Nullable, SliceError,
     options::{OrcaInt, OrcaInts, ProjectSettings, project_config_views::ProjectConfigViews},
+    project::raw_settings::ProjectSettingsRaw,
 };
 
 pub(crate) struct MaterializedProjectVariants {
@@ -28,12 +31,18 @@ pub(crate) struct MaterializedProjectVariants {
 pub(crate) fn materialize_project_variants(
     source: &ProjectSettings,
     filament_map: &OrcaInts,
+    raw: &ProjectSettingsRaw,
 ) -> Result<MaterializedProjectVariants, SliceError> {
     let mut materialized = source.clone();
     let filament_map = expanded_filament_map(source, filament_map);
     materialized.project.gcode.filament_map = filament_map.clone();
 
-    let Some(active) = index::resolve_activation(&materialized)? else {
+    // PrintApply.cpp:1419–1455 selects the installed volume columns before
+    // saving the filament-variant checkpoint.
+    let inventory = (source.project.gcode.filament_map_mode
+        == crate::ProjectFilamentMapMode::NozzleManual)
+        .then(|| NozzleInventory::read(raw));
+    let Some(active) = index::resolve_activation(&materialized, inventory.as_ref())? else {
         let checkpoint = materialized.clone();
         return Ok(MaterializedProjectVariants {
             full: materialized,
@@ -80,11 +89,20 @@ pub(crate) fn refresh_filament_map(
     filament_map: &OrcaInts,
     current: &ProjectSettings,
 ) -> Result<ProjectConfigViews, SliceError> {
+    refresh_filament_variants(checkpoint, filament_map, current, None)
+}
+
+pub(crate) fn refresh_filament_variants(
+    checkpoint: &ProjectSettings,
+    filament_map: &OrcaInts,
+    current: &ProjectSettings,
+    inventory: Option<&NozzleInventory>,
+) -> Result<ProjectConfigViews, SliceError> {
     // Print.cpp:3171-3175 assigns the recommendation without CLI-entry growth.
     let filament_map = filament_map.clone();
     let mut refreshed = current.clone();
     refreshed.project.gcode.filament_map = filament_map.clone();
-    if let Some(active) = index::resolve_activation(checkpoint)? {
+    if let Some(active) = index::resolve_activation(checkpoint, inventory)? {
         let filament_indices =
             index::resolve_filament_indices(checkpoint, &filament_map, &active.variants)?;
         // Print.cpp:3174-3195: select from the saved full config, then apply

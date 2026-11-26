@@ -20,6 +20,11 @@ use super::model_settings::Metadata;
 /// (`bbs_3mf.cpp:4418-4565`); each maps to the owning settings group field.
 pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metadata: &[Metadata]) {
     let mut bed_type = ProjectBedType::DefaultPlate;
+    // PartPlate::init (PartPlate.cpp:248–264) supplies Auto For Flush when the
+    // plate has not saved a mode. Apply that default to project Nozzle Manual.
+    if settings.project.gcode.filament_map_mode == ProjectFilamentMapMode::NozzleManual {
+        settings.project.gcode.filament_map_mode = ProjectFilamentMapMode::AutoForFlush;
+    }
     for item in metadata {
         match item.key.as_str() {
             // `fmmDefault` is never written to the file; every stored value is
@@ -41,6 +46,17 @@ pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metad
                     settings.project.gcode.filament_map =
                         OrcaInts(map.iter().map(|&v| OrcaInt(v.max(1))).collect());
                 }
+            }
+            // bbs_3mf.cpp:4695–4707: clamp entries above High Flow to Standard.
+            "filament_volume_maps" => {
+                let Some(map) = parse_int_list(&item.value) else {
+                    continue;
+                };
+                settings.project.gcode.filament_volume_map = OrcaInts(
+                    map.into_iter()
+                        .map(|v| OrcaInt(if v > 1 { 0 } else { v }))
+                        .collect(),
+                );
             }
             "bed_type" => {
                 // bbs_3mf.cpp:4641–4646 initializes btPC before parsing any present value.
