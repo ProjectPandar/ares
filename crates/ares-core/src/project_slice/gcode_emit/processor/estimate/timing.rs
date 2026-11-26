@@ -20,6 +20,8 @@ pub(super) struct Metadata {
 pub(super) struct Timing {
     machine: TimeMachine,
     pending: VecDeque<Metadata>,
+    batch: Vec<(f64, Trapezoid)>,
+    eligible: Vec<Option<bool>>,
     pub(super) total: f64,
     pub(super) prepare: f32,
     pub(super) initial_layer_time: f32,
@@ -34,6 +36,8 @@ impl Timing {
         Self {
             machine: TimeMachine::new(flavor),
             pending: VecDeque::new(),
+            batch: Vec::new(),
+            eligible: Vec::new(),
             total: 0.0,
             prepare: 0.0,
             initial_layer_time: 0.0,
@@ -51,8 +55,9 @@ impl Timing {
         recorder: &mut MoveRecorder,
     ) {
         self.pending.push_back(metadata);
-        let batch = self.machine.push(block);
-        self.commit(&batch, recorder, true);
+        self.batch.clear();
+        self.machine.push(block, &mut self.batch);
+        self.commit(recorder, true);
     }
 
     pub(super) fn flush(
@@ -61,8 +66,9 @@ impl Timing {
         delay: Option<PendingDelay>,
         recorder: &mut MoveRecorder,
     ) {
-        let batch = self.machine.flush(config, delay);
-        self.commit(&batch, recorder, true);
+        self.batch.clear();
+        self.machine.flush(config, delay, &mut self.batch);
+        self.commit(recorder, true);
     }
 
     pub(super) fn custom(
@@ -78,22 +84,28 @@ impl Timing {
     }
 
     pub(super) fn finish(&mut self, recorder: &mut MoveRecorder) {
-        let (batch, trailing) = self.machine.finish();
-        self.commit(&batch, recorder, true);
+        self.batch.clear();
+        let trailing = self.machine.finish(&mut self.batch);
+        self.commit(recorder, true);
         // A final Marlin block below the planner minimum keeps zero-time
         // lookup metadata, without registering a processed stop time.
-        let unprocessed = vec![(0.0, Trapezoid::default()); self.pending.len()];
-        self.commit(&unprocessed, recorder, false);
+        self.batch.clear();
+        self.batch
+            .resize(self.pending.len(), (0.0, Trapezoid::default()));
+        self.commit(recorder, false);
         self.total += trailing;
         self.custom_gcode_times = std::mem::take(&mut self.custom).finish(trailing, self.total);
     }
 
-    fn commit(&mut self, batch: &[(f64, Trapezoid)], recorder: &mut MoveRecorder, processed: bool) {
-        if batch.is_empty() {
+    fn commit(&mut self, recorder: &mut MoveRecorder, processed: bool) {
+        if self.batch.is_empty() {
             return;
         }
-        let eligible = recorder.apply_batch(batch);
-        for (&(time, _), override_eligible) in batch.iter().zip(eligible) {
+        let tracks_eligibility = recorder.tracks_eligibility();
+        if tracks_eligibility {
+            recorder.apply_batch(&self.batch, &mut self.eligible);
+        }
+        for (index, &(time, _)) in self.batch.iter().enumerate() {
             let metadata = self.pending.pop_front().unwrap();
             self.total += time;
             self.custom.add(time);
@@ -103,6 +115,11 @@ impl Timing {
             if metadata.first_layer {
                 self.initial_layer_time = (f64::from(self.initial_layer_time) + time) as f32;
             }
+            let override_eligible = if tracks_eligibility {
+                self.eligible[index]
+            } else {
+                None
+            };
             if !override_eligible.unwrap_or(metadata.eligible) {
                 continue;
             }

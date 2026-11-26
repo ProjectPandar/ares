@@ -2,13 +2,12 @@
 
 mod commands;
 mod custom_time;
-mod elapsed;
+pub(super) mod elapsed;
 use commands::{arc_seams, synchronizes_planner};
-mod export_cache;
+pub(super) mod export_cache;
 pub(super) mod options_z;
 mod seam;
 mod timing;
-use elapsed::elapsed_snapshots;
 use seam::SeamDetector;
 use timing::{Metadata, Timing};
 
@@ -34,28 +33,17 @@ pub(super) struct Estimate {
     pub(super) stop_times: StopTimes,
     pub(super) print_statistics: crate::PrintEstimatedStatistics,
     pub(super) printable_area: PrintableAreaTracker,
-    elapsed: Vec<Option<elapsed::Snapshot>>,
-    export_elapsed: Vec<Option<f32>>,
+    pub(super) cache: Vec<export_cache::Entry>,
 }
 impl Estimate {
-    /// Runs the time estimate and, with a `recorder`, records the
-    /// `GCodeProcessorResult::moves` of the same pass. The progress lines
-    /// read the vertex types, so a pass without one records them unused.
+    /// Runs the time estimate and feeds `recorder` in the same pass.
     pub(super) fn record<'a>(
-        lines: impl IntoIterator<Item = &'a str> + Clone,
-        line_count: usize,
+        lines: impl IntoIterator<Item = &'a str>,
         machine_load_filament_time: f64,
         config: &'a ProcessorConfig<'_>,
-        recorder: Option<&mut MoveRecorder<'a>>,
+        recorder: &mut MoveRecorder<'a>,
     ) -> Self {
-        let mut owned = None;
-        let recorder = match recorder {
-            Some(recorder) => recorder,
-            None => owned.insert(MoveRecorder::new(config)),
-        };
         let limits = config.limits;
-        let cache_lines = lines.clone();
-        let elapsed_lines = lines.clone();
         let mut timing = Timing::new(limits.gcode_flavor);
         let mut state = MotionState::with_limits(limits);
         let mut prepare_stage = false;
@@ -72,6 +60,9 @@ impl Estimate {
         let mut printable_area = PrintableAreaTracker::new(config.settings, [0.0; 2]);
         let mut g1_line_id = 0;
         let mut seams = SeamDetector::new(config.detect_layer_based_on_tag);
+        let mut motion_blocks = Vec::new();
+        let mut seam_vertices = Vec::new();
+        let mut cache_eligible = Vec::new();
         for (index, line) in lines.into_iter().enumerate() {
             seams.role(line);
             used_filaments.tags(line, filaments.selection().1);
@@ -221,7 +212,7 @@ impl Estimate {
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
             let arc_start = state.position;
-            let motion_blocks = state.motions_indexed(code);
+            state.motions_indexed(code, &mut motion_blocks);
             for motion in &motion_blocks {
                 used_filaments.motion(motion.block.delta, false, state.wiping, &filaments);
                 printable_area.motion(
@@ -231,8 +222,8 @@ impl Estimate {
                     filaments.selection().1,
                 );
             }
-            let mut seam_vertices = Vec::new();
-            let mut cache_eligible = Vec::new();
+            seam_vertices.clear();
+            cache_eligible.clear();
             // Linear commands produce at most one block; only arcs subdivide.
             // `GCodeProcessor::process_G10/G11` calls `process_G1` after
             // `--m_g1_line_id` (`GCodeProcessor.cpp:4873-4893`), so the
@@ -278,12 +269,12 @@ impl Estimate {
                 // it, collapsing the `remaining` chain `ExportLines::update`
                 // walks (:790-800). `arc_start` is the position before
                 // `motions` advanced `state.position` to the arc end.
-                seam_vertices = arc_seams(
+                arc_seams(
                     &mut seams,
                     &motion_blocks,
                     arc_start,
                     state.wiping,
-                    &mut cache_eligible,
+                    (&mut seam_vertices, &mut cache_eligible),
                 );
             }
             let arc = matches!(command, "G2" | "G3");
@@ -322,8 +313,6 @@ impl Estimate {
             saw_motion_command |= is_progress_motion(code);
         }
         timing.finish(recorder);
-        let export_elapsed = export_cache::snapshots(cache_lines, line_count, &timing.cache);
-        let elapsed = elapsed_snapshots(elapsed_lines, line_count, &timing.cache);
         Self {
             total: timing.total,
             custom_gcode_times: timing.custom_gcode_times,
@@ -337,8 +326,7 @@ impl Estimate {
             },
 
             printable_area,
-            elapsed,
-            export_elapsed,
+            cache: timing.cache,
         }
     }
 }

@@ -60,7 +60,7 @@ impl RollingPlanner {
         }
     }
 
-    pub(crate) fn push(&mut self, block: &MotionBlock) -> Vec<(f64, Trapezoid)> {
+    pub(crate) fn push(&mut self, block: &MotionBlock, out: &mut Vec<(f64, Trapezoid)>) {
         let planned = prepare(block, self.previous, !self.blocks.is_empty());
         // ToolChange inserts a time block without updating machine.prev.
         if block.kind != MotionKind::ToolChange {
@@ -68,17 +68,13 @@ impl RollingPlanner {
         }
         self.blocks.push(planned);
         if self.blocks.len() > 256 {
-            self.process(64)
-        } else {
-            Vec::new()
+            self.process(64, out);
         }
     }
 
-    pub(crate) fn flush(&mut self) -> Vec<(f64, Trapezoid)> {
-        if self.blocks.len() < 2 {
-            Vec::new()
-        } else {
-            self.process(0)
+    pub(crate) fn flush(&mut self, out: &mut Vec<(f64, Trapezoid)>) {
+        if self.blocks.len() >= 2 {
+            self.process(0, out);
         }
     }
 
@@ -87,26 +83,24 @@ impl RollingPlanner {
     /// guard — a lone trailing block (e.g. an end-gcode `G1 E-1` after the
     /// last tool-change flush) never reaches `machine.time` — unless extra
     /// time is still buffered (`drain_final`), which drains the lone block.
-    pub(crate) fn finish(&mut self, delay_buffered: bool) -> Vec<(f64, Trapezoid)> {
-        if self.blocks.is_empty() || self.blocks.len() < 2 && !delay_buffered {
-            Vec::new()
-        } else {
-            self.process(0)
+    pub(crate) fn finish(&mut self, delay_buffered: bool, out: &mut Vec<(f64, Trapezoid)>) {
+        if !self.blocks.is_empty() && (self.blocks.len() >= 2 || delay_buffered) {
+            self.process(0, out);
         }
     }
 
-    fn process(&mut self, keep: usize) -> Vec<(f64, Trapezoid)> {
+    fn process(&mut self, keep: usize, out: &mut Vec<(f64, Trapezoid)>) {
         plan(&mut self.blocks);
         let process_len = self.blocks.len() - keep;
-        let times = self.blocks[..process_len]
-            .iter()
-            .map(|block| (f64::from(block.time), block.trapezoid))
-            .collect();
+        out.extend(
+            self.blocks[..process_len]
+                .iter()
+                .map(|block| (f64::from(block.time), block.trapezoid)),
+        );
         self.blocks.drain(..process_len);
         if let Some(first) = self.blocks.first_mut() {
             first.max_entry = first.entry;
         }
-        times
     }
 }
 

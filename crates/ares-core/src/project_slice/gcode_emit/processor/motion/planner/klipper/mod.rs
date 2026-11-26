@@ -51,7 +51,7 @@ impl KlipperPlanner {
         self.config = config;
     }
 
-    pub(super) fn push(&mut self, motion: &MotionBlock) -> Vec<(f64, Trapezoid)> {
+    pub(super) fn push(&mut self, motion: &MotionBlock, out: &mut Vec<(f64, Trapezoid)>) {
         self.configure(motion.klipper);
         let block = if motion.kind == MotionKind::ToolChange {
             Block::default()
@@ -69,64 +69,57 @@ impl KlipperPlanner {
             && !motion.virtual_motion
             && self.junction_flush <= 0.0
         {
-            self.process(true)
-        } else {
-            Vec::new()
+            self.process(true, out);
         }
     }
 
-    pub(super) fn flush(&mut self, config: KlipperConfig) -> Vec<(f64, Trapezoid)> {
+    pub(super) fn flush(&mut self, config: KlipperConfig, out: &mut Vec<(f64, Trapezoid)>) {
         self.configure(config);
-        let batch = self.process(false);
+        self.process(false, out);
         self.junction_flush = if self.config.legacy() { 2.0 } else { 1.0 };
         self.priming = true;
-        batch
     }
 
-    pub(super) fn finish(&mut self) -> Vec<(f64, Trapezoid)> {
-        self.process(false)
+    pub(super) fn finish(&mut self, out: &mut Vec<(f64, Trapezoid)>) {
+        self.process(false, out);
     }
 
-    fn process(&mut self, lazy: bool) -> Vec<(f64, Trapezoid)> {
+    fn process(&mut self, lazy: bool, out: &mut Vec<(f64, Trapezoid)>) {
         if self.blocks.is_empty() {
-            return Vec::new();
+            return;
         }
         self.junction_flush = if self.config.legacy() { 0.250 } else { 0.150 };
         self.priming = false;
         let count = plan::plan(&mut self.blocks, lazy);
-        self.blocks
-            .drain(..count)
-            .map(|block| {
-                let start_v2 = block.entry.min(block.planned_cruise);
-                let end_v2 = block.exit.min(block.planned_cruise);
-                let inv_two_accel = if block.acceleration > 0.0 {
-                    0.5 / block.acceleration
-                } else {
-                    0.0
-                };
-                let trapezoid = Trapezoid {
-                    distance: block.distance,
-                    entry: start_v2.sqrt(),
-                    exit: end_v2.sqrt(),
-                    cruise_feedrate: block.planned_cruise.sqrt(),
-                    accelerate_until: (block.planned_cruise - start_v2) * inv_two_accel,
-                    decelerate_after: block.distance
-                        - (block.planned_cruise - end_v2) * inv_two_accel,
-                };
-                let cruise = f64::from(trapezoid.cruise_feedrate);
-                let mut time = if cruise > 0.0 {
-                    f64::from(block.distance) / cruise
-                } else {
-                    0.0
-                };
-                if cruise > 0.0 && block.acceleration > 0.0 {
-                    let accel = cruise - f64::from(trapezoid.entry);
-                    let decel = cruise - f64::from(trapezoid.exit);
-                    time += (accel * accel + decel * decel)
-                        / (2.0 * f64::from(block.acceleration) * cruise);
-                }
-                (time, trapezoid)
-            })
-            .collect()
+        out.extend(self.blocks.drain(..count).map(|block| {
+            let start_v2 = block.entry.min(block.planned_cruise);
+            let end_v2 = block.exit.min(block.planned_cruise);
+            let inv_two_accel = if block.acceleration > 0.0 {
+                0.5 / block.acceleration
+            } else {
+                0.0
+            };
+            let trapezoid = Trapezoid {
+                distance: block.distance,
+                entry: start_v2.sqrt(),
+                exit: end_v2.sqrt(),
+                cruise_feedrate: block.planned_cruise.sqrt(),
+                accelerate_until: (block.planned_cruise - start_v2) * inv_two_accel,
+                decelerate_after: block.distance - (block.planned_cruise - end_v2) * inv_two_accel,
+            };
+            let cruise = f64::from(trapezoid.cruise_feedrate);
+            let mut time = if cruise > 0.0 {
+                f64::from(block.distance) / cruise
+            } else {
+                0.0
+            };
+            if cruise > 0.0 && block.acceleration > 0.0 {
+                let accel = cruise - f64::from(trapezoid.entry);
+                let decel = cruise - f64::from(trapezoid.exit);
+                time += (accel * accel + decel * decel)
+                    / (2.0 * f64::from(block.acceleration) * cruise);
+            }
+            (time, trapezoid)
+        }));
     }
 }

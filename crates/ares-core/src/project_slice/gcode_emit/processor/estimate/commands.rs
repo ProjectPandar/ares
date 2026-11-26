@@ -44,21 +44,18 @@ pub(super) fn arc_seams(
     motion_blocks: &[IndexedMotion],
     arc_start: [f64; 3],
     wiping: bool,
-    cache_eligible: &mut Vec<bool>,
-) -> Vec<Option<[f32; 3]>> {
+    (seam_vertices, cache_eligible): (&mut Vec<Option<[f32; 3]>>, &mut Vec<bool>),
+) {
     let mut position = arc_start;
-    motion_blocks
-        .iter()
-        .map(|IndexedMotion { block, .. }| {
-            let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
-            let extruding =
-                !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
-            position = end;
-            let seam = seams.associate(extruding, end);
-            cache_eligible.push((!block.e_only || wiping) && seam.is_none());
-            seam
-        })
-        .collect()
+    for IndexedMotion { block, .. } in motion_blocks {
+        let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
+        let extruding =
+            !wiping && block.delta[3] > 0.0 && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
+        position = end;
+        let seam = seams.associate(extruding, end);
+        cache_eligible.push((!block.e_only || wiping) && seam.is_none());
+        seam_vertices.push(seam);
+    }
 }
 
 /// `process_M400:6947–6960`: bare Klipper M400 also synchronizes with zero delay, as do the
