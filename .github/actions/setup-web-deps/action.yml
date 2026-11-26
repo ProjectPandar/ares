@@ -1,0 +1,19 @@
+name: Setup Web Dependencies
+description: Restore cached web node_modules or run bun install --frozen-lockfile
+runs:
+  using: composite
+  steps:
+    - name: Cache web node_modules
+      id: web-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          web/node_modules
+          web/app/node_modules
+          web/packages/ares-profiles/node_modules
+          web/packages/ares-wasm-js/node_modules
+        key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+    - name: Install web dependencies
+      if: steps.web-deps.outputs.cache-hit != 'true'
+      shell: bash
+      run: bun install --cwd web --frozen-lockfile

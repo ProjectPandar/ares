@@ -41,43 +41,31 @@ runs:
           echo "ARES_PARITY_NEXTEST_ARCHIVE=$RUNNER_TEMP/parity-archive/orca-parity.tar.zst"
           echo "ARES_ENUM_ARTIFACTS=$RUNNER_TEMP/enum-artifacts"
         } >> "$GITHUB_ENV"
-    - name: Cache web node_modules
-      id: web-deps
-      uses: actions/cache@v4
-      with:
-        path: |
-          web/node_modules
-          web/app/node_modules
-          web/packages/ares-profiles/node_modules
-          web/packages/ares-wasm-js/node_modules
-        key: bun-modules-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
-    - name: Install web dependencies
-      if: steps.web-deps.outputs.cache-hit != 'true'
-      shell: bash
-      run: bun install --cwd web --frozen-lockfile
+    - uses: ./.github/actions/setup-web-deps
     - uses: actions/cache/restore@v4
       with:
-        path: ${{ runner.temp }}/web-bundle
+        path: target/ci-web-bundle
         key: ${{ inputs.bundle-key }}
         fail-on-cache-miss: true
     - name: Unpack prebuilt web and release CLI bundle
       shell: bash
-      run: tar --zstd -xf "$RUNNER_TEMP/web-bundle/web-dist.tar.zst" -C "$GITHUB_WORKSPACE"
+      run: |
+        tar --zstd -xf target/ci-web-bundle/web-dist.tar.zst -C "$GITHUB_WORKSPACE"
+        rm -rf target/ci-web-bundle
     - name: Cache Playwright browsers
       id: pw-cache
       uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ inputs.browsers }}-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
-    - name: Install Playwright browsers
-      if: steps.pw-cache.outputs.cache-hit != 'true' || contains(inputs.browsers, 'webkit')
+    - name: Install Playwright browsers on cache miss
+      if: steps.pw-cache.outputs.cache-hit != 'true'
       shell: bash
-      run: |
-        if [[ "${{ inputs.browsers }}" == *webkit* ]]; then
-          bunx --cwd web playwright install --with-deps ${{ inputs.browsers }}
-        else
-          bunx --cwd web playwright install ${{ inputs.browsers }}
-        fi
+      run: bunx --cwd web playwright install ${{ inputs.browsers }}
+    - name: Install WebKit system libraries
+      if: contains(inputs.browsers, 'webkit')
+      shell: bash
+      run: bunx --cwd web playwright install-deps webkit
     - name: Cache official OrcaSlicer v2.5.0 AppImage
       uses: actions/cache@v4
       with:
