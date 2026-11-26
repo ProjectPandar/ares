@@ -10,11 +10,20 @@ import type { ModelFile, Theme, ViewMode } from "./store";
 const CONFIG_KEY = "ares.config";
 const VERSION = 1;
 
-/** A Pandar Hub tenant: `print_host` and `printhost_apikey` of a `Pandar` host type. */
-export interface PrintHost {
-  hubUrl: string;
-  tenantId: string;
+/** A Pandar Hub sign-in (GUI_App::request_login): the tenant token its web login ticket exchanged for. */
+export interface CloudSession {
   token: string;
+  /** RFC 3339. */
+  expiresAt: string;
+  tenantId: string;
+  tenantName: string;
+  userName: string;
+}
+
+/** The Cloud menu's Pandar Hub and its session, absent once signed out. */
+export interface CloudConfig {
+  hubUrl: string;
+  session?: CloudSession;
 }
 
 /** Per-printer settings (AppConfig::set_printer_setting, AppConfig.hpp:239-249). */
@@ -55,8 +64,8 @@ export interface StoredConfig {
   preferredFilamentMapMode: "Auto For Flush" | "Auto For Match" | "Manual";
   /** Section `arrange` (GLCanvas3D.cpp:1526-1561), app-config strings by key; absent in older records. */
   arrange?: Record<string, string>;
-  /** The physical printer (PhysicalPrinterDialog): a Pandar Hub print host; absent until set. */
-  printHost?: PrintHost;
+  /** The Pandar Hub of the Cloud menu; absent until a first sign-in. */
+  cloud?: CloudConfig;
 }
 
 const DEFAULTS: StoredConfig = {
@@ -93,6 +102,19 @@ function isPrinterSettings(value: unknown): value is PrinterSettings {
   );
 }
 
+function isCloudConfig(value: unknown): value is CloudConfig {
+  const session = isRecord(value) ? value.session : undefined;
+  return (
+    isRecord(value) &&
+    typeof value.hubUrl === "string" &&
+    (session === undefined ||
+      (isRecord(session) &&
+        [session.token, session.expiresAt, session.tenantId, session.tenantName, session.userName].every(
+          (item) => typeof item === "string",
+        )))
+  );
+}
+
 function isStoredConfig(value: Record<string, unknown>): boolean {
   return (
     (value.theme === "dark" || value.theme === "light") &&
@@ -111,11 +133,7 @@ function isStoredConfig(value: Record<string, unknown>): boolean {
     ["Auto For Flush", "Auto For Match", "Manual"].includes(value.preferredFilamentMapMode as string) &&
     (value.arrange === undefined ||
       (isRecord(value.arrange) && Object.values(value.arrange).every((item) => typeof item === "string"))) &&
-    (value.printHost === undefined ||
-      (isRecord(value.printHost) &&
-        [value.printHost.hubUrl, value.printHost.tenantId, value.printHost.token].every(
-          (item) => typeof item === "string",
-        )))
+    (value.cloud === undefined || isCloudConfig(value.cloud))
   );
 }
 
@@ -130,6 +148,8 @@ function loadConfig(): StoredConfig | null {
       // The vendor-level `vendors` field of earlier builds is dropped, not expanded into models:
       // no printer is installed, so the setup wizard opens.
       delete config.vendors;
+      // The manual Pandar print host of earlier builds is dropped: the Cloud sign-in replaces it.
+      delete config.printHost;
       config.installedPrinters ??= {};
       if (version === VERSION && isStoredConfig(config)) return config as unknown as StoredConfig;
     } catch {

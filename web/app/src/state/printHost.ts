@@ -1,23 +1,13 @@
 /**
- * The Pandar Hub print host: PhysicalPrinterDialog's host settings and PrintHostSendDialog's upload
- * (Plater::send_gcode, Plater.cpp:21228-21248). A Bambu printer receives the plate's print-job
- * `.gcode.3mf`; a Moonraker printer accepts only `.gcode` (Hub `artifact_requires_gcode`).
+ * PrintHostSendDialog's upload to the signed-in Pandar Hub (Plater::send_gcode, Plater.cpp:21228-21248).
+ * A Bambu printer receives the plate's print-job `.gcode.3mf`; a Moonraker printer accepts only
+ * `.gcode` (Hub `artifact_requires_gcode`).
  */
 import { gcodeFileName } from "./actions";
-import { type PrintHost, saveConfig, storedConfig } from "./persistence";
+import { type HubPrinter, tenantRequest } from "./cloud";
 import { projectBytes } from "./saveProject";
 import { slicer } from "./slicer";
 import { useApp } from "./store";
-
-export type { PrintHost };
-
-export interface HubPrinter {
-  id: string;
-  name: string;
-  model: string | null;
-  printer_family: "bambu_lab" | "moonraker";
-  status: string;
-}
 
 /** Calibration mode (Pandar `PrintCalibrationMode`): 0 off, 1 on, 2 auto. */
 export type CalibrationMode = 0 | 1 | 2;
@@ -30,28 +20,6 @@ export interface PrintOptions {
   timelapse: boolean;
 }
 
-export const printHost = () => storedConfig.printHost;
-
-export function setPrintHost(host: PrintHost) {
-  saveConfig({ printHost: { ...host, hubUrl: host.hubUrl.replace(/\/+$/, "") } });
-}
-
-async function hub(host: PrintHost, path: string, init?: RequestInit) {
-  const response = await fetch(`${host.hubUrl}/api/v1/tenants/${encodeURIComponent(host.tenantId)}${path}`, {
-    ...init,
-    headers: { Authorization: `Bearer ${host.token}` },
-  });
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(`Pandar Hub: ${body?.error ?? `HTTP ${response.status}`}`);
-  }
-  return response.json() as Promise<unknown>;
-}
-
-export async function listPrinters(host: PrintHost): Promise<HubPrinter[]> {
-  return ((await hub(host, "/printers")) as { printers: HubPrinter[] }).printers;
-}
-
 /** Why the current plate cannot be sent to `printer`, if it cannot. */
 export function sendBlocker(printer: HubPrinter): string | undefined {
   const { slice, scene } = useApp.getState();
@@ -62,7 +30,7 @@ export function sendBlocker(printer: HubPrinter): string | undefined {
 }
 
 /** Uploads the current plate to `printer` as a Hub print job. */
-export async function sendPlate(host: PrintHost, printer: HubPrinter, options: PrintOptions) {
+export async function sendPlate(printer: HubPrinter, options: PrintOptions) {
   const { slice, scene, currentPlate } = useApp.getState();
   if (slice.status !== "done") throw new Error("Slice the plate first.");
   let file: Blob;
@@ -91,5 +59,5 @@ export async function sendPlate(host: PrintHost, printer: HubPrinter, options: P
   form.set("auto_flow_cali", String(options.flowCali));
   form.set("auto_offset_cali", String(options.offsetCali));
   form.set("timelapse", String(options.timelapse));
-  await hub(host, `/printers/${encodeURIComponent(printer.id)}/jobs`, { method: "POST", body: form });
+  await tenantRequest(`/printers/${encodeURIComponent(printer.id)}/jobs`, { method: "POST", body: form });
 }

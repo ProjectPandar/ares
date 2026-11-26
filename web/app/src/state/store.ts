@@ -18,7 +18,7 @@ import type {
 import type { FilamentSelection } from "./filamentAssignment";
 import { create } from "zustand";
 import type { FilamentInfo } from "../sidebar/filamentGroups";
-import { storedConfig } from "./persistence";
+import { type CloudSession, storedConfig } from "./persistence";
 import type { PrinterPanel } from "./printerPanel";
 import type { TypedSettings } from "./typedSettings";
 
@@ -152,7 +152,14 @@ export interface AppState {
   preview: PreviewView;
   /** G-code window visibility (GUI_App `show_gcode_window`). */
   gcodeWindow: boolean;
+  /** The signed-in Pandar Hub account (GUI_App::is_user_login), if any. */
+  cloud: CloudAccount | null;
 }
+
+/** A Pandar Hub and its unexpired session. */
+export type CloudAccount = CloudSession & { hubUrl: string };
+
+const storedCloud = storedConfig.cloud;
 
 /** The vendor bundles `PresetBundle::apply_vendor_config` installs: those with a model (PresetBundle.cpp:1968-1975). */
 export const installedVendors = (installed: InstalledPrinters) =>
@@ -204,4 +211,8 @@ export const useApp = create<AppState>(() => ({
   printerPanel: null,
   preview: DEFAULT_PREVIEW,
   gcodeWindow: storedConfig.gcodeWindow,
+  cloud:
+    storedCloud?.session && Date.parse(storedCloud.session.expiresAt) > Date.now()
+      ? { hubUrl: storedCloud.hubUrl, ...storedCloud.session }
+      : null,
 }));
