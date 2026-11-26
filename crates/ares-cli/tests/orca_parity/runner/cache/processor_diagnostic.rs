@@ -144,10 +144,14 @@ impl OrcaRunner {
             )?;
             let command = fs::read_dir(&commands)
                 .map_err(|error| io(stage, error))?
-                .next()
-                .unwrap()
-                .map_err(|error| io(stage, error))?
-                .path();
+                .filter_map(|entry| entry.ok().map(|e| e.path()))
+                .find(|path| path.join("status.json").is_file())
+                .ok_or_else(|| {
+                    io(
+                        stage,
+                        "missing Native diagnostic command evidence directory",
+                    )
+                })?;
             for name in [
                 "stdout.bin",
                 "stderr.bin",
