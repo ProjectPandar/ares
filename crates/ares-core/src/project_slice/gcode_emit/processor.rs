@@ -19,8 +19,10 @@ mod used_filaments;
 mod virtual_motion;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
+use estimate::elapsed::ProgressElapsedCursor;
+use estimate::export_cache::ExportElapsedCursor;
 use export_lines::ExportLines;
-use moves::MoveRecorder;
+use moves::{MoveRecorder, RecordMode};
 pub(super) use stats::DEFERRED_PLACEHOLDERS;
 use time::{duration, minutes};
 
@@ -198,16 +200,34 @@ pub(super) fn process(
 ) {
     let limits = config.limits;
     let text = std::str::from_utf8(&output).expect("generated G-code is UTF-8");
-    let line_count = text.lines().count();
     // The injector reads the moves and the line map.
     let record_moves = config.record_moves || config.pre_heating;
-    let mut recorder = record_moves.then(|| MoveRecorder::new(&config));
+    let mut line_count = 0usize;
+    let mut first_marker = None;
+    let mut has_custom_tag = false;
+    for line in text.lines() {
+        if first_marker.is_none() && line == "M73 P0 R0" {
+            first_marker = Some(line_count);
+        }
+        if !record_moves && !has_custom_tag && line.starts_with(';') {
+            has_custom_tag = moves::tags::has_custom_tag(line, limits.bbl_printer);
+        }
+        line_count += 1;
+    }
+    let first_marker = first_marker.unwrap_or(0);
+    let record_mode = if record_moves {
+        RecordMode::Full
+    } else if has_custom_tag {
+        RecordMode::CacheOnly
+    } else {
+        RecordMode::StatsOnly
+    };
+    let mut recorder = MoveRecorder::new(&config, record_mode);
     let estimate = Estimate::record(
         text.lines(),
-        line_count,
         machine_load_filament_time,
         &config,
-        recorder.as_mut(),
+        &mut recorder,
     );
     let materials =
         material_statistics::MaterialStatistics::new(&estimate.print_statistics, &config);
@@ -220,10 +240,8 @@ pub(super) fn process(
     );
     let mut last_progress = None;
     let mut stop_export = estimate.stop_times.exporter(estimate.total);
-    let first_marker = text
-        .lines()
-        .position(|line| line == "M73 P0 R0")
-        .unwrap_or(0);
+    let mut export_cursor = ExportElapsedCursor::default();
+    let mut progress_cursor = ProgressElapsedCursor::default();
     let prepare_time = estimate.prepare;
     let model_time = (estimate.total - prepare_time).max(0.0);
     let deferred = stats::values(
@@ -236,18 +254,25 @@ pub(super) fn process(
     for (index, original) in text.split_inclusive('\n').enumerate() {
         // GCodeProcessor.cpp:1794-1803 retains CR/LF for every ordinary line;
         // ExportLines (:1027-1040,1105-1133) and GCodeFileWriter (:867-881) keep them.
-        let (line, ending) = if let Some(line) = original.strip_suffix("\r\n") {
+        let (raw_line, ending) = if let Some(line) = original.strip_suffix("\r\n") {
             (line, "\r\n")
         } else if let Some(line) = original.strip_suffix('\n') {
             (line, "\n")
         } else {
             (original, "\n")
         };
-        let material = materials.process(line);
-        let line = material.as_deref().unwrap_or(line);
+        let export_elapsed = result
+            .has_backtrace()
+            .then(|| export_cursor.step(raw_line, &estimate.cache))
+            .flatten();
+        let progress_snapshot = emit_progress
+            .then(|| progress_cursor.step(raw_line, &estimate.cache))
+            .flatten();
+        let material = materials.process(raw_line);
+        let line = material.as_deref().unwrap_or(raw_line);
         let expanded = stats::expand(line, &deferred);
         let line = expanded.as_ref();
-        result.begin(line, estimate.export_elapsed_at(index + 1));
+        result.begin(line, export_elapsed);
         if line == "M73 P0 R0" {
             if emit_progress {
                 let remaining = minutes(estimate.total);
@@ -286,13 +311,14 @@ pub(super) fn process(
             ));
             continue;
         }
-        result.append_from(format!("{line}{ending}"), index + 1);
+        result.append_parts(line, ending, index + 1);
         if index < first_marker || !emit_progress || !is_progress_motion(line) {
             continue;
         }
-        let Some(elapsed) = estimate.elapsed_at(index + 1).map(|elapsed| elapsed as f32) else {
+        let Some(snapshot) = progress_snapshot else {
             continue;
         };
+        let elapsed = snapshot.elapsed;
         // Upstream computes `int(100.0f * elapsed_time / machine.time)`
         // (`GCodeProcessor.cpp:1251-1252`): the 100× product stays f32, then
         // the division promotes to f64 against `machine.time` — a `double`
@@ -310,19 +336,17 @@ pub(super) fn process(
             last_progress = Some((percent, remaining));
             result.append(format!("M73 P{percent} R{remaining}\n"));
         }
-        if let Some(line) = stop_export.progress(elapsed, estimate.next_elapsed_at(index + 1)) {
+        if let Some(line) = stop_export.progress(elapsed, snapshot.next) {
             result.append(line);
         }
     }
     let (mut gcode, line_map) = result.finish();
-    let mut processor_result = recorder
-        .zip(line_map)
-        .map(|(recorder, line_map)| {
+    let mut processor_result = line_map
+        .map(|line_map| {
             let mut result = recorder.finish(&line_map);
             if config.pre_heating {
-                let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
                 pre_heating::inject(
-                    &lines,
+                    text.lines(),
                     &line_map,
                     config.settings,
                     (config.nozzle_group_result, config.nozzle_counts),

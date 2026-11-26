@@ -74,8 +74,8 @@ type InsertedLines = BTreeMap<u32, Vec<String>>;
 
 /// `run_second_pass_injection`: splices the injector lines into `gcode` after the output lines
 /// they are keyed on and shifts `moves` past them (`handle_offsets_of_second_process`).
-pub(super) fn inject(
-    lines: &[String],
+pub(super) fn inject<'a>(
+    lines: impl IntoIterator<Item = &'a str>,
     line_map: &[u32],
     settings: &ProjectSettings,
     (nozzle_group_result, nozzle_counts): (&[NozzleGroup], &[i64]),
@@ -132,8 +132,8 @@ fn splice(gcode: &mut Vec<u8>, inserted: &InsertedLines) {
 impl UsageBlocks {
     /// `build_usage_blocks` over every raw processor input line (`:1689-1771,1824-1835`) and
     /// the machine bounds (`:1883-1908`).
-    fn build(
-        lines: &[String],
+    fn build<'a>(
+        lines: impl IntoIterator<Item = &'a str>,
         settings: &ProjectSettings,
         nozzle_group_result: &[NozzleGroup],
     ) -> Self {
@@ -145,7 +145,7 @@ impl UsageBlocks {
             start_end: SENTINEL,
             end_start: SENTINEL,
         };
-        for (index, line) in lines.iter().enumerate() {
+        for (index, line) in lines.into_iter().enumerate() {
             blocks.line(line, index as u32 + 1, settings, nozzle_group_result);
         }
         if let Some(last) = blocks.filaments.last_mut() {

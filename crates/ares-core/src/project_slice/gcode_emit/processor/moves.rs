@@ -10,7 +10,6 @@ mod timing;
 use extrusion::move_type;
 pub(super) mod tags;
 
-use super::ProcessorConfig;
 use super::estimate::options_z::Corrector;
 use super::motion::MotionState;
 use super::motion_util::{MMMIN_TO_MMSEC, word};
@@ -18,7 +17,8 @@ use crate::ExtrusionRole;
 use crate::gcode_processor::{CustomGCodeItem, EMoveType, GCodeProcessorResult, MoveVertex};
 use crate::options::GCodeFlavor;
 use dynamics::PreviewMachine;
-use tags::{BBL_TAGS, COMPATIBLE_TAGS, ParsedLine, Tags};
+use tags::{ParsedLine, Tags};
+pub(super) use timing::RecordMode;
 
 const DEFAULT_TOOLPATH_WIDTH: f32 = 0.4;
 const DEFAULT_TOOLPATH_HEIGHT: f32 = 0.2;
@@ -41,6 +41,7 @@ pub(super) struct RecordedMotion {
 }
 
 pub(super) struct MoveRecorder<'a> {
+    mode: RecordMode,
     mass_locator: Option<&'a super::super::object_mass::Locator<'a>>,
     masses: Vec<crate::gcode_processor::ObjectMass>,
     filament_densities: &'a [crate::OrcaFloat],
@@ -86,86 +87,11 @@ pub(super) struct MoveRecorder<'a> {
 }
 
 impl<'a> MoveRecorder<'a> {
-    pub(super) fn new(config: &'a ProcessorConfig<'_>) -> Self {
-        let settings = config.settings;
-        let filament_diameters = settings
-            .filament
-            .gcode
-            .filament_diameter
-            .0
-            .iter()
-            .map(|diameter| diameter.0 as f32)
-            .collect::<Vec<_>>();
-        let count = filament_diameters.len();
-        let offsets = &settings.project.print.extruder_offset.0;
-        // `apply_config` (`:2052-2081`): `extruder_offset.get_at(filament_map[i] - 1)`.
-        let extruder_offsets = (0..count)
-            .map(|filament| {
-                let slot = settings
-                    .project
-                    .gcode
-                    .filament_map
-                    .0
-                    .get(filament)
-                    .map_or(0, |slot| (slot.0 - 1).max(0) as usize);
-                offsets
-                    .get(slot)
-                    .or(offsets.first())
-                    .map_or([0.0; 2], |offset| [offset.x as f32, offset.y as f32])
-            })
-            .collect();
-        Self {
-            mass_locator: config.mass_locator.as_ref(),
-            masses: config
-                .mass_locator
-                .as_ref()
-                .map_or_else(Vec::new, |locator| locator.masses()),
-            filament_densities: &settings.filament.gcode.filament_density.0,
-            total_travel_distance: 0.0,
-            moves: [MoveVertex::default()].into_iter().collect(),
-            custom_gcode_per_print_z: Vec::new(),
-            last_default_color: 0,
-            color_change_volume: 0.0,
-            color_change_volumes: Vec::new(),
-            pending_option: None,
-            options_z: Corrector::new(),
-            tags: if config.limits.bbl_printer {
-                &BBL_TAGS
-            } else {
-                &COMPATIBLE_TAGS
-            },
-            role: ExtrusionRole::None,
-            processing_start_custom_gcode: false,
-            layer_id: 0,
-            forced_width: 0.0,
-            forced_height: 0.0,
-            width: 0.0,
-            height: 0.0,
-            mm3_per_mm: 0.0,
-            travel_dist: 0.0,
-            extruded_last_z: 0.0,
-            fan_speed: 0.0,
-            feedrate: 0.0,
-            filament: 0,
-            extruder_temps: vec![0.0; count],
-            extruder_colors: (0..count).map(|filament| filament as u8).collect(),
-            cp_color_current: 0,
-            cp_color_counter: 0,
-            extruder_offsets,
-            filament_diameters,
-            z_offset: settings.printer.remaining.z_offset.0 as f32,
-            first_layer_height: settings.process.print.initial_layer_print_height.0.abs() as f32,
-            spiral_vase_mode: settings.process.print.spiral_mode.0,
-            last_line_id: 0,
-            flavor: config.limits.gcode_flavor,
-            machine: PreviewMachine::default(),
-            pressure_advance: 0.0,
-        }
-    }
-
     /// Normal-mode machine state at the start of the next input line.
     pub(super) fn machine(&mut self, state: &MotionState) {
-        self.machine = PreviewMachine::new(state);
+        if self.mode == RecordMode::Full {
+            self.machine = PreviewMachine::new(state);
+        }
     }
 
     pub(super) fn is_first_layer(&self) -> bool {
@@ -182,10 +108,19 @@ impl<'a> MoveRecorder<'a> {
         g1_line_id: usize,
         position: [f64; 4],
     ) {
+        if self.mode == RecordMode::StatsOnly {
+            if line.raw.starts_with(';') && self.tags.is_layer_change(line.raw) {
+                self.layer_id += 1;
+            }
+            return;
+        }
         if line.raw.starts_with(';') {
             if line.raw.len() > 2 {
                 self.tag(source, line, g1_line_id, position);
             }
+            return;
+        }
+        if self.mode != RecordMode::Full {
             return;
         }
         let code = line.raw.split(';').next().unwrap_or_default().trim();
@@ -233,7 +168,8 @@ impl<'a> MoveRecorder<'a> {
     }
 
     pub(super) fn elegoo_purge_temperature(&mut self, physical: usize, temperature: Option<f32>) {
-        if let Some(temperature) = temperature
+        if self.mode == RecordMode::Full
+            && let Some(temperature) = temperature
             && let Some(slot) = self.extruder_temps.get_mut(physical)
         {
             *slot = temperature;
@@ -242,8 +178,13 @@ impl<'a> MoveRecorder<'a> {
 
     /// `process_filament_change` (`:5540-5605`) tool-change vertex.
     pub(super) fn tool_change(&mut self, source: usize, filament: usize, position: [f64; 4]) {
+        if self.mode == RecordMode::StatsOnly {
+            return;
+        }
         self.filament = filament;
-        self.cp_color_current = self.extruder_colors[filament];
+        if self.mode == RecordMode::Full {
+            self.cp_color_current = self.extruder_colors[filament];
+        }
         self.store(source, EMoveType::ToolChange, [position; 2], 0.0);
     }
 
@@ -251,6 +192,9 @@ impl<'a> MoveRecorder<'a> {
     /// product directly; the first arc segment round-trips it through
     /// `internal_only_g1_line`'s `(double)feedrate / MMMIN_TO_MMSEC` (`:4703`).
     pub(super) fn set_feedrate(&mut self, feedrate: f64, arc: bool) {
+        if self.mode != RecordMode::Full {
+            return;
+        }
         self.feedrate = if arc {
             let mmmin = f64::from(MMMIN_TO_MMSEC);
             (feedrate / mmmin * mmmin) as f32
@@ -274,10 +218,18 @@ impl<'a> MoveRecorder<'a> {
         let move_type = move_type(wiping, delta);
         let delta_xyz =
             (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt() as f32;
+        if self.mode == RecordMode::StatsOnly {
+            if move_type == EMoveType::Travel {
+                self.total_travel_distance += delta_xyz;
+            }
+            return;
+        }
         self.travel_dist = delta_xyz;
         if move_type == EMoveType::Extrude {
-            let volume = self.extrusion_geometry(delta, delta_xyz, end[2], linear);
-            self.add_mass(start, end, volume);
+            if self.mode == RecordMode::Full {
+                let volume = self.extrusion_geometry(delta, delta_xyz, end[2], linear);
+                self.add_mass(start, end, volume);
+            }
             self.correct_options_z();
         } else if move_type == EMoveType::Travel {
             self.total_travel_distance += delta_xyz;
@@ -313,8 +265,6 @@ impl<'a> MoveRecorder<'a> {
         [start, end]: [[f64; 4]; 2],
         delta_extruder: f64,
     ) {
-        let [acceleration, jerk] = self.machine.sample(move_type, start, end);
-        self.last_line_id = source as u32;
         let offset = self
             .extruder_offsets
             .get(self.filament)
@@ -326,6 +276,12 @@ impl<'a> MoveRecorder<'a> {
             (end[2] - f64::from(self.z_offset)) as f32
         };
         let position = [end[0] as f32 + offset[0], end[1] as f32 + offset[1], z];
+        if self.mode == RecordMode::CacheOnly {
+            self.options_z.push_cache_move(position, move_type);
+            return;
+        }
+        let [acceleration, jerk] = self.machine.sample(move_type, start, end);
+        self.last_line_id = source as u32;
         let vertex = MoveVertex {
             gcode_id: source as u32,
             move_type,
