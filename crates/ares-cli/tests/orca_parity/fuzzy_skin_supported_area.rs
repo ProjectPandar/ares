@@ -93,3 +93,49 @@ fn classic_ripple_phase_shift_matches_native() {
         }),
     );
 }
+
+#[test]
+fn classic_ripple_sin_witness_matches_native() {
+    let project = include_bytes!(
+        "../../../../tests/parity/fuzzy_skin_supported_area/classic_ripple_sin_witness.3mf"
+    );
+    crate::runner::native_stream_case::check(
+        (
+            "classic_ripple_sin_witness",
+            &[
+                "40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19",
+                "Feature/FuzzySkin/FuzzySkin.cpp:172-231 fuzzy_polyline_ripple",
+                "Feature/FuzzySkin/FuzzySkin.cpp:218 std::sin(arc_phase(s))",
+            ],
+        ),
+        "classic_ripple_sin_witness",
+        project,
+        "3517baa1ea144a9519dc934959675a410e4d85fa9fda9fbc54042685c82c3bae",
+        (false, |reference, _| {
+            for (key, value) in [
+                ("wall_generator", "classic"),
+                ("fuzzy_skin", "external"),
+                ("fuzzy_skin_first_layer", "1"),
+                ("fuzzy_skin_noise_type", "ripple"),
+                ("fuzzy_skin_ripples_per_layer", "34"),
+                ("fuzzy_skin_ripple_offset", "0%"),
+                ("fuzzy_skin_thickness", "1.73687"),
+                ("fuzzy_skin_point_distance", "0.5"),
+            ] {
+                assert!(
+                    reference.native.contains(&format!("; {key} = {value}\n")),
+                    "missing effective {key} = {value}"
+                );
+            }
+            for expected in [
+                "G1 X100.25 Y129.249 E.02001\n",
+                "G1 X100.25 Y129.249 E.02\n",
+            ] {
+                assert!(
+                    reference.native.contains(expected),
+                    "expected ripple sine witness move {expected:?} in native output"
+                );
+            }
+        }),
+    );
+}
