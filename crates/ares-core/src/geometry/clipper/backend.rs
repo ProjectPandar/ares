@@ -78,10 +78,18 @@ pub(super) fn clip_open(
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<Polyline>, ClipperError> {
+    clip_open_paths(subject, &self::paths(clip), kind)
+}
+
+pub(super) fn clip_open_paths(
+    subject: &[Polyline],
+    clip: &c2::Paths64,
+    kind: ClipOperation,
+) -> Result<Vec<Polyline>, ClipperError> {
     let paths = subject.iter().map(|p| to_path(p.points())).collect();
     let mut clipper = configured();
     clipper.add_open_subject(&paths);
-    clipper.add_clip(&self::paths(clip));
+    clipper.add_clip(clip);
     let mut closed = c2::Paths64::new();
     let mut open = c2::Paths64::new();
     clipper.execute(

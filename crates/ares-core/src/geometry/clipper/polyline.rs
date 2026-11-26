@@ -30,13 +30,10 @@ pub(crate) fn open_polyline_inside_expolygon(
     subject: &Polyline,
     clip: &ExPolygon,
 ) -> Result<bool, ClipperError> {
-    let paths: Vec<_> = std::iter::once(clip.contour())
-        .chain(clip.holes())
-        .cloned()
-        .collect();
-    Ok(backend::clip_open(
+    let clip = backend::expolygon_paths(std::slice::from_ref(clip));
+    Ok(backend::clip_open_paths(
         std::slice::from_ref(subject),
-        &paths,
+        &clip,
         ClipOperation::Difference,
     )?
     .is_empty())
@@ -89,9 +86,8 @@ pub(crate) fn recombine_polylines(polylines: &mut Vec<Polyline>) {
                 joining.extend(current);
                 joining
             } else {
-                joining.remove(0);
                 let mut points = current;
-                points.extend(joining);
+                points.extend_from_slice(&joining[1..]);
                 points
             };
             polylines[i] = Polyline::new(points);
