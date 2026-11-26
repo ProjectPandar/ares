@@ -47,7 +47,7 @@ pub(super) fn refresh(
         RefreshScope::Project(selected) => selected.map(|selected| &selected.project.preset),
         RefreshScope::Filaments => None,
     };
-    for (kind, key, slot, replaced) in [
+    for (kind, identity_key, slot, replaced) in [
         (
             ProfileKind::Machine,
             "printer_settings_id",
@@ -64,24 +64,44 @@ pub(super) fn refresh(
         if replaced || matches!(scope, RefreshScope::Filaments) {
             continue;
         }
-        let identity = strings(project, key);
+        let identity = strings(project, identity_key);
         let name = identity.first().map(String::as_str).unwrap_or("");
         let name = system_name(name, &inherited, slot);
         if name.is_empty() {
             continue;
         }
+        let native_file = match lookup {
+            PresetLookup::Native { presets, .. } if uptodate => presets.file(kind, slot),
+            _ => None,
+        };
         // CLI:3182-3185: a resolver miss keeps the project's values.
         let Some(mut system) = lookup.system(kind, name, slot)? else {
             continue;
         };
-        let skip_machine_gcodes = uptodate
+        let skip_machine_gcodes = native_file.is_some()
             && kind == ProfileKind::Machine
             && matches!(
                 lookup,
-                PresetLookup::Native { presets, skip_modified_gcodes: true }
-                    if presets.file(kind, slot).is_some()
+                PresetLookup::Native {
+                    skip_modified_gcodes: true,
+                    ..
+                }
             );
-        let mut protected = dirty_keys(&dirty, slot)?;
+        // CLI:3216-3222,3348-3365 decode only authored overrides for flat
+        // refresh files; `load_project_preset` (`:3179`) adds identity keys.
+        let mut protected = if native_file.is_some() {
+            authored_dirty_keys(&dirty, slot)?
+        } else {
+            dirty_keys(&dirty, slot)?
+        };
+        if let Some(file) = native_file {
+            // CLI:2561,2615,2644,2684 stage `config_name` onto the preset's
+            // settings ID before `update_full_config` (`:3099-3161`).
+            system.insert(
+                identity_key.to_owned(),
+                RawConfigValue::Text(file.name().to_owned()),
+            );
+        }
         // `load_default_gcodes_to_config` (CLI:671–704,3240) supplies
         // definition defaults for absent scripts in nonempty Native config.
         // Only the protected scripts need them for this keep-set exception.
@@ -100,14 +120,20 @@ pub(super) fn refresh(
         }
         let mut released = false;
         for (key, value) in system.entries() {
-            if bookkeeping(key) || connection(key) {
+            let skip_bookkeeping =
+                bookkeeping(key) && !(native_file.is_some() && key == identity_key);
+            if skip_bookkeeping || connection(key) {
                 continue;
             }
             if skip_machine_gcodes && MACHINE_GCODES.contains(&key.as_str()) {
                 released |= protected.remove(key);
             }
-            if project.contains_key(key) && (!refresh_unlisted || protected.contains(key.as_str()))
-            {
+            let kept = if native_file.is_some() {
+                protected.contains(key.as_str())
+            } else {
+                project.contains_key(key) && (!refresh_unlisted || protected.contains(key.as_str()))
+            };
+            if kept {
                 continue;
             }
             // CLI:3188–3193 compares loaded options, not archive strings.
@@ -115,12 +141,9 @@ pub(super) fn refresh(
             result.insert(key.clone(), value.clone());
         }
         if released {
-            // CLI:3244–3253 serializes the remaining authored set, not the
-            // synthetic identity protections used by the merge.
-            let mut remaining = authored_dirty_keys(&dirty, slot)?;
-            remaining.retain(|key| protected.contains(key));
+            // CLI:3244–3253 serializes the remaining authored set.
             let mut columns = dirty.clone();
-            columns[slot] = dirty_columns::encode(remaining.into_iter().collect())?;
+            columns[slot] = dirty_columns::encode(protected.into_iter().collect())?;
             result.insert_strings("different_settings_to_system", &columns);
         }
     }
