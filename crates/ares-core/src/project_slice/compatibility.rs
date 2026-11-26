@@ -69,17 +69,40 @@ pub(crate) struct LoadedPresetNames {
     pub filament_indices: Vec<usize>,
 }
 
-/// Ports the retained-process and direct STL paths of `OrcaSlicer.cpp:2922–2945`.
+/// Ports `OrcaSlicer.cpp:2922–3004` across all four machine/process branches.
 pub(crate) fn reject_incompatible_load_settings(
     raw: &ProjectSettingsRaw,
     names: &LoadedPresetNames,
     machine_config: &ProjectSettingsRaw,
+    bbl_family_3mf: bool,
 ) -> Result<(), SliceError> {
     let Some(machine) = &names.machine else {
-        // No machine file: only branch 4 applies today (process-only
-        // lists are rejected by composition upstream-adjacent — branch 3
-        // deferred).
-        return reject_incompatible_process(raw);
+        if let Some(process) = &names.process {
+            let printer = if bbl_family_3mf {
+                printer_system_name(raw)
+            } else {
+                String::new()
+            };
+            let compatible = if !process.compatible_printers.is_empty() {
+                printer.is_empty()
+                    || process
+                        .compatible_printers
+                        .iter()
+                        .any(|entry| entry == &printer)
+            } else {
+                machine_condition_compatible(&process.compatible_printers_condition, raw, &printer)?
+            };
+            return if compatible {
+                Ok(())
+            } else {
+                Err(SliceError::ProcessNotCompatible)
+            };
+        }
+        return if bbl_family_3mf {
+            reject_incompatible_process(raw)
+        } else {
+            Ok(())
+        };
     };
     let new_printer_system_name = machine.system_name();
     // Direct STL has no embedded preset to enter the printer-switch path.
@@ -97,28 +120,39 @@ pub(crate) fn reject_incompatible_load_settings(
         };
     }
     let compatible = if let Some(process) = &names.process {
-        process
-            .compatible_printers
-            .iter()
-            .any(|entry| entry == new_printer_system_name)
+        if !process.compatible_printers.is_empty() {
+            process
+                .compatible_printers
+                .iter()
+                .any(|entry| entry == new_printer_system_name)
+        } else {
+            machine_condition_compatible(
+                &process.compatible_printers_condition,
+                machine_config,
+                new_printer_system_name,
+            )?
+        }
     } else if let Some(embedded) = &names.embedded {
         retained_process_compatible(embedded, machine_config, new_printer_system_name)?
     } else if let Some(machine_config) = &names.direct_stl_machine {
         retained_process_compatible(raw, machine_config, new_printer_system_name)?
     } else {
-        text_list(raw, "print_compatible_printers")
-            .is_some_and(|list| list.iter().any(|entry| entry == new_printer_system_name))
+        retained_process_compatible(raw, machine_config, new_printer_system_name)?
     };
     if compatible {
         return Ok(());
     }
-    // `OrcaSlicer.cpp:2624-2627`: a different named machine file switches
-    // the printer; the upward `-16` sub-path stays deferred.
-    let current_printer_name = raw
-        .get("printer_settings_id")
-        .and_then(scalar_text)
-        .unwrap_or_default();
-    if !machine.name.is_empty()
+    // `OrcaSlicer.cpp:2972-2976`: machine switch only applies when no process
+    // was loaded and the BBL archive carried a different current printer name.
+    let current_printer_name = if bbl_family_3mf {
+        raw.get("printer_settings_id")
+            .and_then(scalar_text)
+            .unwrap_or_default()
+    } else {
+        String::new()
+    };
+    if names.process.is_none()
+        && !machine.name.is_empty()
         && !current_printer_name.is_empty()
         && machine.name != current_printer_name
     {

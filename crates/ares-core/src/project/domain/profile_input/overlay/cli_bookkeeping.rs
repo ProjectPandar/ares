@@ -6,37 +6,18 @@ use super::FilamentSlots;
 /// (`OrcaSlicer.cpp:2838,:2978,:3161`). Slot 0 accumulates the machine-switch
 /// `compatible_printers` marker before CLI overrides and mapped tower edits.
 pub(super) struct DifferentSettingsContext<'a> {
-    embedded: Option<&'a RawConfigValue>,
-    len: usize,
-    slots: FilamentSlots<'a>,
-    loaded_settings: (bool, bool),
-    switch_compatible_printers: bool,
+    pub(super) embedded: Option<&'a RawConfigValue>,
+    pub(super) len: usize,
+    pub(super) slots: FilamentSlots<'a>,
+    pub(super) loaded_kinds: (bool, bool),
+    pub(super) switch_compatible_printers: bool,
 }
 
-impl<'a> DifferentSettingsContext<'a> {
-    pub(super) fn new(
-        embedded: Option<&'a RawConfigValue>,
-        len: usize,
-        slots: FilamentSlots<'a>,
-        preset: &crate::options::ProjectPresetSourceOptions,
-        switch_compatible_printers: bool,
-    ) -> Self {
-        Self {
-            embedded,
-            len,
-            slots,
-            loaded_settings: (
-                !preset.print_settings_id.0.is_empty(),
-                !preset.printer_settings_id.0.is_empty(),
-            ),
-            switch_compatible_printers,
-        }
-    }
-
+impl DifferentSettingsContext<'_> {
     pub(super) fn slot(&self, index: usize) -> RawConfigValue {
-        let (process_loaded, machine_loaded) = self.loaded_settings;
+        let (has_process, has_machine) = self.loaded_kinds;
         if index == 0 {
-            if process_loaded {
+            if has_process {
                 return RawConfigValue::Text(String::new());
             }
             let existing = self
@@ -59,9 +40,11 @@ impl<'a> DifferentSettingsContext<'a> {
             }
             return RawConfigValue::Text(keys.join(";"));
         }
-        if (index == self.len - 1 && machine_loaded)
-            || (index < self.len - 1 && self.slots.source(index - 1).is_some())
-        {
+        if index == self.len - 1 {
+            if has_machine {
+                return RawConfigValue::Text(String::new());
+            }
+        } else if self.slots.source(index - 1).is_some() {
             return RawConfigValue::Text(String::new());
         }
         self.embedded
