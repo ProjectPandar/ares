@@ -8,6 +8,7 @@ mod fill;
 mod gcode_junction_deviation;
 mod gcode_power_loss_recovery;
 pub mod gcode_processor;
+mod gcode_sink;
 mod gcode_spiral_vase;
 pub mod gcode_thumbnails;
 mod generation;
@@ -36,6 +37,9 @@ pub use extrusion_entity::ExtrusionRole;
 pub use gcode_processor::{
     GCodeProcessorResult, MoveVertex, PrintEstimatedStatistics, PrintStatistics, ProcessedGCode,
     SlicedArchive, SlicedArchiveObject,
+};
+pub use gcode_sink::{
+    FnSink, GCODE_OUTPUT_BLOCK_SIZE, GCodeSink, IoWriteSink, StreamedGCode, fn_sink,
 };
 pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, ThumbnailParseError,
@@ -146,15 +150,19 @@ pub use project::{
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
     CliProjectSliceRequest, CliUpwardMachine, DirectProjectSliceRequest, SlicedPlate,
-    slice_cli_project_plate_validated, slice_cli_project_plate_validated_with_catalog,
-    slice_cli_project_plate_with_refresh, slice_cli_project_plates,
+    slice_cli_project_plate_validated, slice_cli_project_plate_validated_to_sink,
+    slice_cli_project_plate_validated_with_catalog,
+    slice_cli_project_plate_validated_with_catalog_to_sink, slice_cli_project_plate_with_refresh,
+    slice_cli_project_plates, slice_cli_project_plates_to_sink,
     slice_project_plate_processed_validated, slice_project_plate_processed_validated_with_catalog,
     slice_project_plate_processed_validated_with_custom_gcodes, slice_project_plate_validated,
-    slice_project_plate_validated_with_catalog, slice_project_plate_with_archive,
+    slice_project_plate_validated_to_sink, slice_project_plate_validated_with_catalog,
+    slice_project_plate_with_archive,
 };
 pub use project_slice::{
     slice_project, slice_project_plate, slice_project_plate_processed,
-    slice_project_plate_processed_with_catalog, slice_project_plate_with_catalog,
+    slice_project_plate_processed_to_sink, slice_project_plate_processed_with_catalog,
+    slice_project_plate_to_sink, slice_project_plate_with_catalog,
 };
 pub(crate) use segments::Point2;
 pub use slice_error::{

@@ -102,6 +102,13 @@ pub(super) fn slice(
         },
         report: &mut upward_report,
     };
+    enum SliceOutcome {
+        Buffered(ares_core::ProcessedGCode),
+        Streamed(
+            ares_core::StreamedGCode,
+            crate::gcode_file_sink::AtomicFileSink,
+        ),
+    }
     let result = match entry {
         Entry::Catalog(path) => {
             let catalog = fs::read_to_string(path).map_err(|error| {
@@ -113,41 +120,52 @@ pub(super) fn slice(
                     ),
                 )
             })?;
-            admitted.slice_with_profiles(
-                ares_core::CliProfileSliceRequest {
-                    orient: args.orient == Some(1),
-                    profile: ares_core::ProfileSliceRequest {
-                        filename,
-                        catalog_json: &catalog,
-                        selection_json: selection,
-                        plate: args.plate,
-                        overrides,
-                        placement: ares_core::Placement::None,
+            admitted
+                .slice_with_profiles(
+                    ares_core::CliProfileSliceRequest {
+                        orient: args.orient == Some(1),
+                        profile: ares_core::ProfileSliceRequest {
+                            filename,
+                            catalog_json: &catalog,
+                            selection_json: selection,
+                            plate: args.plate,
+                            overrides,
+                            placement: ares_core::Placement::None,
+                        },
+                        record_moves: args.dump_moves.is_some(),
+                        sliced_plate: &mut sliced_plate,
+                        upward,
                     },
+                    metadata,
+                    context,
+                )
+                .map(SliceOutcome::Buffered)
+        }
+        Entry::Native(refresh) => {
+            let mut sink = crate::gcode_file_sink::AtomicFileSink::new(args.output().to_owned());
+            let streamed = admitted.slice_project_to_sink(
+                ares_core::CliProjectSliceRequest {
+                    orient: args.orient == Some(1),
+                    plate: args.plate,
+                    overrides,
                     record_moves: args.dump_moves.is_some(),
                     sliced_plate: &mut sliced_plate,
                     upward,
                 },
-                metadata,
+                (metadata, (None, Some(refresh))),
                 context,
-            )
+                &mut sink,
+            );
+            if streamed.is_err()
+                && let Some(io_error) = sink.take_error()
+            {
+                return Err(io_error.into());
+            }
+            streamed.map(|streamed| SliceOutcome::Streamed(streamed, sink))
         }
-        Entry::Native(refresh) => admitted.slice_project(
-            ares_core::CliProjectSliceRequest {
-                orient: args.orient == Some(1),
-                plate: args.plate,
-                overrides,
-                record_moves: args.dump_moves.is_some(),
-                sliced_plate: &mut sliced_plate,
-                upward,
-            },
-            metadata,
-            (None, Some(refresh)),
-            context,
-        ),
     };
-    let processed = match result {
-        Ok(processed) => processed,
+    let outcome = match result {
+        Ok(outcome) => outcome,
         Err(error) => {
             crate::failure::slicing::check(
                 args,
@@ -177,10 +195,20 @@ pub(super) fn slice(
         &substitutions,
         &upward_report,
     )?;
-    if let Some(path) = &args.dump_moves {
-        fs::write(path, crate::moves_csv::format(&processed.result))?;
+    match outcome {
+        SliceOutcome::Buffered(processed) => {
+            if let Some(path) = &args.dump_moves {
+                fs::write(path, crate::moves_csv::format(&processed.result))?;
+            }
+            fs::write(args.output(), processed.gcode)?;
+        }
+        SliceOutcome::Streamed(streamed, sink) => {
+            if let Some(path) = &args.dump_moves {
+                fs::write(path, crate::moves_csv::format(&streamed.result))?;
+            }
+            sink.commit()?;
+        }
     }
-    fs::write(args.output(), processed.gcode)?;
     crate::report_success(
         &input_file,
         substitutions,
@@ -233,31 +261,39 @@ pub(super) fn slice_embedded(
         upward,
         sliced_plate: &mut sliced_plate,
     };
-    let processed =
-        match admitted.slice_project(request, metadata, (system_catalog.as_ref(), None), context) {
-            Ok(processed) => processed,
-            Err(error) => {
-                crate::failure::slicing::check(
-                    args,
-                    &sliced_plate,
-                    &input_file,
-                    &substitutions,
-                    &upward_report,
-                )?;
-                let failure = slice_error_to_failure(
-                    error,
-                    args.output(),
-                    #[cfg(target_os = "linux")]
-                    args.plate.unwrap_or(1),
-                )
-                .with_upward_report(upward_report)
-                .with_config_substitutions(&input_file, substitutions);
-                #[cfg(target_os = "linux")]
-                let failure =
-                    failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
-                return Err(failure);
+    let mut sink = crate::gcode_file_sink::AtomicFileSink::new(args.output().to_owned());
+    let streamed = match admitted.slice_project_to_sink(
+        request,
+        (metadata, (system_catalog.as_ref(), None)),
+        context,
+        &mut sink,
+    ) {
+        Ok(streamed) => streamed,
+        Err(error) => {
+            if let Some(io_error) = sink.take_error() {
+                return Err(io_error.into());
             }
-        };
+            crate::failure::slicing::check(
+                args,
+                &sliced_plate,
+                &input_file,
+                &substitutions,
+                &upward_report,
+            )?;
+            let failure = slice_error_to_failure(
+                error,
+                args.output(),
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+            .with_upward_report(upward_report)
+            .with_config_substitutions(&input_file, substitutions);
+            #[cfg(target_os = "linux")]
+            let failure =
+                failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+            return Err(failure);
+        }
+    };
     if let Some(path) = &args.dump_moves {
         crate::failure::slicing::check(
             args,
@@ -266,7 +302,7 @@ pub(super) fn slice_embedded(
             &substitutions,
             &upward_report,
         )?;
-        fs::write(path, crate::moves_csv::format(&processed.result))?;
+        fs::write(path, crate::moves_csv::format(&streamed.result))?;
     }
     let _downward = crate::downward::report(
         args,
@@ -274,7 +310,7 @@ pub(super) fn slice_embedded(
         (&input_file, &substitutions),
         &upward_report,
     )?;
-    fs::write(args.output(), processed.gcode)?;
+    sink.commit()?;
     crate::report_success(
         &input_file,
         substitutions,

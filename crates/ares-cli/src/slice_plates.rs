@@ -1,4 +1,4 @@
-use std::{fs, io, path::Path};
+use std::{cell::RefCell, fs, io, path::Path, rc::Rc};
 
 use ares_core::{
     CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings, CliUpwardMachine, ConfigOverrides,
@@ -196,36 +196,58 @@ pub(super) fn run(
     };
     let metadata = GenerationMetadata::default();
     let context = context.with_downward_check(&targets, &mut downward_report);
-    let publish = |plate, gcode: &[u8], report: &ares_core::SlicedPlate| {
-        if let Some(failure) = crate::failure::slicing::critical_failure(
-            #[cfg(target_os = "linux")]
-            &result_path,
-            plate,
-            report,
-        ) {
-            publish_failure = Some(failure);
-            return Err(SliceError::InvalidInput(
-                "plate failed slicing admission".to_owned(),
-            ));
-        }
-        if let Some(directory) = directory
-            && let Err(error) = fs::create_dir_all(directory)
-                .and_then(|()| fs::write(directory.join(format!("plate_{plate}.gcode")), gcode))
+    let sink_error: Rc<RefCell<Option<io::Error>>> = Rc::new(RefCell::new(None));
+    let make_sink = |plate, _report: &ares_core::SlicedPlate| {
+        Ok(match directory {
+            Some(directory) => crate::gcode_file_sink::PlateSink::File(
+                crate::gcode_file_sink::AtomicFileSink::in_directory(
+                    directory.join(format!("plate_{plate}.gcode")),
+                    Rc::clone(&sink_error),
+                ),
+            ),
+            None => crate::gcode_file_sink::PlateSink::Discard,
+        })
+    };
+    let on_complete =
+        |plate, sink: crate::gcode_file_sink::PlateSink, report: &ares_core::SlicedPlate| {
+            if let Some(failure) = crate::failure::slicing::critical_failure(
+                #[cfg(target_os = "linux")]
+                &result_path,
+                plate,
+                report,
+            ) {
+                publish_failure = Some(failure);
+                return Err(SliceError::InvalidInput(
+                    "plate failed slicing admission".to_owned(),
+                ));
+            }
+            if let Err(error) = sink.commit() {
+                publish_failure = Some(CliFailure::slice_export_error(
+                    #[cfg(target_os = "linux")]
+                    &result_path,
+                    #[cfg(target_os = "linux")]
+                    plate,
+                    error,
+                ));
+                return Err(SliceError::InvalidInput("cannot export G-code".to_owned()));
+            }
+            completed.push((plate, report.clone()));
+            Ok(())
+        };
+    let result =
+        admitted.slice_plates_to_sink(request, metadata, context, (make_sink, on_complete));
+    if let Err(error) = result {
+        if publish_failure.is_none()
+            && let Some(io_error) = sink_error.borrow_mut().take()
         {
             publish_failure = Some(CliFailure::slice_export_error(
                 #[cfg(target_os = "linux")]
                 &result_path,
                 #[cfg(target_os = "linux")]
-                plate,
-                error,
+                error.plate,
+                io_error,
             ));
-            return Err(SliceError::InvalidInput("cannot export G-code".to_owned()));
         }
-        completed.push((plate, report.clone()));
-        Ok(())
-    };
-    let result = admitted.slice_plates(request, metadata, context, publish);
-    if let Err(error) = result {
         let failure = publish_failure
             .unwrap_or_else(|| match error.kind {
                 CliPlateFailureKind::Selection => CliFailure::invalid_slice_selection(
