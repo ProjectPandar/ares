@@ -10,7 +10,7 @@ use super::super::motion::Trapezoid;
 use super::super::moves::actual_speed::{Pass, is_timed};
 use crate::gcode_processor::MoveVertex;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub(in crate::project_slice::gcode_emit::processor) struct MoveIds {
     public: usize,
     cache: usize,
@@ -31,6 +31,17 @@ pub(in crate::project_slice::gcode_emit::processor) struct Corrector {
 }
 
 impl Corrector {
+    pub(in crate::project_slice::gcode_emit::processor) fn empty() -> Self {
+        Self {
+            cache_moves: Vec::new(),
+            queue: VecDeque::new(),
+            pending_public: None,
+            pending_cache: None,
+            pass: Pass::default(),
+            cache_pass: cache::Pass::default(),
+        }
+    }
+
     pub(in crate::project_slice::gcode_emit::processor) fn new() -> Self {
         Self {
             cache_moves: vec![CacheMove::from(&MoveVertex::default())],
@@ -70,9 +81,40 @@ impl Corrector {
         self.cache_moves.push(CacheMove::from(vertex));
     }
 
+    pub(in crate::project_slice::gcode_emit::processor) fn push_cache_move(
+        &mut self,
+        position: [f32; 3],
+        kind: crate::gcode_processor::EMoveType,
+    ) {
+        self.cache_moves.push(CacheMove { position, kind });
+    }
+
     pub(in crate::project_slice::gcode_emit::processor) fn set(&mut self, public: usize) {
         self.pending_public = Some(public);
         self.pending_cache = Some(self.cache_moves.len() - 1);
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn set_cache_only(&mut self) {
+        self.pending_cache = Some(self.cache_moves.len() - 1);
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn update_cache_only(&mut self) {
+        let Some(cache) = self.pending_cache.take() else {
+            return;
+        };
+        let mut copy = self.cache_moves[cache];
+        copy.position = self.cache_moves.last().unwrap().position;
+        self.cache_moves.push(copy);
+        self.cache_moves.remove(cache);
+        for queued in &mut self.queue {
+            let Some(ids) = &mut queued.ids else {
+                continue;
+            };
+            if ids.cache > cache {
+                ids.cache -= 1;
+                queued.shifted = true;
+            }
+        }
     }
 
     /// `OptionsZCorrector::update`: relocate the pending marker and renumber
@@ -113,8 +155,10 @@ impl Corrector {
         &mut self,
         moves: &mut crate::gcode_processor::ChunkedMoves,
         batch: &[(f64, Trapezoid)],
-    ) -> Vec<Option<bool>> {
-        let mut eligible = Vec::with_capacity(batch.len());
+        eligible: &mut Vec<Option<bool>>,
+    ) {
+        eligible.clear();
+        eligible.reserve(batch.len());
         for &(time, trapezoid) in batch {
             let queued = self.queue.pop_front().unwrap();
             if let Some(ids) = queued.ids {
@@ -146,7 +190,36 @@ impl Corrector {
                 *index += new - old;
             }
         }
-        eligible
+    }
+
+    pub(in crate::project_slice::gcode_emit::processor) fn flush_cache_only(
+        &mut self,
+        batch: &[(f64, Trapezoid)],
+        eligible: &mut Vec<Option<bool>>,
+    ) {
+        eligible.clear();
+        eligible.reserve(batch.len());
+        for &(_, trapezoid) in batch {
+            let queued = self.queue.pop_front().unwrap();
+            if let Some(ids) = queued.ids {
+                eligible.push(
+                    queued
+                        .shifted
+                        .then(|| is_timed(self.cache_moves[ids.cache].kind)),
+                );
+                self.cache_pass
+                    .block(&self.cache_moves, ids.cache, &trapezoid);
+            } else {
+                eligible.push(None);
+            }
+        }
+        let (cache_map, cache_inserted) = self.cache_pass.insert(&mut self.cache_moves);
+        for queued in &mut self.queue {
+            let Some(ids) = &mut queued.ids else {
+                continue;
+            };
+            ids.cache = remap(&cache_map, cache_inserted, ids.cache);
+        }
     }
 }
 

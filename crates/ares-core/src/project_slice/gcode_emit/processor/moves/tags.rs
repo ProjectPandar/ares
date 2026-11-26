@@ -15,6 +15,12 @@ pub(super) struct Tags {
     custom_code: &'static str,
 }
 
+impl Tags {
+    pub(super) fn is_layer_change(&self, raw: &str) -> bool {
+        raw.len() > 2 && &raw[1..] == self.layer_change
+    }
+}
+
 /// `Reserved_Tags` / `Reserved_Tags_compatible` (`GCodeProcessor.cpp:57-102`).
 pub(super) const BBL_TAGS: Tags = Tags {
     role: " FEATURE: ",
@@ -99,6 +105,13 @@ fn parse_wipe_tag(line: &str, bbl: bool) -> Option<bool> {
     }
 }
 
+pub(in crate::project_slice::gcode_emit::processor) fn has_custom_tag(
+    line: &str,
+    bbl: bool,
+) -> bool {
+    parse_custom_tag(line, bbl).is_some()
+}
+
 fn parse_custom_tag(line: &str, bbl: bool) -> Option<CustomTag<'_>> {
     let comment = line.strip_prefix(';')?;
     let tags = if bbl { &BBL_TAGS } else { &COMPATIBLE_TAGS };
@@ -155,23 +168,27 @@ impl MoveRecorder<'_> {
             self.color_change(source, filament, color, position);
         } else if matches!(custom, Some(CustomTag::PausePrint)) {
             self.store(source, EMoveType::PausePrint, [position; 2], 0.0);
-            self.custom_gcode_per_print_z.push(CustomGCodeItem {
-                print_z: position[2],
-                kind: CustomGCodeType::PausePrint,
-                extruder: self.filament as u32 + 1,
-                color: String::new(),
-                extra: String::new(),
-            });
+            if self.mode == super::RecordMode::Full {
+                self.custom_gcode_per_print_z.push(CustomGCodeItem {
+                    print_z: position[2],
+                    kind: CustomGCodeType::PausePrint,
+                    extruder: self.filament as u32 + 1,
+                    color: String::new(),
+                    extra: String::new(),
+                });
+            }
             self.set_option();
         } else if matches!(custom, Some(CustomTag::Custom)) {
             self.store(source, EMoveType::CustomGCode, [position; 2], 0.0);
-            self.custom_gcode_per_print_z.push(CustomGCodeItem {
-                print_z: position[2],
-                kind: CustomGCodeType::Custom,
-                extruder: self.filament as u32 + 1,
-                color: String::new(),
-                extra: String::new(),
-            });
+            if self.mode == super::RecordMode::Full {
+                self.custom_gcode_per_print_z.push(CustomGCodeItem {
+                    print_z: position[2],
+                    kind: CustomGCodeType::Custom,
+                    extruder: self.filament as u32 + 1,
+                    color: String::new(),
+                    extra: String::new(),
+                });
+            }
             self.set_option();
         } else if comment == tags.layer_change {
             self.layer_id += 1;
@@ -189,6 +206,13 @@ impl MoveRecorder<'_> {
         const DEFAULT_COLORS: [&str; 6] = [
             "#0B2C7A", "#1C8891", "#AAF200", "#F5CE0A", "#D16830", "#942616",
         ];
+        if self.mode != super::RecordMode::Full {
+            if self.filament == filament {
+                self.store(source, EMoveType::ColorChange, [position; 2], 0.0);
+                self.set_option();
+            }
+            return;
+        }
         let color = match color {
             Some(color)
                 if color.len() == 7

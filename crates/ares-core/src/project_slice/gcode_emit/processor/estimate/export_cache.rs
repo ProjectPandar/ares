@@ -1,64 +1,56 @@
 //! Normal `ExportLines::update` cache cursor (`GCodeProcessor.cpp:771–810`).
 
 use super::super::export_lines::reader::command;
-use super::Estimate;
 
-impl Estimate {
-    pub(in crate::project_slice::gcode_emit::processor) fn export_elapsed_at(
-        &self,
-        line: usize,
-    ) -> Option<f32> {
-        self.export_elapsed[line]
-    }
-}
-
-pub(super) struct Entry {
+pub(in crate::project_slice::gcode_emit::processor) struct Entry {
     pub(super) id: usize,
     pub(super) remaining: usize,
     pub(super) elapsed: f32,
 }
 
-pub(super) fn snapshots<'a>(
-    lines: impl IntoIterator<Item = &'a str>,
-    line_count: usize,
-    cache: &[Entry],
-) -> Vec<Option<f32>> {
-    let mut snapshots = vec![None; line_count + 1];
-    let mut cache_index = 0;
-    let mut counter = 0;
-    for (index, line) in lines.into_iter().enumerate() {
+#[derive(Default)]
+pub(in crate::project_slice::gcode_emit::processor) struct ExportElapsedCursor {
+    cache_index: usize,
+    counter: usize,
+}
+
+impl ExportElapsedCursor {
+    pub(in crate::project_slice::gcode_emit::processor) fn step(
+        &mut self,
+        line: &str,
+        cache: &[Entry],
+    ) -> Option<f32> {
         let command = command(line);
         if !matches!(command, "G0" | "G1" | "G2" | "G3" | "G28") {
-            continue;
+            return None;
         }
-        let mut lookup = counter + 1;
-        while cache_index < cache.len() && cache[cache_index].id < lookup {
-            cache_index += 1;
+        let mut lookup = self.counter + 1;
+        while self.cache_index < cache.len() && cache[self.cache_index].id < lookup {
+            self.cache_index += 1;
         }
         let mut internal = 0;
         if cache
-            .get(cache_index)
+            .get(self.cache_index)
             .is_none_or(|entry| entry.id != lookup)
         {
-            counter += 1;
-            continue;
+            self.counter += 1;
+            return None;
         }
         if matches!(command, "G2" | "G3") {
             while cache
-                .get(cache_index)
+                .get(self.cache_index)
                 .is_some_and(|entry| entry.remaining > 0)
             {
-                cache_index += 1;
+                self.cache_index += 1;
                 lookup += 1;
                 internal += 1;
             }
         }
-        if let Some(entry) = cache.get(cache_index)
-            && entry.id == lookup
-        {
-            snapshots[index + 1] = Some(entry.elapsed);
-        }
-        counter += 1 + internal;
+        let elapsed = cache
+            .get(self.cache_index)
+            .filter(|entry| entry.id == lookup)
+            .map(|entry| entry.elapsed);
+        self.counter += 1 + internal;
+        elapsed
     }
-    snapshots
 }

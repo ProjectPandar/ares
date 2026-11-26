@@ -84,7 +84,15 @@ impl<'a> ExportLines<'a> {
         }
     }
 
+    pub(super) const fn has_backtrace(&self) -> bool {
+        self.backtrace.is_some()
+    }
+
     pub(super) fn begin(&mut self, line: &str, elapsed: Option<f32>) {
+        let Some(backtrace) = &self.backtrace else {
+            return;
+        };
+        let backtrace_time = backtrace.time;
         // Flush the preceding input line before updating this line's timestamp.
         self.write();
         if let Some(elapsed) = elapsed {
@@ -93,21 +101,55 @@ impl<'a> ExportLines<'a> {
         if line == self.layer_marker {
             self.layer += 1;
         }
-        if let Some(backtrace) = &self.backtrace
-            && command(line).starts_with('T')
-        {
-            let time = backtrace.time;
+        if command(line).starts_with('T') {
             self.insert_lines(command(line));
-            self.max_backtrace_time = self.max_backtrace_time.max(time);
+            self.max_backtrace_time = self.max_backtrace_time.max(backtrace_time);
         }
     }
 
     pub(super) fn append(&mut self, line: String) {
+        if self.backtrace.is_none() {
+            if !line.is_empty() {
+                self.write_direct(&[&line], 0);
+            }
+            return;
+        }
         self.append_from(line, 0);
     }
 
+    /// Appends the export of processor input line `source` (1-based) without
+    /// allocating a temporary `String` when tool backtrace is disabled.
+    pub(super) fn append_parts(&mut self, line: &str, ending: &str, source: usize) {
+        if self.backtrace.is_none() {
+            if !line.is_empty() || !ending.is_empty() {
+                self.write_direct(&[line, ending], source);
+            }
+            return;
+        }
+        let mut owned = String::with_capacity(line.len() + ending.len());
+        owned.push_str(line);
+        owned.push_str(ending);
+        self.append_from(owned, source);
+    }
+
+    fn write_direct(&mut self, parts: &[&str], source: usize) {
+        if let Some(map) = &mut self.line_map {
+            let newlines: usize = parts
+                .iter()
+                .map(|part| part.bytes().filter(|&byte| byte == b'\n').count())
+                .sum();
+            map.written += newlines as u32;
+            if source != 0 {
+                map.lines[source] = map.written;
+            }
+        }
+        for part in parts {
+            self.output.extend_from_slice(part.as_bytes());
+        }
+    }
+
     /// Appends the export of processor input line `source` (1-based).
-    pub(super) fn append_from(&mut self, line: String, source: usize) {
+    fn append_from(&mut self, line: String, source: usize) {
         if !line.is_empty() {
             self.size += line.len();
             self.lines.push_back(LineData {

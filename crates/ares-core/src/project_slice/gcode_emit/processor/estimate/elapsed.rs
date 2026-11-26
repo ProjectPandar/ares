@@ -1,47 +1,26 @@
 //! `ExportLines::update` M73 lookup over `g1_times_cache` (`GCodeProcessor.cpp:771-810`, `:1241-1252`, `:1458-1471`).
 
-use super::{Estimate, export_cache};
-
-impl Estimate {
-    pub(in crate::project_slice::gcode_emit::processor) fn elapsed_at(
-        &self,
-        line: usize,
-    ) -> Option<f64> {
-        self.elapsed
-            .get(line)
-            .copied()
-            .flatten()
-            .map(|entry| f64::from(entry.elapsed))
-    }
-
-    pub(in crate::project_slice::gcode_emit::processor) fn next_elapsed_at(
-        &self,
-        line: usize,
-    ) -> Option<f32> {
-        self.elapsed
-            .get(line)
-            .copied()
-            .flatten()
-            .and_then(|entry| entry.next)
-    }
-}
+use super::export_cache;
 
 #[derive(Clone, Copy)]
-pub(super) struct Snapshot {
-    pub(super) elapsed: f32,
-    pub(super) next: Option<f32>,
+pub(in crate::project_slice::gcode_emit::processor) struct Snapshot {
+    pub(in crate::project_slice::gcode_emit::processor) elapsed: f32,
+    pub(in crate::project_slice::gcode_emit::processor) next: Option<f32>,
 }
 
-pub(super) fn elapsed_snapshots<'a>(
-    lines: impl IntoIterator<Item = &'a str>,
-    line_count: usize,
-    cache: &[export_cache::Entry],
-) -> Vec<Option<Snapshot>> {
-    let mut elapsed = vec![None; line_count + 1];
-    let mut cache_index = 0;
-    let mut update_cache_index = 0;
-    let mut exported_g1_lines = 0;
-    for (index, line) in lines.into_iter().enumerate() {
+#[derive(Default)]
+pub(in crate::project_slice::gcode_emit::processor) struct ProgressElapsedCursor {
+    cache_index: usize,
+    update_cache_index: usize,
+    exported_g1_lines: usize,
+}
+
+impl ProgressElapsedCursor {
+    pub(in crate::project_slice::gcode_emit::processor) fn step(
+        &mut self,
+        line: &str,
+        cache: &[export_cache::Entry],
+    ) -> Option<Snapshot> {
         let command = line
             .split(';')
             .next()
@@ -50,48 +29,46 @@ pub(super) fn elapsed_snapshots<'a>(
             .next()
             .unwrap_or_default();
         if !matches!(command, "G0" | "G1" | "G2" | "G3" | "G28") {
-            continue;
+            return None;
         }
         // `ExportLines::update` (:778-800) walks the current cache, not
         // the source arc's segment count: VG1 advances estimate ids only.
-        let update_id = exported_g1_lines + 1;
-        while update_cache_index < cache.len() && cache[update_cache_index].id < update_id {
-            update_cache_index += 1;
+        let update_id = self.exported_g1_lines + 1;
+        while self.update_cache_index < cache.len() && cache[self.update_cache_index].id < update_id
+        {
+            self.update_cache_index += 1;
         }
         let mut internal = 0;
         if matches!(command, "G2" | "G3")
             && cache
-                .get(update_cache_index)
+                .get(self.update_cache_index)
                 .is_some_and(|entry| entry.id == update_id)
         {
             while cache
-                .get(update_cache_index)
+                .get(self.update_cache_index)
                 .is_some_and(|entry| entry.remaining > 0)
             {
-                update_cache_index += 1;
+                self.update_cache_index += 1;
                 internal += 1;
             }
         }
         if command == "G28" {
-            exported_g1_lines += 1;
-            continue;
+            self.exported_g1_lines += 1;
+            return None;
         }
         // Caller :1458-1471 probes before advancing its physical counter;
         // its progress-cache iterator is separate from update's cursor.
-        let lookup_id = exported_g1_lines + internal;
-        exported_g1_lines += 1 + internal;
-        while cache_index < cache.len() && cache[cache_index].id < lookup_id {
-            cache_index += 1;
+        let lookup_id = self.exported_g1_lines + internal;
+        self.exported_g1_lines += 1 + internal;
+        while self.cache_index < cache.len() && cache[self.cache_index].id < lookup_id {
+            self.cache_index += 1;
         }
         let hit = cache
-            .get(cache_index)
+            .get(self.cache_index)
             .is_some_and(|entry| entry.id == lookup_id);
-        if hit {
-            elapsed[index + 1] = Some(Snapshot {
-                elapsed: cache[cache_index].elapsed,
-                next: cache.get(cache_index + 1).map(|entry| entry.elapsed),
-            });
-        }
+        hit.then(|| Snapshot {
+            elapsed: cache[self.cache_index].elapsed,
+            next: cache.get(self.cache_index + 1).map(|entry| entry.elapsed),
+        })
     }
-    elapsed
 }

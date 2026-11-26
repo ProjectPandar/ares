@@ -148,23 +148,25 @@ impl MotionState {
     /// `arc::targets` for `G2`/`G3` — needed to preserve the
     /// `m_g1_line_id` hole of dropped zero-displacement segments
     /// (`GCodeProcessor.cpp:3868` fires before the :3891 drop).
-    pub(super) fn motions_indexed(&mut self, code: &str) -> Vec<IndexedMotion> {
+    pub(super) fn motions_indexed(&mut self, code: &str, out: &mut Vec<IndexedMotion>) {
+        out.clear();
         let start = self.position;
         let start_e = self.e_position;
         let Some(block) = self.motion(code) else {
-            return Vec::new();
+            return;
         };
-        let linear = |state: &Self, block| {
+        let push_linear = |state: &Self, block, out: &mut Vec<IndexedMotion>| {
             let [x, y, z] = state.position;
-            vec![IndexedMotion {
+            out.push(IndexedMotion {
                 index: 0,
                 block,
                 end: [x, y, z, state.e_position],
-            }]
+            });
         };
         let command = code.split_whitespace().next().unwrap_or_default();
         if !matches!(command, "G2" | "G3") {
-            return linear(self, block);
+            push_linear(self, block, out);
+            return;
         }
         let Some(targets) = arc::targets(
             command,
@@ -178,7 +180,8 @@ impl MotionState {
                 gcode_flavor: self.gcode_flavor,
             },
         ) else {
-            return linear(self, block);
+            push_linear(self, block, out);
+            return;
         };
         // `internal_only_g1_line` → `process_G1` → `++m_g1_line_id` fires for
         // EVERY discretized segment (`GCodeProcessor.cpp:3868`), including
@@ -186,15 +189,11 @@ impl MotionState {
         // block's `g1_line_id` is its discretization position `base + index`,
         // not a compact rank over the survivors. Carry the `targets` index.
         let mut previous = [start[0], start[1], start[2], start_e];
-        targets
-            .into_iter()
-            .enumerate()
-            .filter_map(|(index, end)| {
-                let delta = std::array::from_fn(|axis| end[axis] - previous[axis]);
-                previous = end;
-                self.segment_block(delta)
-                    .map(|block| IndexedMotion { index, block, end })
-            })
-            .collect()
+        out.extend(targets.into_iter().enumerate().filter_map(|(index, end)| {
+            let delta = std::array::from_fn(|axis| end[axis] - previous[axis]);
+            previous = end;
+            self.segment_block(delta)
+                .map(|block| IndexedMotion { index, block, end })
+        }));
     }
 }
