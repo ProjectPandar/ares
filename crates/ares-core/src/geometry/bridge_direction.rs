@@ -127,7 +127,7 @@ pub(crate) fn detect_bridging_direction(
             (line.b.y() - line.a.y()) as f64,
             (-(line.b.x() - line.a.x())) as f64,
         ));
-        let quantized_angle = (normal.1.atan2(normal.0) * 1000.0).ceil();
+        let quantized_angle = (crate::scalar_math::atan2_f64(normal.1, normal.0) * 1000.0).ceil();
         directions.insert(quantized_angle, normal);
     }
 

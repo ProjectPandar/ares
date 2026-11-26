@@ -185,7 +185,7 @@ impl ClipperOffset {
                 self.do_square(path, j, k);
             }
         } else if self.join_type == JoinType::Round {
-            self.do_round(path, j, k, sin_a.atan2(cos_a));
+            self.do_round(path, j, k, crate::scalar_math::atan2_f64(sin_a, cos_a));
         } else if self.join_type == JoinType::Bevel {
             self.do_bevel(path, j, k);
         } else {
