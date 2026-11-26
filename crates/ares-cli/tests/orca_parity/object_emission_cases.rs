@@ -4,6 +4,8 @@
 mod bbl_absolute_e_end_label_reset;
 #[path = "bbl_layer_object_labels.rs"]
 mod bbl_layer_object_labels;
+#[path = "belt_frame_tilt_decouple.rs"]
+mod belt_frame_tilt_decouple;
 #[path = "belt_print.rs"]
 mod belt_print;
 #[path = "byobject_transition_lift_gate.rs"]
