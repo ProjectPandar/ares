@@ -4,7 +4,8 @@ pub(super) mod reader;
 
 use std::collections::VecDeque;
 
-use crate::{GCodeFlavor, OrcaInts, ProjectSettings};
+use crate::gcode_sink::ChunkWriter;
+use crate::{GCodeFlavor, GCodeSink, OrcaInts, ProjectSettings, SliceError};
 use reader::{axis, command, is_start};
 
 struct LineData {
@@ -27,7 +28,7 @@ struct Backtrace {
     xl: bool,
 }
 
-pub(super) struct ExportLines<'a> {
+pub(super) struct ExportLines<'a, 's> {
     settings: &'a ProjectSettings,
     flavor: GCodeFlavor,
     layer_marker: &'static str,
@@ -37,17 +38,17 @@ pub(super) struct ExportLines<'a> {
     backtrace: Option<Backtrace>,
     lines: VecDeque<LineData>,
     size: usize,
-    output: Vec<u8>,
+    writer: ChunkWriter<'s>,
     line_map: Option<LineMap>,
 }
 
-impl<'a> ExportLines<'a> {
+impl<'a, 's> ExportLines<'a, 's> {
     pub(super) fn new(
         settings: &'a ProjectSettings,
         flavor: GCodeFlavor,
         bbl: bool,
-        capacity: usize,
         source_lines: Option<usize>,
+        sink: &'s mut dyn GCodeSink,
     ) -> Self {
         let print = &settings.process.print;
         let notes = &settings.printer.remaining.printer_notes.0;
@@ -76,7 +77,7 @@ impl<'a> ExportLines<'a> {
             }),
             lines: VecDeque::new(),
             size: 0,
-            output: Vec::with_capacity(capacity),
+            writer: ChunkWriter::new(sink),
             line_map: source_lines.map(|count| LineMap {
                 lines: vec![0; count + 1],
                 written: 0,
@@ -88,13 +89,13 @@ impl<'a> ExportLines<'a> {
         self.backtrace.is_some()
     }
 
-    pub(super) fn begin(&mut self, line: &str, elapsed: Option<f32>) {
+    pub(super) fn begin(&mut self, line: &str, elapsed: Option<f32>) -> Result<(), SliceError> {
         let Some(backtrace) = &self.backtrace else {
-            return;
+            return Ok(());
         };
         let backtrace_time = backtrace.time;
         // Flush the preceding input line before updating this line's timestamp.
-        self.write();
+        self.write()?;
         if let Some(elapsed) = elapsed {
             self.time = elapsed;
         }
@@ -105,34 +106,46 @@ impl<'a> ExportLines<'a> {
             self.insert_lines(command(line));
             self.max_backtrace_time = self.max_backtrace_time.max(backtrace_time);
         }
+        Ok(())
     }
 
-    pub(super) fn append(&mut self, line: String) {
+    pub(super) fn flush_section(&mut self) -> Result<(), SliceError> {
+        self.writer.flush_buffer()
+    }
+
+    pub(super) fn append(&mut self, line: String) -> Result<(), SliceError> {
         if self.backtrace.is_none() {
             if !line.is_empty() {
-                self.write_direct(&[&line], 0);
+                self.write_direct(&[&line], 0)?;
             }
-            return;
+            return Ok(());
         }
         self.append_from(line, 0);
+        Ok(())
     }
 
     /// Appends the export of processor input line `source` (1-based) without
     /// allocating a temporary `String` when tool backtrace is disabled.
-    pub(super) fn append_parts(&mut self, line: &str, ending: &str, source: usize) {
+    pub(super) fn append_parts(
+        &mut self,
+        line: &str,
+        ending: &str,
+        source: usize,
+    ) -> Result<(), SliceError> {
         if self.backtrace.is_none() {
             if !line.is_empty() || !ending.is_empty() {
-                self.write_direct(&[line, ending], source);
+                self.write_direct(&[line, ending], source)?;
             }
-            return;
+            return Ok(());
         }
         let mut owned = String::with_capacity(line.len() + ending.len());
         owned.push_str(line);
         owned.push_str(ending);
         self.append_from(owned, source);
+        Ok(())
     }
 
-    fn write_direct(&mut self, parts: &[&str], source: usize) {
+    fn write_direct(&mut self, parts: &[&str], source: usize) -> Result<(), SliceError> {
         if let Some(map) = &mut self.line_map {
             let newlines: usize = parts
                 .iter()
@@ -144,8 +157,9 @@ impl<'a> ExportLines<'a> {
             }
         }
         for part in parts {
-            self.output.extend_from_slice(part.as_bytes());
+            self.writer.push_bytes(part.as_bytes())?;
         }
+        Ok(())
     }
 
     /// Appends the export of processor input line `source` (1-based).
@@ -273,20 +287,21 @@ impl<'a> ExportLines<'a> {
         )
     }
 
-    fn write(&mut self) {
+    fn write(&mut self) -> Result<(), SliceError> {
         if self.backtrace.is_some() {
             let threshold = self.time - 1.1_f32 * self.max_backtrace_time;
             while self.lines.front().is_some_and(|line| line.time < threshold) {
-                self.write_front();
+                self.write_front()?;
             }
         } else if self.size > 65_535 {
             while !self.lines.is_empty() {
-                self.write_front();
+                self.write_front()?;
             }
         }
+        Ok(())
     }
 
-    fn write_front(&mut self) {
+    fn write_front(&mut self) -> Result<(), SliceError> {
         let line = self.lines.pop_front().expect("a buffered line exists");
         self.size -= line.line.len();
         if let Some(map) = &mut self.line_map {
@@ -295,15 +310,17 @@ impl<'a> ExportLines<'a> {
                 map.lines[line.source] = map.written;
             }
         }
-        self.output.extend_from_slice(line.line.as_bytes());
+        self.writer.push_bytes(line.line.as_bytes())
     }
 
-    /// The exported G-code and, when tracked, the input → output line map.
-    pub(super) fn finish(mut self) -> (Vec<u8>, Option<Vec<u32>>) {
+    /// Flushes all exported G-code chunks to the sink and returns total bytes
+    /// written plus, when tracked, the input → output line map.
+    pub(super) fn finish(mut self) -> Result<(usize, Option<Vec<u32>>), SliceError> {
         while !self.lines.is_empty() {
-            self.write_front();
+            self.write_front()?;
         }
-        (self.output, self.line_map.map(|map| map.lines))
+        let bytes_written = self.writer.finish()?;
+        Ok((bytes_written, self.line_map.map(|map| map.lines)))
     }
 }
 

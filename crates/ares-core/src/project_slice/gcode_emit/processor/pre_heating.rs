@@ -72,15 +72,16 @@ struct UsageBlocks {
 /// `TimeProcessor::InsertedLinesMap` restricted to the injector line types.
 type InsertedLines = BTreeMap<u32, Vec<String>>;
 
-/// `run_second_pass_injection`: splices the injector lines into `gcode` after the output lines
-/// they are keyed on and shifts `moves` past them (`handle_offsets_of_second_process`).
-pub(super) fn inject<'a>(
-    lines: impl IntoIterator<Item = &'a str>,
-    line_map: &[u32],
+/// `run_second_pass_injection`: streams `gcode` with injector lines spliced
+/// after the output lines they are keyed on directly into `sink`, and shifts
+/// `moves` past them (`handle_offsets_of_second_process`).
+pub(super) fn inject_to_sink<'a>(
+    (lines, line_map): (impl IntoIterator<Item = &'a str>, &[u32]),
     settings: &ProjectSettings,
     (nozzle_group_result, nozzle_counts): (&[NozzleGroup], &[i64]),
-    (gcode, moves): (&mut Vec<u8>, &mut crate::gcode_processor::ChunkedMoves),
-) {
+    (gcode, moves): (&[u8], &mut crate::gcode_processor::ChunkedMoves),
+    sink: &mut dyn crate::GCodeSink,
+) -> Result<usize, crate::SliceError> {
     let blocks = UsageBlocks::build(lines, settings, nozzle_group_result).remap(line_map);
     // `:2005-2014`: the injector reads a float prefix sum of the per-move times.
     let mut elapsed = 0.0_f32;
@@ -99,34 +100,45 @@ pub(super) fn inject<'a>(
         &blocks,
     )
     .run();
-    if inserted.is_empty() {
-        return;
-    }
-    splice(gcode, &inserted);
-    let mut keys = inserted.iter().peekable();
-    let mut offset = 0;
-    for vertex in moves {
-        while let Some((_, added)) = keys.next_if(|(key, _)| **key < vertex.gcode_id) {
-            offset += added.len() as u32;
+    let bytes_written = splice_to_sink(gcode, &inserted, sink)?;
+    if !inserted.is_empty() {
+        let mut keys = inserted.iter().peekable();
+        let mut offset = 0;
+        for vertex in moves {
+            while let Some((_, added)) = keys.next_if(|(key, _)| **key < vertex.gcode_id) {
+                offset += added.len() as u32;
+            }
+            vertex.gcode_id += offset;
         }
-        vertex.gcode_id += offset;
     }
+    Ok(bytes_written)
 }
 
 /// `:2087-2108`: one cursor over the keys, advanced only when a line id equals it.
-fn splice(gcode: &mut Vec<u8>, inserted: &InsertedLines) {
+fn splice_to_sink(
+    gcode: &[u8],
+    inserted: &InsertedLines,
+    sink: &mut dyn crate::GCodeSink,
+) -> Result<usize, crate::SliceError> {
     let added = inserted.values().flatten().map(String::len).sum::<usize>();
-    let mut output = Vec::with_capacity(gcode.len() + added);
+    sink.reserve_hint(gcode.len() + added);
+    let mut writer = crate::gcode_sink::ChunkWriter::new(sink);
     let mut keys = inserted.iter().peekable();
     for (index, line) in gcode.split_inclusive(|byte| *byte == b'\n').enumerate() {
-        output.extend_from_slice(line);
+        if line.starts_with(b"; EXECUTABLE_BLOCK_START") {
+            writer.flush_buffer()?;
+        }
+        writer.push_bytes(line)?;
         if let Some((_, lines)) = keys.next_if(|(key, _)| **key as usize == index + 1) {
-            lines
-                .iter()
-                .for_each(|line| output.extend_from_slice(line.as_bytes()));
+            for added_line in lines {
+                writer.push_bytes(added_line.as_bytes())?;
+            }
+        }
+        if line.starts_with(b"; EXECUTABLE_BLOCK_END") {
+            writer.flush_buffer()?;
         }
     }
-    *gcode = output;
+    writer.finish()
 }
 
 impl UsageBlocks {

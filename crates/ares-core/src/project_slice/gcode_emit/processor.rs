@@ -5,6 +5,7 @@ mod envelope;
 mod estimate;
 mod estimated_stats;
 mod export_lines;
+mod export_stream;
 pub(super) mod filament_change;
 mod material_statistics;
 mod motion;
@@ -19,12 +20,8 @@ mod used_filaments;
 mod virtual_motion;
 use crate::options::GCodeFlavor;
 use estimate::Estimate;
-use estimate::elapsed::ProgressElapsedCursor;
-use estimate::export_cache::ExportElapsedCursor;
-use export_lines::ExportLines;
 use moves::{MoveRecorder, RecordMode};
 pub(super) use stats::DEFERRED_PLACEHOLDERS;
-use time::{duration, minutes};
 
 pub(super) fn extruder_colors(
     filament: &crate::options::FilamentGCodeSourceOptions,
@@ -178,185 +175,100 @@ pub fn process_gcode(
         settings.printer.gcode.gcode_flavor,
         bbl_printer,
     );
-    let (output, _) = process(
+    let mut out = Vec::new();
+    let streamed = process_to_sink(
         gcode.as_bytes().to_vec(),
-        post_process,
-        // `GCodeProcessor::apply_config` sets load time independently of
-        // `finalize(bool)` (`GCodeProcessor.cpp:3217,3558-3560`).
-        settings.printer.gcode.machine_load_filament_time.0,
+        (
+            post_process,
+            // `GCodeProcessor::apply_config` sets load time independently of
+            // `finalize(bool)` (`GCodeProcessor.cpp:3217,3558-3560`).
+            settings.printer.gcode.machine_load_filament_time.0,
+        ),
         limits.with_settings(settings).recording_moves(true),
-    );
-    output
+        None,
+        &mut out,
+    )
+    .expect("in-memory Vec<u8> GCodeSink cannot fail");
+    streamed.into_processed(out)
 }
 
-pub(super) fn process(
+pub(super) fn process_to_sink(
     output: Vec<u8>,
-    emit_progress: bool,
-    machine_load_filament_time: f64,
+    (emit_progress, machine_load_filament_time): (bool, f64),
     config: ProcessorConfig<'_>,
-) -> (
-    crate::ProcessedGCode,
-    crate::gcode_processor::printable_area::PrintableAreaTracker,
-) {
+    printable_area_check: Option<&super::PreparedPostClassicTraversal>,
+    sink: &mut dyn crate::GCodeSink,
+) -> Result<crate::StreamedGCode, crate::SliceError> {
     let limits = config.limits;
-    let text = std::str::from_utf8(&output).expect("generated G-code is UTF-8");
     // The injector reads the moves and the line map.
     let record_moves = config.record_moves || config.pre_heating;
-    let mut line_count = 0usize;
-    let mut first_marker = None;
-    let mut has_custom_tag = false;
-    for line in text.lines() {
-        if first_marker.is_none() && line == "M73 P0 R0" {
-            first_marker = Some(line_count);
+    let (bytes_written, mut processor_result, estimate) = {
+        let text = std::str::from_utf8(&output).expect("generated G-code is UTF-8");
+        let mut line_count = 0usize;
+        let mut first_marker = None;
+        let mut has_custom_tag = false;
+        for line in text.lines() {
+            if first_marker.is_none() && line == "M73 P0 R0" {
+                first_marker = Some(line_count);
+            }
+            if !record_moves && !has_custom_tag && line.starts_with(';') {
+                has_custom_tag = moves::tags::has_custom_tag(line, limits.bbl_printer);
+            }
+            line_count += 1;
         }
-        if !record_moves && !has_custom_tag && line.starts_with(';') {
-            has_custom_tag = moves::tags::has_custom_tag(line, limits.bbl_printer);
+        let first_marker = first_marker.unwrap_or(0);
+        let record_mode = if record_moves {
+            RecordMode::Full
+        } else if has_custom_tag {
+            RecordMode::CacheOnly
+        } else {
+            RecordMode::StatsOnly
+        };
+        let mut recorder = MoveRecorder::new(&config, record_mode);
+        let estimate = Estimate::record(
+            text.lines(),
+            machine_load_filament_time,
+            &config,
+            &mut recorder,
+        );
+        let materials =
+            material_statistics::MaterialStatistics::new(&estimate.print_statistics, &config);
+        let prepare_time = estimate.prepare;
+        let model_time = (estimate.total - prepare_time).max(0.0);
+        let deferred = stats::values(
+            estimate.total,
+            &materials,
+            config.settings.printer.gcode.time_cost.0,
+            config.tower_statistics,
+        );
+        let pass = export_stream::StreamPass {
+            text,
+            emit_progress,
+            first_marker,
+            line_count,
+            record_moves,
+            estimate: &estimate,
+            materials: &materials,
+            deferred: &deferred,
+            prepare_time,
+            model_time,
+        };
+        if let Some(traversal) = printable_area_check {
+            let error_code = estimate
+                .printable_area
+                .check(&traversal.resolved.views.full)?;
+            if error_code != 0 {
+                let mut gcode = Vec::new();
+                run_pass_two(&pass, &config, recorder, &mut gcode)?;
+                return Err(super::retained_output::outside_printable_area(
+                    error_code, gcode, traversal,
+                ));
+            }
         }
-        line_count += 1;
-    }
-    let first_marker = first_marker.unwrap_or(0);
-    let record_mode = if record_moves {
-        RecordMode::Full
-    } else if has_custom_tag {
-        RecordMode::CacheOnly
-    } else {
-        RecordMode::StatsOnly
+        let (bytes_written, processor_result) = run_pass_two(&pass, &config, recorder, sink)?;
+        (bytes_written, processor_result, estimate)
     };
-    let mut recorder = MoveRecorder::new(&config, record_mode);
-    let estimate = Estimate::record(
-        text.lines(),
-        machine_load_filament_time,
-        &config,
-        &mut recorder,
-    );
-    let materials =
-        material_statistics::MaterialStatistics::new(&estimate.print_statistics, &config);
-    let mut result = ExportLines::new(
-        config.settings,
-        limits.gcode_flavor,
-        limits.bbl_printer,
-        text.len(),
-        record_moves.then_some(line_count),
-    );
-    let mut last_progress = None;
-    let mut stop_export = estimate.stop_times.exporter(estimate.total);
-    let mut export_cursor = ExportElapsedCursor::default();
-    let mut progress_cursor = ProgressElapsedCursor::default();
-    let prepare_time = estimate.prepare;
-    let model_time = (estimate.total - prepare_time).max(0.0);
-    let deferred = stats::values(
-        estimate.total,
-        &materials,
-        config.settings.printer.gcode.time_cost.0,
-        config.tower_statistics,
-    );
-
-    for (index, original) in text.split_inclusive('\n').enumerate() {
-        // GCodeProcessor.cpp:1794-1803 retains CR/LF for every ordinary line;
-        // ExportLines (:1027-1040,1105-1133) and GCodeFileWriter (:867-881) keep them.
-        let (raw_line, ending) = if let Some(line) = original.strip_suffix("\r\n") {
-            (line, "\r\n")
-        } else if let Some(line) = original.strip_suffix('\n') {
-            (line, "\n")
-        } else {
-            (original, "\n")
-        };
-        let export_elapsed = result
-            .has_backtrace()
-            .then(|| export_cursor.step(raw_line, &estimate.cache))
-            .flatten();
-        let progress_snapshot = emit_progress
-            .then(|| progress_cursor.step(raw_line, &estimate.cache))
-            .flatten();
-        let material = materials.process(raw_line);
-        let line = material.as_deref().unwrap_or(raw_line);
-        let expanded = stats::expand(line, &deferred);
-        let line = expanded.as_ref();
-        result.begin(line, export_elapsed);
-        if line == "M73 P0 R0" {
-            if emit_progress {
-                let remaining = minutes(estimate.total);
-                last_progress = Some((0, remaining));
-                result.append(format!("M73 P0 R{remaining}\n"));
-            }
-            if emit_progress && let Some(line) = stop_export.initial() {
-                result.append(line);
-            }
-            continue;
-        }
-        if !emit_progress && line == "M73 P100 R0" {
-            continue;
-        }
-        if line.starts_with("; model printing time:")
-            || line == "; estimated printing time (normal mode) = 0s"
-        {
-            if limits.bbl_printer {
-                result.append(format!(
-                    "; model printing time: {}; total estimated time: {}\n",
-                    duration(model_time),
-                    duration(estimate.total),
-                ));
-            } else {
-                result.append(format!(
-                    "; estimated printing time (normal mode) = {}\n",
-                    duration(estimate.total),
-                ));
-            }
-            continue;
-        }
-        if line.starts_with("; estimated first layer printing time") {
-            result.append(format!(
-                "; estimated first layer printing time (normal mode) = {}\n",
-                duration(prepare_time),
-            ));
-            continue;
-        }
-        result.append_parts(line, ending, index + 1);
-        if index < first_marker || !emit_progress || !is_progress_motion(line) {
-            continue;
-        }
-        let Some(snapshot) = progress_snapshot else {
-            continue;
-        };
-        let elapsed = snapshot.elapsed;
-        // Upstream computes `int(100.0f * elapsed_time / machine.time)`
-        // (`GCodeProcessor.cpp:1251-1252`): the 100× product stays f32, then
-        // the division promotes to f64 against `machine.time` — a `double`
-        // (`GCodeProcessor.hpp:544`), matching `estimate.total` in f64.
-        // `time_in_minutes(machine.time - elapsed_time)` subtracts the
-        // f32 `elapsed_time` from the f64 `machine.time` in f64, then
-        // `time_in_minutes` narrows to float (:1013).
-        let percent = if estimate.total > 0.0 {
-            (f64::from(100.0_f32 * elapsed) / estimate.total) as u64
-        } else {
-            0
-        };
-        let remaining = minutes(estimate.total - f64::from(elapsed));
-        if last_progress != Some((percent, remaining)) {
-            last_progress = Some((percent, remaining));
-            result.append(format!("M73 P{percent} R{remaining}\n"));
-        }
-        if let Some(line) = stop_export.progress(elapsed, snapshot.next) {
-            result.append(line);
-        }
-    }
-    let (mut gcode, line_map) = result.finish();
-    let mut processor_result = line_map
-        .map(|line_map| {
-            let mut result = recorder.finish(&line_map);
-            if config.pre_heating {
-                pre_heating::inject(
-                    text.lines(),
-                    &line_map,
-                    config.settings,
-                    (config.nozzle_group_result, config.nozzle_counts),
-                    (&mut gcode, &mut result.moves),
-                );
-            }
-            result
-        })
-        .filter(|_| config.record_moves)
-        .unwrap_or_default();
+    drop(output);
     if config.record_moves {
         processor_result.apply_filament_config(&config.settings.filament.gcode);
     }
@@ -376,16 +288,47 @@ pub(super) fn process(
     processor_result.initial_layer_time = estimate.initial_layer_time;
     processor_result.extruder_colors = config.extruder_colors;
     processor_result.custom_gcode_times = estimate.custom_gcode_times;
-    (
-        crate::ProcessedGCode {
-            warnings: Vec::new(),
-            gcode,
-            result: processor_result,
-            print_statistics,
-            archive: None,
-        },
-        estimate.printable_area,
-    )
+    Ok(crate::StreamedGCode {
+        bytes_written,
+        warnings: Vec::new(),
+        result: processor_result,
+        print_statistics,
+        archive: None,
+    })
+}
+
+fn run_pass_two(
+    pass: &export_stream::StreamPass<'_>,
+    config: &ProcessorConfig<'_>,
+    recorder: MoveRecorder<'_>,
+    sink: &mut dyn crate::GCodeSink,
+) -> Result<(usize, crate::GCodeProcessorResult), crate::SliceError> {
+    if !config.pre_heating {
+        sink.reserve_hint(pass.text.len());
+        let (bytes_written, line_map) = export_stream::emit(pass, config, sink)?;
+        let processor_result = line_map
+            .map(|line_map| recorder.finish(&line_map))
+            .filter(|_| config.record_moves)
+            .unwrap_or_default();
+        return Ok((bytes_written, processor_result));
+    }
+    let mut intermediate = Vec::with_capacity(pass.text.len());
+    let (_, line_map) = export_stream::emit(pass, config, &mut intermediate)?;
+    let line_map = line_map.expect("pre_heating tracks line map");
+    let mut full_result = recorder.finish(&line_map);
+    let bytes_written = pre_heating::inject_to_sink(
+        (pass.text.lines(), &line_map),
+        config.settings,
+        (config.nozzle_group_result, config.nozzle_counts),
+        (&intermediate, &mut full_result.moves),
+        sink,
+    )?;
+    let processor_result = if config.record_moves {
+        full_result
+    } else {
+        Default::default()
+    };
+    Ok((bytes_written, processor_result))
 }
 
 fn is_progress_motion(line: &str) -> bool {

@@ -6,7 +6,7 @@ use crate::{
 };
 
 use super::{
-    CliUpwardMachine, ProjectInput, ProjectSource, perimeters, profile_entry, slice_plate,
+    CliUpwardMachine, ProjectInput, ProjectSource, perimeters, profile_entry, slice_plate_to_sink,
     source::PlateInput, state,
 };
 
@@ -57,9 +57,34 @@ pub fn slice_cli_project_plates(
     request: CliPlatesRequest<'_>,
     metadata: GenerationMetadata,
     context: SlicerContext<'_>,
-    publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
+    mut publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
 ) -> Result<(), CliPlateFailure> {
-    slice_project_plates((input, None), request, metadata, context, publish)
+    slice_project_plates_to_sink(
+        (input, None),
+        request,
+        metadata,
+        context,
+        (
+            |_, _| Ok(Vec::new()),
+            |plate, gcode, report| publish(plate, &gcode, report),
+        ),
+    )
+}
+
+/// Streaming counterpart to [`slice_cli_project_plates`]: creates a sink per
+/// plate via the first callback, streams finalized G-code chunks directly into
+/// it, and hands the completed sink to the second callback.
+pub fn slice_cli_project_plates_to_sink<S: crate::GCodeSink>(
+    input: &[u8],
+    request: CliPlatesRequest<'_>,
+    metadata: GenerationMetadata,
+    context: SlicerContext<'_>,
+    callbacks: (
+        impl FnMut(u32, &SlicedPlate) -> Result<S, SliceError>,
+        impl FnMut(u32, S, &SlicedPlate) -> Result<(), SliceError>,
+    ),
+) -> Result<(), CliPlateFailure> {
+    slice_project_plates_to_sink((input, None), request, metadata, context, callbacks)
 }
 
 impl crate::CliPresetProject<'_> {
@@ -68,18 +93,43 @@ impl crate::CliPresetProject<'_> {
         request: CliPlatesRequest<'_>,
         metadata: GenerationMetadata,
         context: SlicerContext<'_>,
-        publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
+        mut publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
     ) -> Result<(), CliPlateFailure> {
-        slice_project_plates(self.into_parts(), request, metadata, context, publish)
+        slice_project_plates_to_sink(
+            self.into_parts(),
+            request,
+            metadata,
+            context,
+            (
+                |_, _| Ok(Vec::new()),
+                |plate, gcode, report| publish(plate, &gcode, report),
+            ),
+        )
+    }
+
+    pub fn slice_plates_to_sink<S: crate::GCodeSink>(
+        self,
+        request: CliPlatesRequest<'_>,
+        metadata: GenerationMetadata,
+        context: SlicerContext<'_>,
+        callbacks: (
+            impl FnMut(u32, &SlicedPlate) -> Result<S, SliceError>,
+            impl FnMut(u32, S, &SlicedPlate) -> Result<(), SliceError>,
+        ),
+    ) -> Result<(), CliPlateFailure> {
+        slice_project_plates_to_sink(self.into_parts(), request, metadata, context, callbacks)
     }
 }
 
-fn slice_project_plates(
+fn slice_project_plates_to_sink<S: crate::GCodeSink>(
     (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
     request: CliPlatesRequest<'_>,
     metadata: GenerationMetadata,
     mut context: SlicerContext<'_>,
-    mut publish: impl FnMut(u32, &[u8], &SlicedPlate) -> Result<(), SliceError>,
+    (mut make_sink, mut on_complete): (
+        impl FnMut(u32, &SlicedPlate) -> Result<S, SliceError>,
+        impl FnMut(u32, S, &SlicedPlate) -> Result<(), SliceError>,
+    ),
 ) -> Result<(), CliPlateFailure> {
     let CliPlatesRequest {
         selection,
@@ -180,9 +230,10 @@ fn slice_project_plates(
         }
         for (plate, state, mut plate_report) in applied {
             current = plate;
-            let result = slice_plate(
+            let mut sink = make_sink(plate, &plate_report)?;
+            let result = slice_plate_to_sink(
                 (metadata, false),
-                &mut context,
+                (&mut context, &mut sink),
                 (Some(&mut plate_report), None),
                 None,
                 |_, context| {
@@ -193,7 +244,8 @@ fn slice_project_plates(
                 },
             );
             loaded_report = plate_report;
-            publish(plate, &result?.gcode, &loaded_report)?;
+            result?;
+            on_complete(plate, sink, &loaded_report)?;
         }
         Ok(())
     };

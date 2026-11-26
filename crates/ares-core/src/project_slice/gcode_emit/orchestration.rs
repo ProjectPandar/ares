@@ -4,14 +4,15 @@ mod tower;
 use super::*;
 use crate::project_slice::ArchiveSource;
 use crate::project_slice::island_print_order::PreparedPostIslandPrintOrder;
-use crate::{GenerationMetadata, ProcessedGCode, SliceError};
-pub(in crate::project_slice) fn emit(
+use crate::{GCodeSink, GenerationMetadata, SliceError, StreamedGCode};
+
+pub(in crate::project_slice) fn emit_to_sink(
     prepared: &mut PreparedPostIslandPrintOrder,
     (metadata, record_moves): (GenerationMetadata, bool),
-    context: &mut crate::SlicerContext,
+    (context, sink): (&mut crate::SlicerContext, &mut dyn GCodeSink),
     warnings: &mut Vec<crate::PrintWarning>,
     archive: Option<ArchiveSource>,
-) -> Result<ProcessedGCode, SliceError> {
+) -> Result<StreamedGCode, SliceError> {
     let traversal = &prepared
         .predecessor
         .predecessor
@@ -214,6 +215,13 @@ pub(in crate::project_slice) fn emit(
         },
         context,
     )?;
+    // Release consumed per-layer geometry before post-processing and streaming.
+    prepared.objects = Vec::new();
+    prepared.support_layers = Vec::new();
+    prepared.top_surfaces = Vec::new();
+    prepared.curled_lines = Vec::new();
+    prepared.nearest_seam_plans = Vec::new();
+    drop((farthest_object_targets, brim, skirt, tower_corners, islands));
     let traversal = &prepared
         .predecessor
         .predecessor
@@ -264,6 +272,7 @@ pub(in crate::project_slice) fn emit(
     if !tags.is_bbl() {
         output.extend_from_slice(&export_config);
     }
+    drop(export_config);
     let tower_statistics = finish::append_filament_stats(&mut output, traversal, &state);
     finish::append_compatible_stats(
         &mut output,
@@ -324,12 +333,12 @@ pub(in crate::project_slice) fn emit(
             output = rebuilt;
         }
     }
-    let mut result = super::orchestration_finish::finish(
+    let mut result = super::orchestration_finish::finish_to_sink(
         output,
         &state,
         traversal,
-        &nozzle_groups,
-        (record_moves, tower_statistics),
+        (&nozzle_groups, (record_moves, tower_statistics)),
+        sink,
     )?;
     result.archive = archive_facts.map(archive::sliced_archive).transpose()?;
     Ok(result)

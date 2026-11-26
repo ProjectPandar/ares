@@ -96,59 +96,24 @@ impl crate::CliPresetProject<'_> {
 }
 
 fn slice_cli_project(
-    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
+    input: (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
     request: CliProjectSliceRequest<'_>,
     metadata: GenerationMetadata,
-    (system_catalog, refresh): (
+    presets: (
         Option<&crate::PresetCatalogHandle>,
         Option<&crate::NativeRefreshPresets>,
     ),
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    let CliProjectSliceRequest {
-        plate,
-        overrides,
-        record_moves,
-        orient,
-        upward,
-        sliced_plate,
-    } = request;
-    upward.report.clear();
-    overrides.validate_cli_config()?;
-    slice_source(
-        ProjectSource {
-            loaded,
-            input: match refresh {
-                None => crate::project_slice::ProjectInput::SavedCliBytes(input),
-                Some(_) => crate::project_slice::ProjectInput::Bytes(input),
-            },
-            plate,
-            profile: None,
-            refresh: refresh.map(|presets| {
-                crate::profiles::ProjectPresetRefresh::native(
-                    presets,
-                    context.skip_modified_gcodes(),
-                )
-            }),
-            overrides,
-            validate_print: true,
-            normative_check: true,
-            allow_mix_temp: false,
-            validate_config: true,
-            skip_modified_gcodes: false,
-            orient,
-            upward: Some(upward),
-            sliced_plate: Some(sliced_plate),
-            system_catalog,
-            max_triangle_count: 0,
-            custom_gcodes: None,
-            downward: None,
-            edits: &crate::plater::NO_EDITS,
-        },
-        metadata,
-        record_moves,
+    let mut gcode = Vec::new();
+    let streamed = super::streaming::slice_cli_project_to_sink(
+        input,
+        request,
+        (metadata, presets),
         context,
-    )
+        &mut gcode,
+    )?;
+    Ok(streamed.into_processed(gcode))
 }
 
 pub struct DirectProjectSliceRequest<'a> {

@@ -151,9 +151,16 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         &output,
         plate as i32 - 1,
     )?;
+    enum DirectOutcome {
+        Buffered(ProcessedGCode),
+        Streamed(
+            ares_core::StreamedGCode,
+            crate::gcode_file_sink::AtomicFileSink,
+        ),
+    }
     let mut sliced_plate = SlicedPlate::default();
     let mut upward_machines = Vec::new();
-    let (processed, substitutions) = match presets {
+    let (outcome, substitutions) = match presets {
         ProjectPresets::Replace(settings, filaments) => {
             let (processed, substitutions) = slice_with_replacement(
                 (input, &bytes, plate, &output),
@@ -163,7 +170,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 args.export_statistics,
             )?;
             upward_machines = std::mem::take(&mut sliced_plate.upward_machines);
-            (processed, substitutions)
+            (processed.map(DirectOutcome::Buffered), substitutions)
         }
         ProjectPresets::Saved {
             project,
@@ -172,7 +179,8 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             catalog,
         } => {
             let substitutions = project.substitutions().to_vec();
-            let processed = project.slice_project(
+            let mut sink = crate::gcode_file_sink::AtomicFileSink::new(output.clone());
+            let streamed = project.slice_project_to_sink(
                 CliProjectSliceRequest {
                     plate: Some(plate),
                     overrides: &ConfigOverrides::default(),
@@ -185,14 +193,22 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                     },
                     sliced_plate: &mut sliced_plate,
                 },
-                GenerationMetadata::default(),
-                (catalog.as_deref(), None),
+                (GenerationMetadata::default(), (catalog.as_deref(), None)),
                 context,
+                &mut sink,
             );
-            (processed, substitutions)
+            if streamed.is_err()
+                && let Some(io_error) = sink.take_error()
+            {
+                return Err(io_error.into());
+            }
+            (
+                streamed.map(|streamed| DirectOutcome::Streamed(streamed, sink)),
+                substitutions,
+            )
         }
     };
-    let processed = processed.map_err(|error| {
+    let outcome = outcome.map_err(|error| {
         if let Some(failure) = crate::failure::slicing::path_conflict(
             &error,
             &mut args.diagnostics,
@@ -237,7 +253,17 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         project,
     )
     .map_err(|failure| failure.with_downward_report(downward_machines.clone()))?;
-    crate::statistics::write(&output, processed, args.export_statistics, plate)?;
+    match outcome {
+        DirectOutcome::Buffered(processed) => {
+            crate::statistics::write(&output, processed, args.export_statistics, plate)?;
+        }
+        DirectOutcome::Streamed(streamed, sink) => {
+            sink.commit()?;
+            if args.export_statistics {
+                crate::statistics::write_sidecar(&output, &streamed.result, plate)?;
+            }
+        }
+    }
     #[cfg(target_os = "linux")]
     crate::result_json::Success {
         strict_mode: args.strict,

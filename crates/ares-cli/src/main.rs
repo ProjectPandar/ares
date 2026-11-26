@@ -9,6 +9,7 @@ mod downward;
 mod export_3mf;
 mod export_stl;
 mod failure;
+mod gcode_file_sink;
 mod installed_resources;
 mod load_settings;
 mod moves_csv;

@@ -15,7 +15,7 @@ mod closing;
 pub(crate) mod compatibility;
 mod compensation;
 pub(crate) use archive_plate::{
-    ArchivePlate, ArchiveSource, slice_source, slice_source_with_archive,
+    ArchivePlate, ArchiveSource, slice_source, slice_source_to_sink, slice_source_with_archive,
     slice_source_with_custom_gcodes,
 };
 mod conical_overhang;
@@ -55,11 +55,17 @@ pub(crate) use profile_entry::{center_profile_project, load_and_place};
 pub use source::{CliUpwardMachine, SlicedPlate};
 mod cli_plates;
 mod cli_stl;
+mod streaming;
 pub use cli_plates::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
-    slice_cli_project_plates,
+    slice_cli_project_plates, slice_cli_project_plates_to_sink,
 };
 pub use cli_stl::{SlicedStlPlate, StlPlateFailure, slice_stl_models_with_load_settings};
+pub use streaming::{
+    slice_cli_project_plate_validated_to_sink,
+    slice_cli_project_plate_validated_with_catalog_to_sink, slice_project_plate_processed_to_sink,
+    slice_project_plate_to_sink, slice_project_plate_validated_to_sink,
+};
 pub use validated::{
     CliProjectSliceRequest, DirectProjectSliceRequest, slice_cli_project_plate_validated,
     slice_cli_project_plate_validated_with_catalog, slice_cli_project_plate_with_refresh,
@@ -148,33 +154,19 @@ pub async fn slice_project_plate_with_catalog(
     system_catalog: Option<&crate::PresetCatalogHandle>,
     context: crate::SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_source(
-        ProjectSource {
-            loaded: None,
-            input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
+    let mut gcode = Vec::new();
+    streaming::slice_project_plate_to_sink_inner(
+        project.as_ref(),
+        DirectProjectSliceRequest {
             plate,
-            profile: None,
-            refresh: None,
-            system_catalog,
             overrides,
-            validate_print: false,
-            normative_check: true,
-            allow_mix_temp: false,
-            validate_config: true,
-            skip_modified_gcodes: false,
-            orient: false,
-            upward: None,
-            sliced_plate: None,
-            max_triangle_count: 0,
-            custom_gcodes: None,
-            downward: None,
-            edits: &crate::plater::NO_EDITS,
+            system_catalog,
         },
-        metadata,
-        false,
+        (metadata, false, false),
         context,
-    )
-    .map(|processed| processed.gcode)
+        &mut gcode,
+    )?;
+    Ok(gcode)
 }
 
 /// Slices one plate and also returns the `GCodeProcessorResult` move
@@ -197,38 +189,25 @@ pub async fn slice_project_plate_processed_with_catalog(
     system_catalog: Option<&crate::PresetCatalogHandle>,
     context: crate::SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    slice_source(
-        ProjectSource {
-            loaded: None,
-            input: crate::project_slice::ProjectInput::Bytes(project.as_ref()),
+    let mut gcode = Vec::new();
+    let streamed = streaming::slice_project_plate_to_sink_inner(
+        project.as_ref(),
+        DirectProjectSliceRequest {
             plate,
-            profile: None,
-            refresh: None,
-            system_catalog,
             overrides,
-            validate_print: false,
-            normative_check: true,
-            allow_mix_temp: false,
-            validate_config: true,
-            skip_modified_gcodes: false,
-            orient: false,
-            upward: None,
-            sliced_plate: None,
-            max_triangle_count: 0,
-            custom_gcodes: None,
-            downward: None,
-            edits: &crate::plater::NO_EDITS,
+            system_catalog,
         },
-        metadata,
-        true,
+        (metadata, true, false),
         context,
-    )
+        &mut gcode,
+    )?;
+    Ok(streamed.into_processed(gcode))
 }
 
 fn slice_plate(
     generation: (GenerationMetadata, bool),
     context: &mut crate::SlicerContext<'_>,
-    (mut sliced_plate, plate_custom_gcodes): (
+    outputs: (
         Option<&mut SlicedPlate>,
         Option<&mut Vec<crate::gcode_processor::CustomGCodeItem>>,
     ),
@@ -241,6 +220,28 @@ fn slice_plate(
         SliceError,
     >,
 ) -> Result<ProcessedGCode, SliceError> {
+    let mut gcode = Vec::new();
+    let streamed =
+        slice_plate_to_sink(generation, (context, &mut gcode), outputs, archive, prepare)?;
+    Ok(streamed.into_processed(gcode))
+}
+
+fn slice_plate_to_sink(
+    generation: (GenerationMetadata, bool),
+    (context, sink): (&mut crate::SlicerContext<'_>, &mut dyn crate::GCodeSink),
+    (mut sliced_plate, plate_custom_gcodes): (
+        Option<&mut SlicedPlate>,
+        Option<&mut Vec<crate::gcode_processor::CustomGCodeItem>>,
+    ),
+    archive: Option<ArchiveSource>,
+    prepare: impl FnOnce(
+        Option<&mut SlicedPlate>,
+        &mut crate::SlicerContext<'_>,
+    ) -> Result<
+        perimeters::layer_region::PreparedPostLayerRegionPerimeters,
+        SliceError,
+    >,
+) -> Result<crate::StreamedGCode, SliceError> {
     // Fresh-process equivalence for the `~`/`^` rotate_template joints
     // (`Fill.cpp:199-200`).
     group_fills::reset_rand_state();
@@ -293,8 +294,13 @@ fn slice_plate(
     if let Some(custom_gcodes) = plate_custom_gcodes {
         *custom_gcodes = ordered.plate_custom_gcodes();
     }
-    let output =
-        consume_post_island_print_order(ordered, generation, context, &mut warnings, archive);
+    let output = consume_post_island_print_order(
+        ordered,
+        generation,
+        (context, sink),
+        &mut warnings,
+        archive,
+    );
     if let Some(sliced_plate) = sliced_plate {
         sliced_plate.warnings.clone_from(&warnings);
     }
@@ -346,11 +352,17 @@ fn extract_top_surfaces(
 fn consume_post_island_print_order(
     mut prepared: island_print_order::PreparedPostIslandPrintOrder,
     generation: (GenerationMetadata, bool),
-    context: &mut crate::SlicerContext,
+    (context, sink): (&mut crate::SlicerContext, &mut dyn crate::GCodeSink),
     warnings: &mut Vec<crate::PrintWarning>,
     archive: Option<ArchiveSource>,
-) -> Result<ProcessedGCode, SliceError> {
-    let mut output = gcode_emit::emit(&mut prepared, generation, context, warnings, archive)?;
+) -> Result<crate::StreamedGCode, SliceError> {
+    let mut output = gcode_emit::emit_to_sink(
+        &mut prepared,
+        generation,
+        (context, sink),
+        warnings,
+        archive,
+    )?;
     output.result.apply_filament_config(prepared.filament());
     Ok(output)
 }

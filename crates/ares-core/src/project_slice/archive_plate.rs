@@ -1,9 +1,11 @@
 //! Headless `PartPlateList::store_to_3mf_structure` plate facts.
 
 use crate::project::raw_settings::ProjectSettingsRaw;
-use crate::{GenerationMetadata, ProcessedGCode, SliceError, SlicerContext};
+use crate::{
+    GCodeSink, GenerationMetadata, ProcessedGCode, SliceError, SlicerContext, StreamedGCode,
+};
 
-use super::{ProjectSource, perimeters, slice_plate};
+use super::{ProjectSource, perimeters, slice_plate, slice_plate_to_sink};
 
 #[derive(Clone, Copy)]
 pub(crate) enum ArchiveSource {
@@ -58,6 +60,40 @@ pub(crate) fn slice_source_with_archive(
     archive: Option<ArchiveSource>,
 ) -> Result<ProcessedGCode, SliceError> {
     slice_source_inner(project, (metadata, record_moves), context, archive, None)
+}
+
+#[inline(never)]
+pub(crate) fn slice_source_to_sink(
+    mut project: ProjectSource<'_>,
+    generation: (GenerationMetadata, bool),
+    mut context: SlicerContext<'_>,
+    sink: &mut dyn GCodeSink,
+) -> Result<StreamedGCode, SliceError> {
+    let sliced_plate = project.sliced_plate.take();
+    slice_plate_to_sink(
+        generation,
+        (&mut context, sink),
+        (sliced_plate, None),
+        None,
+        |report, context| {
+            if let Some(profile) = project.profile.as_mut() {
+                profile.enable_timelapse = context.enable_timelapse;
+            }
+            perimeters::prepare_post_layer_region_perimeters(
+                ProjectSource {
+                    sliced_plate: report,
+                    normative_check: context.normative_check(),
+                    skip_modified_gcodes: context.skip_modified_gcodes(),
+                    allow_mix_temp: context.allow_mix_temp(),
+                    max_triangle_count: context.max_triangle_count,
+                    custom_gcodes: context.custom_gcodes.take(),
+                    downward: context.downward.take(),
+                    ..project
+                },
+                context,
+            )
+        },
+    )
 }
 
 fn slice_source_inner(
