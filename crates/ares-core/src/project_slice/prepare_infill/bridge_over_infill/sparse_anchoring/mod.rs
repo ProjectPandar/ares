@@ -3,6 +3,7 @@ mod projected;
 pub(in crate::project_slice) use projected::projected_sparse_density;
 mod arms;
 mod arms_tail;
+mod gyroid;
 mod honeycomb;
 mod linear;
 mod plane_path;
@@ -42,12 +43,20 @@ const TRIANGLE_SWEEPS: [Sweep; 3] = [
     },
 ];
 
+#[derive(Clone, Copy)]
+pub(in crate::project_slice) struct AnchoringContext<'a> {
+    pub(in crate::project_slice) lightning_generator:
+        Option<&'a crate::fill::lightning::generator::Generator>,
+    pub(in crate::project_slice) adaptive_fields:
+        &'a crate::fill::adaptive_infill_field::AdaptiveInfillFields,
+    pub(in crate::project_slice) grid_bounds: Option<crate::geometry::BoundingBox>,
+}
+
 pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    grid_bounds: Option<crate::geometry::BoundingBox>,
+    context: AnchoringContext<'_>,
 ) -> Result<Vec<Polyline>, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -85,8 +94,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             z,
             object_reference,
             object_bounding_box,
-            lightning_generator,
-            grid_bounds,
+            context,
             spacing,
             &mut result,
         )?;

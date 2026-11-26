@@ -43,7 +43,6 @@ pub(super) fn prepare_infill_lines(
     object_index: usize,
     candidates: &BridgeCandidateObject,
     view: super::ObjectView<'_>,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
 ) -> Result<BTreeMap<usize, Vec<Polyline>>, SliceError> {
     let super::ObjectView {
         horizontal,
@@ -105,8 +104,11 @@ pub(super) fn prepare_infill_lines(
             predecessor,
             object_index,
             lower_layer,
-            lightning_generator,
-            grid_bounds,
+            super::super::super::sparse_anchoring::AnchoringContext {
+                lightning_generator: candidates.lightning_generator.as_deref(),
+                adaptive_fields: &candidates.adaptive_infill_fields,
+                grid_bounds,
+            },
         )?;
         result.insert(lower_layer, lines);
     }

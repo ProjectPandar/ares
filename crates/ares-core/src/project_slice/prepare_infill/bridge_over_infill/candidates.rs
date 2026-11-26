@@ -48,6 +48,7 @@ pub(super) fn gather_candidates(
         surfaces_by_layer,
         lightning_expanded_surfaces: std::collections::BTreeMap::new(),
         lightning_generator: None,
+        adaptive_infill_fields: Default::default(),
     })
 }
 

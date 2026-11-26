@@ -6,7 +6,6 @@ use crate::{
     ProcessInfillPattern, SliceError,
     fill::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
-        gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
@@ -39,11 +38,15 @@ pub(super) fn dispatch(
     z: f64,
     object_reference: Point,
     object_bounding_box: crate::geometry::BoundingBox,
-    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
-    grid_bounds: Option<crate::geometry::BoundingBox>,
+    context: super::AnchoringContext<'_>,
     object_spacing: &crate::project_slice::fill_entities::adaptive::ObjectSpacing,
     result: &mut Vec<Polyline>,
 ) -> Result<(), SliceError> {
+    let super::AnchoringContext {
+        lightning_generator,
+        adaptive_fields,
+        grid_bounds,
+    } = context;
     match fill.params.pattern {
         SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
             let params = CrossHatchFillParams {
@@ -177,25 +180,13 @@ pub(super) fn dispatch(
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
-            let params = GyroidFillParams {
-                z,
-                spacing: fill.params.spacing,
-                overlap: 0.0,
-                angle: fill.params.angle,
-                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-                multiline: fill.params.multiline,
-                layer_height: fill.params.flow.height,
-                gyroid_optimized: fill.params.gyroid_optimized,
-                anchor_length: fill.params.anchor_length,
-                anchor_length_max: fill.params.anchor_length_max,
-                dont_sort: false,
-            };
-            for expolygon in fill.expolygons {
-                result.extend(
-                    fill_gyroid(&expolygon, params, traversal.scale)
-                        .map_err(super::super::transaction::geometry_error)?,
-                );
-            }
+            super::gyroid::append(
+                fill,
+                traversal,
+                (object_index, layer_index, z),
+                adaptive_fields,
+                result,
+            )?;
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
             let params = Honeycomb3dParams {

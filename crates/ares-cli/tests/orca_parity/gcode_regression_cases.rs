@@ -98,3 +98,6 @@ mod moonraker_metadata;
 
 #[path = "type1_writer_arc_mode.rs"]
 mod type1_writer_arc_mode;
+
+#[path = "adaptive_infill_field.rs"]
+mod adaptive_infill_field;

@@ -6,11 +6,11 @@ use crate::SliceError;
 
 use super::super::{
     FloatOrPercent, OrcaBool, OrcaBoolsNullable, OrcaFloat, OrcaFloatsNullable, OrcaInt, OrcaInts,
-    OrcaString, OrcaStrings, Percent, ProcessCounterboreHoleBridging,
-    ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode, ProcessFuzzySkinType,
-    ProcessInfillPattern, ProcessIroningType, ProcessNoiseType, ProcessSeamScarfType,
-    ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection, ProcessWallDirection,
-    ProcessWallSequence, region_fields::region_option_fields,
+    OrcaString, OrcaStrings, Percent, ProcessAdaptiveInfillGradient, ProcessAdaptiveInfillMode,
+    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
+    ProcessFuzzySkinType, ProcessInfillPattern, ProcessIroningType, ProcessNoiseType,
+    ProcessSeamScarfType, ProcessSurfaceFillOrder, ProcessTopSurfaceExpansionDirection,
+    ProcessWallDirection, ProcessWallSequence, region_fields::region_option_fields,
 };
 use super::metadata::RegionMetadataCodec;
 
@@ -30,6 +30,9 @@ macro_rules! declare_region_option_overrides {
             $(pub(crate) $field: Option<$ty>),*,
             pub(crate) top_surface_fill_order: Option<ProcessSurfaceFillOrder>,
             pub(crate) bottom_surface_fill_order: Option<ProcessSurfaceFillOrder>,
+            pub(crate) adaptive_infill_mode: Option<ProcessAdaptiveInfillMode>,
+            pub(crate) adaptive_infill_interior_density: Option<Percent>,
+            pub(crate) adaptive_infill_gradient: Option<ProcessAdaptiveInfillGradient>,
             pub(crate) extruder: Option<OrcaInt>,
         }
 
@@ -50,6 +53,18 @@ macro_rules! declare_region_option_overrides {
                     }
                     "bottom_surface_fill_order" => {
                         self.bottom_surface_fill_order = Some(deserialize_value(key, value)?);
+                        Ok(true)
+                    }
+                    "adaptive_infill_mode" => {
+                        self.adaptive_infill_mode = Some(deserialize_value(key, value)?);
+                        Ok(true)
+                    }
+                    "adaptive_infill_interior_density" => {
+                        self.adaptive_infill_interior_density = Some(deserialize_value(key, value)?);
+                        Ok(true)
+                    }
+                    "adaptive_infill_gradient" => {
+                        self.adaptive_infill_gradient = Some(deserialize_value(key, value)?);
                         Ok(true)
                     }
                     "extruder" => {
