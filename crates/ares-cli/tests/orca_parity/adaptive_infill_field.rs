@@ -1,9 +1,12 @@
-//! Continuous gyroid `AdaptiveInfillField` parity cases against pinned OrcaSlicer 2.5.0.
+//! `AdaptiveInfillField` parity cases against pinned OrcaSlicer 2.5.0.
 
 #[path = "adaptive_infill_field/fixtures.rs"]
 mod fixtures;
+#[path = "adaptive_infill_field/stepped_shells.rs"]
+mod stepped_shells;
+#[path = "adaptive_infill_field/tpms_patterns.rs"]
+mod tpms_patterns;
 
-use ares_core::{GenerationMetadata, SliceError, SlicerContext};
 use serde_json::{Value, json};
 
 use crate::runner::{native_api_cli::sha, native_stream_case};
@@ -14,9 +17,11 @@ const UPSTREAM: (&str, &[&str]) = (
         "PrintConfig.hpp:177,291-308,1528-1530",
         "PrintConfig.cpp:3727-3793,9765-9770",
         "PrintObject.cpp:1274-1304,3365",
-        "Fill/AdaptiveInfillField.cpp:56-776",
+        "Fill/AdaptiveInfillField.cpp:56-821",
         "Fill/Fill.cpp:317-401,1024-1034,1387,1437-1439,1620,1660-1662",
-        "Fill/FillGyroid.cpp:25-28,345-349",
+        "Fill/FillGyroid.cpp:25-28,318-324,345-349",
+        "Fill/FillTpmsD.cpp:28-31,120-139",
+        "Fill/FillTpmsFK.cpp:27-30,135-157",
     ],
 );
 
@@ -311,35 +316,4 @@ fn adaptive_gyroid_bridge_over_infill_anchoring_match_native() {
         ],
     );
     assert!(!moves.is_empty());
-}
-
-#[tokio::test]
-async fn adaptive_infill_deferred_modes_report_unsupported() {
-    let cube = fixtures::box_mesh(20.0, 20.0, 20.0);
-    let cases = [
-        ("gyroid", "stepped_shells"),
-        ("tpmsd", "lobes"),
-        ("tpmsfk", "lobes"),
-    ];
-    for (pattern, mode) in cases {
-        let project = fixtures::build_3mf(
-            &cube,
-            &[
-                ("sparse_infill_pattern", Some(json!(pattern))),
-                ("adaptive_infill_mode", Some(json!(mode))),
-            ],
-            &[],
-        );
-        let result = ares_core::slice_project(
-            &project,
-            GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-            SlicerContext::new(1),
-        )
-        .await;
-        assert!(
-            matches!(result, Err(SliceError::UnsupportedProjectFeature(_))),
-            "expected UnsupportedProjectFeature for {pattern} + {mode}, got {:?}",
-            result.map(|bytes| bytes.len())
-        );
-    }
 }
