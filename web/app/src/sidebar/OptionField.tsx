@@ -1,5 +1,5 @@
 import type { ConfigOptionDef, OptionValue } from "@ares-slicer/wasm";
-import { type ReactNode, useId, useState } from "react";
+import { memo, type ReactNode, useId, useState } from "react";
 import { setOverride, showFieldError } from "../state/actions";
 import { useApp } from "../state/store";
 import {
@@ -62,7 +62,15 @@ export const tooltipOf = (def: ConfigOptionDef, index?: number) =>
 const enumTexts = (def: ConfigOptionDef) => (def.enum_labels.length ? def.enum_labels : def.enum_values);
 
 /** The control of one `Field` (Field.cpp TextCtrl / SpinCtrl / Choice) with its sidetext. */
-export function OptionControl({ def, index, label, original, edited, readOnly, code }: FieldProps) {
+export const OptionControl = memo(function OptionControl({
+  def,
+  index,
+  label,
+  original,
+  edited,
+  readOnly,
+  code,
+}: FieldProps) {
   const value = edited ?? original;
   const control = controlOf(def, code, index);
   const error = useApp((state) => (state.fieldError?.key === def.key ? state.fieldError.message : null));
@@ -187,10 +195,10 @@ export function OptionControl({ def, index, label, original, edited, readOnly, c
       )}
     </span>
   );
-}
+});
 
 /** One single-option `Line` of an OrcaSlicer optgroup; the label carries the field tooltip (OptionsGroup.cpp:597-599). */
-export function OptionField({ full, ...field }: FieldProps & { full?: boolean }) {
+export const OptionField = memo(function OptionField({ full, ...field }: FieldProps & { full?: boolean }) {
   const { def, index, label, original, edited, readOnly } = field;
   return (
     <div className={`option-row${edited === undefined ? "" : " edited"}${full ? " full" : ""}`}>
@@ -210,4 +218,4 @@ export function OptionField({ full, ...field }: FieldProps & { full?: boolean })
       <OptionControl {...field} />
     </div>
   );
-}
+});
