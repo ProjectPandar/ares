@@ -122,6 +122,19 @@ impl PresetMetadataBuilder {
         Ok(true)
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        if !Self::is_known_field(key) {
+            return Ok(false);
+        }
+        let _ = String::deserialize(deserializer).map_err(|error| {
+            serde::de::Error::custom(format_args!("invalid Orca preset metadata {key}: {error}"))
+        })?;
+        Ok(true)
+    }
+
     pub(crate) fn resolve(self) -> PresetMetadata {
         PresetMetadata {
             from: self.from.unwrap_or_default(),

@@ -175,13 +175,14 @@ impl Project {
         // CLI bed classification reads `printable_area` and `printable_height`
         // from the parsed config (`OrcaSlicer.cpp:4350–4354,4371–4382`),
         // `PrintConfigDef` defaults included.
-        let mut resolved = crate::options::json_deserialize::deserialize_config_values(
-            merged.clone().into_object(),
-        )
-        .map_err(|error| {
-            SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-        })?
-        .resolve();
+        let mut resolved =
+            crate::options::json_deserialize::deserialize_config_values_ref(merged.as_map())
+                .map_err(|error| {
+                    SliceError::InvalidInput(format!(
+                        "merged project settings are invalid: {error}"
+                    ))
+                })?
+                .resolve();
         // OrcaSlicer.cpp:1640 chooses importer membership before placement.
         project.prepare_import_scope(plate);
         // CLI `shrink_to_new_bed` classifies the bed change and translates the
@@ -197,13 +198,14 @@ impl Project {
             project.translate_all_instances(offset);
             shift_wipe_tower(&mut merged, offset);
             // The shifted wipe tower reaches the typed view too.
-            resolved = crate::options::json_deserialize::deserialize_config_values(
-                merged.clone().into_object(),
-            )
-            .map_err(|error| {
-                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-            })?
-            .resolve();
+            resolved =
+                crate::options::json_deserialize::deserialize_config_values_ref(merged.as_map())
+                    .map_err(|error| {
+                        SliceError::InvalidInput(format!(
+                            "merged project settings are invalid: {error}"
+                        ))
+                    })?
+                    .resolve();
         }
 
         project.settings = resolved;

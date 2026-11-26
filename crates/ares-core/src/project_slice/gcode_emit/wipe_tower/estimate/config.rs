@@ -3,7 +3,8 @@
 //! `345efec64`) takes the stored value, else the key's declared default from the
 //! `PrintConfigDef` registry, and parses it by the registry's declared type.
 
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::HashMap;
 
 use crate::options::collect_config_entries;
 use crate::{OptionValueKind, ProjectSettings, SliceError, decode_config_value, option_definition};
@@ -104,7 +105,8 @@ pub(crate) fn get_at<T: Copy>(values: &[T], index: usize) -> T {
 /// `DynamicPrintConfig`: the composed settings by key (`full_config()`), each value the token
 /// `serialize` writes; a key without one reads the registry default.
 pub struct DynamicPrintConfig {
-    tokens: BTreeMap<String, String>,
+    tokens: HashMap<String, String>,
+    cache: RefCell<HashMap<String, ConfigValue>>,
 }
 
 impl DynamicPrintConfig {
@@ -114,13 +116,17 @@ impl DynamicPrintConfig {
             .into_iter()
             .map(|entry| (entry.key, entry.token))
             .collect();
-        Ok(Self { tokens })
+        Ok(Self {
+            tokens,
+            cache: RefCell::new(HashMap::new()),
+        })
     }
 
     /// `DynamicPrintConfig::full_print_config()`: every key at its registry default.
     pub fn full_print_config() -> Self {
         Self {
-            tokens: BTreeMap::new(),
+            tokens: HashMap::new(),
+            cache: RefCell::new(HashMap::new()),
         }
     }
 
@@ -129,28 +135,42 @@ impl DynamicPrintConfig {
     pub fn set_deserialize_strict(&mut self, key: &str, value: &str) -> Result<(), SliceError> {
         let definition = option_definition(key)
             .ok_or_else(|| SliceError::InvalidInput(format!("unknown option {key}")))?;
-        decode_config_value(definition.kind, value)
+        let json = decode_config_value(definition.kind, value)
             .map_err(|error| SliceError::InvalidInput(format!("{key}: {error}")))?;
         self.tokens.insert(key.to_owned(), value.to_owned());
+        self.cache
+            .get_mut()
+            .insert(key.to_owned(), parse_json(definition.kind, json));
         Ok(())
     }
 
     /// `option_of(config, key)`.
     pub(crate) fn option(&self, key: &str) -> ConfigValue {
+        if let Some(cached) = self.cache.borrow().get(key) {
+            return cached.clone();
+        }
         let definition = option_definition(key).unwrap_or_else(|| panic!("no option {key}"));
         let token = self
             .tokens
             .get(key)
             .map_or(definition.default_wire_value, String::as_str);
-        parse(definition.kind, token)
+        let parsed = parse(definition.kind, token);
+        self.cache
+            .borrow_mut()
+            .insert(key.to_owned(), parsed.clone());
+        parsed
     }
 }
 
 /// `ConfigOption::deserialize` of `token` for an option of `kind` (`decode_config_value`).
 fn parse(kind: OptionValueKind, token: &str) -> ConfigValue {
+    let json = decode_config_value(kind, token).unwrap_or_else(|error| panic!("{error}"));
+    parse_json(kind, json)
+}
+
+fn parse_json(kind: OptionValueKind, json: String) -> ConfigValue {
     use OptionValueKind as K;
     use serde_json::Value;
-    let json = decode_config_value(kind, token).unwrap_or_else(|error| panic!("{error}"));
     let value: Value = serde_json::from_str(&json).expect("decoded config value is JSON");
     // A `nil` element of a nullable vector reads as NaN.
     let float = |value: &Value| value.as_f64().unwrap_or(f64::NAN);

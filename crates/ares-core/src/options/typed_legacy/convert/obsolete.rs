@@ -1,8 +1,6 @@
 use super::LegacyOutcome;
-use crate::options::typed_legacy::OBSOLETE_INPUTS;
+use crate::options::typed_legacy::is_obsolete_input;
 
 pub(crate) fn transform_obsolete(source: &str) -> Option<LegacyOutcome> {
-    OBSOLETE_INPUTS
-        .contains(&source)
-        .then_some(LegacyOutcome::Consume)
+    is_obsolete_input(source).then_some(LegacyOutcome::Consume)
 }

@@ -75,25 +75,26 @@ fn write_runtime_tail(
     // (`GCode.cpp:3554-3562`); the BBL block stops at the two temperature
     // lines (`GCode.cpp:2648-2657`).
     if !bbl_printer {
-        let area = entries
-            .iter()
-            .find(|entry| entry.key == "printable_area")
-            .map(|entry| entry.token.as_str())
-            .unwrap_or_default();
+        let area = find_entry(entries, "printable_area").unwrap_or_default();
         append_line(output, "bed_shape", area);
         if let Some((_, nozzle)) = compat_temperatures {
             append_line(output, "first_layer_temperature", &nozzle.to_string());
         }
-        if let Some(height) = entries
-            .iter()
-            .find(|entry| entry.key == "initial_layer_print_height")
-            .and_then(|entry| entry.token.parse::<f64>().ok())
+        if let Some(height) = find_entry(entries, "initial_layer_print_height")
+            .and_then(|token| token.parse::<f64>().ok())
         {
             append_line(output, "first_layer_height", &format!("{height:.3}"));
         }
     } else if let Some((_, nozzle)) = compat_temperatures {
         append_line(output, "first_layer_temperature", &nozzle.to_string());
     }
+}
+
+fn find_entry<'a>(entries: &'a [ConfigEntry], key: &str) -> Option<&'a str> {
+    entries
+        .binary_search_by(|entry| entry.key.as_str().cmp(key))
+        .ok()
+        .map(|index| entries[index].token.as_str())
 }
 
 pub(super) fn append_line(output: &mut Vec<u8>, key: &str, token: &str) {

@@ -344,6 +344,30 @@ macro_rules! declare_option_group {
                     _ => Ok(false),
                 }
             }
+
+            pub(crate) fn validate_known_value<'de, D>(
+                key: &str,
+                deserializer: D,
+            ) -> Result<bool, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                match key {
+                    $(
+                        $key => {
+                            let _ = <$ty as serde::Deserialize>::deserialize(deserializer)
+                                .map_err(|error| {
+                                    serde::de::Error::custom(format_args!(
+                                        concat!("invalid Orca option ", $key, ": {}"),
+                                        error
+                                    ))
+                                })?;
+                            Ok(true)
+                        }
+                    ),*
+                    _ => Ok(false),
+                }
+            }
         }
 
         impl $crate::options::option_group::OverlayOptionGroup for $builder {

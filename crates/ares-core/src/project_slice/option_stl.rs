@@ -77,7 +77,7 @@ pub(crate) fn load_input(
             raw.insert(key.to_owned(), default);
         }
     }
-    let settings = json_deserialize::deserialize_config_values(raw.clone().into_object())
+    let settings = json_deserialize::deserialize_config_values_ref(raw.as_map())
         .map_err(SliceError::InvalidInput)?
         .resolve();
     let preparation = PreparationContext::capture(&raw, &ConfigOverrides::default())?;
