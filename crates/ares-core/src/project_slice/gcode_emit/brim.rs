@@ -84,6 +84,7 @@ impl BrimPlan {
                 | ProcessBrimType::OuterAndInner
                 | ProcessBrimType::BrimEars
                 | ProcessBrimType::Painted
+                | ProcessBrimType::LeadingEdgeOnly
         ) || (options.brim_type != ProcessBrimType::AutoBrim && options.brim_width.0 <= 0.0)
         {
             return Ok(None);
@@ -200,6 +201,7 @@ impl BrimPlan {
                 | ProcessBrimType::InnerOnly
                 | ProcessBrimType::BrimEars
                 | ProcessBrimType::Painted
+                | ProcessBrimType::LeadingEdgeOnly
         ) {
             match support.get(object_index).and_then(|layers| layers.first()) {
                 Some(first) => super::footprint::support_no_brim(first.inner_tree, first, scale)
@@ -337,6 +339,7 @@ impl BrimPlan {
                     ProcessBrimType::OuterOnly
                         | ProcessBrimType::InnerOnly
                         | ProcessBrimType::OuterAndInner
+                        | ProcessBrimType::LeadingEdgeOnly
                 ),
             },
             forbidden,

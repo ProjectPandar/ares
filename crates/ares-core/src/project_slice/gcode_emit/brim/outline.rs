@@ -18,6 +18,7 @@ pub(super) fn efc_enabled(options: &ObjectOptions) -> bool {
             | ProcessBrimType::OuterAndInner
             | ProcessBrimType::BrimEars
             | ProcessBrimType::Painted
+            | ProcessBrimType::LeadingEdgeOnly
     ) && options.brim_use_efc_outline.0
         && options.elefant_foot_compensation.0 > 0.0
         && options.elefant_foot_compensation_layers.0 > 0

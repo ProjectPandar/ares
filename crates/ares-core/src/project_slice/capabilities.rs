@@ -5,9 +5,6 @@ pub(super) fn validate(
     resolved_objects: &[ResolvedProjectObject],
 ) -> Result<(), SliceError> {
     for resolved in resolved_objects {
-        if resolved.object.brim_type == crate::ProcessBrimType::LeadingEdgeOnly {
-            return unsupported("brim_type: leading_edge_only");
-        }
         if resolved.object.support_ironing_pattern == crate::ProcessInfillPattern::SpiralInset {
             return unsupported("support_ironing_pattern: spiralinset");
         }
@@ -72,11 +69,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
         settings.process.region.sparse_infill_density.0,
         settings.process.region.adaptive_infill_mode,
     )?;
-    if settings.process.object.brim_type == crate::ProcessBrimType::LeadingEdgeOnly {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "brim_type: leading_edge_only".to_owned(),
-        ));
-    }
     if matches!(
         settings.process.print.print_order,
         crate::ProcessPrintOrder::BestOfStrategies | crate::ProcessPrintOrder::Snake

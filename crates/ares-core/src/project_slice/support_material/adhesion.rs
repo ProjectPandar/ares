@@ -172,7 +172,9 @@ fn brim_trimming(input: &AdhesionInput<'_>) -> Result<Vec<Polygon>, ClipperError
     }
     let outer = matches!(
         input.object.brim_type,
-        ProcessBrimType::OuterOnly | ProcessBrimType::OuterAndInner
+        ProcessBrimType::OuterOnly
+            | ProcessBrimType::OuterAndInner
+            | ProcessBrimType::LeadingEdgeOnly
     );
     let inner = matches!(
         input.object.brim_type,

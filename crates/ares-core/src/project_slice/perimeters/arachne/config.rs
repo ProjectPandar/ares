@@ -83,12 +83,14 @@ pub(in crate::project_slice) fn validate_record(
     } else {
         scaled_resolution
     };
-    // v2.5.0-beta PerimeterGenerator.cpp:3204-3211, for the imported brim kinds.
+    // PerimeterGenerator.cpp:3204-3212 (`brim_puts_outer_walls_first`).
     let outer_walls_first_for_brim = layer_id == 0
         && object.brim_width.0 > 0.0
         && matches!(
             object.brim_type,
-            crate::ProcessBrimType::OuterOnly | crate::ProcessBrimType::OuterAndInner
+            crate::ProcessBrimType::OuterOnly
+                | crate::ProcessBrimType::OuterAndInner
+                | crate::ProcessBrimType::LeadingEdgeOnly
         );
     Ok(ArachneRecordConfig {
         params: make_paths_params(layer_id, object, nozzle_diameters, scale)?,
