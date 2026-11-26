@@ -1,7 +1,7 @@
 use ares_core::{GenerationMetadata, PresetCatalogHandle, SlicerContext};
 use wasm_bindgen::prelude::*;
 
-use crate::{SliceOutput, custom_gcode_overview, parse_overrides};
+use crate::{SliceOutput, parse_overrides};
 
 #[wasm_bindgen(js_name = sliceProjectWithCatalog)]
 pub async fn slice_project_with_catalog(
@@ -68,19 +68,18 @@ pub async fn slice_project_plate_processed_with_catalog_bytes(
         .map(PresetCatalogHandle::from_json)
         .transpose()
         .map_err(|error| error.to_string())?;
-    let output = ares_core::slice_project_plate_processed_validated_with_catalog(
-        &input,
-        ares_core::DirectProjectSliceRequest {
-            plate,
-            overrides: &overrides,
-            system_catalog: catalog.as_ref(),
-        },
-        GenerationMetadata::default(),
-        SlicerContext::new(0),
-    )
-    .await
-    .map_err(|error| error.to_string())?;
-    let custom_gcodes = custom_gcode_overview::plate_custom_gcodes(&input, plate)
+    let (output, custom_gcodes) =
+        ares_core::slice_project_plate_processed_validated_with_custom_gcodes(
+            &input,
+            ares_core::DirectProjectSliceRequest {
+                plate,
+                overrides: &overrides,
+                system_catalog: catalog.as_ref(),
+            },
+            GenerationMetadata::default(),
+            SlicerContext::new(0),
+        )
+        .await
         .map_err(|error| error.to_string())?;
     Ok(SliceOutput::from_processed(output).with_custom_gcodes(&custom_gcodes))
 }

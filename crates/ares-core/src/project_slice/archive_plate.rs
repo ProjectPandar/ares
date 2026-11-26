@@ -30,21 +30,48 @@ pub(crate) fn slice_source(
     record_moves: bool,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    slice_source_with_archive(project, metadata, record_moves, context, None)
+    slice_source_inner(project, (metadata, record_moves), context, None, None)
+}
+
+pub(crate) fn slice_source_with_custom_gcodes(
+    project: ProjectSource<'_>,
+    metadata: GenerationMetadata,
+    record_moves: bool,
+    context: SlicerContext<'_>,
+) -> Result<(ProcessedGCode, Vec<crate::gcode_processor::CustomGCodeItem>), SliceError> {
+    let mut custom_gcodes = Vec::new();
+    let output = slice_source_inner(
+        project,
+        (metadata, record_moves),
+        context,
+        None,
+        Some(&mut custom_gcodes),
+    )?;
+    Ok((output, custom_gcodes))
 }
 
 pub(crate) fn slice_source_with_archive(
-    mut project: ProjectSource<'_>,
+    project: ProjectSource<'_>,
     metadata: GenerationMetadata,
     record_moves: bool,
+    context: SlicerContext<'_>,
+    archive: Option<ArchiveSource>,
+) -> Result<ProcessedGCode, SliceError> {
+    slice_source_inner(project, (metadata, record_moves), context, archive, None)
+}
+
+fn slice_source_inner(
+    mut project: ProjectSource<'_>,
+    generation: (GenerationMetadata, bool),
     mut context: SlicerContext<'_>,
     archive: Option<ArchiveSource>,
+    plate_custom_gcodes: Option<&mut Vec<crate::gcode_processor::CustomGCodeItem>>,
 ) -> Result<ProcessedGCode, SliceError> {
     let sliced_plate = project.sliced_plate.take();
     slice_plate(
-        (metadata, record_moves),
+        generation,
         &mut context,
-        sliced_plate,
+        (sliced_plate, plate_custom_gcodes),
         archive,
         |report, context| {
             if let Some(profile) = project.profile.as_mut() {

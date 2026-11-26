@@ -1,5 +1,5 @@
 import type { MovesView, Scene, SceneInstance, Toolpaths, ViewColors } from "@ares-slicer/wasm";
-import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cmdDown, isShortcut } from "../shell/keys";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { selectObject } from "../state/actions";
@@ -281,8 +281,10 @@ export function ViewportView({
     return () => viewport.detach();
   }, [viewport, shown]);
 
+  const instances = useMemo(() => instancesProbe(scene), [scene]);
+
   return (
-    <div className="viewport" data-instances={instancesProbe(scene)}>
+    <div className="viewport" data-instances={instances}>
       <div className="viewport-canvas" ref={host} data-testid="viewport" />
       <div
         className={editable ? "view-toolbar bottom" : "view-toolbar"}

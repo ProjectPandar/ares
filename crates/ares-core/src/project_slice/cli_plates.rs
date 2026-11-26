@@ -173,7 +173,7 @@ fn slice_project_plates(
             let result = slice_plate(
                 (metadata, false),
                 &mut context,
-                Some(&mut plate_report),
+                (Some(&mut plate_report), None),
                 None,
                 |_, context| {
                     perimeters::prepare_post_layer_region_perimeters(

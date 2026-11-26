@@ -89,7 +89,7 @@ pub fn slice_stl_models_with_load_settings<'a>(
                 slice_plate(
                     (GenerationMetadata::default(), record_moves),
                     &mut context,
-                    Some(&mut report),
+                    (Some(&mut report), None),
                     capture_archive.then_some(super::ArchiveSource::DirectStl),
                     |_, context| {
                         perimeters::prepare_post_layer_region_perimeters(
