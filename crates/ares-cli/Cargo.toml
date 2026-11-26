@@ -18,7 +18,7 @@ windows-sys = { workspace = true }
 [dev-dependencies]
 boostvoronoi = { workspace = true }
 ares-wasm = { path = "../ares-wasm" }
-ares-vgcode = { path = "../ares-vgcode" }
+ares-vgcode = { path = "../ares-vgcode", features = ["ares-core-convert"] }
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 jiff = { workspace = true }
 md-5 = { workspace = true }

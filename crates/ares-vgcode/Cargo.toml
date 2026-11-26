@@ -4,9 +4,29 @@ version.workspace = true
 edition = "2024"
 rust-version.workspace = true
 
+[features]
+default = []
+ares-core-convert = ["dep:ares-core"]
+
 [dependencies]
-ares-core = { path = "../ares-core" }
+ares-core = { path = "../ares-core", optional = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
 tokio = { workspace = true }
+
+[[test]]
+name = "convert"
+required-features = ["ares-core-convert"]
+
+[[test]]
+name = "filament_legend"
+required-features = ["ares-core-convert"]
+
+[[test]]
+name = "color_print_legend"
+required-features = ["ares-core-convert"]
+
+[[test]]
+name = "custom_gcode_overview"
+required-features = ["ares-core-convert"]

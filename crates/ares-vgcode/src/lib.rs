@@ -1,6 +1,7 @@
 //! Rendering-neutral data ported from AGPL-licensed OrcaSlicer `src/libvgcode` sources.
 
 mod color_range;
+#[cfg(feature = "ares-core-convert")]
 pub mod convert;
 mod extrusion_roles;
 mod filament_legend;
@@ -16,7 +17,9 @@ mod viewer;
 
 pub use color_range::{ColorRange, DEFAULT_RANGES_COLORS};
 pub use extrusion_roles::ExtrusionRoles;
-pub use filament_legend::{FilamentColumn, FilamentLegend, FilamentRow, filament_legend};
+#[cfg(feature = "ares-core-convert")]
+pub use filament_legend::filament_legend;
+pub use filament_legend::{FilamentColumn, FilamentLegend, FilamentRow};
 pub use input_data::{ColorPrint, GCodeInputData};
 pub use layers::Layers;
 pub use moves_slider::MovesSlider;
@@ -35,5 +38,7 @@ pub use types::{
 pub use viewer::{
     ColorPrintLegend, ColorPrintRange, CustomGCodeOverviewRow, DEFAULT_EXTRUSION_ROLES_COLORS,
     DEFAULT_OPTIONS_COLORS, ExtruderColorPrints, MissingColorVolume, PartialTime, PartialTimeKind,
-    PrintedColor, ViewerImpl, color_print_legend, custom_gcode_overview,
+    PrintedColor, ViewerImpl,
 };
+#[cfg(feature = "ares-core-convert")]
+pub use viewer::{color_print_legend, custom_gcode_overview};

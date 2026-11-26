@@ -1,6 +1,10 @@
 // Ports AGPL OrcaSlicer GCodeViewer.cpp:3358-3388,4172-4239 display records.
+#[cfg(feature = "ares-core-convert")]
 use super::ViewerImpl;
-use crate::{Color, ColorPrint, DUMMY_COLOR};
+#[cfg(feature = "ares-core-convert")]
+use crate::DUMMY_COLOR;
+use crate::{Color, ColorPrint};
+#[cfg(feature = "ares-core-convert")]
 use ares_core::gcode_processor::{CustomGCodeType, GCodeProcessorResult};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -68,6 +72,7 @@ impl Default for ColorPrintLegend {
 /// Keeps printed transitions, layer brackets and partial times distinct.
 /// Missing native volume indices make the whole partial table unavailable;
 /// the original result and the other two structures are untouched.
+#[cfg(feature = "ares-core-convert")]
 pub fn color_print_legend(viewer: &ViewerImpl, result: &GCodeProcessorResult) -> ColorPrintLegend {
     let zs = viewer.layers().get_zs();
     let extruders: Vec<_> = viewer
@@ -124,6 +129,7 @@ pub fn color_print_legend(viewer: &ViewerImpl, result: &GCodeProcessorResult) ->
     }
 }
 
+#[cfg(feature = "ares-core-convert")]
 fn partial_times(
     viewer: &ViewerImpl,
     result: &GCodeProcessorResult,
@@ -205,6 +211,7 @@ fn partial_times(
 
 // GCodeViewer ignores decode_color's failure and retains default black.
 // These display swatches do not use the path wrapper's minimum brightness.
+#[cfg(feature = "ares-core-convert")]
 fn raw_color(color: &str) -> Color {
     let bytes = color.as_bytes();
     if !matches!(bytes.len(), 7 | 9) || bytes[0] != b'#' {
