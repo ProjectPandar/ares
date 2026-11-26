@@ -219,7 +219,7 @@ fn partial_mask(
     )?;
     filtered = offset_expolygons(&filtered, (-spacing) as f32, JoinType::Miter, 3.0)?;
     filtered = difference_ex_with_safety_offset(&filtered, last)?;
-    filtered = opening_ex(&filtered, spacing as f32, JoinType::Miter, 3.0)?;
+    filtered = opening_ex(&filtered, (width / 2) as f32, JoinType::Miter, 3.0)?;
     filtered = offset_expolygons(&filtered, spacing as f32, JoinType::Miter, 3.0)?;
     filtered = difference_ex(
         &filtered,
