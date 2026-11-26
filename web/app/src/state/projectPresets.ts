@@ -1,6 +1,11 @@
 import type { ProjectPresetSelection } from "@ares-slicer/wasm";
-import { FILAMENT_LIBRARY } from "./presets";
 import type { CatalogSources } from "./presetSlice";
+
+/**
+ * PresetBundle::ORCA_FILAMENT_LIBRARY: always installed and loaded before the
+ * other vendors (PresetBundle.cpp:2216-2234).
+ */
+export const FILAMENT_LIBRARY = "OrcaFilamentLibrary";
 
 /** The catalog JSON `sliceWithProfiles` takes: the installed vendors and the imported presets. */
 export async function catalogJson({ vendors, presetImports }: CatalogSources): Promise<string> {
