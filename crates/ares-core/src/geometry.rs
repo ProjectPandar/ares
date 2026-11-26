@@ -75,7 +75,10 @@ pub(crate) use line::{Line, ThickLine, liang_barsky_interval};
 pub(crate) use line_distance_tree::{FloatLineDistanceTree, LineDistanceTree};
 pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
-pub(crate) use point_ordering::chain_points_with_postprocessing;
+pub(crate) use point_ordering::{
+    chain_instances_best_of, chain_instances_snake, chain_points_with_postprocessing,
+    order_points_with_strategy,
+};
 pub use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, points_length, to_thick_polylines};
 pub(crate) use region_expansion::{

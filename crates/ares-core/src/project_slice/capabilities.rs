@@ -69,20 +69,6 @@ pub(super) fn validate_settings(settings: &crate::ProjectSettings) -> Result<(),
         settings.process.region.sparse_infill_density.0,
         settings.process.region.adaptive_infill_mode,
     )?;
-    if matches!(
-        settings.process.print.print_order,
-        crate::ProcessPrintOrder::BestOfStrategies | crate::ProcessPrintOrder::Snake
-    ) {
-        let value =
-            if settings.process.print.print_order == crate::ProcessPrintOrder::BestOfStrategies {
-                "best_of"
-            } else {
-                "snake"
-            };
-        return Err(SliceError::UnsupportedProjectFeature(format!(
-            "print_order: {value}"
-        )));
-    }
     if settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual {
         return Err(SliceError::UnsupportedProjectFeature(
             "filament_map_mode: Nozzle Manual".to_owned(),
