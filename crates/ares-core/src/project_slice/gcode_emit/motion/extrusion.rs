@@ -1,8 +1,18 @@
 use super::{
     EmitState, arc,
     features::{PathProperties, feature_description, is_bridge_feature},
-    format::{axis as format_axis, extrusion as format_extrusion},
+    format::{push_axis, push_extrusion},
 };
+
+pub(super) fn push_feature_comment(output: &mut Vec<u8>, gcode_comments: bool, feature: &str) {
+    if gcode_comments {
+        output.extend_from_slice(b" ; ");
+        output.extend_from_slice(feature_description(feature).as_bytes());
+        if is_bridge_feature(feature) {
+            output.extend_from_slice(b" (bridge)");
+        }
+    }
+}
 
 pub(super) struct XyzEmission<'a> {
     pub(super) end: arc::Point,
@@ -28,23 +38,17 @@ pub(super) fn extrude_to_xyz(
     let z_changed = state
         .writer_z
         .is_none_or(|previous| quantize(z) != quantize(previous));
-    let xyz = state.xy_words(
+    let value = coordinate(state, delta);
+    output.extend_from_slice(b"G1 ");
+    state.push_xy_words(
+        output,
         (end.x, end.y),
         (z_changed || state.belt.is_some()).then_some(z),
     );
-    let value = coordinate(state, delta);
-    let comment = if state.options.gcode_comments {
-        let bridge = if is_bridge_feature(properties.feature) {
-            " (bridge)"
-        } else {
-            ""
-        };
-        format!(" ; {}{bridge}", feature_description(properties.feature))
-    } else {
-        String::new()
-    };
-    output
-        .extend_from_slice(format!("G1 {xyz} E{}{comment}\n", format_extrusion(value),).as_bytes());
+    output.extend_from_slice(b" E");
+    push_extrusion(output, value);
+    push_feature_comment(output, state.options.gcode_comments, properties.feature);
+    output.push(b'\n');
     state.x = end.x;
     state.y = end.y;
     state.scarf_z = Some(z);
@@ -58,14 +62,12 @@ pub(super) fn force_no_extrusion_segment(
     end: arc::Point,
     state: &mut EmitState,
 ) {
-    let comment = if state.options.gcode_comments {
-        " ; move inwards before retraction/seam"
-    } else {
-        ""
-    };
-    output.extend_from_slice(
-        format!("G1 {}{comment}\n", state.xy_words((end.x, end.y), None)).as_bytes(),
-    );
+    output.extend_from_slice(b"G1 ");
+    state.push_xy_words(output, (end.x, end.y), None);
+    if state.options.gcode_comments {
+        output.extend_from_slice(b" ; move inwards before retraction/seam");
+    }
+    output.push(b'\n');
     state.x = end.x;
     state.y = end.y;
     state.wipe_start = Some(end);
@@ -84,31 +86,15 @@ pub(super) fn linear_segment(
         state.options.filament_flow_ratio,
         state.options.filament_area,
     ) * small_area_multiplier(state, properties.feature, uncut_length);
-    let comment = if state.options.gcode_comments {
-        let bridge = if is_bridge_feature(properties.feature) {
-            " (bridge)"
-        } else {
-            ""
-        };
-        format!(" ; {}{bridge}", feature_description(properties.feature))
-    } else {
-        Default::default()
-    };
-    if extrusion.abs() <= f64::EPSILON {
-        output.extend_from_slice(
-            format!("G1 {}{comment}\n", state.xy_words((end.x, end.y), None)).as_bytes(),
-        );
-    } else {
+    output.extend_from_slice(b"G1 ");
+    state.push_xy_words(output, (end.x, end.y), None);
+    if extrusion.abs() > f64::EPSILON {
         let extrusion = coordinate(state, extrusion);
-        output.extend_from_slice(
-            format!(
-                "G1 {} E{}{comment}\n",
-                state.xy_words((end.x, end.y), None),
-                format_extrusion(extrusion)
-            )
-            .as_bytes(),
-        );
+        output.extend_from_slice(b" E");
+        push_extrusion(output, extrusion);
     }
+    push_feature_comment(output, state.options.gcode_comments, properties.feature);
+    output.push(b'\n');
     state.x = end.x;
     state.y = end.y;
     state.wipe_start = Some(end);
@@ -204,16 +190,11 @@ pub(super) fn for_length(
 }
 
 pub(super) fn speed(output: &mut Vec<u8>, feedrate: f64, properties: PathProperties<'_>) {
-    let external = if properties.feature == "Outer wall" {
-        ";_EXTERNAL_PERIMETER"
-    } else {
-        ""
-    };
-    output.extend_from_slice(
-        format!(
-            "G1 F{};_EXTRUDE_SET_SPEED{external}\n",
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
+    output.extend_from_slice(b"G1 F");
+    push_axis(output, feedrate);
+    output.extend_from_slice(b";_EXTRUDE_SET_SPEED");
+    if properties.feature == "Outer wall" {
+        output.extend_from_slice(b";_EXTERNAL_PERIMETER");
+    }
+    output.push(b'\n');
 }
