@@ -43,6 +43,14 @@ runs:
         bash scripts/ci/fetch-orca-appimage.sh \
           "$RUNNER_TEMP/orca-appdir" \
           "$HOME/.cache/ares-orca-appimage/orca-v2.5.0.AppImage"
+    - name: Cache Moonraker metadata extractors and Pillow
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ares-moonraker
+        key: moonraker-extractors-v1-4ba6fd228-71f9e677b-${{ runner.os }}
+    - name: Setup Moonraker metadata extractors
+      shell: bash
+      run: bash scripts/ci/setup-moonraker.sh "$HOME/.cache/ares-moonraker" "$GITHUB_ENV"
     - name: Restore pinned GHCR v2.5.0 oracles
       shell: bash
       env:
@@ -55,10 +63,12 @@ runs:
           extra=(--appdir "$RUNNER_TEMP/orca-appdir" --job-appdir "$RUNNER_TEMP/orca-job-appdir")
         fi
         bash scripts/ci/restore-oracles.sh --mode "${{ inputs.mode }}" "${extra[@]}" --env-file "$GITHUB_ENV"
+        mkdir -p "$RUNNER_TEMP/parity-artifacts" "$RUNNER_TEMP/enum-artifacts"
         {
           cat scripts/ci/parity-flags.env | grep -E '^[A-Z0-9_]+='
           echo "ARES_PYTHON_BIN=$(command -v python3)"
           echo "ARES_PARITY_ARTIFACT_ROOT=$RUNNER_TEMP/parity-artifacts"
+          echo "ARES_ENUM_ARTIFACTS=$RUNNER_TEMP/enum-artifacts"
           echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER=$PWD/scripts/ci/pin-runner.sh"
         } >> "$GITHUB_ENV"
     - name: Verify runtime GLU and profile input boundaries

@@ -29,6 +29,7 @@ tar --zstd -cf "${TMP_ROOT}/web-bundle/web-dist.tar.zst" \
   target/release/ares \
   target/release/examples/print_config_def \
   target/web-e2e \
+  web/packages/ares-wasm-js/src/wasm \
   web/packages/ares-wasm-js/dist \
   web/packages/ares-profiles/dist \
   web/app/dist

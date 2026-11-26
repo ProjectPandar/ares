@@ -58,13 +58,20 @@ pub(super) fn runner(test: &str) -> Option<OrcaRunner> {
         return None;
     }
     // 2.5.0 seed-replay producer identity (ard-ksr-initialized-runtime-authority.md).
+    let expected_bin = std::env::var("ARES_KSR_INITIALIZED_BIN_SHA256").unwrap_or_else(|_| {
+        "9d285c9995cdd0eacef354afb76853c81e3def3154b12e38a50238bf268004d6".to_owned()
+    });
+    let expected_native =
+        std::env::var("ARES_KSR_INITIALIZED_NATIVE_SHA256").unwrap_or_else(|_| {
+            "84a7780653be3b46fe909e43ae98b3576907c561e8ff337c208ff97c2b23a84a".to_owned()
+        });
     assert_eq!(
         cache_identity::raw_digest(&fs::read(&bin).unwrap()),
-        "9d285c9995cdd0eacef354afb76853c81e3def3154b12e38a50238bf268004d6"
+        expected_bin
     );
     assert_eq!(
         cache_identity::raw_digest(&fs::read(&native).unwrap()),
-        "84a7780653be3b46fe909e43ae98b3576907c561e8ff337c208ff97c2b23a84a"
+        expected_native
     );
     OrcaRunner::from_env().unwrap()
 }

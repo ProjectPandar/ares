@@ -1,11 +1,10 @@
-import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { build, preview } from "vite";
 import { test } from "./failureDiagnostics";
-import { oraclePath } from "./oracleEnv";
+import { oraclePath, runParityNextest } from "./oracleEnv";
 import { aresGeneratorLine } from "./orcaGcode";
 import { systemPresetCatalog } from "./systemPresetCatalog";
 
@@ -96,38 +95,23 @@ test("a project sliced twice through the worker API is complete, repeatable and 
   const replayCpu = /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync("/proc/self/status", "utf8"))![1];
   console.log(`KSR seeded replay CPU ${replayCpu}`);
   try {
-    execFileSync(
-      "cargo",
-      [
-        "nextest",
-        "run",
-        "-p",
-        "ares-cli",
-        "--test",
-        "orca_parity",
-        "--test-threads",
-        "2",
-        "-E",
-        "test(runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_ordered_bytes)",
-      ],
+    runParityNextest(
+      repositoryRoot,
+      "test(runner::stock_project_native_stream::browser::browser_output_matches_initialized_orca_ordered_bytes)",
       {
-        cwd: repositoryRoot,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-        env: {
-          ...process.env,
-          ARES_BROWSER_GCODE: capture,
-          ARES_REQUIRE_ORCA: "1",
-          ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
-          // Byte-equal to producer.rs's repo_root() launcher (CARGO_MANIFEST_DIR/../..), so it runs in-process.
-          ARES_ORCA_BIN: `${repositoryRoot}crates/ares-cli/../../scripts/orca-seeded-parity.sh`,
-          ARES_ORCA_NATIVE_BIN: native,
-          ARES_ORCA_RESOURCES_DIR: resources,
-          ORCA_REPLAY_BIN: replay,
-          ORCA_REPLAY_SEED: "0",
-          ORCA_REPLAY_CPU: replayCpu,
-        },
+        ...process.env,
+        ARES_BROWSER_GCODE: capture,
+        ARES_REQUIRE_ORCA: "1",
+        ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+        // Byte-equal to producer.rs's repo_root() launcher (CARGO_MANIFEST_DIR/../..), so it runs in-process.
+        ARES_ORCA_BIN: `${repositoryRoot}crates/ares-cli/../../scripts/orca-seeded-parity.sh`,
+        ARES_ORCA_NATIVE_BIN: native,
+        ARES_ORCA_RESOURCES_DIR: resources,
+        ORCA_REPLAY_BIN: replay,
+        ORCA_REPLAY_SEED: "0",
+        ORCA_REPLAY_CPU: replayCpu,
       },
+      ["--test-threads", "2"],
     );
   } catch (error) {
     const { stdout, stderr } = error as { stdout: string; stderr: string };

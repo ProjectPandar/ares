@@ -1,11 +1,10 @@
-import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { build, preview } from "vite";
-import { nativeEnv, oraclePath } from "./oracleEnv";
+import { nativeEnv, oraclePath, runParityNextest } from "./oracleEnv";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
@@ -30,29 +29,12 @@ test("decodeConfigValues then encodeConfigValues in the browser returns the orig
   // Oracle: the CONFIG_BLOCK round-trip parity test slices the same fixture with official
   // OrcaSlicer and writes its whole serialize() values (GCode.cpp:5631-5641 append_full_config).
   const nativeRoot = `${mkdtempSync(`${tmpdir()}/ares-web-config-block-`)}/`;
-  execFileSync(
-    "cargo",
-    [
-      "nextest",
-      "run",
-      "-p",
-      "ares-cli",
-      "--test",
-      "orca_parity",
-      "-E",
-      "test(=runner::config_block_roundtrip::config_block_encode_inverts_decode)",
-    ],
-    {
-      cwd: repositoryRoot,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
-        ...nativeEnv(orca!),
-        ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
-      },
-    },
-  );
+  runParityNextest(repositoryRoot, "test(=runner::config_block_roundtrip::config_block_encode_inverts_decode)", {
+    ...process.env,
+    ARES_ORCA_BIN: `${repositoryRoot}scripts/orca-parity.sh`,
+    ...nativeEnv(orca!),
+    ARES_PARITY_ARTIFACT_ROOT: nativeRoot,
+  });
   const work = readdirSync(nativeRoot)
     .filter((name) => name.startsWith("orca-runner-"))
     .map((name) => `${nativeRoot}${name}/`)[0];

@@ -1,5 +1,40 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { test } from "@playwright/test";
+
+/**
+ * Runs an `ares-cli::orca_parity` nextest filter either from a prebuilt CI
+ * nextest archive (`ARES_PARITY_NEXTEST_ARCHIVE`, zero recompilation) or via
+ * `cargo nextest run` locally.
+ */
+export function runParityNextest(
+  repositoryRoot: string,
+  filter: string,
+  env: NodeJS.ProcessEnv,
+  extraArgs: string[] = [],
+) {
+  const archive = process.env.ARES_PARITY_NEXTEST_ARCHIVE;
+  const command = archive ? "cargo-nextest" : "cargo";
+  const args = archive
+    ? [
+        "nextest",
+        "run",
+        "--archive-file",
+        archive,
+        "--workspace-remap",
+        repositoryRoot.replace(/\/$/, ""),
+        ...extraArgs,
+        "-E",
+        filter,
+      ]
+    : ["nextest", "run", "-p", "ares-cli", "--test", "orca_parity", ...extraArgs, "-E", filter];
+  return execFileSync(command, args, {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    env,
+  });
+}
 
 /**
  * Path of the external oracle named by the environment variable `name`.

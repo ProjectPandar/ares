@@ -294,7 +294,7 @@ jobs:
 
   web-desktop:
     name: web-desktop (${{ matrix.shard }}/4)
-    needs: web-build
+    needs: [web-build, build-parity]
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
     strategy:
@@ -311,6 +311,7 @@ jobs:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
           browsers: chromium
           ghcr-token: ${{ github.token }}
+          parity-archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Restore main web E2E timing baseline
         uses: actions/cache/restore@v4
         with:
@@ -327,12 +328,9 @@ jobs:
           key: web-desktop-timings-main-${{ github.sha }}-shard-${{ matrix.shard }}
 
   web-packages-mobile:
-    needs: web-build
+    needs: [web-build, build-parity]
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
-    env:
-      CARGO_PROFILE_TEST_DEBUG: line-tables-only
-      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
         with:
@@ -343,13 +341,7 @@ jobs:
           bundle-key: ci-web-bundle-${{ github.run_id }}-${{ github.run_attempt }}
           browsers: chromium webkit
           ghcr-token: ${{ github.token }}
-      - uses: dtolnay/rust-toolchain@1.99.0
-      - uses: taiki-e/install-action@nextest
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "rust-nonparity"
-      - name: Prebuild orca_parity fixture binary for package specs
-        run: cargo nextest run --no-run -p ares-cli --test orca_parity
+          parity-archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Run packages E2E (workers=1)
         run: bunx --cwd web playwright test --config playwright.config.ts --project packages --workers 1 --retries 0 --output "$RUNNER_TEMP/web-results/packages"
       - name: Run mobile E2E (iphone, pixel, ipad)

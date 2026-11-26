@@ -186,14 +186,27 @@ export async function sliceAllPlates() {
 }
 
 async function slicePlates(indices: number[]) {
+  const initial = useApp.getState();
+  if (!initial.file || !initial.scene || initial.slice.status === "slicing" || indices.length === 0) return;
+  if (initial.presetSelection && presetSliceBlocker(initial.presetSelection, initial.scene)) return;
+  const firstStartedAt = performance.now();
+  useApp.setState({
+    currentPlate: indices[0],
+    slice: { status: "slicing", startedAt: firstStartedAt },
+    arrangeError: undefined,
+  });
   const opened = stlSessionOpened();
   await opened;
-  const { file, scene, slice, overrides, presetSelection, plater } = useApp.getState();
-  if (!file || !scene || slice.status === "slicing") return;
-  if (presetSelection && presetSliceBlocker(presetSelection, scene)) return;
-  for (const index of indices) {
-    const startedAt = performance.now();
-    useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt }, arrangeError: undefined });
+  const { file, scene, overrides, presetSelection, plater } = useApp.getState();
+  if (!file || !scene || (presetSelection && presetSliceBlocker(presetSelection, scene))) {
+    useApp.setState({ slice: { status: "idle" } });
+    return;
+  }
+  for (const [pos, index] of indices.entries()) {
+    const startedAt = pos === 0 ? firstStartedAt : performance.now();
+    if (pos > 0) {
+      useApp.setState({ currentPlate: index, slice: { status: "slicing", startedAt }, arrangeError: undefined });
+    }
     const plate = scene.plates[index]?.id;
     const onStatus = (progress: SlicingStatus) =>
       useApp.setState(({ slice: running }) =>
