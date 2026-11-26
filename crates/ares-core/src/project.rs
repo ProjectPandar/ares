@@ -24,7 +24,9 @@ pub(crate) mod raw_settings;
 pub(crate) mod region_graph;
 mod relationships;
 mod settings_export;
-pub(crate) use settings_export::{export_loaded_settings, export_prepared_settings};
+pub(crate) use settings_export::{
+    export_loaded_project_settings, export_loaded_settings, export_prepared_settings,
+};
 pub use settings_export::{export_project_settings, export_project_settings_with_catalog};
 mod slice_info;
 mod transform;
@@ -41,8 +43,8 @@ pub use domain::{
 pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile, SlotOptionsSnapshot};
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use export::{
-    export_3mf, export_arranged_sliced_3mf, export_imported_stl_3mf, export_project_3mf,
-    export_sliced_3mf,
+    direct_stl_print_object_id, export_3mf, export_arranged_sliced_3mf, export_imported_stl_3mf,
+    export_project_3mf, export_saved_sliced_3mf, export_sliced_3mf, saved_print_object_id,
 };
 pub use export_stl::{StlExport, export_stl, export_stls};
 pub use layer_config_ranges::LayerConfigRange;

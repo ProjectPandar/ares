@@ -118,7 +118,7 @@ pub(crate) struct DirectSliceArgs {
         default_value = "0",
         default_missing_value = "1",
         overrides_with = "enable_timelapse",
-        value_parser = parse_enable_timelapse
+        value_parser = action_bool
     )]
     pub(crate) enable_timelapse: bool,
     #[arg(long)]
@@ -134,25 +134,6 @@ pub(crate) struct DirectSliceArgs {
     pub(crate) arrange: crate::direct_stl::arrange::DirectArrangeArgs,
     #[arg(required = true)]
     pub(crate) inputs: Vec<PathBuf>,
-}
-
-fn parse_enable_timelapse(value: &str) -> Result<bool, &'static str> {
-    // Config.cpp:1757-1782,1900-1906 and Config.hpp:1927-1945.
-    if value.is_empty() {
-        return Ok(true);
-    }
-    match value
-        .split(',')
-        .map(str::trim)
-        .find(|item| !item.is_empty())
-        .unwrap_or_default()
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        "1" | "true" | "yes" | "on" | "enabled" => Ok(true),
-        "0" | "false" | "no" | "off" | "disabled" => Ok(false),
-        _ => Err("expected a boolean value"),
-    }
 }
 
 #[derive(Parser)]

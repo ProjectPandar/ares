@@ -1,12 +1,14 @@
 use std::{fs, path::Path};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsRequest,
     LoadSettingsSliceRequest, SlicedPlate, SlicerContext,
 };
 
 use crate::{
-    CliFailure, args::DirectSliceArgs, preset_sources::read_preset_files, split_native_list,
+    CliFailure,
+    args::DirectSliceArgs,
+    preset_sources::{as_load_settings_files, read_preset_list},
 };
 
 fn destination(output: &Path, outputdir: Option<&Path>) -> std::path::PathBuf {
@@ -74,22 +76,14 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         .iter()
         .map(|path| read_model(path, &output))
         .collect::<Result<Vec<_>, _>>()?;
-    let settings = read_preset_files(
-        &args
-            .load_settings
-            .as_deref()
-            .map_or_else(Vec::new, split_native_list),
-    )?;
-    let filaments = read_preset_files(
-        &args
-            .load_filaments
-            .as_deref()
-            .map_or_else(Vec::new, split_native_list),
-    )?;
+    let settings_files = read_preset_list(args.load_settings.as_deref())?;
+    let filament_files = read_preset_list(args.load_filaments.as_deref())?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let presets = LoadSettingsRequest {
         loaded_sources: None,
-        settings: &sources(&settings),
-        filaments: &sources(&filaments),
+        settings: &settings,
+        filaments: &filaments,
     };
     let archive = if stl {
         export_stl(
@@ -101,7 +95,12 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
     } else {
         let (input, filename) = &models[0];
         if sliced {
-            export_saved_sliced(input, filename).await
+            ares_core::export_saved_sliced_3mf(
+                input,
+                filename,
+                GenerationMetadata::default(),
+                SlicerContext::new(0),
+            )
         } else {
             ares_core::export_3mf(input, filename, presets)
         }
@@ -169,7 +168,12 @@ async fn export_stl(
         SlicerContext::new(0),
     )
     .await?;
-    ares_core::export_sliced_3mf(&[], filename, processed, print_object_id(1, 1, false))
+    ares_core::export_sliced_3mf(
+        &[],
+        filename,
+        processed,
+        ares_core::direct_stl_print_object_id(),
+    )
 }
 
 fn stl_slice_request<'a>(
@@ -192,24 +196,6 @@ fn stl_slice_request<'a>(
         orient: false,
         sliced_plate,
     }
-}
-
-async fn export_saved_sliced(
-    input: &[u8],
-    filename: &str,
-) -> Result<Vec<u8>, ares_core::SliceError> {
-    let project = ares_core::load_project(input)?;
-    let first_id = saved_print_object_id(&project)
-        .map_err(|detail| ares_core::SliceError::InvalidInput(detail.into()))?;
-    let processed = ares_core::slice_project_plate_with_archive(
-        input,
-        GenerationMetadata::default(),
-        Some(1),
-        &ConfigOverrides::default(),
-        SlicerContext::new(0),
-    )
-    .await?;
-    ares_core::export_sliced_3mf(input, filename, processed, first_id)
 }
 
 fn reject_unsupported(output: &Path, unsupported: &[(bool, &str)]) -> Result<(), CliFailure> {
@@ -241,65 +227,4 @@ fn read_model<'a>(path: &'a Path, output: &Path) -> Result<(Vec<u8>, &'a str), C
         .and_then(|name| name.to_str())
         .ok_or_else(|| failed("invalid source filename".to_owned()))?;
     Ok((input, filename))
-}
-
-fn saved_print_object_id(project: &ares_core::Project) -> Result<u32, &'static str> {
-    if project.plates().len() != 1 {
-        return Err("sliced export requires one saved plate");
-    }
-    let objects = project.objects();
-    let mut volumes = 0;
-    for object in objects {
-        let [instance] = object.instances() else {
-            return Err("sliced export requires one saved instance per object");
-        };
-        if !instance.printable()
-            || object
-                .volumes()
-                .iter()
-                .any(|volume| volume.volume_type() != ares_core::ProjectVolumeType::ModelPart)
-        {
-            return Err("sliced export requires printable instances of ordinary model parts");
-        }
-        volumes += object.volumes().len() as u32;
-    }
-
-    Ok(print_object_id(objects.len() as u32, volumes, true))
-}
-
-fn print_object_id(objects: u32, volumes: u32, saved: bool) -> u32 {
-    // The direct STL path uses one fresh model object and one volume. The saved
-    // path starts with the same ObjectBase allocation sequence.
-    let model = 2; // Model + ModelWipeTower (Model.hpp:1704,1753).
-    let config = 1; // ModelConfigObject (Model.hpp:86–104).
-    let object = 1 + config + 1; // ModelObject + config + LayerHeightProfile (582–588).
-    let instance = 1; // ModelInstance (1562–1567).
-    let volume = 1 + config + 4 + 8; // ModelVolume, config and FacetsAnnotations (904–935).
-    let input = 2 * model + (object + instance) * objects + volume * volumes;
-    // The reader's return and the CLI vector insertion each construct a tower
-    // but preserve the existing model ID (Model.cpp:489–516; OrcaSlicer.cpp:2008).
-    let model_moves = 2;
-    let print = 1 + model; // PrintBase and its private model (PrintBase.hpp:390,561).
-    let initial_list = 3 + print; // PartPlateList and two PartPlates (PartPlate.cpp:5966–5995).
-    let plate_preparation = if saved {
-        1 + print // Replacement plate + Print (PartPlate.cpp:6589–6605).
-    } else {
-        2 // Two more model allocations are avoided when no saved plate is restored.
-    };
-    let slice_copy = model; // Default construct before copying IDs (OrcaSlicer.cpp:6466–6470).
-    let print_object = 1; // Print::apply (PrintApply.cpp:1977).
-    input + model_moves + initial_list + plate_preparation + slice_copy + print_object
-}
-
-fn sources(
-    files: &[(String, String, Option<ares_core::SourceIdentity>)],
-) -> Vec<LoadSettingsFile<'_>> {
-    files
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect()
 }

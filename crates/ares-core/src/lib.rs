@@ -114,11 +114,12 @@ pub use profiles::{
     FilamentSlotState, FilteredPresets, GuiProfileSliceRequest, GuideFilament, GuideModel,
     InstalledPrinters, LoadSettingsFile, LoadSettingsRequest, LoadSettingsSliceRequest,
     MergedProfile, MergedProfileMetadata, MissingParent, ParsedPresetBundle, PresetCatalogHandle,
-    PresetValues, PrinterModelInfo, ProfileFragment, ProfileGroupMetadata, ProfileKind,
-    ProfileRequest, ProfileSelection, ProfileSettings, ProfileSliceRequest, SelectablePrinter,
-    SourceIdentity, compose_profile_fragments, export_stl_settings, filter_compatible_presets,
-    guide_models, merge_profile_fragments, parse_preset_bundle, profile_placed_project,
-    profile_settings, slice_imported_stl_with_load_settings_processed, slice_with_load_settings,
+    PresetInheritanceSource, PresetValues, PrinterModelInfo, ProfileFragment, ProfileGroupMetadata,
+    ProfileKind, ProfileRequest, ProfileSelection, ProfileSettings, ProfileSliceRequest,
+    SelectablePrinter, SourceIdentity, VendorManifest, compose_profile_fragments,
+    export_stl_settings, filter_compatible_presets, guide_models, merge_profile_fragments,
+    parse_preset_bundle, preset_inheritance_source, profile_placed_project, profile_settings,
+    slice_imported_stl_with_load_settings_processed, slice_with_load_settings,
     slice_with_load_settings_processed, slice_with_profiles, slice_with_profiles_processed,
     validate_stl_export_presets, validate_with_profiles,
 };
@@ -139,8 +140,9 @@ pub use project::{
     load_project, project_config_substitutions, validate_project_version,
 };
 pub use project::{
-    StlExport, export_3mf, export_arranged_sliced_3mf, export_imported_stl_3mf, export_project_3mf,
-    export_sliced_3mf, export_stl, export_stls,
+    StlExport, direct_stl_print_object_id, export_3mf, export_arranged_sliced_3mf,
+    export_imported_stl_3mf, export_project_3mf, export_saved_sliced_3mf, export_sliced_3mf,
+    export_stl, export_stls, saved_print_object_id,
 };
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,

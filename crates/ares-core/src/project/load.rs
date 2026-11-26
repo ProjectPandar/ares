@@ -86,33 +86,57 @@ pub(crate) fn load_project_with_preparation(
     input: impl AsRef<[u8]>,
     overrides: &crate::ConfigOverrides,
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    load_project_raw(input.as_ref(), overrides, true, None)
+    let loaded = load_project_raw(input.as_ref(), overrides, true, (false, false))?;
+    Ok((loaded.project, loaded.preparation))
 }
 
 pub(crate) fn load_project_for_profiles(
     input: &[u8],
 ) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
-    load_project_raw(input, &crate::ConfigOverrides::default(), false, None)
+    let loaded = load_project_raw(
+        input,
+        &crate::ConfigOverrides::default(),
+        false,
+        (false, false),
+    )?;
+    Ok((loaded.project, loaded.preparation))
 }
 
 fn load_project_raw(
     input: &[u8],
     overrides: &crate::ConfigOverrides,
     materialize_retained_defaults: bool,
-    sparse_settings: Option<&mut ProjectSettingsRaw>,
-) -> Result<(Project, crate::options::flush_matrix::PreparationContext), SliceError> {
+    cli_flags: (bool, bool),
+) -> Result<profile_project::LoadedProjectData, SliceError> {
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
     }
-
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+    load_project_from_archive(
+        &mut archive,
+        overrides,
+        materialize_retained_defaults,
+        cli_flags,
+    )
+}
+
+fn load_project_from_archive(
+    archive: &mut ProjectArchive<'_>,
+    overrides: &crate::ConfigOverrides,
+    materialize_retained_defaults: bool,
+    (capture_cli_metadata, check_version): (bool, bool),
+) -> Result<profile_project::LoadedProjectData, SliceError> {
+    let (prefetched_rels, prefetched_root) = if check_version {
+        profile_project::prefetch_and_check_version(archive)?
+    } else {
+        (None, None)
+    };
     let archive_paths = archive.paths().cloned().collect::<BTreeSet<_>>();
     let has_painted_layer_height_profile = archive_paths.iter().any(|path| {
         path.as_str()
             .eq_ignore_ascii_case(LAYER_HEIGHT_PROFILE_PATH)
     });
-    let content_types: ContentTypes =
-        read_xml(&mut archive, CONTENT_TYPES_PATH, XmlRole::ContentTypes)?;
+    let content_types: ContentTypes = read_xml(archive, CONTENT_TYPES_PATH, XmlRole::ContentTypes)?;
     content_types.validate_required()?;
 
     let root_relationships_path = PackagePath::entry(ROOT_RELATIONSHIPS_PATH.as_bytes())?;
@@ -121,31 +145,36 @@ fn load_project_raw(
             "root relationship part has the wrong content type".to_owned(),
         ));
     }
-    let root_relationships: Relationships = read_xml(
-        &mut archive,
-        ROOT_RELATIONSHIPS_PATH,
-        XmlRole::Relationships,
-    )?;
+    let root_relationships: Relationships = match prefetched_rels {
+        Some(bytes) => deserialize_xml(&bytes, XmlRole::Relationships)?,
+        None => read_xml(archive, ROOT_RELATIONSHIPS_PATH, XmlRole::Relationships)?,
+    };
     root_relationships.validate_unique_ids(&PackagePath::root())?;
     let root_model =
         root_relationships.resolve_required(&PackagePath::root(), MODEL_RELATIONSHIP_TYPE)?;
     require_model_content_type(&content_types, &root_model)?;
     previews::validate_root_previews(&root_relationships, &content_types, &archive_paths)?;
 
-    let graph = graph::load(&mut archive, &content_types, &archive_paths, root_model)?;
+    let graph = graph::load(
+        archive,
+        &content_types,
+        &archive_paths,
+        root_model,
+        prefetched_root,
+    )?;
 
-    let model_settings: ModelSettings = read_optional(&mut archive, MODEL_SETTINGS_PATH)?
+    let model_settings: ModelSettings = read_optional(archive, MODEL_SETTINGS_PATH)?
         .map(|bytes| deserialize_xml(&bytes, XmlRole::ModelSettings))
         .transpose()?
         .unwrap_or_default();
     previews::validate_plate_previews(&model_settings, &content_types, &archive_paths)?;
-    content_types.validate_png_entries(&mut archive)?;
-    let slice_info: SliceInfo = read_optional(&mut archive, SLICE_INFO_PATH)?
+    content_types.validate_png_entries(archive)?;
+    let slice_info: SliceInfo = read_optional(archive, SLICE_INFO_PATH)?
         .map(|bytes| deserialize_xml(&bytes, XmlRole::SliceInfo))
         .transpose()?
         .unwrap_or_default();
     let metadata = metadata::index(&model_settings)?;
-    let filament_sequences = read_optional(&mut archive, FILAMENT_SEQUENCE_PATH)?
+    let filament_sequences = read_optional(archive, FILAMENT_SEQUENCE_PATH)?
         .map(|bytes| {
             FilamentSequences::read(&bytes, metadata.plates.iter().map(|plate| plate.id()))
         })
@@ -158,12 +187,30 @@ fn load_project_raw(
         // OrcaSlicer only writes plate documents when saving a sliced plate;
         // CLI exports of unsliced projects omit them.
         if archive_paths.contains(&PackagePath::root().resolve(&path)?) {
-            let document: PlateJson = read_json(&mut archive, &path, JsonRole::Plate)?;
+            let document: PlateJson = read_json(archive, &path, JsonRole::Plate)?;
             metadata::validate_plate_document(&document)?;
             plate_documents.push(document);
         }
     }
-    let mut project_settings_raw = read_project_settings(&mut archive)?;
+    let (project_settings_present, mut project_settings_raw) = read_project_settings_opt(archive)?;
+    let embedded_raw =
+        (capture_cli_metadata && project_settings_present).then(|| project_settings_raw.clone());
+    let root_is_bbl_family = graph.root().document.metadata.iter().any(|entry| {
+        entry.name == "Application"
+            && (entry.value.starts_with("BambuStudio-") || entry.value.starts_with("OrcaSlicer-"))
+    });
+    let upward_source = if !capture_cli_metadata || !root_is_bbl_family {
+        Ok(None)
+    } else if !project_settings_present {
+        Err(format!(
+            "invalid project archive: entry {:?} is missing",
+            PROJECT_SETTINGS_PATH
+        ))
+    } else {
+        super::UpwardMachineSource::from_raw_settings(&project_settings_raw)
+            .map(Some)
+            .map_err(|error| error.to_string())
+    };
     // `load_from_json`'s type dispatch runs before any per-key
     // deserialization: non-string/non-array JSON scalars never reach
     // `set_deserialize` and the key keeps its default (`Config.cpp:905-990`).
@@ -175,7 +222,7 @@ fn load_project_raw(
     // EMBEDDED config (the CLI passes `Enable`, `OrcaSlicer.cpp:1380, 1737`, and
     // `project_config_substitutions` reports them). Caller overrides below merge
     // through their own deserialization rule and are not substituted.
-    project_settings_raw.normalize_embedded_wire_substitutions();
+    let substitutions = project_settings_raw.normalize_embedded_wire_substitutions();
     // `handle_legacy_composite` (`PrintConfig.cpp:10094-10096`) ends the same `load_from_json`.
     project_settings_raw.normalize_filament_values_to_variants();
     project_settings_raw
@@ -186,9 +233,11 @@ fn load_project_raw(
         &project_settings_raw,
         overrides,
     )?;
-    if let Some(sparse_settings) = sparse_settings {
-        sparse_settings.clone_from(&project_settings_raw);
-    }
+    let sparse_settings = if capture_cli_metadata {
+        project_settings_raw.clone()
+    } else {
+        ProjectSettingsRaw::default()
+    };
     let (project_settings_raw, settings) = settings::resolve(
         project_settings_raw,
         overrides,
@@ -198,10 +247,10 @@ fn load_project_raw(
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::domain::materialize_meshes(&mut objects);
     super::domain::normalize_volume_offsets(&mut objects);
-    super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
-    super::layer_height_profiles::load(&mut archive, &archive_paths, &mut objects)?;
-    super::brim_ear_points::load(&mut archive, &archive_paths, &mut objects)?;
-    let plates_custom_gcodes = super::plate_custom_gcodes::load(&mut archive, &archive_paths)?;
+    super::layer_config_ranges::load(archive, &archive_paths, &mut objects)?;
+    super::layer_height_profiles::load(archive, &archive_paths, &mut objects)?;
+    super::brim_ear_points::load(archive, &archive_paths, &mut objects)?;
+    let plates_custom_gcodes = super::plate_custom_gcodes::load(archive, &archive_paths)?;
     // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
     // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).
     let bbl_family_3mf = graph.models.iter().any(|model| {
@@ -252,20 +301,33 @@ fn load_project_raw(
         },
     );
     project.plates_custom_gcodes = plates_custom_gcodes;
-    Ok((project, preparation))
+    Ok(profile_project::LoadedProjectData {
+        project,
+        preparation,
+        sparse_settings,
+        embedded_raw,
+        substitutions,
+        upward_source,
+    })
 }
 
 fn read_project_settings(
     archive: &mut ProjectArchive<'_>,
 ) -> Result<ProjectSettingsRaw, SliceError> {
-    read_optional(archive, PROJECT_SETTINGS_PATH)?
-        .map(|bytes| {
-            serde_json::from_slice(&bytes).map_err(|error| {
+    read_project_settings_opt(archive).map(|(_, raw)| raw)
+}
+
+fn read_project_settings_opt(
+    archive: &mut ProjectArchive<'_>,
+) -> Result<(bool, ProjectSettingsRaw), SliceError> {
+    match read_optional(archive, PROJECT_SETTINGS_PATH)? {
+        Some(bytes) => serde_json::from_slice(&bytes)
+            .map(|raw| (true, raw))
+            .map_err(|error| {
                 SliceError::InvalidInput(format!("invalid project settings JSON: {error}"))
-            })
-        })
-        .transpose()
-        .map(Option::unwrap_or_default)
+            }),
+        None => Ok((false, ProjectSettingsRaw::default())),
+    }
 }
 
 fn read_optional(

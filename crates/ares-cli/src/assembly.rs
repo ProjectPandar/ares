@@ -3,8 +3,9 @@ use std::{collections::BTreeMap, fs, path::Path};
 use ares_core::{Assembly, AssemblyError, AssemblyFile, AssemblyList, ConfigOverrides};
 
 use crate::{
-    CliFailure, SliceArgs, preset_sources::read_preset_files, report_success,
-    slice_error_to_failure, split_native_list,
+    CliFailure, SliceArgs,
+    preset_sources::{as_load_settings_files, read_preset_list},
+    report_success, slice_error_to_failure, split_native_list,
 };
 
 pub(super) fn requested(args: &SliceArgs) -> bool {
@@ -135,21 +136,6 @@ fn read_list(path: &Path) -> Result<AssemblyList, AssemblyError> {
     AssemblyList::from_json(&bytes)
 }
 
-fn preset_files(
-    presets: &[(String, String, Option<ares_core::SourceIdentity>)],
-) -> Vec<ares_core::LoadSettingsFile<'_>> {
-    presets
-        .iter()
-        .map(
-            |(label, json, source_identity)| ares_core::LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            },
-        )
-        .collect()
-}
-
 pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
     if args.assemble_list.is_some() {
         eprintln!("Invalid option --assemble-list");
@@ -197,20 +183,10 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
         None => Assembly::from_models(&inputs, &args.load_filament_ids),
     }
     .map_err(failure)?;
-    let settings = args
-        .load_settings
-        .as_deref()
-        .map(split_native_list)
-        .unwrap_or_default();
-    let filaments = args
-        .load_filaments
-        .as_deref()
-        .map(split_native_list)
-        .unwrap_or_default();
-    let settings = read_preset_files(&settings)?;
-    let filaments = read_preset_files(&filaments)?;
-    let settings = preset_files(&settings);
-    let filaments = preset_files(&filaments);
+    let settings_files = read_preset_list(args.load_settings.as_deref())?;
+    let filament_files = read_preset_list(args.load_filaments.as_deref())?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let mut sliced_plate = ares_core::SlicedPlate::default();
     let mut progress = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text)

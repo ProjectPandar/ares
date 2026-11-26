@@ -1,6 +1,7 @@
 //! Headless branch of `bbs_3mf.cpp:6418`, `_save_model_to_file`.
 mod geometry;
 mod json_float;
+mod object_ids;
 mod project_settings;
 mod saved_presets;
 mod scene;
@@ -8,6 +9,7 @@ mod stl;
 mod xml;
 mod zip_records;
 
+pub use object_ids::{direct_stl_print_object_id, export_saved_sliced_3mf, saved_print_object_id};
 pub use scene::export_project_3mf;
 pub(crate) use scene::write as write_plater_project;
 pub use stl::export_imported_stl_3mf;
@@ -98,17 +100,17 @@ pub fn export_sliced_3mf(
             "export requires a source filename without a directory",
         ));
     }
-    let mut archive = processed
-        .archive
-        .take()
-        .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    let model = if let Some(model) = archive.stl_model.take() {
+    let model = if let Some(archive) = processed.archive.as_mut()
+        && let Some(model) = archive.stl_model.take()
+    {
         if archive.filament_color.is_empty()
             && let Some(color) = processed.result.extruder_colors.first()
         {
             archive.filament_color.clone_from(color);
         }
         model
+    } else if processed.archive.is_none() {
+        return Err(invalid("sliced export requires captured plate data"));
     } else {
         if !filename.to_ascii_lowercase().ends_with(".3mf") {
             return Err(deferred(
@@ -117,6 +119,18 @@ pub fn export_sliced_3mf(
         }
         geometry::load_saved(input)?
     };
+    write_sliced_3mf_package(model, processed, first_print_object_id)
+}
+
+pub(super) fn write_sliced_3mf_package(
+    model: SavedModel,
+    mut processed: ProcessedGCode,
+    first_print_object_id: u32,
+) -> Result<Vec<u8>, SliceError> {
+    let archive = processed
+        .archive
+        .take()
+        .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
     let mut identify_ids = vec![None; model.objects.len()];
     let mismatch = || invalid("captured plate does not match model objects");
     for object in &archive.objects {

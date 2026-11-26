@@ -34,7 +34,16 @@ fn export_saved_settings(
     catalog: Option<&PresetCatalogHandle>,
 ) -> Result<Vec<u8>, SliceError> {
     let overrides = ConfigOverrides::default();
-    let (mut project, preparation) = load_project_with_preparation(input, &overrides)?;
+    let (project, preparation) = load_project_with_preparation(input, &overrides)?;
+    export_loaded_project_settings(project, preparation, catalog)
+}
+
+pub(crate) fn export_loaded_project_settings(
+    mut project: super::Project,
+    preparation: flush_matrix::PreparationContext,
+    catalog: Option<&PresetCatalogHandle>,
+) -> Result<Vec<u8>, SliceError> {
+    let overrides = ConfigOverrides::default();
     let filament_count = project.cli_filament_count();
     // OrcaSlicer.cpp:1894 creates upward_compatible_machine only for a BBL-family 3MF.
     let upward = project.documents().bbl_family_3mf;

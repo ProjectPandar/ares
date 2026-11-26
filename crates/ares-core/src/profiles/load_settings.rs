@@ -143,7 +143,7 @@ pub fn validate_stl_export_presets(request: &LoadSettingsRequest<'_>) -> Result<
 }
 
 pub(crate) fn compose_project_load_settings(
-    input: &[u8],
+    (input, embedded_raw): (&[u8], Option<&ProjectSettingsRaw>),
     request: &LoadSettingsRequest<'_>,
 ) -> Result<
     (
@@ -157,7 +157,7 @@ pub(crate) fn compose_project_load_settings(
     // sends every non-3MF input through STL parsing before adjudication.
     let direct_stl = InputFormat::detect(input) != InputFormat::ThreeMf;
     let mut names = load_settings_preset_names(request, &catalog, direct_stl)?;
-    names.embedded = project::retained_config(input, request, &names)?;
+    names.embedded = project::retained_config((input, embedded_raw), request, &names)?;
     let sparse = direct_stl && request.filaments.iter().any(|file| file.label.is_empty());
     let (mut composed, loaded_indices) = compose_with_project(
         request,

@@ -1,11 +1,12 @@
 use std::{fs, io, io::Write, path::Path};
 
-use ares_core::{CliPresetProject, LoadSettingsFile, LoadSettingsRequest};
+use ares_core::{CliPresetProject, ConfigSubstitution, LoadSettingsRequest};
 
 use crate::{
     args::DirectSliceArgs,
     failure::{CliFailure, substitution_warnings},
-    preset_sources, split_native_list,
+    preset_sources::{self, as_load_settings_files},
+    split_native_list,
 };
 
 pub(super) fn run(
@@ -14,6 +15,8 @@ pub(super) fn run(
     args: &DirectSliceArgs,
 ) -> Result<(), CliFailure> {
     let project = fs::read(input)?;
+    let opened = CliPresetProject::open(&project, true).map_err(io::Error::other)?;
+    let substitutions = opened.substitutions().to_vec();
     if destination != Path::new("-")
         && let Some(settings) = args.load_settings.as_deref()
     {
@@ -28,22 +31,25 @@ pub(super) fn run(
             let context = args
                 .project_actions
                 .context(ares_core::SlicerContext::new(0));
-            let admitted = CliPresetProject::admit(&project, &context).map_err(io::Error::other)?;
-            if admitted.is_bbl_family_3mf() {
+            opened
+                .check_post_process(&context)
+                .map_err(io::Error::other)?;
+            if opened.is_bbl_family_3mf() {
                 let json = export_explicit(
-                    admitted,
+                    opened,
                     (&settings, filaments.as_deref().unwrap_or_default()),
                     args,
                 )?;
-                return report_and_write(input, &project, destination, &json);
+                return report_and_write(input, &substitutions, destination, &json);
             }
         }
     }
     let resources = crate::installed_resources::resolve(None)?;
     let catalog = crate::project_presets::load_resources_catalog(&resources)?;
-    let json = ares_core::export_project_settings_with_catalog(&project, &catalog)
+    let json = opened
+        .export_settings_with_catalog(&catalog)
         .map_err(io::Error::other)?;
-    report_and_write(input, &project, destination, &json)
+    report_and_write(input, &substitutions, destination, &json)
 }
 
 fn export_explicit(
@@ -51,18 +57,10 @@ fn export_explicit(
     (settings, filaments): (&[&str], &[&str]),
     args: &DirectSliceArgs,
 ) -> Result<Vec<u8>, CliFailure> {
-    let settings = preset_sources::read_preset_files(settings)?;
-    let filaments = preset_sources::read_preset_files(filaments)?;
-    let [settings, filaments] = [&settings, &filaments].map(|files| {
-        files
-            .iter()
-            .map(|(label, json, source_identity)| LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            })
-            .collect::<Vec<_>>()
-    });
+    let settings_files = preset_sources::read_preset_files(settings)?;
+    let filament_files = preset_sources::read_preset_files(filaments)?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let loaded_sources = preset_sources::load(
         args.datadir.as_deref(),
         settings.iter().chain(&filaments).copied(),
@@ -82,14 +80,13 @@ fn export_explicit(
 
 fn report_and_write(
     input: &Path,
-    project: &[u8],
+    substitutions: &[ConfigSubstitution],
     destination: &Path,
     json: &[u8],
 ) -> Result<(), CliFailure> {
-    let substitutions = crate::substitutions(project);
     eprint!(
         "{}",
-        substitution_warnings(&input.to_string_lossy(), &substitutions)
+        substitution_warnings(&input.to_string_lossy(), substitutions)
     );
     write(destination, json)
 }

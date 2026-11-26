@@ -10,7 +10,7 @@ use crate::{
     args::ProjectActionArgs,
     failure::{CliFailure, slice_error_to_failure},
     native_refresh::{self, RefreshInputs},
-    substitutions,
+    preset_sources::{as_load_settings_files, read_preset_list},
 };
 
 pub(super) struct PlateOptions<'a> {
@@ -69,39 +69,27 @@ pub(super) fn run(
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
     let loaded_files = args.load_settings.is_some() || args.load_filaments.is_some();
-    let admit = || {
-        ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
-            slice_error_to_failure(
-                error,
-                &result_path,
-                #[cfg(target_os = "linux")]
-                args.report_plate,
-            )
-        })
+    let map_err = |error| {
+        slice_error_to_failure(
+            error,
+            &result_path,
+            #[cfg(target_os = "linux")]
+            args.report_plate,
+        )
     };
-    let mut admitted = loaded_files.then(admit).transpose()?;
+    let mut admitted = ares_core::CliPresetProject::open(input, true).map_err(map_err)?;
+    if loaded_files {
+        admitted.check_post_process(&context).map_err(map_err)?;
+    }
+    let substitutions = admitted.substitutions().to_vec();
     let catalog = args
         .project_preset_catalog
         .map(fs::read_to_string)
         .transpose()?;
-    let settings_files = preset_files(args.load_settings)?;
-    let filament_files = preset_files(args.load_filaments)?;
-    let settings = settings_files
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect::<Vec<_>>();
-    let filaments = filament_files
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect::<Vec<_>>();
+    let settings_files = read_preset_list(args.load_settings)?;
+    let filament_files = read_preset_list(args.load_filaments)?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let loaded_sources;
     let system_catalog;
     let refresh;
@@ -125,7 +113,8 @@ pub(super) fn run(
             None,
         )
     } else if let Some(json) = catalog.as_deref() {
-        let source = ares_core::UpwardMachineSource::from_project(input)
+        let source = admitted
+            .take_upward_source()
             .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
         (
             CliPlatesSettings::Catalog {
@@ -135,42 +124,47 @@ pub(super) fn run(
             source,
             None,
         )
-    } else if args.uptodate
-        && let Some(source) = ares_core::UpwardMachineSource::from_project(input)
-            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
-    {
-        admitted = Some(admit()?);
-        refresh = native_refresh::load(
-            &RefreshInputs {
-                resources_dir: args.resources_dir,
-                settings: args.uptodate_settings,
-                filaments: args.uptodate_filaments,
-                #[cfg(target_os = "linux")]
-                output: &result_path,
-            },
-            &source,
-            &[],
-        )?;
-        (
-            CliPlatesSettings::RetainedRefresh(&refresh),
-            Some(source),
-            None,
-        )
     } else {
-        let resources = crate::installed_resources::resolve(args.resources_dir)?;
-        let (source, machine) = crate::compatible_machine::load(input, &resources)?;
-        system_catalog = crate::project_presets::retained_printer_catalog(
-            &resources,
-            source.as_ref(),
-            args.resources_dir.is_some(),
-        )?;
-        (
-            CliPlatesSettings::Embedded {
-                system_catalog: system_catalog.as_ref(),
-            },
-            source,
-            machine,
-        )
+        let source = admitted
+            .take_upward_source()
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
+        if args.uptodate
+            && let Some(source) = source
+        {
+            admitted.check_post_process(&context).map_err(map_err)?;
+            refresh = native_refresh::load(
+                &RefreshInputs {
+                    resources_dir: args.resources_dir,
+                    settings: args.uptodate_settings,
+                    filaments: args.uptodate_filaments,
+                    #[cfg(target_os = "linux")]
+                    output: &result_path,
+                },
+                &source,
+                &[],
+            )?;
+            (
+                CliPlatesSettings::RetainedRefresh(&refresh),
+                Some(source),
+                None,
+            )
+        } else {
+            let resources = crate::installed_resources::resolve(args.resources_dir)?;
+            let machine =
+                crate::compatible_machine::read_machine_full(source.as_ref(), &resources)?;
+            system_catalog = crate::project_presets::retained_printer_catalog(
+                &resources,
+                source.as_ref(),
+                args.resources_dir.is_some(),
+            )?;
+            (
+                CliPlatesSettings::Embedded {
+                    system_catalog: system_catalog.as_ref(),
+                },
+                source,
+                machine,
+            )
+        }
     };
     let upward_input = match &settings {
         CliPlatesSettings::RetainedRefresh(refresh) => UpwardMachineInput::RetainedRefresh(refresh),
@@ -230,11 +224,7 @@ pub(super) fn run(
         completed.push((plate, report.clone()));
         Ok(())
     };
-    let result = match admitted {
-        Some(project) => project.slice_plates(request, metadata, context, publish),
-        None => ares_core::slice_cli_project_plates(input, request, metadata, context, publish),
-    };
-    let substitutions = substitutions(input);
+    let result = admitted.slice_plates(request, metadata, context, publish);
     if let Err(error) = result {
         let failure = publish_failure
             .unwrap_or_else(|| match error.kind {
@@ -298,13 +288,4 @@ pub(super) fn sources_for_slice<'a>(
             ),
         }
     })
-}
-
-fn preset_files(
-    value: Option<&str>,
-) -> Result<Vec<(String, String, Option<ares_core::SourceIdentity>)>, CliFailure> {
-    value.map_or_else(
-        || Ok(Vec::new()),
-        |list| crate::preset_sources::read_preset_files(&crate::split_native_list(list)),
-    )
 }

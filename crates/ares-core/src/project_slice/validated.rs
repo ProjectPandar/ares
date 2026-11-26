@@ -296,11 +296,43 @@ pub async fn slice_project_plate_with_archive(
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
+    slice_project_plate_with_archive_loaded(
+        (input.as_ref(), None),
+        metadata,
+        plate,
+        overrides,
+        context,
+    )
+}
+
+pub(crate) fn slice_loaded_project_plate_with_archive(
+    (input, loaded): (&[u8], Box<crate::project::LoadedProfileProject>),
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+    overrides: &ConfigOverrides,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
+    slice_project_plate_with_archive_loaded(
+        (input, Some(loaded)),
+        metadata,
+        plate,
+        overrides,
+        context,
+    )
+}
+
+fn slice_project_plate_with_archive_loaded(
+    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+    overrides: &ConfigOverrides,
+    context: SlicerContext<'_>,
+) -> Result<ProcessedGCode, SliceError> {
     overrides.validate_cli_config()?;
     slice_source_with_archive(
         ProjectSource {
-            loaded: None,
-            input: crate::project_slice::ProjectInput::Bytes(input.as_ref()),
+            loaded,
+            input: crate::project_slice::ProjectInput::Bytes(input),
             plate,
             profile: None,
             refresh: None,

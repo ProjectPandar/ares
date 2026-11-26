@@ -31,7 +31,7 @@ pub fn export_imported_stl_3mf(
         sliced_plate: &mut Default::default(),
     };
     with_load_settings_source(
-        (ProjectInput::ImportedStl(model), &[]),
+        (ProjectInput::ImportedStl(model), &[], None),
         request,
         None,
         |source| {

@@ -31,7 +31,11 @@ impl ModelIdentity {
             XmlRole::Relationships,
         )?;
         let model_path = relationships.resolve_required(&root, MODEL_RELATIONSHIP_TYPE)?;
-        deserialize_xml(&archive.read(&model_path)?, XmlRole::Model)
+        Self::from_bytes(&archive.read(&model_path)?)
+    }
+
+    pub(super) fn from_bytes(bytes: &[u8]) -> Result<Self, SliceError> {
+        deserialize_xml(bytes, XmlRole::Model)
     }
 
     pub(super) fn metadata(&self) -> impl DoubleEndedIterator<Item = &ModelMetadata> {
