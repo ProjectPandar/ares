@@ -101,3 +101,6 @@ mod type1_writer_arc_mode;
 
 #[path = "adaptive_infill_field.rs"]
 mod adaptive_infill_field;
+
+#[path = "brim_leading_edge_only.rs"]
+mod brim_leading_edge_only;

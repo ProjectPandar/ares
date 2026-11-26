@@ -121,6 +121,41 @@ async fn ultimaker_host() {
     );
 }
 
+#[tokio::test]
+async fn leading_edge_brim_flat_bed() {
+    let work = enum_declarations_support::artifacts("brim_type-leading_edge_only");
+    let input = enum_declarations_support::input("brim_type", "leading_edge_only");
+    std::fs::write(work.join("input.3mf"), &input).unwrap();
+    let project = ares_core::load_project(&input).unwrap();
+    assert_eq!(
+        enum_declarations_support::loaded_value(&project, "brim_type"),
+        "leading_edge_only"
+    );
+    let substitutions = ares_core::project_config_substitutions(&input).unwrap();
+    assert!(!substitutions.iter().any(|entry| entry.key == "brim_type"));
+    let result =
+        ares_core::slice_project(&input, GenerationMetadata::default(), SlicerContext::new(1))
+            .await;
+    std::fs::write(
+        work.join("result.json"),
+        serde_json::to_vec_pretty(&json!({
+            "loaded": "leading_edge_only", "substitutions": [],
+            "error": result.as_ref().err().map(|error| format!("{error:?}")),
+            "output_bytes": result.as_ref().ok().map(Vec::len),
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let bytes = result.unwrap();
+    std::fs::write(work.join("output.gcode"), &bytes).unwrap();
+    assert!(
+        std::str::from_utf8(&bytes)
+            .unwrap()
+            .lines()
+            .any(|line| line == "; brim_type = leading_edge_only")
+    );
+}
+
 macro_rules! unsupported_states {
     ($($name:ident: $key:literal, $value:literal;)*) => {$(
         #[tokio::test]
@@ -132,7 +167,6 @@ macro_rules! unsupported_states {
 
 unsupported_states! {
     internal_solid_spiral_inset: "internal_solid_infill_pattern", "spiralinset";
-    leading_edge_brim: "brim_type", "leading_edge_only";
     best_of_order: "print_order", "best_of";
     snake_order: "print_order", "snake";
     nozzle_manual: "filament_map_mode", "Nozzle Manual";
