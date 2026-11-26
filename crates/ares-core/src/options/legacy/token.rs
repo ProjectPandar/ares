@@ -34,181 +34,157 @@ pub(crate) fn erases_percentage_for_absolute_keys(opt_key: &str) -> bool {
 }
 
 pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
-    if opt_key == "curr_bed_type" && value == "SuperTack Plate" {
-        *value = "Supertack Plate".to_owned();
-    } else if opt_key == "enable_wipe_tower" {
-        *opt_key = "enable_prime_tower".to_owned();
-    } else if opt_key == "wipe_tower_width" {
-        *opt_key = "prime_tower_width".to_owned();
-    } else if opt_key == "wiping_volume" {
-        *opt_key = "prime_volume".to_owned();
-    } else if opt_key == "wipe_tower_brim_width" {
-        *opt_key = "prime_tower_brim_width".to_owned();
-    } else if opt_key == "tool_change_gcode" {
-        *opt_key = "change_filament_gcode".to_owned();
-    } else if opt_key == "bridge_fan_speed" {
-        *opt_key = "overhang_fan_speed".to_owned();
-    } else if opt_key == "tpms_adaptive" {
-        *opt_key = "adaptive_infill_mode".to_owned();
-    } else if opt_key == "tpms_interior_density" {
-        *opt_key = "adaptive_infill_interior_density".to_owned();
-    } else if opt_key == "tpms_adaptive_gradient" {
-        *opt_key = "adaptive_infill_gradient".to_owned();
-    } else if opt_key == "infill_extruder" {
-        *opt_key = "sparse_infill_filament".to_owned();
-    } else if opt_key == "solid_infill_extruder" {
-        *opt_key = "solid_infill_filament".to_owned();
-    } else if opt_key == "perimeter_extruder" {
-        *opt_key = "wall_filament".to_owned();
-    } else if opt_key == "wipe_tower_extruder" {
-        *opt_key = "wipe_tower_filament".to_owned();
-    } else if opt_key == "support_material_extruder" {
-        *opt_key = "support_filament".to_owned();
-    } else if opt_key == "support_material_interface_extruder" {
-        *opt_key = "support_interface_filament".to_owned();
-    } else if opt_key == "support_material_angle" {
-        *opt_key = "support_angle".to_owned();
-    } else if opt_key == "support_material_enforce_layers" {
-        *opt_key = "enforce_support_layers".to_owned();
-    } else if erases_percentage_for_absolute_keys(opt_key) && value.contains('%') {
-        // Old profiles expressed these as percentages; the current keys are
-        // absolute, so the entry is dropped to avoid a parse error.
-        opt_key.clear();
-    } else if opt_key == "inherits_cummulative" {
-        *opt_key = "inherits_group".to_owned();
-    } else if opt_key == "compatible_printers_condition_cummulative" {
-        *opt_key = "compatible_machine_expression_group".to_owned();
-    } else if opt_key == "compatible_prints_condition_cummulative" {
-        *opt_key = "compatible_process_expression_group".to_owned();
-    } else if opt_key == "cooling" {
-        *opt_key = "slow_down_for_layer_cooling".to_owned();
-    } else if opt_key == "timelapse_no_toolhead" {
-        *opt_key = "timelapse_type".to_owned();
-    } else if opt_key == "timelapse_type" && value == "2" {
-        // old file "0" is None, "2" is Traditional; new file "0" is
-        // Traditional, erase "2".
-        *value = "0".to_owned();
-    } else if opt_key == "support_type" && value == "normal" {
-        *value = "normal(manual)".to_owned();
-    } else if opt_key == "support_type" && value == "tree" {
-        *value = "tree(manual)".to_owned();
-    } else if opt_key == "support_type" && value == "hybrid(auto)" {
-        *value = "tree(auto)".to_owned();
-    } else if opt_key == "support_base_pattern" && value == "none" {
-        *value = "hollow".to_owned();
-    } else if opt_key == "tree_support_wall_count" && value == "-1" {
-        // PrintConfig.cpp (345efec64c7b):9839-9840: legacy auto, not a new minimum.
-        *value = "0".to_owned();
-    } else if opt_key == "different_settings_to_system" {
-        normalize_different_settings_to_system(value);
-    } else if opt_key == "overhang_fan_threshold" && value == "5%" {
-        *value = "10%".to_owned();
-    } else if opt_key == "wall_infill_order" {
-        // `PrintConfig.cpp:8134-8145`: the three-part legacy order collapses
-        // to `wall_sequence`; the `infill/…` prefix forms additionally set
-        // `is_infill_first` in `load_from_json` (Config.cpp:943-945), handled
-        // at the composite level, not here.
-        *opt_key = "wall_sequence".to_owned();
-        *value = match value.as_str() {
-            "inner wall/outer wall/infill" | "infill/inner wall/outer wall" => {
-                "inner wall/outer wall".to_owned()
-            }
-            "outer wall/inner wall/infill" | "infill/outer wall/inner wall" => {
-                "outer wall/inner wall".to_owned()
-            }
-            "inner-outer-inner wall/infill" => "inner-outer-inner wall".to_owned(),
-            _ => return,
-        };
-    } else if [
-        "nozzle_volume_type",
-        "default_nozzle_volume_type",
-        "printer_extruder_variant",
-        "print_extruder_variant",
-        "filament_extruder_variant",
-        "extruder_variant_list",
-    ]
-    .contains(&opt_key.as_str())
-    {
-        *value = value
-            .replace("Normal", "Standard")
-            .replace("Big Traffic", "High Flow");
-    } else if opt_key == "extruder_type" {
-        *value = value.replace("DirectDrive", "Direct Drive");
-    } else if opt_key == "enable_power_loss_recovery" {
-        if value == "1" || value.eq_ignore_ascii_case("true") {
-            *value = "enable".to_owned();
-        } else if value == "0" || value.eq_ignore_ascii_case("false") {
-            *value = "disable".to_owned();
+    match opt_key.as_str() {
+        "curr_bed_type" if value == "SuperTack Plate" => *value = "Supertack Plate".to_owned(),
+        "enable_wipe_tower" => *opt_key = "enable_prime_tower".to_owned(),
+        "wipe_tower_width" => *opt_key = "prime_tower_width".to_owned(),
+        "wiping_volume" => *opt_key = "prime_volume".to_owned(),
+        "wipe_tower_brim_width" => *opt_key = "prime_tower_brim_width".to_owned(),
+        "tool_change_gcode" => *opt_key = "change_filament_gcode".to_owned(),
+        "bridge_fan_speed" => *opt_key = "overhang_fan_speed".to_owned(),
+        "tpms_adaptive" => *opt_key = "adaptive_infill_mode".to_owned(),
+        "tpms_interior_density" => *opt_key = "adaptive_infill_interior_density".to_owned(),
+        "tpms_adaptive_gradient" => *opt_key = "adaptive_infill_gradient".to_owned(),
+        "infill_extruder" => *opt_key = "sparse_infill_filament".to_owned(),
+        "solid_infill_extruder" => *opt_key = "solid_infill_filament".to_owned(),
+        "perimeter_extruder" => *opt_key = "wall_filament".to_owned(),
+        "wipe_tower_extruder" => *opt_key = "wipe_tower_filament".to_owned(),
+        "support_material_extruder" => *opt_key = "support_filament".to_owned(),
+        "support_material_interface_extruder" => {
+            *opt_key = "support_interface_filament".to_owned();
         }
-    } else if opt_key == "enable_arc_fitting" {
-        // PrintConfig.cpp (345efec64c7b):9886-9891.
-        if value == "1" || value.eq_ignore_ascii_case("true") {
-            *value = "enabled".to_owned();
-        } else if value == "0" || value.eq_ignore_ascii_case("false") {
-            *value = "disabled".to_owned();
-        }
-    } else if opt_key == "ensure_vertical_shell_thickness" {
-        if value == "1" {
-            *value = "ensure_all".to_owned();
-        } else if value == "0" {
-            *value = "ensure_moderate".to_owned();
-        }
-    } else if opt_key == "rotate_solid_infill_direction" {
-        *opt_key = "solid_infill_rotate_template".to_owned();
-        if value == "1" {
-            *value = "0,90".to_owned();
-        } else if value == "0" {
-            *value = "0".to_owned();
-        }
-    } else if opt_key == "sparse_infill_anchor" {
-        *opt_key = "infill_anchor".to_owned();
-    } else if opt_key == "sparse_infill_anchor_max" {
-        *opt_key = "infill_anchor_max".to_owned();
-    } else if opt_key == "chamber_temperatures" {
-        *opt_key = "chamber_temperature".to_owned();
-    } else if opt_key == "thumbnail_size" {
-        *opt_key = "thumbnails".to_owned();
-    } else if opt_key == "top_one_wall_type" && !value.is_empty() && value != "none" {
-        // `PrintConfig.cpp:8161-8165` uses `value != "none"`; the empty-value
-        // guard preserves Ares's handling of non-string inputs (arrays, bools,
-        // numbers are not renamed — only real string values trigger).
-        *opt_key = "only_one_wall_top".to_owned();
-        *value = "1".to_owned();
-    } else if opt_key == "initial_layer_flow_ratio" {
-        *opt_key = "bottom_solid_infill_flow_ratio".to_owned();
-    } else if opt_key == "ironing_direction" {
-        *opt_key = "ironing_angle".to_owned();
-    } else if opt_key == "ironing_angle" && value.starts_with('-') {
-        *value = "0".to_owned();
-    } else if opt_key == "counterbole_hole_bridging" {
-        *opt_key = "counterbore_hole_bridging".to_owned();
-    } else if opt_key == "draft_shield" && value == "limited" {
-        *value = "disabled".to_owned();
-    } else if opt_key == "filament_map_mode" && value == "Auto" {
-        *value = "Auto For Flush".to_owned();
-    } else if opt_key == "filament_type" {
-        normalize_filament_type(value);
-    } else if opt_key == "prime_tower_rib_wall" {
-        if value == "1" {
-            *opt_key = "wipe_tower_wall_type".to_owned();
-            *value = "rib".to_owned();
-        } else {
+        "support_material_angle" => *opt_key = "support_angle".to_owned(),
+        "support_material_enforce_layers" => *opt_key = "enforce_support_layers".to_owned(),
+        key if erases_percentage_for_absolute_keys(key) && value.contains('%') => {
+            // Old profiles expressed these as percentages; the current keys are
+            // absolute, so the entry is dropped to avoid a parse error.
             opt_key.clear();
         }
-    } else if opt_key == "prime_tower_extra_rib_length" {
-        *opt_key = "wipe_tower_extra_rib_length".to_owned();
-    } else if opt_key == "prime_tower_rib_width" {
-        *opt_key = "wipe_tower_rib_width".to_owned();
-    } else if opt_key == "prime_tower_fillet_wall" {
-        *opt_key = "wipe_tower_fillet_wall".to_owned();
-    } else if opt_key == "extruder_clearance_max_radius" {
-        *opt_key = "extruder_clearance_radius".to_owned();
-    } else if opt_key == "machine_switch_extruder_time" {
-        *opt_key = "machine_tool_change_time".to_owned();
-    } else if opt_key == "wall_direction" && value == "auto" {
-        *value = "ccw".to_owned();
-    } else if is_obsolete_legacy_key(opt_key) {
-        opt_key.clear();
+        "inherits_cummulative" => *opt_key = "inherits_group".to_owned(),
+        "compatible_printers_condition_cummulative" => {
+            *opt_key = "compatible_machine_expression_group".to_owned();
+        }
+        "compatible_prints_condition_cummulative" => {
+            *opt_key = "compatible_process_expression_group".to_owned();
+        }
+        "cooling" => *opt_key = "slow_down_for_layer_cooling".to_owned(),
+        "timelapse_no_toolhead" => *opt_key = "timelapse_type".to_owned(),
+        "timelapse_type" if value == "2" => {
+            // old file "0" is None, "2" is Traditional; new file "0" is
+            // Traditional, erase "2".
+            *value = "0".to_owned();
+        }
+        "support_type" => match value.as_str() {
+            "normal" => *value = "normal(manual)".to_owned(),
+            "tree" => *value = "tree(manual)".to_owned(),
+            "hybrid(auto)" => *value = "tree(auto)".to_owned(),
+            _ => {}
+        },
+        "support_base_pattern" if value == "none" => *value = "hollow".to_owned(),
+        "tree_support_wall_count" if value == "-1" => {
+            // PrintConfig.cpp (345efec64c7b):9839-9840: legacy auto, not a new minimum.
+            *value = "0".to_owned();
+        }
+        "different_settings_to_system" => normalize_different_settings_to_system(value),
+        "overhang_fan_threshold" if value == "5%" => *value = "10%".to_owned(),
+        "wall_infill_order" => {
+            // `PrintConfig.cpp:8134-8145`: the three-part legacy order collapses
+            // to `wall_sequence`; the `infill/…` prefix forms additionally set
+            // `is_infill_first` in `load_from_json` (Config.cpp:943-945), handled
+            // at the composite level, not here.
+            *opt_key = "wall_sequence".to_owned();
+            *value = match value.as_str() {
+                "inner wall/outer wall/infill" | "infill/inner wall/outer wall" => {
+                    "inner wall/outer wall".to_owned()
+                }
+                "outer wall/inner wall/infill" | "infill/outer wall/inner wall" => {
+                    "outer wall/inner wall".to_owned()
+                }
+                "inner-outer-inner wall/infill" => "inner-outer-inner wall".to_owned(),
+                _ => return,
+            };
+        }
+        "nozzle_volume_type"
+        | "default_nozzle_volume_type"
+        | "printer_extruder_variant"
+        | "print_extruder_variant"
+        | "filament_extruder_variant"
+        | "extruder_variant_list" => {
+            if value.contains("Normal") || value.contains("Big Traffic") {
+                *value = value
+                    .replace("Normal", "Standard")
+                    .replace("Big Traffic", "High Flow");
+            }
+        }
+        "extruder_type" => {
+            if value.contains("DirectDrive") {
+                *value = value.replace("DirectDrive", "Direct Drive");
+            }
+        }
+        "enable_power_loss_recovery" => {
+            if value == "1" || value.eq_ignore_ascii_case("true") {
+                *value = "enable".to_owned();
+            } else if value == "0" || value.eq_ignore_ascii_case("false") {
+                *value = "disable".to_owned();
+            }
+        }
+        "enable_arc_fitting" => {
+            // PrintConfig.cpp (345efec64c7b):9886-9891.
+            if value == "1" || value.eq_ignore_ascii_case("true") {
+                *value = "enabled".to_owned();
+            } else if value == "0" || value.eq_ignore_ascii_case("false") {
+                *value = "disabled".to_owned();
+            }
+        }
+        "ensure_vertical_shell_thickness" => {
+            if value == "1" {
+                *value = "ensure_all".to_owned();
+            } else if value == "0" {
+                *value = "ensure_moderate".to_owned();
+            }
+        }
+        "rotate_solid_infill_direction" => {
+            *opt_key = "solid_infill_rotate_template".to_owned();
+            if value == "1" {
+                *value = "0,90".to_owned();
+            } else if value == "0" {
+                *value = "0".to_owned();
+            }
+        }
+        "sparse_infill_anchor" => *opt_key = "infill_anchor".to_owned(),
+        "sparse_infill_anchor_max" => *opt_key = "infill_anchor_max".to_owned(),
+        "chamber_temperatures" => *opt_key = "chamber_temperature".to_owned(),
+        "thumbnail_size" => *opt_key = "thumbnails".to_owned(),
+        "top_one_wall_type" if !value.is_empty() && value != "none" => {
+            // `PrintConfig.cpp:8161-8165` uses `value != "none"`; the empty-value
+            // guard preserves Ares's handling of non-string inputs (arrays, bools,
+            // numbers are not renamed — only real string values trigger).
+            *opt_key = "only_one_wall_top".to_owned();
+            *value = "1".to_owned();
+        }
+        "initial_layer_flow_ratio" => *opt_key = "bottom_solid_infill_flow_ratio".to_owned(),
+        "ironing_direction" => *opt_key = "ironing_angle".to_owned(),
+        "ironing_angle" if value.starts_with('-') => *value = "0".to_owned(),
+        "counterbole_hole_bridging" => *opt_key = "counterbore_hole_bridging".to_owned(),
+        "draft_shield" if value == "limited" => *value = "disabled".to_owned(),
+        "filament_map_mode" if value == "Auto" => *value = "Auto For Flush".to_owned(),
+        "filament_type" => normalize_filament_type(value),
+        "prime_tower_rib_wall" => {
+            if value == "1" {
+                *opt_key = "wipe_tower_wall_type".to_owned();
+                *value = "rib".to_owned();
+            } else {
+                opt_key.clear();
+            }
+        }
+        "prime_tower_extra_rib_length" => *opt_key = "wipe_tower_extra_rib_length".to_owned(),
+        "prime_tower_rib_width" => *opt_key = "wipe_tower_rib_width".to_owned(),
+        "prime_tower_fillet_wall" => *opt_key = "wipe_tower_fillet_wall".to_owned(),
+        "extruder_clearance_max_radius" => *opt_key = "extruder_clearance_radius".to_owned(),
+        "machine_switch_extruder_time" => *opt_key = "machine_tool_change_time".to_owned(),
+        "wall_direction" if value == "auto" => *value = "ccw".to_owned(),
+        key if is_obsolete_legacy_key(key) => opt_key.clear(),
+        _ => {}
     }
 }
 
@@ -265,6 +241,9 @@ fn is_obsolete_legacy_key(key: &str) -> bool {
 /// separated sub-key is itself run through `handle_legacy`; renamed keys are
 /// replaced inside the value string.
 fn normalize_different_settings_to_system(value: &mut String) {
+    if value.is_empty() {
+        return;
+    }
     let unquoted = value.replace('"', "");
     let split_keys = unquoted
         .split(';')
@@ -286,6 +265,9 @@ fn normalize_different_settings_to_system(value: &mut String) {
 /// unquoted, `ASA-Aero`→`ASA-AERO`, and the value is rebuilt quoted when any
 /// token changed.
 fn normalize_filament_type(value: &mut String) {
+    if !value.contains("ASA-Aero") {
+        return;
+    }
     let mut rebuild = false;
     let types = value
         .split_terminator(';')

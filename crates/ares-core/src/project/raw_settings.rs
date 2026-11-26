@@ -11,6 +11,8 @@ mod deserialize;
 mod filament_variants;
 mod numeric;
 
+pub(crate) use deserialize::RawValueRef;
+
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
@@ -161,18 +163,14 @@ impl ProjectSettingsRaw {
         let mut normalized = BTreeMap::new();
         let mut derived = Vec::new();
         for (mut key, value) in std::mem::take(&mut self.0) {
-            let scalar = matches!(
-                value,
-                RawConfigValue::Text(_) | RawConfigValue::Number(_) | RawConfigValue::Flag(_)
-            );
-            let mut token = if let RawConfigValue::Text(text) = &value {
+            let (scalar, mut token, rest) = match value {
                 // handle_legacy receives the deserialize input, not the export
                 // view: Config.hpp:946-950 distinguishes "nil" from "" (zero).
-                text.clone()
-            } else if scalar {
-                value.token().unwrap_or_default()
-            } else {
-                String::new()
+                RawConfigValue::Text(text) => (true, text, None),
+                other @ (RawConfigValue::Number(_) | RawConfigValue::Flag(_)) => {
+                    (true, other.token().unwrap_or_default(), None)
+                }
+                other => (false, String::new(), Some(other)),
             };
             // Read the source pair before it is rewritten. Config.cpp:996–1005,
             // 1072–1075 applies the derived value after the document's explicit fields.
@@ -191,10 +189,9 @@ impl ProjectSettingsRaw {
             // what parses/validates it, so the normalized token is stored back
             // as a plain text scalar — not re-decoded here (which would
             // pre-empt the typed builder's diagnostics).
-            let stored = if scalar {
-                RawConfigValue::Text(token)
-            } else {
-                value
+            let stored = match rest {
+                None => RawConfigValue::Text(token),
+                Some(value) => value,
             };
             normalized.insert(key, stored);
         }

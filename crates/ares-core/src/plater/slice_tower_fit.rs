@@ -18,11 +18,11 @@ pub(crate) fn fit_slice_wipe_tower(
     project: Project,
     plate: Option<u32>,
 ) -> Result<Project, SliceError> {
-    let config = DynamicPrintConfig::new(project.settings())?;
     // Belt printers are deferred (no `belt_printer` key).
-    if !config.option("enable_prime_tower").bool() {
+    if !project.settings().process.print.enable_prime_tower.0 {
         return Ok(project);
     }
+    let config = DynamicPrintConfig::new(project.settings())?;
     let plate = plate.unwrap_or_else(|| project.first_plate_id());
     // `select_plate` reports a plate the project does not have.
     let Some(index) = project.plates().iter().position(|p| p.id() == plate) else {

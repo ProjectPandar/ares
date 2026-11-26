@@ -171,6 +171,31 @@ impl ProcessOptionsBuilder {
         }
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if ProcessObjectSourceOptionsBuilder::is_known_field(key) {
+            ProcessObjectSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProcessRegionSourceOptionsBuilder::is_known_field(key) {
+            ProcessRegionSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProcessGCodeSourceOptionsBuilder::is_known_field(key) {
+            ProcessGCodeSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProcessPrintSourceOptionsBuilder::is_known_field(key) {
+            ProcessPrintSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if key == "ironing_expansion" {
+            let _ =
+                <OrcaFloat as serde::Deserialize>::deserialize(deserializer).map_err(|error| {
+                    serde::de::Error::custom(format_args!(
+                        "invalid Orca option ironing_expansion: {error}"
+                    ))
+                })?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     pub(crate) fn apply_derived_support_style(&mut self) {
         self.object
             .set_derived_support_style(ProcessSupportStyle::TreeHybrid);

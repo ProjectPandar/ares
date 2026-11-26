@@ -2,14 +2,15 @@ pub(crate) mod wire;
 
 pub(crate) use wire::WireValue;
 
-use serde::de::value::{Error as ValueError, SeqDeserializer, StringDeserializer};
+use serde::de::value::{Error as ValueError, SeqDeserializer, StrDeserializer, StringDeserializer};
 
 use super::{
     ObjectOptionOverrides, RegionOptionOverrides,
     project_settings::ProjectSettingsBuilder,
     registry::{OptionValueKind, option_definition},
     typed_legacy::{
-        EXPLICIT_RULES, LegacyOutcome, LegacyTransformError, transform_lexical, transform_obsolete,
+        LegacyOutcome, LegacyTransformError, find_explicit_rule, transform_lexical,
+        transform_obsolete,
     },
 };
 use crate::SliceError;
@@ -75,7 +76,7 @@ fn normalize_model_field(
     source: &str,
     value: String,
 ) -> Result<Option<(&str, String)>, SliceError> {
-    let Some(rule) = EXPLICIT_RULES.iter().find(|rule| rule.source == source) else {
+    let Some(rule) = find_explicit_rule(source) else {
         return Ok(transform_obsolete(source)
             .is_none()
             .then_some((source, value)));
@@ -116,12 +117,25 @@ pub(crate) fn validate_model_config_value(
     let definition = option_definition(key).ok_or_else(|| {
         SliceError::InvalidInput(format!("unknown model config option {}", bounded(key, 96)))
     })?;
-    let decoded = wire::decode(definition.kind, value)
-        .map_err(|reason| invalid_value(key, value, &reason))?;
-
-    let mut builder = ProjectSettingsBuilder::default();
-    let handled = deserialize_project_value(&mut builder, key, decoded)
-        .map_err(|error| invalid_value(key, value, &error.to_string()))?;
+    let handled = match definition.kind {
+        OptionValueKind::Point
+        | OptionValueKind::Float
+        | OptionValueKind::FloatOrPercent
+        | OptionValueKind::Percent
+        | OptionValueKind::Int
+        | OptionValueKind::Bool
+        | OptionValueKind::Enum => ProjectSettingsBuilder::validate_known_value(
+            key,
+            StrDeserializer::<ValueError>::new(value),
+        )
+        .map_err(|error| invalid_value(key, value, &error.to_string()))?,
+        kind => {
+            let decoded =
+                wire::decode(kind, value).map_err(|reason| invalid_value(key, value, &reason))?;
+            validate_project_value(key, decoded)
+                .map_err(|error| invalid_value(key, value, &error.to_string()))?
+        }
+    };
     if handled {
         return Ok(ModelConfigValueDestination::ProjectSettings);
     }
@@ -135,18 +149,15 @@ pub(crate) fn decode_wire(kind: OptionValueKind, value: &str) -> Result<WireValu
     wire::decode(kind, value)
 }
 
-fn deserialize_project_value(
-    builder: &mut ProjectSettingsBuilder,
-    key: &str,
-    value: WireValue,
-) -> Result<bool, ValueError> {
+fn validate_project_value(key: &str, value: WireValue) -> Result<bool, ValueError> {
     match value {
         WireValue::Scalar(value) => {
-            builder.deserialize_known_value(key, StringDeserializer::new(value))
+            ProjectSettingsBuilder::validate_known_value(key, StringDeserializer::new(value))
         }
-        WireValue::Sequence(values) => {
-            builder.deserialize_known_value(key, SeqDeserializer::new(values.into_iter()))
-        }
+        WireValue::Sequence(values) => ProjectSettingsBuilder::validate_known_value(
+            key,
+            SeqDeserializer::new(values.into_iter()),
+        ),
     }
 }
 

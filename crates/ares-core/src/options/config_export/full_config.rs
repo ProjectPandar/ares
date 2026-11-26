@@ -6,43 +6,46 @@ use crate::options::config_export::value::serialize_config_value;
 use crate::options::config_export::writer::append_line;
 use crate::options::config_types::format_number;
 use crate::options::registry::OptionValueKind as Kind;
-use crate::options::{EXPLICIT_RULES, LegacyAction, registry};
+use crate::options::{LegacyAction, find_explicit_rule, registry};
 use crate::project::raw_settings::ProjectSettingsRaw;
 use crate::{ProjectSettings, SliceError};
 
-const BANNED_KEYS: &[&str] = &[
-    "filament_extruder_compatibility",
-    "prime_volume_mode",
-    "flush_multiplier_fast",
-    "filament_flush_temp_fast",
-    "support_fast_purge_mode",
-    "deretract_speed_extruder_change",
-    "farthest_point_timelapse",
-    "is_imex",
-    "imex_firmware_managed_zones",
-    "imex_gantry_count",
-    "imex_tools_per_gantry",
-    "imex_tool_layout",
-    "imex_nozzle_clearance_x",
-    "imex_nozzle_clearance_y",
-    "imex_carriage_margin",
-    "imex_viz_theme",
-    "imex_mode_names",
-    "imex_mode_active_tools",
-    "imex_mode_gcodes",
-    "imex_parallel_mode",
-    "imex_head_filament_map",
-    "compatible_printers",
-    "compatible_prints",
-    "filament_colour_type",
-    "print_host",
-    "print_host_webui",
-    "printhost_apikey",
-    "printhost_cafile",
-    "printhost_user",
-    "printhost_password",
-    "printhost_port",
-];
+fn is_banned_key(key: &str) -> bool {
+    matches!(
+        key,
+        "filament_extruder_compatibility"
+            | "prime_volume_mode"
+            | "flush_multiplier_fast"
+            | "filament_flush_temp_fast"
+            | "support_fast_purge_mode"
+            | "deretract_speed_extruder_change"
+            | "farthest_point_timelapse"
+            | "is_imex"
+            | "imex_firmware_managed_zones"
+            | "imex_gantry_count"
+            | "imex_tools_per_gantry"
+            | "imex_tool_layout"
+            | "imex_nozzle_clearance_x"
+            | "imex_nozzle_clearance_y"
+            | "imex_carriage_margin"
+            | "imex_viz_theme"
+            | "imex_mode_names"
+            | "imex_mode_active_tools"
+            | "imex_mode_gcodes"
+            | "imex_parallel_mode"
+            | "imex_head_filament_map"
+            | "compatible_printers"
+            | "compatible_prints"
+            | "filament_colour_type"
+            | "print_host"
+            | "print_host_webui"
+            | "printhost_apikey"
+            | "printhost_cafile"
+            | "printhost_user"
+            | "printhost_password"
+            | "printhost_port"
+    )
+}
 
 pub(super) fn write_entries(
     settings: &ProjectSettings,
@@ -69,7 +72,7 @@ pub(super) fn write_entries(
         token: String,
         is_nil: bool,
     ) {
-        if BANNED_KEYS.contains(&key) || is_nil {
+        if is_banned_key(key) || is_nil {
             return;
         }
         emitted_keys.insert(key);
@@ -130,9 +133,8 @@ pub(super) fn write_entries(
         }
         // PrintConfig.cpp:10002-10035 consumes obsolete/renamed input keys.
         // Deferred bookkeeping remains part of the applied config.
-        if EXPLICIT_RULES.iter().any(|rule| {
-            rule.source == key
-                && !matches!(rule.action, LegacyAction::DeferredProfileBookkeeping { .. })
+        if find_explicit_rule(key).is_some_and(|rule| {
+            !matches!(rule.action, LegacyAction::DeferredProfileBookkeeping { .. })
         }) {
             continue;
         }

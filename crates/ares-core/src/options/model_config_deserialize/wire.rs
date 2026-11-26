@@ -2,7 +2,7 @@ use std::{iter::Peekable, str::Chars};
 
 use serde::de::{
     DeserializeOwned,
-    value::{Error as ValueError, SeqDeserializer, StringDeserializer},
+    value::{Error as ValueError, SeqDeserializer, StrDeserializer},
 };
 
 use super::super::{
@@ -171,7 +171,7 @@ pub(crate) fn deserialize_scalar<T>(value: &str) -> Result<(), String>
 where
     T: DeserializeOwned,
 {
-    T::deserialize(StringDeserializer::<ValueError>::new(value.to_owned()))
+    T::deserialize(StrDeserializer::<ValueError>::new(value))
         .map(drop)
         .map_err(|error| error.to_string())
 }

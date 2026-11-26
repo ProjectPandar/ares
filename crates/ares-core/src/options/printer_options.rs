@@ -127,6 +127,19 @@ impl PrinterOptionsBuilder {
         }
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if MachineEnvelopeOptionsBuilder::is_known_field(key) {
+            MachineEnvelopeOptionsBuilder::validate_known_value(key, deserializer)
+        } else if PrinterGCodeSourceOptionsBuilder::is_known_field(key) {
+            PrinterGCodeSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else {
+            PrinterRemainingOptionsBuilder::validate_known_value(key, deserializer)
+        }
+    }
+
     pub(crate) fn normalize_present_thumbnails(
         &mut self,
     ) -> Result<(), crate::ThumbnailParseError> {

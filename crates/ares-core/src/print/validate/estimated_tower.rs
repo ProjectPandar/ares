@@ -35,12 +35,12 @@ pub(super) fn validate(
     {
         return Ok(());
     }
-    let config = DynamicPrintConfig::new(settings)?;
-    let has_tower = has_tower(&config);
+    let has_tower = has_tower(settings);
     let scale = CoordinateScale::from_printable_area(&settings.printer.remaining.printable_area);
     let mut checked = Vec::new();
     let mut compacted_estimate = None;
     if has_tower {
+        let config = DynamicPrintConfig::new(settings)?;
         let slots = extruders(project, resolved, &config, true);
         let (mut max_height, mut layer_height) = (0.0_f64, f64::MAX);
         for object in &resolved.objects {
@@ -136,14 +136,14 @@ pub(super) fn validate(
     })
 }
 
-fn has_tower(config: &DynamicPrintConfig) -> bool {
-    !config.option("belt_printer").bool()
-        && config.option("enable_prime_tower").bool()
-        && ((config.option("enable_wrapping_detection").bool()
-            && config.option("wrapping_exclude_area").points().len() > 2)
-            || config.option("timelapse_type").key() == "1"
-            || (!config.option("spiral_mode").bool()
-                && config.option("filament_diameter").floats().len() > 1))
+fn has_tower(settings: &crate::ProjectSettings) -> bool {
+    !settings.printer.remaining.belt_printer.0
+        && settings.process.print.enable_prime_tower.0
+        && ((settings.process.gcode.enable_wrapping_detection.0
+            && settings.printer.gcode.wrapping_exclude_area.0.len() > 2)
+            || settings.process.print.timelapse_type == crate::ProcessTimelapseType::Smooth
+            || (!settings.process.print.spiral_mode.0
+                && settings.filament.gcode.filament_diameter.0.len() > 1))
 }
 
 /// `Print.cpp:686-803`, `PrintRegion.cpp:79-101`: ordered aggregation before final deduplication.

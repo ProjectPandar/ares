@@ -5,7 +5,7 @@ use serde::de::{
 };
 
 use super::{
-    EXPLICIT_RULES, LegacyAction, LegacyOutcome, LegacyRule, LegacyTransformError,
+    LegacyAction, LegacyOutcome, LegacyRule, LegacyTransformError, find_explicit_rule,
     transform_json_array, transform_lexical, transform_obsolete,
 };
 use crate::options::project_settings::ProjectSettingsBuilder;
@@ -18,7 +18,7 @@ pub(crate) fn deserialize_project_field<'de, A>(
 where
     A: MapAccess<'de>,
 {
-    if let Some(rule) = EXPLICIT_RULES.iter().find(|rule| rule.source == key) {
+    if let Some(rule) = find_explicit_rule(key) {
         if matches!(rule.action, LegacyAction::DeferredProfileBookkeeping { .. }) {
             // Profile bookkeeping (preset inheritance metadata) does not
             // affect slicing; OrcaSlicer loads projects carrying these keys.

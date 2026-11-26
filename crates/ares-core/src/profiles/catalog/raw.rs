@@ -1,6 +1,6 @@
 use crate::{
     OptionValueKind, ProfileKind, option_definition,
-    options::{EXPLICIT_RULES, OBSOLETE_INPUTS},
+    options::{find_explicit_rule, is_obsolete_input},
 };
 
 // Typed config export owns canonical tokens; this raw view only retains input
@@ -9,31 +9,30 @@ use crate::{
 // OrcaSlicer.cpp:2800-2804 update_full_config exclusions. This is the CLI
 // copy rule, not PresetBundle::full_fff_config's GUI metadata erasure.
 pub(super) fn applies(kind: ProfileKind, key: &str) -> bool {
-    if [
-        "compatible_prints",
-        "compatible_printers",
-        "model_id",
-        "inherits",
-        "dev_model_name",
-        "name",
-        "from",
-        "type",
-        "version",
-        "setting_id",
-        "instantiation",
-    ]
-    .contains(&key)
-    {
+    if matches!(
+        key,
+        "compatible_prints"
+            | "compatible_printers"
+            | "model_id"
+            | "inherits"
+            | "dev_model_name"
+            | "name"
+            | "from"
+            | "type"
+            | "version"
+            | "setting_id"
+            | "instantiation"
+    ) {
         return false;
     }
-    if OBSOLETE_INPUTS.contains(&key) {
+    if is_obsolete_input(key) {
         return false;
     }
     // Legacy rule sources have no option definition, but the typed
     // resolution consumes them from the raw view (`handle_legacy` runs per
     // loaded key upstream, PrintConfig.cpp:8033); admitting them keeps
     // alias/new coexistence resolvable downstream.
-    if EXPLICIT_RULES.iter().any(|rule| rule.source == key) {
+    if find_explicit_rule(key).is_some() {
         return true;
     }
     let Some(definition) = option_definition(key) else {
