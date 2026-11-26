@@ -76,7 +76,7 @@ pub(in crate::project_slice) struct TraverseExtrusionsOutcome {
 pub(in crate::project_slice) fn traverse_extrusions(
     pg_extrusions: Vec<PerimeterGeneratorArachneExtrusion>,
     context: &TraverseExtrusionsContext,
-    slice_context: &mut crate::SlicerContext,
+    mut slice_context: Option<&mut crate::SlicerContext>,
 ) -> Result<TraverseExtrusionsOutcome, SliceError> {
     // Detect steep overhangs. Only calculate overhang degree on even (from
     // GUI POV) layers (`PerimeterGenerator.cpp:375-377`).
@@ -111,7 +111,7 @@ pub(in crate::project_slice) fn traverse_extrusions(
                 layer_height: context.layer_height,
                 scale: context.scale,
             },
-            slice_context,
+            slice_context.as_deref_mut(),
         )?;
 
         let mut paths: Vec<ExtrusionPath> = Vec::new();

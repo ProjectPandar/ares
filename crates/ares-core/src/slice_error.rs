@@ -130,6 +130,9 @@ pub enum SliceError {
         sparse_infill_density: f64,
     },
     ProjectSlicingIncomplete,
+    /// `Slic3r::CanceledException` (`PrintBase.hpp:47-51`): cooperative cancellation
+    /// requested through [`crate::CancelToken::cancel`].
+    Canceled,
     GcodePathConflict([String; 2]),
     UnsupportedProjectFeature(String),
     ToolpathOutsidePrintableArea {
@@ -190,6 +193,7 @@ impl fmt::Display for SliceError {
             // OrcaSlicer.cpp:6286-6291 forwards ex.what() without decoration.
             | Self::Slicing { message, .. } => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
+            Self::Canceled => f.write_str("Background processing has been canceled"),
             Self::GcodePathConflict([first, second]) => {
                 write!(f, "Found gcode path conflicts between object {first} and {second}")
             }

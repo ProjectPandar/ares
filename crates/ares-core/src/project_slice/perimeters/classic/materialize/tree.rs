@@ -74,7 +74,7 @@ pub(super) fn materialize_surface(
     record_context: super::RecordContext<'_>,
     surface: &PreparedTraversalSurface,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<PreparedRawPathSurface, SliceError> {
     let record = record_context.record;
     let mut thin_entities = Vec::new();
@@ -98,11 +98,17 @@ pub(super) fn materialize_surface(
             .expect("the root level remains until return");
         if !frame.flat_done {
             frame.flat_done = true;
-            frame.paths =
-                materialize_flat_level(object, &record_context, frame.seeds, scale, context)?;
+            frame.paths = materialize_flat_level(
+                object,
+                &record_context,
+                frame.seeds,
+                scale,
+                context.as_deref_mut(),
+            )?;
             if is_root && !surface.thin_walls.is_empty() {
                 // PerimeterGenerator.cpp:258-278: sibling loops consume fuzzy draws first.
-                thin_entities = materialize_thin_walls(&surface.thin_walls, record, context)?;
+                thin_entities =
+                    materialize_thin_walls(&surface.thin_walls, record, context.as_deref_mut())?;
             }
             let chain = level_chain(&frame.paths, is_root.then_some(thin_entities.as_slice()));
             let loop_count = frame.paths.iter().filter(|paths| !paths.is_empty()).count();
@@ -150,7 +156,7 @@ pub(super) fn materialize_surface(
 fn materialize_thin_walls(
     walls: &[ThickPolyline],
     record: &ClassicTraversalRecord,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<Vec<ExtrusionEntity>, SliceError> {
     let layer = Layer {
         id: record.layer_id,
@@ -170,7 +176,7 @@ fn materialize_thin_walls(
         }
         record
             .fuzzy_skin
-            .apply(&mut line, (true, closed), layer, context)?;
+            .apply(&mut line, (true, closed), layer, context.as_deref_mut())?;
         thin_walls.push(line.to_thick_polyline());
     }
     convert_entities(
@@ -191,7 +197,7 @@ fn materialize_flat_level(
     record_context: &super::RecordContext<'_>,
     seeds: &[TraversalSeed],
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<Vec<Vec<ExtrusionPath>>, SliceError> {
     let overhang = matches!(
         record_context.record.branch,
@@ -207,7 +213,7 @@ fn materialize_flat_level(
             },
             seed,
             scale,
-            context,
+            context.as_deref_mut(),
         )?;
         if overhang && !paths_for_seed.is_empty() {
             let first = paths_for_seed[0].polyline.points[0];

@@ -243,14 +243,19 @@ fn slice_plate(
     // Fresh-process equivalence for the `~`/`^` rotate_template joints
     // (`Fill.cpp:199-200`).
     group_fills::reset_rand_state();
+    context.check_canceled()?;
     let walls = prepare(sliced_plate.as_deref_mut(), context)?;
+    context.check_canceled()?;
     // `Print.cpp:3461-3481` prepares and fills each object in turn (`PrintObject.cpp:631,819`);
     // Ares prepares the infill of every object, then fills every object.
     for _ in &walls.objects {
         context.set_status(25, format_args!("Generating infill regions"), 0);
+        context.check_canceled()?;
         context.set_status(35, format_args!("Generating infill toolpath"), 0);
+        context.check_canceled()?;
     }
     let staged = prepare_infill::surface_type_detection::prepare(walls)?;
+    context.check_canceled()?;
     let external = prepare_infill::external_surfaces::prepare(
         prepare_infill::horizontal_shell_propagation::prepare(
             prepare_infill::horizontal_shell_promotion::prepare(
@@ -270,25 +275,33 @@ fn slice_plate(
             )?,
         )?,
     )?;
+    context.check_canceled()?;
     let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
     let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
+    context.check_canceled()?;
     // `get_boundary` consumes current Top fill surfaces after prepare_infill
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.
     let top_surfaces = extract_top_surfaces(&prepared.predecessor.predecessor.predecessor);
-    let mut filled = fill_entities::prepare(prepared)?;
-    contour_z::prepare(&mut filled, context);
+    let mut filled = fill_entities::prepare(prepared, context.cancel_ref())?;
+    context.check_canceled()?;
+    contour_z::prepare(&mut filled, context)?;
+    context.check_canceled()?;
     let mut warnings = support_material::check_necessity(&filled, context)?;
+    context.check_canceled()?;
     if let Some(sliced_plate) = sliced_plate.as_deref_mut() {
         // CLI:7150-7160 records warnings before export; a later error keeps them.
         sliced_plate.warnings.clone_from(&warnings);
     }
     let support_layers = support_material::generate(&filled, context)?;
+    context.check_canceled()?;
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands, top_surfaces);
     ordered.support_layers = support_layers;
+    context.check_canceled()?;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
     path_simplification::apply(&mut ordered);
+    context.check_canceled()?;
     if let Some(custom_gcodes) = plate_custom_gcodes {
         *custom_gcodes = ordered.plate_custom_gcodes();
     }

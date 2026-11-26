@@ -86,6 +86,35 @@ async fn pre_canceled_token_aborts_immediately_without_status_updates() {
     );
 }
 
+async fn assert_cancels_at_stage(trigger: &str, forbidden_later: &str) {
+    let token = CancelToken::new();
+    let trigger_token = token.clone();
+    let mut seen = Vec::new();
+    let mut callback = |status: &ares_core::SlicingStatus<'_>| {
+        seen.push(status.text.to_owned());
+        if status.text == trigger {
+            trigger_token.cancel();
+        }
+    };
+    let mut context = SlicerContext::new(0).with_cancel_token(token);
+    context.set_status_callback(&mut callback);
+
+    let result = slice_with_context(OVERHANG, context).await;
+    assert_eq!(
+        result,
+        Err(SliceError::Canceled),
+        "trigger `{trigger}` should cancel slice"
+    );
+    assert!(
+        seen.iter().any(|text| text == trigger),
+        "trigger `{trigger}` was never observed in {seen:?}"
+    );
+    assert!(
+        !seen.iter().any(|text| text == forbidden_later),
+        "slice kept running to `{forbidden_later}` after canceling at `{trigger}`: {seen:?}"
+    );
+}
+
 #[tokio::test]
 async fn status_callback_cancellation_stops_each_major_stage() {
     let stage_triggers = [
@@ -97,32 +126,7 @@ async fn status_callback_cancellation_stops_each_major_stage() {
     ];
 
     for (trigger, forbidden_later) in stage_triggers {
-        let token = CancelToken::new();
-        let trigger_token = token.clone();
-        let mut seen = Vec::new();
-        let mut callback = |status: &ares_core::SlicingStatus<'_>| {
-            seen.push(status.text.to_owned());
-            if status.text == trigger {
-                trigger_token.cancel();
-            }
-        };
-        let mut context = SlicerContext::new(0).with_cancel_token(token);
-        context.set_status_callback(&mut callback);
-
-        let result = slice_with_context(OVERHANG, context).await;
-        assert_eq!(
-            result,
-            Err(SliceError::Canceled),
-            "trigger `{trigger}` should cancel slice"
-        );
-        assert!(
-            seen.iter().any(|text| text == trigger),
-            "trigger `{trigger}` was never observed in {seen:?}"
-        );
-        assert!(
-            !seen.iter().any(|text| text == forbidden_later),
-            "slice kept running to `{forbidden_later}` after canceling at `{trigger}`: {seen:?}"
-        );
+        assert_cancels_at_stage(trigger, forbidden_later).await;
     }
 }
 
@@ -155,6 +159,7 @@ async fn concurrent_thread_cancellation_stops_slice_cleanly() {
     context.set_status_callback(&mut callback);
 
     let result = slice_with_context(OVERHANG, context).await;
+    drop(entered_tx);
     canceller.join().expect("cancel thread exits cleanly");
     assert_eq!(result, Err(SliceError::Canceled));
 }

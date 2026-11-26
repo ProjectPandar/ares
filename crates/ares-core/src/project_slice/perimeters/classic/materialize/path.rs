@@ -24,7 +24,7 @@ pub(super) fn materialize_seed(
     }: super::RecordContext<'_>,
     seed: &TraversalSeed,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     match record.branch {
         PendingPathBranch::OrdinaryUnsplit { .. } => {
@@ -56,7 +56,7 @@ fn materialize_overhang(
     }: super::RecordContext<'_>,
     seed: &TraversalSeed,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     let lower = object
         .lower_series(record_index, seed.route)
@@ -70,7 +70,7 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     seed: &TraversalSeed,
     scale: CoordinateScale,
     lower: &[Polygon],
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     let polygon = fuzzy_polygon(record, seed, scale, context)?;
     let mut bounds = BoundingBox::from_polygon(&polygon)
@@ -133,7 +133,7 @@ fn fuzzy_polygon(
     record: &ClassicTraversalRecord,
     seed: &TraversalSeed,
     scale: CoordinateScale,
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) -> Result<Polygon, SliceError> {
     let polygon = super::super::fuzzy_skin::apply_regions(
         &seed.polygon,

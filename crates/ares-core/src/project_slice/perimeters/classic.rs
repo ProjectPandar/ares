@@ -38,17 +38,20 @@ pub(in crate::project_slice) use top_split::{
 pub(in crate::project_slice) use traversal::{
     PostClassicTraversalPrintObject, PreparedPostClassicTraversal,
 };
-pub(in crate::project_slice) use types::{ClassicPreludeRecord, PreparedPostClassicPrelude};
+pub(in crate::project_slice) use types::{
+    ClassicPreludeRecord, PostClassicPreludePrintObject, PreparedPostClassicPrelude,
+};
 
 use crate::SliceError;
 
 use super::PreparedPostPerimeterInputs;
 use preflight::ClassicValidationContext;
-use types::PostClassicPreludePrintObject;
 
 pub(super) fn finish_classic_prelude(
     prepared: PreparedPostPerimeterInputs,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicPrelude, SliceError> {
+    cancel.check()?;
     let enable_arc_fitting = prepared
         .resolved
         .views
@@ -75,7 +78,7 @@ pub(super) fn finish_classic_prelude(
         .into_iter()
         .zip(validated)
         .map(|(mut object, validated)| {
-            let records = prelude::prepare_object(&mut object, validated, prepared.scale)?;
+            let records = prelude::prepare_object(&mut object, validated, prepared.scale, cancel)?;
             Ok(PostClassicPreludePrintObject { object, records })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
@@ -91,26 +94,30 @@ pub(super) fn finish_classic_prelude(
 
 pub(super) fn finish_classic_top_split(
     prepared: PreparedPostClassicPrelude,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicTopSplit, SliceError> {
-    top_split::finish(prepared)
+    top_split::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_onion(
     prepared: PreparedPostClassicTopSplit,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicOnion, SliceError> {
-    onion::finish(prepared)
+    onion::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_hierarchy(
     prepared: PreparedPostClassicOnion,
-) -> PreparedPostClassicHierarchy {
-    hierarchy::finish(prepared)
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicHierarchy, SliceError> {
+    hierarchy::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_traversal(
     prepared: PreparedPostClassicHierarchy,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicTraversal, SliceError> {
-    traversal::finish(prepared)
+    traversal::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_raw_paths(
@@ -122,42 +129,49 @@ pub(super) fn finish_classic_raw_paths(
 
 pub(super) fn finish_classic_chained_loops(
     prepared: PreparedPostClassicRawPaths,
-) -> PreparedPostClassicChainedLoops {
-    chained_loops::finish(prepared)
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicChainedLoops, SliceError> {
+    chained_loops::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_entity_collections(
     prepared: PreparedPostClassicChainedLoops,
-) -> PreparedPostClassicEntityCollections {
-    entity_collections::finish(prepared)
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicEntityCollections, SliceError> {
+    entity_collections::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_perimeter_append(
     prepared: PreparedPostClassicEntityCollections,
-) -> PreparedPostClassicPerimeterAppend {
-    perimeter_append::finish(prepared)
+    cancel: &crate::CancelToken,
+) -> Result<PreparedPostClassicPerimeterAppend, SliceError> {
+    perimeter_append::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_gap_domain(
     prepared: PreparedPostClassicPerimeterAppend,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicGapDomain, SliceError> {
-    gap_domain::finish(prepared)
+    gap_domain::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_medial_gap(
     prepared: PreparedPostClassicGapDomain,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
-    medial_gap::finish(prepared)
+    medial_gap::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_gap_extrusion(
     prepared: PreparedPostClassicMedialGap,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicGapExtrusion, SliceError> {
-    gap_extrusion::finish(prepared)
+    gap_extrusion::finish(prepared, cancel)
 }
 
 pub(super) fn finish_classic_infill_boundary(
     prepared: PreparedPostClassicGapExtrusion,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicInfillBoundary, SliceError> {
-    infill_boundary::finish(prepared)
+    infill_boundary::finish(prepared, cancel)
 }

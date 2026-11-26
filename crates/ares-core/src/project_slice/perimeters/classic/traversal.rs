@@ -13,6 +13,7 @@ use types::{ClassicTraversalRecord as Record, RouteFlows};
 
 pub(super) fn finish(
     prepared: PreparedPostClassicHierarchy,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicTraversal, crate::SliceError> {
     let objects = prepared
         .objects
@@ -33,7 +34,7 @@ pub(super) fn finish(
                 .object
                 .raft_layers
                 .0;
-            prepare_object(predecessor, raft_layers, prepared.scale)
+            prepare_object(predecessor, raft_layers, prepared.scale, cancel)
         })
         .collect::<Result<Vec<_>, _>>()?;
     let PreparedPostClassicHierarchy {
@@ -66,6 +67,7 @@ fn prepare_object(
     hierarchy: &PostClassicHierarchyPrintObject,
     raft_layers: i32,
     scale: crate::geometry::CoordinateScale,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<Option<ClassicTraversalRecord>>, crate::SliceError> {
     let onion = &hierarchy.predecessor;
     let top_split = &onion.predecessor;
@@ -73,68 +75,64 @@ fn prepare_object(
     let input_object = &prelude_object.object;
     let (post_regions, _) = input_object.object.as_parts();
     let (plan, _, _) = post_regions.as_parts();
-    hierarchy
-        .records
-        .iter()
-        .zip(&prelude_object.records)
-        .zip(input_object.as_parts().1)
-        .enumerate()
-        .map(
-            |(record_index, ((hierarchy_record, prelude_record), input))| {
-                match (hierarchy_record, prelude_record, input) {
-                    (Some(hierarchy_record), Some(prelude), Some(input)) => {
-                        let region = input_object.region_options(input);
-                        let flows = RouteFlows {
-                            perimeter: input.perimeter_flow,
-                            external: input.ext_perimeter_flow,
-                            smaller_external: prelude.smaller_external_flow,
-                        };
-                        let onion_surfaces = onion.records[record_index]
-                            .as_ref()
-                            .map(|record| record.surfaces.as_slice())
-                            .unwrap_or(&[]);
-                        let surfaces = hierarchy_record
-                            .surfaces
+    let inputs = input_object.as_parts().1;
+    crate::parallel::par_range_map_try(hierarchy.records.len(), cancel, |record_index| {
+        match (
+            &hierarchy.records[record_index],
+            &prelude_object.records[record_index],
+            &inputs[record_index],
+        ) {
+            (Some(hierarchy_record), Some(prelude), Some(input)) => {
+                let region = input_object.region_options(input);
+                let flows = RouteFlows {
+                    perimeter: input.perimeter_flow,
+                    external: input.ext_perimeter_flow,
+                    smaller_external: prelude.smaller_external_flow,
+                };
+                let onion_surfaces = onion.records[record_index]
+                    .as_ref()
+                    .map(|record| record.surfaces.as_slice())
+                    .unwrap_or(&[]);
+                let surfaces = hierarchy_record
+                    .surfaces
+                    .iter()
+                    .map(|surface| PreparedTraversalSurface {
+                        source_index: surface.source_index,
+                        roots: classify_roots(&surface.roots, flows),
+                        // `detect_thin_wall` walls carried from the onion
+                        // surface at the same `source_index`.
+                        thin_walls: onion_surfaces
                             .iter()
-                            .map(|surface| PreparedTraversalSurface {
-                                source_index: surface.source_index,
-                                roots: classify_roots(&surface.roots, flows),
-                                // `detect_thin_wall` walls carried from the onion
-                                // surface at the same `source_index`.
-                                thin_walls: onion_surfaces
-                                    .iter()
-                                    .find(|o| o.source_index == surface.source_index)
-                                    .map(|o| o.thin_walls.clone())
-                                    .unwrap_or_default(),
-                            })
-                            .collect();
-                        Ok(Some(Record {
-                            surfaces,
-                            layer_id: input.layer_id,
-                            layer_height: input.layer_height,
-                            slice_z: plan.layers[input.planned_layer_index].slice_z,
-                            fuzzy_skin: super::super::arachne::fuzzy::Regions::prepare(
-                                input_object,
-                                input,
-                                scale,
-                                prelude.printable_lower_slices.as_deref(),
-                            )?,
-                            overhang_flow: input.overhang_flow,
-                            ext_perimeter_flow: input.ext_perimeter_flow,
-                            scale,
-                            branch: PendingPathBranch::from_operands(
-                                region.detect_overhang_wall.0,
-                                input.layer_id,
-                                raft_layers,
-                            ),
-                        }))
-                    }
-                    (None, None, None) => Ok(None),
-                    _ => unreachable!("O5 record slots remain aligned with O4 and O1"),
-                }
-            },
-        )
-        .collect()
+                            .find(|o| o.source_index == surface.source_index)
+                            .map(|o| o.thin_walls.clone())
+                            .unwrap_or_default(),
+                    })
+                    .collect();
+                Ok(Some(Record {
+                    surfaces,
+                    layer_id: input.layer_id,
+                    layer_height: input.layer_height,
+                    slice_z: plan.layers[input.planned_layer_index].slice_z,
+                    fuzzy_skin: super::super::arachne::fuzzy::Regions::prepare(
+                        input_object,
+                        input,
+                        scale,
+                        prelude.printable_lower_slices.as_deref(),
+                    )?,
+                    overhang_flow: input.overhang_flow,
+                    ext_perimeter_flow: input.ext_perimeter_flow,
+                    scale,
+                    branch: PendingPathBranch::from_operands(
+                        region.detect_overhang_wall.0,
+                        input.layer_id,
+                        raft_layers,
+                    ),
+                }))
+            }
+            (None, None, None) => Ok(None),
+            _ => unreachable!("O5 record slots remain aligned with O4 and O1"),
+        }
+    })
 }
 
 impl PostClassicTraversalPrintObject {

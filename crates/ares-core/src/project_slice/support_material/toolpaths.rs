@@ -29,7 +29,9 @@ pub(super) struct ToolpathInput<'a> {
 pub(super) fn generate_grid_support_toolpaths(
     geometry: &mut GeneratedSupportGeometry,
     input: &ToolpathInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
+    cancel.check()?;
     let mut layers = std::mem::take(&mut geometry.support_layers);
     let n_raft_layers = layers.len().min(
         (input.slicing.base_raft_layers + input.slicing.interface_raft_layers).saturating_sub(1),
@@ -42,8 +44,9 @@ pub(super) fn generate_grid_support_toolpaths(
         1.5 * width_scaled as f64,
     );
     let mut indices = LayerCacheIndices::default();
-    let mut caches = Vec::with_capacity(layers.len() - n_raft_layers);
-    for (index, layer) in layers.iter_mut().enumerate().skip(n_raft_layers) {
+    let mut prepared = Vec::with_capacity(layers.len().saturating_sub(n_raft_layers));
+    for (index, layer) in layers.iter().enumerate().skip(n_raft_layers) {
+        cancel.check()?;
         let mut cache = indices.select(geometry, layer.print_z);
         let interface_angle = input
             .parameters
@@ -60,45 +63,70 @@ pub(super) fn generate_grid_support_toolpaths(
                 scale: input.scale,
             },
         )?;
-        let fill = SupportFillInput {
-            object: input.object,
-            parameters: input.parameters,
-            counts: input.counts,
-            support_layer: layer,
-            support_layer_index: index,
-            range_begin: n_raft_layers,
-            n_raft_layers,
-            raft_contact: contact.raft_contact,
-            interface_angle,
-            scale: input.scale,
-        };
-        cache.fill_grid_interfaces(geometry, &fill)?;
-        cache.fill_grid_base(geometry, &fill)?;
-        let mut ordered = cache.collect_ordered(geometry, &indices).map_err(|error| {
-            SliceError::InvalidInput(format!("support toolpath islands: {error:?}"))
+        prepared.push((index, cache, indices, interface_angle, contact));
+    }
+    let mut filled = crate::parallel::par_map_try(
+        prepared,
+        cancel,
+        |(index, mut cache, snapshot, interface_angle, contact)| {
+            let fill = SupportFillInput {
+                object: input.object,
+                parameters: input.parameters,
+                counts: input.counts,
+                support_layer: &layers[index],
+                support_layer_index: index,
+                range_begin: n_raft_layers,
+                n_raft_layers,
+                raft_contact: contact.raft_contact,
+                interface_angle,
+                scale: input.scale,
+            };
+            cache.fill_grid_interfaces(geometry, &fill)?;
+            cache.fill_grid_base_extrusions(geometry, &fill)?;
+            Ok((index, cache, snapshot, contact.ironing))
+        },
+    )?;
+    for (_, cache, _, _) in &mut filled {
+        cancel.check()?;
+        cache.merge_grid_base_interface(geometry)?;
+    }
+    let built =
+        crate::parallel::par_map_try(filled, cancel, |(index, cache, snapshot, ironing)| {
+            let mut ordered = cache
+                .collect_ordered(geometry, &snapshot)
+                .map_err(|error| {
+                    SliceError::InvalidInput(format!("support toolpath islands: {error:?}"))
+                })?;
+            let islands = std::mem::take(&mut ordered.islands);
+            Ok((index, islands, ordered, ironing))
         })?;
-        layer.support_islands = std::mem::take(&mut ordered.islands);
-        caches.push((ordered, contact.ironing));
+    let mut caches = Vec::with_capacity(built.len());
+    for (index, islands, ordered, ironing) in built {
+        layers[index].support_islands = islands;
+        caches.push((index, ordered, ironing));
     }
     // All islands are available before modulation and immediate-upper ironing trim.
-    for (index, (mut cache, ironing)) in caches.into_iter().enumerate() {
-        let index = index + n_raft_layers;
-        let (lower, upper) = layers.split_at_mut(index + 1);
-        let layer = &mut lower[index];
-        cache.modulate_and_append(&mut layer.support_fills, geometry, input.scale)?;
+    let fills = crate::parallel::par_map_try(caches, cancel, |(index, mut cache, ironing)| {
+        let layer = &layers[index];
+        let mut support_fills = Vec::new();
+        cache.modulate_and_append(&mut support_fills, geometry, input.scale)?;
         if let Some(ironing) = ironing {
             ironing.append_paths(
-                &mut layer.support_fills,
+                &mut support_fills,
                 &IroningInput {
                     object: input.object,
                     parameters: input.parameters,
                     layer_id: layer.id,
                     print_z: layer.print_z,
-                    upper: upper.first(),
+                    upper: layers.get(index + 1),
                     scale: input.scale,
                 },
             )?;
         }
+        Ok(support_fills)
+    })?;
+    for (layer, support_fills) in layers.iter_mut().skip(n_raft_layers).zip(fills) {
+        layer.support_fills = support_fills;
     }
     Ok(layers)
 }

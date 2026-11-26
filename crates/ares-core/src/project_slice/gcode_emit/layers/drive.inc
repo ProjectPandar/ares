@@ -79,6 +79,7 @@
         // `GCode.cpp:5149,5248`: one status per layer to print; by object, each instance restarts at 1.
         status_layer += 1;
         slicer.set_status(80, format_args!("Generating G-code: layer {status_layer}"), 0);
+        slicer.check_canceled()?;
         if tool_ordering.tools_for_layer(group_z).is_empty() {
             cooling.empty_layer(output, cooling_layer_index, group_end == merged.len());
             continue;

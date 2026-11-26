@@ -67,16 +67,37 @@ fn prepare_object(
             })
         })
         .collect::<Vec<_>>();
-    for group in &input.groups {
-        let record_index = input.region_layer_record_index(group.owner);
-        let record = object.records[record_index].as_ref().unwrap();
-        records[record_index] = Some(prepare_record(
-            object,
-            record_index,
-            record,
-            scale,
-            context,
-        )?);
+    let has_fuzzy = object
+        .records
+        .iter()
+        .flatten()
+        .any(|record| record.fuzzy_skin.has_contour || record.fuzzy_skin.has_hole);
+    if has_fuzzy {
+        for group in &input.groups {
+            context.check_canceled()?;
+            let record_index = input.region_layer_record_index(group.owner);
+            let record = object.records[record_index].as_ref().unwrap();
+            records[record_index] = Some(prepare_record(
+                object,
+                record_index,
+                record,
+                scale,
+                Some(context),
+            )?);
+        }
+    } else {
+        let built =
+            crate::parallel::par_range_map_try(input.groups.len(), context.cancel_ref(), |g| {
+                let record_index = input.region_layer_record_index(input.groups[g].owner);
+                let record = object.records[record_index].as_ref().unwrap();
+                Ok((
+                    record_index,
+                    prepare_record(object, record_index, record, scale, None)?,
+                ))
+            })?;
+        for (record_index, built_record) in built {
+            records[record_index] = Some(built_record);
+        }
     }
     Ok(PreparedRawPathObject { records })
 }
@@ -86,7 +107,7 @@ fn prepare_record(
     record_index: usize,
     record: &super::traversal::ClassicTraversalRecord,
     scale: crate::geometry::CoordinateScale,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<PreparedRawPathRecord, SliceError> {
     let mut surfaces = Vec::with_capacity(record.surfaces.len());
     for surface in &record.surfaces {
@@ -98,7 +119,7 @@ fn prepare_record(
             },
             surface,
             scale,
-            context,
+            context.as_deref_mut(),
         )?);
     }
     Ok(PreparedRawPathRecord { surfaces })

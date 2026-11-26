@@ -50,11 +50,13 @@ pub(in crate::project_slice::support_material) fn generate(
     let object = tree.object;
     // `TreeSupport.cpp:1914-1950`: one status per stage of `TreeSupport::generate`.
     context.set_status(55, format_args!("Generating support"), 0);
+    context.check_canceled()?;
     let mut overhangs = SmartOverhangs::new(object, tree.layers, tree.extrusion_width, tree.scale)
         .map_err(error)?;
     if object.enable_support.0 {
         let start = web_time::Instant::now();
         for layer in 0..tree.layers.len() {
+            context.check_canceled()?;
             overhangs
                 .detect_layer(layer, || start.elapsed().as_secs_f64())
                 .map_err(error)?;
@@ -62,6 +64,7 @@ pub(in crate::project_slice::support_material) fn generate(
         overhangs.propagate_sharp_tails().map_err(error)?;
         overhangs.collect_cluster_overhangs().map_err(error)?;
         for layer in 0..tree.layers.len() {
+            context.check_canceled()?;
             overhangs
                 .finalize_layer(
                     layer,
@@ -106,6 +109,7 @@ pub(in crate::project_slice::support_material) fn generate(
     }
     let style = super::super::super::style::resolve(object.support_type, object.support_style);
     context.set_status(56, format_args!("Support: generate contact points"), 0);
+    context.check_canceled()?;
     let mut contacts = contacts::generate_contact_points(
         &ContactInput {
             object,
@@ -133,6 +137,7 @@ pub(in crate::project_slice::support_material) fn generate(
         &mut contacts.layers,
     );
     context.set_status(60, format_args!("Generating support"), 0);
+    context.check_canceled()?;
     NodeDropping {
         arena: &mut arena,
         layers: &mut contacts.layers,
@@ -142,10 +147,10 @@ pub(in crate::project_slice::support_material) fn generate(
         object,
         style,
     }
-    .run(context)
-    .map_err(error)?;
+    .run(context)?;
     smoothing::smooth_nodes(&mut arena, &contacts.layers);
     context.set_status(65, format_args!("Generating support"), 0);
+    context.check_canceled()?;
     let trim_layers = tree
         .slices
         .iter()
@@ -186,11 +191,11 @@ pub(in crate::project_slice::support_material) fn generate(
         bed: std::slice::from_ref(&tree.bed),
         scale: tree.scale,
     }
-    .draw_node_areas()
-    .map_err(error)?;
+    .draw_node_areas(context.cancel_ref())?;
     prefix.append(&mut drawn.layers);
     drawn.layers = prefix;
     context.set_status(70, format_args!("Generating support"), 0);
+    context.check_canceled()?;
     toolpaths::generate(
         drawn,
         &toolpaths::ToolpathInput {
@@ -204,6 +209,7 @@ pub(in crate::project_slice::support_material) fn generate(
             raft_layers: raft_count,
             scale: tree.scale,
         },
+        context.cancel_ref(),
     )
 }
 

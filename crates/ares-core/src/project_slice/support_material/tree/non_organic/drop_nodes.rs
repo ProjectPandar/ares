@@ -24,7 +24,7 @@ pub(super) struct NodeDropping<'a> {
 }
 
 impl NodeDropping<'_> {
-    pub(super) fn run(self, context: &mut crate::SlicerContext) -> Result<(), ClipperError> {
+    pub(super) fn run(self, context: &mut crate::SlicerContext) -> Result<(), crate::SliceError> {
         let Self {
             arena,
             layers,
@@ -37,8 +37,9 @@ impl NodeDropping<'_> {
         if heights.is_empty() {
             return Ok(());
         }
-        precalculate(arena, layers, heights, data, settings)?;
+        precalculate(arena, layers, heights, data, settings).map_err(geometry_error)?;
         for layer in (1..layers.len()).rev() {
+            context.check_canceled()?;
             if layers[layer].is_empty() {
                 continue;
             }
@@ -48,6 +49,7 @@ impl NodeDropping<'_> {
                 format_args!("Generating support"),
                 0,
             );
+            context.check_canceled()?;
             let current_height = &heights[layer];
             let next_height = &heights[layer - 1];
             let mut cuts = LineCutCache::new(super::super::super::layer_input::to_polygons(
@@ -69,7 +71,8 @@ impl NodeDropping<'_> {
                     next_height,
                     next_nodes: &mut layers[layer - 1],
                 }
-                .run(group)?;
+                .run(group)
+                .map_err(geometry_error)?;
                 DropPass {
                     group_index,
                     arena,
@@ -84,12 +87,17 @@ impl NodeDropping<'_> {
                     is_slim: style == ProcessSupportStyle::TreeSlim,
                     is_strong: style == ProcessSupportStyle::TreeStrong,
                 }
-                .run(group)?;
+                .run(group)
+                .map_err(geometry_error)?;
             }
             prune_unsupported(arena, layers, unsupported);
         }
         Ok(())
     }
+}
+
+fn geometry_error(error: ClipperError) -> crate::SliceError {
+    crate::SliceError::InvalidInput(format!("tree support geometry: {error:?}"))
 }
 
 fn precalculate(

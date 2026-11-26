@@ -58,6 +58,7 @@ pub(in crate::project_slice) struct PreparedPostFillEntities {
 
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostInfillCombination,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostFillEntities, SliceError> {
     let result = {
         let external = &predecessor.predecessor.predecessor;
@@ -66,64 +67,8 @@ pub(in crate::project_slice) fn prepare(
             .objects
             .iter()
             .enumerate()
-            .map(|(object_index, object)| {
-                let prelude = &object
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .object;
-                let (compensated, _) = prelude.as_parts();
-                let (post_regions, _) = compensated.as_parts();
-                let (plan, _, _) = post_regions.as_parts();
-                let Some(resolved) = traversal
-                    .resolved
-                    .objects
-                    .iter()
-                    .find(|resolved| resolved.source_object_index == plan.source_object_index)
-                else {
-                    unreachable!("fill object retains its resolved configuration");
-                };
-                // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
-                // Grid multiline reads this box; other generators keep their adapters.
-                let grid_bounds = resolved
-                    .all_regions
-                    .iter()
-                    .any(|region| {
-                        region.sparse_infill_pattern == crate::ProcessInfillPattern::Grid
-                            && region.fill_multiline.0 > 1
-                    })
-                    .then(|| {
-                        object_bounds::extended(
-                            &traversal.project.objects()[plan.source_object_index],
-                            resolved.print_objects[plan.transform_index].transform,
-                            traversal.scale,
-                        )
-                    });
-                // `prepare_lightning_infill_data` — reuse the generator built
-                // in `bridge_over_infill` on the expanded surfaces
-                // (`PrintObject.cpp:2711` builds it once, `make_fills` reuses).
-                let lightning_generator = predecessor
-                    .predecessor
-                    .lightning_generators
-                    .get(object_index)
-                    .and_then(|g| g.as_ref());
-                let adaptive_fields = &predecessor.predecessor.adaptive_infill_fields[object_index];
-                (0..plan.layers.len())
-                    .map(|layer_index| {
-                        generate::generate_layer_with_active(
-                            external,
-                            object_index,
-                            layer_index,
-                            generate::layer_options(
-                                external,
-                                object_index,
-                                (lightning_generator.map(|g| g.as_ref()), adaptive_fields),
-                                grid_bounds,
-                            ),
-                        )
-                    })
-                    .collect::<Result<Vec<_>, _>>()
+            .map(|(object_index, _)| {
+                prepare_object_layers(&predecessor, external, object_index, cancel)
             })
             .collect::<Result<Vec<_>, _>>()
     };
@@ -133,6 +78,95 @@ pub(in crate::project_slice) fn prepare(
         predecessor,
         objects,
     })
+}
+
+fn prepare_object_layers(
+    predecessor: &PreparedPostInfillCombination,
+    external: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    cancel: &crate::CancelToken,
+) -> Result<Vec<LayerFillEntities>, SliceError> {
+    cancel.check()?;
+    let traversal = &external.predecessor.predecessor;
+    let object = &traversal.objects[object_index];
+    let prelude = &object
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let (compensated, _) = prelude.as_parts();
+    let (post_regions, _) = compensated.as_parts();
+    let (plan, _, _) = post_regions.as_parts();
+    let Some(resolved) = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|resolved| resolved.source_object_index == plan.source_object_index)
+    else {
+        unreachable!("fill object retains its resolved configuration");
+    };
+    // Fill.cpp:1224/1237 -> PrintObject::bounding_box, once per object.
+    // Grid multiline reads this box; other generators keep their adapters.
+    let grid_bounds = resolved
+        .all_regions
+        .iter()
+        .any(|region| {
+            region.sparse_infill_pattern == crate::ProcessInfillPattern::Grid
+                && region.fill_multiline.0 > 1
+        })
+        .then(|| {
+            object_bounds::extended(
+                &traversal.project.objects()[plan.source_object_index],
+                resolved.print_objects[plan.transform_index].transform,
+                traversal.scale,
+            )
+        });
+    // `prepare_lightning_infill_data` — reuse the generator built
+    // in `bridge_over_infill` on the expanded surfaces
+    // (`PrintObject.cpp:2711` builds it once, `make_fills` reuses).
+    let lightning_generator = predecessor
+        .predecessor
+        .lightning_generators
+        .get(object_index)
+        .and_then(|g| g.as_ref());
+    let adaptive_fields = &predecessor.predecessor.adaptive_infill_fields[object_index];
+    let uses_random_rotate_template = resolved.all_regions.iter().any(|region| {
+        region.sparse_infill_rotate_template.0.contains(['~', '^'])
+            || region.solid_infill_rotate_template.0.contains(['~', '^'])
+    });
+    if lightning_generator.is_none() && !uses_random_rotate_template {
+        crate::parallel::par_range_map_try(plan.layers.len(), cancel, |layer_index| {
+            generate::generate_layer_with_active(
+                external,
+                object_index,
+                layer_index,
+                generate::layer_options(
+                    external,
+                    object_index,
+                    (None, adaptive_fields),
+                    grid_bounds,
+                ),
+            )
+        })
+    } else {
+        (0..plan.layers.len())
+            .map(|layer_index| {
+                cancel.check()?;
+                generate::generate_layer_with_active(
+                    external,
+                    object_index,
+                    layer_index,
+                    generate::layer_options(
+                        external,
+                        object_index,
+                        (lightning_generator.map(|g| g.as_ref()), adaptive_fields),
+                        grid_bounds,
+                    ),
+                )
+            })
+            .collect()
+    }
 }
 
 fn move_thin_fills(

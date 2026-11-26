@@ -23,12 +23,12 @@ pub(super) fn apply(
     polygon: &Polygon,
     config: FuzzySkinConfig,
     input: FuzzySkinInput,
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) -> Result<Polygon, SliceError> {
     if !config.should_fuzzify(input.layer_id, input.loop_index, input.is_contour) {
         return Ok(polygon.clone());
     }
-
+    let context = context.expect("fuzzy skin requires sequential SlicerContext");
     Ok(Polygon::new(config.fuzzified_scaled_points(
         (polygon.points(), true),
         crate::perimeters::FuzzySkinLayer {
@@ -45,8 +45,11 @@ pub(super) fn apply_regions(
     polygon: &Polygon,
     regions: &Regions,
     input: FuzzySkinInput,
-    context: &mut crate::SlicerContext,
+    mut context: Option<&mut crate::SlicerContext>,
 ) -> Result<Polygon, SliceError> {
+    if !regions.has_contour && !regions.has_hole {
+        return Ok(polygon.clone());
+    }
     let supported = regions.supported_area();
     if regions.entries.len() == 1 && supported.is_none() {
         return apply(polygon, regions.entries[0].config.base, input, context);
@@ -73,7 +76,7 @@ pub(super) fn apply_regions(
         }
         let config = region.config.base;
         if split.iter().all(|point| point.clipped) {
-            polygon = apply(&polygon, config, input, context)?;
+            polygon = apply(&polygon, config, input, context.as_deref_mut())?;
             continue;
         }
         let first = split.iter().position(|point| !point.clipped).unwrap();
@@ -87,12 +90,24 @@ pub(super) fn apply_regions(
                 output.push(point.point);
             } else {
                 segment.push(point.point);
-                append_segment(&mut output, &mut segment, config, input, context);
+                append_segment(
+                    &mut output,
+                    &mut segment,
+                    config,
+                    input,
+                    context.as_deref_mut(),
+                );
             }
         }
         if !segment.is_empty() {
             segment.push(split[0].point);
-            append_segment(&mut output, &mut segment, config, input, context);
+            append_segment(
+                &mut output,
+                &mut segment,
+                config,
+                input,
+                context.as_deref_mut(),
+            );
         }
         polygon = Polygon::new(output);
     }
@@ -104,8 +119,9 @@ fn append_segment(
     segment: &mut Vec<Point>,
     config: FuzzySkinConfig,
     input: FuzzySkinInput,
-    context: &mut crate::SlicerContext,
+    context: Option<&mut crate::SlicerContext>,
 ) {
+    let context = context.expect("fuzzy skin requires sequential SlicerContext");
     output.push(segment[0]);
     let back = *segment.last().unwrap();
     output.extend(config.fuzzified_scaled_points(

@@ -39,7 +39,9 @@ pub(super) struct ToolpathInput<'a> {
 pub(super) fn generate(
     drawn: DrawnLayers,
     input: &ToolpathInput<'_>,
+    cancel: &crate::CancelToken,
 ) -> Result<Vec<InstalledSupportLayer>, SliceError> {
+    cancel.check()?;
     let mut output = drawn
         .layers
         .iter()
@@ -62,52 +64,69 @@ pub(super) fn generate(
         return Ok(output);
     }
     raft::fill_prefix(&mut output, &drawn.layers, input)?;
-    for (layer_id, (source, layer)) in drawn
-        .layers
-        .iter()
-        .zip(&mut output)
-        .enumerate()
-        .skip(input.raft_layers)
-    {
-        let support_flow = input.support_flow(source.height)?;
-        let interface_flow = input.flows.interface.with_height(source.height as f32)?;
-        for group in &source.groups {
-            let area = match group.kind {
-                AreaKind::Base => &source.base[group.index],
-                AreaKind::Roof => &source.roof[group.index],
-                AreaKind::Floor => &source.floor[group.index],
-                AreaKind::RoofFirst => &source.roof_first[group.index],
-            };
-            if group.kind == AreaKind::Base {
-                base::BaseArea {
-                    input,
-                    area,
-                    group,
-                    support_flow,
-                    layer_id,
-                    print_z: source.print_z,
-                    lightning: drawn.lightning.as_ref(),
-                }
-                .append(&mut layer.support_fills)?;
-            } else {
-                interfaces::InterfaceArea {
-                    input,
-                    area,
-                    group,
-                    support_flow,
-                    interface_flow,
-                    layer_id,
-                }
-                .append(&mut layer.support_fills)?;
-            }
+    let skip = input.raft_layers.min(output.len());
+    if drawn.lightning.is_none() {
+        let drawn_layers = &drawn.layers;
+        crate::parallel::par_for_each_mut_try(&mut output[skip..], cancel, |offset, layer| {
+            let layer_id = skip + offset;
+            fill_tree_layer(&drawn_layers[layer_id], layer, layer_id, input, None)
+        })?;
+    } else {
+        for (layer_id, (source, layer)) in
+            drawn.layers.iter().zip(&mut output).enumerate().skip(skip)
+        {
+            cancel.check()?;
+            fill_tree_layer(source, layer, layer_id, input, drawn.lightning.as_ref())?;
         }
-        chain_and_reorder_entities_with_optional_start(&mut layer.support_fills, None);
     }
     for (layer, source) in output.iter_mut().zip(drawn.layers) {
         layer.slices = source.slices;
         layer.tree_base_areas = Some(source.base);
     }
     Ok(output)
+}
+
+fn fill_tree_layer(
+    source: &LayerAreas,
+    layer: &mut InstalledSupportLayer,
+    layer_id: usize,
+    input: &ToolpathInput<'_>,
+    lightning: Option<&super::drawing::lightning::SupportLightning>,
+) -> Result<(), SliceError> {
+    let support_flow = input.support_flow(source.height)?;
+    let interface_flow = input.flows.interface.with_height(source.height as f32)?;
+    for group in &source.groups {
+        let area = match group.kind {
+            AreaKind::Base => &source.base[group.index],
+            AreaKind::Roof => &source.roof[group.index],
+            AreaKind::Floor => &source.floor[group.index],
+            AreaKind::RoofFirst => &source.roof_first[group.index],
+        };
+        if group.kind == AreaKind::Base {
+            base::BaseArea {
+                input,
+                area,
+                group,
+                support_flow,
+                layer_id,
+                print_z: source.print_z,
+                lightning,
+            }
+            .append(&mut layer.support_fills)?;
+        } else {
+            interfaces::InterfaceArea {
+                input,
+                area,
+                group,
+                support_flow,
+                interface_flow,
+                layer_id,
+            }
+            .append(&mut layer.support_fills)?;
+        }
+    }
+    chain_and_reorder_entities_with_optional_start(&mut layer.support_fills, None);
+    Ok(())
 }
 
 impl ToolpathInput<'_> {

@@ -155,13 +155,14 @@ pub(super) fn prepare_profile_slice(
     project: &mut ProjectSource<'_>,
     profile: ProfileInput<'_>,
     upward_report: Option<&mut Vec<String>>,
+    cancel: &crate::CancelToken,
 ) -> Result<ProjectSliceState, SliceError> {
+    cancel.check()?;
     let (loaded, preparation) = load_profile_slice(project, profile, upward_report)?;
     crate::downward::check_project(&loaded, project.plate, project.downward.take());
     state::prepare_loaded_project_slice_with_validation(
         loaded,
-        project.plate,
-        Some(profile.printer_name()),
+        (project.plate, Some(profile.printer_name())),
         (
             project.validate_print,
             project.max_triangle_count,
@@ -173,6 +174,7 @@ pub(super) fn prepare_profile_slice(
             .full_fff_config
             .is_none()
             .then_some((&preparation, project.overrides)),
+        cancel,
     )
 }
 

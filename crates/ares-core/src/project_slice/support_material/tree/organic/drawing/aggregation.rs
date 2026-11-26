@@ -1,7 +1,7 @@
 //! Ordered per-branch, per-tree and cross-tree polygon accumulation.
 
-use super::BranchSlices;
-use crate::geometry::{ClipperError, Polygon, union_polygons_paths};
+use super::{BranchSlices, geometry_error};
+use crate::geometry::{Polygon, union_polygons_paths};
 
 #[derive(Default)]
 pub(in super::super) struct Slice {
@@ -44,20 +44,24 @@ impl TreeSlices {
         self.first = Some(begin);
     }
 
-    pub(super) fn union_branches(&mut self) -> Result<(), ClipperError> {
-        for slice in &mut self.slices {
+    pub(super) fn union_branches(
+        &mut self,
+        cancel: &crate::CancelToken,
+    ) -> Result<(), crate::SliceError> {
+        crate::parallel::par_for_each_mut_try(&mut self.slices, cancel, |_, slice| {
             if slice.num_branches <= 1 {
-                continue;
+                return Ok(());
             }
             if !slice.polygons.is_empty() {
-                slice.polygons = union_polygons_paths(&slice.polygons)?;
+                slice.polygons = union_polygons_paths(&slice.polygons).map_err(geometry_error)?;
             }
             if !slice.bottom_contacts.is_empty() {
-                slice.bottom_contacts = union_polygons_paths(&slice.bottom_contacts)?;
+                slice.bottom_contacts =
+                    union_polygons_paths(&slice.bottom_contacts).map_err(geometry_error)?;
             }
             slice.num_branches = 1;
-        }
-        Ok(())
+            Ok(())
+        })
     }
 }
 

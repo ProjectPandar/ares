@@ -260,7 +260,7 @@ pub(super) fn append(
     let mut chunk_index = 0;
     let mut final_chunk = None;
     let mut status_layer = 0;
-    include!("layers/drive.rs");
+    include!("layers/drive.inc");
     cooling.finish(output);
     // `GCode.cpp:3440-3441` (ByLayer; the per-object completion
     // `:3359-3361` reaches the same point at the final object): once

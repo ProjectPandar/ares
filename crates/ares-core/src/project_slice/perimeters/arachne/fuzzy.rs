@@ -141,8 +141,11 @@ impl Regions {
         extrusion: &mut ExtrusionLine,
         (contour, whole_path_closed): (bool, bool),
         layer: Layer,
-        context: &mut SlicerContext,
+        mut context: Option<&mut SlicerContext>,
     ) -> Result<(), SliceError> {
+        if !self.has_contour && !self.has_hole {
+            return Ok(());
+        }
         if self.entries.len() == 1 && self.supported.is_none() {
             let config = self.entries[0].config;
             if config
@@ -188,7 +191,13 @@ impl Regions {
             if self.supported.is_some() && region.mask.is_empty() {
                 continue;
             }
-            apply_mask(extrusion, &region, layer, context, whole_path_closed)?;
+            apply_mask(
+                extrusion,
+                &region,
+                layer,
+                context.as_deref_mut(),
+                whole_path_closed,
+            )?;
         }
         Ok(())
     }
@@ -242,7 +251,7 @@ fn apply_mask(
     extrusion: &mut ExtrusionLine,
     region: &Region,
     layer: Layer,
-    context: &mut SlicerContext,
+    context: Option<&mut SlicerContext>,
     whole_path_closed: bool,
 ) -> Result<(), SliceError> {
     let points: Vec<_> = extrusion.junctions.iter().map(|j| j.point).collect();
@@ -269,7 +278,7 @@ fn rebuild(
     split: Vec<crate::geometry::SplitJunction>,
     config: Config,
     layer: Layer,
-    context: &mut SlicerContext,
+    mut context: Option<&mut SlicerContext>,
 ) {
     let current = std::mem::take(&mut extrusion.junctions);
     let mut segment = Vec::with_capacity(current.len());
@@ -289,7 +298,7 @@ fn rebuild(
                 &mut segment,
                 config,
                 layer,
-                context,
+                context.as_deref_mut(),
             );
         }
     }
@@ -330,7 +339,7 @@ fn append_segment(
     segment: &mut Vec<ExtrusionJunction>,
     config: Config,
     layer: Layer,
-    context: &mut SlicerContext,
+    context: Option<&mut SlicerContext>,
 ) {
     let front = segment[0];
     let back = *segment.last().expect("a clipped segment has endpoints");

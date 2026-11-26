@@ -23,8 +23,9 @@ const VORONOI_ERROR: &str = "Classic medial-axis Voronoi construction failed";
 
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapDomain,
+    cancel: &crate::CancelToken,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
-    let staged = stage(&prepared)?;
+    let staged = stage(&prepared, cancel)?;
     let PreparedPostClassicGapDomain {
         predecessor,
         objects,
@@ -40,22 +41,22 @@ pub(in crate::project_slice) fn finish(
     })
 }
 
-fn stage(prepared: &PreparedPostClassicGapDomain) -> Result<Vec<StagedObject>, SliceError> {
+fn stage(
+    prepared: &PreparedPostClassicGapDomain,
+    cancel: &crate::CancelToken,
+) -> Result<Vec<StagedObject>, SliceError> {
     let scale = prepared.predecessor.scale;
     prepared
         .objects
         .iter()
         .map(|object| {
-            let records = object
-                .records
-                .iter()
-                .map(|record| {
-                    record
+            let records =
+                crate::parallel::par_range_map_try(object.records.len(), cancel, |index| {
+                    object.records[index]
                         .as_ref()
                         .map(|record| stage_record(record, scale))
                         .transpose()
-                })
-                .collect::<Result<Vec<_>, _>>()?;
+                })?;
             Ok(StagedObject { records })
         })
         .collect()
