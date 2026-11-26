@@ -116,6 +116,19 @@ impl ProjectRuntimeOptionsBuilder {
         }
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if ProjectGCodeSourceOptionsBuilder::is_known_field(key) {
+            ProjectGCodeSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProjectPrintSourceOptionsBuilder::is_known_field(key) {
+            ProjectPrintSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else {
+            ProjectPresetSourceOptionsBuilder::validate_known_value(key, deserializer)
+        }
+    }
+
     pub(crate) fn resolve(self) -> ProjectRuntimeOptions {
         ProjectRuntimeOptions {
             gcode: self.gcode.resolve(),

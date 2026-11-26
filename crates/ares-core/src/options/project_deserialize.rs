@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
@@ -32,7 +33,16 @@ impl<'de> Deserialize<'de> for ProjectSettingsBuilder {
 pub(crate) fn deserialize_config_values(
     input: RawConfigValue,
 ) -> Result<ProjectSettingsBuilder, String> {
-    input
+    deserialize_config_map(input)
+}
+
+pub(crate) fn deserialize_config_map<'de, D>(
+    deserializer: D,
+) -> Result<ProjectSettingsBuilder, String>
+where
+    D: Deserializer<'de>,
+{
+    deserializer
         .deserialize_map(ProjectSettingsVisitor {
             apply_thumbnail: false,
         })
@@ -56,7 +66,7 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
     {
         let mut builder = ProjectSettingsBuilder::default();
 
-        while let Some(key) = map.next_key::<String>()? {
+        while let Some(key) = map.next_key::<Cow<'de, str>>()? {
             if deserialize_project_field(&mut builder, &key, &mut map)? {
                 continue;
             }

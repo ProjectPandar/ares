@@ -2,6 +2,36 @@ mod rules;
 
 pub(crate) use rules::EXPLICIT_RULES;
 
+const fn str_lt(left: &str, right: &str) -> bool {
+    let (a, b) = (left.as_bytes(), right.as_bytes());
+    let mut i = 0;
+    while i < a.len() && i < b.len() {
+        if a[i] != b[i] {
+            return a[i] < b[i];
+        }
+        i += 1;
+    }
+    a.len() < b.len()
+}
+
+const _: () = {
+    let mut i = 1;
+    while i < EXPLICIT_RULES.len() {
+        assert!(str_lt(
+            EXPLICIT_RULES[i - 1].source,
+            EXPLICIT_RULES[i].source
+        ));
+        i += 1;
+    }
+};
+
+pub(crate) fn find_explicit_rule(source: &str) -> Option<&'static LegacyRule> {
+    EXPLICIT_RULES
+        .binary_search_by_key(&source, |rule| rule.source)
+        .ok()
+        .map(|index| &EXPLICIT_RULES[index])
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Replacement {
     pub(crate) from: &'static str,

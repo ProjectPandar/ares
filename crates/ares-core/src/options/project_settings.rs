@@ -85,6 +85,25 @@ impl ProjectSettingsBuilder {
         }
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if PrinterOptionsBuilder::is_known_field(key) {
+            PrinterOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProcessOptionsBuilder::is_known_field(key) {
+            ProcessOptionsBuilder::validate_known_value(key, deserializer)
+        } else if FilamentOptionsBuilder::is_known_field(key) {
+            FilamentOptionsBuilder::validate_known_value(key, deserializer)
+        } else if ProjectRuntimeOptionsBuilder::is_known_field(key) {
+            ProjectRuntimeOptionsBuilder::validate_known_value(key, deserializer)
+        } else if PresetMetadataBuilder::is_known_field(key) {
+            PresetMetadataBuilder::validate_known_value(key, deserializer)
+        } else {
+            Ok(false)
+        }
+    }
+
     pub(crate) fn schedule_json_effect(&mut self, effect: JsonDerivedEffect) {
         match (effect.target, effect.value) {
             ("support_style", "tree_hybrid") => self.derived_support_style = true,

@@ -102,15 +102,16 @@ pub(super) fn compose(
             ordinary.apply_present(&mut settings.filament);
         }
         if capped {
-            settings.printer.machine = crate::options::json_deserialize::deserialize_config_values(
-                raw.clone().into_object(),
-            )
-            .map_err(|error| {
-                SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
-            })?
-            .resolve()
-            .printer
-            .machine;
+            settings.printer.machine =
+                crate::options::json_deserialize::deserialize_config_values_ref(raw.as_map())
+                    .map_err(|error| {
+                        SliceError::InvalidInput(format!(
+                            "merged project settings are invalid: {error}"
+                        ))
+                    })?
+                    .resolve()
+                    .printer
+                    .machine;
         }
         // CLI:4250-4259 adds a missing static default once, not once per
         // loaded filament. Typed composition must not invent raw members.
@@ -123,7 +124,7 @@ pub(super) fn compose(
         // `handle_legacy` on user edits (Config.cpp:577–579) precedes
         // the typed settings rebuild.
         raw.handle_legacy();
-        crate::options::json_deserialize::deserialize_config_values(raw.clone().into_object())
+        crate::options::json_deserialize::deserialize_config_values_ref(raw.as_map())
             .map_err(|error| {
                 SliceError::InvalidInput(format!("merged project settings are invalid: {error}"))
             })?

@@ -271,6 +271,33 @@ impl FilamentOptionsBuilder {
         }
     }
 
+    pub(crate) fn validate_known_value<'de, D>(key: &str, deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if FilamentGCodeSourceOptionsBuilder::is_known_field(key) {
+            FilamentGCodeSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if FilamentPrintSourceOptionsBuilder::is_known_field(key) {
+            FilamentPrintSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if FilamentRegionSourceOptionsBuilder::is_known_field(key) {
+            FilamentRegionSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if FilamentRetractOverrideOptionsBuilder::is_known_field(key) {
+            FilamentRetractOverrideOptionsBuilder::validate_known_value(key, deserializer)
+        } else if FilamentPresetSourceOptionsBuilder::is_known_field(key) {
+            FilamentPresetSourceOptionsBuilder::validate_known_value(key, deserializer)
+        } else if key == "pellet_flow_coefficient" {
+            let _ =
+                <OrcaFloats as serde::Deserialize>::deserialize(deserializer).map_err(|error| {
+                    serde::de::Error::custom(format_args!(
+                        "invalid Orca option pellet_flow_coefficient: {error}"
+                    ))
+                })?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
     fn deserialize_direct_field<'de, A>(&mut self, key: &str, map: &mut A) -> Result<bool, A::Error>
     where
         A: serde::de::MapAccess<'de>,
