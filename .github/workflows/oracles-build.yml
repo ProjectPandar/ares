@@ -30,16 +30,37 @@ concurrency:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
+      already_published: ${{ steps.tag.outputs.already_published }}
     steps:
       - uses: actions/checkout@v4
       - id: tag
-        run: echo "tag=$(bash scripts/ci/oracle-image.sh tag)" >> "$GITHUB_OUTPUT"
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(bash scripts/ci/oracle-image.sh tag)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          source scripts/ci/oracle-image.env
+          already_published="false"
+          if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] && [ -n "${ORACLE_IMAGE_DIGEST:-}" ]; then
+            ref="$(bash scripts/ci/oracle-image.sh ref)"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin >/dev/null
+            if docker manifest inspect "$ref" >/dev/null 2>&1; then
+              echo "Pinned oracle digest already exists in GHCR ($ref); skipping rebuild."
+              already_published="true"
+            fi
+          fi
+          echo "already_published=$already_published" >> "$GITHUB_OUTPUT"
 
   build-variant:
     name: build-${{ matrix.variant }}
     needs: plan
+    if: needs.plan.outputs.already_published != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -86,6 +107,7 @@ jobs:
 
   package-image:
     needs: [plan, build-variant]
+    if: needs.plan.outputs.already_published != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -195,10 +217,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          source scripts/ci/oracle-image.env
           owner="${GITHUB_REPOSITORY%%/*}"
           repo_name="${GITHUB_REPOSITORY#*/}"
           bash scripts/ci/oracle-image.sh prune \
             --owner "$owner" \
             --package "${repo_name}/ci-oracles" \
             --keep "${{ inputs.keep_versions || '3' }}" \
-            --keep-tag "${{ needs.plan.outputs.tag }}"
+            --keep-tag "${{ needs.plan.outputs.tag }}" \
+            --keep-digest "${ORACLE_IMAGE_DIGEST:-}"

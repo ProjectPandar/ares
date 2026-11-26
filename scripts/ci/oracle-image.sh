@@ -222,13 +222,14 @@ EOF
 }
 
 prune_ghcr() {
-  local owner="" package="ares/ci-oracles" keep="3" keep_tag=""
+  local owner="" package="ares/ci-oracles" keep="3" keep_tag="" keep_digest=""
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --owner) owner="$2"; shift 2 ;;
       --package) package="$2"; shift 2 ;;
       --keep) keep="$2"; shift 2 ;;
       --keep-tag) keep_tag="$2"; shift 2 ;;
+      --keep-digest) keep_digest="$2"; shift 2 ;;
       *) echo "unknown arg: $1" >&2; exit 2 ;;
     esac
   done
@@ -240,15 +241,19 @@ prune_ghcr() {
     endpoint="/users/$owner/packages/container/$encoded/versions"
     versions="$(gh api --paginate "$endpoint")"
   fi
-  VERSIONS_JSON="$versions" python3 - "$keep" "$keep_tag" <<'PYEOF' | while IFS= read -r vid; do
+  VERSIONS_JSON="$versions" python3 - "$keep" "$keep_tag" "$keep_digest" <<'PYEOF' | while IFS= read -r vid; do
 import json, os, sys
 keep = int(sys.argv[1])
 keep_tag = sys.argv[2]
+keep_digest = sys.argv[3]
 raw = os.environ.get("VERSIONS_JSON", "").strip()
 items = sorted(json.loads(raw) if raw else [], key=lambda x: x["created_at"], reverse=True)
 kept = 0
 for item in items:
     tags = item.get("metadata", {}).get("container", {}).get("tags", [])
+    if keep_digest and item.get("name") == keep_digest:
+        kept += 1
+        continue
     if keep_tag and keep_tag in tags:
         kept += 1
         continue
