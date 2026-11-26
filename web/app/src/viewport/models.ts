@@ -93,3 +93,32 @@ export function buildInstances(scene: Scene, materials: ModelMaterials): THREE.G
   }
   return groups;
 }
+
+/** Plater edits: updates instance matrices and effective filaments when mesh buffers are unchanged. */
+export function updateInstances(models: THREE.Group, scene: Scene): boolean {
+  const groups = models.children;
+  const matrices = scene.objects.flatMap((object) => object.instances.map((instance) => instance.matrix));
+  if (groups.length !== matrices.length) return false;
+  groups.forEach((group, index) => group.matrix.fromArray(matrices[index]));
+  models.updateMatrixWorld(true);
+  const objects = new Map(scene.objects.map((object) => [object.id, object]));
+  models.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const object = objects.get(node.userData.objectId as number);
+    const volume = object?.volumes.find(({ id }) => id === node.userData.volumeId);
+    if (volume) node.userData.filament = volume.effectiveFilament;
+  });
+  return true;
+}
+
+/** Assigns each model mesh its material for the current selection and filament palette. */
+export function applySelectionMaterials(models: THREE.Group, materials: ModelMaterials, objectId: number | null) {
+  models.traverse((node) => {
+    if (node instanceof THREE.Mesh)
+      node.material = materials.get(
+        node.userData.volumeType as VolumeType,
+        node.userData.objectId === objectId,
+        node.userData.filament as number,
+      );
+  });
+}
