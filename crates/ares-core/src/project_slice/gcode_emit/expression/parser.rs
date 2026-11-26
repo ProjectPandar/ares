@@ -102,9 +102,9 @@ impl Parser<'_> {
         let result = if matches!(comparison, Token::RegexMatch | Token::RegexNotMatch) {
             // `regex_op` (`PlaceholderParser.cpp:754-759`) rejects a deferred subject.
             self.reject_deferred(&[&left])?;
-            let pattern =
-                match regex::bytes::Regex::new(&format!("^(?s-u:{})$", right.value.as_string())) {
-                    Ok(pattern) => pattern,
+            let matched =
+                match regex_is_match(&right.value.as_string(), left.value.as_string().as_bytes()) {
+                    Ok(matched) => matched,
                     // Suppressed (inactive) branch: `regex_op` no-ops while
                     // skipping (`PlaceholderParser.cpp:687-691`).
                     Err(_) if self.suppressed > 0 => {
@@ -112,7 +112,6 @@ impl Parser<'_> {
                     }
                     Err(error) => return Err(format!("invalid regex: {error}")),
                 };
-            let matched = pattern.is_match(left.value.as_string().as_bytes());
             if comparison == Token::RegexMatch {
                 matched
             } else {
@@ -328,4 +327,25 @@ impl<'a> Parser<'a> {
             suppressed: 0,
         }
     }
+}
+
+fn regex_is_match(pattern: &str, subject: &[u8]) -> Result<bool, regex::Error> {
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    thread_local! {
+        static CACHE: RefCell<HashMap<String, regex::bytes::Regex>> = RefCell::new(HashMap::new());
+    }
+    CACHE.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        if let Some(compiled) = cache.get(pattern) {
+            return Ok(compiled.is_match(subject));
+        }
+        let compiled = regex::bytes::Regex::new(&format!("^(?s-u:{pattern})$"))?;
+        let matched = compiled.is_match(subject);
+        if cache.len() >= 64 {
+            cache.clear();
+        }
+        cache.insert(pattern.to_owned(), compiled);
+        Ok(matched)
+    })
 }

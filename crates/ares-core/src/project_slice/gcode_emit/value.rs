@@ -1,7 +1,9 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
+mod parse;
 mod random;
 pub(super) mod variables;
+use parse::parse_value;
 use variables::{Scope, Variable, Variables, VectorKind};
 
 // PlaceholderParser.hpp:16-26: config copies share the execution context.
@@ -149,13 +151,45 @@ fn format_number(value: f64) -> String {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Config {
-    values: HashMap<String, Value>,
+    base: Option<Arc<HashMap<String, Value>>>,
+    values: HashMap<String, Option<Value>>,
     pub(crate) random: Option<TemplateRng>,
     pub(super) globals: Variables,
     pub(super) locals: Variables,
 }
 
 impl Config {
+    pub(crate) fn from_shared_base(
+        base: Arc<HashMap<String, Value>>,
+        random: Option<TemplateRng>,
+    ) -> Self {
+        Self {
+            base: Some(base),
+            values: HashMap::new(),
+            random,
+            globals: Variables::default(),
+            locals: Variables::default(),
+        }
+    }
+
+    pub(crate) fn into_shared_map(self) -> Arc<HashMap<String, Value>> {
+        let mut map = self
+            .base
+            .map(|base| (*base).clone())
+            .unwrap_or_else(|| HashMap::with_capacity(self.values.len()));
+        for (key, value) in self.values {
+            match value {
+                Some(value) => {
+                    map.insert(key, value);
+                }
+                None => {
+                    map.remove(&key);
+                }
+            }
+        }
+        Arc::new(map)
+    }
+
     pub(crate) fn from_block(block: &[u8]) -> Self {
         let mut config = Self::default();
         for line in String::from_utf8_lossy(block).lines() {
@@ -176,10 +210,11 @@ impl Config {
         let key = key.into();
         if let Value::List(values) = &value {
             for (index, item) in values.iter().enumerate() {
-                self.values.insert(format!("{key}_{index}"), item.clone());
+                self.values
+                    .insert(format!("{key}_{index}"), Some(item.clone()));
             }
         }
-        self.values.insert(key, value);
+        self.values.insert(key, Some(value));
     }
 
     /// Stores an assignment target (`{var[idx] = value}`): lists grow with
@@ -200,7 +235,7 @@ impl Config {
                 Value::List(values)
             }
         };
-        if !self.values.contains_key(name)
+        if self.get(name).is_none()
             && let Some(variable) = self
                 .globals
                 .get_mut(name)
@@ -216,7 +251,10 @@ impl Config {
     }
 
     pub(crate) fn get(&self, key: &str) -> Option<&Value> {
-        self.values.get(key)
+        match self.values.get(key) {
+            Some(value) => value.as_ref(),
+            None => self.base.as_deref().and_then(|base| base.get(key)),
+        }
     }
 
     /// Brace resolution (`PlaceholderParser.cpp:992-1022`). Bracket expansion
@@ -252,106 +290,27 @@ impl Config {
     }
 
     fn remove(&mut self, key: &str) {
-        if let Some(Value::List(values)) = self.values.remove(key) {
-            for index in 0..values.len() {
-                self.values.remove(&format!("{key}_{index}"));
+        let list_len = match self.get(key) {
+            Some(Value::List(values)) => Some(values.len()),
+            _ => None,
+        };
+        self.remove_one(key);
+        if let Some(len) = list_len {
+            for index in 0..len {
+                self.remove_one(&format!("{key}_{index}"));
             }
         }
     }
-}
 
-/// The `expr` type an option value takes: `scalar_variable_to_expr`
-/// (`PlaceholderParser.cpp:1170-1232`) and `vector_element_to_expr` (`:1355-1361`).
-#[derive(Clone, Copy)]
-enum Scalar {
-    Bool,
-    Int,
-    /// `coFloat`, `coPercent` and their vectors: the number without its `%`.
-    Float,
-    /// `coString`, `coEnum` and `coStrings`: the serialized text.
-    Text,
-    Untyped,
-}
-
-fn parse_value(raw: &str, kind: Option<crate::options::registry::OptionValueKind>) -> Value {
-    use crate::options::registry::OptionValueKind as Kind;
-    // Registry-typed vector options keep their vector shape regardless of
-    // element count — upstream vectors stay `is_vector()` even with a
-    // single element, and a bare brace reference then enters
-    // `vector_element_to_expr` (`PlaceholderParser.cpp:1086-1211`) instead
-    // of scalar resolution.
-    let (scalar, nullable) = match kind {
-        Some(Kind::Int) => return parse_scalar(raw, Scalar::Int),
-        Some(Kind::Float | Kind::Percent) => return parse_scalar(raw, Scalar::Float),
-        Some(Kind::String | Kind::Enum) => return parse_scalar(raw, Scalar::Text),
-        Some(Kind::Bool) => return untyped_list(raw, Scalar::Bool),
-        Some(Kind::Ints) => (Scalar::Int, false),
-        Some(Kind::IntsNullable) => (Scalar::Int, true),
-        Some(Kind::Floats | Kind::Percents) => (Scalar::Float, false),
-        Some(Kind::FloatsNullable | Kind::PercentsNullable) => (Scalar::Float, true),
-        Some(Kind::Bools) => (Scalar::Bool, false),
-        Some(Kind::BoolsNullable) => (Scalar::Bool, true),
-        Some(Kind::Strings) => (Scalar::Text, false),
-        Some(Kind::Enums | Kind::EnumsNullable) => (Scalar::Untyped, false),
-        _ => return untyped_list(raw, Scalar::Untyped),
-    };
-    Value::List(
-        raw.split([';', ','])
-            .map(|element| {
-                if nullable && element.trim() == "nil" {
-                    Value::Nil
-                } else {
-                    parse_scalar(element, scalar)
-                }
-            })
-            .collect(),
-    )
-}
-
-/// An option without a registry vector kind: `;` or `,` separated values become a list.
-fn untyped_list(raw: &str, scalar: Scalar) -> Value {
-    let mut values = raw
-        .split(';')
-        .map(|value| parse_scalar(value, scalar))
-        .collect::<Vec<_>>();
-    if values.len() == 1 {
-        let value = values.remove(0);
-        let comma_values = value
-            .as_string()
-            .split(',')
-            .map(|value| parse_scalar(value, scalar))
-            .collect::<Vec<_>>();
-        return if comma_values.len() == 1 {
-            value
+    fn remove_one(&mut self, key: &str) {
+        if self
+            .base
+            .as_deref()
+            .is_some_and(|base| base.contains_key(key))
+        {
+            self.values.insert(key.to_owned(), None);
         } else {
-            Value::List(comma_values)
-        };
-    }
-    Value::List(values)
-}
-
-fn parse_scalar(raw: &str, scalar: Scalar) -> Value {
-    let raw = raw.trim().trim_matches('"');
-    match scalar {
-        Scalar::Bool if matches!(raw, "0" | "1" | "false" | "true") => {
-            Value::option_bool(matches!(raw, "1" | "true"))
+            self.values.remove(key);
         }
-        Scalar::Int => Value::Integer(raw.parse().unwrap()),
-        Scalar::Float => raw
-            .trim_end_matches('%')
-            .parse()
-            .map_or_else(|_| untyped(raw), Value::Number),
-        Scalar::Text => Value::String(raw.to_owned()),
-        Scalar::Bool | Scalar::Untyped => untyped(raw),
-    }
-}
-
-fn untyped(raw: &str) -> Value {
-    if let Ok(value) = raw.parse::<f64>() {
-        Value::Number(value)
-    } else if raw == "true" || raw == "false" {
-        Value::Bool(raw == "true")
-    } else {
-        Value::String(raw.to_owned())
     }
 }

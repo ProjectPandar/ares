@@ -1,16 +1,11 @@
+use crate::options::FlatMatrix;
 use crate::{ProjectSettings, SliceError};
 
 const MATRIX_ERROR: &str = "Flush volumes matrix do not match to the correct size!";
 
-pub(super) fn transformed_for_export(
-    source: &ProjectSettings,
-) -> Result<ProjectSettings, SliceError> {
-    let mut transformed = source.clone();
-    scale_flush_matrix(&mut transformed)?;
-    Ok(transformed)
-}
-
-fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> {
+pub(super) fn scaled_flush_matrix(
+    settings: &ProjectSettings,
+) -> Result<Option<FlatMatrix>, SliceError> {
     let multipliers = match settings.project.print.prime_volume_mode {
         crate::ProjectPrimeVolumeMode::Fast => &settings.project.print.flush_multiplier_fast.0,
         crate::ProjectPrimeVolumeMode::Default | crate::ProjectPrimeVolumeMode::Saving => {
@@ -23,11 +18,12 @@ fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> 
     }
 
     let filament_count = settings.filament.gcode.filament_colour.0.len();
-    let matrix = &mut settings.project.print.flush_volumes_matrix.0;
+    let source = &settings.project.print.flush_volumes_matrix.0;
     let expected = filament_count
         .checked_mul(filament_count)
         .and_then(|count| count.checked_mul(head_count));
-    if expected == Some(matrix.len()) {
+    if expected == Some(source.len()) {
+        let mut matrix = source.clone();
         let segment_len = matrix.len() / head_count;
         for (head, multiplier) in multipliers.iter().enumerate() {
             let start = head * segment_len;
@@ -36,9 +32,9 @@ fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> 
                 *value = (*value * multiplier.0).round();
             }
         }
-        Ok(())
+        Ok(Some(FlatMatrix(matrix)))
     } else if filament_count == 1 {
-        Ok(())
+        Ok(None)
     } else {
         Err(matrix_error())
     }

@@ -5,12 +5,30 @@ mod timestamp;
 
 pub(super) use cut_retraction::insert_aliases as refresh_filament_aliases;
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use crate::{
     GenerationMetadata, SliceError,
     project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
 use super::value::{self, Value};
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+struct CacheKey {
+    timestamp: (u16, u8, u8, u8, u8, u8),
+    first_layer_bounds: Option<(u64, u64, u64, u64)>,
+    layer_count: usize,
+    temperatures: (i32, i32),
+}
+
+type CachedBase = (CacheKey, Arc<HashMap<String, Value>>);
+
+#[derive(Default)]
+pub(in crate::project_slice) struct PlaceholderCache {
+    cached: Mutex<Option<CachedBase>>,
+}
 
 /// Placeholders available to every project G-code template (start, layer
 /// change, end), mirroring the shared upstream placeholder parser state
@@ -22,9 +40,26 @@ pub(super) fn base_config(
     rng: Option<&value::TemplateRng>,
     (layer_count, writer_temperatures): (usize, super::machine::WriterTemperatures),
 ) -> Result<value::Config, SliceError> {
+    let key = CacheKey {
+        timestamp: metadata.timestamp(),
+        first_layer_bounds: first_layer_bounds
+            .map(|(a, b, c, d)| (a.to_bits(), b.to_bits(), c.to_bits(), d.to_bits())),
+        layer_count,
+        temperatures: (
+            writer_temperatures.minimum_vitrification,
+            writer_temperatures.overall_chamber,
+        ),
+    };
+    if let Some((cached_key, base)) = traversal.placeholder_cache.cached.lock().unwrap().as_ref()
+        && *cached_key == key
+    {
+        return Ok(value::Config::from_shared_base(
+            Arc::clone(base),
+            rng.cloned(),
+        ));
+    }
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-    config.random = rng.cloned();
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal, layer_count);
     config.insert(
@@ -95,7 +130,9 @@ pub(super) fn base_config(
     insert_outer_wall_volumetric_speed(&mut config, traversal)?;
     bounds::insert_adaptive_bed_mesh(&mut config);
     bounds::insert_head_wrap_detect_zone(&mut config, traversal);
-    Ok(config)
+    let base = config.into_shared_map();
+    *traversal.placeholder_cache.cached.lock().unwrap() = Some((key, Arc::clone(&base)));
+    Ok(value::Config::from_shared_base(base, rng.cloned()))
 }
 
 fn insert_flush_placeholders(config: &mut value::Config, traversal: &PreparedPostClassicTraversal) {

@@ -63,24 +63,21 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
         Value::Integer((state.layer_chunk_index + 1) as i64),
     );
     config.insert("layer_z", Value::number(state.source_layer_z));
-    let sources = [
-        (
-            "change_extrusion_role_gcode",
-            state.options.role_change_machine.clone(),
-        ),
-        (
-            "filament_change_extrusion_role_gcode",
-            state.options.role_change_filament.clone(),
-        ),
-        (
-            "process_change_extrusion_role_gcode",
-            state.options.role_change_process.clone(),
-        ),
+    let templates = [
+        ("change_extrusion_role_gcode", 0usize),
+        ("filament_change_extrusion_role_gcode", 1usize),
+        ("process_change_extrusion_role_gcode", 2usize),
     ];
-    for (name, template_source) in sources {
+    for (name, slot) in templates {
+        let template_source = match slot {
+            0 => state.options.role_change_machine.as_str(),
+            1 => state.options.role_change_filament.as_str(),
+            _ => state.options.role_change_process.as_str(),
+        };
         if template_source.is_empty() {
             continue;
         }
+        let template_source = template_source.to_owned();
         refresh_writer_state(&mut config, state);
         match template::render(&template_source, &mut config, &mut state.template_context) {
             Ok(rendered) => {

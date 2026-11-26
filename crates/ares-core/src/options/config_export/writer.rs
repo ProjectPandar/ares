@@ -2,7 +2,8 @@ use crate::SliceError;
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
-    transform::transformed_for_export,
+    transform::scaled_flush_matrix,
+    value::serialize_config_value,
 };
 use crate::options::project_config_views::ProjectConfigViews;
 use crate::project::{ConfigComposer, raw_settings::ProjectSettingsRaw};
@@ -16,12 +17,21 @@ pub(crate) fn write_config_block(
     compat_temperatures: Option<(i32, i32)>,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
-    let transformed = transformed_for_export(&views.full)?;
-    let entries = collect_config_entries(&transformed).map_err(config_error)?;
+    let scaled_flush = scaled_flush_matrix(&views.full)?;
+    let mut entries = collect_config_entries(&views.full).map_err(config_error)?;
+    if let Some(matrix) = scaled_flush {
+        let serialized = serialize_config_value(&matrix).map_err(config_error)?;
+        if let Ok(index) =
+            entries.binary_search_by(|entry| entry.key.as_str().cmp("flush_volumes_matrix"))
+        {
+            entries[index].token = serialized.token;
+            entries[index].is_nil = serialized.is_nil;
+        }
+    }
     let mut scratch = Vec::new();
     scratch.extend_from_slice(START);
     super::full_config::write_entries(
-        &transformed,
+        &views.full,
         plate_index,
         &entries,
         raw_settings,
