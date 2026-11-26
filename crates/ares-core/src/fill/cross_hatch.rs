@@ -11,7 +11,7 @@ use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, JoinType, Polyline, intersection_open_polylines,
     offset_expolygon,
 };
-use transform::{polyline_length, rotate_expolygon, rotate_polylines, translate_polylines};
+use transform::{rotate_expolygon, rotate_polylines, translate_polylines};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct CrossHatchFillParams {
@@ -81,7 +81,7 @@ fn fill_component(
     clip.extend(holes);
     let mut polylines = intersection_open_polylines(&polylines, &clip)?;
     let minimum_length = (0.8 * params.spacing) / scale.factor();
-    polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
+    polylines.retain(|polyline| polyline.length() >= minimum_length);
     if polylines.is_empty() {
         return Ok(Vec::new());
     }

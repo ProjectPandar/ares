@@ -1,5 +1,5 @@
 use super::super::checked_rotate::{rotate_points, rotate_points_with_trig};
-use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Line, Point, Polygon, Polyline};
+use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polygon, Polyline};
 
 pub(super) fn rotate_expolygon(
     expolygon: ExPolygon,
@@ -116,12 +116,4 @@ pub(super) fn translate_polylines(
         );
     }
     Ok(())
-}
-
-pub(super) fn polyline_length(polyline: &Polyline) -> f64 {
-    polyline
-        .points()
-        .windows(2)
-        .map(|points| Line::new(points[0], points[1]).length())
-        .sum()
 }

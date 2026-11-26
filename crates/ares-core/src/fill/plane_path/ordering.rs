@@ -1,6 +1,6 @@
 use super::PlanePathPattern;
 use crate::{
-    geometry::{Line, Point, Polyline},
+    geometry::{Point, Polyline},
     project_slice::chain_polylines,
 };
 
@@ -27,9 +27,9 @@ fn order_calibration_archimedean(
     scale: crate::geometry::CoordinateScale,
 ) {
     let mut longest_index = 0;
-    let mut longest_length = polyline_length(&polylines[0]);
+    let mut longest_length = polylines[0].length();
     for (index, polyline) in polylines.iter().enumerate().skip(1) {
-        let length = polyline_length(polyline);
+        let length = polyline.length();
         if length > longest_length {
             longest_index = index;
             longest_length = length;
@@ -43,14 +43,6 @@ fn order_calibration_archimedean(
     }
     chain_polylines(polylines, scale);
     polylines.push(center);
-}
-
-fn polyline_length(polyline: &Polyline) -> f64 {
-    polyline
-        .points()
-        .windows(2)
-        .map(|points| Line::new(points[0], points[1]).length())
-        .sum()
 }
 
 fn squared_norm(point: Point) -> i128 {

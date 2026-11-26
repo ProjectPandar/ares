@@ -28,9 +28,18 @@ impl Clipper64 {
 }
 
 impl Clipper64 {
+    pub fn reserve_vertices(&mut self, additional: usize) {
+        self.base.reserve_vertices(additional);
+    }
+
     /// Add subject paths
     pub fn add_subject(&mut self, subjects: &Paths64) {
         self.base.add_paths(subjects, PathType::Subject, false);
+    }
+
+    /// Stream one closed subject path directly into the vertex arena.
+    pub fn add_subject_points(&mut self, points: impl IntoIterator<Item = Point64>) {
+        self.base.add_path_points(points, PathType::Subject, false);
     }
 }
 
@@ -39,12 +48,22 @@ impl Clipper64 {
     pub fn add_open_subject(&mut self, open_subjects: &Paths64) {
         self.base.add_paths(open_subjects, PathType::Subject, true);
     }
+
+    /// Stream one open subject path directly into the vertex arena.
+    pub fn add_open_subject_points(&mut self, points: impl IntoIterator<Item = Point64>) {
+        self.base.add_path_points(points, PathType::Subject, true);
+    }
 }
 
 impl Clipper64 {
     /// Add clip paths
     pub fn add_clip(&mut self, clips: &Paths64) {
         self.base.add_paths(clips, PathType::Clip, false);
+    }
+
+    /// Stream one clip path directly into the vertex arena.
+    pub fn add_clip_points(&mut self, points: impl IntoIterator<Item = Point64>) {
+        self.base.add_path_points(points, PathType::Clip, false);
     }
 }
 

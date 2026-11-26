@@ -13,7 +13,7 @@ pub(super) fn attach(
     }
     let bounds: Vec<_> = output
         .iter()
-        .map(|p| c2::get_bounds_path(&backend::to_path(p.contour().points())))
+        .map(|p| rect_of_points(p.contour().points()))
         .collect();
     let index = Index::new(&bounds, scale);
     let mut areas = vec![0.0; output.len()];
@@ -93,6 +93,17 @@ fn interior_point(polygon: &Polygon) -> Option<Point> {
         }
     }
     None
+}
+
+fn rect_of_points(points: &[Point]) -> c2::Rect64 {
+    let mut rect = c2::Rect64::new(i64::MAX, i64::MAX, i64::MIN, i64::MIN);
+    for point in points {
+        rect.left = rect.left.min(point.x());
+        rect.right = rect.right.max(point.x());
+        rect.top = rect.top.min(point.y());
+        rect.bottom = rect.bottom.max(point.y());
+    }
+    rect
 }
 
 mod bbox_index;

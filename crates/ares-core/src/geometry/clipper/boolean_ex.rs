@@ -12,39 +12,24 @@ fn run(
     clip: &[ExPolygon],
     kind: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    Ok(backend::clip_tree(
-        backend::expolygon_paths(subject),
-        backend::expolygon_paths(clip),
-        kind,
-        FillRule::NonZero,
-    )?
-    .into_expolygons(crate::geometry::CoordinateScale::Normal))
+    Ok(backend::clip_tree(subject, clip, kind, FillRule::NonZero)?
+        .into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
 fn run_paths(
     subject: &[ExPolygon],
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    Ok(backend::clip_tree(
-        backend::expolygon_paths(subject),
-        backend::paths(clip),
-        kind,
-        FillRule::NonZero,
-    )?
-    .into_expolygons(crate::geometry::CoordinateScale::Normal))
+    Ok(backend::clip_tree(subject, clip, kind, FillRule::NonZero)?
+        .into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
 fn run_polygons(
     subject: &[Polygon],
     clip: &[Polygon],
     kind: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    Ok(backend::clip_tree(
-        backend::paths(subject),
-        backend::paths(clip),
-        kind,
-        FillRule::NonZero,
-    )?
-    .into_expolygons(crate::geometry::CoordinateScale::Normal))
+    Ok(backend::clip_tree(subject, clip, kind, FillRule::NonZero)?
+        .into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
 pub(crate) fn difference_ex(
     subject: &[ExPolygon],
@@ -52,11 +37,44 @@ pub(crate) fn difference_ex(
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     run(subject, clip, ClipOperation::Difference)
 }
+pub(crate) fn difference_ex_refs(
+    subject: &[&ExPolygon],
+    clip: &[&ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    Ok(
+        backend::clip_tree(subject, clip, ClipOperation::Difference, FillRule::NonZero)?
+            .into_expolygons(crate::geometry::CoordinateScale::Normal),
+    )
+}
 pub(crate) fn intersection_ex(
     subject: &[ExPolygon],
     clip: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     run(subject, clip, ClipOperation::Intersection)
+}
+pub(crate) fn intersection_ex_refs(
+    subject: &[&ExPolygon],
+    clip: &[&ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    Ok(backend::clip_tree(
+        subject,
+        clip,
+        ClipOperation::Intersection,
+        FillRule::NonZero,
+    )?
+    .into_expolygons(crate::geometry::CoordinateScale::Normal))
+}
+pub(crate) fn intersection_ex_refs_ex(
+    subject: &[&ExPolygon],
+    clip: &[ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    Ok(backend::clip_tree(
+        subject,
+        clip,
+        ClipOperation::Intersection,
+        FillRule::NonZero,
+    )?
+    .into_expolygons(crate::geometry::CoordinateScale::Normal))
 }
 pub(crate) fn xor_ex(
     subject: &[ExPolygon],
@@ -68,10 +86,8 @@ pub(crate) fn union_expolygons(
     first: &[ExPolygon],
     second: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut paths = backend::expolygon_paths(first);
-    paths.extend(backend::expolygon_paths(second));
     Ok(
-        backend::clip_tree(paths, Vec::new(), ClipOperation::Union, FillRule::NonZero)?
+        backend::clip_tree((first, second), (), ClipOperation::Union, FillRule::NonZero)?
             .into_expolygons(crate::geometry::CoordinateScale::Normal),
     )
 }
@@ -104,8 +120,8 @@ pub(crate) fn intersection_polygons_ex(
     clip: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     Ok(backend::clip_tree(
-        backend::paths(subject),
-        backend::expolygon_paths(clip),
+        subject,
+        clip,
         ClipOperation::Intersection,
         FillRule::NonZero,
     )?

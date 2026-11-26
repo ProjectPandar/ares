@@ -3,8 +3,7 @@
 mod waves;
 
 use waves::{
-    contour_bounds, make_one_period, make_wave, polyline_length, rotate_expolygon,
-    rotate_polylines, translate,
+    contour_bounds, make_one_period, make_wave, rotate_expolygon, rotate_polylines, translate,
 };
 
 use super::connect::{FillConnectionParams, connect_infill};
@@ -167,7 +166,7 @@ fn fill_component(
         EPSILON / scale.factor(),
     );
     let minimum_length = 0.8 * params.spacing / scale.factor();
-    polylines.retain(|polyline| polyline_length(polyline) >= minimum_length);
+    polylines.retain(|polyline| polyline.length() >= minimum_length);
     if polylines.is_empty() {
         return Ok(Vec::new());
     }

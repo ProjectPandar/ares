@@ -91,24 +91,18 @@ pub(crate) fn union_ex(
     polygons: &[Polygon],
     fill: FillRule,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    Ok(backend::clip_tree(
-        backend::paths(polygons),
-        Vec::new(),
-        ClipOperation::Union,
-        fill,
-    )?
-    .into_expolygons(CoordinateScale::Normal))
+    Ok(
+        backend::clip_tree(polygons, (), ClipOperation::Union, fill)?
+            .into_expolygons(CoordinateScale::Normal),
+    )
 }
 
 pub(crate) fn union_contours(
     polygons: &[Polygon],
     scale: CoordinateScale,
 ) -> Result<Vec<Vec<Point>>, ClipperError> {
-    Ok(backend::clip_tree(
-        backend::paths(polygons),
-        Vec::new(),
-        ClipOperation::Union,
-        FillRule::EvenOdd,
-    )?
-    .into_outside_in_contours(scale))
+    Ok(
+        backend::clip_tree(polygons, (), ClipOperation::Union, FillRule::EvenOdd)?
+            .into_outside_in_contours(scale),
+    )
 }

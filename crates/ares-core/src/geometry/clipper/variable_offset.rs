@@ -46,8 +46,8 @@ pub(crate) fn variable_offset_inner_ex(
     }
 
     Ok(backend::clip_tree(
-        backend::paths(&contours),
-        backend::paths(&holes),
+        contours.as_slice(),
+        holes.as_slice(),
         ClipOperation::Difference,
         FillRule::NonZero,
     )?
@@ -160,8 +160,8 @@ fn repair_inner(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
     }
 
     backend::clip_paths(
-        vec![backend::to_path(path.points())],
-        Vec::new(),
+        std::slice::from_ref(&path),
+        (),
         ClipOperation::Union,
         FillRule::Positive,
     )
@@ -173,8 +173,8 @@ fn repair_outer(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
     }
 
     backend::clip_paths(
-        vec![backend::to_path(path.points())],
-        Vec::new(),
+        std::slice::from_ref(&path),
+        (),
         ClipOperation::Union,
         FillRule::Negative,
     )

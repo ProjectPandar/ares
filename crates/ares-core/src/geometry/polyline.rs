@@ -41,6 +41,10 @@ impl Polyline {
         self.points.len() >= 2
     }
 
+    pub(crate) fn length(&self) -> f64 {
+        points_length(&self.points)
+    }
+
     /// `Polyline::clip_end` (`Polyline.cpp:50-68`) — removes `distance` from the
     /// polyline tail, walking back whole segments and interpolating the final
     /// partial segment with `.cast<coord_t>()` (truncation). Plain `Polyline`
@@ -77,12 +81,16 @@ pub(crate) struct ThickPolyline {
     pub(crate) endpoints: (bool, bool),
 }
 
+pub(crate) fn points_length(points: &[Point]) -> f64 {
+    points
+        .windows(2)
+        .map(|points| super::Line::new(points[0], points[1]).length())
+        .sum()
+}
+
 impl ThickPolyline {
     pub(crate) fn length(&self) -> f64 {
-        self.points
-            .windows(2)
-            .map(|points| super::Line::new(points[0], points[1]).length())
-            .sum()
+        points_length(&self.points)
     }
 
     pub(crate) fn reverse(&mut self) {

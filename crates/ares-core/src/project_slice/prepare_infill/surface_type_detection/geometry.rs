@@ -1,8 +1,8 @@
 use crate::{
     SliceError,
     geometry::{
-        ExPolygon, JoinType, Polygon, difference_ex_polygons, difference_ex_with_safety_offset,
-        difference_polygons_ex, offset_expolygons_paths, offset_paths_tree,
+        ExPolygon, JoinType, difference_ex_refs, difference_ex_with_safety_offset,
+        offset_expolygons_paths, offset_paths_tree,
     },
 };
 
@@ -33,14 +33,11 @@ pub(super) fn opening(input: &[ExPolygon], offset: f32) -> Result<Vec<ExPolygon>
     )
 }
 
-pub(super) fn paths(surfaces: &[RegionSurface]) -> Vec<Polygon> {
-    let mut paths = Vec::new();
-    for surface in surfaces {
-        let (_, expolygon, ..) = surface.as_parts();
-        paths.push(expolygon.contour().clone());
-        paths.extend(expolygon.holes().iter().cloned());
-    }
-    paths
+pub(super) fn expolygon_refs(surfaces: &[RegionSurface]) -> Vec<&ExPolygon> {
+    surfaces
+        .iter()
+        .map(|surface| surface.as_parts().1)
+        .collect()
 }
 
 pub(super) fn expolygons(surfaces: &[RegionSurface]) -> Vec<ExPolygon> {
@@ -57,18 +54,19 @@ pub(super) fn fresh(kind: RegionSurfaceKind, expolygons: Vec<ExPolygon>) -> Vec<
         .collect()
 }
 
-pub(super) fn subtract_paths(
-    subject: &[Polygon],
-    clip: &[Polygon],
+pub(super) fn subtract_surface_refs(
+    subject: &[&ExPolygon],
+    clip: &[&ExPolygon],
 ) -> Result<Vec<ExPolygon>, SliceError> {
-    difference_polygons_ex(subject, clip).map_err(geometry_error)
+    difference_ex_refs(subject, clip).map_err(geometry_error)
 }
 
 pub(super) fn internal(
     previous: &[ExPolygon],
-    top_bottom: &[Polygon],
+    top_bottom: &[&ExPolygon],
 ) -> Result<Vec<RegionSurface>, SliceError> {
-    difference_ex_polygons(previous, top_bottom)
+    let previous_refs: Vec<&ExPolygon> = previous.iter().collect();
+    difference_ex_refs(&previous_refs, top_bottom)
         .map(|expolygons| fresh(RegionSurfaceKind::Internal, expolygons))
         .map_err(geometry_error)
 }

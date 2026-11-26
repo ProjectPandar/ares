@@ -50,18 +50,19 @@ pub(crate) use clipper::z_clip::{
 };
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
-    difference_ex_polygons, difference_ex_polygons_with_safety_offset,
+    difference_ex_polygons, difference_ex_polygons_with_safety_offset, difference_ex_refs,
     difference_ex_with_safety_offset, difference_open_polylines, difference_polygons_ex,
     difference_polygons_ex_with_safety_offset, difference_polygons_paths,
     difference_polygons_paths_with_safety_offset, intersection_ex, intersection_ex_polygons,
-    intersection_ex_with_safety_offset, intersection_open_polylines, intersection_pl,
-    intersection_polygons_ex, intersection_polygons_paths,
-    intersection_polygons_paths_with_safety_offset, intersection_polygons_polygons_ex,
-    offset_expolygon, offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths,
-    offset_open_paths, offset_paths, offset_paths_tree, offset2_ex, open_polyline_inside_expolygon,
-    opening_ex, opening_paths, point_in_polygon, union_even_odd_polygons_paths, union_ex,
-    union_expolygons, union_polygons_paths, union_polygons_paths_pair, union_safety_offset_ex,
-    union_safety_offset_expolygons, union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
+    intersection_ex_refs, intersection_ex_refs_ex, intersection_ex_with_safety_offset,
+    intersection_open_polylines, intersection_pl, intersection_polygons_ex,
+    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
+    intersection_polygons_polygons_ex, offset_expolygon, offset_expolygon_refs_paths,
+    offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
+    offset2_ex, open_polyline_inside_expolygon, opening_ex, opening_paths, point_in_polygon,
+    union_even_odd_polygons_paths, union_ex, union_expolygons, union_polygons_paths,
+    union_polygons_paths_pair, union_safety_offset_ex, union_safety_offset_expolygons,
+    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use clipper2::EndType;
 pub(crate) use convex_hull::convex_hull;
@@ -76,7 +77,7 @@ pub(crate) use line_split::{SplitJunction, split_line};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use point_ordering::chain_points_with_postprocessing;
 pub use polygon::Polygon;
-pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
+pub(crate) use polyline::{Polyline, ThickPolyline, points_length, to_thick_polylines};
 pub(crate) use region_expansion::{
     RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, expand_expolygons,
     expand_merge_expolygons, merge_expansions_into_expolygons, propagate_waves, propagate_waves_ex,
