@@ -61,7 +61,7 @@ pub(super) fn write_entries(
         .filter(|entry| entry.is_nil)
         .map(|entry| entry.key.as_str())
         .collect();
-    let mut emitted_keys = HashSet::with_capacity(registry::option_metadata_table().len());
+    let mut emitted_keys = HashSet::with_capacity(registry::option_definitions().len());
     fn emit<'a>(
         lines: &mut Vec<(String, String)>,
         emitted_keys: &mut HashSet<&'a str>,
@@ -191,20 +191,19 @@ pub(super) fn write_entries(
     }
     // FullPrintConfig/default preset construction owns absent defaults, not a
     // historical dump-key whitelist. Nil applied values must not be resurrected.
-    for metadata in registry::option_metadata_table() {
-        let definition = registry::option_definition(metadata.key).unwrap();
+    for definition in registry::option_definitions() {
         if !definition.full_config_default
             || definition.default_is_nil
-            || raw_settings.contains_key(metadata.key)
-            || entry_keys.contains(metadata.key)
-            || emitted_keys.contains(metadata.key)
+            || raw_settings.contains_key(definition.key)
+            || entry_keys.contains(definition.key)
+            || emitted_keys.contains(definition.key)
         {
             continue;
         }
         emit(
             &mut lines,
             &mut emitted_keys,
-            metadata.key,
+            definition.key,
             definition.default_wire_value.to_owned(),
             false,
         );

@@ -13,6 +13,9 @@ pub(in crate::project_slice) struct PreparedPostClassicTraversal {
     /// Per-slice adaptive octree cache — replaces global thread-local
     /// state so repeated slice calls with multiple projects are isolated.
     pub(in crate::project_slice) adaptive_octrees: crate::fill::adaptive::AdaptiveOctreeCache,
+    /// Per-slice placeholder base map cache for G-code template rendering.
+    pub(in crate::project_slice) placeholder_cache:
+        crate::project_slice::gcode_emit::placeholders::PlaceholderCache,
 }
 
 impl PreparedPostClassicTraversal {
