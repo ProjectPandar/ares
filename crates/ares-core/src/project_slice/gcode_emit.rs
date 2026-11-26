@@ -28,7 +28,7 @@ pub(in crate::project_slice) mod motion;
 mod object;
 mod object_mass;
 mod offset;
-mod placeholders;
+pub(in crate::project_slice) mod placeholders;
 mod preamble;
 mod pressure_advance;
 pub(crate) mod processor;

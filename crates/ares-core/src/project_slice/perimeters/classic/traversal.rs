@@ -49,6 +49,8 @@ pub(super) fn finish(
         config_block,
         scale,
         adaptive_octrees: crate::fill::adaptive::AdaptiveOctreeCache::new(),
+        placeholder_cache:
+            crate::project_slice::gcode_emit::placeholders::PlaceholderCache::default(),
         objects: predecessors
             .into_iter()
             .zip(objects)
