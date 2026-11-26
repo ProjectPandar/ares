@@ -147,7 +147,12 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
     let mut first = vec![-1; physical_count];
     let mut first_non_support = vec![-1; physical_count];
     let filament_map = &settings.project.gcode.filament_map;
-    let nozzle_map = &settings.project.gcode.filament_nozzle_map;
+    // GCode.cpp:241–276 and 3421: use the published result, even when the
+    // saved map is unchanged or grouping returned no nozzles.
+    let manual = traversal.resolved.manual_nozzle_maps.as_ref();
+    let nozzle_map = manual.map_or(&settings.project.gcode.filament_nozzle_map, |maps| {
+        &maps.nozzles
+    });
     // GCode.cpp:241-276; Print.cpp:5008-5014: preserve each helper's fallback.
     let extruder = |filament: usize| {
         filament_map
@@ -165,14 +170,11 @@ pub(in crate::project_slice::gcode_emit) fn resolve(
     let first_nozzle = |filament| {
         nozzle(filament).map_or_else(|| extruder(filament), |group| group.group_id as i64)
     };
-    let unmapped_nozzle = if ordering.nozzle_groups.is_empty() {
-        0
-    } else {
-        -1
-    };
+    let no_group_result = manual.is_none() && ordering.nozzle_groups.is_empty();
+    let unmapped_nozzle = if no_group_result { 0 } else { -1 };
     let nozzle_ids = (0..filament_map.0.len().max(nozzle_map.0.len()))
         .map(|filament| {
-            if ordering.nozzle_groups.is_empty() {
+            if no_group_result {
                 extruder(filament)
             } else {
                 nozzle(filament).map_or(-1, |group| group.group_id as i64)

@@ -1,13 +1,19 @@
-use std::collections::BTreeSet;
+use std::{borrow::Cow, collections::BTreeSet};
 
 use crate::{
     SliceError,
     options::{ExtruderType, NozzleVolumeType, OrcaInt, ProjectSettings},
 };
 
-use super::select::select_stride;
+use super::{
+    nozzle_inventory::{NozzleInventory, filament_variant},
+    select::select_stride,
+};
 
-pub(super) struct ActiveVariants(Vec<String>);
+pub(super) struct ActiveVariants {
+    slots: Vec<(i32, String)>,
+    inventory_volumes: Option<bool>,
+}
 
 pub(super) struct Activation {
     pub(super) variants: ActiveVariants,
@@ -18,6 +24,7 @@ pub(super) struct Activation {
 
 pub(super) fn resolve_activation(
     source: &ProjectSettings,
+    inventory: Option<&NozzleInventory>,
 ) -> Result<Option<Activation>, SliceError> {
     let physical_count = physical_count(source)?;
     let tokens = guard_tokens(source, physical_count)?;
@@ -33,7 +40,15 @@ pub(super) fn resolve_activation(
     }
 
     Ok(Some(Activation {
-        variants: ActiveVariants(active_variants(source, physical_count)?),
+        variants: ActiveVariants {
+            slots: if let Some(inventory) = inventory {
+                inventory.slots(source)?
+            } else {
+                active_variants(source, physical_count)?
+            },
+            inventory_volumes: inventory
+                .map(|inventory| inventory.has_extra_volumes(physical_count)),
+        },
         extruders,
     }))
 }
@@ -50,7 +65,7 @@ pub(super) fn resolve_printer_indices(
             key: "printer_extruder_variant",
             miss_scans_ids: false,
         },
-        physical_requests(&active.0),
+        physical_requests(&active.slots),
     )
 }
 
@@ -58,7 +73,7 @@ pub(super) fn resolve_printer_indices_for_variant_two(
     source: &ProjectSettings,
     active: &ActiveVariants,
 ) -> Vec<usize> {
-    physical_requests(&active.0)
+    physical_requests(&active.slots)
         .map(|(requested_id, requested_variant)| {
             // PrintApply.cpp:1425 selects variant two before variant one reduces
             // the id/variant metadata used by get_index_for_extruder.
@@ -86,7 +101,7 @@ pub(super) fn resolve_process_indices(
             key: "print_extruder_variant",
             miss_scans_ids: false,
         },
-        physical_requests(&active.0),
+        physical_requests(&active.slots),
     )
 }
 
@@ -134,6 +149,8 @@ pub(super) fn resolve_filament_indices(
         return Err(invalid("filament_extruder_variant"));
     }
 
+    let count = physical_count(source)?;
+    let sized_volumes = source.project.gcode.filament_volume_map.0.len() == filament_map.0.len();
     let requests = filament_map
         .0
         .iter()
@@ -142,12 +159,19 @@ pub(super) fn resolve_filament_indices(
             let physical_index = usize::try_from(*physical_id)
                 .ok()
                 .and_then(|id| id.checked_sub(1))
-                .filter(|&index| index < active.0.len())
+                .filter(|&index| index < count)
                 .ok_or_else(|| invalid("filament_map"))?;
-            Ok((
-                (logical_index + 1) as i32,
-                active.0[physical_index].as_str(),
-            ))
+            let variant = if let Some(all_heads) = active.inventory_volumes {
+                Cow::Owned(filament_variant(
+                    source,
+                    (physical_index, logical_index),
+                    sized_volumes,
+                    all_heads,
+                )?)
+            } else {
+                Cow::Borrowed(active.slots[physical_index].1.as_str())
+            };
+            Ok(((logical_index + 1) as i32, variant))
         })
         .collect::<Result<Vec<_>, SliceError>>()?;
 
@@ -159,7 +183,7 @@ pub(super) fn resolve_filament_indices(
             key: "filament_extruder_variant",
             miss_scans_ids: true,
         },
-        requests,
+        requests.iter().map(|(id, variant)| (*id, variant.as_ref())),
     )
 }
 
@@ -188,7 +212,7 @@ fn guard_tokens(
 fn active_variants(
     source: &ProjectSettings,
     physical_count: usize,
-) -> Result<Vec<String>, SliceError> {
+) -> Result<Vec<(i32, String)>, SliceError> {
     (0..physical_count)
         .map(|index| {
             let extruder_type = get_at(
@@ -201,16 +225,18 @@ fn active_variants(
                 index,
                 "nozzle_volume_type",
             )?;
-            Ok(canonical_variant(*extruder_type, *nozzle_volume_type))
+            Ok((
+                index as i32 + 1,
+                canonical_variant(*extruder_type, *nozzle_volume_type),
+            ))
         })
         .collect()
 }
 
-fn physical_requests(active_variants: &[String]) -> impl Iterator<Item = (i32, &str)> {
+fn physical_requests(active_variants: &[(i32, String)]) -> impl Iterator<Item = (i32, &str)> {
     active_variants
         .iter()
-        .enumerate()
-        .map(|(index, variant)| ((index + 1) as i32, variant.as_str()))
+        .map(|(id, variant)| (*id, variant.as_str()))
 }
 
 /// The variant table one `update_values_to_printer_extruders*` overload
@@ -356,7 +382,7 @@ pub(crate) fn canonical_variant(extruder: ExtruderType, volume: NozzleVolumeType
     format!("{extruder} {volume}")
 }
 
-fn get_at<'a, T>(values: &'a [T], index: usize, key: &str) -> Result<&'a T, SliceError> {
+pub(super) fn get_at<'a, T>(values: &'a [T], index: usize, key: &str) -> Result<&'a T, SliceError> {
     values
         .get(index)
         .or_else(|| values.first())

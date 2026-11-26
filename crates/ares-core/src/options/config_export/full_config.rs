@@ -306,7 +306,10 @@ fn applied_filament_maps(
         .join(",");
     lines.retain(|(key, _)| key != "filament_nozzle_map");
     lines.push(("filament_nozzle_map".to_owned(), nozzles));
-    if !multiple_nozzles {
+    // ToolOrdering.cpp:3058–3084 writes the applied volume map for Nozzle Manual.
+    if !multiple_nozzles
+        || settings.project.gcode.filament_map_mode == crate::ProjectFilamentMapMode::NozzleManual
+    {
         let volumes = settings
             .project
             .gcode

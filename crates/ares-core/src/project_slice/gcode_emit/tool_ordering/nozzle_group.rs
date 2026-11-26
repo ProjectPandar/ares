@@ -1,8 +1,9 @@
+pub(super) use crate::options::parse_nozzle_counts;
 use crate::project_slice::gcode_emit::wipe_tower_estimate::config::{
     ConfigValue, DynamicPrintConfig,
 };
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
-use crate::{NozzleVolumeType, ProjectSettings};
+use crate::{NozzleVolumeType, OrcaInts, ProjectSettings};
 
 // ToolOrdering.cpp:1503-1527: the physical groups retained by the grouping result.
 pub(in crate::project_slice::gcode_emit) struct NozzleGroup {
@@ -14,19 +15,13 @@ pub(in crate::project_slice::gcode_emit) struct NozzleGroup {
 
 // MultiNozzleUtils.cpp:380–447: resolve the published group, not a head-local guess.
 pub(super) fn process_assignments(
-    settings: &ProjectSettings,
+    nozzle_map: &OrcaInts,
     groups: &[NozzleGroup],
     count: usize,
 ) -> Vec<Option<crate::options::ProcessNozzle>> {
     (0..count)
         .map(|filament| {
-            let id = settings
-                .project
-                .gcode
-                .filament_nozzle_map
-                .0
-                .get(filament)?
-                .0;
+            let id = nozzle_map.0.get(filament)?.0;
             let group = groups.iter().find(|group| group.group_id as i32 == id)?;
             Some(crate::options::ProcessNozzle {
                 physical: group.extruder,

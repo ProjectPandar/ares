@@ -41,6 +41,8 @@ mod non_bbl_auto_map;
 mod nozzle_diameters;
 #[path = "nullable_vectors/nozzle_ids.rs"]
 mod nozzle_ids;
+#[path = "nullable_vectors/nozzle_manual.rs"]
+mod nozzle_manual;
 #[path = "nullable_vectors/overlays.rs"]
 mod overlays;
 #[path = "nullable_vectors/plate_metadata_order.rs"]

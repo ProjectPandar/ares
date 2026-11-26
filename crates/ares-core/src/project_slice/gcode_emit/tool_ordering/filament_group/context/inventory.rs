@@ -1,6 +1,7 @@
 use super::{DynamicPrintConfig, NozzleGroup, SliceError, unsupported};
-use crate::project_slice::gcode_emit::tool_ordering::nozzle_group::canonical_diameter;
-use std::collections::BTreeMap;
+use crate::project_slice::gcode_emit::tool_ordering::nozzle_group::{
+    canonical_diameter, parse_nozzle_counts,
+};
 
 // ToolOrdering.cpp:1503-1527: expand each extruder into physical nozzle groups.
 pub(super) fn build_nozzle_groups(
@@ -39,21 +40,7 @@ pub(super) fn check_nozzle_stats(
         .enumerate()
         .take(2)
     {
-        let mut stats = BTreeMap::new();
-        for token in wire.split('|') {
-            let mut parts = token.split('#');
-            let volume = match parts.next().unwrap() {
-                "Standard" => 0,
-                "High Flow" => 1,
-                "Hybrid" => 2,
-                "TPU High Flow" => 3,
-                "E3D High Flow" => 5,
-                "Extra High Flow" => 6,
-                _ => continue,
-            };
-            let Some(count) = parts.next() else { continue };
-            stats.insert(volume, atoi(count));
-        }
+        let stats = parse_nozzle_counts(wire);
         if !stats.is_empty() {
             if stats.len() != 1 || stats.values().any(|v| *v != 1) || stats.contains_key(&2) {
                 return Err(unsupported());
@@ -65,17 +52,4 @@ pub(super) fn check_nozzle_stats(
         }
     }
     Ok(())
-}
-
-// std::atoi consumes a signed C-locale decimal prefix (PrintConfig.cpp:967).
-fn atoi(text: &str) -> i32 {
-    let text = text.trim_start_matches([' ', '\t', '\n', '\u{b}', '\u{c}', '\r']);
-    let sign = usize::from(text.starts_with(['+', '-']));
-    let end = sign
-        + text
-            .bytes()
-            .skip(sign)
-            .take_while(u8::is_ascii_digit)
-            .count();
-    text[..end].parse().unwrap_or(0)
 }
