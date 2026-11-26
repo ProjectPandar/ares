@@ -1,74 +1,98 @@
+#[inline]
+pub(super) fn push_axis(output: &mut Vec<u8>, value: f64) {
+    push_fixed(output, value, 3);
+}
+
+#[inline]
+pub(super) fn push_offset(output: &mut Vec<u8>, value: f64) {
+    push_fixed(output, value, 3);
+}
+
+#[inline]
+pub(super) fn push_extrusion(output: &mut Vec<u8>, value: f64) {
+    push_fixed(output, value, 5);
+}
+
 pub(super) fn axis(value: f64) -> String {
-    let value = trim_fixed(value, 3);
-    if value == "0" {
-        value
-    } else if let Some(value) = value.strip_prefix("-0") {
-        format!("-{value}")
-    } else {
-        value.strip_prefix('0').unwrap_or(&value).to_owned()
-    }
+    fixed_string(value, 3)
 }
 
 pub(super) fn offset(value: f64) -> String {
-    let value = trim_fixed(value, 3);
-    if value == "0" {
-        value
-    } else if let Some(value) = value.strip_prefix("-0") {
-        format!("-{value}")
-    } else {
-        value.strip_prefix('0').unwrap_or(&value).to_owned()
-    }
+    axis(value)
 }
 
 pub(in crate::project_slice::gcode_emit) fn z(value: f64) -> String {
-    offset(value)
+    axis(value)
 }
 
 pub(super) fn extrusion(value: f64) -> String {
-    let value = trim_fixed(value, 5);
-    if value == "0" {
-        value
-    } else if let Some(value) = value.strip_prefix("-0") {
-        format!("-{value}")
-    } else {
-        value.strip_prefix('0').unwrap_or(&value).to_owned()
-    }
+    fixed_string(value, 5)
 }
 
-fn trim_fixed(value: f64, precision: usize) -> String {
-    // `GCodeFormatter::emit_axis` (GCodeWriter.cpp:1224-1265):
-    // `v_int = int64_t(std::round(v * pow_10[digits]))` — round-half-away
-    // in the scaled integer domain, then place the decimal point into the
-    // integer digits and strip trailing zeros.
-    let scale = 10f64.powi(precision as i32);
-    let scaled = (value * scale).round();
-    let negative = scaled < 0.0;
-    let digits = (scaled.abs() as i64).to_string();
-    let (int, frac) = if digits.len() > precision {
-        digits.split_at(digits.len() - precision)
-    } else {
-        ("0", digits.as_str())
+fn fixed_string(value: f64, precision: usize) -> String {
+    let mut buf = [0_u8; 32];
+    let len = format_fixed_buf(value, precision, &mut buf);
+    std::str::from_utf8(&buf[..len])
+        .expect("fixed formatter produces ASCII")
+        .to_owned()
+}
+
+#[inline]
+fn push_fixed(output: &mut Vec<u8>, value: f64, precision: usize) {
+    let mut buf = [0_u8; 32];
+    let len = format_fixed_buf(value, precision, &mut buf);
+    output.extend_from_slice(&buf[..len]);
+}
+
+/// `GCodeFormatter::emit_axis` (GCodeWriter.cpp:1224-1265):
+/// `v_int = int64_t(std::round(v * pow_10[digits]))` — round-half-away
+/// in the scaled integer domain, strip trailing zeros and leading zero
+/// before the decimal point (e.g. `0.5` → `.5`, `-0.5` → `-.5`).
+fn format_fixed_buf(value: f64, precision: usize, buf: &mut [u8; 32]) -> usize {
+    let (scale, scale_u64) = match precision {
+        3 => (1_000.0, 1_000_u64),
+        5 => (100_000.0, 100_000_u64),
+        _ => (10f64.powi(precision as i32), 10_u64.pow(precision as u32)),
     };
-    let mut out = String::new();
-    if negative {
-        out.push('-');
+    let scaled = (value * scale).round();
+    let abs_int = (scaled.abs() as i64) as u64;
+    if abs_int == 0 {
+        buf[0] = b'0';
+        return 1;
     }
-    out.push_str(int);
-    if precision > 0 {
-        let frac: String = std::iter::repeat_n('0', precision.saturating_sub(frac.len()))
-            .chain(frac.chars())
-            .collect();
-        let frac = frac.trim_end_matches('0');
-        if !frac.is_empty() {
-            out.push('.');
-            out.push_str(frac);
+    let mut len = 0;
+    if scaled < 0.0 {
+        buf[len] = b'-';
+        len += 1;
+    }
+    let int_part = abs_int / scale_u64;
+    let frac_part = abs_int % scale_u64;
+    if int_part > 0 {
+        let start = len;
+        let mut n = int_part;
+        while n > 0 {
+            buf[len] = b'0' + (n % 10) as u8;
+            len += 1;
+            n /= 10;
         }
+        buf[start..len].reverse();
     }
-    if out.is_empty() || out == "-" || out == "-0" {
-        "0".to_owned()
-    } else {
-        out
+    if precision > 0 && frac_part > 0 {
+        buf[len] = b'.';
+        len += 1;
+        let start = len;
+        let mut n = frac_part;
+        for i in (0..precision).rev() {
+            buf[start + i] = b'0' + (n % 10) as u8;
+            n /= 10;
+        }
+        let mut end = start + precision;
+        while end > start && buf[end - 1] == b'0' {
+            end -= 1;
+        }
+        len = end;
     }
+    len
 }
 
 /// C++ ostream default `operator<<` for a double: 6 significant digits

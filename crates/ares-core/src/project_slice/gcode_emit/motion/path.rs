@@ -18,7 +18,7 @@ use retraction::inside_support_islands;
 
 use super::{
     EmitState, LayerGeometry, arc, clip, extrusion, fan, features::PathProperties,
-    features::role_id, format::axis as format_axis, overhang, set_accel_and_jerk,
+    features::role_id, format::push_axis, overhang, set_accel_and_jerk,
 };
 
 pub(super) const SOURCE_EPSILON_MM: f64 = 1e-4;
@@ -136,7 +136,6 @@ fn emit_piece(
     else {
         return Ok(None);
     };
-    let segment_lengths = constant::segment_lengths(&scaled_points, geometry.scale);
     let mut local_points = scaled_points
         .iter()
         .copied()
@@ -148,11 +147,11 @@ fn emit_piece(
     // (`GCode.cpp:6111`) and `set_last_pos(path.last_point())`
     // (`GCode.cpp:7259`) — so the wipe path and last_pos both see the
     // projected endpoint, not the pre-clip tail.
-    let mut fitting = properties.fitting.to_vec();
+    let mut fitting = std::borrow::Cow::Borrowed(properties.fitting);
     let mut last_scaled = last_scaled;
     if properties.end_clip > 0.0 {
         let pre_projected = local_points.last().copied();
-        arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
+        arc::clip_fitting_end(&mut local_points, fitting.to_mut(), geometry.scale);
         if let Some(&projected) = local_points.last()
             && Some(projected) != pre_projected
         {
@@ -254,7 +253,8 @@ fn emit_piece(
         role_change::emit(output, role, state);
     }
     if state.extrusion_role_markers && role_changed {
-        output.extend_from_slice(format!(";_EXTRUSION_ROLE:{role}\n").as_bytes());
+        use std::io::Write;
+        let _ = writeln!(output, ";_EXTRUSION_ROLE:{role}");
     }
     if role_changed {
         state.last_extrusion_role = Some(role);
@@ -273,22 +273,20 @@ fn emit_piece(
     // `GCode.cpp:6782–6802`: tower markers bypass the live width/height cache.
     let last_was_tower = state.last_feature == Some("Prime tower");
     if state.last_feature != Some(properties.feature) {
-        let feature = state.tags.feature(properties.feature) + "\n";
-        output.extend_from_slice(feature.as_bytes());
+        output.extend_from_slice(state.tags.feature(properties.feature).as_bytes());
+        output.push(b'\n');
         state.last_feature = Some(properties.feature);
     }
     if last_was_tower || state.last_width != Some(properties.width) {
         output.extend_from_slice(
-            format!(
-                "{}\n",
-                state
-                    .tags
-                    .width(&super::super::format_processor_float(f64::from(
-                        properties.width
-                    )))
-            )
-            .as_bytes(),
+            state
+                .tags
+                .width(&super::super::format_processor_float(f64::from(
+                    properties.width,
+                )))
+                .as_bytes(),
         );
+        output.push(b'\n');
         state.last_width = Some(properties.width);
     }
     if last_was_tower
@@ -297,16 +295,14 @@ fn emit_piece(
             .is_none_or(|height| (height - properties.height).abs() > 0.000_1)
     {
         output.extend_from_slice(
-            format!(
-                "{}\n",
-                state
-                    .tags
-                    .height(&super::super::format_processor_float(f64::from(
-                        properties.height
-                    )))
-            )
-            .as_bytes(),
+            state
+                .tags
+                .height(&super::super::format_processor_float(f64::from(
+                    properties.height,
+                )))
+                .as_bytes(),
         );
+        output.push(b'\n');
         state.last_height = Some(properties.height);
     }
     let evaluated = adaptive_pa::tag(output, state, properties, acceleration, role_changed);
@@ -379,7 +375,6 @@ fn emit_piece(
             points: &points,
             local_points: &local_points,
             timelapse_context: geometry.timelapse_context,
-            segment_lengths: &segment_lengths,
             uncut_lengths,
             scaled: (&scaled_points, geometry.scale),
             fitting: &fitting,

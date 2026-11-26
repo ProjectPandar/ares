@@ -1,6 +1,8 @@
 //! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:428-481,
 //! 535-583`).
 
+use std::io::Write;
+
 use crate::project_slice::gcode_emit::klipper_acceleration::append_klipper_accel_to_decel;
 
 use super::{EmitState, format, jerk, travel::EPSILON};
@@ -38,14 +40,14 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
     if acceleration == 0 || *last == Some(acceleration) {
         return;
     }
-    let line = match state.options.gcode_flavor {
+    match state.options.gcode_flavor {
         crate::GCodeFlavor::Repetier => {
             let code = if separate_travel { "M202" } else { "M201" };
-            format!("{code} X{acceleration} Y{acceleration}{comment}\n")
+            let _ = writeln!(output, "{code} X{acceleration} Y{acceleration}{comment}");
         }
         crate::GCodeFlavor::RepRapFirmware | crate::GCodeFlavor::MarlinFirmware => {
             let code = if separate_travel { "M204 T" } else { "M204 P" };
-            format!("{code}{acceleration}{comment}\n")
+            let _ = writeln!(output, "{code}{acceleration}{comment}");
         }
         crate::GCodeFlavor::Klipper => {
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
@@ -61,11 +63,12 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
             }
             line.push_str(comment);
             line.push('\n');
-            line
+            output.extend_from_slice(line.as_bytes());
         }
-        _ => format!("M204 S{acceleration}{comment}\n"),
-    };
-    output.extend_from_slice(line.as_bytes());
+        _ => {
+            let _ = writeln!(output, "M204 S{acceleration}{comment}");
+        }
+    }
     *last = Some(acceleration);
 }
 
@@ -101,37 +104,34 @@ pub(in crate::project_slice::gcode_emit) fn set_accel_and_jerk(
             acceleration
         };
     let jerk = jerk::clamp_xy(state, jerk);
-    let mut line = String::from("SET_VELOCITY_LIMIT");
-    let mut empty = true;
-    if acceleration != 0 && state.last_acceleration != Some(acceleration) {
-        line.push_str(&format!(" ACCEL={acceleration}"));
+    let emit_accel = acceleration != 0 && state.last_acceleration != Some(acceleration);
+    let emit_jerk = jerk > 0.01
+        && !state
+            .last_jerk
+            .is_some_and(|last| (last - jerk).abs() < EPSILON);
+    if !emit_accel && !emit_jerk {
+        return;
+    }
+    output.extend_from_slice(b"SET_VELOCITY_LIMIT");
+    if emit_accel {
+        let _ = write!(output, " ACCEL={acceleration}");
         if state.options.accel_to_decel_enable {
+            let mut extra = String::new();
             append_klipper_accel_to_decel(
-                &mut line,
+                &mut extra,
                 acceleration,
                 state.options.accel_to_decel_factor,
             );
+            output.extend_from_slice(extra.as_bytes());
         }
         state.last_acceleration = Some(acceleration);
-        empty = false;
     }
-    if jerk > 0.01
-        && !state
-            .last_jerk
-            .is_some_and(|last| (last - jerk).abs() < EPSILON)
-    {
-        line.push_str(&format!(
-            " SQUARE_CORNER_VELOCITY={}",
-            format::ostream(jerk)
-        ));
+    if emit_jerk {
+        let _ = write!(output, " SQUARE_CORNER_VELOCITY={}", format::ostream(jerk));
         state.last_jerk = Some(jerk);
-        empty = false;
     }
-    if !empty {
-        if state.options.gcode_comments {
-            line.push_str(" ; adjust VELOCITY_LIMIT(accel/jerk)");
-        }
-        line.push('\n');
-        output.extend_from_slice(line.as_bytes());
+    if state.options.gcode_comments {
+        output.extend_from_slice(b" ; adjust VELOCITY_LIMIT(accel/jerk)");
     }
+    output.push(b'\n');
 }

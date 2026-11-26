@@ -2,7 +2,7 @@
 
 use crate::{Point3d, RemapAxis, options::PrinterRemainingOptions, project_slice::belt};
 
-use super::{EmitState, format::axis};
+use super::{EmitState, format::push_axis};
 
 pub(in crate::project_slice::gcode_emit) struct BeltWriter {
     rotation: belt::BeltRotation,
@@ -51,24 +51,39 @@ impl BeltWriter {
 }
 
 impl EmitState {
-    pub(super) fn xy_words(&self, (x, y): (f64, f64), z: Option<f64>) -> String {
+    pub(super) fn push_xy_words(&self, output: &mut Vec<u8>, (x, y): (f64, f64), z: Option<f64>) {
         let (x, y) = (x - self.xy_offset.0, y - self.xy_offset.1);
-        if let Some(belt) = &self.belt {
+        let (x, y, z) = if let Some(belt) = &self.belt {
             let z = z.or(self.writer_z).unwrap_or(self.layer_z);
             let [x, y, z] = belt.apply(Point3d::new(x, y, z));
-            format!("X{} Y{} Z{}", axis(x), axis(y), axis(z))
-        } else if let Some(z) = z {
-            format!("X{} Y{} Z{}", axis(x), axis(y), axis(z))
+            (x, y, Some(z))
         } else {
-            format!("X{} Y{}", axis(x), axis(y))
+            (x, y, z)
+        };
+        output.push(b'X');
+        push_axis(output, x);
+        output.extend_from_slice(b" Y");
+        push_axis(output, y);
+        if let Some(z) = z {
+            output.extend_from_slice(b" Z");
+            push_axis(output, z);
         }
+    }
+
+    pub(super) fn xy_words(&self, (x, y): (f64, f64), z: Option<f64>) -> String {
+        let mut buf = Vec::with_capacity(32);
+        self.push_xy_words(&mut buf, (x, y), z);
+        String::from_utf8(buf).expect("XY words are ASCII")
     }
 
     pub(super) fn z_words(&self, z: f64) -> String {
         if self.belt.is_some() {
             self.xy_words((self.x, self.y), Some(z))
         } else {
-            format!("Z{}", axis(z))
+            let mut buf = Vec::with_capacity(16);
+            buf.push(b'Z');
+            push_axis(&mut buf, z);
+            String::from_utf8(buf).expect("Z word is ASCII")
         }
     }
 }

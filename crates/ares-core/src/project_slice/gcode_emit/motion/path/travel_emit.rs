@@ -1,4 +1,4 @@
-use super::format_axis;
+use super::push_axis;
 
 pub(super) fn quantize_axis(value: f64) -> f64 {
     (value * 1_000.0).round() / 1_000.0
@@ -12,14 +12,12 @@ pub(super) fn xy_with_comment(
     feedrate: f64,
     comment: &str,
 ) {
-    output.extend_from_slice(
-        format!(
-            "G1 {} F{}{comment}\n",
-            state.xy_words((x, y), None),
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
+    output.extend_from_slice(b"G1 ");
+    state.push_xy_words(output, (x, y), None);
+    output.extend_from_slice(b" F");
+    push_axis(output, feedrate);
+    output.extend_from_slice(comment.as_bytes());
+    output.push(b'\n');
 }
 
 /// Writer-domain XYZ from `GCodeWriter.cpp::travel_to_xyz` (`Vec3d`), less the writer's XY
@@ -31,13 +29,11 @@ pub(super) fn xyz_with_comment(
     feedrate: f64,
     comment: &str,
 ) {
-    output.extend_from_slice(
-        format!(
-            "G1 {} F{}{comment}\n",
-            state.xy_words((x, y), Some(z)),
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
+    output.extend_from_slice(b"G1 ");
+    state.push_xy_words(output, (x, y), Some(z));
+    output.extend_from_slice(b" F");
+    push_axis(output, feedrate);
+    output.extend_from_slice(comment.as_bytes());
+    output.push(b'\n');
     state.record_z(z);
 }
