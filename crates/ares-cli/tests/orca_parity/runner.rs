@@ -132,240 +132,32 @@ mod adjacent_color;
 #[path = "runner/adjacent_motion.rs"]
 mod adjacent_motion;
 
+#[path = "runner/application.rs"]
+pub(crate) mod application;
+#[path = "runner/filament_map.rs"]
+pub(crate) mod filament_map;
 #[path = "runner/object_copy_second_print_instance.rs"]
 pub(crate) mod object_copy_second_print_instance;
 #[cfg(test)]
-#[path = "runner/tiq2_footer_dispatch_whole_file.rs"]
-mod tiq2_footer_dispatch_whole_file;
-#[cfg(test)]
-#[path = "runner/tiq2_footer_template_slot_dispatch.rs"]
-mod tiq2_footer_template_slot_dispatch;
-#[cfg(test)]
-#[path = "runner/tiq2_restores_retained_role_fan.rs"]
-mod tiq2_restores_retained_role_fan;
-#[path = "runner/vg1_two_filament_inputs.rs"]
-pub(crate) mod vg1_two_filament_inputs;
-
-#[cfg(test)]
-#[path = "runner/adaptive_pa_activation_edits_hold_arachne_parity.rs"]
-mod adaptive_pa_activation_edits_hold_arachne_parity;
-#[cfg(test)]
-#[path = "runner/adaptive_pa_off_cannot_hide_arachne_mismatch.rs"]
-mod adaptive_pa_off_cannot_hide_arachne_mismatch;
-#[path = "runner/application.rs"]
-pub(crate) mod application;
-#[cfg(test)]
-#[path = "runner/application_tests.rs"]
-mod application_tests;
-#[cfg(test)]
-#[path = "runner/arachne_counterbore.rs"]
-mod arachne_counterbore;
-#[cfg(test)]
-#[path = "runner/arachne_counterbore_none.rs"]
-mod arachne_counterbore_none;
-#[cfg(test)]
-#[path = "runner/arachne_open_wall_order.rs"]
-mod arachne_open_wall_order;
-#[cfg(test)]
-#[path = "runner/cache_contract_tests.rs"]
-mod cache_contract_tests;
-#[cfg(test)]
-#[path = "runner/classic_layer_id.rs"]
-mod classic_layer_id;
-#[cfg(test)]
-#[path = "runner/clipped_loop_motion.rs"]
-mod clipped_loop_motion;
-#[cfg(test)]
-#[path = "runner/compatible_regions.rs"]
-mod compatible_regions;
-#[cfg(test)]
-#[path = "runner/content_cache_tests.rs"]
-mod content_cache_tests;
-#[cfg(test)]
-#[path = "runner/costrings.rs"]
-mod costrings;
-#[cfg(test)]
-#[path = "runner/counterbore_filled.rs"]
-mod counterbore_filled;
-#[cfg(test)]
-#[path = "runner/counterbore_n_split.rs"]
-mod counterbore_n_split;
-#[cfg(test)]
-#[path = "runner/counterbore_partiallybridge.rs"]
-mod counterbore_partiallybridge;
-
-#[cfg(test)]
-#[path = "runner/avoid_crossing_routes_around_top_surfaces.rs"]
-mod avoid_crossing_routes_around_top_surfaces;
-#[path = "runner/direct_stl_bed_placement.rs"]
-mod direct_stl_bed_placement;
-#[cfg(test)]
-#[path = "runner/direct_stl_override_bookkeeping.rs"]
-mod direct_stl_override_bookkeeping;
-#[cfg(test)]
-#[path = "runner/embedded_script_whole_file.rs"]
-mod embedded_script_whole_file;
-#[cfg(test)]
-#[path = "runner/empty_tools.rs"]
-mod empty_tools;
-#[path = "runner/filament_map.rs"]
-pub(crate) mod filament_map;
-#[cfg(test)]
-#[path = "runner/filament_map_ramming.rs"]
-mod filament_map_ramming;
-#[cfg(test)]
-#[path = "runner/filament_map_tests.rs"]
-mod filament_map_tests;
-#[cfg(test)]
-#[path = "runner/filament_self_index.rs"]
-mod filament_self_index;
-#[cfg(test)]
-#[path = "runner/generated_printer_ids.rs"]
-mod generated_printer_ids;
-#[cfg(test)]
-#[path = "runner/infill_first_ironing.rs"]
-mod infill_first_ironing;
-#[cfg(test)]
-#[path = "runner/initialization_tests.rs"]
-mod initialization_tests;
-#[cfg(test)]
-#[path = "runner/initialized_loop_chain.rs"]
-mod initialized_loop_chain;
-#[cfg(test)]
-#[path = "runner/initialized_overhang_intersections.rs"]
-mod initialized_overhang_intersections;
-#[cfg(test)]
-#[path = "runner/j1_used_extruder_mask_follows_emitted_tools.rs"]
-mod j1_used_extruder_mask_follows_emitted_tools;
-#[cfg(test)]
-#[path = "runner/lifecycle_tests.rs"]
-mod lifecycle_tests;
-#[cfg(test)]
-#[path = "runner/multi_object_skirt.rs"]
-mod multi_object_skirt;
-#[cfg(test)]
-#[path = "runner/native_availability_tests.rs"]
-mod native_availability_tests;
-#[cfg(test)]
-#[path = "runner/nearest_seam_gaussian.rs"]
-mod nearest_seam_gaussian;
-#[cfg(test)]
-#[path = "runner/object_layer_height_ranges.rs"]
-mod object_layer_height_ranges;
-#[cfg(test)]
-#[path = "runner/object_range_regions.rs"]
-mod object_range_regions;
-#[cfg(test)]
-#[path = "runner/overhang_reverse.rs"]
-mod overhang_reverse;
-#[cfg(test)]
-#[path = "runner/path_tests.rs"]
-mod path_tests;
-#[cfg(test)]
-#[path = "runner/plate_custom_gcode_emission.rs"]
-mod plate_custom_gcode_emission;
-#[path = "runner/print_sequence_by_object.rs"]
-mod print_sequence_by_object;
-#[cfg(test)]
-#[path = "runner/processor_migration.rs"]
-mod processor_migration;
-#[cfg(test)]
 #[path = "runner/profile_entry.rs"]
 mod profile_entry;
+#[path = "runner/vg1_two_filament_inputs.rs"]
+pub(crate) mod vg1_two_filament_inputs;
 #[cfg(target_os = "linux")]
 pub(crate) use profile_entry::placed_cube;
-#[cfg(test)]
-#[path = "runner/native_api_cli.rs"]
-pub(crate) mod native_api_cli;
-
-#[path = "runner/concentric_ironing_order.rs"]
-mod concentric_ironing_order;
-#[cfg(test)]
-#[path = "runner/profile_entry_3mf.rs"]
-mod profile_entry_3mf;
-#[cfg(test)]
-#[path = "runner/profile_inherits_group.rs"]
-mod profile_inherits_group;
-#[cfg(test)]
-#[path = "runner/profile_legacy_overlay.rs"]
-mod profile_legacy_overlay;
-#[cfg(test)]
-#[path = "runner/profile_overlay_default_gcodes.rs"]
-mod profile_overlay_default_gcodes;
-#[cfg(test)]
-#[path = "runner/project_export_metadata.rs"]
-mod project_export_metadata;
-#[cfg(test)]
-#[path = "runner/scarf_default_threshold.rs"]
-mod scarf_default_threshold;
-#[cfg(test)]
-#[path = "runner/seam_layer_height.rs"]
-mod seam_layer_height;
-#[cfg(test)]
-#[path = "runner/seam_object_bias.rs"]
-mod seam_object_bias;
-#[cfg(test)]
-#[path = "runner/seam_visibility_eigen_distance.rs"]
-mod seam_visibility_eigen_distance;
-#[cfg(test)]
-#[path = "runner/seam_visibility_search_radius.rs"]
-mod seam_visibility_search_radius;
-#[cfg(test)]
-#[path = "runner/short_curled_entity.rs"]
-mod short_curled_entity;
-#[path = "runner/simple_rotation_list.rs"]
-mod simple_rotation_list;
-#[cfg(test)]
-#[path = "runner/small_loop_speed.rs"]
-mod small_loop_speed;
-#[cfg(test)]
-#[path = "runner/stage_tests.rs"]
-mod stage_tests;
-#[path = "runner/stages.rs"]
-pub(crate) mod stages;
-#[cfg(test)]
-#[path = "runner/stl_model_label.rs"]
-mod stl_model_label;
-#[cfg(test)]
-#[path = "runner/stl_variant_whole_file.rs"]
-mod stl_variant_whole_file;
-#[cfg(test)]
-#[path = "runner/support_annotations.rs"]
-mod support_annotations;
-#[cfg(test)]
-#[path = "runner/support_modifier.rs"]
-mod support_modifier;
-#[cfg(test)]
-#[path = "runner/template_rng.rs"]
-mod template_rng;
-#[cfg(test)]
-#[path = "runner/tests.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "runner/tree_support.rs"]
-mod tree_support;
-
 #[path = "runner/command.rs"]
 mod command;
 #[path = "runner/command_cache.rs"]
 mod command_cache;
 #[cfg(test)]
-#[path = "runner/strict_reference_tests.rs"]
-mod strict_reference_tests;
-
+#[path = "runner/native_api_cli.rs"]
+pub(crate) mod native_api_cli;
+#[path = "runner/stages.rs"]
+pub(crate) mod stages;
 #[path = "runner/user_overrides.rs"]
 mod user_overrides;
 
-#[cfg(test)]
-#[path = "runner/flush_matrix_cli_reconstruction.rs"]
-mod flush_matrix_cli_reconstruction;
-#[cfg(test)]
-#[path = "runner/wrapper_tests.rs"]
-mod wrapper_tests;
-
-#[cfg(test)]
-#[path = "runner/wipe_tags.rs"]
-mod wipe_tags;
+include!("runner/test_modules.rs");
 
 use stages::{FailureKind, Stage, StageError};
 #[path = "runner/environment.rs"]
