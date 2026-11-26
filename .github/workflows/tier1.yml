@@ -233,9 +233,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       browsers_image: ${{ steps.toolchain.outputs.browsers_image }}
-    env:
-      CARGO_PROFILE_TEST_DEBUG: line-tables-only
-      CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
     steps:
       - uses: actions/checkout@v4
         with:
@@ -248,9 +245,6 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: taiki-e/install-action@nextest
-      - uses: taiki-e/install-action@wasm-bindgen-cli
-        with:
-          tool: wasm-bindgen-cli@0.2.121
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/checkout-orca-sparse
         with:
@@ -259,7 +253,16 @@ jobs:
         with:
           shared-key: "pages-wasm"
       - uses: ./.github/actions/setup-web-deps
+      - uses: ./.github/actions/cache-web-wasm
+        id: web-wasm
+      - uses: taiki-e/install-action@wasm-bindgen-cli
+        if: steps.web-wasm.outputs.wasm-hit != 'true' || steps.web-wasm.outputs.panic-probe-hit != 'true'
+        with:
+          tool: wasm-bindgen-cli@0.2.121
       - name: Build CLI, WASM, web app, verify metadata, and pack bundle
+        env:
+          WASM_CACHE_HIT: ${{ steps.web-wasm.outputs.wasm-hit }}
+          PANIC_PROBE_CACHE_HIT: ${{ steps.web-wasm.outputs.panic-probe-hit }}
         run: bash scripts/ci/run-web-build.sh && bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
       - uses: actions/cache/save@v4
         with:
