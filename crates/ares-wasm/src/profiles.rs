@@ -38,24 +38,6 @@ pub fn guide_models_json(vendors_json: &[u8]) -> Result<String, String> {
         .map_err(|error| format!("guide models cannot serialize: {error}"))
 }
 
-/// Loads and pads the catalog's presets once (`PresetBundle::load_presets`), so the next project
-/// load with the same catalog selects from them.
-#[wasm_bindgen(js_name = loadPresetBundle)]
-pub fn load_preset_bundle(catalog_json: &str) -> Result<(), JsValue> {
-    ares_core::load_preset_bundle(catalog_json)
-        .map_err(|error| JsValue::from_str(&error.to_string()))
-}
-
-#[wasm_bindgen(js_name = filterCompatiblePresets)]
-pub fn filter_compatible_presets(
-    catalog_json: String,
-    printer: String,
-    process: Option<String>,
-) -> Result<String, JsValue> {
-    filter_compatible_presets_json(&catalog_json, &printer, process.as_deref())
-        .map_err(|error| JsValue::from_str(&error))
-}
-
 pub fn filter_compatible_presets_json(
     catalog_json: &str,
     printer: &str,
@@ -104,25 +86,6 @@ impl ProfileSliceOptions {
     }
 }
 
-#[wasm_bindgen(js_name = sliceWithProfiles)]
-pub async fn slice_with_profiles(
-    input: Vec<u8>,
-    filename: String,
-    catalog_json: String,
-    selection_json: String,
-    options_json: String,
-) -> Result<Vec<u8>, JsValue> {
-    slice_with_profiles_bytes(
-        input,
-        &filename,
-        &catalog_json,
-        &selection_json,
-        &options_json,
-    )
-    .await
-    .map_err(|error| JsValue::from_str(&error))
-}
-
 pub async fn slice_with_profiles_bytes(
     input: Vec<u8>,
     filename: &str,
@@ -151,21 +114,21 @@ pub async fn slice_with_profiles_bytes(
 }
 
 #[wasm_bindgen(js_name = sliceWithProfilesProcessed)]
-pub async fn slice_with_profiles_processed(
+pub fn slice_with_profiles_processed(
     input: Vec<u8>,
     filename: String,
-    catalog_json: String,
+    catalog: &PresetCatalog,
     selection_json: String,
     options_json: String,
 ) -> Result<crate::SliceOutput, JsValue> {
-    let output = slice_with_profiles_processed_bytes(
+    let output = crate::poll_ready(slice_with_profiles_processed_bytes(
         input,
         &filename,
-        &catalog_json,
+        catalog.catalog_json(),
         &selection_json,
         &options_json,
-    )
-    .await
+    ))
+    .and_then(|res| res)
     .map_err(|error| JsValue::from_str(&error))?;
     Ok(crate::SliceOutput::from_processed(output))
 }
@@ -199,21 +162,21 @@ pub async fn slice_with_profiles_processed_bytes(
 }
 
 #[wasm_bindgen(js_name = profileSettings)]
-pub async fn profile_settings(
+pub fn profile_settings(
     input: Vec<u8>,
     filename: String,
-    catalog_json: String,
+    catalog: &PresetCatalog,
     selection_json: String,
     options_json: String,
 ) -> Result<String, JsValue> {
-    profile_settings_json(
+    crate::poll_ready(profile_settings_json(
         input,
         &filename,
-        &catalog_json,
+        catalog.catalog_json(),
         &selection_json,
         &options_json,
-    )
-    .await
+    ))
+    .and_then(|res| res)
     .map_err(|error| JsValue::from_str(&error))
 }
 
@@ -247,28 +210,28 @@ pub async fn profile_settings_json(
 /// reusing the existing scene extraction. Bed shape (`printable_area`) is
 /// available in the metadata's `settings.printer` section.
 #[wasm_bindgen(js_name = placementScene)]
-pub async fn placement_scene(
+pub fn placement_scene(
     input: Vec<u8>,
     filename: String,
-    catalog_json: String,
+    catalog: &PresetCatalog,
     selection_json: String,
     options_json: String,
 ) -> Result<crate::SceneData, JsValue> {
     let options =
         ProfileSliceOptions::parse(&options_json).map_err(|error| JsValue::from_str(&error))?;
     let overrides = options.overrides();
-    let project = ares_core::profile_placed_project(
+    let project = crate::poll_ready(ares_core::profile_placed_project(
         input,
         ares_core::GuiProfileSliceRequest(ares_core::ProfileSliceRequest {
             filename: &filename,
-            catalog_json: &catalog_json,
+            catalog_json: catalog.catalog_json(),
             selection_json: &selection_json,
             plate: options.plate,
             overrides: &overrides,
             placement: options.placement(),
         }),
-    )
-    .await
+    ))
+    .map_err(|error| JsValue::from_str(&error))?
     .map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(crate::scene::project_scene_data(&project))
 }

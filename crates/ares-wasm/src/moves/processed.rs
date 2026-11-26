@@ -35,9 +35,6 @@ impl SliceOutput {
             vertices,
             print_statistics: Some(output.result.print_statistics),
             estimation,
-            extruder_colors: output.result.extruder_colors,
-            filament_diameters: output.result.filament_diameters,
-            filament_densities: output.result.filament_densities,
             custom_gcode_overview: Vec::new(),
         }
     }

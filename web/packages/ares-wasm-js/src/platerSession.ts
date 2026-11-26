@@ -58,14 +58,14 @@ export class PlaterSession {
 
   /** Selected-profile settings composed from the session's complete original model. */
   async profileSettings(
-    catalog: string,
+    catalog: string | PresetCatalog,
     selection: ProfileSelection,
     options: ProfileSliceOptions,
   ): Promise<OptionMap> {
     return (await this.#call({
       kind: "platerProfileSettings",
       sessionId: this.#sessionId,
-      catalog,
+      catalog: typeof catalog === "string" ? catalog : catalog.workerId,
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     })) as OptionMap;
@@ -284,7 +284,7 @@ export class PlaterSession {
    * `onStatus` receives each status of the slice, in order, while it runs.
    */
   async sliceWithProfiles(
-    catalogJson: string,
+    catalog: string | PresetCatalog,
     selection: ProfileSelection | ProjectPresetSelection,
     options: ProfileSliceOptions,
     onStatus?: (status: SlicingStatus) => void,
@@ -294,7 +294,7 @@ export class PlaterSession {
         kind: "platerSliceWithProfiles",
         sessionId: this.#sessionId,
         plate: options.plate,
-        catalog: catalogJson,
+        catalog: typeof catalog === "string" ? catalog : catalog.workerId,
         selection: JSON.stringify(selection),
         options: JSON.stringify(options),
       },
@@ -313,14 +313,14 @@ export class PlaterSession {
 
   /** Saves the edited scene with the selected presets and option edits. */
   async saveProjectWithProfiles(
-    catalog: string,
+    catalog: string | PresetCatalog,
     selection: ProfileSelection | ProjectPresetSelection,
     options: ProfileSliceOptions,
   ): Promise<Uint8Array<ArrayBuffer>> {
     return (await this.#call({
       kind: "platerSaveProjectWithProfiles",
       sessionId: this.#sessionId,
-      catalog,
+      catalog: typeof catalog === "string" ? catalog : catalog.workerId,
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     })) as Uint8Array<ArrayBuffer>;

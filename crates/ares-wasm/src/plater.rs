@@ -75,10 +75,10 @@ fn js_error(error: impl ToString) -> JsValue {
 /// Loads a model with selected presets into a plater session: an STL lands on the bed centre
 /// as on an empty plate when `options.placement` is "center" (`Plater::priv::load_model_objects`).
 #[wasm_bindgen(js_name = createPlaterSessionWithProfiles)]
-pub async fn create_plater_session_with_profiles(
+pub fn create_plater_session_with_profiles(
     input: Vec<u8>,
     filename: String,
-    catalog_json: String,
+    catalog: &PresetCatalog,
     selection_json: String,
     options_json: String,
 ) -> Result<PlaterSession, JsValue> {
@@ -86,14 +86,14 @@ pub async fn create_plater_session_with_profiles(
     let overrides = options.overrides();
     let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
         filename: &filename,
-        catalog_json: &catalog_json,
+        catalog_json: catalog.catalog_json(),
         selection_json: &selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
     });
-    let session = ares_core::PlaterSession::load_with_profiles(input, request)
-        .await
+    let session = crate::poll_ready(ares_core::PlaterSession::load_with_profiles(input, request))
+        .map_err(js_error)?
         .map_err(js_error)?;
     Ok(PlaterSession { session, filename })
 }
@@ -271,9 +271,9 @@ impl PlaterSession {
     /// loaded file; `options.plate` selects the plate.
     /// `onStatus(percent, text)` receives each slicing status.
     #[wasm_bindgen(js_name = sliceWithProfilesProcessed)]
-    pub async fn slice_with_profiles_processed(
+    pub fn slice_with_profiles_processed(
         &self,
-        catalog_json: String,
+        catalog: &PresetCatalog,
         selection_json: String,
         options_json: String,
         on_status: Option<js_sys::Function>,
@@ -285,20 +285,20 @@ impl PlaterSession {
         let overrides = options.overrides();
         let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
             filename: &self.filename,
-            catalog_json: &catalog_json,
+            catalog_json: catalog.catalog_json(),
             selection_json: &selection_json,
             plate: options.plate,
             overrides: &overrides,
             placement: options.placement(),
         });
-        let output = ares_core::slice_plater_with_profiles(
+        let output = crate::poll_ready(ares_core::slice_plater_with_profiles(
             &self.session,
             request,
             true,
             GenerationMetadata::default(),
             crate::status::context(options.seed, report.as_mut()),
-        )
-        .await
+        ))
+        .map_err(js_error)?
         .map_err(js_error)?;
         Ok(SliceOutput::from_processed(output)
             .with_custom_gcodes(&self.custom_gcodes(options.plate)))

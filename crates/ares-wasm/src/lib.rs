@@ -20,7 +20,7 @@ mod status;
 pub use colors::{option_colors, role_colors, view_types};
 pub use direct_project::{
     slice_project_plate_processed_with_catalog, slice_project_plate_processed_with_catalog_bytes,
-    slice_project_plate_with_catalog, slice_project_with_catalog,
+    slice_project_plate_processed_with_catalog_handle, slice_project_plate_with_catalog,
 };
 pub use moves::{SliceOutput, VertexBuffers, option_types};
 pub use plater::{
@@ -33,9 +33,9 @@ use ares_core::{SliceError, SliceOptions};
 use wasm_bindgen::prelude::*;
 
 pub use profiles::{
-    PresetCatalog, filter_compatible_presets, filter_compatible_presets_json, guide_models,
-    guide_models_json, parse_preset_bundle, parse_preset_bundle_json, resolve_default_bed_type,
-    slice_with_profiles, slice_with_profiles_bytes,
+    PresetCatalog, filter_compatible_presets_json, guide_models, guide_models_json,
+    parse_preset_bundle, parse_preset_bundle_json, placement_scene, profile_settings,
+    resolve_default_bed_type, slice_with_profiles_bytes, slice_with_profiles_processed,
 };
 pub use scene::{SceneData, load_scene, scene_from_bytes};
 
@@ -53,35 +53,6 @@ pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u
         .map_err(|error| error.to_string())
 }
 
-#[wasm_bindgen(js_name = sliceProject)]
-pub async fn slice_project(
-    input: Vec<u8>,
-    overrides_json: Option<String>,
-) -> Result<Vec<u8>, JsValue> {
-    slice_project_plate(input, None, overrides_json).await
-}
-
-#[wasm_bindgen(js_name = sliceProjectPlate)]
-pub async fn slice_project_plate(
-    input: Vec<u8>,
-    plate: Option<u32>,
-    overrides_json: Option<String>,
-) -> Result<Vec<u8>, JsValue> {
-    slice_project_plate_with_catalog(input, plate, overrides_json, None).await
-}
-
-/// Palettes derive from processed filament colors and custom G-code items.
-#[wasm_bindgen(js_name = sliceProjectPlateProcessed)]
-pub async fn slice_project_plate_processed(
-    input: Vec<u8>,
-    plate: Option<u32>,
-    overrides_json: Option<String>,
-) -> Result<SliceOutput, JsValue> {
-    slice_project_plate_processed_bytes(input, plate, overrides_json.as_deref())
-        .await
-        .map_err(|error| JsValue::from_str(&error))
-}
-
 /// The processed slice of `plate`, with the legend Custom G-code overview of
 /// that plate's custom G-codes.
 pub async fn slice_project_plate_processed_bytes(
@@ -90,6 +61,17 @@ pub async fn slice_project_plate_processed_bytes(
     overrides_json: Option<&str>,
 ) -> Result<SliceOutput, String> {
     slice_project_plate_processed_with_catalog_bytes(input, plate, overrides_json, None).await
+}
+
+/// Polls an immediately-ready `ares_core` future without allocating a JS Promise,
+/// allowing synchronous `#[wasm_bindgen]` entry points to borrow `&PresetCatalog`.
+pub(crate) fn poll_ready<T>(future: impl std::future::Future<Output = T>) -> Result<T, String> {
+    let future = std::pin::pin!(future);
+    let mut cx = std::task::Context::from_waker(std::task::Waker::noop());
+    match future.poll(&mut cx) {
+        std::task::Poll::Ready(value) => Ok(value),
+        std::task::Poll::Pending => Err("slicer future yielded unexpectedly".to_owned()),
+    }
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {

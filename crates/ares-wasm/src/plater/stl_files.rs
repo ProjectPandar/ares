@@ -5,7 +5,7 @@ use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
 use super::{PlaterSession, js_error};
-use crate::profiles::ProfileSliceOptions;
+use crate::profiles::{PresetCatalog, ProfileSliceOptions};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -52,26 +52,26 @@ impl Import {
 #[wasm_bindgen]
 impl PlaterSession {
     #[wasm_bindgen(js_name = profileSettings)]
-    pub async fn profile_settings(
+    pub fn profile_settings(
         &self,
-        catalog_json: String,
+        catalog: &PresetCatalog,
         selection_json: String,
         options_json: String,
     ) -> Result<String, JsValue> {
         let options = ProfileSliceOptions::parse(&options_json).map_err(js_error)?;
         let overrides = options.overrides();
-        let settings = self
-            .session
-            .profile_settings(ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
+        let settings = crate::poll_ready(self.session.profile_settings(
+            ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
                 filename: &self.filename,
-                catalog_json: &catalog_json,
+                catalog_json: catalog.catalog_json(),
                 selection_json: &selection_json,
                 plate: options.plate,
                 overrides: &overrides,
                 placement: options.placement(),
-            }))
-            .await
-            .map_err(js_error)?;
+            }),
+        ))
+        .map_err(js_error)?
+        .map_err(js_error)?;
         serde_json::to_string(&settings).map_err(js_error)
     }
 }
@@ -91,10 +91,10 @@ pub fn create_plater_session_from_stl_files(
 }
 
 #[wasm_bindgen(js_name = createPlaterSessionFromStlFilesWithProfiles)]
-pub async fn create_plater_session_from_stl_files_with_profiles(
+pub fn create_plater_session_from_stl_files_with_profiles(
     input: js_sys::Array,
     import_json: String,
-    catalog_json: String,
+    catalog: &PresetCatalog,
     selection_json: String,
     options_json: String,
 ) -> Result<PlaterSession, JsValue> {
@@ -103,18 +103,18 @@ pub async fn create_plater_session_from_stl_files_with_profiles(
     let overrides = options.overrides();
     let request = ares_core::GuiProfileSliceRequest(ProfileSliceRequest {
         filename: "multipart.stl",
-        catalog_json: &catalog_json,
+        catalog_json: catalog.catalog_json(),
         selection_json: &selection_json,
         plate: options.plate,
         overrides: &overrides,
         placement: options.placement(),
     });
-    let session = ares_core::PlaterSession::load_stl_files_with_profiles(
+    let session = crate::poll_ready(ares_core::PlaterSession::load_stl_files_with_profiles(
         &import.files(&bytes),
         import.options(),
         request,
-    )
-    .await
+    ))
+    .map_err(js_error)?
     .map_err(js_error)?;
     Ok(PlaterSession {
         session,

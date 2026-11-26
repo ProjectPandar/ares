@@ -42,11 +42,11 @@ export interface Toolpaths {
   extrusionRoles: Uint8Array<ArrayBuffer>;
   /** Normal-mode `get_extrusion_role_estimated_time` of each `extrusionRoles` id, seconds. */
   extrusionRoleTimes: Float32Array<ArrayBuffer>;
-  /** libvgcode `extract_pos_and_or_hwa` `[height, width]` of each vertex (travels / wipes at their radius). */
+  /** libvgcode `extract_pos_and_or_hwa` `[height, width]` of each vertex; empty when packed textures are enabled unless requested. */
   heightsWidths: Float32Array<ArrayBuffer>;
-  /** libvgcode `ViewerImpl` segment position of each vertex, stride 3 (extrusions pushed down by half their height). */
+  /** libvgcode `ViewerImpl` segment position of each vertex, stride 3; empty when packed textures are enabled unless requested. */
   segmentPositions: Float32Array<ArrayBuffer>;
-  /** libvgcode `extract_pos_and_or_hwa` join angle of each vertex, radians. */
+  /** libvgcode `extract_pos_and_or_hwa` join angle of each vertex, radians; empty when packed textures are enabled unless requested. */
   segmentAngles: Float32Array<ArrayBuffer>;
   /** Normal-mode `get_travels_estimated_time`, seconds (an f32). */
   travelsTime: number;
@@ -54,6 +54,14 @@ export interface Toolpaths {
   estimatedTime: number;
   /** Packed in the worker once `AresSlicer.prepareViewerTextures` has run. */
   textures?: ToolpathTextures;
+}
+
+/** Options for `AresSlicer.prepareViewerTextures`. */
+export interface ViewerTextureOptions {
+  /** Compute E2E FNV-1a probes for drawn segments and recolors (disabled by default for interactive performance). */
+  probes?: boolean;
+  /** Keep transferring the raw `heightsWidths`, `segmentPositions` and `segmentAngles` arrays alongside packed textures. */
+  includeRawArrays?: boolean;
 }
 
 /** `w` of the heights/widths/angles texel of travels and wipes: this plus their `EOptionType` index, above the role ids. */
@@ -71,8 +79,8 @@ export interface ToolpathTextures {
   segments: Uint32Array<ArrayBuffer>;
   /** `[min xyz, max xyz]` of the extrusion segments other than Custom (GCodeViewer::load paths box); infinite when none. */
   bounds: number[];
-  /** E2E probes of the drawn segments, `count:FNV-1a 32`: end sizes, geometry inputs and `Toolpaths.colors`. */
-  probes: { sizes: string; geometry: string; colors: string };
+  /** E2E probes of the drawn segments, `count:FNV-1a 32`: end sizes, geometry inputs and `Toolpaths.colors`; present when `probes` is enabled. */
+  probes?: { sizes: string; geometry: string; colors: string };
 }
 
 /** One item of the legend Custom G-code overview (GCodeViewer.cpp:4517-4544), computed by ares-vgcode. */

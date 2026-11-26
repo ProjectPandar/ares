@@ -56,6 +56,14 @@ const VIEW_KEYS: Record<string, ViewPreset> = {
 /** GLGizmosManager's gizmo keys (GLGizmoMove3D, Rotate3D, Scale3D::on_init). */
 const GIZMO_KEYS: Record<string, GizmoMode> = { m: "move", r: "rotate", s: "scale" };
 
+/** Enables E2E FNV-1a viewer probes only under WebDriver automation or explicit `?probes=1`. */
+function viewerProbesEnabled(): boolean {
+  const param = new URLSearchParams(window.location.search).get("probes");
+  if (param === "1") return true;
+  if (param === "0") return false;
+  return navigator.webdriver === true;
+}
+
 /**
  * The instances the canvas draws: per object in scene order its name and each instance's printable
  * flag and column-major matrix, and per plate its `[object, instance]` positions in that order.
@@ -157,7 +165,7 @@ export function ViewportView({
         setMenu(gizmoOpen.current ? null : { objectId: hit.object, volume, at });
       };
       instance.onOrbit = () => setActive(null);
-      void slicer.prepareViewerTextures(instance.maxTextureSize);
+      void slicer.prepareViewerTextures(instance.maxTextureSize, { probes: viewerProbesEnabled() });
       setViewport(instance);
     });
     return () => {
@@ -267,7 +275,7 @@ export function ViewportView({
     if (view) viewport?.setPreviewView(view);
   }, [viewport, view]);
   useLayoutEffect(() => {
-    if (colors) viewport?.setToolpathColors(colors.colors, colors.colorsProbe!);
+    if (colors) viewport?.setToolpathColors(colors.colors, colors.colorsProbe);
   }, [viewport, colors]);
   useLayoutEffect(() => {
     if (!enabled || !toolpaths) return;

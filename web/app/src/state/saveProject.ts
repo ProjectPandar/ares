@@ -1,6 +1,7 @@
 import { download } from "./actions";
+import { presetCatalog } from "./presetCatalog";
 import { overrideTokens, profileSliceRequest } from "./presetSlice";
-import { catalogJson, FROM_PROJECT } from "./projectPresets";
+import { FROM_PROJECT } from "./projectPresets";
 import { presetSliceBlocker } from "./presets";
 import { stlSessionOpened } from "./stlSession";
 import { useApp } from "./store";
@@ -41,17 +42,16 @@ export async function saveProject() {
   try {
     let bytes: Uint8Array<ArrayBuffer>;
     if (presetSelection) {
-      const { catalog, profiles, request } = await profileSliceRequest(scene!, presetSelection, overrides);
+      const { profiles, request } = await profileSliceRequest(scene!, presetSelection, overrides);
       if (!stillOpen()) return;
-      bytes = await plater!.saveProjectWithProfiles(catalog, profiles, request);
+      bytes = await plater!.saveProjectWithProfiles(await presetCatalog(), profiles, request);
     } else {
       const tokens = await overrideTokens(overrides);
-      const catalog = file!.kind === "stl-batch" ? null : await catalogJson(state);
       if (!stillOpen()) return;
       bytes =
-        catalog === null
+        file!.kind === "stl-batch"
           ? await plater!.saveProject(tokens)
-          : await plater!.saveProjectWithProfiles(catalog, FROM_PROJECT, {
+          : await plater!.saveProjectWithProfiles(await presetCatalog(), FROM_PROJECT, {
               seed: 0,
               placement: "none",
               overrides: tokens,

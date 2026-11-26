@@ -1,4 +1,5 @@
 import type { RequestBody } from "./protocol.js";
+import type { SliceResult } from "./toolpaths.js";
 import type {
   CompatiblePresets,
   CurrentPrinter,
@@ -8,8 +9,12 @@ import type {
   PresetKind,
   PrinterModel,
   PrinterModelInfo,
+  ProfileSelection,
+  ProfileSliceOptions,
+  Scene,
   SelectablePrinter,
 } from "./types.js";
+import { profilePayload } from "./workerClient.js";
 
 export interface FilamentSlotState {
   filaments: string[];
@@ -213,6 +218,50 @@ export class PresetCatalog {
   /** The loaded system filaments in name order with the printers they are compatible with, for the setup guide. */
   async guideFilaments(): Promise<GuideFilament[]> {
     return (await this.#call({ kind: "catalogGuideFilaments", catalogId: this.#catalogId })) as GuideFilament[];
+  }
+
+  /** Loads and pads this catalog's presets once in the worker (`PresetBundle::load_presets`). */
+  async loadPresetBundle(): Promise<void> {
+    await this.#call({ kind: "loadPresetBundle", catalog: this.#catalogId });
+  }
+
+  /** Slices a model with selected presets reusing this catalog handle directly in the worker. */
+  async sliceWithProfiles(
+    input: Uint8Array,
+    filename: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<SliceResult> {
+    return (await this.#call({
+      kind: "sliceWithProfiles",
+      ...profilePayload(input, filename, this.#catalogId, selection, options),
+    })) as SliceResult;
+  }
+
+  /** Composes the effective settings of selected presets reusing this catalog handle directly in the worker. */
+  async profileSettings(
+    input: Uint8Array,
+    filename: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<OptionMap> {
+    return (await this.#call({
+      kind: "profileSettings",
+      ...profilePayload(input, filename, this.#catalogId, selection, options),
+    })) as OptionMap;
+  }
+
+  /** Places a model with selected presets reusing this catalog handle directly in the worker. */
+  async placementScene(
+    input: Uint8Array,
+    filename: string,
+    selection: ProfileSelection,
+    options: ProfileSliceOptions,
+  ): Promise<Scene> {
+    return (await this.#call({
+      kind: "placementScene",
+      ...profilePayload(input, filename, this.#catalogId, selection, options),
+    })) as Scene;
   }
 
   /** Releases the worker's catalog. */

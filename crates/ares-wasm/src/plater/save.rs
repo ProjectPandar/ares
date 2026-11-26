@@ -1,7 +1,7 @@
 use ares_core::{GuiProfileSliceRequest, ProfileSliceRequest};
 use wasm_bindgen::prelude::*;
 
-use super::{PlaterSession, ProfileSliceOptions, js_error};
+use super::{PlaterSession, PresetCatalog, ProfileSliceOptions, js_error};
 
 #[wasm_bindgen]
 impl PlaterSession {
@@ -16,7 +16,7 @@ impl PlaterSession {
     #[wasm_bindgen(js_name = saveProjectWithProfiles)]
     pub fn save_project_with_profiles(
         &self,
-        catalog_json: String,
+        catalog: &PresetCatalog,
         selection_json: String,
         options_json: String,
     ) -> Result<Vec<u8>, JsValue> {
@@ -25,7 +25,7 @@ impl PlaterSession {
         self.session
             .save_project_with_profiles(GuiProfileSliceRequest(ProfileSliceRequest {
                 filename: &self.filename,
-                catalog_json: &catalog_json,
+                catalog_json: catalog.catalog_json(),
                 selection_json: &selection_json,
                 plate: None,
                 overrides: &overrides,

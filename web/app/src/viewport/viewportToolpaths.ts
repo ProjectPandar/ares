@@ -74,19 +74,22 @@ export class ViewportToolpaths {
       this.place(origin);
       this.#container.dataset.optionMarkers = JSON.stringify(markers.counts);
       const { probes } = toolpaths.textures!;
-      this.#container.dataset.segmentSizes = probes.sizes;
-      this.#container.dataset.segmentGeometry = probes.geometry;
-      this.#container.dataset.segmentColors = probes.colors;
+      if (probes) {
+        this.#container.dataset.segmentSizes = probes.sizes;
+        this.#container.dataset.segmentGeometry = probes.geometry;
+        this.#container.dataset.segmentColors = probes.colors;
+      }
     }
     if (this.#previewView && this.#mesh) applyPreviewView(this.#mesh, this.#previewView);
   }
 
-  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its E2E probe (`ViewColors.colorsProbe`). */
-  setColors(colors: Uint8Array, probe: string): boolean {
+  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its optional E2E probe (`ViewColors.colorsProbe`). */
+  setColors(colors: Uint8Array, probe?: string): boolean {
     if (!this.#mesh || colors === this.#colors) return false;
     this.#colors = colors;
     applyVertexColors(this.#mesh, colors);
-    this.#container.dataset.segmentColors = probe;
+    if (probe !== undefined) this.#container.dataset.segmentColors = probe;
+    else delete this.#container.dataset.segmentColors;
     return true;
   }
 

@@ -84,7 +84,7 @@ export class WorkerClient {
 export function profilePayload(
   input: Uint8Array,
   filename: string,
-  catalog: string,
+  catalog: string | number,
   selection: ProfileSelection | ProjectPresetSelection,
   options: ProfileSliceOptions,
 ) {
