@@ -9,7 +9,7 @@ import type {
   SlicingStatus,
 } from "@ares-slicer/wasm";
 import { extruderOverrides } from "./extruders";
-import { catalogJson } from "./projectPresets";
+import { presetCatalog } from "./presetCatalog";
 import { slicer } from "./slicer";
 import { type ModelFile, type PresetSelection, useApp } from "./store";
 import { decodeOptions } from "./typedSettings";
@@ -21,18 +21,16 @@ export type CatalogSources = { vendors: readonly string[]; presetImports: readon
 export async function profileRequest(
   scene: Scene,
   { printer, process, filaments, filamentProject }: PresetSelection,
-  sources: CatalogSources,
   plate = scene.plates[0]?.id,
   includeOverrides = true,
 ) {
-  const catalog = await catalogJson(sources);
   const options: ProfileSliceOptions = {
     plate,
     seed: 0,
     placement: scene.format === "stl" ? "center" : "none",
     overrides: includeOverrides && filamentProject ? await overrideTokens(filamentProject) : undefined,
   };
-  return { catalog, selection: { machine: printer, process: process!, filaments }, options };
+  return { selection: { machine: printer, process: process!, filaments }, options };
 }
 
 /**
@@ -65,11 +63,7 @@ export async function profileSliceRequest(
   overrides: ConfigOverrides,
   plate?: number,
 ) {
-  const {
-    catalog,
-    selection: profiles,
-    options,
-  } = await profileRequest(scene, selection, useApp.getState(), plate, false);
+  const { selection: profiles, options } = await profileRequest(scene, selection, plate, false);
   // The plate combo's `curr_bed_type` is part of the project config the slice composes.
   // So are the dual-nozzle volume types and filament map.
   const project: ConfigOverrides = {
@@ -77,7 +71,7 @@ export async function profileSliceRequest(
     ...selection.filamentProject,
     ...extruderOverrides(selection, selection.filaments.length),
   };
-  return { catalog, profiles, request: { ...options, overrides: await overrideTokens({ ...overrides, ...project }) } };
+  return { profiles, request: { ...options, overrides: await overrideTokens({ ...overrides, ...project }) } };
 }
 
 export async function sliceWithPresets(
@@ -88,29 +82,26 @@ export async function sliceWithPresets(
   plate?: number,
   onStatus?: (status: SlicingStatus) => void,
 ): Promise<SliceResult> {
-  const { catalog, profiles, request } = await profileSliceRequest(scene, selection, overrides, plate);
+  const { profiles, request } = await profileSliceRequest(scene, selection, overrides, plate);
+  const catalog = await presetCatalog();
   const { plater } = useApp.getState();
   if (file.kind === "stl-batch") return plater!.sliceWithProfiles(catalog, profiles, request, onStatus);
   return plater
     ? plater.sliceWithProfiles(catalog, profiles, request, onStatus)
-    : slicer.sliceWithProfiles(file.bytes, file.name, catalog, profiles, request);
+    : catalog.sliceWithProfiles(file.bytes, file.name, profiles, request);
 }
 
 /**
  * Values of the selected presets as the preset slice composes them (`PresetBundle::full_config`),
  * typed where decoded, for the process tab to show and edit.
  */
-export async function presetValues(
-  file: ModelFile,
-  scene: Scene,
-  selection: PresetSelection,
-  sources: CatalogSources,
-): Promise<OptionMap> {
-  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
+export async function presetValues(file: ModelFile, scene: Scene, selection: PresetSelection): Promise<OptionMap> {
+  const { selection: profiles, options } = await profileRequest(scene, selection);
+  const catalog = await presetCatalog();
   const settings =
     file.kind === "stl-batch"
       ? await useApp.getState().plater!.profileSettings(catalog, profiles, options)
-      : await slicer.profileSettings(file.bytes, file.name, catalog, profiles, options);
+      : await catalog.profileSettings(file.bytes, file.name, profiles, options);
   return { ...settings, ...(await decodeOptions(useApp.getState().configDefs!, settings)) };
 }
 
@@ -118,14 +109,9 @@ export async function presetValues(
  * The scene as the preset slice places it on the selected printer's bed: an STL centered like
  * one model loaded on an empty plate (Plater.cpp:7149-7160), with the composed config's bed.
  */
-export async function placedScene(
-  file: ModelFile,
-  scene: Scene,
-  selection: PresetSelection,
-  sources: CatalogSources,
-): Promise<Scene> {
-  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
-  return file.kind === "stl-batch"
-    ? useApp.getState().plater!.scene()
-    : slicer.placementScene(file.bytes, file.name, catalog, profiles, options);
+export async function placedScene(file: ModelFile, scene: Scene, selection: PresetSelection): Promise<Scene> {
+  const { selection: profiles, options } = await profileRequest(scene, selection);
+  if (file.kind === "stl-batch") return useApp.getState().plater!.scene();
+  const catalog = await presetCatalog();
+  return catalog.placementScene(file.bytes, file.name, profiles, options);
 }

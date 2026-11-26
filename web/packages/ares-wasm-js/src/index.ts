@@ -2,7 +2,7 @@ import type { PrintConfigDef } from "./configDef.js";
 import { PlaterSession } from "./platerSession.js";
 import { PresetCatalog } from "./presetCatalog.js";
 import type { RequestBody } from "./protocol.js";
-import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange } from "./toolpaths.js";
+import type { MovesSlider, MovesView, SliceResult, ViewColors, ViewRange, ViewerTextureOptions } from "./toolpaths.js";
 import type {
   AresSlicerOptions,
   CompatiblePresets,
@@ -189,14 +189,15 @@ export class AresSlicer {
   createPlaterSessionWithProfiles(
     input: Uint8Array,
     filename: string,
-    catalogJson: string,
+    catalog: string | PresetCatalog,
     selection: ProfileSelection | ProjectPresetSelection,
     options: ProfileSliceOptions,
   ): Promise<PlaterSession> {
+    const ref = typeof catalog === "string" ? catalog : catalog.workerId;
     return this.#openSession((sessionId) => ({
       kind: "platerCreateWithProfiles",
       sessionId,
-      ...profilePayload(input, filename, catalogJson, selection, options),
+      ...profilePayload(input, filename, ref, selection, options),
     }));
   }
 
@@ -213,15 +214,16 @@ export class AresSlicer {
   createPlaterSessionFromStlFilesWithProfiles(
     files: readonly StlFile[],
     choices: StlImportOptions,
-    catalogJson: string,
+    catalog: string | PresetCatalog,
     selection: ProfileSelection,
     options: ProfileSliceOptions,
   ): Promise<PlaterSession> {
+    const ref = typeof catalog === "string" ? catalog : catalog.workerId;
     return this.#openSession((sessionId) => ({
       kind: "platerCreateFromStlFilesWithProfiles",
       sessionId,
       ...stlBatchPayload(files, choices),
-      catalog: catalogJson,
+      catalog: ref,
       selection: JSON.stringify(selection),
       options: JSON.stringify(options),
     }));
@@ -239,11 +241,15 @@ export class AresSlicer {
   }
 
   /**
-   * Loads the presets of `catalogJson` (the `sliceWithProfiles` catalog) once, as OrcaSlicer loads its
-   * `PresetBundle` at startup and after the wizard; a later project load with the same catalog reuses them.
+   * Loads the presets of `catalog` (the `sliceWithProfiles` catalog string or a worker
+   * `PresetCatalog` handle) once, as OrcaSlicer loads its `PresetBundle` at startup and after the
+   * wizard; a later project load with the same catalog reuses them.
    */
-  async loadPresetBundle(catalogJson: string): Promise<void> {
-    await this.#client.call({ kind: "loadPresetBundle", catalog: catalogJson });
+  async loadPresetBundle(catalog: string | PresetCatalog): Promise<void> {
+    await this.#client.call({
+      kind: "loadPresetBundle",
+      catalog: typeof catalog === "string" ? catalog : catalog.workerId,
+    });
   }
 
   /**
@@ -305,8 +311,13 @@ export class AresSlicer {
   }
 
   /** From now on the worker packs `Toolpaths.textures` of each slice result, in rows of up to `maxTextureSize` texels. */
-  async prepareViewerTextures(maxTextureSize: number): Promise<void> {
-    await this.#client.send({ kind: "prepareViewerTextures", maxTextureSize });
+  async prepareViewerTextures(maxTextureSize: number, options?: ViewerTextureOptions): Promise<void> {
+    await this.#client.send({
+      kind: "prepareViewerTextures",
+      maxTextureSize,
+      probes: options?.probes,
+      includeRawArrays: options?.includeRawArrays,
+    });
   }
 
   /**

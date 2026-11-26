@@ -1,6 +1,6 @@
 import type { PlaterSession, Scene } from "@ares-slicer/wasm";
 import { loadArrangeSettings } from "./arrange";
-import { installVendors } from "./presets";
+import { presetCatalog } from "./presetCatalog";
 import { type CatalogSources, profileRequest } from "./presetSlice";
 import { slicer } from "./slicer";
 import { invalidatedSlices, type ModelFile, type PresetSelection, useApp } from "./store";
@@ -72,12 +72,13 @@ async function openSession(
   selection: PresetSelection,
   sources: CatalogSources,
 ): Promise<Scene> {
-  const { catalog, selection: profiles, options } = await profileRequest(scene, selection, sources);
+  const { selection: profiles, options } = await profileRequest(scene, selection);
+  const catalog = await presetCatalog();
   const plater =
     file.kind === "stl-batch"
       ? await slicer.createPlaterSessionFromStlFilesWithProfiles(file.files, file.choices, catalog, profiles, options)
       : await slicer.createPlaterSessionWithProfiles(file.bytes, file.name, catalog, profiles, options);
-  await installVendors(plater);
+  await plater.setInstalledVendors(catalog);
   const placed = await plater.scene();
   if (useApp.getState().file !== file) {
     void plater.free();

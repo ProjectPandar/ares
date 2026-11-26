@@ -2,7 +2,7 @@ import type { InstalledPrinters, ParsedPresetBundle, PlaterSession, PresetCatalo
 import type { DialogFilament } from "../sidebar/filamentDialog";
 import { firstString } from "../sidebar/options";
 import { saveConfig, storedConfig } from "./persistence";
-import { catalogJson, FILAMENT_LIBRARY } from "./projectPresets";
+import { FILAMENT_LIBRARY } from "./projectPresets";
 import { slicer } from "./slicer";
 import { useApp } from "./store";
 
@@ -58,7 +58,7 @@ async function syncCatalog(): Promise<PresetCatalog> {
   synced.imports = importFiles.length;
   // PresetBundle::load_presets at startup (GUI_App.cpp:3723) and after the wizard (ConfigWizard.cpp:2597):
   // the project load that follows selects from these presets instead of loading them again.
-  if (changed) await slicer.loadPresetBundle(await catalogJson(useApp.getState()));
+  if (changed) await synced.catalog.loadPresetBundle();
   return synced.catalog;
 }
 

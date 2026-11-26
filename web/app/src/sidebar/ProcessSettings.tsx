@@ -5,7 +5,12 @@ import { presetValues } from "../state/presetSlice";
 import { presetSliceBlocker } from "../state/presets";
 import { type ModelFile, type PresetSelection, useApp } from "../state/store";
 
-type Fetched = { file: ModelFile; selection: PresetSelection } & ({ values: OptionMap } | { error: string });
+type Fetched = {
+  file: ModelFile;
+  selection: PresetSelection;
+  vendors: readonly string[];
+  presetImports: readonly unknown[];
+} & ({ values: OptionMap } | { error: string });
 
 /**
  * The process tab's values with presets selected: the config the preset slice composes,
@@ -21,15 +26,23 @@ export function usePresetValues(selection: PresetSelection): { values: OptionMap
   useEffect(() => {
     if (!file || !scene || blocked) return;
     let stale = false;
-    presetValues(file, scene, selection, { vendors, presetImports }).then(
-      (values) => !stale && setFetched({ file, selection, values }),
-      (error: Error) => !stale && setFetched({ file, selection, error: error.message }),
+    presetValues(file, scene, selection).then(
+      (values) => !stale && setFetched({ file, selection, vendors, presetImports, values }),
+      (error: Error) => !stale && setFetched({ file, selection, vendors, presetImports, error: error.message }),
     );
     return () => {
       stale = true;
     };
   }, [file, scene, blocked, selection, vendors, presetImports]);
-  if (blocked || fetched?.file !== file || fetched.selection !== selection) return { values: null };
+  if (
+    blocked ||
+    fetched?.file !== file ||
+    fetched.selection !== selection ||
+    fetched.vendors !== vendors ||
+    fetched.presetImports !== presetImports
+  ) {
+    return { values: null };
+  }
   return "values" in fetched ? { values: fetched.values } : { values: null, error: fetched.error };
 }
 import { SettingsPages } from "./SettingsPages";

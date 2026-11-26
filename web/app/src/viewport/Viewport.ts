@@ -239,8 +239,8 @@ export class Viewport {
     this.render();
   }
 
-  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its E2E probe (`ViewColors.colorsProbe`). */
-  setToolpathColors(colors: Uint8Array, probe: string) {
+  /** Recolors the current toolpaths with per-vertex RGB of the same toolpaths and its optional E2E probe (`ViewColors.colorsProbe`). */
+  setToolpathColors(colors: Uint8Array, probe?: string) {
     if (this.#toolpaths.setColors(colors, probe)) this.render();
   }
 

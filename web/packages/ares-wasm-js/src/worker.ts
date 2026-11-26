@@ -4,11 +4,9 @@ import init, {
   type PlaterSnapshot,
   type PresetCatalog,
   decodeConfigValue,
-  exportPlateSlicedFile,
   encodeConfigValue,
-  filterCompatiblePresets,
+  exportPlateSlicedFile,
   guideModels,
-  loadPresetBundle,
   loadScene,
   orcaSlicerVersion,
   parsePresetBundle,
@@ -17,6 +15,7 @@ import init, {
   profileSettings,
   resolveDefaultBedType,
   sliceProjectPlateProcessedWithCatalog,
+  sliceProjectPlateProcessedWithCatalogHandle,
   sliceWithProfilesProcessed,
   type SceneData,
   slice_stl,
@@ -26,7 +25,7 @@ import { applyEdit } from "./platerEdit.js";
 import type { WorkerRequest, WorkerResponse } from "./protocol.js";
 import type { SliceResult } from "./toolpaths.js";
 import type { Scene } from "./types.js";
-import { handleCatalog } from "./workerCatalog.js";
+import { catalogHandleFor, handleCatalog } from "./workerCatalog.js";
 import { crash, trapped } from "./workerCrash.js";
 import { handlePlaterSource } from "./workerPlaterSource.js";
 import {
@@ -78,20 +77,33 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
       return sceneResult(loadScene(request.input));
     case "placementScene": {
       const { input, filename, catalog, selection, options } = request;
-      return sceneResult(await placementScene(input, filename, catalog, selection, options));
+      return sceneResult(placementScene(input, filename, catalogHandleFor(catalog, catalogs), selection, options));
     }
-    case "sliceProject":
+    case "sliceProject": {
       // Both palettes come from GCodeProcessorResult.
-      return processedResult(
-        await sliceProjectPlateProcessedWithCatalog(request.input, request.plate, request.overrides, request.catalog),
-      );
+      const output =
+        request.catalog !== undefined
+          ? sliceProjectPlateProcessedWithCatalogHandle(
+              request.input,
+              request.plate,
+              request.overrides,
+              catalogHandleFor(request.catalog, catalogs),
+            )
+          : await sliceProjectPlateProcessedWithCatalog(request.input, request.plate, request.overrides, undefined);
+      return processedResult(output);
+    }
     case "sliceWithProfiles": {
       const { input, filename, catalog, selection, options } = request;
-      return processedResult(await sliceWithProfilesProcessed(input, filename, catalog, selection, options));
+      return processedResult(
+        sliceWithProfilesProcessed(input, filename, catalogHandleFor(catalog, catalogs), selection, options),
+      );
     }
     case "profileSettings": {
       const { input, filename, catalog, selection, options } = request;
-      return [JSON.parse(await profileSettings(input, filename, catalog, selection, options)), []];
+      return [
+        JSON.parse(profileSettings(input, filename, catalogHandleFor(catalog, catalogs), selection, options)),
+        [],
+      ];
     }
     case "sliceStl": {
       replaceViewer();
@@ -105,9 +117,12 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "parsePresetBundle":
       return [JSON.parse(parsePresetBundle(request.input, request.filename)), []];
     case "filterCompatiblePresets":
-      return [JSON.parse(filterCompatiblePresets(request.catalog, request.printer, request.process)), []];
+      return [
+        JSON.parse(catalogHandleFor(request.catalog, catalogs).filterCompatible(request.printer, request.process)),
+        [],
+      ];
     case "loadPresetBundle":
-      loadPresetBundle(request.catalog);
+      catalogHandleFor(request.catalog, catalogs).loadPresetBundle();
       return [undefined, []];
     case "guideModels":
       return [JSON.parse(guideModels(request.input)), []];
@@ -134,7 +149,7 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "platerCreateFromStlFiles":
     case "platerCreateFromStlFilesWithProfiles":
     case "platerProfileSettings":
-      return [await handlePlaterSource(request, sessions), []];
+      return [handlePlaterSource(request, sessions, catalogs), []];
     case "platerScene":
       return sceneResult(sessions.get(request.sessionId)!.scene());
     case "platerInvalidValues":
@@ -200,9 +215,14 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     case "platerSliceWithProfiles": {
       const { sessionId, plate, catalog, selection, options } = request;
       const result = processedResult(
-        await sessions
+        sessions
           .get(sessionId)!
-          .sliceWithProfilesProcessed(catalog, selection, options, reportStatus(request.id)),
+          .sliceWithProfilesProcessed(
+            catalogHandleFor(catalog, catalogs),
+            selection,
+            options,
+            reportStatus(request.id),
+          ),
       );
       keepPlateViewer(sessionId, plate);
       return result;
@@ -213,7 +233,9 @@ async function handle(request: WorkerRequest): Promise<[unknown, Transferable[]]
     }
     case "platerSaveProjectWithProfiles": {
       const { sessionId, catalog, selection, options } = request;
-      const project = sessions.get(sessionId)!.saveProjectWithProfiles(catalog, selection, options);
+      const project = sessions
+        .get(sessionId)!
+        .saveProjectWithProfiles(catalogHandleFor(catalog, catalogs), selection, options);
       return [project, [project.buffer]];
     }
     case "platerPreview":

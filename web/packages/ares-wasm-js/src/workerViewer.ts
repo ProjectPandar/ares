@@ -17,7 +17,7 @@ import type {
   ViewColors,
   ViewRange,
 } from "./toolpaths.js";
-import { colorsProbe, packTextures, prepareViewerTextures } from "./toolpathTextures.js";
+import { colorsProbe, packTextures, prepareViewerTextures, rawSegmentArraysRequested } from "./toolpathTextures.js";
 import { readColors, readEnabled, readRanges, readVertexArrays } from "./workerTransfer.js";
 
 // wasm-bindgen returns `Vec<u8>` as a `.slice()` copy out of wasm memory: always a fresh, transferable ArrayBuffer.
@@ -65,7 +65,7 @@ export function processedResult(output: SliceOutput): [SliceResult, Transferable
   output.free();
   let retained = false;
   try {
-    const arrays = readVertexArrays(vertices);
+    const arrays = readVertexArrays(vertices, rawSegmentArraysRequested());
     const toolpaths: Toolpaths = {
       vertexCount: vertices.count,
       values: arrays.values,
@@ -110,6 +110,9 @@ export function processedResult(output: SliceOutput): [SliceResult, Transferable
       segmentAngles,
       textures,
     } = toolpaths;
+    const rawTransfers = heightsWidths.byteLength
+      ? [heightsWidths.buffer, segmentPositions.buffer, segmentAngles.buffer]
+      : [];
     const result: [SliceResult, Transferable[]] = [
       { gcode, toolpaths },
       [
@@ -125,9 +128,7 @@ export function processedResult(output: SliceOutput): [SliceResult, Transferable
         layerZs.buffer,
         extrusionRoles.buffer,
         extrusionRoleTimes.buffer,
-        heightsWidths.buffer,
-        segmentPositions.buffer,
-        segmentAngles.buffer,
+        ...rawTransfers,
         ...(textures ? [textures.positions.buffer, textures.heightsWidthsAngles.buffer, textures.segments.buffer] : []),
       ],
     ];
@@ -163,7 +164,10 @@ export function handleViewer(request: ViewerRequest): [unknown, Transferable[]] 
       return [value, [colors.buffer]];
     }
     case "prepareViewerTextures":
-      prepareViewerTextures(request.maxTextureSize);
+      prepareViewerTextures(request.maxTextureSize, {
+        probes: request.probes,
+        includeRawArrays: request.includeRawArrays,
+      });
       return [undefined, []];
     case "movesSlider": {
       if (!viewer) throw new Error("No toolpaths: slice a project first");

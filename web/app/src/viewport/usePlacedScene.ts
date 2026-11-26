@@ -36,7 +36,7 @@ export function usePlacedScene(): Scene | null {
     // same composition error (usePresetValues).
     (model.format === "stl"
       ? openStlSession(file, model, selection, sources)
-      : placedScene(file, model, selection, sources)
+      : placedScene(file, model, selection)
     ).then(
       (result) => !stale && setPlaced({ inputs: [file, selection, vendors, presetImports], scene: result }),
       () => !stale && setPlaced(null),
