@@ -121,42 +121,19 @@ impl OptionGuiType {
     }
 }
 
-/// Presentation metadata for one option, generated from upstream
+/// Runtime validation metadata for one option, generated from upstream
 /// `PrintConfigDef::init_fff_params`/`init_common_params` (`ConfigOptionDef`).
+/// Presentation fields (labels, tooltips, GUI hints) live in the compressed
+/// `print_config_def_json()` bundle so slicing incurs zero heap allocation.
 /// All data is `&'static`; the table is sorted by `key` for binary search.
 #[derive(Clone, Copy, Debug)]
 pub struct OptionMetadata {
     pub key: &'static str,
-    pub label: Option<&'static str>,
-    pub full_label: Option<&'static str>,
-    pub category: Option<&'static str>,
-    /// Upstream msgid (untranslated English source string).
-    pub tooltip: Option<&'static str>,
-    pub sidetext: Option<&'static str>,
     pub enum_values: &'static [&'static str],
-    pub enum_labels: &'static [&'static str],
-    /// Integer codes from the upstream `enum_keys_map`.
-    pub enum_keys: &'static [i32],
     /// Element-wise bound for vector options (upstream semantics).
     pub min: Option<f64>,
     pub max: Option<f64>,
-    pub max_literal: Option<f64>,
-    pub mode: OptionMode,
-    pub gui_type: OptionGuiType,
-    pub gui_flags: &'static str,
-    pub multiline: bool,
-    pub full_width: bool,
-    pub is_code: bool,
-    pub readonly: bool,
     pub nullable: bool,
-    pub height: Option<f64>,
-    pub width: Option<f64>,
-    /// Key this option's value is a ratio of (e.g. line width vs nozzle diameter).
-    pub ratio_over: Option<&'static str>,
-    pub aliases: &'static [&'static str],
-    pub shortcut: &'static [&'static str],
-    /// `any` (common), `fff`, or `sla` (unused in this slice).
-    pub printer_technology: &'static str,
 }
 
 mod definitions;
