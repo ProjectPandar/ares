@@ -41,6 +41,16 @@ pub(in crate::project_slice::gcode_emit) fn export_object_footprint(
     for polygon in first_slice {
         include_points(polygon.contour().points(), copy.shift, scale, &mut bounds);
     }
+    if let Some(belt) = &schedule.belt_brim {
+        for area in belt
+            .by_layer
+            .iter()
+            .chain(&belt.prologue)
+            .flat_map(|band| &band.areas)
+        {
+            include_points(area.contour().points(), copy.shift, scale, &mut bounds);
+        }
+    }
     let (x0, y0, x1, y1) = brim
         .and_then(|brim| brim.covered_bounds(scale))
         .or(bounds)?;

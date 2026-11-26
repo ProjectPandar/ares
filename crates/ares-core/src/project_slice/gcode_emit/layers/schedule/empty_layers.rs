@@ -1,7 +1,7 @@
 //! `GCode.cpp:2404–2467`: last-extrusion gaps and the critical layer warning.
 use super::{LayerToPrint, raft_schedule};
 use crate::project_slice::{
-    island_print_order::OrderedExtrusionLayer,
+    belt::brim::BeltBrimPlan, island_print_order::OrderedExtrusionLayer,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
     support_material::InstalledSupportLayer,
 };
@@ -10,11 +10,14 @@ use crate::{ObjectOptions, PrintWarning, SlicingNotificationType, WarningLevel};
 pub(super) fn collect(
     merged: &[(f64, LayerToPrint)],
     traversal: &PreparedPostClassicTraversal,
-    layers: (&[Vec<OrderedExtrusionLayer>], &[Vec<InstalledSupportLayer>]),
+    (objects, support, brim): (
+        &[Vec<OrderedExtrusionLayer>],
+        &[Vec<InstalledSupportLayer>],
+        Option<&BeltBrimPlan>,
+    ),
     raft: Option<&raft_schedule::RaftSchedule>,
     options: &[ObjectOptions],
 ) -> Vec<PrintWarning> {
-    let (objects, support) = layers;
     let printer = &traversal.resolved.views.full.printer.remaining;
     let belt_printer = printer.belt_printer.0;
     let mut last: Vec<Option<(f64, bool)>> = vec![None; objects.len()];
@@ -37,8 +40,8 @@ pub(super) fn collect(
                 .any(|island| !island.entities.is_empty())
         });
         let support_present = entry.support_layer.is_some() || entry.raft_layer.is_some();
-        let has_extrusions = has_object || has_support || has_raft;
-        if !has_object && !support_present {
+        let has_extrusions = has_object || has_support || has_raft || entry.belt_prologue.is_some();
+        if !has_extrusions && !support_present {
             continue;
         }
         let config = &options[object];
@@ -54,6 +57,8 @@ pub(super) fn collect(
             traversal.objects[object].physical_layers()[layer].height
         } else if let Some(layer) = entry.support_layer {
             support[object][layer].height
+        } else if let Some(index) = entry.belt_prologue {
+            brim.expect("prologue entry retains its brim plan").prologue[index].height
         } else {
             raft.expect("raft entry retains its adapter").plans[object][entry
                 .raft_layer
@@ -68,7 +73,11 @@ pub(super) fn collect(
         let previous_z = last[object].map_or(0.0, |(z, _)| z);
         let maximal_print_z = previous_z + height + extra_gap.max(0.0);
         let belt_leading_gap = belt_printer && last[object].is_none();
-        if has_extrusions && !belt_leading_gap && z > maximal_print_z + 2.0 * super::EPSILON {
+        if (has_object || support_present)
+            && has_extrusions
+            && !belt_leading_gap
+            && z > maximal_print_z + 2.0 * super::EPSILON
+        {
             ranges[object].push((previous_z, z));
         }
         if has_extrusions {

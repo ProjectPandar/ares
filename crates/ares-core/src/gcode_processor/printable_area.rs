@@ -1,9 +1,9 @@
-//! `GCodeProcessor.cpp:1866-1999`: non-custom extrusion-group bounds.
+//! `GCodeProcessor.cpp:2934-3120`: non-custom extrusion-group bounds.
 use std::collections::BTreeMap;
 
 use crate::geometry::{BoundingBox, CoordinateScale, Point, Polygon, difference_polygons_paths};
 use crate::options::Nullable;
-use crate::{Point2d, ProjectSettings, SliceError};
+use crate::{Point2d, Point3d, ProjectSettings, SliceError, project_slice::MachineFrameTransform};
 
 pub(crate) struct PrintableAreaTracker {
     groups: BTreeMap<(i32, usize), Group>,
@@ -12,6 +12,8 @@ pub(crate) struct PrintableAreaTracker {
     custom: bool,
     offsets: Vec<[f32; 2]>,
     xy_offset: [f64; 2],
+    z_offset: f32,
+    machine_frame: MachineFrameTransform,
 }
 
 struct Group {
@@ -41,6 +43,8 @@ impl PrintableAreaTracker {
             custom: false,
             offsets,
             xy_offset,
+            z_offset: settings.printer.remaining.z_offset.0 as f32,
+            machine_frame: MachineFrameTransform::from_printer(&settings.printer.remaining),
         }
     }
 
@@ -70,21 +74,44 @@ impl PrintableAreaTracker {
     }
 
     pub(crate) fn motion(&mut self, delta: [f64; 4], end: [f64; 4], wiping: bool, filament: usize) {
-        if wiping || self.custom || delta[3] <= 0.0 || delta[0] == 0.0 && delta[1] == 0.0 {
+        if wiping
+            || self.custom
+            || delta[3] <= 0.0
+            || (delta[0] == 0.0
+                && delta[1] == 0.0
+                && (delta[2] == 0.0 || !self.machine_frame.is_active()))
+        {
             return;
         }
         // `store_move_vertex:5680`: addition is in f32 before conversion to fixed XY.
         let offset = self.offsets[filament];
-        let p = Point::new(
-            scale(f64::from((end[0] + self.xy_offset[0]) as f32 + offset[0])),
-            scale(f64::from((end[1] + self.xy_offset[1]) as f32 + offset[1])),
-        );
+        let x = f64::from((end[0] + self.xy_offset[0]) as f32 + offset[0]);
+        let y = f64::from((end[1] + self.xy_offset[1]) as f32 + offset[1]);
+        let (p, print_z) = if self.machine_frame.is_active() {
+            // Match store_move_vertex's float position, then remove the preview offsets
+            // before inverting the shear/scale (GCodeProcessor.cpp:2962-2974).
+            let raw = Point3d::new(
+                x - self.xy_offset[0] - f64::from(offset[0]),
+                y - self.xy_offset[1] - f64::from(offset[1]),
+                f64::from(end[2] as f32 - self.z_offset) + f64::from(self.z_offset),
+            );
+            let build = self.machine_frame.apply_inverse(raw);
+            (
+                Point::new(
+                    scale(build.x + self.xy_offset[0]),
+                    scale(build.y + self.xy_offset[1]),
+                ),
+                build.z as f32,
+            )
+        } else {
+            (Point::new(scale(x), scale(y)), self.print_z)
+        };
         let group = self.groups.entry((self.object, filament)).or_insert(Group {
             bounds: BoundingBox::new(p, p),
             max_print_z: 0.0,
         });
         group.bounds.merge_point(p);
-        group.max_print_z = group.max_print_z.max(self.print_z);
+        group.max_print_z = group.max_print_z.max(print_z);
     }
 
     /// Called by the core `GCode::export` completion boundary, not standalone move decoding.
@@ -107,7 +134,8 @@ impl PrintableAreaTracker {
             if plate_bbox.is_some_and(|plate| !contains(plate, group.bounds)) {
                 error_code |= 1 << 2;
             }
-            if f64::from(group.max_print_z) > printer.printable_height.0 {
+            if !printer.belt_printer.0 && f64::from(group.max_print_z) > printer.printable_height.0
+            {
                 error_code |= 1 << 3;
             }
             if !multiple {
@@ -120,7 +148,9 @@ impl PrintableAreaTracker {
             {
                 error_code |= 1;
             }
-            if let Some(Nullable::Value(height)) = printer.extruder_printable_height.0.get(extruder)
+            if !printer.belt_printer.0
+                && let Some(Nullable::Value(height)) =
+                    printer.extruder_printable_height.0.get(extruder)
                 && f64::from(group.max_print_z) > height.0
             {
                 error_code |= 1 << 1;

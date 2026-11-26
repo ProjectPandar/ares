@@ -1,8 +1,11 @@
 //! `GCode.cpp::collect_layers_to_print` object/support pairs and plate chunks.
 
 use super::{object::ObjectLabels, raft_schedule};
-use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+use crate::project_slice::{
+    belt::brim::BeltBrimPlan, perimeters::classic::traversal::PreparedPostClassicTraversal,
+};
 
+mod belt_brim;
 mod empty_layers;
 
 const EPSILON: f64 = 1e-4;
@@ -14,6 +17,7 @@ pub(in crate::project_slice::gcode_emit) struct LayerToPrint {
     pub(super) support_layer: Option<usize>,
     // Temporary raft-only adapter; ordinary support owns its raft layers.
     pub(super) raft_layer: Option<usize>,
+    pub(super) belt_prologue: Option<usize>,
 }
 
 pub(in crate::project_slice::gcode_emit) struct Schedule {
@@ -30,6 +34,7 @@ pub(in crate::project_slice::gcode_emit) struct Schedule {
     pub(super) object_layer_counts: Vec<usize>,
     pub(super) layer_count: usize,
     pub(super) skirt_schedule: super::skirt_schedule::SkirtSchedule,
+    pub(in crate::project_slice::gcode_emit) belt_brim: Option<BeltBrimPlan>,
 }
 
 impl Schedule {
@@ -145,6 +150,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         .predecessor;
     let settings = &traversal.resolved.views.full;
     let belt_printer = settings.printer.remaining.belt_printer.0;
+    let belt_brim = BeltBrimPlan::generate(traversal)?;
     tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();
@@ -190,15 +196,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         pair_layers(&mut merged, object_index, &object_z, &support_z);
     }
     if belt_printer {
-        // GCode.cpp:2301,2477–2484,3538: do not schedule an entry that prints nothing.
-        merged.retain(|(_, entry)| {
-            entry.object_layer.is_some_and(|layer| {
-                objects[entry.object_index][layer]
-                    .islands
-                    .iter()
-                    .any(|island| !island.entities.is_empty())
-            })
-        });
+        belt_brim::schedule(&mut merged, objects, &mut tool_ordering, belt_brim.as_ref());
         raw_zs.extend(merged.iter().map(|entry| entry.0));
     }
     if let Some(raft) = &raft {
@@ -219,6 +217,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
                     object_layer: None,
                     support_layer: None,
                     raft_layer: Some(sentinel - raft_schedule::RAFT_SENTINEL_BASE),
+                    belt_prologue: None,
                 },
             )
         }));
@@ -255,7 +254,12 @@ pub(in crate::project_slice::gcode_emit) fn build(
                 .iter()
                 .any(|island| !island.entities.is_empty())
         });
-        if !object_extrusions && !support_extrusions && !raft_extrusions {
+        if !object_extrusions
+            && !support_extrusions
+            && !raft_extrusions
+            && first.belt_prologue.is_none()
+            && !belt_printer
+        {
             return Err(crate::SliceError::InvalidInput(
                 "one object has an empty first layer and cannot be printed".into(),
             ));
@@ -264,7 +268,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
     let warnings = empty_layers::collect(
         &merged,
         traversal,
-        (objects, support),
+        (objects, support, belt_brim.as_ref()),
         raft.as_ref(),
         &object_options,
     );
@@ -347,6 +351,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         object_layer_counts,
         layer_count,
         skirt_schedule,
+        belt_brim,
     })
 }
 
@@ -384,6 +389,7 @@ fn pair_layers(
                 object_layer,
                 support_layer,
                 raft_layer: None,
+                belt_prologue: None,
             },
         ));
         object += usize::from(object_layer.is_some());

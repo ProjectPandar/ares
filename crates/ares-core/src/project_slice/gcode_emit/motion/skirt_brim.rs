@@ -102,6 +102,53 @@ pub(in crate::project_slice::gcode_emit) fn emit_brim_loop(
     Ok(())
 }
 
+/// `GCode.cpp::extrude_path`: belt brim is open and always on the belt plane.
+pub(in crate::project_slice::gcode_emit) fn emit_belt_brim(
+    output: &mut Vec<u8>,
+    paths: &[crate::project_slice::belt::brim::BandPath],
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) -> Result<(), crate::SliceError> {
+    let bands = state.belt_bands.take();
+    let on_first_layer = std::mem::replace(&mut state.on_first_layer, true);
+    let travel_speed = std::mem::replace(
+        &mut state.travel_feedrate,
+        state.options.first_layer_travel_feedrate,
+    );
+    state.use_external_mp = true;
+    let speed = state
+        .current_support_speed
+        .get_at(state.options.nozzle_config_index);
+    let result = paths.iter().try_for_each(|path| {
+        path::emit_with_speed(
+            output,
+            path.polyline.points().iter().map(|p| (p.x(), p.y())),
+            (
+                PathProperties {
+                    contour: None,
+                    mm3_per_mm: path.mm3_per_mm,
+                    width: path.width,
+                    height: path.height,
+                    feature: "Brim",
+                    is_perimeter: false,
+                    end_clip: 0.0,
+                    fitting: &[],
+                    slope: None,
+                },
+                Some(speed),
+            ),
+            geometry,
+            state,
+        )
+    });
+    state.use_external_mp = false;
+    state.avoid_crossing_disabled_once = true;
+    state.travel_feedrate = travel_speed;
+    state.on_first_layer = on_first_layer;
+    state.belt_bands = bands;
+    result
+}
+
 /// Flow and clipping state for the skirt loop (`GCode.cpp:5804`, `Flow.hpp::Flow`).
 pub(in crate::project_slice::gcode_emit) struct SkirtLoopParameters {
     pub(in crate::project_slice::gcode_emit) flow: SkirtLoopFlow,

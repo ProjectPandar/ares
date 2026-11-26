@@ -149,13 +149,16 @@
         let object_layer_over_raft = entries[0].object_layer == Some(0)
             && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
         let layer_z = group_z;
+        let (prologue, belt_band) = belt_brim::band(belt_brim.as_ref(), entries[0]);
         // The HEIGHT header keeps the f32-difference quirk (upstream
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
         // f64 print_z for template comparisons.
-        let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
+        let layer_height = if prologue { f64::from(belt_band.unwrap().height as f32) } else {
+            f64::from(layer_z as f32) - f64::from(previous_layer_z as f32)
+        };
         // `GCode.cpp:4589`: `first_layer` is per-object — the leading
         // object/support/raft layer sitting on the plate.
-        let first_layer = group::on_first_layer(traversal, &entries, support_layers, &raft);
+        let first_layer = !prologue && group::on_first_layer(traversal, &entries, support_layers, &raft);
         let layer_tools = tool_ordering.for_layer(group_z);
         let wiping = &layer_tools.wiping;
         farthest::begin_layer(
@@ -208,6 +211,7 @@
                 layer_height,
                 first_layer,
                 belt_past_first_layer,
+                belt_prologue: prologue,
                 second_layer_done: &mut second_layer_done,
                 bed_cache: &mut bed_cache,
                 custom_gcode: tool_ordering.for_layer(group_z).custom_gcode.as_ref(),
@@ -216,6 +220,15 @@
         let timelapse_context = boundary.timelapse_context;
         state.layer_index = cooling_layer_index;
         state.on_first_layer = first_layer;
+        if prologue {
+            let shift = instances[layer_object][0].shift;
+            belt_brim::emit(output, state, belt_band.unwrap(), timelapse_context, (shift, None))?;
+            cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
+            previous_layer_z = layer_z;
+            chunk_index += 1;
+            state.adaptive_pa_layer = chunk_index;
+            continue;
+        }
         // The skirt prints once per layer before any object content
         // (`GCode.cpp:4388+`), gated by the `skirt_done` vector:
         // `Skirt::make_skirt_loops_per_extruder_1st_layer` emits when the
@@ -264,6 +277,10 @@
         let last_tool = by_tool.last().map(|(tool, _)| *tool);
         let mut final_entry = entries[0];
         let mut wrapping_inserted = false;
+        let mut belt_band = belt_band.map(|band| {
+            let index = entries[0].object_layer.unwrap();
+            (band, [layer_object, index], entry_builder.geometry(layer_object, index, chunk_perimeter_spacing))
+        });
         for (tool, tool_entries) in &mut by_tool {
             if let Some(instances) = &filament_instances {
                 state.filament_instances_code = Some(
@@ -314,6 +331,10 @@
                 last_object_copy = None;
             }
             let entry_count = tool_entries.visits.len();
+            if entry_count > 0 && let Some((band, index, geometry)) = belt_band.take() {
+                let shift = instances[layer_object][0].shift;
+                belt_brim::emit(output, state, band, timelapse_context, (shift, Some((index, &geometry))))?;
+            }
             for (pass, entry_position) in [tool_buckets::Pass::Wiping, tool_buckets::Pass::Normal]
                 .into_iter()
                 .filter(|pass| *pass == tool_buckets::Pass::Normal || wiping.has_overrides())
@@ -357,6 +378,10 @@
                     },
                 )?;
             }
+        }
+        if let Some((band, index, geometry)) = belt_band {
+            let shift = instances[layer_object][0].shift;
+            belt_brim::emit(output, state, band, timelapse_context, (shift, Some((index, &geometry))))?;
         }
         // An empty final visit can bypass the per-entry tail.
         layer_end::append_farthest_fallback(output, state, timelapse_context)?;

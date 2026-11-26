@@ -4,13 +4,14 @@
 
 All geometry, scheduling, tool registration, and G-code emission behavior in this specification ports OrcaSlicer `v2.5.0` (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`):
 
-- `src/libslic3r/Support/BeltFloorContext.hpp` and `src/libslic3r/Support/BeltFloorContext.cpp`: `BeltFloorContext::{init, init_local, is_active, surface_polygon, valid_region_polygon, floor_print_z, cutoff_u, compute_per_layer_floors}` plus the belt floor shear, axis, and Z-shift fields in `src/libslic3r/Slicing.hpp:119-122`.
+- `src/libslic3r/Support/BeltFloorContext.hpp` and `src/libslic3r/Support/BeltFloorContext.cpp`: the print-space `BeltFloorContext::{init, floor_print_z, cutoff_u}` used by brim, plus the belt floor shear, axis, and Z-shift fields in `src/libslic3r/Slicing.hpp:119-122`.
 - `src/libslic3r/BeltBrim.hpp` and `src/libslic3r/BeltBrim.cpp`: `BELT_BRIM_MIN_TILT_DEG` (`1.0`), `BELT_BRIM_MAX_TILT_DEG` (`85.0`), `BeltBrimFrame`, `belt_scale_u`, `belt_flatten`, `belt_unflatten`, `sweep_ex`, `belt_brim_region`, `belt_brim_clip_leading_edge`, `belt_brim_line_positions`, `BeltBrimBand`, `belt_brim_band_paths`, `belt_brim_obstacles`, and `make_belt_brim`.
 - `src/libslic3r/PrintObject.cpp:1369-1424, 5537-5541`: `PrintObject::{has_belt_brim, belt_brim_filament, clear_belt_brim, set_belt_brim, get_layer_at_printz}`.
 - `src/libslic3r/Print.cpp:857-873, 3068-3087, 3223-3238, 3878-3890, 4030-4034`: `Print::{has_tilted_belt, has_belt_brim, brim_flow, get_first_layer_bbox, _make_skirt}` and lowest prologue band inclusion in `m_first_layer_convex_hull`.
 - `src/libslic3r/Brim.cpp:944-945`: plate brim early return on `belt_printer`.
 - `src/libslic3r/GCode.cpp:2301-2312, 2346-2389, 2477-2484, 3489-3496, 3505-3550, 6031-6059, 6155-6290, 6620-6625, 7452-7622, 8142-8162, 8886-8912, 9324, 11600-11613`: `belt_object_layer_prints_something`, prologue band merge and retain in `collect_layers_to_print`, `m_layer_count`, `erBrim` first-layer travel and `belt_path_height` zero-height override, `generate_object_brim` coincident belt brim emission, `process_belt_brim_layer`, `emit_belt_brim_bands`, in-visit deduplication, end-of-layer orphan sweep for empty object layers, and open-path `extrude_path` emission.
 - `src/libslic3r/GCode/ToolOrdering.cpp:527, 575, 1005-1033`: registration of prologue Z bands and coincident belt brim filaments on per-layer `LayerTools`.
+- `src/libslic3r/GCode/GCodeProcessor.cpp:2947-3008`: undo preview offsets and the machine-frame transform before testing extrusion bounds; do not enforce printer or extruder Z-height limits on belts.
 
 ## Rust Destination Boundary
 
@@ -61,7 +62,7 @@ The following adjacent upstream areas remain outside this slice and keep their e
 
 - Belt purge prism (`src/libslic3r/BeltPurge.cpp`, `belt_printer: belt_purge`).
 - Belt support generation and raft layers (`belt_printer: support`).
-- Decoupled belt frame tilt (`belt_frame_tilt_decouple`).
+- This slice uses the existing `BeltBackTransform` port for decoupled belt frame tilt. `gcode_processor/printable_area.rs` uses its shared `MachineFrameTransform::apply_inverse`; it does not derive a second transform.
 - Multi-object, multi-instance, sequential (`ByObject`), multi-volume, and multi-material belt prints (`belt_printer: instances`, `volumes`, `materials`), plus skirt/draft-shield, spiral mode, and contoured toolpaths on belt printers.
 - Non-blocking `Print::validate` advisory warnings (`Print.cpp:2177-2201`), which emit log-only diagnostics and do not alter G-code or `result.json`.
 
@@ -80,9 +81,8 @@ The following adjacent upstream areas remain outside this slice and keep their e
 - Whole-G-code byte-exact comparison (`golden::compare_ordered_bytes_generator_only`) against live Official and Seeded OrcaSlicer `v2.5.0` across:
   - 45° belt `leading_edge_only` (API and CLI), including gap, `leading_brim_length`, `extra_brim_width`, and `slow_down_layers = 0`.
   - 45° belt `outer_only` across X-axis, Y-axis, negative angle (`-45°`), `belt_support_floor_offset`, and zero `brim_width` with positive `leading_brim_length`.
-  - 45° belt `inner_only`, `outer_and_inner`, `auto_brim`, `brim_ears`, and `no_brim`, plus an enclosed-hole 1° belt `inner_only` case exercising active inner brim geometry.
+  - 45° belt `inner_only`, `outer_and_inner`, `auto_brim`, `brim_ears`, and `no_brim`. The enclosed-hole 1° fixture exercises `belt_brim_region`'s inner-ring offsets and clipping with the rear seam setting to isolate brim geometry from aligned seam placement.
   - Tilt boundaries at `0.5°`, `1°`, `85°`, and `86°`.
-  - Shallow `5°` multi-line lattice (`band_in_plane > 1.5 * in_plane_pitch`).
+  - Shallow `5°` multi-line lattice in `belt_brim_line_positions` (`band_in_plane > 1.5 * in_plane_pitch`), with variable overhang speeds disabled to isolate band generation from object-path speed selection.
   - Apron prologue layers (`1°`, `leading_brim_length = 30`) verifying prologue `;Z:` / `;HEIGHT:`, first-layer placeholder bounds, omitted fan-change marker on prologue layers, and second-layer temperature transition.
 - Preserved fail-closed checks for deferred `belt_printer: support` and `belt_printer: belt_purge`.
-- Unit tests on `BeltFloorContext` (`init`, `init_local`, `surface_polygon`, `valid_region_polygon`, `floor_print_z`, `cutoff_u`, `compute_per_layer_floors`) and `BeltBrim` pure geometry helpers (`belt_scale_u`, `sweep_ex`, `belt_brim_line_positions`, `belt_brim_clip_leading_edge`).
