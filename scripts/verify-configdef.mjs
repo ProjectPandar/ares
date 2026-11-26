@@ -61,6 +61,25 @@ function stripComments(src) {
 }
 
 function decodeStr(text) {
+    const ctx = /^\s*L_CONTEXT\s*\(\s*([\s\S]*)\)\s*$/.exec(text);
+    if (ctx) {
+        let depth = 0;
+        let inStr = false;
+        const inner = ctx[1];
+        for (let i = 0; i < inner.length; i += 1) {
+            const c = inner[i];
+            if (inStr) {
+                if (c === '\\') i += 1;
+                else if (c === '"') inStr = false;
+            } else if (c === '"') inStr = true;
+            else if (c === '(') depth += 1;
+            else if (c === ')') depth -= 1;
+            else if (c === ',' && depth === 0) {
+                text = inner.slice(0, i);
+                break;
+            }
+        }
+    }
     const re = /(?:u8)?"((?:[^"\\]|\\.)*)"/g;
     let m;
     let out = '';
@@ -201,6 +220,32 @@ function expandRegions(body) {
         }
         body = body.replace(axisLoop[0], '');
     }
+    // plugin_config_overrides loop: expand one region per preset key.
+    const pluginLoop = /for\s*\(\s*const char\*\s*key\s*:\s*\{([^}]*)\}\s*\)\s*\{([\s\S]*?)\n    \}/.exec(body);
+    if (pluginLoop) {
+        const keys = [...pluginLoop[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+        for (const key of keys) {
+            out.push(pluginLoop[2].replace(/this->add\(\s*key\s*,/, `this->add("${key}",`));
+        }
+        body = body.replace(pluginLoop[0], '');
+    }
+    // add_belt_remap lambda + calls: inline-expand into per-key regions.
+    const beltLambda = /auto\s+add_belt_remap\s*=\s*\[this\]\([^)]*\)\s*\{([\s\S]*?)\n    \};/.exec(body);
+    if (beltLambda) {
+        const tmpl = beltLambda[1];
+        body = body.replace(beltLambda[0], '');
+        const callRe = /add_belt_remap\(\s*"([^"]+)"\s*,\s*L\(("(?:[^"\\]|\\.)*")\)\s*,\s*L\(("(?:[^"\\]|\\.)*")\)\s*,\s*([^,]+)\s*,\s*(com\w+)\s*\);/g;
+        let cm;
+        while ((cm = callRe.exec(body)) !== null) {
+            const expanded = tmpl
+                .replace(/auto\s+def\s*=\s*this->add\(\s*key\s*,/, `def = this->add("${cm[1]}",`)
+                .replace(/def->label\s*=\s*label;/, `def->label = L(${cm[2]});`)
+                .replace(/def->tooltip\s*=\s*tooltip;/, `def->tooltip = L(${cm[3]});`)
+                .replace(/def->mode\s*=\s*mode;/, `def->mode = ${cm[5]};`);
+            out.push(expanded);
+        }
+        body = body.replace(callRe, '');
+    }
     // MaterialType::all() loop inside filament_type's region: inline-expand.
     body = body.replace(
         /for \(const auto& filament : MaterialType::all\(\)\) \{\s*def->enum_values\.push_back\(filament\.name\);\s*\}/g,
@@ -254,7 +299,8 @@ const CO_TO_KIND = {
 const MODE = { comSimple: 'simple', comAdvanced: 'advanced', comExpert: 'expert', comDevelop: 'develop' };
 const GUI = {
     undefined: 'undefined', i_enum_open: 'i_enum_open', f_enum_open: 'f_enum_open',
-    color: 'color', select_open: 'select_open', slider: 'slider', legend: 'legend', one_string: 'one_string',
+    color: 'color', select_open: 'select_open', slider: 'slider', legend: 'legend',
+    plugin_config: 'plugin_config', plugin_picker: 'plugin_picker', one_string: 'one_string',
 };
 
 function numOf(tok) {
@@ -336,6 +382,9 @@ function parseRegion(region) {
     {
         const m = /def->nullable\s*=\s*(true|false)/.exec(t);
         if (m) rec.nullable = m[1] === 'true';
+        else if (region.co === 'coFloatsOrPercents' && /new\s+ConfigOptionFloatsOrPercentsNullable\b/.test(t)) {
+            rec.nullable = true;
+        }
     }
     {
         const m = /def->mode\s*=\s*(com\w+)/.exec(t);
@@ -402,7 +451,7 @@ const OVERRIDE_SIMPLE = new Set([
     'filament_long_retractions_when_cut', 'filament_retraction_distances_when_cut',
 ]);
 const OVERRIDE_KIND = {
-    floats: 'floats_nullable', floats_or_percents: 'floats_or_percents_nullable',
+    floats: 'floats_nullable',
     percents: 'percents_nullable', ints: 'ints_nullable', bools: 'bools_nullable',
     enums: 'enums_nullable',
 };

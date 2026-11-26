@@ -17,7 +17,7 @@ list_tests() {
     --workspace-remap "$PWD" \
     --profile "$PROFILE" \
     "$@" \
-    --message-format terse | LC_ALL=C sort
+    --message-format oneline | LC_ALL=C sort
 }
 
 list_tests > "$tmp_dir/full.txt"

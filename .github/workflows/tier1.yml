@@ -167,11 +167,6 @@ jobs:
   build-parity:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
@@ -180,7 +175,11 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+      - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-nonparity"
       - name: Build and archive orca_parity test binary
         run: |
           set -euo pipefail
@@ -211,13 +210,7 @@ jobs:
           archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
           ghcr-token: ${{ github.token }}
       - name: Run parity-official shard ${{ matrix.shard }}/8
-        run: |
-          cargo nextest run \
-            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" \
-            --workspace-remap "$GITHUB_WORKSPACE" \
-            --no-fail-fast --test-threads 4 \
-            --profile parity-official \
-            --partition "hash:${{ matrix.shard }}/8"
+        run: cargo nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-official --partition "hash:${{ matrix.shard }}/8"
 
   parity-seeded:
     name: parity-seeded (${{ matrix.shard }}/8)
@@ -235,22 +228,11 @@ jobs:
           archive-key: ci-parity-archive-${{ github.run_id }}-${{ github.run_attempt }}
           ghcr-token: ${{ github.token }}
       - name: Run parity-seeded shard ${{ matrix.shard }}/8
-        run: |
-          cargo nextest run \
-            --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" \
-            --workspace-remap "$GITHUB_WORKSPACE" \
-            --no-fail-fast --test-threads 4 \
-            --profile parity-seeded \
-            --partition "hash:${{ matrix.shard }}/8"
+        run: cargo nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-seeded --partition "hash:${{ matrix.shard }}/8"
 
   web-build:
     if: github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/projectpandar/ares/ci-toolchain:base-1e03abfd9400
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       CARGO_PROFILE_TEST_DEBUG: line-tables-only
       CARGO_PROFILE_TEST_SPLIT_DEBUGINFO: unpacked
@@ -259,10 +241,20 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@nextest
+      - uses: taiki-e/install-action@wasm-bindgen-cli
+        with:
+          tool: wasm-bindgen-cli@0.2.121
+      - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/checkout-orca-sparse
         with:
           ref: ${{ env.ORCA_REF }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "pages-wasm"
       - name: Cache web node_modules
         id: web-deps
         uses: actions/cache@v4
@@ -346,6 +338,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.99.0
       - uses: taiki-e/install-action@nextest
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-nonparity"
       - name: Prebuild orca_parity fixture binary for package specs
         run: cargo nextest run --no-run -p ares-cli --test orca_parity
       - name: Run packages E2E (workers=1)
