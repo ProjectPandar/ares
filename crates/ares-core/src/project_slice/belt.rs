@@ -1,5 +1,8 @@
 //! BeltTransformPipeline and the bounded belt print admission.
 
+pub(super) mod back_transform;
+pub(super) mod kinematics;
+
 use crate::{
     BeltRotationAxis, Point3d, ProcessBrimType, ProcessDraftShield, ProcessPrintSequence, Project,
     ProjectVolumeType, RemapAxis, SliceError,
@@ -8,7 +11,7 @@ use crate::{
     project::{Transform3d, effective_config::types::BoundedResolvedProjectConfig},
 };
 
-const EPSILON: f64 = 1e-4;
+pub(super) const EPSILON: f64 = 1e-4;
 
 fn unsupported(feature: &str) -> SliceError {
     SliceError::UnsupportedProjectFeature(format!("belt_printer: {feature}"))
@@ -85,9 +88,6 @@ pub(super) fn admit(
     if object.all_regions.iter().any(|region| region.zaa_enabled.0) {
         return Err(unsupported("contoured_toolpaths"));
     }
-    if printer.belt_frame_tilt_decouple.0 {
-        return Err(unsupported("belt_frame_tilt_decouple"));
-    }
     let axis = printer.belt_slice_rotation;
     let angle = printer.belt_slice_rotation_angle.0;
     let sin = angle.to_radians().sin();
@@ -116,7 +116,7 @@ pub(super) struct BeltRotation {
 impl BeltRotation {
     pub(super) fn from_printer(printer: &PrinterRemainingOptions) -> Option<Self> {
         printer.belt_printer.0.then(|| {
-            let (sin, cos) = printer.belt_slice_rotation_angle.0.to_radians().sin_cos();
+            let (sin, cos) = back_transform::deg2rad(printer.belt_slice_rotation_angle.0).sin_cos();
             Self {
                 axis: printer.belt_slice_rotation,
                 sin,
@@ -126,15 +126,7 @@ impl BeltRotation {
     }
 
     pub(super) fn forward(self) -> Transform3d {
-        self.transform(self.sin)
-    }
-
-    pub(super) fn inverse(self) -> Transform3d {
-        self.transform(-self.sin)
-    }
-
-    fn transform(self, sin: f64) -> Transform3d {
-        let cos = self.cos;
+        let (sin, cos) = (self.sin, self.cos);
         Transform3d::from_rows(match self.axis {
             BeltRotationAxis::X => [
                 [1., 0., 0., 0.],
@@ -150,16 +142,6 @@ impl BeltRotation {
             ],
             _ => unreachable!("belt admission requires a tilted axis"),
         })
-    }
-
-    pub(super) fn machine_frame(self, [x, y, z]: [f64; 3]) -> [f64; 3] {
-        let cot = self.cos / self.sin;
-        let scale = self.sin.abs();
-        match self.axis {
-            BeltRotationAxis::X => [x, y / scale, z + cot * y],
-            BeltRotationAxis::Y => [x / scale, y, z - cot * x],
-            _ => unreachable!("belt admission requires a tilted axis"),
-        }
     }
 }
 
