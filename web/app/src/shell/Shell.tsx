@@ -4,14 +4,14 @@ import { exportGcode, importFiles, selectObject, slicePlate } from "../state/act
 import { PreparePage } from "../prepare/PreparePage";
 import { PreviewPage } from "../preview/PreviewPage";
 import { Sidebar } from "../sidebar/Sidebar";
-import { printHost } from "../state/printHost";
+import { DevicesPage } from "../devices/DevicesPage";
 import { useApp } from "../state/store";
 import { usePlacedScene } from "../viewport/usePlacedScene";
 import { AboutDialog } from "./AboutDialog";
 import { cmdDown, isShortcut } from "./keys";
 import { LoadWarning } from "./LoadWarning";
 import { MultipartDialog } from "./MultipartDialog";
-import { PhysicalPrinterDialog, PrintHostSendDialog } from "./PrintHostDialogs";
+import { CloudSignInDialog, PrintHostSendDialog } from "./PrintHostDialogs";
 import { EngineCrashDialog } from "./EngineCrashDialog";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { StatusBar } from "./StatusBar";
@@ -29,18 +29,25 @@ export function Shell() {
   const [dragging, setDragging] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [printDialog, setPrintDialog] = useState<"host" | "send" | null>(null);
+  const [cloudDialog, setCloudDialog] = useState<"sign-in" | "sign-in-to-send" | "send" | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const projectInput = useRef<HTMLInputElement>(null);
   const router = useRouter();
   // One Sidebar and both tab panes, built once; the route shows one (Plater::priv::set_current_panel,
   // Plater.cpp:12564-12865).
-  const preview = useRouterState({ select: (state) => state.location.pathname }) === "/preview";
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const preview = pathname === "/preview";
+  const signedIn = useApp((state) => state.cloud !== null);
   const placed = usePlacedScene();
   // Layout effect: CSS theme variables must be live before the viewport reads them.
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // GUI_App::request_user_logout drops the Device tab (MainFrame::show_device(false)): leave it first.
+  useEffect(() => {
+    if (!signedIn && pathname === "/devices") void router.navigate({ to: "/prepare" });
+  }, [signedIn, pathname, router]);
 
   // MainFrame key handler (Ctrl+O/I/R/G) and plater keys: ? list, Esc deselect, Tab switches tabs.
   useEffect(() => {
@@ -77,8 +84,9 @@ export function Shell() {
         projectInput={projectInput}
         onShortcuts={() => setShortcutsOpen(true)}
         onAbout={() => setAboutOpen(true)}
+        onSignIn={() => setCloudDialog("sign-in")}
       />
-      <TabBar onPrint={() => setPrintDialog(printHost() ? "send" : "host")} />
+      <TabBar onPrint={() => setCloudDialog(useApp.getState().cloud ? "send" : "sign-in-to-send")} />
       <main
         className="workspace"
         data-testid="workspace"
@@ -97,11 +105,12 @@ export function Shell() {
           importFiles([...event.dataTransfer.files]);
         }}
       >
-        <div className="page">
+        <div className="page" hidden={pathname === "/devices"}>
           <Sidebar />
           <PreparePage shown={!preview} placed={placed} />
           <PreviewPage shown={preview} placed={placed} />
         </div>
+        {pathname === "/devices" && <DevicesPage />}
         <LoadWarning />
         {dragging && (
           <div className="drop-overlay" data-testid="drop-overlay">
@@ -121,17 +130,14 @@ export function Shell() {
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <EngineCrashDialog />
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
-      {printDialog === "host" && (
-        <PhysicalPrinterDialog
-          onClose={() => setPrintDialog((open) => (open === "host" ? null : open))}
-          onSaved={() => setPrintDialog("send")}
+      {(cloudDialog === "sign-in" || cloudDialog === "sign-in-to-send") && (
+        <CloudSignInDialog
+          onClose={() => setCloudDialog((open) => (open === "send" ? open : null))}
+          onSignedIn={() => setCloudDialog(cloudDialog === "sign-in-to-send" ? "send" : null)}
         />
       )}
-      {printDialog === "send" && (
-        <PrintHostSendDialog
-          onClose={() => setPrintDialog((open) => (open === "send" ? null : open))}
-          onEditHost={() => setPrintDialog("host")}
-        />
+      {cloudDialog === "send" && signedIn && (
+        <PrintHostSendDialog onClose={() => setCloudDialog((open) => (open === "send" ? null : open))} />
       )}
       {wizard && (
         <Suspense>

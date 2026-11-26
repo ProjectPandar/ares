@@ -11,20 +11,23 @@ import {
 } from "../state/actions";
 import { importPresetFiles, presetSliceBlocker } from "../state/presets";
 import { useApp } from "../state/store";
+import { CloudMenu } from "./CloudMenu";
 import { FileMenu } from "./FileMenu";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
 
-/** BBLTopbar: the File menu and the project title. */
+/** BBLTopbar: the File and Cloud menus and the project title. */
 export function TitleBar({
   importInput: input,
   projectInput,
   onShortcuts,
   onAbout,
+  onSignIn,
 }: {
   importInput: RefObject<HTMLInputElement | null>;
   projectInput: RefObject<HTMLInputElement | null>;
   onShortcuts: () => void;
   onAbout: () => void;
+  onSignIn: () => void;
 }) {
   const { theme, file } = useApp();
   const presetInput = useRef<HTMLInputElement>(null);
@@ -36,6 +39,7 @@ export function TitleBar({
           Ares
         </span>
         <FileMenu importInput={input} projectInput={projectInput} presetInput={presetInput} />
+        <CloudMenu onSignIn={onSignIn} />
         <input
           ref={input}
           type="file"
@@ -141,7 +145,7 @@ function HelpMenu({ onShortcuts, onAbout }: { onShortcuts: () => void; onAbout: 
  * sliced plate.
  */
 export function TabBar({ onPrint }: { onPrint: () => void }) {
-  const { engine, scene, slice, presetSelection, plateSlices } = useApp();
+  const { engine, scene, slice, presetSelection, plateSlices, cloud } = useApp();
   const slicing = slice.status === "slicing";
   const blocker = scene && presetSelection ? presetSliceBlocker(presetSelection, scene) : null;
   const multiPlate = (scene?.plates.length ?? 0) > 1;
@@ -160,6 +164,12 @@ export function TabBar({ onPrint }: { onPrint: () => void }) {
         <Link to="/preview" className="tab" activeProps={{ className: "tab active" }}>
           <OrcaIcon name="tab_preview_active" size={20} /> Preview
         </Link>
+        {/* MainFrame::show_device (MainFrame.cpp:1661-1745): the Device tab after Preview, while signed in. */}
+        {cloud && (
+          <Link to="/devices" className="tab" activeProps={{ className: "tab active" }}>
+            <OrcaIcon name="tab_monitor_active" size={20} /> Devices
+          </Link>
+        )}
       </div>
       <div className="tabbar-actions">
         <button
@@ -183,7 +193,7 @@ export function TabBar({ onPrint }: { onPrint: () => void }) {
         <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>
           Export G-code file
         </button>
-        {/* SideButton "Print plate" (Plater::send_gcode): a physical printer first, then the send dialog. */}
+        {/* SideButton "Print plate" (Plater::send_gcode): a Cloud sign-in first, then the send dialog. */}
         <button className="side-button" onClick={onPrint} disabled={slice.status !== "done"}>
           Print plate
         </button>

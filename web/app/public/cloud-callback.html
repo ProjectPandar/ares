@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ares Cloud sign-in</title>
+  </head>
+  <body>
+    <p>Signed in. You can close this window.</p>
+    <script>
+      // The Pandar Hub's web sign-in redirect: hand the one-use ticket to the Ares window (src/state/cloud.ts).
+      const query = new URLSearchParams(location.search);
+      new BroadcastChannel("ares.cloud").postMessage({ ticket: query.get("ticket"), state: query.get("state") });
+      close();
+    </script>
+  </body>
+</html>

@@ -3,13 +3,12 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page, type Request } from "@playwright/test";
 import { unzipSync } from "fflate";
 import { test } from "./failureDiagnostics";
+import { expiresAt, fakeHub, hub, signInDialog, token } from "./pandarHub";
 
-// Plater::send_gcode to a Pandar Hub print host (docs/architecture/web-pandar-print-host.md).
+// Plater::send_gcode to the signed-in Pandar Hub (docs/architecture/web-pandar-print-host.md).
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/pandar-send/", import.meta.url));
 const fixture = `${repositoryRoot}tests/parity/auto-lift-query-frame/project.3mf`;
-const hub = "http://hub.pandar.test";
-const token = "tenant-token";
 const printers = [
   { id: "p-bambu", name: "Bambu P1S", model: "P1S", printer_family: "bambu_lab", status: "idle" },
   { id: "p-klipper", name: "Voron", model: null, printer_family: "moonraker", status: "idle" },
@@ -27,31 +26,6 @@ const config = {
   nozzleVolumeTypes: {},
   preferredFilamentMapMode: "Auto For Flush",
 };
-const cors = {
-  "access-control-allow-origin": "http://127.0.0.1:4174",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "authorization, content-type",
-};
-
-/** A fake Hub tenant that records each job upload. */
-async function fakeHub(page: Page) {
-  const jobs: Request[] = [];
-  await page.route(`${hub}/**`, async (route) => {
-    const request = route.request();
-    const path = new URL(request.url()).pathname;
-    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors });
-    if (request.headers().authorization !== `Bearer ${token}`)
-      return route.fulfill({ status: 401, headers: cors, json: { error: "unauthorized" } });
-    if (request.method() === "GET" && path === "/api/v1/tenants/t1/printers")
-      return route.fulfill({ headers: cors, json: { printers } });
-    if (request.method() === "POST" && /^\/api\/v1\/tenants\/t1\/printers\/[^/]+\/jobs$/.test(path)) {
-      jobs.push(request);
-      return route.fulfill({ status: 201, headers: cors, json: { id: `job-${jobs.length}` } });
-    }
-    return route.fulfill({ status: 404, headers: cors, json: { error: "not_found" } });
-  });
-  return jobs;
-}
 
 async function form(request: Request) {
   const body = new Response(new Uint8Array(request.postDataBuffer()!), {
@@ -76,7 +50,7 @@ test.use({ firstRunConfig: false });
 
 test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hub", async ({ page }) => {
   mkdirSync(artifacts, { recursive: true });
-  const jobs = await fakeHub(page);
+  const { jobs } = await fakeHub(page.context(), printers);
   await page.addInitScript((record) => {
     if (localStorage.getItem("ares.config") === null) localStorage.setItem("ares.config", record);
   }, JSON.stringify(config));
@@ -93,16 +67,15 @@ test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hu
   const [download] = await Promise.all([page.waitForEvent("download"), exportGcode.click()]);
   const preview = new Uint8Array(readFileSync((await download.path())!));
 
-  // No host yet: the physical printer comes first, then the send dialog.
+  // Not signed in yet: the Cloud sign-in comes first, then the send dialog.
   await print.click();
-  const host = page.getByRole("dialog", { name: "Physical Printer" });
-  await host.getByRole("textbox", { name: "Hub URL" }).fill(`${hub}/`);
-  await host.getByRole("textbox", { name: "Tenant ID" }).fill("t1");
-  await host.getByLabel("API Token").fill(token);
-  await host.getByRole("button", { name: "OK" }).click();
+  await signInDialog(page);
   await page.getByRole("dialog", { name: "Send to Printer" }).getByRole("button", { name: "Close" }).click();
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).printHost);
-  expect(stored).toEqual({ hubUrl: hub, tenantId: "t1", token });
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).cloud);
+  expect(stored).toEqual({
+    hubUrl: hub,
+    session: { token, expiresAt, tenantId: "t1", tenantName: "Workshop", userName: "Ada" },
+  });
 
   await send(page, "Bambu P1S");
   await send(page, "Voron");

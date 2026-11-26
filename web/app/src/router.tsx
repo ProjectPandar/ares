@@ -1,5 +1,6 @@
 import { createHashHistory, createRootRoute, createRoute, createRouter, redirect } from "@tanstack/react-router";
 import { Shell } from "./shell/Shell";
+import { useApp } from "./state/store";
 
 const rootRoute = createRootRoute({ component: Shell });
 
@@ -21,8 +22,17 @@ const previewRoute = createRoute({
   path: "/preview",
 });
 
+/** MainFrame's Device tab, only while signed in to Pandar Cloud. */
+const devicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/devices",
+  beforeLoad: () => {
+    if (!useApp.getState().cloud) throw redirect({ to: "/prepare" });
+  },
+});
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, prepareRoute, previewRoute]),
+  routeTree: rootRoute.addChildren([indexRoute, prepareRoute, previewRoute, devicesRoute]),
   history: createHashHistory(),
 });
 

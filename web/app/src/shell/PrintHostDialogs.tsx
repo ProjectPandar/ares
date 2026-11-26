@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  type CalibrationMode,
-  type HubPrinter,
-  listPrinters,
-  type PrintHost,
-  type PrintOptions,
-  printHost,
-  sendBlocker,
-  sendPlate,
-  setPrintHost,
-} from "../state/printHost";
+import { cloudHubUrl, type HubPrinter, listPrinters, signIn } from "../state/cloud";
+import { type CalibrationMode, type PrintOptions, sendBlocker, sendPlate } from "../state/printHost";
+import { useApp } from "../state/store";
 
 function useModal(onClose: () => void) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -28,42 +20,66 @@ function Header({ id, title, close }: { id: string; title: string; close: () => 
   );
 }
 
-/** PhysicalPrinterDialog (PhysicalPrinterDialog.cpp) for the `Pandar` host type. */
-export function PhysicalPrinterDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+/**
+ * The Cloud menu's sign-in (GUI_App::request_login, GUI_App.cpp:5363; ZUserLogin's WebView): the
+ * Pandar Hub URL, then the Hub's own sign-in page in a popup until it hands back a ticket.
+ */
+export function CloudSignInDialog({ onClose, onSignedIn }: { onClose: () => void; onSignedIn: () => void }) {
   const { ref, close } = useModal(onClose);
-  const [host, setHost] = useState<PrintHost>(printHost() ?? { hubUrl: "", tenantId: "", token: "" });
-  const field = (key: keyof PrintHost, label: string, type = "text") => (
-    <label className="print-host-field">
-      {label}
-      <input
-        type={type}
-        required
-        value={host[key]}
-        autoComplete="off"
-        onChange={(event) => setHost({ ...host, [key]: event.target.value })}
-      />
-    </label>
-  );
+  const [hubUrl, setHubUrl] = useState(cloudHubUrl);
+  const [waiting, setWaiting] = useState<AbortController>();
+  const [error, setError] = useState<string>();
+  useEffect(() => () => waiting?.abort(), [waiting]);
   return (
-    <dialog ref={ref} className="print-host-dialog" aria-labelledby="physical-printer-title" onClose={onClose}>
-      <Header id="physical-printer-title" title="Physical Printer" close={close} />
+    <dialog ref={ref} className="print-host-dialog" aria-labelledby="cloud-sign-in-title" onClose={onClose}>
+      <Header id="cloud-sign-in-title" title="Sign in to Pandar Cloud" close={close} />
       <form
         className="print-host-body"
         onSubmit={(event) => {
           event.preventDefault();
-          setPrintHost(host);
-          close();
-          onSaved();
+          const controller = new AbortController();
+          setWaiting(controller);
+          setError(undefined);
+          signIn(hubUrl, controller.signal).then(
+            () => {
+              close();
+              onSignedIn();
+            },
+            (reason: Error) => {
+              if (controller.signal.aborted) return;
+              setWaiting(undefined);
+              setError(reason.message);
+            },
+          );
         }}
       >
-        <p className="print-host-type">Host Type: Pandar</p>
-        {field("hubUrl", "Hub URL", "url")}
-        {field("tenantId", "Tenant ID")}
-        {field("token", "API Token", "password")}
+        <label className="print-host-field">
+          Hub URL
+          <input
+            type="url"
+            required
+            value={hubUrl}
+            disabled={waiting !== undefined}
+            placeholder="https://pandar.example.com"
+            onChange={(event) => setHubUrl(event.target.value)}
+          />
+        </label>
+        {waiting && <p role="status">Continue in the Pandar sign-in window…</p>}
+        {error && (
+          <p className="preset-error" role="alert">
+            {error}
+          </p>
+        )}
         <footer className="vendor-footer">
-          <button type="submit" className="side-button">
-            OK
-          </button>
+          {waiting ? (
+            <button type="button" className="side-button" onClick={() => setWaiting(undefined)}>
+              Cancel
+            </button>
+          ) : (
+            <button type="submit" className="side-button">
+              Sign in
+            </button>
+          )}
         </footer>
       </form>
     </dialog>
@@ -77,9 +93,9 @@ const MODES: [CalibrationMode, string][] = [
 ];
 
 /** PrintHostSendDialog (PrintHostDialogs.cpp): picks a Hub printer and its print options, then uploads. */
-export function PrintHostSendDialog({ onClose, onEditHost }: { onClose: () => void; onEditHost: () => void }) {
+export function PrintHostSendDialog({ onClose }: { onClose: () => void }) {
   const { ref, close } = useModal(onClose);
-  const host = printHost()!;
+  const cloud = useApp((state) => state.cloud)!;
   const [printers, setPrinters] = useState<HubPrinter[]>();
   const [printerId, setPrinterId] = useState("");
   const [options, setOptions] = useState<PrintOptions>({
@@ -91,14 +107,14 @@ export function PrintHostSendDialog({ onClose, onEditHost }: { onClose: () => vo
   });
   const [state, setState] = useState<{ sending?: true; error?: string; sent?: true }>({});
   useEffect(() => {
-    listPrinters(host).then(
+    listPrinters().then(
       (list) => {
         setPrinters(list);
         setPrinterId(list[0]?.id ?? "");
       },
       (error: Error) => setState({ error: error.message }),
     );
-  }, [host]);
+  }, []);
   const printer = printers?.find(({ id }) => id === printerId);
   const blocker = printer && sendBlocker(printer);
   const bambu = printer?.printer_family === "bambu_lab";
@@ -135,17 +151,14 @@ export function PrintHostSendDialog({ onClose, onEditHost }: { onClose: () => vo
         onSubmit={(event) => {
           event.preventDefault();
           setState({ sending: true });
-          sendPlate(host, printer!, options).then(
+          sendPlate(printer!, options).then(
             () => setState({ sent: true }),
             (error: Error) => setState({ error: error.message }),
           );
         }}
       >
         <p className="print-host-type">
-          {host.hubUrl}{" "}
-          <button type="button" className="link-button" onClick={onEditHost}>
-            Edit
-          </button>
+          {cloud.tenantName} · {cloud.hubUrl}
         </p>
         <label className="print-host-field">
           Printer

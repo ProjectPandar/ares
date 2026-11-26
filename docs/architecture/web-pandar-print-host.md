@@ -1,4 +1,4 @@
-# Web print host: send a sliced plate to Pandar
+# Web print host: Pandar Cloud sign-in, Devices tab and sending a sliced plate
 
 ## Source boundary
 
@@ -22,8 +22,13 @@ Plate sliced file (`libslic3r`, the rewrite boundary):
 
 Print host UI (GUI, ported only as browser behaviour):
 
-- `PhysicalPrinterDialog` (`src/slic3r/GUI/PhysicalPrinterDialog.cpp`) stores a host type, the
-  host address (`print_host`) and the API key (`printhost_apikey`).
+- `GUI_App::request_login` and `ShowUserLogin` (`src/slic3r/GUI/GUI_App.cpp:5135`, `:5363`) open the
+  cloud sign-in WebView. `GUI_App::request_user_logout` (`:5448`) forgets the account and its
+  devices (`DeviceManager::clean_user_info`).
+- `MainFrame` adds the Device tab (`m_monitor_page`, `MonitorPanel`, `_L("Device")`,
+  `tab_monitor_active`; `src/slic3r/GUI/MainFrame.cpp:1606-1608`). `MainFrame::show_device`
+  (`:1661-1745`) inserts it after Preview and takes it away again. `StatusPanel` shows each
+  printer's temperatures and print progress.
 - `PrintHostSendDialog` (`src/slic3r/GUI/PrintHostDialogs.cpp`) confirms the upload name and the
   post-upload action (upload, or upload and print).
 
@@ -38,10 +43,25 @@ Print host UI (GUI, ported only as browser behaviour):
   plate 1 of a saved single-plate 3MF (the bytes `saveProjectWithProfiles` returns) with archive capture
   and returns the `min_save` `.gcode.3mf`. Slicing and packaging stay in Rust.
 - Web app:
-  - "Physical printer" settings (host type `Pandar`, Hub URL, tenant ID, tenant API token), kept in
-    browser `localStorage` like the rest of the app config.
-  - "Print plate" side button: opens the physical printer settings when none are set, then the send
-    dialog. The dialog lists the tenant's printers (`GET /api/v1/tenants/{tenant}/printers`) and
+  - A "Cloud" menu next to "File" signs in to a Pandar Hub. The sign-in dialog asks only for the Hub
+    URL and remembers the last one. A popup opens `{hub}/web-sign-in` with `redirect_url` (the
+    app's `cloud-callback.html`), a PKCE S256 `code_challenge` and a random `state`. The Hub sends
+    the popup back to `cloud-callback.html` with a one-use ticket. That page posts
+    `{ ticket, state }` on the `ares.cloud` BroadcastChannel: the app's
+    `Cross-Origin-Opener-Policy: same-origin` severs `window.opener` across the Hub hop. The app
+    exchanges the ticket and its verifier at `POST /api/v1/web/login-tickets/exchange` for a
+    30-day `web:session` tenant token and its profile.
+  - The session (token, expiry, tenant, user name) and the Hub URL are kept in the `cloud` field of
+    the `ares.config` `localStorage` record. An expired session is not restored. "Sign out" and any
+    401 from the tenant API drop the session and keep the Hub URL. The manual `printHost` field of
+    earlier builds is dropped on load, not migrated.
+  - A "Devices" tab (`#/devices`) follows Preview while signed in. It lists the tenant's printers
+    (`GET /api/v1/tenants/{tenant}/printers`) with their status, nozzle, bed and chamber
+    temperatures and the running print's name, layer, time left and progress. It then opens the
+    printer-event socket (`POST /api/v1/tenants/{tenant}/printer-events/tickets`, then
+    `GET /api/v1/tenants/{tenant}/printer-events?ticket=`), and each `printer_snapshot` replaces
+    its printer. A closed socket reconnects after 5 s. The socket is open only while the tab is shown.
+  - "Print plate" side button: opens the Cloud sign-in when signed out, then the send dialog. The dialog lists the tenant's printers (`GET /api/v1/tenants/{tenant}/printers`) and
     uploads. A Bambu printer offers the Hub's calibration modes (0 off, 1 on, 2 auto) with the paired
     booleans set to `mode != 0`, plus AMS and timelapse.
   - The upload goes to the Pandar Hub client API:
@@ -51,7 +71,8 @@ Print host UI (GUI, ported only as browser behaviour):
   - A Moonraker printer in Pandar accepts only `.gcode` (Hub `artifact_requires_gcode`), so it
     gets the plate's plain G-code. A Bambu printer gets the `.gcode.3mf`.
   - The Hub must allow the web origin through its `PANDAR_CORS_ALLOWED_ORIGINS` allowlist
-    (ProjectPandar/pandar#17). The browser sends no cookies.
+    (ProjectPandar/pandar#17). The same allowlist bounds the sign-in `redirect_url` origin. The
+    browser sends no cookies.
 
 ## Included / deferred
 
@@ -67,6 +88,8 @@ Deferred, rejected with a message rather than approximated:
   thumbnail renderer port yet.
 - AMS slot mapping (`ams_mapping`); the job is sent without a mapping and `use_ams` as chosen.
 - Other host types (OctoPrint, Moonraker direct, …).
+- Device control from the Devices tab (pause, stop, light, AMS), print history and the camera view.
+  The tab is read-only.
 - "Export plate sliced file" in the File menu. It can reuse the same export, but it is a separate
   menu slice.
 
@@ -90,10 +113,20 @@ reuse the preview slice. Two consequences follow, both upstream CLI behaviour:
 - Web E2E (`web/e2e/pandarSend.spec.ts`): the P1S project `tests/parity/auto-lift-query-frame/project.3mf`
   is opened with the P1S installed and sliced. A fake cross-origin Hub answers the CORS preflight,
   checks the bearer token and records each job. The spec asserts the following:
-  - the physical printer config is stored;
+  - the Cloud sign-in through the popup is stored;
   - each job's path and fields;
   - the Bambu `.gcode.3mf` has exactly the 11 `--min-save` members;
   - its G-code equals the preview G-code apart from the three CLI-kept config lines;
   - the Moonraker `.gcode` equals the preview G-code.
 
   `target/web-e2e/pandar-send/` keeps both uploads and `requests.json` as the repeatable artifact.
+- Web E2E (`web/e2e/pandarCloud.spec.ts`): the fake Hub (`web/e2e/pandarHub.ts`) redirects the
+  sign-in popup with a ticket and accepts the exchange only for the verifier whose SHA-256 is the
+  issued challenge. The spec asserts the following:
+  - `#/devices` falls back to Prepare and no Devices tab shows while signed out;
+  - the stored session after sign-in;
+  - the printer cards, then a `printer_snapshot` updating temperatures and print progress;
+  - the session outlives a reload;
+  - sign-out leaves Devices, drops the session and keeps the Hub URL for the next sign-in.
+
+  `target/web-e2e/pandar-cloud/` keeps the two Devices screenshots and `session.json`.
