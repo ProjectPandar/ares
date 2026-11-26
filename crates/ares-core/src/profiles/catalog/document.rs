@@ -70,7 +70,7 @@ pub(in crate::profiles) struct ProfileDocument {
     pub fields: BTreeMap<String, RawConfigValue>,
 }
 
-fn deserialize_includes<'de, D: serde::Deserializer<'de>>(
+pub(in crate::profiles) fn deserialize_includes<'de, D: serde::Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Vec<String>, D::Error> {
     #[derive(Deserialize)]
@@ -83,6 +83,118 @@ fn deserialize_includes<'de, D: serde::Deserializer<'de>>(
         Names::One(name) => vec![name],
         Names::Many(names) => names,
     })
+}
+
+/// Parsed vendor manifest (`PresetBundle.cpp:4712-4821`): carries the vendor
+/// identity and list of profile `sub_path`s so hosts can read profile files
+/// once from disk and feed raw bytes directly without JSON re-serialization.
+pub struct VendorManifest {
+    pub(in crate::profiles) id: String,
+    pub(in crate::profiles) index: VendorIndex,
+}
+
+impl VendorManifest {
+    /// Parses a vendor index JSON, returning `Ok(None)` for non-vendor JSON
+    /// files (such as `blacklist.json`) that carry no string `"name"`.
+    pub fn parse_optional(
+        id: impl Into<String>,
+        index_json: &[u8],
+    ) -> Result<Option<Self>, crate::SliceError> {
+        let value: serde_json::Value = serde_json::from_slice(crate::profiles::without_utf8_bom(
+            index_json,
+        ))
+        .map_err(|error| {
+            crate::SliceError::InvalidInput(format!("invalid vendor index JSON: {error}"))
+        })?;
+        if value
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .is_none()
+        {
+            return Ok(None);
+        }
+        let index: VendorIndex = serde_json::from_value(value).map_err(|error| {
+            crate::SliceError::InvalidInput(format!("invalid vendor index JSON: {error}"))
+        })?;
+        Ok(Some(Self {
+            id: id.into(),
+            index,
+        }))
+    }
+
+    /// Parses a required vendor index JSON (fails if `"name"` or any entry's
+    /// `sub_path` is missing).
+    pub fn parse(id: impl Into<String>, index_json: &[u8]) -> Result<Self, crate::SliceError> {
+        let index: VendorIndex = serde_json::from_slice(crate::profiles::without_utf8_bom(
+            index_json,
+        ))
+        .map_err(|error| {
+            crate::SliceError::InvalidInput(format!("invalid vendor index JSON: {error}"))
+        })?;
+        Ok(Self {
+            id: id.into(),
+            index,
+        })
+    }
+
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn sub_paths(&self) -> impl Iterator<Item = &str> {
+        self.index
+            .machine_model_list
+            .iter()
+            .map(|entry| entry.sub_path.as_str())
+            .chain(
+                self.index
+                    .machine_list
+                    .iter()
+                    .chain(&self.index.process_list)
+                    .chain(&self.index.filament_list)
+                    .map(|entry| entry.sub_path.as_str()),
+            )
+    }
+}
+
+/// Ownership scope referenced by a preset's `inherits` link
+/// (`PresetBundle.cpp:614-688`).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PresetInheritanceSource {
+    User,
+    System,
+}
+
+/// Inspects a preset JSON file's `inherits` and `from` metadata without
+/// materializing the full option map.
+pub fn preset_inheritance_source(
+    json: &str,
+) -> Result<Option<PresetInheritanceSource>, crate::SliceError> {
+    #[derive(Deserialize)]
+    struct Header {
+        #[serde(default)]
+        inherits: Option<serde_json::Value>,
+        #[serde(default)]
+        from: Option<serde_json::Value>,
+    }
+    let header: Header = serde_json::from_str(json).map_err(|error| {
+        crate::SliceError::InvalidInput(format!("invalid preset JSON: {error}"))
+    })?;
+    if header
+        .inherits
+        .as_ref()
+        .and_then(serde_json::Value::as_str)
+        .is_none_or(str::is_empty)
+    {
+        return Ok(None);
+    }
+    Ok(
+        match header.from.as_ref().and_then(serde_json::Value::as_str) {
+            Some("user" | "User") => Some(PresetInheritanceSource::User),
+            Some("system") => Some(PresetInheritanceSource::System),
+            _ => None,
+        },
+    )
 }
 
 impl ProfileDocument {

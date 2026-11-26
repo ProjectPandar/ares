@@ -1,37 +1,9 @@
-use std::{collections::BTreeMap, fs, io, path::Path};
-
-use serde_json::{Value, json};
+use std::{fs, io, path::Path};
 
 use crate::{
     SliceArgs,
     failure::{CliFailure, slice_error_to_failure},
 };
-
-pub(super) fn check_input_version(
-    args: &SliceArgs,
-    extension: Option<&str>,
-    input: &[u8],
-) -> Result<(), CliFailure> {
-    if args.selection.is_none()
-        && extension == Some("3mf")
-        && let Err(error @ ares_core::SliceError::FileVersionNotSupported) =
-            ares_core::validate_project_version(input, args.allow_newer_file)
-    {
-        return Err(slice_error_to_failure(
-            error,
-            args.output(),
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        ));
-    }
-    Ok(())
-}
-
-fn resource_json(path: &Path) -> Result<Value, io::Error> {
-    let bytes = fs::read(path)?;
-    serde_json::from_slice(bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(&bytes))
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
-}
 
 pub(super) fn load_resources_catalog(
     resources_dir: &Path,
@@ -56,32 +28,19 @@ pub(super) fn load_resources_catalog(
             .file_stem()
             .and_then(|name| name.to_str())
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid vendor filename"))?;
-        let index = resource_json(&index_path)?;
-        if index.get("name").and_then(Value::as_str).is_none() {
+        let index_bytes = fs::read(&index_path)?;
+        let Some(manifest) = ares_core::VendorManifest::parse_optional(id, &index_bytes)
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
+        else {
             continue;
-        }
-        let mut files = BTreeMap::new();
-        let entries = [
-            "machine_model_list",
-            "machine_list",
-            "process_list",
-            "filament_list",
-        ]
-        .into_iter()
-        .flat_map(|kind| index[kind].as_array().into_iter().flatten());
-        for entry in entries {
-            let Some(sub_path) = entry["sub_path"].as_str() else {
-                continue;
-            };
-            let path = profiles_dir.join(id).join(sub_path);
-            let value = resource_json(&path)?;
-            files.insert(sub_path.to_owned(), value);
-        }
-        let vendor = json!({"id": id, "index": index, "files": files});
+        };
+        let files = crate::preset_sources::read_vendor_files(&profiles_dir, &manifest)?;
         catalog
-            .add_vendor(
-                &serde_json::to_vec(&vendor)
-                    .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?,
+            .add_vendor_manifest(
+                manifest,
+                files
+                    .iter()
+                    .map(|(sub_path, bytes)| (sub_path.as_str(), bytes.as_slice())),
             )
             .map_err(|error| {
                 io::Error::new(
@@ -109,41 +68,13 @@ pub(super) enum Entry<'a> {
     Native(&'a ares_core::NativeRefreshPresets),
 }
 
-pub(super) fn admit<'a>(
-    args: &SliceArgs,
-    input: &'a [u8],
-    context: &ares_core::SlicerContext<'_>,
-) -> Result<ares_core::CliPresetProject<'a>, CliFailure> {
-    if args
-        .input()
-        .extension()
-        .and_then(|extension| extension.to_str())
-        != Some("3mf")
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "--project-preset-catalog requires 3MF project input",
-        )
-        .into());
-    }
-    ares_core::CliPresetProject::admit(input, context).map_err(|error| {
-        slice_error_to_failure(
-            error,
-            args.output(),
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })
-}
-
 pub(super) fn slice(
     args: &SliceArgs,
     entry: Entry<'_>,
-    admitted: ares_core::CliPresetProject<'_>,
+    mut admitted: ares_core::CliPresetProject<'_>,
     overrides: &ares_core::ConfigOverrides,
     context: ares_core::SlicerContext<'_>,
 ) -> Result<(), CliFailure> {
-    let input = admitted.input();
     let filename = args
         .input()
         .file_name()
@@ -157,7 +88,9 @@ pub(super) fn slice(
 
     let metadata = ares_core::GenerationMetadata::default();
     let input_file = args.input().to_string_lossy();
-    let source = ares_core::UpwardMachineSource::from_project(input)
+    let substitutions = admitted.substitutions().to_vec();
+    let source = admitted
+        .take_upward_source()
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
     let mut upward_report = Vec::new();
     let mut sliced_plate = ares_core::SlicedPlate::default();
@@ -220,7 +153,7 @@ pub(super) fn slice(
                 args,
                 &sliced_plate,
                 &input_file,
-                input,
+                &substitutions,
                 &upward_report,
             )?;
             let failure = slice_error_to_failure(
@@ -230,21 +163,27 @@ pub(super) fn slice(
                 args.plate.unwrap_or(1),
             )
             .with_upward_report(upward_report)
-            .with_config_substitutions(&input_file, crate::substitutions(input));
+            .with_config_substitutions(&input_file, substitutions);
             #[cfg(target_os = "linux")]
             let failure =
                 failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
             return Err(failure);
         }
     };
-    crate::failure::slicing::check(args, &sliced_plate, &input_file, input, &upward_report)?;
+    crate::failure::slicing::check(
+        args,
+        &sliced_plate,
+        &input_file,
+        &substitutions,
+        &upward_report,
+    )?;
     if let Some(path) = &args.dump_moves {
         fs::write(path, crate::moves_csv::format(&processed.result))?;
     }
     fs::write(args.output(), processed.gcode)?;
     crate::report_success(
         &input_file,
-        crate::substitutions(input),
+        substitutions,
         #[cfg(target_os = "linux")]
         crate::result_json::Success {
             strict_mode: false,
@@ -254,6 +193,100 @@ pub(super) fn slice(
             sliced_plate,
             upward_machines: &upward_report,
             downward_machines: &[],
+        },
+    );
+    Ok(())
+}
+
+pub(super) fn slice_embedded(
+    args: &SliceArgs,
+    mut admitted: ares_core::CliPresetProject<'_>,
+    resources: &Path,
+    overrides: &ares_core::ConfigOverrides,
+    context: ares_core::SlicerContext<'_>,
+) -> Result<(), CliFailure> {
+    let metadata = ares_core::GenerationMetadata::default();
+    let input_file = args.input().to_string_lossy();
+    let substitutions = admitted.substitutions().to_vec();
+    let source = admitted
+        .take_upward_source()
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
+    let machine_full = crate::compatible_machine::read_machine_full(source.as_ref(), resources)?;
+    let system_catalog =
+        retained_printer_catalog(resources, source.as_ref(), args.resources_dir.is_some())?;
+    let mut upward_report = Vec::new();
+    let mut sliced_plate =
+        ares_core::SlicedPlate::with_size(args.project_actions.has_downward_targets());
+    let upward = ares_core::CliUpwardMachine {
+        source,
+        input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
+        report: &mut upward_report,
+    };
+    // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
+    // --slice0 is used, or selects the explicit one-based plate.
+    // This byte API slices one view; its default is that first plate.
+    let request = ares_core::CliProjectSliceRequest {
+        orient: args.orient == Some(1),
+        plate: args.plate,
+        overrides,
+        record_moves: args.dump_moves.is_some(),
+        upward,
+        sliced_plate: &mut sliced_plate,
+    };
+    let processed =
+        match admitted.slice_project(request, metadata, (system_catalog.as_ref(), None), context) {
+            Ok(processed) => processed,
+            Err(error) => {
+                crate::failure::slicing::check(
+                    args,
+                    &sliced_plate,
+                    &input_file,
+                    &substitutions,
+                    &upward_report,
+                )?;
+                let failure = slice_error_to_failure(
+                    error,
+                    args.output(),
+                    #[cfg(target_os = "linux")]
+                    args.plate.unwrap_or(1),
+                )
+                .with_upward_report(upward_report)
+                .with_config_substitutions(&input_file, substitutions);
+                #[cfg(target_os = "linux")]
+                let failure =
+                    failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
+                return Err(failure);
+            }
+        };
+    if let Some(path) = &args.dump_moves {
+        crate::failure::slicing::check(
+            args,
+            &sliced_plate,
+            &input_file,
+            &substitutions,
+            &upward_report,
+        )?;
+        fs::write(path, crate::moves_csv::format(&processed.result))?;
+    }
+    let _downward = crate::downward::report(
+        args,
+        &sliced_plate,
+        (&input_file, &substitutions),
+        &upward_report,
+    )?;
+    fs::write(args.output(), processed.gcode)?;
+    crate::report_success(
+        &input_file,
+        substitutions,
+        #[cfg(target_os = "linux")]
+        crate::result_json::Success {
+            strict_mode: false,
+            output: args.output(),
+            plate: args.plate.unwrap_or(1),
+            plate_index: args.plate.unwrap_or(0),
+            sliced_plate,
+            upward_machines: &upward_report,
+            downward_machines: &_downward,
         },
     );
     Ok(())

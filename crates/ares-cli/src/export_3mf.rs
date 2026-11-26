@@ -1,12 +1,14 @@
 use std::{fs, path::Path};
 
 use ares_core::{
-    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsFile, LoadSettingsRequest,
+    ConfigOverrides, GenerationMetadata, ImportedStl, LoadSettingsRequest,
     LoadSettingsSliceRequest, SlicedPlate, SlicerContext,
 };
 
 use crate::{
-    CliFailure, args::DirectSliceArgs, preset_sources::read_preset_files, split_native_list,
+    CliFailure,
+    args::DirectSliceArgs,
+    preset_sources::{as_load_settings_files, read_preset_list},
 };
 
 fn destination(output: &Path, outputdir: Option<&Path>) -> std::path::PathBuf {
@@ -75,22 +77,14 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         .iter()
         .map(|path| read_model(path, &output))
         .collect::<Result<Vec<_>, _>>()?;
-    let settings = read_preset_files(
-        &args
-            .load_settings
-            .as_deref()
-            .map_or_else(Vec::new, split_native_list),
-    )?;
-    let filaments = read_preset_files(
-        &args
-            .load_filaments
-            .as_deref()
-            .map_or_else(Vec::new, split_native_list),
-    )?;
+    let settings_files = read_preset_list(args.load_settings.as_deref())?;
+    let filament_files = read_preset_list(args.load_filaments.as_deref())?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let presets = LoadSettingsRequest {
         loaded_sources: None,
-        settings: &sources(&settings),
-        filaments: &sources(&filaments),
+        settings: &settings,
+        filaments: &filaments,
     };
     let archive = if stl {
         export_stl(
@@ -236,16 +230,4 @@ fn read_model<'a>(path: &'a Path, output: &Path) -> Result<(Vec<u8>, &'a str), C
         .and_then(|name| name.to_str())
         .ok_or_else(|| failed("invalid source filename".to_owned()))?;
     Ok((input, filename))
-}
-fn sources(
-    files: &[(String, String, Option<ares_core::SourceIdentity>)],
-) -> Vec<LoadSettingsFile<'_>> {
-    files
-        .iter()
-        .map(|(label, json, source_identity)| LoadSettingsFile {
-            label,
-            json,
-            source_identity: source_identity.as_ref(),
-        })
-        .collect()
 }

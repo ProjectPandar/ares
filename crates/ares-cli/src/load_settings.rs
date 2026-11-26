@@ -5,13 +5,13 @@ use std::{fs, io};
 use crate::{
     SliceArgs,
     failure::{CliFailure, slice_error_to_failure},
-    preset_sources::read_preset_files,
-    report_success, substitutions,
+    preset_sources::{as_load_settings_files, read_preset_files},
+    report_success,
 };
 
 pub(super) async fn slice(
     args: &SliceArgs,
-    input: &[u8],
+    admitted: ares_core::CliPresetProject<'_>,
     overrides: &ares_core::ConfigOverrides,
     (load_settings, load_filaments): (&[&str], &[&str]),
     context: ares_core::SlicerContext<'_>,
@@ -22,45 +22,16 @@ pub(super) async fn slice(
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-    // `OrcaSlicer.cpp:1682-1690`: the 3MF load block admits the
-    // project before `:1953-2024` reads the preset files — probe the
-    // admission first so the embedded `-19` gate wins over the
-    // adapter's missing-file `-5`.
-    let admitted = ares_core::CliPresetProject::admit(input, &context).map_err(|error| {
-        slice_error_to_failure(
-            error,
-            args.output(),
-            #[cfg(target_os = "linux")]
-            args.plate.unwrap_or(1),
-        )
-    })?;
+    let substitutions = admitted.substitutions().to_vec();
     let catalog = args
         .project_preset_catalog
         .as_ref()
         .map(fs::read_to_string)
         .transpose()?;
-    let settings = read_preset_files(load_settings)?;
-    let filaments = read_preset_files(load_filaments)?;
-    let settings = settings
-        .iter()
-        .map(
-            |(label, json, source_identity)| ares_core::LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            },
-        )
-        .collect::<Vec<_>>();
-    let filaments = filaments
-        .iter()
-        .map(
-            |(label, json, source_identity)| ares_core::LoadSettingsFile {
-                label,
-                json,
-                source_identity: source_identity.as_ref(),
-            },
-        )
-        .collect::<Vec<_>>();
+    let settings_files = read_preset_files(load_settings)?;
+    let filament_files = read_preset_files(load_filaments)?;
+    let settings = as_load_settings_files(&settings_files);
+    let filaments = as_load_settings_files(&filament_files);
     let loaded_sources = crate::preset_sources::load(
         args.datadir.as_deref(),
         settings.iter().chain(&filaments).copied(),
@@ -104,7 +75,7 @@ pub(super) async fn slice(
                 args,
                 &sliced_plate,
                 &input_file,
-                input,
+                &substitutions,
                 &sliced_plate.upward_machines,
             )?;
             let failure = slice_error_to_failure(
@@ -116,7 +87,7 @@ pub(super) async fn slice(
                 // :5723/:433 records index+1 for the -50 result.
                 args.plate.unwrap_or(1),
             )
-            .with_config_substitutions(&input_file, substitutions(input));
+            .with_config_substitutions(&input_file, substitutions);
             #[cfg(target_os = "linux")]
             let failure = failure
                 .with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings)
@@ -128,13 +99,13 @@ pub(super) async fn slice(
         args,
         &sliced_plate,
         &input_file,
-        input,
+        &substitutions,
         &sliced_plate.upward_machines,
     )?;
     fs::write(args.output(), gcode)?;
     report_success(
         &input_file,
-        substitutions(input),
+        substitutions,
         #[cfg(target_os = "linux")]
         result_json::Success {
             strict_mode: false,

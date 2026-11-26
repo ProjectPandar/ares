@@ -34,6 +34,7 @@ use crate::{
 pub(in crate::profiles) use chain::MissingParentLink;
 pub(super) use document::ProfileDocument;
 use document::VendorInput;
+pub use document::{PresetInheritanceSource, VendorManifest, preset_inheritance_source};
 pub use guide::{GuideFilament, GuideModel, guide_models};
 pub use installed_printers::InstalledPrinters;
 pub use model_info::PrinterModelInfo;
@@ -147,6 +148,32 @@ impl PresetCatalogHandle {
         let vendor: VendorInput = serde_json::from_slice(super::without_utf8_bom(vendor_json))
             .map_err(|error| invalid(format!("invalid vendor profile JSON: {error}")))?;
         self.catalog.push_vendor(vendor)
+    }
+
+    /// Adds one vendor from its parsed manifest and raw profile file bytes,
+    /// parsing each file directly into `ProfileDocument` without building or
+    /// re-serializing an intermediate JSON envelope.
+    pub fn add_vendor_manifest<'a>(
+        &mut self,
+        manifest: VendorManifest,
+        files: impl IntoIterator<Item = (&'a str, &'a [u8])>,
+    ) -> Result<(), SliceError> {
+        let mut parsed = BTreeMap::new();
+        for (sub_path, bytes) in files {
+            let document: ProfileDocument = serde_json::from_slice(super::without_utf8_bom(bytes))
+                .map_err(|error| {
+                    invalid(format!(
+                        "invalid vendor {} profile JSON ({sub_path}): {error}",
+                        manifest.id
+                    ))
+                })?;
+            parsed.insert(sub_path.to_owned(), document);
+        }
+        self.catalog.push_vendor(VendorInput {
+            id: manifest.id,
+            index: manifest.index,
+            files: parsed,
+        })
     }
 
     /// CLI:2793–2817 refreshes resolvable system filaments without compacting slots.

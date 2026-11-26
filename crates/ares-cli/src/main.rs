@@ -125,9 +125,6 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         }
         Err(error) => return Err(error.into()),
     };
-    project_presets::check_input_version(&args, extension.as_deref(), &input)?;
-    // The file name as the CLI received it (`m_input_files`), which the substitution report names.
-    let input_file = args.input().to_string_lossy().into_owned();
     // `PrintBase::set_status` without a GUI callback logs `Percent %1%: %2%` (`PrintBase.cpp:127`).
     let mut print_status = |status: &ares_core::SlicingStatus<'_>| {
         eprintln!("Percent {}: {}", status.percent, status.text);
@@ -142,18 +139,6 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
     if let Some(selection) = args.selection {
         return slice_plates::run((&args).into(), selection, &input, &overrides, context);
     }
-    if let Some(catalog) = &args.project_preset_catalog
-        && args.load_settings.is_none()
-    {
-        let admitted = project_presets::admit(&args, &input, &context)?;
-        return project_presets::slice(
-            &args,
-            project_presets::Entry::Catalog(catalog),
-            admitted,
-            &overrides,
-            context,
-        );
-    }
     let load_settings = args
         .load_settings
         .as_deref()
@@ -164,125 +149,84 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         .as_deref()
         .map(split_native_list)
         .unwrap_or_default();
+    if extension.as_deref() == Some("3mf") {
+        let map_err = |error| {
+            slice_error_to_failure(
+                error,
+                args.output(),
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        };
+        let admitted =
+            ares_core::CliPresetProject::open(&input, args.allow_newer_file).map_err(map_err)?;
+        if let Some(catalog) = &args.project_preset_catalog
+            && args.load_settings.is_none()
+        {
+            admitted.check_post_process(&context).map_err(map_err)?;
+            return project_presets::slice(
+                &args,
+                project_presets::Entry::Catalog(catalog),
+                admitted,
+                &overrides,
+                context,
+            );
+        }
+        if !load_settings.is_empty() || !load_filaments.is_empty() {
+            // `OrcaSlicer.cpp:1682-1690`: probe the embedded `-19` gate before
+            // reading external preset files (`-5`).
+            admitted.check_post_process(&context).map_err(map_err)?;
+            return load_settings::slice(
+                &args,
+                admitted,
+                &overrides,
+                (&load_settings, &load_filaments),
+                context,
+            )
+            .await;
+        }
+        if native_refresh::requested(&args) {
+            admitted.check_post_process(&context).map_err(map_err)?;
+            if let Some(refresh) = native_refresh::load_admitted(&args, &admitted, &load_filaments)?
+            {
+                return project_presets::slice(
+                    &args,
+                    project_presets::Entry::Native(&refresh),
+                    admitted,
+                    &overrides,
+                    context,
+                );
+            }
+        }
+        let resources = installed_resources::resolve(args.resources_dir.as_deref())?;
+        return project_presets::slice_embedded(&args, admitted, &resources, &overrides, context);
+    }
+    if args.project_preset_catalog.is_some() && args.load_settings.is_none() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--project-preset-catalog requires 3MF project input",
+        )
+        .into());
+    }
     if !load_settings.is_empty() || !load_filaments.is_empty() {
+        let admitted = ares_core::CliPresetProject::admit(&input, &context).map_err(|error| {
+            slice_error_to_failure(
+                error,
+                args.output(),
+                #[cfg(target_os = "linux")]
+                args.plate.unwrap_or(1),
+            )
+        })?;
         return load_settings::slice(
             &args,
-            &input,
+            admitted,
             &overrides,
             (&load_settings, &load_filaments),
             context,
         )
         .await;
     }
-    let admitted = if native_refresh::requested(&args) {
-        let admitted = project_presets::admit(&args, &input, &context)?;
-        if let Some(refresh) = native_refresh::load_admitted(&args, &admitted, &load_filaments)? {
-            return project_presets::slice(
-                &args,
-                project_presets::Entry::Native(&refresh),
-                admitted,
-                &overrides,
-                context,
-            );
-        }
-        Some(admitted)
-    } else {
-        None
-    };
     let output = match extension {
-        Some(extension) if extension == "3mf" => {
-            let metadata = ares_core::GenerationMetadata::default();
-            let resources = installed_resources::resolve(args.resources_dir.as_deref())?;
-            let (source, machine_full) = compatible_machine::load(&input, &resources)?;
-            let system_catalog = project_presets::retained_printer_catalog(
-                &resources,
-                source.as_ref(),
-                args.resources_dir.is_some(),
-            )?;
-            let mut upward_report = Vec::new();
-            let mut sliced_plate =
-                ares_core::SlicedPlate::with_size(args.project_actions.has_downward_targets());
-            let upward = ares_core::CliUpwardMachine {
-                source,
-                input: ares_core::UpwardMachineInput::FetchOriginal(machine_full.as_deref()),
-                report: &mut upward_report,
-            };
-            // OrcaSlicer.cpp:5681-5690 iterates from plate index0 when
-            // --slice0 is used, or selects the explicit one-based plate.
-            // This byte API slices one view; its default is that first plate.
-            let request = ares_core::CliProjectSliceRequest {
-                orient: args.orient == Some(1),
-                plate: args.plate,
-                overrides: &overrides,
-                record_moves: args.dump_moves.is_some(),
-                upward,
-                sliced_plate: &mut sliced_plate,
-            };
-            let result = match admitted {
-                Some(project) => project.slice_project(
-                    request,
-                    metadata,
-                    (system_catalog.as_ref(), None),
-                    context,
-                ),
-                None => {
-                    ares_core::slice_cli_project_plate_validated_with_catalog(
-                        &input,
-                        request,
-                        metadata,
-                        system_catalog.as_ref(),
-                        context,
-                    )
-                    .await
-                }
-            };
-            let processed = match result {
-                Ok(processed) => processed,
-                Err(error) => {
-                    failure::slicing::check(
-                        &args,
-                        &sliced_plate,
-                        &input_file,
-                        &input,
-                        &upward_report,
-                    )?;
-                    let failure = slice_error_to_failure(
-                        error,
-                        args.output(),
-                        #[cfg(target_os = "linux")]
-                        args.plate.unwrap_or(1),
-                    )
-                    .with_upward_report(upward_report)
-                    .with_config_substitutions(&input_file, substitutions(&input));
-                    #[cfg(target_os = "linux")]
-                    let failure = failure
-                        .with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
-                    return Err(failure);
-                }
-            };
-            if let Some(path) = &args.dump_moves {
-                failure::slicing::check(&args, &sliced_plate, &input_file, &input, &upward_report)?;
-                fs::write(path, moves_csv::format(&processed.result))?;
-            }
-            let _downward =
-                downward::report(&args, &sliced_plate, (&input_file, &input), &upward_report)?;
-            fs::write(args.output(), processed.gcode)?;
-            report_success(
-                &input_file,
-                substitutions(&input),
-                #[cfg(target_os = "linux")]
-                result_json::Success {
-                    strict_mode: false,
-                    output: args.output(),
-                    plate: args.plate.unwrap_or(1),
-                    plate_index: args.plate.unwrap_or(0),
-                    sliced_plate,
-                    upward_machines: &upward_report,
-                    downward_machines: &_downward,
-                },
-            );
-            return Ok(());
-        }
         Some(extension) if extension == "stl" => {
             if args.orient == Some(1) {
                 return Err(io::Error::new(

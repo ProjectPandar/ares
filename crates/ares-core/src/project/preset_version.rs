@@ -13,6 +13,14 @@ pub fn validate_project_version(
     }
     let mut archive = ProjectArchive::open(input.as_ref(), ArchiveLimits::PROJECT)?;
     let identity = ModelIdentity::read(&mut archive)?;
+    check_identity(&identity)
+}
+
+pub(super) fn check_root_model_bytes(bytes: &[u8]) -> Result<(), SliceError> {
+    check_identity(&ModelIdentity::from_bytes(bytes)?)
+}
+
+fn check_identity(identity: &ModelIdentity) -> Result<(), SliceError> {
     let orca = identity
         .metadata()
         .rfind(|entry| entry.name == "OrcaSlicer")

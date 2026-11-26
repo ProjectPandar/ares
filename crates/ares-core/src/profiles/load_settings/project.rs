@@ -30,7 +30,7 @@ pub(crate) fn project_for_3mf_export(
             },
         )
     } else {
-        let (composed, names) = super::compose_project_load_settings(input, request)?;
+        let (composed, names) = super::compose_project_load_settings((input, None), request)?;
         (Some(composed), names)
     };
     let mut default_settings = crate::ProjectSettings::default();
@@ -99,7 +99,7 @@ pub(crate) fn project_for_3mf_export(
 }
 
 pub(super) fn retained_config(
-    input: &[u8],
+    (input, embedded_raw): (&[u8], Option<&ProjectSettingsRaw>),
     request: &LoadSettingsRequest<'_>,
     names: &LoadedPresetNames,
 ) -> Result<Option<ProjectSettingsRaw>, SliceError> {
@@ -109,7 +109,10 @@ pub(super) fn retained_config(
     {
         return Ok(None);
     }
-    read_embedded_config(input).map(Some)
+    match embedded_raw {
+        Some(raw) => Ok(Some(raw.clone())),
+        None => read_embedded_config(input).map(Some),
+    }
 }
 
 fn read_embedded_config(input: &[u8]) -> Result<ProjectSettingsRaw, SliceError> {

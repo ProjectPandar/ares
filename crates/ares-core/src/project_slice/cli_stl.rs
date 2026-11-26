@@ -65,7 +65,7 @@ pub fn slice_stl_models_with_load_settings<'a>(
     let mut print_settings = None;
     let mut plate = 0;
     let pending = with_load_settings_source(
-        (ProjectInput::Model(&model), &[]),
+        (ProjectInput::Model(&model), &[], None),
         request,
         None,
         |source| {

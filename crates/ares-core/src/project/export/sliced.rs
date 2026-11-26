@@ -2,7 +2,8 @@
 //! of a direct STL or a saved project, optionally as the `--min-save` print-job file
 //! `Plater::send_gcode` also writes (`Plater.cpp:21240`).
 
-use super::{Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
+use super::super::{ArchiveLimits, LoadedProfileProject, ProjectArchive};
+use super::{SavedModel, Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
 use crate::{
     ConfigOverrides, GenerationMetadata, ProcessedGCode, Project, SliceError, SlicerContext,
 };
@@ -19,17 +20,17 @@ pub fn export_sliced_3mf(
             "export requires a source filename without a directory",
         ));
     }
-    let mut archive = processed
-        .archive
-        .take()
-        .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
-    let model = if let Some(model) = archive.stl_model.take() {
+    let model = if let Some(archive) = processed.archive.as_mut()
+        && let Some(model) = archive.stl_model.take()
+    {
         if archive.filament_color.is_empty()
             && let Some(color) = processed.result.extruder_colors.first()
         {
             archive.filament_color.clone_from(color);
         }
         model
+    } else if processed.archive.is_none() {
+        return Err(invalid("sliced export requires captured plate data"));
     } else {
         if !filename.to_ascii_lowercase().ends_with(".3mf") {
             return Err(deferred(
@@ -38,6 +39,19 @@ pub fn export_sliced_3mf(
         }
         geometry::load_saved(input)?
     };
+    write_sliced_3mf_package(model, processed, first_print_object_id, min_save)
+}
+
+fn write_sliced_3mf_package(
+    model: SavedModel,
+    mut processed: ProcessedGCode,
+    first_print_object_id: u32,
+    min_save: bool,
+) -> Result<Vec<u8>, SliceError> {
+    let archive = processed
+        .archive
+        .take()
+        .ok_or_else(|| invalid("sliced export requires captured plate data"))?;
     let mut identify_ids = vec![None; model.objects.len()];
     let mismatch = || invalid("captured plate does not match model objects");
     for object in &archive.objects {
@@ -74,26 +88,41 @@ pub fn export_sliced_3mf(
     )
 }
 
-/// Slices plate 1 of a saved 3MF and exports it as a sliced 3MF; `min_save` adds
-/// `SaveStrategy::SkipModel`.
+/// Single-open saved 3MF slice + export: opens the source archive once to validate
+/// the saved object layout, extract geometry for export, and slice plate 1; `min_save`
+/// adds `SaveStrategy::SkipModel`.
 pub async fn export_saved_sliced_3mf(
     input: &[u8],
     filename: &str,
     min_save: bool,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    let project = crate::load_project(input)?;
-    let first_id = saved_print_object_id(&project)
+    if input.is_empty() {
+        return Err(SliceError::EmptyInput);
+    }
+    let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+    let loaded = LoadedProfileProject::open_from_archive(&mut archive, false)?;
+    let first_id = saved_print_object_id(loaded.project())
         .map_err(|detail| SliceError::InvalidInput(detail.into()))?;
-    let processed = crate::slice_project_plate_with_archive(
-        input,
+    let saved_model = geometry::from_saved_project(archive, loaded.project());
+    let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
+        (input, Box::new(loaded)),
         GenerationMetadata::default(),
         Some(1),
         &ConfigOverrides::default(),
         context,
-    )
-    .await?;
-    super::export_sliced_3mf(input, filename, processed, first_id, min_save)
+    )?;
+    if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
+        return Err(invalid(
+            "export requires a source filename without a directory",
+        ));
+    }
+    if !filename.to_ascii_lowercase().ends_with(".3mf") {
+        return Err(deferred(
+            "sliced export requires a saved 3MF or a captured STL model",
+        ));
+    }
+    write_sliced_3mf_package(saved_model?, processed, first_id, min_save)
 }
 
 fn saved_print_object_id(project: &Project) -> Result<u32, &'static str> {

@@ -32,7 +32,8 @@ pub(super) fn load_admitted(
     if !requested(args) {
         return Ok(None);
     }
-    let Some(source) = UpwardMachineSource::from_project(input.input())
+    let Some(source) = input
+        .upward_source()
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?
     else {
         return Ok(None);
@@ -44,7 +45,7 @@ pub(super) fn load_admitted(
         #[cfg(target_os = "linux")]
         output: args.output(),
     };
-    load(&inputs, &source, load_filaments).map(Some)
+    load(&inputs, source, load_filaments).map(Some)
 }
 
 pub(super) fn load(

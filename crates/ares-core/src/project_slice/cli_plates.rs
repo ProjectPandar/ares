@@ -103,6 +103,10 @@ fn slice_project_plates(
     let skip_modified_gcodes = context.skip_modified_gcodes();
     let custom_gcodes = context.custom_gcodes.take();
     let downward = context.downward.take();
+    let embedded_raw = loaded
+        .as_deref()
+        .and_then(crate::project::LoadedProfileProject::embedded_raw)
+        .cloned();
     let run = |mut source_input: ProjectSource<'_>| {
         if let Some(profile) = source_input.profile.as_mut() {
             profile.enable_timelapse = context.enable_timelapse;
@@ -240,7 +244,7 @@ fn slice_project_plates(
             } => {
                 let mut report = SlicedPlate::default();
                 with_load_settings_source(
-                    (ProjectInput::Bytes(input), input),
+                    (ProjectInput::Bytes(input), input, embedded_raw.as_ref()),
                     LoadSettingsSliceRequest {
                         filename,
                         catalog_json,
