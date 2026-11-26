@@ -12,6 +12,9 @@ pub(super) fn metadata(
     support: &[Vec<InstalledSupportLayer>],
     last_layer: bool,
 ) -> (usize, bool) {
+    if entries[0].belt_prologue.is_some() {
+        return (0, true);
+    }
     let object = entries.iter().find(|entry| entry.object_layer.is_some());
     let first_support = entries
         .iter()

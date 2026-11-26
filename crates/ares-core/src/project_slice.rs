@@ -8,6 +8,7 @@ pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 10
 
 mod archive_plate;
 mod belt;
+pub(crate) use belt::kinematics::MachineFrameTransform;
 mod bounds;
 mod capabilities;
 mod closing;

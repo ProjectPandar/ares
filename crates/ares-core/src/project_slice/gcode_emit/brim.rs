@@ -19,6 +19,18 @@ impl BrimPlan {
         )
             -> &'a [crate::project_slice::extrusion_islands::RegionToolUsage],
     ) -> Result<Vec<Option<Self>>, SliceError> {
+        // Brim.cpp:944: belt brim is not part of the plate brim map.
+        if traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .remaining
+            .belt_printer
+            .0
+        {
+            return Ok((0..traversal.objects.len()).map(|_| None).collect());
+        }
         let mut areas = (0..traversal.objects.len())
             .map(|_| None)
             .collect::<Vec<_>>();

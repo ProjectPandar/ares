@@ -34,6 +34,18 @@ impl FirstLayerIslands {
                 .flatten()
                 .flat_map(|polygon| polygon.contour().points().iter().copied())
                 .collect::<Vec<_>>();
+            if let Some(lowest) = schedule
+                .belt_brim
+                .as_ref()
+                .and_then(|brim| brim.prologue.first())
+            {
+                local.extend(
+                    lowest
+                        .areas
+                        .iter()
+                        .flat_map(|area| area.contour().points().iter().copied()),
+                );
+            }
             let first = first_support(index, support, schedule);
             let spacing = first
                 .map(|first| first.coverage(0.0, scale))

@@ -9,6 +9,17 @@ impl SkirtPlan {
         tower_corners: &[Point],
         raft: Option<&super::super::layers::RaftSchedule>,
     ) -> Result<Option<Self>, SliceError> {
+        if traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .remaining
+            .belt_printer
+            .0
+        {
+            return Ok(None);
+        }
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
         let infinite_skirt =
