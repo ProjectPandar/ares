@@ -40,11 +40,11 @@ async function syncCatalog(): Promise<PresetCatalog> {
     const start = performance.now();
     void synced?.catalog.free();
     synced = null;
-    const { loadVendor } = await import("@ares-slicer/profiles");
-    const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendor));
+    const { loadVendorJson } = await import("@ares-slicer/profiles");
+    const loaded = await Promise.all([FILAMENT_LIBRARY, ...vendors].map(loadVendorJson));
     const catalog = await slicer.createPresetCatalog();
     const encoder = new TextEncoder();
-    for (const vendor of loaded) await catalog.addVendor(encoder.encode(JSON.stringify(vendor)));
+    for (const json of loaded) await catalog.addVendor(encoder.encode(json));
     performance.measure("ares:catalog-build", { start });
     synced = { vendors, installed: null, imports: 0, catalog };
     // The installed vendors changed: the plater's vendor test reads the new set.

@@ -75,6 +75,8 @@ export async function importFile(file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   useApp.setState({ loadingFile: true, loadError: undefined, loadWarning: undefined, saveError: undefined });
   try {
+    // GUI_App::on_init_inner selects the stored presets before the plater takes a file (GUI_App.cpp:3713).
+    await sessionRestored;
     // A project loads into an editable plater with its plates (PartPlateList::load_from_3mf_structure)
     // and its presets filled from the installed system presets.
     let plater: PlaterSession | null = null;
@@ -91,8 +93,11 @@ export async function importFile(file: File) {
     const typedSettings = scene.settings && (await decodeSettings(await configDefs, scene.settings));
     const previous = useApp.getState().plater;
     const selection = useApp.getState().presetSelection;
+    // A 3MF's config replaces the current presets (Plater.cpp:9514-9515, :9623).
+    const projectPresets = plater && scene.settings;
     useApp.setState({
-      presetSelection: selection && { ...selection, filamentProject: undefined },
+      presetSelection: !projectPresets && selection ? { ...selection, filamentProject: undefined } : null,
+      ...(projectPresets ? { compatible: null, printerPanel: null } : {}),
       file: { kind: "single", name: file.name, bytes },
       scene,
       plater,
@@ -110,12 +115,8 @@ export async function importFile(file: File) {
     });
     void previous?.free();
     if (plater) await loadArrangeSettings(plater);
-    // GUI_App::on_init_inner selects the stored presets (GUI_App.cpp:3713, load_presets into
-    // load_selections) before the plater takes a file: the load continues from that selection.
-    await sessionRestored;
-    // A project config becomes the current presets (Plater.cpp:9514-9515, PresetBundle::load_config_model
-    // at :9623); a model file keeps the selection, and its filament count can add slots.
-    if (plater && scene.settings) await selectPrinter(null);
+    // A model file keeps the selection, and its filament count can add slots.
+    if (projectPresets) await selectPrinter(null);
     else if (useApp.getState().presetSelection) await updateCompatible();
     else await updatePrinterPanel();
   } catch (error) {
