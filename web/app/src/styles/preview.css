@@ -281,6 +281,9 @@
   border-bottom: 1px solid var(--border);
   font-weight: 600;
 }
+.legend-section {
+  padding-left: 26px;
+}
 .legend-header span:first-child {
   flex: 1;
   padding-left: 22px;
