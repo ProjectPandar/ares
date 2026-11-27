@@ -43,7 +43,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash scripts/ci/check-merge-group-reuse.sh --workflow tier1 --base "${{ github.event.merge_group.base_sha }}" --github-output "$GITHUB_OUTPUT"
-
   fast-checks:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
@@ -70,7 +69,6 @@ jobs:
           key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
       - name: Run merged fast checks with strict latency budgets
         run: ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" bash scripts/ci/run-fast-checks.sh
-
   rust-wasm-check:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
@@ -95,7 +93,6 @@ jobs:
       - name: Check wasm32 targets
         if: steps.select.outputs.run_rust_wasm == 'true'
         run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
-
   rust-clippy:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
