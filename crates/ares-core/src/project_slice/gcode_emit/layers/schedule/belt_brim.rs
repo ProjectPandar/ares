@@ -5,6 +5,8 @@ use crate::project_slice::{
     belt::brim::BeltBrimPlan,
     gcode_emit::tool_ordering::{LayerTools, ToolOrdering},
     island_print_order::OrderedExtrusionLayer,
+    perimeters::classic::traversal::PreparedPostClassicTraversal,
+    support_material::InstalledSupportLayer,
 };
 
 // Admission gives the belt object one instance and filament, and prologue
@@ -12,17 +14,33 @@ use crate::project_slice::{
 pub(super) fn schedule(
     merged: &mut Vec<(f64, LayerToPrint)>,
     objects: &[Vec<OrderedExtrusionLayer>],
+    support: &[Vec<InstalledSupportLayer>],
     ordering: &mut ToolOrdering,
     brim: Option<&BeltBrimPlan>,
+    traversal: &PreparedPostClassicTraversal,
+    raw_zs: &mut Vec<f64>,
 ) {
     merged.retain(|(_, entry)| {
-        entry.object_layer.is_some_and(|layer| {
+        let object = entry.object_index;
+        let prints_object = entry.object_layer.is_some_and(|layer| {
             brim.is_some_and(|brim| !brim.by_layer[layer].paths.is_empty())
                 || objects[entry.object_index][layer]
                     .islands
                     .iter()
                     .any(|island| !island.entities.is_empty())
-        })
+        });
+        let prints_support = entry
+            .support_layer
+            .is_some_and(|layer| !support[object][layer].support_fills.is_empty());
+        if prints_object {
+            raw_zs.push(
+                traversal.objects[object].physical_layers()[entry.object_layer.unwrap()].print_z,
+            );
+        }
+        if prints_support {
+            raw_zs.push(support[object][entry.support_layer.unwrap()].print_z);
+        }
+        prints_object || prints_support
     });
     let Some(brim) = brim else {
         return;
@@ -47,6 +65,7 @@ pub(super) fn schedule(
             },
         ));
         register(ordering, band.print_z);
+        raw_zs.push(band.print_z);
     }
 }
 

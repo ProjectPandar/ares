@@ -24,6 +24,7 @@ pub(super) struct ToolpathInput<'a> {
     pub(super) parameters: &'a ToolpathParameters,
     pub(super) counts: &'a InterfaceCounts,
     pub(super) scale: CoordinateScale,
+    pub(super) belt_floor: bool,
 }
 
 pub(super) fn generate_grid_support_toolpaths(
@@ -74,6 +75,7 @@ pub(super) fn generate_grid_support_toolpaths(
                 parameters: input.parameters,
                 counts: input.counts,
                 support_layer: &layers[index],
+                belt_floor: input.belt_floor,
                 support_layer_index: index,
                 range_begin: n_raft_layers,
                 n_raft_layers,

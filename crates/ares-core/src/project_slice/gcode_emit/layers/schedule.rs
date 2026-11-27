@@ -7,6 +7,7 @@ use crate::project_slice::{
 
 mod belt_brim;
 mod empty_layers;
+mod pairs;
 
 const EPSILON: f64 = 1e-4;
 
@@ -167,8 +168,8 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .collect::<Vec<_>>();
         if !belt_printer {
             raw_zs.extend_from_slice(&object_z);
+            raw_zs.extend_from_slice(&support_z);
         }
-        raw_zs.extend_from_slice(&support_z);
         skirt_layers.extend(
             object_z
                 .iter()
@@ -193,11 +194,18 @@ pub(in crate::project_slice::gcode_emit) fn build(
             });
             super::skirt_schedule::Layer::new(layer.print_z, false, has_extrusions)
         }));
-        pair_layers(&mut merged, object_index, &object_z, &support_z);
+        pairs::pair_layers(&mut merged, object_index, &object_z, &support_z);
     }
     if belt_printer {
-        belt_brim::schedule(&mut merged, objects, &mut tool_ordering, belt_brim.as_ref());
-        raw_zs.extend(merged.iter().map(|entry| entry.0));
+        belt_brim::schedule(
+            &mut merged,
+            objects,
+            support,
+            &mut tool_ordering,
+            belt_brim.as_ref(),
+            traversal,
+            &mut raw_zs,
+        );
     }
     if let Some(raft) = &raft {
         raw_zs.extend(raft.entries.iter().map(|entry| entry.0));
@@ -353,46 +361,4 @@ pub(in crate::project_slice::gcode_emit) fn build(
         skirt_schedule,
         belt_brim,
     })
-}
-
-fn pair_layers(
-    destination: &mut Vec<(f64, LayerToPrint)>,
-    object_index: usize,
-    object_z: &[f64],
-    support_z: &[f64],
-) {
-    let (mut object, mut support) = (0, 0);
-    while object < object_z.len() || support < support_z.len() {
-        let minimum = object_z
-            .get(object)
-            .copied()
-            .unwrap_or(f64::MAX)
-            .min(support_z.get(support).copied().unwrap_or(f64::MAX));
-        let object_layer = object_z
-            .get(object)
-            .filter(|&&z| z <= minimum + EPSILON)
-            .map(|_| object);
-        let support_layer = support_z
-            .get(support)
-            .filter(|&&z| z <= minimum + EPSILON)
-            .map(|_| support);
-        let z = match (object_layer, support_layer) {
-            (Some(object), Some(support)) => 0.5 * (object_z[object] + support_z[support]),
-            (Some(object), None) => object_z[object],
-            (None, Some(support)) => support_z[support],
-            (None, None) => unreachable!("at least one next layer is at the minimum Z"),
-        };
-        destination.push((
-            z,
-            LayerToPrint {
-                object_index,
-                object_layer,
-                support_layer,
-                raft_layer: None,
-                belt_prologue: None,
-            },
-        ));
-        object += usize::from(object_layer.is_some());
-        support += usize::from(support_layer.is_some());
-    }
 }

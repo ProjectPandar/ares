@@ -1,7 +1,9 @@
 //! Grid branch of `bottom_contact_layers_and_layer_support_areas`.
 
 use super::{
-    bottom_contacts::{BottomContactLayer, BottomContactsInput, detect_bottom_contacts},
+    bottom_contacts::{
+        BottomContactLayer, BottomContactsInput, detect_bottom_contacts, detect_floor_contact,
+    },
     contact_layer::TopContactLayer,
     contact_placement::ContactPlacement,
     layer_input::LayerInput,
@@ -10,12 +12,15 @@ use super::{
 };
 use crate::geometry::support_grid::SupportGridParams;
 use crate::geometry::{
-    ClipperError, CoordinateScale, JoinType, Polygon, offset_paths, union_polygons_paths,
+    ClipperError, CoordinateScale, JoinType, Polygon, intersection_polygons_paths, offset_paths,
+    union_polygons_paths,
 };
+use crate::project_slice::belt::floor_context::BeltFloorContext;
 
 pub(super) struct BottomProjectionInput<'a> {
     pub(super) placement: &'a ContactPlacement<'a>,
     pub(super) layers: &'a [LayerInput<'a>],
+    pub(super) floor: Option<BeltFloorContext>,
     pub(super) top_surfaces: &'a [Vec<Polygon>],
     pub(super) bottom_interface_height: f64,
     pub(super) support_width_scaled: f32,
@@ -44,6 +49,7 @@ pub(super) fn bottom_contact_layers_and_layer_support_areas(
     let mut contacts = Vec::new();
     let mut overhangs_projection = Vec::new();
     let mut enforcers_projection = Vec::new();
+    let propagating_floor = input.floor.filter(|floor| floor.propagates());
     let mut contact_index = top_contacts.len() as i32 - 1;
     for layer_index in (0..input.layers.len() - 1).rev() {
         let layer = &input.placement.layers[layer_index];
@@ -74,23 +80,27 @@ pub(super) fn bottom_contact_layers_and_layer_support_areas(
         } else {
             &overhangs_raw
         };
-        if !bottom_projection.is_empty()
-            && let Some(contact) = detect_bottom_contacts(
-                &BottomContactsInput {
-                    placement: input.placement,
-                    layer_index,
-                    top_surfaces: &input.top_surfaces[layer_index],
-                    supports_projected: bottom_projection,
-                    top_contacts,
-                    contact_index,
-                    bottom_interface_height: input.bottom_interface_height,
-                    support_width_scaled: input.support_width_scaled,
-                    scale: input.scale,
-                },
-                &mut support_areas,
-            )?
-        {
-            contacts.push(contact);
+        if !bottom_projection.is_empty() {
+            let contact = BottomContactsInput {
+                placement: input.placement,
+                layer_index,
+                top_surfaces: &input.top_surfaces[layer_index],
+                supports_projected: bottom_projection,
+                top_contacts,
+                contact_index,
+                bottom_interface_height: input.bottom_interface_height,
+                support_width_scaled: input.support_width_scaled,
+                scale: input.scale,
+            };
+            contacts.extend(detect_bottom_contacts(&contact, &mut support_areas)?);
+            if let Some(floor) = propagating_floor {
+                let surface = floor.half_plane(layer.print_z, input.scale, true);
+                let contact = BottomContactsInput {
+                    top_surfaces: &surface,
+                    ..contact
+                };
+                contacts.extend(detect_floor_contact(&contact, &mut support_areas)?);
+            }
         }
         let covered = buildplate_covered
             .as_deref_mut()
@@ -116,6 +126,19 @@ pub(super) fn bottom_contact_layers_and_layer_support_areas(
         } else {
             Vec::new()
         };
+        if let Some(floor) = propagating_floor {
+            let valid = floor.half_plane(layer.print_z, input.scale, false);
+            for polygons in [
+                &mut overhangs_projection,
+                &mut enforcers_projection,
+                &mut area,
+                &mut enforced_area,
+            ] {
+                if !polygons.is_empty() {
+                    *polygons = intersection_polygons_paths(polygons, &valid)?;
+                }
+            }
+        }
         if !enforced_area.is_empty() {
             if area.is_empty() {
                 area = enforced_area;
@@ -136,6 +159,14 @@ pub(super) fn bottom_contact_layers_and_layer_support_areas(
             polygons: &mut layer.polygons,
         }),
     )?;
+    if let Some(floor) = input.floor {
+        floor.trim(
+            contacts
+                .iter_mut()
+                .map(|layer| (layer.print_z, &mut layer.polygons)),
+            input.scale,
+        )?;
+    }
     Ok(BottomProjection {
         contacts,
         support_areas,

@@ -140,6 +140,15 @@ Grid by default. Native rejects belt raft in `Print.cpp:2145–2149`.
    object-only behavior and its no-object fallback (`:6874–6879,11570–11597`).
    Do not apply the support floor offset to path speed or fan band height.
 
+   The overhang estimator tracks the last object layer prepared for emission,
+   not the previous geometric slice (`GCode.cpp:5102–5108,6995–7001`,
+   `GCode/ExtrusionProcessor.hpp:490–542`). A support-only lead-in does not
+   populate that history. Before an object layer has been prepared, Native
+   measures against an empty boundary at infinite distance
+   (`AABBTreeLines.hpp:336–345`), so the first printed wall above the belt's
+   first-layer band can slow down even if a geometric slice exists below it.
+   Keep this history and empty-boundary behavior shared with flat-bed emission.
+
 ## Deferred
 
 - Tree support (`Support/TreeModelVolumes.cpp:155–162`,

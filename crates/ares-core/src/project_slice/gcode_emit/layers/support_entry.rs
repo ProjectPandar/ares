@@ -105,13 +105,17 @@ pub(super) fn emit(
             motion::SharedLayerId::Support(layer.id),
         ),
     };
-    motion::emit_support(
+    let saved_bands = state.belt_bands;
+    state.belt_bands = super::boundary::belt::bands(traversal, object_index, layer.print_z);
+    let emitted = motion::emit_support(
         output,
         &mut layer.support_fills,
         selected_role,
         phase,
         state,
-    )?;
+    );
+    state.belt_bands = saved_bands;
+    emitted?;
     if standalone {
         if let Some(labels) = labels {
             labels.queue_stop(output, state, emit_labels);

@@ -2,6 +2,7 @@
 
 mod annotations;
 mod bed;
+mod grid;
 pub(super) mod region;
 mod tree_input;
 
@@ -21,10 +22,7 @@ use crate::{
     project_slice::{
         extruders::collect_project_object_extruders,
         fill_entities::PreparedPostFillEntities,
-        perimeters::{
-            flow::{resolve_support_flows, with_flow_ratio},
-            types::{Flow, RegionLayerIndex},
-        },
+        perimeters::{flow::resolve_support_flows, types::RegionLayerIndex},
     },
 };
 use region::{Region, RegionSource};
@@ -302,37 +300,21 @@ pub(in crate::project_slice) fn generate(
                     parameters: &parameters,
                     counts: &counts,
                     scale,
+                    belt_floor: false,
                 },
                 context.cancel_ref(),
             )?);
             continue;
         }
-        let height_min = settings
-            .project
-            .print
-            .min_layer_height
-            .0
-            .iter()
-            .map(|height| height.0.max(0.01))
-            .chain(plan.layers.iter().map(|layer| layer.height.max(0.01)))
-            .fold(0.01 / scale.factor(), f64::min);
-        let interface_nozzle = region::nozzle(
-            object.support_interface_filament.0,
-            &settings.project.print.nozzle_diameter,
+        let frame = grid::SupportFrame::new(plan, &settings.printer.remaining);
+        let (height_min, extrusion_width, bottom_interface_height) = grid::dimensions(
+            settings,
+            object,
+            plan,
+            &parameters,
+            bridge_flow_ratio,
+            scale,
         );
-        let extrusion_width = match object.line_width {
-            FloatOrPercent::Float(width) => width,
-            FloatOrPercent::Percent(percent) => interface_nozzle * percent.0 / 100.0,
-        };
-        let bottom_interface_flow = if slicing.zero_gap_interface_bottom || !object.thick_bridges.0
-        {
-            with_flow_ratio(parameters.interface_flow, bridge_flow_ratio)
-        } else {
-            Flow::bridging_flow(
-                (bridge_flow_ratio * f64::from(parameters.interface_flow.nozzle_diameter)) as f32,
-                parameters.interface_flow.nozzle_diameter,
-            )
-        };
         let mut geometry = generate_grid_support_geometry(
             &GridSupportInput {
                 toolpath_parameters: &parameters,
@@ -345,8 +327,10 @@ pub(in crate::project_slice) fn generate(
                         .independent_support_layer_height
                         .0,
                     support_layer_height_min: height_min,
-                    layers: &plan.layers,
+                    layers: &frame.layers,
                 },
+                floor: frame.floor,
+                tilt_slope: frame.tilt_slope,
                 layers: &layers,
                 enforcers: &enforcers,
                 blockers: &blockers,
@@ -355,7 +339,7 @@ pub(in crate::project_slice) fn generate(
                 trim_regions: &trim_regions,
                 interface_counts: &counts,
                 extrusion_width_scaled: extrusion_width / scale.factor(),
-                bottom_interface_height: f64::from(bottom_interface_flow.height),
+                bottom_interface_height,
                 support_width_scaled: (f64::from(parameters.base_flow.width) / scale.factor())
                     as i64 as f32,
                 gap_xy: object.support_object_xy_distance.0,
@@ -378,7 +362,7 @@ pub(in crate::project_slice) fn generate(
             },
             context.cancel_ref(),
         )?;
-        output.push(generate_grid_support_toolpaths(
+        let mut installed = generate_grid_support_toolpaths(
             &mut geometry,
             &ToolpathInput {
                 object,
@@ -386,9 +370,12 @@ pub(in crate::project_slice) fn generate(
                 parameters: &parameters,
                 counts: &counts,
                 scale,
+                belt_floor: frame.floor.is_some(),
             },
             context.cancel_ref(),
-        )?);
+        )?;
+        frame.restore(&mut installed);
+        output.push(installed);
     }
     Ok(output)
 }

@@ -33,6 +33,7 @@ pub(super) struct AdhesionInput<'a> {
     pub(super) first_object_slices: &'a [ExPolygon],
     // PrintObject::has_brim includes model-owned painted brim points.
     pub(super) has_brim: bool,
+    pub(super) belt_floor: bool,
     pub(super) gap_xy_first_layer: f64,
     pub(super) first_layer_flow_width_scaled: i64,
     pub(super) scale: CoordinateScale,
@@ -56,7 +57,11 @@ pub(super) fn generate_raft_base(
                 raft_interface_top_z: parameters.raft_interface_top_z,
                 first_object_slices: input.first_object_slices,
                 brim: &brim,
-                first_layer_expansion: input.object.raft_first_layer_expansion.0,
+                first_layer_expansion: if input.belt_floor {
+                    0.0
+                } else {
+                    input.object.raft_first_layer_expansion.0
+                },
                 gap_xy_first_layer: input.gap_xy_first_layer,
                 first_layer_flow_width_scaled: input.first_layer_flow_width_scaled,
                 scale: input.scale,

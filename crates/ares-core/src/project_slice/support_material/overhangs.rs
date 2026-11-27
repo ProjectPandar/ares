@@ -27,6 +27,7 @@ pub(super) struct OverhangDetection<'a> {
     pub(super) layer: &'a LayerInput<'a>,
     pub(super) lower: Option<&'a LayerInput<'a>>,
     pub(super) object: &'a ObjectOptions,
+    pub(super) tilt_slope: [f64; 2],
     pub(super) annotations: &'a LayerAnnotations<'a>,
     pub(super) scale: CoordinateScale,
 }
@@ -53,8 +54,18 @@ pub(super) fn detect_overhangs(
         let lower = input.lower.unwrap();
         let filtered =
             filtered_lower_slices(lower.slices, input.layer.regions[0].external_width_scaled)?;
+        let mut effective_lower = to_polygons(lower.slices);
+        if input.tilt_slope.iter().any(|slope| slope.abs() > 1e-4) {
+            let [dx, dy] = input
+                .tilt_slope
+                .map(|slope| input.scale.scaled_delta(slope * lower.height) as i64);
+            for point in effective_lower.iter_mut().flat_map(Polygon::points_mut) {
+                *point = Point::new(point.x() + dx, point.y() + dy);
+            }
+        }
         for region in input.layer.regions {
-            let detected = detect_region_overhangs(input, region, &filtered, sharp_tails)?;
+            let detected =
+                detect_region_overhangs(input, region, &effective_lower, &filtered, sharp_tails)?;
             lower_offset = detected.lower_layer_offset;
             let mut region_polygons = detected.polygons;
             if region_polygons.is_empty() {
@@ -141,9 +152,10 @@ pub(super) fn filtered_lower_slices(
     Ok(output)
 }
 
-pub(super) fn detect_region_overhangs(
+fn detect_region_overhangs(
     input: &OverhangDetection<'_>,
     region: &RegionInput<'_>,
+    lower: &[Polygon],
     lower_filtered: &[ExPolygon],
     sharp_tails: &mut SharpTails,
 ) -> Result<RegionOverhangs, ClipperError> {
@@ -168,16 +180,15 @@ pub(super) fn detect_region_overhangs(
         };
         width - (overlap_mm / input.scale.factor()) as f32
     };
-    let lower = to_polygons(lower_layer.slices);
     let current = to_polygons(region.slices);
     let mut polygons = Vec::new();
     if lower_layer_offset == 0.0 {
-        polygons = difference_polygons_paths(&current, &lower)?;
+        polygons = difference_polygons_paths(&current, lower)?;
         if let Some(covered) = input.annotations.buildplate_covered {
             polygons = difference_polygons_paths(&polygons, covered)?;
         }
     } else if input.object.support_type == ProcessSupportType::NormalAuto {
-        let expanded_lower = offset_paths(&lower, lower_layer_offset, JoinType::Square, 0.0)?;
+        let expanded_lower = offset_paths(lower, lower_layer_offset, JoinType::Square, 0.0)?;
         polygons = difference_polygons_paths(&current, &expanded_lower)?;
         if let Some(covered) = input.annotations.buildplate_covered
             && !covered.is_empty()
@@ -187,7 +198,7 @@ pub(super) fn detect_region_overhangs(
         if !polygons.is_empty() {
             let expanded = offset_paths(&polygons, lower_layer_offset, JoinType::Square, 0.0)?;
             let clipped = intersection_polygons_paths(&expanded, &current)?;
-            polygons = difference_polygons_paths(&clipped, &lower)?;
+            polygons = difference_polygons_paths(&clipped, lower)?;
         }
         for polygon in region.raw_slices {
             if offset_expolygon(polygon, -0.5 * width, JoinType::Miter, 3.0)?.is_empty() {

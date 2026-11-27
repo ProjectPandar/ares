@@ -39,13 +39,12 @@ pub(super) fn emit(
     let spiral_body_layer = spiral.is_body_layer(layer, layer_index, layer_z);
     state.spiral_vase_layer = spiral_body_layer;
     let geometry = entry_builder.geometry(object_index, layer_index, chunk_perimeter_spacing);
-    let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
-        .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
+    let lower_boundary = crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines);
     let motion_geometry = geometry.view(
         timelapse_context,
         object_index,
         layer_index,
-        lower_boundary.as_ref(),
+        Some(&lower_boundary),
     );
     let entry_output_start = output.len();
     if !starts_after_support && let Some(labels) = labels {
