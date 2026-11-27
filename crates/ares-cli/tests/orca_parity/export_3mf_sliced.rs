@@ -16,6 +16,8 @@ const SETTINGS: [&str; 4] = [
 const STL: &str = "3mf-export.stl";
 const GCODE: &str = "Metadata/plate_1.gcode";
 
+#[path = "export_3mf_sliced/allow_newer.rs"]
+mod allow_newer;
 #[path = "export_3mf_sliced/assemble_items.rs"]
 mod assemble_items;
 #[path = "export_3mf_sliced/comparator.rs"]
