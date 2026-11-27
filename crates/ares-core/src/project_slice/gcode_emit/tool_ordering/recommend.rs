@@ -12,7 +12,7 @@ use crate::{
         write_config_block,
     },
     project_slice::{
-        island_print_order::OrderedExtrusionLayer,
+        belt::brim::BeltBrimPlan, island_print_order::OrderedExtrusionLayer,
         prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
         support_material::InstalledSupportLayer,
     },
@@ -24,10 +24,16 @@ pub(in crate::project_slice::gcode_emit) fn build_recommended(
     objects: &[Vec<OrderedExtrusionLayer>],
     support: &[Vec<InstalledSupportLayer>],
     raft: Option<&RaftSchedule>,
+    brim: Option<&BeltBrimPlan>,
 ) -> Result<ToolOrdering, SliceError> {
     let traversal = &mut horizontal.predecessor;
-    let (layers, bottom_z, max_height) =
-        collect_layers(traversal, objects, support, raft, OrderingScope::All)?;
+    let (layers, bottom_z, max_height) = collect_layers(
+        traversal,
+        objects,
+        support,
+        (raft, brim),
+        OrderingScope::All,
+    )?;
     let mut used = layers
         .iter()
         .flat_map(|layer| layer.extruders.iter().copied())

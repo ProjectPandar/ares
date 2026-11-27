@@ -21,7 +21,7 @@ pub(super) use partitions::max_layer_height;
 use super::layers::RaftSchedule;
 
 use crate::project_slice::{
-    island_print_order::OrderedExtrusionLayer,
+    belt::brim::BeltBrimPlan, island_print_order::OrderedExtrusionLayer,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
     support_material::InstalledSupportLayer,
 };
@@ -212,7 +212,8 @@ pub(super) fn build(
     scope: OrderingScope,
 ) -> Result<ToolOrdering, crate::SliceError> {
     let scoped = matches!(scope, OrderingScope::Object { .. });
-    let (layers, bottom_z, max_height) = collect_layers(traversal, objects, support, raft, scope)?;
+    let (layers, bottom_z, max_height) =
+        collect_layers(traversal, objects, support, (raft, None), scope)?;
     finish_layers(traversal, layers, bottom_z, max_height, scoped)
 }
 
@@ -220,7 +221,7 @@ fn collect_layers(
     traversal: &PreparedPostClassicTraversal,
     objects: &[Vec<OrderedExtrusionLayer>],
     support: &[Vec<InstalledSupportLayer>],
-    raft: Option<&RaftSchedule>,
+    (raft, brim): (Option<&RaftSchedule>, Option<&BeltBrimPlan>),
     scope: OrderingScope,
 ) -> Result<(Vec<LayerTools>, f64, f64), crate::SliceError> {
     let (scoped_object, seed_extruder) = match scope {
@@ -237,7 +238,12 @@ fn collect_layers(
             raft.map(|raft| raft.plans.as_slice()),
             object,
         ),
-        None => initialize_layers(traversal, support, raft.map(|raft| raft.plans.as_slice())),
+        None => initialize_layers(
+            traversal,
+            support,
+            raft.map(|raft| raft.plans.as_slice()),
+            brim,
+        ),
     };
     let candidates = collect::print_extruders(traversal);
     let per_layer_extruder_switches = if scoped_object.is_some() {
@@ -313,6 +319,9 @@ fn collect_layers(
                     &candidates,
                 );
             }
+        }
+        if let Some(brim) = brim {
+            initialize::collect_belt_brim(&mut layers, brim);
         }
         for layer in &mut layers {
             layer.extruders.sort_unstable();

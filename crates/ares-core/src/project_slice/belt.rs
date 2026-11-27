@@ -47,15 +47,27 @@ pub(super) fn admit(
             return Err(unsupported("volumes"));
         }
     }
-    // The admitted single slot cannot activate the planner (BeltPurge.cpp:48–61).
-    if resolved.logical_filament_count != 1
-        || resolved
-            .usage
-            .supported_used_filaments
-            .iter()
-            .any(|&slot| slot != 0)
+    let slots = resolved.logical_filament_count;
+    if resolved
+        .usage
+        .supported_used_filaments
+        .iter()
+        .any(|&slot| slot >= slots)
     {
         return Err(unsupported("materials"));
+    }
+    if slots > 1 {
+        if placements != 1 {
+            return Err(unsupported("multi_placement_materials"));
+        }
+        let object = objects
+            .clone()
+            .next()
+            .expect("one placement has one object");
+        let source = &project.objects()[object.source_object_index];
+        if !admits_multiple_filaments(project, resolved, source, &object.object) {
+            return Err(unsupported("materials"));
+        }
     }
 
     for object in objects.clone() {
@@ -149,6 +161,39 @@ fn normal_grid_support(
             .mapping
             .is_empty()
         && !brim::enabled(settings, object)
+}
+
+fn admits_multiple_filaments(
+    project: &Project,
+    resolved: &BoundedResolvedProjectConfig,
+    source: &crate::ProjectObject,
+    object: &crate::ObjectOptions,
+) -> bool {
+    let settings = &resolved.views.full;
+    // BeltPurge.cpp:48–61, Print.cpp:3614–3615: activation precedes the tool-change scan.
+    if settings.printer.remaining.enable_belt_purge_tower.0 && object.belt_purge_tower_object.0 {
+        return false;
+    }
+    if settings.project.print.nozzle_diameter.0.len() != 1
+        || source.is_mm_painted(resolved.logical_filament_count)
+    {
+        return false;
+    }
+    let raw = &project.documents().project_settings_raw;
+    let any_value = |key: &str, matches: fn(&str) -> bool| {
+        raw.get(key).is_some_and(|values| {
+            (0..values.len()).any(|index| {
+                values
+                    .element(index)
+                    .and_then(|value| value.token())
+                    .is_some_and(|value| value.split([';', ',']).any(matches))
+            })
+        })
+    };
+    !any_value("filament_is_mixed", |flag| matches!(flag, "1" | "true"))
+        && !any_value("extruder_max_nozzle_count", |count| {
+            count.parse::<i32>().is_ok_and(|count| count > 1)
+        })
 }
 
 #[derive(Clone, Copy)]

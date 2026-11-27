@@ -24,6 +24,37 @@ pub(super) fn band(plan: Option<&BeltBrimPlan>, layer: LayerToPrint) -> (bool, O
     }
 }
 
+pub(super) fn select(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    filament: usize,
+    context: super::super::timelapse::Context<'_>,
+) -> Result<(), SliceError> {
+    if !state.extruder_selected || state.extruders.active_id() != filament {
+        super::super::tool_transition::emit(output, state, filament, context)?;
+    }
+    Ok(())
+}
+
+pub(super) fn emit_coincident(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    context: super::super::timelapse::Context<'_>,
+    shift: Point,
+    band: Option<(&Band, [usize; 2], EntryGeometry<'_>)>,
+) -> Result<(), SliceError> {
+    if let Some((band, index, geometry)) = band {
+        emit(
+            output,
+            state,
+            band,
+            context,
+            (shift, Some((index, &geometry))),
+        )?;
+    }
+    Ok(())
+}
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
