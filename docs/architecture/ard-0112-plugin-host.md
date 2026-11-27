@@ -1,0 +1,84 @@
+# ARD-0112: Slicing pipeline plugin host
+
+Status: proposed. Tracking: [plugin-system.md](../plugin-system.md).
+
+## Source boundary
+
+OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`) already splits
+its plugin system into a `libslic3r` seam and a GUI-side host. Ares ports the
+seam and replaces the host.
+
+| Upstream | Role | Ares destination |
+| --- | --- | --- |
+| `PrintConfig.cpp:6007–6011` `plugins` (`name;uuid;capability` manifest) | project/preset key | already defined in `options/registry`; still inert |
+| `PrintConfig.cpp:6013–6020` `slicing_pipeline_plugin` (`plugin_type = "slicing-pipeline"`) | selects capabilities | already defined in `options/process_options/print_source.rs`; still inert |
+| `Print.hpp:132–138` `SlicingPipelineStepPlugin` | 12 in-pipeline steps + `psGCodePostProcess` | `ares-core` step enum |
+| `Print.hpp:1061–1064,1491–1496` `SlicingPipelineHookFn`, `set_slicing_pipeline_hook_fn`, `run_pipeline_hook` | injected dispatcher; `libslic3r` has no plugin dependency | `ares-core` host trait supplied by the caller |
+| `Print.cpp:3272–3275` | active iff a dispatcher is installed and `slicing_pipeline_plugin` is non-empty | same rule |
+| `Print.cpp:3419–3423` `hook_after` and call sites `:3543,:3629,:3909,:3926` | fire only when the step was recomputed in this pass | same rule, keyed into step invalidation |
+| `GUI/PostProcessor.cpp:266–290` | `psGCodePostProcess` edits the exported file | byte-in/byte-out step after export |
+| `plugin/PluginHooks.cpp:72–140`, `plugin/PluginManager.cpp:137` | Python dispatcher, installed only by the GUI plugin manager | replaced by the WASM host below |
+| `plugin/host/PluginHostSlicing.cpp:115–363` | data exposed to Python: surfaces writable, extrusions read-only | replaced by the interface below |
+
+`src/OrcaSlicer.cpp` (CLI) never installs a dispatcher, so Native CLI output
+ignores both keys. Ares keeps that default: a project that names plugins
+slices exactly as today unless the caller explicitly attaches a plugin host.
+
+## Decisions
+
+1. **One plugin interface.** The only plugin contract is a versioned
+   WebAssembly module interface, defined once (message types in one crate)
+   and projected into a Rust SDK and TypeScript declarations. There is no
+   second compiled-in or native plugin interface; first-party plugins ship as
+   `.wasm` like any other.
+2. **The host only loads WebAssembly.** JavaScript plugins run through a JS
+   runtime plugin: a WASM module that embeds a JS engine, implements the same
+   interface and forwards calls to JS sources. Every platform runs the same
+   engine binary, so a JS plugin produces identical bytes on native and in the
+   browser.
+3. **`ares-core` stays platform-neutral.** Core owns the step enum, the
+   activation and recompute-only firing rules, and the host trait. The WASM
+   engine is either a pure-Rust interpreter usable from core on all four
+   platforms, or adapter-owned (native runtime in `ares-cli`, the browser's
+   WebAssembly in `ares-wasm`); the spike in [plugin-system.md](../plugin-system.md)
+   selects one. Core never reads plugin files.
+4. **Deterministic plugins.** Plugins get no clock, randomness, threads,
+   filesystem or network. Each hook is a pure function of the data the host
+   passes for one layer or object; hooks run in the order of
+   `slicing_pipeline_plugin`. NaN payloads returned by a plugin are
+   canonicalized. Output must not depend on core count.
+5. **Hot reload.** A plugin's identity is the hash of its module bytes (and, for
+   JS, its sources). The identity is part of the configuration compared by the
+   PrintApply invalidation, so replacing a plugin recomputes from its first
+   hooked step and keeps earlier steps. File watching belongs to the adapter.
+6. **No plugin, no change.** With no host attached or an empty
+   `slicing_pipeline_plugin`, output is byte-identical to the current code and
+   every parity suite is unchanged. Output produced with plugins carries no
+   OrcaSlicer parity claim.
+7. **Perimeter extension.** Upstream exposes extrusions read-only, so its
+   plugins can only alter perimeters by rewriting G-code text, where the
+   perimeter index is lost. Ares adds one non-upstream extension at the
+   `posPerimeters` seam: read-only inset index per perimeter path, and
+   writable per-path Z offset, flow multiplier and perimeter order, honoured
+   by G-code emission. Its exact data model is specified with its first
+   consumer.
+
+## Rewrite rule amendment (proposed)
+
+`AGENTS.md` requires every milestone to be an upstream rewrite slice. Plugin
+features (for example staggered perimeters) have no upstream implementation.
+Proposed addition:
+
+> Plugin modules are exempt from the rewrite rule. Core changes for plugins
+> are limited to porting the upstream plugin seam plus the extensions recorded
+> in ARD-0112; with no plugin attached, output stays byte-identical, and
+> plugin output makes no OrcaSlicer parity claim.
+
+## Verification
+
+- Every existing parity and non-parity suite passes unchanged with no plugin.
+- End-to-end: a sample plugin at each step class (post-process, perimeter)
+  sliced through the CLI and the browser build produces byte-identical
+  G-code, retained as a repeatable artifact.
+- Core-count invariance (1/2/7/16) with plugins attached.
+- Replacing a plugin during a session recomputes only from its hooked step.
