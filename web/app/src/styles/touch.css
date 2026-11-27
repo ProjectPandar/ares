@@ -127,3 +127,22 @@
     bottom: 200px;
   }
 }
+/* Phones: the view cube's actions sit in a row above it, keeping both left of the 3D view's centre,
+   where gestures start. */
+@media (pointer: coarse) and (max-width: 640px) {
+  .view-cube-nav {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+  .view-cube-actions {
+    flex-direction: row;
+    margin-bottom: 0;
+  }
+}
+/* Short phones: the collapsed slicing result keeps its header only, so the view cube fits between
+   it and the G-code window. */
+@media (pointer: coarse) and (max-width: 640px) and (max-height: 740px) {
+  .slice-result:has(.slice-result-collapse[aria-expanded="false"]) > :not(.slice-result-header) {
+    display: none;
+  }
+}

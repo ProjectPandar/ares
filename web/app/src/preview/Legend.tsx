@@ -206,8 +206,8 @@ export function Legend({
             </ul>
             {optionRows.length > 0 && (
               <>
-                <div className="legend-header" aria-hidden="true">
-                  <span>Options</span>
+                <div className="legend-header legend-section" aria-hidden="true">
+                  Options
                 </div>
                 <ul className="legend-list legend-options">{optionRows}</ul>
               </>
