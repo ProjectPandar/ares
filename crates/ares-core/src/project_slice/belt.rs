@@ -114,10 +114,12 @@ fn automatic_support(
             ProcessSupportType::TreeAuto,
             ProcessSupportStyle::Organic
             | ProcessSupportStyle::Default
-            | ProcessSupportStyle::TreeSlim
             | ProcessSupportStyle::TreeStrong
             | ProcessSupportStyle::TreeHybrid,
         ) => object.support_on_build_plate_only.0,
+        // Support/TreeSupport.cpp:2980–3029,2408–2524 retains model groups and
+        // derives their contact bands when build-plate-only is disabled.
+        (ProcessSupportType::TreeAuto, ProcessSupportStyle::TreeSlim) => true,
         _ => false,
     };
     let printer = &settings.printer.remaining;
