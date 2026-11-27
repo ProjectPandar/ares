@@ -137,6 +137,29 @@ fn catalog_retained_filament_keep_project_resets_script_without_writing_column()
 }
 
 #[test]
+fn catalog_retained_filament_refresh_replaces_empty_notes_vector() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = artifact_dir();
+    let base =
+        fs::read(repo_root().join("tests/parity/bbl-layer-object-labels/one-object.3mf")).unwrap();
+    repack_file(&base, &root.join("two-slot.3mf"), |saved| {
+        saved["filament_notes"] = json!("");
+        saved[COLUMNS] = json!(["layer_height", "", "", ""]);
+    });
+    let resources = stock_resources();
+    let gcode = pair_on(
+        (&runner, &root),
+        "two-slot.3mf",
+        "empty-notes",
+        &[],
+        &["--resources-dir", resources.to_str().unwrap()],
+    );
+    assert_eq!(decode_strings(&gcode, "filament_notes"), ["", ""]);
+}
+
+#[test]
 fn catalog_retained_multi_filament_preserves_other_slots() {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
