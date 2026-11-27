@@ -4,6 +4,8 @@
 mod brim;
 #[path = "belt_print/instances.rs"]
 mod instances;
+#[path = "belt_print/multi_filament.rs"]
+mod multi_filament;
 #[path = "belt_print/normal_support.rs"]
 mod normal_support;
 #[path = "belt_print/purge.rs"]

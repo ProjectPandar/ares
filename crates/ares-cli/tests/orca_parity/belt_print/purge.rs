@@ -107,15 +107,17 @@ fn enabling_belt_purge_still_rejects_support_without_gcode() {
 }
 
 #[test]
-fn enabling_belt_purge_still_rejects_multiple_filaments_without_gcode() {
-    super::rejects(
-        "materials",
-        &[
-            ("enable_belt_purge_tower", json!("1")),
-            ("filament_diameter", json!(["1.75", "1.75"])),
-            ("filament_map", json!(["1", "1"])),
-        ],
-    );
+fn rejects_a_marked_multi_slot_purge_prism_without_gcode() {
+    for switches in [&[][..], super::multi_filament::SWITCHES] {
+        let input = super::multi_filament::project(
+            2,
+            1,
+            true,
+            switches,
+            &[("enable_belt_purge_tower", json!("1"))],
+        );
+        super::rejects_project("materials", input);
+    }
 }
 
 #[test]
