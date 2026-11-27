@@ -32,7 +32,7 @@ pub(crate) fn collect_bounded_project_usage(
         .grouped
         .by_object
         .iter()
-        .filter(|group| !group.transforms.is_empty())
+        .filter(|group| !group.groups.is_empty())
         .zip(sources.resolved)
         .map(|(group, resolved)| {
             object_usage_input(&sources.objects[group.source_object_index], resolved)

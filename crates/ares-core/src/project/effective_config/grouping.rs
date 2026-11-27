@@ -1,34 +1,13 @@
 use std::cmp::Ordering;
 
-use crate::{ProjectObject, project::transform::Transform3d};
+use crate::{Point3d, ProjectObject, project::transform::Transform3d};
+
+use super::types::ResolvedPrintObjectConfig;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ProjectObjectTransformGroups {
     pub(crate) source_object_index: usize,
-    pub(crate) transforms: Vec<Transform3d>,
-}
-
-impl ProjectObjectTransformGroups {
-    /// `PrintApply.cpp::print_objects_from_model_object` (`:193-230`): each group's members, the
-    /// `is_printable()` instances (`:201`), retain ModelObject instance order, independently of
-    /// transform ordering.
-    pub(crate) fn instance_indices(&self, object: &ProjectObject) -> Vec<Vec<usize>> {
-        let mut members = vec![Vec::new(); self.transforms.len()];
-        for (index, instance) in object
-            .instances()
-            .iter()
-            .enumerate()
-            .filter(|(_, instance)| instance.is_printable())
-        {
-            let transform = instance.transform().without_xy_translation();
-            let group = self
-                .transforms
-                .binary_search_by(|candidate| transform_order(candidate, &transform))
-                .expect("printable instance retains its transform group");
-            members[group].push(index);
-        }
-        members
-    }
+    pub(crate) groups: Vec<ResolvedPrintObjectConfig>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,23 +26,50 @@ fn transform_order(left: &Transform3d, right: &Transform3d) -> Ordering {
     }
 }
 
-pub(crate) fn group_print_object_transforms(objects: &[ProjectObject]) -> GroupedPrintObjects {
+pub(crate) fn group_print_object_transforms(
+    objects: &[ProjectObject],
+    belt_shrinkage: Option<f64>,
+) -> GroupedPrintObjects {
     let mut effective_print_object_count = 0;
     let mut by_object = Vec::with_capacity(objects.len());
 
     for (source_object_index, object) in objects.iter().enumerate() {
-        let mut transforms = object
+        let mut instances = object
             .instances()
             .iter()
-            .filter(|instance| instance.is_printable())
-            .map(|instance| instance.transform().without_xy_translation())
+            .enumerate()
+            .filter(|(_, instance)| instance.is_printable())
+            .enumerate()
+            .map(|(ordinal, (index, instance))| {
+                let transform = instance.transform().without_xy_translation();
+                // PrintApply.cpp:200–218 separates belt copies and retains bed-drop Z.
+                let transform = belt_shrinkage.map_or(transform, |factor| {
+                    transform
+                        .with_z_shrinkage_compensation(factor)
+                        .pretranslated(Point3d::new(0., 0., 1e-10 * (ordinal + 1) as f64))
+                });
+                (transform, index)
+            })
             .collect::<Vec<_>>();
-        transforms.sort_by(transform_order);
-        transforms.dedup_by(|left, right| left.fixed_order_equal(*right));
-        effective_print_object_count += transforms.len();
+        instances.sort_by(|left, right| transform_order(&left.0, &right.0));
+        let mut groups: Vec<ResolvedPrintObjectConfig> = Vec::new();
+        for (transform, index) in instances {
+            if belt_shrinkage.is_none()
+                && let Some(last) = groups.last_mut()
+                && last.transform.fixed_order_equal(transform)
+            {
+                last.instance_indices.push(index);
+            } else {
+                groups.push(ResolvedPrintObjectConfig {
+                    transform,
+                    instance_indices: vec![index],
+                });
+            }
+        }
+        effective_print_object_count += groups.len();
         by_object.push(ProjectObjectTransformGroups {
             source_object_index,
-            transforms,
+            groups,
         });
     }
 

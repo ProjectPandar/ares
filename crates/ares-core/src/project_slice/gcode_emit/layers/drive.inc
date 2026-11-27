@@ -149,7 +149,9 @@
         let slicing = traversal.objects[entries[0].object_index].slicing_parameters();
         let object_layer_over_raft = entries[0].object_layer == Some(0)
             && slicing.base_raft_layers + slicing.interface_raft_layers > 0;
-        let layer_z = group_z;
+        let layer_z = if state.belt.is_some() && entries.len() > 1 {
+            group::leading_print_z(traversal, &entries, support_layers).unwrap_or(group_z)
+        } else { group_z };
         let (prologue, belt_band) = belt_brim::band(belt_brim.as_ref(), entries[0]);
         // The HEIGHT header keeps the f32-difference quirk (upstream
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the

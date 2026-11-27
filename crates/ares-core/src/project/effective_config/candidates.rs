@@ -8,10 +8,7 @@ use super::{
     grouping::GroupedPrintObjects,
     layers::{layer_candidate_ranges, layer_range_source_index},
     occupancy::model_part_occupies_range,
-    types::{
-        ResolvedLayerCandidate, ResolvedModelPartCandidate, ResolvedPrintObjectConfig,
-        ResolvedProjectObject,
-    },
+    types::{ResolvedLayerCandidate, ResolvedModelPartCandidate, ResolvedProjectObject},
 };
 
 pub(crate) fn resolve_project_objects(
@@ -21,11 +18,12 @@ pub(crate) fn resolve_project_objects(
     grouped: &GroupedPrintObjects,
     process_variant_indices: &[usize],
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
-    let z_compensation = z_shrinkage_compensation(settings, validated.logical_filament_count);
+    let z_compensation = (!settings.printer.remaining.belt_printer.0)
+        .then(|| z_shrinkage_compensation(settings, validated.logical_filament_count));
     grouped
         .by_object
         .iter()
-        .filter(|groups| !groups.transforms.is_empty())
+        .filter(|groups| !groups.groups.is_empty())
         .map(|groups| {
             let object = &objects[groups.source_object_index];
             let object_options = ObjectOptions::resolve(
@@ -38,13 +36,14 @@ pub(crate) fn resolve_project_objects(
                 source_object_index: groups.source_object_index,
                 object: object_options,
                 print_objects: groups
-                    .transforms
+                    .groups
                     .iter()
-                    .copied()
-                    .zip(groups.instance_indices(object))
-                    .map(|(transform, instance_indices)| ResolvedPrintObjectConfig {
-                        transform: transform.with_z_shrinkage_compensation(z_compensation),
-                        instance_indices,
+                    .cloned()
+                    .map(|mut group| {
+                        if let Some(factor) = z_compensation {
+                            group.transform = group.transform.with_z_shrinkage_compensation(factor);
+                        }
+                        group
                     })
                     .collect(),
                 layer_candidates: Vec::new(),
@@ -54,7 +53,7 @@ pub(crate) fn resolve_project_objects(
         .collect()
 }
 
-fn z_shrinkage_compensation(settings: &ProjectSettings, logical_count: usize) -> f64 {
+pub(crate) fn z_shrinkage_compensation(settings: &ProjectSettings, logical_count: usize) -> f64 {
     let xy = &settings.filament.print.filament_shrink.0;
     let z = &settings.filament.print.filament_shrinkage_compensation_z.0;
     let first = (xy[0].0, z[0].0);
@@ -84,7 +83,7 @@ pub(crate) fn resolve_project_candidates(
     for (groups, resolved_object) in grouped
         .by_object
         .iter()
-        .filter(|groups| !groups.transforms.is_empty())
+        .filter(|groups| !groups.groups.is_empty())
         .zip(&mut resolved)
     {
         let representative = resolved_object.print_objects[0].transform;

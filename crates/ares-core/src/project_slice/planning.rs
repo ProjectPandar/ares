@@ -21,57 +21,44 @@ pub(super) fn plan_project(
         resolved.logical_filament_count,
     );
     let rotation = BeltRotation::from_printer(&resolved.views.full.printer.remaining);
-    plan_resolved_objects(&resolved.objects, |object_index, resolved_object| {
-        let source = &project.objects()[resolved_object.source_object_index];
-        let belt_slice = rotation
-            .map(|rotation| {
-                BeltSlice::new(rotation, source, &resolved_object.print_objects[0], scale)
-            })
-            .transpose()?;
-        let object_height = match belt_slice {
-            Some(slice) => slice.height,
-            None => bounds::participating_object_heights(
-                project.objects(),
-                std::slice::from_ref(resolved_object),
-            )?[0],
-        };
-        let parameters = parameters::slicing_parameters(
-            &resolved.views.full,
-            &resolved_object.object,
-            object_height,
-            &object_extruders[object_index],
-        )?;
-        let profile = profile::update_layer_height_profile(
-            &parameters,
-            source.layer_height_profile(),
-            source.layer_config_ranges(),
-        )?;
-        Ok((parameters, profile, belt_slice))
-    })
-}
-
-pub(super) fn plan_resolved_objects(
-    resolved_objects: &[ResolvedProjectObject],
-    mut prepare: impl FnMut(
-        usize,
-        &ResolvedProjectObject,
-    ) -> Result<
-        (parameters::SlicingParameters, Vec<f64>, Option<BeltSlice>),
-        SliceError,
-    >,
-) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
     let mut budget = layers::LayerBudget::default();
     let mut planned_objects = Vec::new();
-    for (object_index, resolved_object) in resolved_objects.iter().enumerate() {
+    for (object_index, resolved_object) in resolved.objects.iter().enumerate() {
         if resolved_object.print_objects.is_empty() {
             continue;
         }
-        let (parameters, profile, belt_slice) = prepare(object_index, resolved_object)?;
-        for (transform_index, _) in resolved_object.print_objects.iter().enumerate() {
+        let source = &project.objects()[resolved_object.source_object_index];
+        let prepare = |height| -> Result<_, SliceError> {
+            let parameters = parameters::slicing_parameters(
+                &resolved.views.full,
+                &resolved_object.object,
+                height,
+                &object_extruders[object_index],
+            )?;
+            let profile = profile::update_layer_height_profile(
+                &parameters,
+                source.layer_height_profile(),
+                source.layer_config_ranges(),
+            )?;
+            Ok((parameters, profile))
+        };
+        let flat = rotation
+            .is_none()
+            .then(|| prepare(bounds::object_height(source)?))
+            .transpose()?;
+        for (transform_index, group) in resolved_object.print_objects.iter().enumerate() {
+            let belt_slice = rotation
+                .map(|rotation| BeltSlice::new(rotation, source, group, scale))
+                .transpose()?;
+            let belt = belt_slice.map(|slice| prepare(slice.height)).transpose()?;
+            let (parameters, profile) = belt
+                .as_ref()
+                .or(flat.as_ref())
+                .expect("group retains a layer profile");
             planned_objects.push(layers::plan_print_object(
                 (resolved_object.source_object_index, transform_index),
-                &parameters,
-                &profile,
+                parameters,
+                profile,
                 layers::LayerPlanOptions {
                     precise_z_height: resolved_object.object.precise_z_height.0,
                     zaa_min_z: zaa_min_z(resolved_object),

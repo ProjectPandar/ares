@@ -29,21 +29,23 @@ pub(super) fn admit(
     if !printer.belt_printer.0 {
         return Ok(());
     }
-    let mut objects = resolved
+    let objects = resolved
         .objects
         .iter()
         .filter(|object| !object.print_objects.is_empty());
-    let object = objects.next().ok_or_else(|| unsupported("instances"))?;
-    if objects.next().is_some()
-        || !matches!(object.print_objects.as_slice(), [group] if group.instance_indices.len() == 1)
-        || settings.process.print.print_sequence != ProcessPrintSequence::ByLayer
-    {
+    let placements = objects
+        .clone()
+        .map(|object| object.print_objects.len())
+        .sum::<usize>();
+    if placements == 0 || settings.process.print.print_sequence != ProcessPrintSequence::ByLayer {
         return Err(unsupported("instances"));
     }
-    let source = &project.objects()[object.source_object_index];
-    if !matches!(source.volumes(), [volume] if volume.volume_type() == ProjectVolumeType::ModelPart)
-    {
-        return Err(unsupported("volumes"));
+    for object in objects.clone() {
+        let source = &project.objects()[object.source_object_index];
+        if !matches!(source.volumes(), [volume] if volume.volume_type() == ProjectVolumeType::ModelPart)
+        {
+            return Err(unsupported("volumes"));
+        }
     }
     if resolved.logical_filament_count != 1
         || resolved
@@ -55,11 +57,19 @@ pub(super) fn admit(
         return Err(unsupported("materials"));
     }
 
-    if object.object.enable_support.0
-        || object.object.raft_layers.0 != 0
-        || object.object.enforce_support_layers.0 != 0
-    {
+    if objects.clone().any(|object| {
+        object.object.enable_support.0
+            || object.object.raft_layers.0 != 0
+            || object.object.enforce_support_layers.0 != 0
+    }) {
         return Err(unsupported("support"));
+    }
+    if placements > 1
+        && objects
+            .clone()
+            .any(|object| brim::is_active(&object.object, settings))
+    {
+        return Err(unsupported("multi_placement_brim"));
     }
     if printer.enable_belt_purge_tower.0
         || project
@@ -86,7 +96,10 @@ pub(super) fn admit(
     if settings.process.print.spiral_mode.0 {
         return Err(unsupported("spiral_mode"));
     }
-    if object.all_regions.iter().any(|region| region.zaa_enabled.0) {
+    if objects
+        .flat_map(|object| &object.all_regions)
+        .any(|region| region.zaa_enabled.0)
+    {
         return Err(unsupported("contoured_toolpaths"));
     }
     let axis = printer.belt_slice_rotation;
@@ -192,12 +205,9 @@ impl BeltSlice {
     ) -> Result<Self, SliceError> {
         let center = super::centering::center(source, group, scale)?;
         let center = Point3d::new(scale.unscale(center.x()), scale.unscale(center.y()), 0.);
-        // PrintApply.cpp:213–214 adds to Z using the one-based printable instance ordinal.
-        let instance_ordinal = 1.;
         let centered = group
             .transform
-            .without_xy_translation()
-            .pretranslated(Point3d::new(-center.x, -center.y, 1e-10 * instance_ordinal));
+            .pretranslated(Point3d::new(-center.x, -center.y, 0.));
         let volume = &source.volumes()[0];
         let local = centered.then(volume.transform());
         let forward = rotation.forward();

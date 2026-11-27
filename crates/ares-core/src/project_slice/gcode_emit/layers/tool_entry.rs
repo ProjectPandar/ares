@@ -204,6 +204,7 @@ pub(super) fn emit(
     // assignments ahead of the brim instead of leaving the previous
     // entry's values in place.
     let object_layer_state = entry.object_layer.inspect(|&layer_index| {
+        super::boundary::belt::select_owner(traversal, *entry, state);
         let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
         state.layer_index = physical_layer.id;
         state.active_layer_print_z = physical_layer.print_z;

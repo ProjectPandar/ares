@@ -6,7 +6,7 @@ mod geometry;
 use self::geometry::Frame;
 use super::floor_context::BeltFloorContext;
 use crate::{
-    ProcessBrimType, SliceError,
+    ObjectOptions, ProcessBrimType, ProjectSettings, SliceError,
     geometry::{
         BoundingBox, CoordinateScale, ExPolygon, Polyline, intersection_ex_polygons,
         union_expolygons,
@@ -42,20 +42,32 @@ impl BeltBrimPlan {
     pub(in crate::project_slice) fn generate(
         traversal: &PreparedPostClassicTraversal,
     ) -> Result<Option<Self>, SliceError> {
-        if !traversal
-            .resolved
-            .views
-            .full
-            .printer
-            .remaining
-            .belt_printer
-            .0
+        if traversal.objects.len() != 1
+            || !traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .remaining
+                .belt_printer
+                .0
         {
             return Ok(None);
         }
         generate(traversal)
             .map_err(|_| SliceError::InvalidInput("invalid belt brim geometry".into()))
     }
+}
+
+/// `PrintObject::has_belt_brim` checks requested geometry before clipping.
+pub(super) fn is_active(object: &ObjectOptions, settings: &ProjectSettings) -> bool {
+    let printer = &settings.printer.remaining;
+    let process = &settings.process.object;
+    (1.0..=85.0).contains(&printer.belt_slice_rotation_angle.0.abs())
+        && object.brim_type != ProcessBrimType::NoBrim
+        && (object.brim_width.0 > 0.0
+            || (object.brim_type != ProcessBrimType::InnerOnly
+                && (process.leading_brim_length.0 > 0.0 || process.extra_brim_width.0 > 0.0)))
 }
 
 fn generate(
@@ -67,12 +79,7 @@ fn generate(
     let options = &traversal.print_object_config(0).0.object;
     let leading = full.process.object.leading_brim_length.0;
     let lateral = full.process.object.extra_brim_width.0;
-    if !(1.0..=85.0).contains(&printer.belt_slice_rotation_angle.0.abs())
-        || options.brim_type == ProcessBrimType::NoBrim
-        || (options.brim_width.0 <= 0.0
-            && (options.brim_type == ProcessBrimType::InnerOnly
-                || (leading <= 0.0 && lateral <= 0.0)))
-    {
+    if !is_active(options, full) {
         return Ok(None);
     }
     let Some(floor) = object.belt_floor() else {
