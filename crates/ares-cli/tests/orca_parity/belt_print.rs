@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/instances.rs"]
+mod instances;
 #[path = "belt_print/normal_support.rs"]
 mod normal_support;
 #[path = "belt_print/purge.rs"]
