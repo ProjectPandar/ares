@@ -4,8 +4,8 @@ pub(super) mod back_transform;
 pub(super) mod kinematics;
 
 use crate::{
-    BeltRotationAxis, Point3d, ProcessDraftShield, ProcessPrintSequence, ProcessSupportStyle,
-    ProcessSupportType, Project, ProjectVolumeType, RemapAxis, SliceError,
+    BeltRotationAxis, Point3d, PrintValidationKind, ProcessDraftShield, ProcessPrintSequence,
+    ProcessSupportStyle, ProcessSupportType, Project, ProjectVolumeType, RemapAxis, SliceError,
     geometry::CoordinateScale,
     options::PrinterRemainingOptions,
     project::{Transform3d, effective_config::types::BoundedResolvedProjectConfig},
@@ -63,10 +63,17 @@ pub(super) fn admit(
     {
         return Err(unsupported("support"));
     }
-    if settings.process.print.skirt_loops.0 != 0
-        || settings.process.print.draft_shield != ProcessDraftShield::Disabled
-    {
-        return Err(unsupported("skirt"));
+    if settings.process.print.draft_shield != ProcessDraftShield::Disabled {
+        return Err(SliceError::Validate {
+            kind: PrintValidationKind::Generic,
+            message: "Draft shield is not compatible with belt printer mode.".to_owned(),
+            plate_index: project.first_plate_id(),
+            layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+            wall_loops: settings.process.region.wall_loops.0,
+            sparse_infill_density: f64::from(
+                settings.process.region.sparse_infill_density.0 as f32,
+            ),
+        });
     }
     if settings.process.print.spiral_mode.0 {
         return Err(unsupported("spiral_mode"));
