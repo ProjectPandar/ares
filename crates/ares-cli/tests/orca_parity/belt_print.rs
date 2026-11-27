@@ -8,6 +8,8 @@ mod normal_support;
 mod purge;
 #[path = "belt_print/seam_visibility.rs"]
 mod seam_visibility;
+#[path = "belt_print/skirt.rs"]
+mod skirt;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -203,7 +205,7 @@ fn run_ares(work: &Path) -> Output {
 }
 
 fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
-    compare_project(name, project(belt, shift, edits, false));
+    compare_output(name, belt, shift, edits, |_| {});
 }
 
 fn compare_project(name: &str, project: Vec<u8>) {
@@ -211,6 +213,25 @@ fn compare_project(name: &str, project: Vec<u8>) {
 }
 
 fn compare_project_with_native(name: &str, input: Vec<u8>, check_native: impl FnOnce(&str)) {
+    compare_project_with_checks(name, input, check_native, |_| {});
+}
+
+fn compare_output(
+    name: &str,
+    belt: bool,
+    shift: bool,
+    edits: &[(&str, Value)],
+    check: impl FnOnce(&[u8]),
+) {
+    compare_project_with_checks(name, project(belt, shift, edits, false), |_| {}, check);
+}
+
+fn compare_project_with_checks(
+    name: &str,
+    input: Vec<u8>,
+    check_native: impl FnOnce(&str),
+    check: impl FnOnce(&[u8]),
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("belt coordinates require Native OrcaSlicer");
         return;
@@ -239,6 +260,7 @@ fn compare_project_with_native(name: &str, input: Vec<u8>, check_native: impl Fn
     let actual = fs::read(out.join("plate_1.gcode")).unwrap();
     golden::compare_ordered_bytes_generator_only(&native, &actual)
         .unwrap_or_else(|error| panic!("{error}; {work:?}"));
+    check(&actual);
 }
 
 fn rejects(reason: &str, edits: &[(&str, Value)]) {
