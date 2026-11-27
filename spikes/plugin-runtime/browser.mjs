@@ -87,26 +87,38 @@ try {
         ['interpreter', 'rust'], ['interpreter', 'quickjs'], ['interpreter', 'boa'],
         ['browser', 'rust'], ['browser', 'quickjs'], ['browser', 'boa'],
     ];
-    if (process.env.PLUGIN_SPIKE_PORTABLE === 'probe') {
+    const followup = process.env.PLUGIN_SPIKE_PORTABLE;
+    if (followup) {
         await capture({ portableLimits: true }, 'browser-portable-limits.json');
         if (failed) throw new Error('portable WebAssembly limits did not hold');
+        if (followup !== 'probe') {
+            for (const kind of ['staggered', 'subdivision']) {
+                for (const engine of ['rust', 'quickjs']) {
+                    for (const portable of [false, true]) {
+                        const label = portable ? 'portable' : 'plain';
+                        await capture({ backend: 'browser', engine, kind, layers, trials, portable, runnerReload: true },
+                            `browser-${label}-${engine}-${kind}.jsonl`);
+                    }
+                }
+            }
+        }
     } else {
-    for (const kind of ['staggered', 'subdivision']) {
-        for (const [backend, engine] of combinations) {
-            await capture({ backend, engine, kind, layers, trials }, `browser-${backend}-${engine}-${kind}.jsonl`);
+        for (const kind of ['staggered', 'subdivision']) {
+            for (const [backend, engine] of combinations) {
+                await capture({ backend, engine, kind, layers, trials }, `browser-${backend}-${engine}-${kind}.jsonl`);
+            }
         }
-    }
-    for (const engine of ['quickjs', 'boa']) {
-        for (const backend of ['browser', 'direct']) {
-            await capture({ backend, engine, kind: 'staggered', rawMath: true, layers: 1, trials: 1 }, `browser-raw-math-${backend}-${engine}.jsonl`);
+        for (const engine of ['quickjs', 'boa']) {
+            for (const backend of ['browser', 'direct']) {
+                await capture({ backend, engine, kind: 'staggered', rawMath: true, layers: 1, trials: 1 }, `browser-raw-math-${backend}-${engine}.jsonl`);
+            }
         }
-    }
-    await capture({ backend: 'interpreter', engine: 'rust', kind: 'staggered', metered: true, layers, trials }, 'browser-metered-interpreter-rust-staggered.jsonl');
-    await capture({ limits: true }, 'browser-limits.json');
-    for (const files of ['custom', 'wasi']) {
-        await capture({ files }, 'browser-files-' + files + '.json');
-    }
-    await capture({ component: true, jco: Boolean(jco) }, 'component-browser.json');
+        await capture({ backend: 'interpreter', engine: 'rust', kind: 'staggered', metered: true, layers, trials }, 'browser-metered-interpreter-rust-staggered.jsonl');
+        await capture({ limits: true }, 'browser-limits.json');
+        for (const files of ['custom', 'wasi']) {
+            await capture({ files }, 'browser-files-' + files + '.json');
+        }
+        await capture({ component: true, jco: Boolean(jco) }, 'component-browser.json');
     }
 } finally {
     await browser?.close();

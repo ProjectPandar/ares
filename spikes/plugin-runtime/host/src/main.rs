@@ -1,5 +1,7 @@
 #[cfg(feature = "jit")]
 mod component;
+#[cfg(all(feature = "jit", feature = "metering"))]
+mod portable;
 mod verify;
 
 use anyhow::{Result, bail};
@@ -16,6 +18,7 @@ struct Sample {
     hook_total_ms: f64,
     wall_ms: f64,
     reload_ms: Option<f64>,
+    runner_reload_ms: Option<f64>,
     layer_sha256: String,
     gcode_sha256: String,
     gcode: String,
@@ -23,6 +26,10 @@ struct Sample {
 
 fn ms(t: Instant) -> f64 {
     t.elapsed().as_secs_f64() * 1_000.0
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn sample(
@@ -74,7 +81,6 @@ fn sample(
     let wall_ms = ms(wall);
     let gcode = guest.gcode(GCODE)?;
     assert!(gcode.starts_with(GCODE));
-    let hex = |bytes: &[u8]| bytes.iter().map(|byte| format!("{byte:02x}")).collect();
     let layer_sha256 = hex(&digest.finalize());
     let gcode_sha256 = hex(&Sha256::digest(&gcode));
     let gcode = String::from_utf8(gcode)?;
@@ -93,12 +99,22 @@ fn sample(
         verify::first_layer(&updated, subdivide, true);
         Some(elapsed)
     };
+    let runner_reload_ms = if guest.has_source() && env::var_os("PLUGIN_SPIKE_PORTABLE").is_some() {
+        let t = Instant::now();
+        let updated = load(wasm, Some(replacement))?.perimeters(&input)?;
+        let elapsed = ms(t);
+        verify::first_layer(&updated, subdivide, true);
+        Some(elapsed)
+    } else {
+        None
+    };
     Ok(Sample {
         load_ms,
         warmup_ms,
         hook_total_ms,
         wall_ms,
         reload_ms,
+        runner_reload_ms,
         layer_sha256,
         gcode_sha256,
         gcode,
@@ -158,8 +174,14 @@ fn fixture(dir: &std::path::Path) -> Result<()> {
             plugin_spike_wire::js_layout()
         ),
     )?;
-    #[cfg(feature = "jit")]
-    component::build(dir)?;
+    #[cfg(all(feature = "jit", feature = "interpreter"))]
+    if env::var_os("PLUGIN_SPIKE_PORTABLE").is_none() {
+        component::build(dir)?;
+    } else {
+        component::limits_fixture(dir)?;
+    }
+    #[cfg(all(feature = "jit", not(feature = "interpreter")))]
+    component::limits_fixture(dir)?;
     Ok(())
 }
 
@@ -211,6 +233,15 @@ fn files() -> Result<()> {
 fn main() -> Result<()> {
     match env::args().nth(1).as_deref() {
         Some("fixture") => fixture(std::path::Path::new(&env::args().nth(2).unwrap())),
+        #[cfg(all(feature = "jit", feature = "metering"))]
+        Some("portable-probe") => portable::probe(),
+        #[cfg(all(feature = "jit", feature = "metering"))]
+        Some("portable-sizes") => portable::sizes(),
+        #[cfg(all(feature = "jit", feature = "metering"))]
+        Some("jit-portable") => {
+            let host = plugin_spike_host::jit::Host::portable(1024, 1_000_000_000);
+            run(|wasm, src| Ok(Box::new(host.load(wasm, src)?)))
+        }
         #[cfg(feature = "files")]
         Some("files") => files(),
         #[cfg(all(feature = "direct-boa", feature = "direct-quickjs"))]

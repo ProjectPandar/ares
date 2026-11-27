@@ -14,6 +14,22 @@ capture() {
         failed=1
     fi
 }
+if [[ -n "${PLUGIN_SPIKE_PORTABLE:-}" ]]; then
+    capture native-portable-limits.json portable-probe limits.wasm
+    capture guest-sizes.jsonl portable-sizes staggered.wasm staggered-alternate.wasm \
+        subdivision.wasm subdivision-alternate.wasm quickjs.wasm
+    if [[ "$failed" != 0 || "$PLUGIN_SPIKE_PORTABLE" == probe ]]; then exit "$failed"; fi
+    for kind in staggered subdivision; do
+        export PLUGIN_SPIKE_KIND="$kind"
+        for mode in plain portable; do
+            command=jit
+            if [[ "$mode" == portable ]]; then command=jit-portable; fi
+            capture "native-$mode-rust-$kind.jsonl" "$command" "$kind.wasm" "$kind-alternate.wasm" -
+            capture "native-$mode-quickjs-$kind.jsonl" "$command" quickjs.wasm "$kind-alternate.js" "$kind.js"
+        done
+    done
+    exit "$failed"
+fi
 for kind in staggered subdivision; do
     export PLUGIN_SPIKE_KIND="$kind"
     capture "native-direct-rust-$kind.jsonl" rust - - -

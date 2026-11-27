@@ -9,7 +9,7 @@ const wasi = {
     proc_exit(code) { throw new Error(`guest proc_exit: ${code}`); },
 };
 
-export function load(moduleBytes, source) {
+export function instantiate(moduleBytes) {
     const compiled = new WebAssembly.Module(moduleBytes);
     let guest;
     ({ exports: guest } = new WebAssembly.Instance(compiled, {
@@ -20,7 +20,13 @@ export function load(moduleBytes, source) {
         } },
         env: { __rquickjs_host_now_us: () => 0 },
     }));
+    return guest;
+}
+
+export function load(moduleBytes, source, fuel) {
+    const guest = instantiate(moduleBytes);
     function write(input) {
+        if (fuel !== undefined) guest.__ares_fuel.value = fuel;
         const pos = guest.reserve_input(input.length);
         new Uint8Array(guest.memory.buffer, pos, input.length).set(input);
     }

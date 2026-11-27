@@ -39,6 +39,35 @@ Rust baseline times only the typed hook; the Chrome Rust baseline includes
 its Wasm-bindgen calls and byte projection. The native driver separately
 checks that the hosted runtime can be invoked through the typed trait.
 
+## Portable fuel experiment
+
+Set `PLUGIN_SPIKE_PORTABLE=1` for all four build and measurement commands
+above. The matrix then runs Wasmtime and browser WebAssembly with and without
+the shared load-time transform, on Rust and QuickJS guests only. Use separate
+output and target directories from the earlier run. To hold guest bytes fixed
+across runs, copy the earlier Rust and QuickJS guest binaries and recipe
+scripts into the new output directory after building. For a resource-limit-only
+run, set `PLUGIN_SPIKE_PORTABLE=probe` after building. Compare against the
+previous runtime run with:
+
+```sh
+python3 -I spikes/plugin-runtime/summarize-metering.py "$PLUGIN_SPIKE_OUT" "$PRIOR_SPIKE_OUT"
+```
+
+Metered load includes validation, rewriting, compilation, instantiation and
+initial source evaluation. Load and reload exclude initialization of the
+`ares-wasm` host itself. Rust reload loads different module bytes and runs the
+first layer. QuickJS source reload updates the source and runs the first layer
+in the same instance; the additional runner reload creates a new instance,
+loads the replacement source and runs the first layer. The one-billion-unit
+hook budget covers both input allocation and the call.
+
+The transform charges one unit per original operator, except structural
+`block`, `loop`, `else` and `end` delimiters. Bulk memory and table operations
+and calls to host imports have only static charges, so this bounds charged
+instructions, not wall time. The rewritten cap covers linear memory, not
+engine metadata, stacks, tables or host allocations.
+
 This prototype does not admit untrusted project files or load a real 3MF. It
 has no production-level validation, import admission, failure isolation, or
 persistent plugin identity. The virtual file fixtures only implement the

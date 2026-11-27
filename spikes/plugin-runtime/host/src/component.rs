@@ -1,10 +1,12 @@
 use anyhow::Result;
 use std::{fs, path::Path};
+#[cfg(feature = "interpreter")]
 use wasmtime::{
     Engine, Store,
     component::{Component, Linker},
 };
 
+#[cfg(feature = "interpreter")]
 const WRAPPER: &str = r#"
 (component
   (core module $m
@@ -40,8 +42,15 @@ const LIMITS: &str = r#"
     local.get 0 memory.grow))
 "#;
 
-pub fn build(out: &Path) -> Result<()> {
+pub fn limits_fixture(out: &Path) -> Result<Vec<u8>> {
     let limits = wat::parse_str(LIMITS.replace("MEMORY", "(memory 1)"))?;
+    fs::write(out.join("limits.wasm"), &limits)?;
+    Ok(limits)
+}
+
+#[cfg(feature = "interpreter")]
+pub fn build(out: &Path) -> Result<()> {
+    let limits = limits_fixture(out)?;
     let budget = plugin_spike_host::Budget {
         memory: Some(2 * 65536),
         fuel: Some(1_000),
@@ -56,7 +65,7 @@ pub fn build(out: &Path) -> Result<()> {
         out.join("native-limits.json"),
         serde_json::to_vec(&serde_json::json!({"jit": jit, "interpreter": interpreter}))?,
     )?;
-    fs::write(out.join("limits.wasm"), limits)?;
+
     fs::write(
         out.join("limits-browser.wasm"),
         wat::parse_str(LIMITS.replace("MEMORY", r#"(import "ares" "memory" (memory 1 2))"#))?,

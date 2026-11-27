@@ -11,6 +11,7 @@ default = ["interpreter"]
 files = ["interpreter"]
 interpreter = ["dep:wasmi"]
 jit = ["dep:wasmtime", "dep:wat"]
+metering = ["dep:wasm-encoder", "dep:wasmparser"]
 direct-boa = ["dep:plugin-spike-js", "plugin-spike-js/boa"]
 direct-quickjs = ["dep:plugin-spike-js", "plugin-spike-js/quickjs"]
 
@@ -20,6 +21,8 @@ plugin-spike-js = { path = "../js", optional = true }
 plugin-spike-samples = { path = "../samples" }
 anyhow = "1"
 plugin-spike-wire = { path = "../wire" }
+wasm-encoder = { version = "=0.263.0", default-features = false, optional = true }
+wasmparser = { version = "=0.263.0", default-features = false, features = ["features", "validate"], optional = true }
 wasmi = { version = "=2.0.3", default-features = false, features = ["stable", "std", "validate", "auto-dispatch", "deterministic"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -32,7 +32,13 @@ async function sha256(bytes) {
     return Array.from(hash, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function run({ backend, engine, kind, rawMath, metered = false, layers = LAYERS, trials = TRIALS }) {
+async function metering() {
+    const { default: init, instrumentPlugin } = await import('./metering_host.js');
+    await init({ module_or_path: './metering_host_bg.wasm' });
+    return instrumentPlugin;
+}
+
+async function run({ backend, engine, kind, rawMath, metered = false, portable = false, runnerReload = false, layers = LAYERS, trials = TRIALS }) {
     const js = engine !== 'rust';
     const direct = backend === 'direct';
     const compiled = direct && !js;
@@ -44,7 +50,10 @@ async function run({ backend, engine, kind, rawMath, metered = false, layers = L
     ]);
     let load = browser.load;
     let interpreter;
-    if (backend === 'interpreter') {
+    if (portable) {
+        const instrument = await metering();
+        load = (module, source) => browser.load(instrument(module, 1024), source, 1_000_000_000n);
+    } else if (backend === 'interpreter') {
         const { default: init, SpikeInterpreter } = await import('./ares_wasm.js');
         await init({ module_or_path: './ares_wasm_bg.wasm' });
         interpreter = new SpikeInterpreter(metered);
@@ -93,7 +102,16 @@ async function run({ backend, engine, kind, rawMath, metered = false, layers = L
             same(updated, reloaded);
         }
         guest.free();
-        samples.push({ load_ms, warmup_ms, hook_total_ms, wall_ms, reload_ms,
+        let runner_reload_ms = null;
+        if (js && runnerReload) {
+            t = performance.now();
+            const next = load(wasm, replacement);
+            const updated = next.perimeters(input);
+            runner_reload_ms = performance.now() - t;
+            same(updated, reloaded);
+            next.free();
+        }
+        samples.push({ load_ms, warmup_ms, hook_total_ms, wall_ms, reload_ms, runner_reload_ms,
             layer_sha256: await sha256(output), gcode_sha256: await sha256(gcode),
             gcode: new TextDecoder().decode(gcode) });
     }
@@ -154,9 +172,12 @@ async function limits() {
 }
 
 async function portableLimits() {
-    const module = new WebAssembly.Module(await bytes('limits.wasm'));
-    const { exports } = new WebAssembly.Instance(module);
+    const instrument = await metering();
+    const input = await bytes('limits.wasm');
+    const transformed = instrument(input, 2);
+    const exports = browser.instantiate(transformed);
     let trapped = false;
+    exports.__ares_fuel.value = 1000n;
     try {
         exports.advance(100000);
     } catch (error) {
@@ -164,12 +185,13 @@ async function portableLimits() {
         trapped = true;
     }
     const steps = new DataView(exports.memory.buffer).getInt32(0, true);
+    exports.__ares_fuel.value = 1000n;
     const atCap = exports.grow(1);
     const aboveCap = exports.grow(1);
     if (!trapped || steps !== 71 || atCap !== 1 || aboveCap !== -1) {
         throw new Error(`expected trap at 71 and two-page cap; got ${[trapped, steps, atCap, aboveCap]}`);
     }
-    return [Number(trapped), steps, atCap, aboveCap];
+    return { limit: [Number(trapped), steps, atCap, aboveCap], sha256: await sha256(transformed) };
 }
 
 async function measure(scenario) {

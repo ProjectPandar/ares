@@ -26,6 +26,8 @@ mod scene;
 mod spike_direct;
 #[cfg(all(target_arch = "wasm32", feature = "spike-plugin-files"))]
 mod spike_files;
+#[cfg(all(target_arch = "wasm32", feature = "spike-plugin-metering"))]
+mod spike_metering;
 #[cfg(all(target_arch = "wasm32", feature = "spike-plugin-interpreter"))]
 mod spike_plugin;
 mod status;

@@ -5,6 +5,8 @@ pub use {plugin_spike_api as api, plugin_spike_samples as samples, plugin_spike_
 pub mod direct;
 #[cfg(feature = "files")]
 pub mod files;
+#[cfg(feature = "metering")]
+pub mod metering;
 
 pub struct Hosted<'a> {
     pub guest: &'a mut dyn Guest,
@@ -95,10 +97,14 @@ macro_rules! backend {
             Caller, Config, Engine, Extern, Linker, Memory, Module, Store, StoreLimits,
             StoreLimitsBuilder, TypedFunc,
         };
+        #[cfg(feature = "metering")]
+        use $runtime::{Global, Val};
 
         pub struct Host {
             engine: Engine,
             budget: Budget,
+            #[cfg(feature = "metering")]
+            portable: Option<(u32, i64)>,
         }
         impl Default for Host {
             fn default() -> Self {
@@ -114,10 +120,29 @@ macro_rules! backend {
                 Self {
                     engine: engine_result(engine),
                     budget,
+                    #[cfg(feature = "metering")]
+                    portable: None,
+                }
+            }
+
+            #[cfg(feature = "metering")]
+            pub fn portable(max_pages: u32, fuel: i64) -> Self {
+                Self {
+                    portable: Some((max_pages, fuel)),
+                    ..Self::default()
                 }
             }
 
             fn prepare(&self, wasm: &[u8]) -> Result<(Store<StoreLimits>, $runtime::Instance)> {
+                #[cfg(feature = "metering")]
+                let instrumented = self
+                    .portable
+                    .map(|(pages, _)| metering::instrument(wasm, pages))
+                    .transpose()?;
+                #[cfg(feature = "metering")]
+                let wasm = instrumented
+                    .as_ref()
+                    .map_or(wasm, |module| module.bytes.as_slice());
                 let module = Module::new(&self.engine, wasm)?;
                 let mut limits = StoreLimitsBuilder::new();
                 if let Some(memory) = self.budget.memory {
@@ -151,6 +176,46 @@ macro_rules! backend {
                 Ok([i32::from(trapped), i32::from_le_bytes(steps), growth])
             }
 
+            #[cfg(feature = "metering")]
+            fn fuel_global(
+                &self,
+                store: &mut Store<StoreLimits>,
+                exports: $runtime::Instance,
+            ) -> Result<Option<(Global, i64)>> {
+                self.portable
+                    .map(|(_, fuel)| {
+                        let global = exports
+                            .get_global(store, metering::FUEL_EXPORT)
+                            .ok_or_else(|| anyhow::anyhow!("no guest fuel global"))?;
+                        Ok((global, fuel))
+                    })
+                    .transpose()
+            }
+
+            #[cfg(feature = "metering")]
+            pub fn portable_probe(&self, wasm: &[u8]) -> Result<[i32; 4]> {
+                let (mut store, exports) = self.prepare(wasm)?;
+                let (global, fuel) = self
+                    .fuel_global(&mut store, exports)?
+                    .ok_or_else(|| anyhow::anyhow!("no portable fuel budget"))?;
+                let advance = exports.get_typed_func::<i32, ()>(&mut store, "advance")?;
+                let memory = exports.get_memory(&mut store, "memory").unwrap();
+                global.set(&mut store, Val::I64(fuel))?;
+                let trapped = advance.call(&mut store, 100_000).is_err();
+                let mut steps = [0; 4];
+                memory.read(&store, 0, &mut steps)?;
+                let grow = exports.get_typed_func::<i32, i32>(&mut store, "grow")?;
+                global.set(&mut store, Val::I64(fuel))?;
+                let at_cap = grow.call(&mut store, 1)?;
+                let above_cap = grow.call(&mut store, 1)?;
+                Ok([
+                    i32::from(trapped),
+                    i32::from_le_bytes(steps),
+                    at_cap,
+                    above_cap,
+                ])
+            }
+
             pub fn load(&self, wasm: &[u8], source: Option<&[u8]>) -> Result<Instance> {
                 let (mut store, exports) = self.prepare(wasm)?;
                 let memory = exports
@@ -162,6 +227,8 @@ macro_rules! backend {
                 let source_hook = exports
                     .get_typed_func::<(), ()>(&mut store, "set_source")
                     .ok();
+                #[cfg(feature = "metering")]
+                let portable = self.fuel_global(&mut store, exports)?;
                 let mut instance = Instance {
                     store,
                     memory,
@@ -170,6 +237,8 @@ macro_rules! backend {
                     gcode,
                     source: source_hook,
                     fuel: self.budget.fuel,
+                    #[cfg(feature = "metering")]
+                    portable,
                 };
                 if let Some(source) = source {
                     instance.set_source(source)?;
@@ -181,6 +250,8 @@ macro_rules! backend {
         pub struct Instance {
             store: Store<StoreLimits>,
             fuel: Option<u64>,
+            #[cfg(feature = "metering")]
+            portable: Option<(Global, i64)>,
             memory: Memory,
             reserve: TypedFunc<u32, u32>,
             perimeters: TypedFunc<(), u64>,
@@ -192,6 +263,10 @@ macro_rules! backend {
             fn input(&mut self, bytes: &[u8]) -> Result<()> {
                 if let Some(fuel) = self.fuel {
                     self.store.set_fuel(fuel)?;
+                }
+                #[cfg(feature = "metering")]
+                if let Some((global, fuel)) = self.portable {
+                    global.set(&mut self.store, Val::I64(fuel))?;
                 }
                 let pos = self
                     .reserve

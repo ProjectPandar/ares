@@ -6,12 +6,15 @@ cd -- "$(dirname -- "$0")/../.."
 export CC_wasm32_unknown_unknown="${CC_wasm32_unknown_unknown:-clang}"
 export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
 mkdir -p "$PLUGIN_SPIKE_OUT"
-for engine in interpreter compiled-rust quickjs boa files baseline; do
+engines=(interpreter compiled-rust quickjs boa files baseline)
+if [[ -n "${PLUGIN_SPIKE_PORTABLE:-}" ]]; then engines=(metering baseline); fi
+for engine in "${engines[@]}"; do
     feature=(--features "spike-plugin-$engine")
     case $engine in
         interpreter) name=ares_wasm ;;
         compiled-rust) name=direct_rust ;;
         files) name=files_host ;;
+        metering) name=metering_host ;;
         baseline) name=baseline; feature=() ;;
         *) name="direct_$engine" ;;
     esac
