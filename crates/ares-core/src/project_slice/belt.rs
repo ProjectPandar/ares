@@ -5,7 +5,8 @@ pub(super) mod kinematics;
 
 use crate::{
     BeltRotationAxis, Point3d, PrintValidationKind, ProcessDraftShield, ProcessPrintSequence,
-    ProcessSupportStyle, ProcessSupportType, Project, ProjectVolumeType, RemapAxis, SliceError,
+    ProcessSupportStyle, ProcessSupportType, Project, ProjectObject, ProjectVolume,
+    ProjectVolumeType, RemapAxis, SliceError,
     geometry::CoordinateScale,
     options::PrinterRemainingOptions,
     project::{Transform3d, effective_config::types::BoundedResolvedProjectConfig},
@@ -18,6 +19,13 @@ pub(super) mod floor_context;
 
 fn unsupported(feature: &str) -> SliceError {
     SliceError::UnsupportedProjectFeature(format!("belt_printer: {feature}"))
+}
+
+fn model_parts(source: &ProjectObject) -> impl Iterator<Item = &ProjectVolume> {
+    source.volumes().iter().filter(|volume| {
+        volume.volume_type() == ProjectVolumeType::ModelPart
+            && !volume.mesh().triangles().is_empty()
+    })
 }
 
 pub(super) fn admit(
@@ -40,14 +48,22 @@ pub(super) fn admit(
     if placements == 0 || settings.process.print.print_sequence != ProcessPrintSequence::ByLayer {
         return Err(unsupported("instances"));
     }
+    let slots = resolved.logical_filament_count;
     for object in objects.clone() {
         let source = &project.objects()[object.source_object_index];
-        if !matches!(source.volumes(), [volume] if volume.volume_type() == ProjectVolumeType::ModelPart)
+        let volumes = source.volumes();
+        if model_parts(source).next().is_none()
+            || volumes.iter().any(|volume| {
+                !matches!(
+                    volume.volume_type(),
+                    ProjectVolumeType::ModelPart | ProjectVolumeType::ParameterModifier
+                )
+            })
+            || (volumes.len() > 1 && (placements != 1 || slots != 1))
         {
             return Err(unsupported("volumes"));
         }
     }
-    let slots = resolved.logical_filament_count;
     if resolved
         .usage
         .supported_used_filaments
@@ -78,7 +94,8 @@ pub(super) fn admit(
         }
         if options.raft_layers.0 != 0
             || options.enforce_support_layers.0 != 0
-            || (options.enable_support.0 && !normal_grid_support(settings, options, source))
+            || (options.enable_support.0
+                && (source.volumes().len() != 1 || !normal_grid_support(settings, options, source)))
         {
             return Err(unsupported("support"));
         }
@@ -205,14 +222,15 @@ pub(super) struct BeltRotation {
 
 impl BeltRotation {
     pub(super) fn from_printer(printer: &PrinterRemainingOptions) -> Option<Self> {
-        printer.belt_printer.0.then(|| {
-            let (sin, cos) = back_transform::deg2rad(printer.belt_slice_rotation_angle.0).sin_cos();
-            Self {
-                axis: printer.belt_slice_rotation,
-                sin,
-                cos,
-            }
-        })
+        let axis = printer.belt_slice_rotation;
+        let angle = printer.belt_slice_rotation_angle.0;
+        // BeltTransform.hpp:56–60 counts Z as a rotation even though admission excludes it.
+        (printer.belt_printer.0 && axis != BeltRotationAxis::None && angle.abs() > EPSILON).then(
+            || {
+                let (sin, cos) = back_transform::deg2rad(angle).sin_cos();
+                Self { axis, sin, cos }
+            },
+        )
     }
 
     pub(super) fn forward(self) -> Transform3d {
@@ -275,7 +293,7 @@ impl BeltFloor {
 impl BeltSlice {
     pub(super) fn new(
         rotation: BeltRotation,
-        source: &crate::ProjectObject,
+        source: &ProjectObject,
         group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
         scale: CoordinateScale,
     ) -> Result<Self, SliceError> {
@@ -284,11 +302,8 @@ impl BeltSlice {
         let centered = group
             .transform
             .pretranslated(Point3d::new(-center.x, -center.y, 0.));
-        let volume = &source.volumes()[0];
-        let local = centered.then(volume.transform());
         let forward = rotation.forward();
         let rotated = forward.then(centered);
-        let rotated_volume = rotated.then(volume.transform());
         let mut lower = [f64::INFINITY; 3];
         let mut upper = [f64::NEG_INFINITY; 3];
         let (axis, shear) = match rotation.axis {
@@ -304,14 +319,17 @@ impl BeltSlice {
         let floor_z = |p: Point3d| floor.map_or(0., |floor| floor.shear * [p.x, p.y][floor.axis]);
         let margin = floor.map_or(0., |floor| 10. * floor.shear.abs());
         let mut min_z = f64::INFINITY;
-        for &vertex in volume.mesh().vertices() {
-            let point = local.transform_point(vertex);
-            for (i, value) in [point.x, point.y, point.z].into_iter().enumerate() {
-                lower[i] = lower[i].min(value);
-                upper[i] = upper[i].max(value);
+        for volume in model_parts(source) {
+            let local = centered.then(volume.transform());
+            let rotated_volume = rotated.then(volume.transform());
+            for &vertex in volume.mesh().vertices() {
+                let point = local.transform_point(vertex);
+                let xyz = [point.x, point.y, point.z];
+                lower = std::array::from_fn(|i| lower[i].min(xyz[i]));
+                upper = std::array::from_fn(|i| upper[i].max(xyz[i]));
+                let rotated_point = rotated_volume.transform_point(vertex);
+                min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
             }
-            let rotated_point = rotated_volume.transform_point(vertex);
-            min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
         }
         let lift = (margin - min_z).max(0.);
         // BeltTransform.cpp:151–168 estimates the below-footprint floor from
