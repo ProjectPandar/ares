@@ -6,6 +6,8 @@ SHIPPED_REL="web/packages/ares-wasm-js/src/wasm"
 PROBE_REL="target/web-e2e/panic-probe"
 RETENTION_DAYS=14
 ARTIFACT_PREFIX="web-build-wasm"
+PRODUCER_WORKFLOW_NAME="Web Build Producer"
+PRODUCER_WORKFLOW_REL=".github/workflows/web-build-producer.yml"
 
 usage() {
   cat >&2 <<'EOF'
@@ -89,6 +91,7 @@ tree_sha=$(git -C "$ROOT" rev-parse 'HEAD^{tree}')
 repository=${GITHUB_REPOSITORY:-}
 retention_days=${RETENTION_DAYS}
 workflow_sha256=$(hash_file "$ROOT/.github/workflows/tier1.yml")
+producer_workflow_sha256=$(hash_file "$ROOT/$PRODUCER_WORKFLOW_REL")
 run_web_build_sha256=$(hash_file "$ROOT/scripts/ci/run-web-build.sh")
 build_wasm_sha256=$(hash_file "$ROOT/web/packages/ares-wasm-js/scripts/build-wasm.mjs")
 rust_toolchain_sha256=$(hash_file "$ROOT/rust-toolchain.toml")
@@ -168,6 +171,7 @@ verify_recipe() {
   require_manifest_value manifest_version 1 "$artifact_root/manifest"
   require_manifest_value retention_days "$RETENTION_DAYS" "$artifact_root/manifest"
   require_manifest_value workflow_sha256 "$(hash_file "$ROOT/.github/workflows/tier1.yml")" "$artifact_root/manifest"
+  require_manifest_value producer_workflow_sha256 "$(hash_file "$ROOT/$PRODUCER_WORKFLOW_REL")" "$artifact_root/manifest"
   require_manifest_value run_web_build_sha256 "$(hash_file "$ROOT/scripts/ci/run-web-build.sh")" "$artifact_root/manifest"
   require_manifest_value build_wasm_sha256 "$(hash_file "$ROOT/web/packages/ares-wasm-js/scripts/build-wasm.mjs")" "$artifact_root/manifest"
   require_manifest_value rust_toolchain_sha256 "$(hash_file "$ROOT/rust-toolchain.toml")" "$artifact_root/manifest"
@@ -240,7 +244,7 @@ restore_artifact() {
       unzip -q "$zip" -d "$extracted" || continue
       artifact_root="$(find_artifact_root "$extracted")" || continue
       break
-    done < <(jq -r '[.[] | .workflow_runs[] | select(.name == "Tier 1" and .status == "completed" and .conclusion == "success") | .id] | .[]' <<<"$runs")
+    done < <(jq -r --arg workflow "$PRODUCER_WORKFLOW_NAME" '[.[] | .workflow_runs[] | select(.name == $workflow and .status == "completed" and .conclusion == "success") | .id] | .[]' <<<"$runs")
     [ -n "$artifact_root" ] || miss "producer-not-found"
   fi
   [ -f "$artifact_root/manifest" ] || miss "manifest-missing"

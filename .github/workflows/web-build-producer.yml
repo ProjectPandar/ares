@@ -1,0 +1,86 @@
+name: Web Build Producer
+
+on:
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+  packages: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  ORCA_REF: 40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  web-build-producer:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          filter: blob:none
+          persist-credentials: false
+      - name: Select producer scope
+        id: select
+        run: bash scripts/ci/web-build-artifact.sh should-produce --base HEAD^1 --github-output "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@1.99.0
+        if: steps.select.outputs.produce == 'true'
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@nextest
+        if: steps.select.outputs.produce == 'true'
+      - uses: ./.github/actions/setup-bun
+        if: steps.select.outputs.produce == 'true'
+      - uses: ./.github/actions/checkout-orca-sparse
+        if: steps.select.outputs.produce == 'true'
+        with:
+          ref: ${{ env.ORCA_REF }}
+      - uses: Swatinem/rust-cache@v2
+        if: steps.select.outputs.produce == 'true'
+        with:
+          shared-key: "pages-wasm"
+      - uses: ./.github/actions/setup-web-deps
+        if: steps.select.outputs.produce == 'true'
+      - uses: taiki-e/install-action@wasm-bindgen-cli
+        if: steps.select.outputs.produce == 'true'
+        with:
+          tool: wasm-bindgen-cli@0.2.121
+      - name: Clear tree-specific WebAssembly outputs
+        if: steps.select.outputs.produce == 'true'
+        run: |
+          if [ -d web/packages/ares-wasm-js/src/wasm ]; then
+            find web/packages/ares-wasm-js/src/wasm -mindepth 1 -delete
+          fi
+          if [ -d target/web-e2e/panic-probe ]; then
+            find target/web-e2e/panic-probe -mindepth 1 -delete
+          fi
+      - name: Build tree-specific WebAssembly outputs
+        if: steps.select.outputs.produce == 'true'
+        env:
+          WASM_CACHE_HIT: false
+          PANIC_PROBE_CACHE_HIT: false
+        run: bash scripts/ci/run-web-build.sh
+      - name: Create tree-specific WebAssembly artifact
+        if: steps.select.outputs.produce == 'true'
+        id: artifact
+        run: bash scripts/ci/web-build-artifact.sh create --output target/web-build-artifact --github-output "$GITHUB_OUTPUT"
+      - name: Upload tree-specific WebAssembly artifact
+        if: steps.select.outputs.produce == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.artifact-name }}
+          path: target/web-build-artifact
+          if-no-files-found: error
+          retention-days: 14

@@ -7,8 +7,10 @@ expensive WebAssembly outputs, then let the merge-queue `web-build` consumer
 restore them only when the checked-out tree is identical. Keep the existing
 merge-queue build and all browser checks as the consumer of those outputs.
 
-The producer is a new pull-request path in the Tier 1 workflow. It runs the
-existing build script with both WebAssembly outputs absent, records
+The producer is a dedicated pull-request workflow at
+`.github/workflows/web-build-producer.yml`; the merge-group consumer remains in
+Tier 1. Its producer steps are defined at
+`.github/workflows/web-build-producer.yml:1-86`. It runs the existing build script with both WebAssembly outputs absent, records
 `git rev-parse HEAD^{tree}`, and uploads only these generated directories:
 
 - `web/packages/ares-wasm-js/src/wasm`
@@ -36,8 +38,9 @@ honest miss path.
 Only same-repository pull requests are eligible. Fork pull requests, multiple
 pull requests in one queue ref, and any other ambiguous producer selection are
 misses. Each uploaded producer artifact has an explicit `retention-days: 14`.
-The manifest identity includes the pinned Rust, wasm-bindgen, Bun, and browser
-tool versions plus SHA-256 values for `scripts/ci/run-web-build.sh` and
+The manifest identity includes the producer workflow and Tier 1 workflow
+hashes, the pinned Rust, wasm-bindgen, Bun, and browser tool versions, plus
+SHA-256 values for `scripts/ci/run-web-build.sh` and
 `web/packages/ares-wasm-js/scripts/build-wasm.mjs`; a different build recipe
 cannot be reused even if its tree value is otherwise acceptable.
 
@@ -82,8 +85,9 @@ full-path miss baseline, not a target result.
 
 ## Workflow shape
 
-1. **Pull-request producer.** Add a producer job to the Tier 1 workflow for
-   changes that select web work. It must check out the pull-request tree,
+1. **Pull-request producer.** Add a producer job to
+   `.github/workflows/web-build-producer.yml` for same-repository pull requests
+   whose changed tree is not documentation-only. It must check out the pull-request tree,
    install the pinned toolchain and dependencies, clear both output
    directories, and run the existing `scripts/ci/run-web-build.sh` with both
    output-hit variables false. It then records the tree manifest and uploads
@@ -112,8 +116,8 @@ full-path miss baseline, not a target result.
    desktop, package, and mobile suites (`.github/workflows/tier1.yml:274-361`).
 
 The producer needs read access to pull-request and workflow-run metadata and
-artifact download access. The workflow permissions must be explicit. The
-lookup must reuse the existing single-PR and base/tree checks rather than
+artifact download access. The producer and consumer workflow permissions must
+be explicit. The lookup must reuse the existing single-PR and base/tree checks rather than
 trusting a branch name: `scripts/ci/check-merge-group-reuse.sh:4-11,60-123`
 shows the current fail-closed rules and exact tree comparison. Multiple pull
 requests, a changed base, a rebased head, a fork, an API error, or an

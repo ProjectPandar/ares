@@ -228,68 +228,6 @@ jobs:
       - name: Run parity-seeded shard ${{ matrix.shard }}/8
         run: cargo-nextest nextest run --archive-file "$RUNNER_TEMP/parity-archive/orca-parity.tar.zst" --workspace-remap "$GITHUB_WORKSPACE" --no-fail-fast --test-threads 4 --profile parity-seeded --partition "hash:${{ matrix.shard }}/8"
 
-  web-build-producer:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-          filter: blob:none
-          persist-credentials: false
-      - name: Select producer scope
-        id: select
-        run: bash scripts/ci/web-build-artifact.sh should-produce --base HEAD^1 --github-output "$GITHUB_OUTPUT"
-      - uses: dtolnay/rust-toolchain@1.99.0
-        if: steps.select.outputs.produce == 'true'
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: taiki-e/install-action@nextest
-        if: steps.select.outputs.produce == 'true'
-      - uses: ./.github/actions/setup-bun
-        if: steps.select.outputs.produce == 'true'
-      - uses: ./.github/actions/checkout-orca-sparse
-        if: steps.select.outputs.produce == 'true'
-        with:
-          ref: ${{ env.ORCA_REF }}
-      - uses: Swatinem/rust-cache@v2
-        if: steps.select.outputs.produce == 'true'
-        with:
-          shared-key: "pages-wasm"
-      - uses: ./.github/actions/setup-web-deps
-        if: steps.select.outputs.produce == 'true'
-      - uses: taiki-e/install-action@wasm-bindgen-cli
-        if: steps.select.outputs.produce == 'true'
-        with:
-          tool: wasm-bindgen-cli@0.2.121
-      - name: Clear tree-specific WebAssembly outputs
-        if: steps.select.outputs.produce == 'true'
-        run: |
-          if [ -d web/packages/ares-wasm-js/src/wasm ]; then
-            find web/packages/ares-wasm-js/src/wasm -mindepth 1 -delete
-          fi
-          if [ -d target/web-e2e/panic-probe ]; then
-            find target/web-e2e/panic-probe -mindepth 1 -delete
-          fi
-      - name: Build tree-specific WebAssembly outputs
-        if: steps.select.outputs.produce == 'true'
-        env:
-          WASM_CACHE_HIT: false
-          PANIC_PROBE_CACHE_HIT: false
-        run: bash scripts/ci/run-web-build.sh
-      - name: Create tree-specific WebAssembly artifact
-        if: steps.select.outputs.produce == 'true'
-        id: artifact
-        run: bash scripts/ci/web-build-artifact.sh create --output target/web-build-artifact --github-output "$GITHUB_OUTPUT"
-      - name: Upload tree-specific WebAssembly artifact
-        if: steps.select.outputs.produce == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.artifact.outputs.artifact-name }}
-          path: target/web-build-artifact
-          if-no-files-found: error
-          retention-days: 14
-
   web-build:
     needs: merge-scope
     if: "!cancelled() && ((github.event_name == 'merge_group' && needs.merge-scope.outputs.run_complete_suite == 'true') || contains(github.event.pull_request.labels.*.name, 'run-full-parity'))"
@@ -301,13 +239,8 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
-      - name: Restore exact pull-request WebAssembly artifact
+      - uses: ./.github/actions/restore-web-build-artifact
         id: web-artifact
-        if: github.event_name == 'merge_group'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_EVENT_MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
-        run: bash scripts/ci/web-build-artifact.sh restore --workspace "$GITHUB_WORKSPACE"
       - name: Resolve pinned CI browser container image
         id: toolchain
         run: bash scripts/ci/toolchain-image.sh verify-pins && echo "browsers_image=$(bash scripts/ci/toolchain-image.sh ref browsers)" >> "$GITHUB_OUTPUT"
@@ -326,30 +259,14 @@ jobs:
       - uses: ./.github/actions/cache-web-wasm
         if: github.event_name != 'merge_group'
         id: web-wasm
-      - name: Select WebAssembly output state
-        id: output-state
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          ARTIFACT_WASM_HIT: ${{ steps.web-artifact.outputs.wasm-hit }}
-          ARTIFACT_PROBE_HIT: ${{ steps.web-artifact.outputs.panic-probe-hit }}
-          CACHE_WASM_HIT: ${{ steps.web-wasm.outputs.wasm-hit }}
-          CACHE_PROBE_HIT: ${{ steps.web-wasm.outputs.panic-probe-hit }}
-        run: |
-          if [ "$EVENT_NAME" = merge_group ]; then
-            echo "wasm-hit=${ARTIFACT_WASM_HIT:-false}" >> "$GITHUB_OUTPUT"
-            echo "panic-probe-hit=${ARTIFACT_PROBE_HIT:-false}" >> "$GITHUB_OUTPUT"
-          else
-            echo "wasm-hit=${CACHE_WASM_HIT:-false}" >> "$GITHUB_OUTPUT"
-            echo "panic-probe-hit=${CACHE_PROBE_HIT:-false}" >> "$GITHUB_OUTPUT"
-          fi
       - uses: taiki-e/install-action@wasm-bindgen-cli
-        if: steps.output-state.outputs.wasm-hit != 'true' || steps.output-state.outputs.panic-probe-hit != 'true'
+        if: (github.event_name == 'merge_group' && (steps.web-artifact.outputs.wasm-hit != 'true' || steps.web-artifact.outputs.panic-probe-hit != 'true')) || (github.event_name != 'merge_group' && (steps.web-wasm.outputs.wasm-hit != 'true' || steps.web-wasm.outputs.panic-probe-hit != 'true'))
         with:
           tool: wasm-bindgen-cli@0.2.121
       - name: Build CLI, WASM, web app, verify metadata, and pack bundle
         env:
-          WASM_CACHE_HIT: ${{ steps.output-state.outputs.wasm-hit }}
-          PANIC_PROBE_CACHE_HIT: ${{ steps.output-state.outputs.panic-probe-hit }}
+          WASM_CACHE_HIT: ${{ github.event_name == 'merge_group' && steps.web-artifact.outputs.wasm-hit || steps.web-wasm.outputs.wasm-hit }}
+          PANIC_PROBE_CACHE_HIT: ${{ github.event_name == 'merge_group' && steps.web-artifact.outputs.panic-probe-hit || steps.web-wasm.outputs.panic-probe-hit }}
         run: bash scripts/ci/run-web-build.sh && bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
       - uses: actions/cache/save@v4
         with:
