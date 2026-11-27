@@ -1,12 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 
 use crate::{OrcaInt, SliceError};
 
-use super::{
-    colors,
-    graph::ModelGraph,
-    metadata::{self, MetadataIndex},
-};
+use super::{colors, graph::ModelGraph, metadata::MetadataIndex};
 use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 use crate::project::{
     PackagePath,
@@ -109,9 +105,8 @@ fn project_domain_with_budget(
     let group_extruders = colors::group_extruders(graph);
 
     let mut object_ids = ObjectIdCounter::model_read();
-    let mut builders = BTreeMap::<(PackagePath, u32), ObjectBuilder>::new();
+    let mut builders = BTreeMap::<ObjectIdentity, ObjectBuilder>::new();
     let mut order = Vec::new();
-    let mut loaded_instances = BTreeSet::new();
     for item in &root.document.build.items {
         let target_path = graph.component_target(root, item.path.as_deref())?;
         let (_, source_object) = graph.object(&target_path, item.object_id)?;
@@ -171,13 +166,36 @@ fn project_domain_with_budget(
             .unwrap()
             .instances
             .push(instance);
-        loaded_instances.insert((item.object_id, instance_id));
     }
 
-    // A plate entry naming an instance absent from the build labels nothing: the `loaded_id` loop
-    // skips it ("invalid instance id", `bbs_3mf.cpp:2466-2500` at v2.5.0-beta `345efec64`). Build
-    // instances without plate metadata are kept for the geometric print-volume gate.
-    metadata::validate_assemble(settings, &loaded_instances)?;
+    if let Some(assemble) = settings
+        .assemble
+        .as_ref()
+        .filter(|doc| !doc.items.is_empty())
+    {
+        let build_ids: BTreeMap<_, _> = build_roots.iter().map(|root| (root.1, root)).collect();
+        for item in &assemble.items {
+            let Some(identity) = u32::try_from(item.object_id)
+                .ok()
+                .and_then(|id| build_ids.get(&id))
+            else {
+                return Err(invalid(format!(
+                    "can not find object for assemble item, id= {}",
+                    item.object_id
+                )));
+            };
+            // bbs_3mf.cpp:5025–5047: absent objects fail; absent instances are ignored.
+            if let Ok(ordinal) = usize::try_from(item.instance_id)
+                && let Some(instance) = builders
+                    .get_mut(*identity)
+                    .unwrap()
+                    .instances
+                    .get_mut(ordinal)
+            {
+                instance.set_assemble(item.state());
+            }
+        }
+    }
 
     let objects = order
         .into_iter()

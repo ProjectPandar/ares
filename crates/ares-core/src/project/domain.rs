@@ -376,6 +376,7 @@ pub struct ProjectInstance {
     printable: bool,
     auto_drop: bool,
     transform: Transform3d,
+    assemble: Option<Box<(Transform3d, [f64; 3])>>,
     /// `ModelInstance::print_volume_state` (`Model.hpp:1430`), `Inside` until the CLI's
     /// `update_print_volume_state` stores it (`Model.hpp:1564`).
     print_volume_state: InstancePvs,

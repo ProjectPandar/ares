@@ -41,6 +41,7 @@ impl ProjectInstance {
             printable,
             auto_drop,
             transform,
+            assemble: None,
             print_volume_state: InstancePvs::Inside,
         }
     }
@@ -59,6 +60,7 @@ impl ProjectInstance {
             printable,
             auto_drop,
             transform,
+            assemble: None,
             print_volume_state: InstancePvs::Inside,
         }
     }
@@ -113,5 +115,16 @@ impl ProjectInstance {
 
     pub fn transform(&self) -> Transform3d {
         self.transform
+    }
+
+    pub(crate) fn set_assemble(&mut self, state: (Transform3d, [f64; 3])) {
+        *self
+            .assemble
+            .get_or_insert_with(|| Box::new(state))
+            .as_mut() = state;
+    }
+
+    pub(crate) fn assemble(&self) -> Option<(Transform3d, [f64; 3])> {
+        self.assemble.as_deref().copied()
     }
 }

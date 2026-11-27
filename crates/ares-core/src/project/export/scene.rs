@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
-use std::fmt::Write;
 
-use crate::project::model_settings::{AssembleSettings, Metadata, PartSettings};
+use crate::project::model_settings::{Metadata, PartSettings};
 use crate::{Project, ProjectVolumeType, SliceError};
 
 use super::{ObjectEntry, geometry, invalid, project_settings, write_package, xml};
@@ -21,8 +20,6 @@ struct ScenePlate<'a> {
 
 pub(super) struct SceneLayout<'a> {
     plates: Vec<ScenePlate<'a>>,
-    instances: BTreeMap<(u32, u32), SceneInstance>,
-    assemble: Option<&'a AssembleSettings>,
 }
 
 /// Writes an unsliced project from the model and project options already in memory.
@@ -127,6 +124,7 @@ pub(crate) fn write(
                     .map(|instance| geometry::Instance {
                         transform: instance.transform(),
                         printable: instance.printable(),
+                        assemble: instance.assemble(),
                     })
                     .collect(),
                 parts,
@@ -257,11 +255,7 @@ impl<'a> SceneLayout<'a> {
                 })
                 .collect()
         };
-        Self {
-            plates,
-            instances,
-            assemble: docs.assemble.as_ref(),
-        }
+        Self { plates }
     }
 
     pub(super) fn filament_sequence(&self) -> Vec<u8> {
@@ -272,7 +266,7 @@ impl<'a> SceneLayout<'a> {
         serde_json::to_vec(&entries).expect("serializing an empty filament sequence")
     }
 
-    pub(super) fn write_model_settings(&self, out: &mut String, objects: &[ObjectEntry<'_>]) {
+    pub(super) fn write_plates(&self, out: &mut String, objects: &[ObjectEntry<'_>]) {
         // A plate's G-code paths and thumbnails belong to a sliced or rendered result, not to this model.
         const PLATE_FIELDS: &[&str] = &[
             "bed_type",
@@ -319,21 +313,5 @@ impl<'a> SceneLayout<'a> {
             }
             out.push_str("  </plate>\n");
         }
-        out.push_str("  <assemble>\n");
-        for item in self
-            .assemble
-            .into_iter()
-            .flat_map(|assemble| &assemble.items)
-        {
-            let Some(instance) = self.instances.get(&(item.object_id, item.instance_id)) else {
-                continue;
-            };
-            let id = objects[instance.object].id;
-            let ordinal = instance.ordinal;
-            let transform = quick_xml::escape::escape(&item.transform);
-            let offset = quick_xml::escape::escape(&item.offset);
-            writeln!(out, "   <assemble_item object_id=\"{id}\" instance_id=\"{ordinal}\" transform=\"{transform}\" offset=\"{offset}\" />").unwrap();
-        }
-        out.push_str("  </assemble>\n");
     }
 }

@@ -31,6 +31,7 @@ pub(crate) struct Object {
 pub(super) struct Instance {
     pub transform: Transform3d,
     pub printable: bool,
+    pub assemble: Option<(Transform3d, [f64; 3])>,
 }
 
 impl Instance {
@@ -43,6 +44,7 @@ impl Instance {
                 [0.0, 0.0, 0.0, 1.0],
             ]),
             printable: true,
+            assemble: None,
         }
     }
 }

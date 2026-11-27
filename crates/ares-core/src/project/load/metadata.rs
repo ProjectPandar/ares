@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{SliceError, Transform3d};
+use crate::SliceError;
 
 use super::super::{
     domain::PlateMetadata,
@@ -96,26 +96,6 @@ pub(super) fn validate_plate_document(document: &PlateJson) -> Result<(), SliceE
     Ok(())
 }
 
-pub(super) fn validate_assemble(
-    settings: &ModelSettings,
-    instances: &BTreeSet<(u32, u32)>,
-) -> Result<(), SliceError> {
-    let Some(assemble) = &settings.assemble else {
-        return Ok(());
-    };
-    for item in &assemble.items {
-        if !instances.contains(&(item.object_id, item.instance_id)) {
-            return Err(invalid(format!(
-                "assemble item references missing object/instance ({}, {})",
-                item.object_id, item.instance_id
-            )));
-        }
-        Transform3d::parse_3mf(&item.transform)?;
-        parse_offset(&item.offset)?;
-    }
-    Ok(())
-}
-
 fn required_value<'a>(entries: &'a [Metadata], key: &str) -> Result<&'a str, SliceError> {
     optional_value(entries, key)?.ok_or_else(|| invalid(format!("missing metadata {key:?}")))
 }
@@ -136,23 +116,6 @@ fn parse_u32(value: &str, name: &str) -> Result<u32, SliceError> {
     value
         .parse()
         .map_err(|_| invalid(format!("{name} {value:?} is invalid")))
-}
-
-fn parse_offset(value: &str) -> Result<[f64; 3], SliceError> {
-    let values = value.split_ascii_whitespace().collect::<Vec<_>>();
-    if values.len() != 3 {
-        return Err(invalid("assemble offset must contain three numbers"));
-    }
-    let mut output = [0.0_f64; 3];
-    for (output, value) in output.iter_mut().zip(values) {
-        *output = value
-            .parse()
-            .map_err(|_| invalid("assemble offset contains an invalid number"))?;
-        if !output.is_finite() {
-            return Err(invalid("assemble offset values must be finite"));
-        }
-    }
-    Ok(output)
 }
 
 fn invalid(reason: impl std::fmt::Display) -> SliceError {

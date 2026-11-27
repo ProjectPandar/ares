@@ -98,7 +98,10 @@ pub(crate) fn from_saved_project(
             let offset = instance.transform().to_column_major();
             Ok(Object {
                 name: object.name().to_owned(),
-                instances: vec![Instance::at([offset[12], offset[13], offset[14]])],
+                instances: vec![Instance {
+                    assemble: instance.assemble(),
+                    ..Instance::at([offset[12], offset[13], offset[14]])
+                }],
                 metadata: cli_object_metadata(),
                 auto_drop: true,
                 parts: object

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer, de::Error as _};
 
+use crate::Transform3d;
 use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 
 mod object_metadata;
@@ -187,12 +188,77 @@ pub(crate) struct AssembleSettings {
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct AssembleItem {
-    #[serde(rename = "@object_id")]
-    pub object_id: u32,
-    #[serde(rename = "@instance_id")]
-    pub instance_id: u32,
-    #[serde(rename = "@transform")]
-    pub transform: String,
-    #[serde(rename = "@offset")]
-    pub offset: String,
+    #[serde(rename = "@object_id", default, deserialize_with = "assemble_id")]
+    pub object_id: i32,
+    #[serde(rename = "@instance_id", default, deserialize_with = "assemble_id")]
+    pub instance_id: i32,
+    #[serde(rename = "@transform", default)]
+    transform: String,
+    #[serde(rename = "@offset", default)]
+    offset: String,
+}
+
+impl AssembleItem {
+    pub(super) fn state(&self) -> (Transform3d, [f64; 3]) {
+        let transform = assemble_values(&self.transform)
+            .map_or(Transform3d::IDENTITY, Transform3d::from_3mf_values);
+        (transform, assemble_values(&self.offset).unwrap_or_default())
+    }
+}
+
+// bbs_3mf.cpp:552–558 uses an optionally signed integer prefix with no whitespace skipper.
+fn assemble_id<'de, D: Deserializer<'de>>(deserializer: D) -> Result<i32, D::Error> {
+    let text = String::deserialize(deserializer)?;
+    let sign = number_sign_len(&text);
+    let end = sign + decimal_digits(&text[sign..]);
+    Ok(text[..end].parse().unwrap_or_default())
+}
+
+fn assemble_values<const N: usize>(text: &str) -> Option<[f64; N]> {
+    // bbs_3mf.cpp:637–682 compresses runs of spaces but keeps empty edge tokens.
+    let mut tokens = text
+        .starts_with(' ')
+        .then_some("")
+        .into_iter()
+        .chain(text.split(' ').filter(|token| !token.is_empty()))
+        .chain(text.ends_with(' ').then_some(""));
+    let mut values = [0.0; N];
+    for value in &mut values {
+        *value = assemble_number(tokens.next()?);
+    }
+    tokens.next().is_none().then_some(values)
+}
+
+fn assemble_number(token: &str) -> f64 {
+    let token = token.trim_ascii_start();
+    if let Ok(value) = token.parse() {
+        return value;
+    }
+    let sign = number_sign_len(token);
+    if let Some(prefix) = token.get(sign..sign + 3)
+        && (prefix.eq_ignore_ascii_case("inf") || prefix.eq_ignore_ascii_case("nan"))
+    {
+        return token[..sign + 3].parse().unwrap_or_default();
+    }
+    // atof accepts a decimal prefix and leaves an incomplete exponent unread.
+    let mut end = sign + decimal_digits(&token[sign..]);
+    if let Some(fraction) = token[end..].strip_prefix('.') {
+        end += 1 + decimal_digits(fraction);
+    }
+    if let Some(exponent) = token[end..].strip_prefix(['e', 'E']) {
+        let exponent_sign = number_sign_len(exponent);
+        let digits = decimal_digits(&exponent[exponent_sign..]);
+        if digits != 0 {
+            end += 1 + exponent_sign + digits;
+        }
+    }
+    token[..end].parse().unwrap_or_default()
+}
+
+fn number_sign_len(token: &str) -> usize {
+    usize::from(token.starts_with(['-', '+']))
+}
+
+fn decimal_digits(token: &str) -> usize {
+    token.bytes().take_while(u8::is_ascii_digit).count()
 }

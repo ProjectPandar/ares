@@ -12,13 +12,16 @@ impl Transform3d {
     ]);
 
     pub fn parse_3mf(value: &str) -> Result<Self, SliceError> {
-        let values = parse_values::<12>(value, "3MF transform")?;
-        Ok(Self([
+        parse_values::<12>(value, "3MF transform").map(Self::from_3mf_values)
+    }
+
+    pub(super) const fn from_3mf_values(values: [f64; 12]) -> Self {
+        Self([
             [values[0], values[3], values[6], values[9]],
             [values[1], values[4], values[7], values[10]],
             [values[2], values[5], values[8], values[11]],
             [0.0, 0.0, 0.0, 1.0],
-        ]))
+        ])
     }
 
     pub(crate) const fn from_rows(rows: [[f64; 4]; 4]) -> Self {

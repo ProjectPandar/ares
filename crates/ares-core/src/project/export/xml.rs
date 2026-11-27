@@ -17,8 +17,7 @@ const MODEL_OPEN: &str = concat!(
     "xmlns:p=\"http://schemas.microsoft.com/3dmanufacturing/production/2015/06\" requiredextensions=\"p\">\n"
 );
 const VERSION_METADATA: &str = " <metadata name=\"BambuStudio:3mfVersion\">1</metadata>\n";
-// The model stream uses float::max_digits10 (bbs_3mf.cpp:7143–7151).
-fn transform_3mf(transform: Transform3d) -> String {
+fn transform_3mf(transform: Transform3d, digits: usize) -> String {
     let column_major = transform.to_column_major();
     let values = column_major
         .as_chunks::<4>()
@@ -26,7 +25,7 @@ fn transform_3mf(transform: Transform3d) -> String {
         .iter()
         .flat_map(|column| &column[..3])
         .copied();
-    numbers(values, 9)
+    numbers(values, digits)
 }
 
 pub(super) fn content_types() -> String {
@@ -118,7 +117,8 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
         let path = quick_xml::escape::escape(path);
         writeln!(out, "  <object id=\"{id}\" p:UUID=\"{backup_id:08x}-61cb-4c03-9d28-80fed5dfa1dc\" type=\"model\">\n   <components>").unwrap();
         for (id, prefix, part) in object.parts() {
-            let transform = transform_3mf(part.transform);
+            // The model stream uses float::max_digits10 (bbs_3mf.cpp:7143–7151).
+            let transform = transform_3mf(part.transform, 9);
             writeln!(out, "    <component p:path=\"/{path}\" objectid=\"{id}\" p:UUID=\"{prefix:08x}-b206-40ff-9872-83e8017abed1\" transform=\"{transform}\"/>").unwrap();
         }
         out.push_str("   </components>\n  </object>\n");
@@ -133,7 +133,7 @@ pub(super) fn main_model(objects: &[ObjectEntry<'_>], loaded_orca_version: Optio
     for object in objects {
         let id = object.id;
         for instance in &object.object.instances {
-            let transform = transform_3mf(instance.transform);
+            let transform = transform_3mf(instance.transform, 9);
             let printable = u8::from(instance.printable);
             writeln!(out, "  <item objectid=\"{id}\" p:UUID=\"{id:08x}-b1ec-4553-aec9-835e5b724bb4\" transform=\"{transform}\" printable=\"{printable}\"/>").unwrap();
         }
@@ -223,10 +223,24 @@ pub(super) fn model_settings(
         out.push_str("  </object>\n");
     }
     if let Some(scene) = scene {
-        scene.write_model_settings(&mut out, objects);
-        out.push_str("</config>\n");
-        return out;
+        scene.write_plates(&mut out, objects);
+    } else {
+        write_package_plates(&mut out, objects, sliced, saved_instance_id, skip_model);
     }
+    if !skip_model {
+        write_assemble(&mut out, model_objects);
+    }
+    out.push_str("</config>\n");
+    out
+}
+
+fn write_package_plates(
+    out: &mut String,
+    objects: &[ObjectEntry<'_>],
+    sliced: Option<&[SlicedMembers]>,
+    saved_instance_id: Option<u32>,
+    skip_model: bool,
+) {
     let plates = sliced.map_or_else(|| vec![None], |plates| plates.iter().map(Some).collect());
     for (index, plate) in plates.into_iter().enumerate() {
         let plate_id = index + 1;
@@ -242,11 +256,23 @@ pub(super) fn model_settings(
         }
         out.push_str("  </plate>\n");
     }
-    if !skip_model {
-        out.push_str("  <assemble>\n  </assemble>\n");
+}
+
+fn write_assemble(out: &mut String, objects: &[ObjectEntry<'_>]) {
+    out.push_str("  <assemble>\n");
+    for object in objects {
+        let id = object.id;
+        for (ordinal, instance) in object.object.instances.iter().enumerate() {
+            let Some((transform, offset)) = instance.assemble else {
+                continue;
+            };
+            // bbs_3mf.cpp:8301,8617–8647 streams the initialized state at double::max_digits10.
+            let transform = transform_3mf(transform, 17);
+            let offset = numbers(offset.into_iter(), 17);
+            writeln!(out, "   <assemble_item object_id=\"{id}\" instance_id=\"{ordinal}\" transform=\"{transform}\" offset=\"{offset}\" />").unwrap();
+        }
     }
-    out.push_str("</config>\n");
-    out
+    out.push_str("  </assemble>\n");
 }
 
 pub(super) fn slice_info(
@@ -332,7 +358,15 @@ pub(super) fn slice_info_header() -> String {
 
 fn numbers(values: impl Iterator<Item = f64>, digits: usize) -> String {
     values
-        .map(|value| crate::options::format_number_precision(value, digits))
+        .map(|value| {
+            if value.is_finite() {
+                crate::options::format_number_precision(value, digits)
+            } else {
+                let sign = if value.is_sign_negative() { "-" } else { "" };
+                let word = if value.is_nan() { "nan" } else { "inf" };
+                format!("{sign}{word}")
+            }
+        })
         .collect::<Vec<_>>()
         .join(" ")
 }
