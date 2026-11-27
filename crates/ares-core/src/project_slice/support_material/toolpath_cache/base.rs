@@ -23,7 +23,7 @@ impl LayerCache<SupportExtrusionEntity> {
             && !base.polygons_to_extrude(geometry).is_empty()
         {
             let parameters = input.parameters;
-            let first_layer = base.source.bottom_z(geometry) < 1e-4;
+            let first_layer = !input.belt_floor && base.source.bottom_z(geometry) < 1e-4;
             let organic = !first_layer
                 && crate::project_slice::support_material::style::resolve(
                     input.object.support_type,

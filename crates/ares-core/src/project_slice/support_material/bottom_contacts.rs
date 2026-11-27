@@ -36,6 +36,21 @@ pub(super) fn detect_bottom_contacts(
     if input.top_surfaces.is_empty() {
         return Ok(None);
     }
+    make_bottom_contact(input, layer_support_areas, false)
+}
+
+pub(super) fn detect_floor_contact(
+    input: &BottomContactsInput<'_>,
+    layer_support_areas: &mut [Vec<Polygon>],
+) -> Result<Option<BottomContactLayer>, ClipperError> {
+    make_bottom_contact(input, layer_support_areas, true)
+}
+
+fn make_bottom_contact(
+    input: &BottomContactsInput<'_>,
+    layer_support_areas: &mut [Vec<Polygon>],
+    belt_floor: bool,
+) -> Result<Option<BottomContactLayer>, ClipperError> {
     let touching = intersection_polygons_paths(input.top_surfaces, input.supports_projected)?;
     if touching.is_empty() {
         return Ok(None);
@@ -45,7 +60,12 @@ pub(super) fn detect_bottom_contacts(
     let parameters = placement.parameters;
     let layer = &placement.layers[input.layer_index];
     let zero_gap_bottom = parameters.zero_gap_interface_bottom;
-    let (height, print_z) = if placement.independent_support_layer_height {
+    let (height, print_z) = if belt_floor {
+        (
+            input.bottom_interface_height,
+            layer.print_z + input.bottom_interface_height + parameters.gap_object_support,
+        )
+    } else if placement.independent_support_layer_height {
         if zero_gap_bottom {
             let upper = &placement.layers[input.layer_index + 1];
             (upper.height, upper.print_z)

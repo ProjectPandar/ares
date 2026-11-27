@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/normal_support.rs"]
+mod normal_support;
 #[path = "belt_print/purge.rs"]
 mod purge;
 #[path = "belt_print/seam_visibility.rs"]
@@ -94,11 +96,6 @@ fn emits_belt_first_layer_bands_with_no_slowdown_ramp() {
             ("slow_down_layers", json!("0")),
         ],
     );
-}
-
-#[test]
-fn rejects_belt_support_without_gcode() {
-    rejects("support", &[("enable_support", json!("1"))]);
 }
 
 fn project(belt: bool, shift: bool, edits: &[(&str, Value)], second_island: bool) -> Vec<u8> {

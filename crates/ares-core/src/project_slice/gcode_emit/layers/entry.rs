@@ -8,7 +8,7 @@ pub(super) struct EntryGeometry<'a> {
     pub(super) lower_boundary_lines: Vec<crate::geometry::Line>,
     pub(super) nearest_penalties:
         Option<&'a crate::project_slice::island_print_order::NearestSeamLayer>,
-    /// The previous physical layer's `Layer::curled_lines`
+    /// The previous prepared object layer's `Layer::curled_lines`
     /// (`estimate_curled_extrusions`) for the artificial curl distance.
     pub(super) previous_curled: &'a [CurledLine],
     pub(super) layer_slices: std::rc::Rc<[ExPolygon]>,

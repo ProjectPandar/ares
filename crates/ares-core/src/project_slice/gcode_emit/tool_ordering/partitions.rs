@@ -63,11 +63,15 @@ pub(super) fn fill(
         layer.has_wipe_tower = wrapping;
     }
     let smooth = settings.process.print.timelapse_type == ProcessTimelapseType::Smooth;
+    let belt = settings.printer.remaining.belt_printer.0;
     for layer in layers.iter_mut() {
-        layer.has_wipe_tower |= (layer.has_object && (smooth || layer.wipe_tower_partitions > 0))
-            || layer.print_z < object_bottom_z + EPSILON;
+        layer.has_wipe_tower |= ((layer.has_object || (belt && layer.has_support))
+            && (smooth || layer.wipe_tower_partitions > 0))
+            || (!belt && layer.print_z < object_bottom_z + EPSILON);
     }
-    raft_gap(layers, object_bottom_z, max_layer_height);
+    if !belt {
+        raft_gap(layers, object_bottom_z, max_layer_height);
+    }
     for i in 0..layers.len() - 1 {
         if layers[i].extruders.is_empty() || layers[i + 1].extruders.is_empty() {
             break;
