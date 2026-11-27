@@ -89,7 +89,13 @@ export const checks = [
   assert<
     Equal<
       ProfileSliceOptions,
-      { plate?: number; seed: number; overrides?: Record<string, string | string[]>; placement?: "none" | "center" }
+      {
+        plate?: number;
+        seed: number;
+        render_thumbnails?: boolean;
+        overrides?: Record<string, string | string[]>;
+        placement?: "none" | "center";
+      }
     >
   >(),
   assert<Equal<ReturnType<AresSlicer["sliceStl"]>, Promise<SliceResult>>>(),
