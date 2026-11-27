@@ -53,30 +53,37 @@ export function CloudSignInDialog({ onClose, onSignedIn }: { onClose: () => void
           );
         }}
       >
-        <label className="print-host-field">
-          Hub URL
-          <input
-            type="url"
-            required
-            value={hubUrl}
-            disabled={waiting !== undefined}
-            placeholder="https://pandar.example.com"
-            onChange={(event) => setHubUrl(event.target.value)}
-          />
-        </label>
-        {waiting && <p role="status">Continue in the Pandar sign-in window…</p>}
-        {error && (
-          <p className="preset-error" role="alert">
-            {error}
-          </p>
-        )}
+        <div className="dialog-body print-host-fields">
+          <label className="print-host-field">
+            Hub URL
+            <input
+              type="url"
+              required
+              value={hubUrl}
+              disabled={waiting !== undefined}
+              placeholder="https://pandar.example.com"
+              onChange={(event) => setHubUrl(event.target.value)}
+            />
+          </label>
+          {waiting && (
+            <p className="dialog-notice busy" role="status">
+              <span className="spinner" aria-hidden="true" />
+              Continue in the Pandar sign-in window…
+            </p>
+          )}
+          {error && (
+            <p className="dialog-notice error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
         <footer className="vendor-footer">
           {waiting ? (
             <button type="button" className="side-button" onClick={() => setWaiting(undefined)}>
               Cancel
             </button>
           ) : (
-            <button type="submit" className="side-button">
+            <button type="submit" className="side-button dialog-primary">
               Sign in
             </button>
           )}
@@ -105,7 +112,11 @@ export function PrintHostSendDialog({ onClose }: { onClose: () => void }) {
     offsetCali: 0,
     timelapse: false,
   });
-  const [state, setState] = useState<{ sending?: true; error?: string; sent?: true }>({});
+  const [state, setState] = useState<{
+    sending?: true;
+    error?: string;
+    sent?: true;
+  }>({});
   useEffect(() => {
     listPrinters().then(
       (list) => {
@@ -144,7 +155,7 @@ export function PrintHostSendDialog({ onClose }: { onClose: () => void }) {
     </label>
   );
   return (
-    <dialog ref={ref} className="print-host-dialog" aria-labelledby="send-title" onClose={onClose}>
+    <dialog ref={ref} className="print-host-dialog send-dialog" aria-labelledby="send-title" onClose={onClose}>
       <Header id="send-title" title="Send to Printer" close={close} />
       <form
         className="print-host-body"
@@ -157,39 +168,52 @@ export function PrintHostSendDialog({ onClose }: { onClose: () => void }) {
           );
         }}
       >
-        <p className="print-host-type">
-          {cloud.tenantName} · {cloud.hubUrl}
-        </p>
-        <label className="print-host-field">
-          Printer
-          <select value={printerId} disabled={!printers?.length} onChange={(event) => setPrinterId(event.target.value)}>
-            {printers?.length === 0 && <option value="">No printers</option>}
-            {printers?.map(({ id, name, status }) => (
-              <option key={id} value={id}>
-                {name} ({status})
-              </option>
-            ))}
-          </select>
-        </label>
-        {bambu && (
-          <>
-            {mode("bedLeveling", "Bed Leveling")}
-            {mode("flowCali", "Flow Dynamics Calibration")}
-            {mode("offsetCali", "Nozzle Offset Calibration")}
-            {flag("useAms", "Use AMS")}
-            {flag("timelapse", "Timelapse")}
-          </>
-        )}
-        {(blocker ?? state.error) && (
-          <p className="preset-error" role="alert">
-            {blocker ?? state.error}
+        <div className="dialog-body print-host-fields">
+          <p className="print-host-type">
+            {cloud.tenantName} · {cloud.hubUrl}
           </p>
-        )}
-        {state.sent && <p role="status">Sent to {printer!.name}.</p>}
+          <label className="print-host-field">
+            Printer
+            <select
+              value={printerId}
+              disabled={!printers?.length}
+              onChange={(event) => setPrinterId(event.target.value)}
+            >
+              {printers?.length === 0 && <option value="">No printers</option>}
+              {printers?.map(({ id, name, status }) => (
+                <option key={id} value={id}>
+                  {name} ({status})
+                </option>
+              ))}
+            </select>
+          </label>
+          {bambu && (
+            <section className="print-host-options" aria-labelledby="print-options-title">
+              <h3 id="print-options-title">Print options</h3>
+              <div className="print-host-options-body">
+                {mode("bedLeveling", "Bed Leveling")}
+                {mode("flowCali", "Flow Dynamics Calibration")}
+                {mode("offsetCali", "Nozzle Offset Calibration")}
+                {flag("useAms", "Use AMS")}
+                {flag("timelapse", "Timelapse")}
+              </div>
+            </section>
+          )}
+          {(blocker ?? state.error) && (
+            <p className="dialog-notice error" role="alert">
+              {blocker ?? state.error}
+            </p>
+          )}
+          {state.sent && (
+            <p className="dialog-notice success" role="status">
+              Sent to {printer!.name}.
+            </p>
+          )}
+        </div>
         <footer className="vendor-footer">
           <button
             type="submit"
-            className="side-button"
+            className="side-button dialog-primary"
             disabled={!printer || blocker !== undefined || state.sending || state.sent}
           >
             {state.sending ? "Sending…" : "Send"}

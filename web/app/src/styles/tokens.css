@@ -96,3 +96,65 @@
   --bed-outline: #e5e5e5;
   --shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
+
+/* Compact surfaces and controls from the Ares Design canvas. */
+:root[data-theme] {
+  --panel: #fff;
+  --panel-raised: #f1f2f4;
+  --panel-sunken: #f6f7f8;
+  --field: #fff;
+  --border: #e0e2e6;
+  --separator: #e5e6e9;
+  --text: #181b20;
+  --label: #343940;
+  --text-dim: #5d646e;
+  --accent: #087e73;
+  --accent-fill: #08766c;
+  --accent-fill-hover: #06645c;
+  --accent-fill-pressed: #05544e;
+  --accent-ink: #076a61;
+  --accent-soft: #e8f6f3;
+  --accent-checked: #def2ee;
+  --success: #08766c;
+  --shadow: 0 1px 2px #12151c0d, 0 4px 12px #12151c0c;
+  --inset: inset 0 1px #fff3;
+  --radius-control: 7px;
+  --radius-panel: 12px;
+  --code-number: #9a411b;
+  --code-command: #116f64;
+}
+
+:root[data-theme="dark"] {
+  --panel: #1c1e22;
+  --panel-raised: #2d3036;
+  --panel-sunken: #15171a;
+  --field: #25282d;
+  --border: #373b42;
+  --separator: #30333a;
+  --text: #f2f3f5;
+  --label: #dfe2e7;
+  --text-dim: #aaafb8;
+  --accent: #6cd9c6;
+  --accent-fill: #87e4d3;
+  --accent-fill-hover: #a1eddf;
+  --accent-fill-pressed: #6dd1bf;
+  --accent-text: #101f1d;
+  --accent-ink: #91e7d7;
+  --accent-soft: #223632;
+  --accent-checked: #21433e;
+  --success: #6cd9c6;
+  --shadow: 0 1px 2px #0004, 0 4px 12px #0003;
+  --inset: inset 0 1px #fff0, inset 0 -1px #ffffff0c;
+  --code-number: #f5a97a;
+  --code-command: #8be7d6;
+}
+
+:root[data-theme] {
+  --bg: var(--panel-sunken);
+  --topbar: var(--panel);
+  --topbar-text: var(--text);
+  --topbar-hover: var(--panel-raised);
+  --button-hover: var(--panel-raised);
+  --slice-result-max-height: 420px;
+  --plate-row-height: 24px;
+}

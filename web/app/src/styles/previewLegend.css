@@ -1,0 +1,76 @@
+.slice-result .legend {
+  --legend-metric-columns: 10px minmax(0, 1fr) 64px 52px;
+  --legend-row-inset: 8px;
+}
+
+.slice-result .legend-roles {
+  overflow: clip;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  background: var(--panel-sunken);
+}
+
+.slice-result .legend-roles li + li {
+  border-top: 1px solid var(--separator);
+}
+
+.slice-result :is(.legend-header:has(> :nth-child(3)), .legend-metrics .legend-row) {
+  display: grid;
+  grid-template-columns: var(--legend-metric-columns);
+  gap: 8px;
+  align-items: center;
+}
+
+.slice-result .legend-header:has(> :nth-child(3)) {
+  padding-inline: calc(var(--legend-row-inset) + 1px);
+  border: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.slice-result .legend-header:has(> :nth-child(3)) span {
+  width: auto;
+}
+.slice-result .legend-header:has(> :nth-child(3)) span:first-child {
+  grid-column: span 2;
+  padding-inline-start: 18px;
+}
+.slice-result .legend-header:has(> :nth-child(3)) span:last-child {
+  text-align: center;
+}
+
+.slice-result .legend-metrics .legend-row {
+  padding-inline: var(--legend-row-inset);
+  border-radius: 0;
+}
+
+.slice-result .legend-roles .legend-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.slice-result .legend-roles .legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.slice-result .legend-metrics .legend-time {
+  width: auto;
+}
+.slice-result .legend-metrics .legend-percent {
+  width: auto;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.slice-result .legend-metrics .legend-percent::after {
+  content: "%";
+}
+.shell .slice-result .legend-row:focus-visible {
+  outline-offset: -2px;
+}

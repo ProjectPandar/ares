@@ -80,7 +80,14 @@ export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose:
       onKeyDown={(event) => event.key === "Escape" && blockClose(event)}
     >
       <header className="shortcuts-header">
-        <h2 id="wizard-title">{filamentStep ? "Filament Selection" : "Printer Selection"}</h2>
+        <div>
+          {firstRun && (
+            <span className="dialog-step">
+              <b>{filamentStep ? "2" : "1"} of 2</b> · First-run setup
+            </span>
+          )}
+          <h2 id="wizard-title">{filamentStep ? "Filament Selection" : "Printer Selection"}</h2>
+        </div>
         {!firstRun && (
           <button className="bar-button" aria-label="Close" disabled={busy} onClick={() => dialog.current!.close()}>
             {"✕"}
@@ -100,14 +107,19 @@ export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose:
         <>
           <ModelPage models={models} checked={checked} onChange={setChecked} />
           <footer className="vendor-footer wizard-footer">
+            <span className="filament-count">{checked.size} selected</span>
             {firstRun ? (
-              <button className="side-button" disabled={busy} onClick={() => checked.size > 0 && void next(models)}>
+              <button
+                className="side-button dialog-primary"
+                disabled={busy}
+                onClick={() => checked.size > 0 && void next(models)}
+              >
                 Next
               </button>
             ) : (
               <>
                 <button
-                  className="side-button"
+                  className="side-button dialog-primary"
                   disabled={busy}
                   onClick={() => checked.size > 0 && void confirm(models)}
                 >

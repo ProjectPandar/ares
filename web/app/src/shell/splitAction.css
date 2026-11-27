@@ -1,0 +1,104 @@
+.action-split {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.tabbar-actions .action-split .action-main {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.tabbar-actions .action-split .action-trigger {
+  flex: none;
+  width: 32px;
+  padding: 0;
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.tabbar-actions .action-trigger.slice-action {
+  box-shadow: inset 1px 0 color-mix(in srgb, var(--accent-text) 28%, transparent);
+}
+
+.action-trigger::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.action-menu {
+  position: fixed;
+  inset: auto;
+  min-width: 152px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.action-option {
+  display: grid;
+  grid-template-columns: 12px auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.action-option:hover {
+  background: var(--panel-raised);
+}
+
+.action-option[aria-checked="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.action-option::before {
+  content: "";
+}
+
+.action-option[aria-checked="true"]::before {
+  width: 9px;
+  height: 5px;
+  border: solid currentColor;
+  border-width: 0 0 1.5px 1.5px;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.shell .action-option:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (max-width: 640px) {
+  .action-split {
+    flex: 1;
+  }
+  .tabbar-actions .action-split .action-trigger {
+    width: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  .tabbar-actions .action-split .action-trigger {
+    width: 44px;
+  }
+  .action-option {
+    min-height: 44px;
+  }
+}

@@ -26,6 +26,7 @@ function FilterColumn({
   const shown = values.filter((value) => matches(value, search));
   return (
     <div className="filament-column" role="group" aria-label={title}>
+      <h3 className="filament-column-heading">{title}</h3>
       <input
         type="search"
         className="filament-column-search"
@@ -74,27 +75,23 @@ function Columns({ model, onDone }: { model: DialogModel; onDone: (checked: Read
         <FilterColumn title="Filament type" values={model.types} checked={types} onChange={setTypes} />
         <FilterColumn title="Vendor" values={model.vendors} checked={vendors} onChange={setVendors} />
         <div className="filament-column filament-items" role="group" aria-label="Filaments">
-          <div className="filament-items-bar">
-            <input
-              type="search"
-              className="filament-column-search"
-              aria-label="Filter filaments"
-              placeholder="Filter items"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-            />
-            {/* UpdateStats (common.js:379-392): checked / all [listed]. */}
-            <span className="filament-count" data-testid="filament-count">
-              {checked.size} / {model.items.length}
-              {shown.length < model.items.length ? ` [${shown.length}]` : ""}
-            </span>
+          <div className="filament-column-heading filament-items-bar">
+            <h3>Filaments</h3>
             <button className="side-button" onClick={() => setShown(true)}>
-              all
+              All
             </button>
             <button className="side-button" onClick={() => setShown(false)}>
               Clear all
             </button>
           </div>
+          <input
+            type="search"
+            className="filament-column-search"
+            aria-label="Filter filaments"
+            placeholder="Filter items"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
           <div className="filament-column-list">
             {shown.map((item) => (
               <label key={item.key} className="vendor-item" title={item.names.join("\n")}>
@@ -111,7 +108,11 @@ function Columns({ model, onDone }: { model: DialogModel; onDone: (checked: Read
         </div>
       </div>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => onDone(checked)}>
+        <span className="filament-count" data-testid="filament-count">
+          {checked.size} / {model.items.length}
+          {shown.length < model.items.length ? ` [${shown.length}]` : ""}
+        </span>
+        <button className="side-button dialog-primary" onClick={() => onDone(checked)}>
           Done
         </button>
       </footer>
@@ -136,7 +137,10 @@ export function FilamentDialog({ printer, onClose }: { printer: string; onClose:
       onClose={onClose}
     >
       <header className="shortcuts-header">
-        <h2 id="filaments-title">Filament selection</h2>
+        <div>
+          <h2 id="filaments-title">Filament selection</h2>
+          <span className="settings-preset">{printer}</span>
+        </div>
         <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
           {"\u2715"}
         </button>

@@ -55,8 +55,14 @@ export function SettingsDialog({
   const slots = useApp((state) => state.scene?.filamentSlots);
   const selection = useApp((state) => (printer || project ? null : state.presetSelection));
   const defs = useApp((state) => state.configDefs)!;
-  const [fetched, setFetched] = useState<{ selection: typeof selection; values: OptionMap } | null>(null);
-  const [edited, setEdited] = useState<{ source: OptionMap; values: OptionMap } | null>(null);
+  const [fetched, setFetched] = useState<{
+    selection: typeof selection;
+    values: OptionMap;
+  } | null>(null);
+  const [edited, setEdited] = useState<{
+    source: OptionMap;
+    values: OptionMap;
+  } | null>(null);
   useEffect(() => {
     if (!project) return;
     let stale = false;
@@ -120,8 +126,10 @@ export function SettingsDialog({
   return (
     <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title" onClose={onClose}>
       <header className="shortcuts-header">
-        <h2 id="settings-title">{title}</h2>
-        <span className="settings-preset">{name ? String(name) : ""}</span>
+        <div className="settings-heading">
+          <h2 id="settings-title">{title}</h2>
+          {name && <span className="settings-preset">{String(name)}</span>}
+        </div>
         <ModeSwitch />
         <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
           {"\u2715"}

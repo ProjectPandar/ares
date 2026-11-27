@@ -295,15 +295,15 @@ function NewProjectDialog({ onClose }: { onClose: (discard: boolean) => void }) 
       <header className="shortcuts-header">
         <h2 id="new-project-title">Discard the current project?</h2>
       </header>
-      <p className="switch-diameter-text">
-        The model, its plates and slice results are closed. The selected presets stay.
-      </p>
+      <div className="dialog-body">
+        <p>The model, its plates and slice results are closed. The selected presets stay.</p>
+      </div>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => answer(true)}>
-          Discard
-        </button>
         <button className="side-button" onClick={() => answer(false)}>
           Cancel
+        </button>
+        <button className="side-button dialog-danger" onClick={() => answer(true)}>
+          Discard
         </button>
       </footer>
     </dialog>

@@ -57,9 +57,16 @@ test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hu
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
   await page.getByTestId("import-input").setInputFiles(fixture);
-  await expect(page.getByTestId("status")).toHaveText("Ready to slice", { timeout: 60_000 });
+  await expect(page.getByTestId("status")).toHaveText("Ready to slice", {
+    timeout: 60_000,
+  });
+  const outputOptions = page.getByRole("button", { name: "Output options" });
+  await outputOptions.click();
+  await page.getByRole("menuitemradio", { name: "Print plate" }).click();
   const print = page.getByRole("button", { name: "Print plate" });
   await expect(print).toBeDisabled();
+  await outputOptions.click();
+  await page.getByRole("menuitemradio", { name: "Export G-code file" }).click();
 
   await page.getByRole("button", { name: "Slice plate" }).click();
   const exportGcode = page.getByRole("button", { name: "Export G-code file" });
@@ -68,6 +75,9 @@ test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hu
   const preview = new Uint8Array(readFileSync((await download.path())!));
 
   // Not signed in yet: the Cloud sign-in comes first, then the send dialog.
+  await outputOptions.click();
+  await page.getByRole("menuitemradio", { name: "Print plate" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await print.click();
   await signInDialog(page);
   await page.getByRole("dialog", { name: "Send to Printer" }).getByRole("button", { name: "Close" }).click();

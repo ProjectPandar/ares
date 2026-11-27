@@ -69,7 +69,7 @@ export function FilamentPage({
         <button className="side-button" onClick={onBack}>
           Back
         </button>
-        <button className="side-button" onClick={finish}>
+        <button className="side-button dialog-primary" onClick={finish}>
           Finish
         </button>
       </footer>
@@ -84,7 +84,7 @@ export function FilamentPage({
             Error
           </div>
           <p id="wizard-notice-text">At least one filament must be selected.</p>
-          <button className="side-button" onClick={() => setNotice(false)}>
+          <button className="side-button dialog-primary" onClick={() => setNotice(false)}>
             OK
           </button>
         </div>

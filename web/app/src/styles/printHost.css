@@ -1,21 +1,6 @@
 /* CloudSignInDialog and PrintHostSendDialog. */
-.print-host-dialog {
-  width: min(440px, 92vw);
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-.print-host-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.35);
-}
-.print-host-body {
+.print-host-field {
   display: grid;
-  gap: 8px;
-  padding: 12px 16px 0;
-  font-size: 12px;
 }
 .print-host-body p {
   margin: 0;
@@ -24,12 +9,44 @@
   color: var(--text-dim);
   overflow-wrap: anywhere;
 }
-.print-host-field {
-  display: grid;
-  grid-template-columns: 9em 1fr;
-  align-items: center;
-  gap: 8px;
+
+.print-host-body {
+  display: block;
+  padding: 0;
+  font-size: inherit;
 }
-.print-host-dialog .vendor-footer {
-  padding: 4px 0 12px;
+.print-host-fields {
+  display: grid;
+  gap: 12px;
+}
+.print-host-field {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  font-weight: 550;
+}
+.print-host-field :is(input, select) {
+  width: 100%;
+  min-width: 0;
+}
+.print-host-options {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.print-host-options h3 {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  background: var(--panel-raised);
+  border-bottom: 1px solid var(--border);
+}
+.print-host-options-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 9px 12px;
+  padding: 7px 10px;
+}
+.print-host-options-body > .vendor-item {
+  grid-column: 1 / -1;
 }

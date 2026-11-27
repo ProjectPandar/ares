@@ -124,13 +124,20 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   await page.screenshot({ path: `${artifacts}preview-plate-1.png` });
 
   // "Slice all" slices every plate in turn and ends on the last; "Export all" saves each plate.
+  await action(page, "Slicing options").click();
+  await page.getByRole("menuitemradio", { name: "Slice all" }).click();
   await action(page, "Slice all").click();
   await expect(page.getByTestId("slice-plate")).toHaveText("2", { timeout: 120_000 });
   await expect(page.getByTestId("status")).toContainText("Slice complete", { timeout: 120_000 });
   const downloads: string[] = [];
   page.on("download", (download) => downloads.push(download.suggestedFilename()));
+  await action(page, "Output options").click();
+  await page.getByRole("menuitemradio", { name: "Export all" }).click();
+  expect(downloads).toEqual([]);
   await action(page, "Export all").click();
   await expect.poll(() => downloads.sort()).toEqual(["two-plates_plate_1.gcode", "two-plates_plate_2.gcode"]);
+  await action(page, "Output options").click();
+  await page.getByRole("menuitemradio", { name: "Export G-code file" }).click();
   expect(await exportCurrent(page, "two-plates_plate_2.gcode")).toBe(plate2);
 
   // Three added plates make 5: the grid grows to 3 columns (compute_colum_count) and the new
