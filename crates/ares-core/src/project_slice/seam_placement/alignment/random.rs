@@ -1,6 +1,10 @@
-use crate::{project_slice::seam_candidates::PaintState, scalar_math::sincosf};
+use crate::{
+    CancelToken, SliceError, project_slice::seam_candidates::PaintState, scalar_math::sincosf,
+};
 
 use super::{LayerPlan, SeamPerimeter, Vec3, is_not_much_worse};
+
+const RANDOM_MULTIPLIER: f32 = f32::from_bits(0x472a_ee8c);
 
 #[derive(Clone, Copy)]
 struct Edge {
@@ -9,21 +13,23 @@ struct Edge {
     length: f32,
 }
 
-pub(super) fn apply(layers: &mut [LayerPlan]) {
-    for layer in layers {
+pub(super) fn apply(layers: &mut [LayerPlan], cancel: &CancelToken) -> Result<(), SliceError> {
+    crate::parallel::par_for_each_mut_try(layers, cancel, |_, layer| {
         for perimeter_index in 0..layer.candidates.perimeters.len() {
+            cancel.check()?;
             let (seam_index, position) = select(layer, perimeter_index);
             layer.choices[perimeter_index].seam_index = seam_index;
             layer.choices[perimeter_index].final_position = Some(position);
         }
-    }
+        Ok(())
+    })
 }
 
 fn select(layer: &LayerPlan, perimeter_index: usize) -> (usize, Vec3) {
     let perimeter = &layer.candidates.perimeters[perimeter_index];
     let seed = layer.positions[perimeter.start_index];
     let mut random =
-        (sincosf::sin(seed.dot(Vec3::new(12.9898, 78.233, 133.3333))) * 43_758.547).abs();
+        (sincosf::sin(seed.dot(Vec3::new(12.9898, 78.233, 133.3333))) * RANDOM_MULTIPLIER).abs();
     random -= random as i32 as f32;
     let viable = viable_edges(layer, perimeter);
     let mut picked = viable.iter().map(|edge| edge.length).sum::<f32>() * random;

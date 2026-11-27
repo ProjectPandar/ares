@@ -1,5 +1,7 @@
 use std::f32::consts::PI;
 
+use crate::{CancelToken, SliceError};
+
 use super::{
     mesh::{TriangleMesh, Vec3},
     sampling::{TriangleSamples, sample_uniform},
@@ -20,55 +22,40 @@ impl GlobalVisibility {
     /// `front_bias` mirrors spAlignedBack's visibility adjustment
     /// (`SeamPlacer.cpp:165-170`): samples facing the front (-Y) get up to
     /// +1.0 visibility penalty so the seam prefers the back.
-    pub(super) fn from_mesh(mesh: TriangleMesh, sample_count: usize, front_bias: bool) -> Self {
+    pub(super) fn from_mesh(
+        mesh: TriangleMesh,
+        sample_count: usize,
+        front_bias: bool,
+        cancel: &CancelToken,
+    ) -> Result<Self, SliceError> {
         let samples = sample_uniform(&mesh, sample_count);
         let tree = TriangleBvh::new(&mesh);
         let directions = hemisphere_directions();
         let contains_negative = mesh.negative_start < mesh.triangles.len();
-        let mut negative_caster = NegativeRaycaster {
+        let mut values = vec![0.0; samples.positions.len()];
+        let chunk = VisibilityChunk {
             mesh: &mesh,
             tree: &tree,
             directions: &directions,
-            hits: Vec::new(),
+            samples: &samples,
+            contains_negative,
+            front_bias,
+            cancel,
         };
-        let values: Vec<f32> = samples
-            .positions
-            .iter()
-            .zip(&samples.normals)
-            .zip(&samples.triangle_indices)
-            .map(|((&center, &normal), &triangle_index)| {
-                let front_adjustment = if front_bias {
-                    ((-normal.y + 1.2) * 0.5).clamp(0.0, 1.0)
-                } else {
-                    0.0
-                };
-                if contains_negative {
-                    return negative_caster.visibility(
-                        center,
-                        normal,
-                        triangle_index,
-                        1.0 + front_adjustment,
-                    );
-                }
-                let visibility = sample_visibility(&mesh, &tree, center, normal, &directions);
-                if front_bias {
-                    visibility + front_adjustment
-                } else {
-                    visibility
-                }
-            })
-            .collect();
+        crate::parallel::par_chunks_mut_try(&mut values, 64, cancel, |offset, values| {
+            chunk.fill(offset, values)
+        })?;
         let density = sample_count as f32 / samples.total_area;
         let search_area = 4.0 / (-0.9_f32.ln() * density);
         // SeamPlacer.cpp:685 promotes search_area through double PI before sqrt.
         let radius = (f64::from(search_area) / std::f64::consts::PI).sqrt() as f32;
         let sample_tree = PointKdTree::new(&samples.positions);
-        Self {
+        Ok(Self {
             samples,
             values,
             sample_tree,
             radius,
-        }
+        })
     }
 
     pub(super) fn at(&self, position: Vec3) -> f32 {
@@ -100,6 +87,70 @@ impl GlobalVisibility {
             return 1.0;
         }
         total_visibility / total_weight
+    }
+}
+
+struct VisibilityChunk<'a> {
+    mesh: &'a TriangleMesh,
+    tree: &'a TriangleBvh,
+    directions: &'a [Vec3],
+    samples: &'a TriangleSamples,
+    contains_negative: bool,
+    front_bias: bool,
+    cancel: &'a CancelToken,
+}
+
+impl VisibilityChunk<'_> {
+    fn fill(&self, offset: usize, values: &mut [f32]) -> Result<(), SliceError> {
+        if self.contains_negative {
+            let mut negative_caster = NegativeRaycaster {
+                mesh: self.mesh,
+                tree: self.tree,
+                directions: self.directions,
+                hits: Vec::new(),
+            };
+            for (local_index, value) in values.iter_mut().enumerate() {
+                self.cancel.check()?;
+                let sample_index = offset + local_index;
+                let center = self.samples.positions[sample_index];
+                let normal = self.samples.normals[sample_index];
+                let front_bias = front_adjustment(normal, self.front_bias);
+                *value = negative_caster.visibility(
+                    center,
+                    normal,
+                    self.samples.triangle_indices[sample_index],
+                    1.0 + front_bias,
+                );
+            }
+        } else {
+            for (local_index, value) in values.iter_mut().enumerate() {
+                self.cancel.check()?;
+                let sample_index = offset + local_index;
+                let center = self.samples.positions[sample_index];
+                let normal = self.samples.normals[sample_index];
+                let front_bias = front_adjustment(normal, self.front_bias);
+                let visibility =
+                    sample_visibility(self.mesh, self.tree, center, normal, self.directions);
+                *value = adjust_visibility(visibility, front_bias, self.front_bias);
+            }
+        }
+        Ok(())
+    }
+}
+
+fn front_adjustment(normal: Vec3, front_bias: bool) -> f32 {
+    if front_bias {
+        ((-normal.y + 1.2) * 0.5).clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
+}
+
+fn adjust_visibility(visibility: f32, front_adjustment: f32, front_bias: bool) -> f32 {
+    if front_bias {
+        visibility + front_adjustment
+    } else {
+        visibility
     }
 }
 

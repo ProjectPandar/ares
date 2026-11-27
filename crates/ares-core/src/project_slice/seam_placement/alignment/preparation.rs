@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use crate::{
-    ProcessSeamPosition, SliceError,
+    CancelToken, ProcessSeamPosition, SliceError,
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
@@ -24,14 +24,26 @@ use super::{
 };
 use crate::project_slice::seam_placement::{candidate_penalty, paint::SeamPaint, visibility};
 
+pub(in crate::project_slice::seam_placement) struct PreparationInput<'a> {
+    pub(in crate::project_slice::seam_placement) visibility:
+        Option<&'a visibility::GlobalVisibility>,
+    pub(in crate::project_slice::seam_placement) paint: Option<&'a SeamPaint>,
+    pub(in crate::project_slice::seam_placement) cancel: &'a CancelToken,
+}
+
 pub(in crate::project_slice::seam_placement) fn prepare(
     layers: (&[OrderedExtrusionLayer], &[f32]),
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     nozzle_diameter: f32,
-    (visibility, paint): (Option<&visibility::GlobalVisibility>, Option<&SeamPaint>),
+    input: PreparationInput<'_>,
 ) -> Result<Vec<LayerPlan>, SliceError> {
     let (layers, layer_zs) = layers;
+    let PreparationInput {
+        visibility,
+        paint,
+        cancel,
+    } = input;
     let placement = traversal
         .print_object_config(object_index)
         .0
@@ -54,42 +66,47 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .iter()
         .map(|value| value.0)
         .fold(0.0_f64, f64::max);
-    let mut plans = layers
-        .iter()
-        .zip(layer_zs)
-        .enumerate()
-        .map(|(index, (layer, &z))| {
-            let regions = layer_regions(layer, input, index);
-            prepare_layer(
-                &regions,
-                z,
-                traversal.scale,
-                (nozzle_diameter, max_nozzle_diameter),
-                (visibility, placement, paint),
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    let mut plans = crate::parallel::par_range_map_try(layers.len(), cancel, |index| {
+        let regions = layer_regions(&layers[index], input, index);
+        prepare_layer(
+            &regions,
+            layer_zs[index],
+            traversal.scale,
+            (nozzle_diameter, max_nozzle_diameter),
+            (placement, paint),
+        )
+    })?;
+    crate::parallel::par_for_each_mut_try(&mut plans, cancel, |_, plan| {
+        for (score, candidate) in plan.scores.iter_mut().zip(&plan.candidates.points) {
+            cancel.check()?;
+            *score = candidate_penalty(candidate, visibility);
+        }
+        Ok(())
+    })?;
     let (post_region, layer_slices) = input.object.as_parts();
     let (planned_object, _, _) = post_region.as_parts();
     context::populate(
         &mut plans,
-        &embedding_layers(layers),
-        layer_slices,
-        &planned_object.layers,
-        traversal.scale,
-    );
-    for plan in &mut plans {
-        plan.choices = plan
-            .candidates
-            .perimeters
-            .iter()
-            .map(|perimeter| PerimeterChoice {
+        context::PopulationInput {
+            compute_embedding: &embedding_layers(layers),
+            layer_slices,
+            planned_layers: &planned_object.layers,
+            scale: traversal.scale,
+            cancel,
+        },
+    )?;
+    crate::parallel::par_for_each_mut_try(&mut plans, cancel, |_, plan| {
+        plan.choices = Vec::with_capacity(plan.candidates.perimeters.len());
+        for perimeter in &plan.candidates.perimeters {
+            cancel.check()?;
+            plan.choices.push(PerimeterChoice {
                 seam_index: best_candidate(perimeter, plan),
                 final_position: None,
                 finalized: false,
-            })
-            .collect();
-    }
+            });
+        }
+        Ok(())
+    })?;
     Ok(plans)
 }
 
@@ -175,11 +192,7 @@ fn prepare_layer(
     z: f32,
     scale: CoordinateScale,
     (nozzle_diameter, max_nozzle_diameter): (f32, f64),
-    (visibility, placement, paint): (
-        Option<&visibility::GlobalVisibility>,
-        ProcessSeamPosition,
-        Option<&SeamPaint>,
-    ),
+    (placement, paint): (ProcessSeamPosition, Option<&SeamPaint>),
 ) -> Result<LayerPlan, SliceError> {
     let collections = regions
         .iter()
@@ -196,11 +209,7 @@ fn prepare_layer(
         .collect::<Vec<_>>();
     let candidates = seam_candidates::generate_regions(&regions, z, scale, nozzle_diameter, paint)?;
     let candidate_count = candidates.points.len();
-    let scores = candidates
-        .points
-        .iter()
-        .map(|candidate| candidate_penalty(candidate, visibility))
-        .collect::<Vec<_>>();
+    let scores = vec![0.0; candidate_count];
     let positions = candidates
         .points
         .iter()

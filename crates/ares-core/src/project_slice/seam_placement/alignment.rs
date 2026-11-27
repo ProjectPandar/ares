@@ -7,13 +7,13 @@ mod random;
 mod string_fit;
 
 use crate::{
-    ProcessSeamPosition,
+    CancelToken, ProcessSeamPosition, SliceError,
     project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter},
 };
 
 use super::{mesh::Vec3, spatial::PointKdTree};
 
-pub(super) use preparation::prepare;
+pub(super) use preparation::{PreparationInput, prepare};
 
 const SCORE_TOLERANCE: f32 = 0.3;
 const SEARCH_DISTANCE_FLOW_FACTOR: f32 = 4.0;
@@ -133,8 +133,8 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     first_penalty <= second_penalty || first_penalty - second_penalty < SCORE_TOLERANCE
 }
 
-pub(super) fn randomize(layers: &mut [LayerPlan]) {
-    random::apply(layers);
+pub(super) fn randomize(layers: &mut [LayerPlan], cancel: &CancelToken) -> Result<(), SliceError> {
+    random::apply(layers, cancel)
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {

@@ -13,7 +13,7 @@ mod split;
 mod visibility;
 
 use crate::{
-    ProcessSeamPosition, SliceError,
+    CancelToken, ProcessSeamPosition, SliceError,
     project_slice::{
         island_print_order::{
             NearestSeamLayer, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
@@ -44,6 +44,7 @@ pub(in crate::project_slice) use runtime::{
 
 pub(in crate::project_slice) fn apply(
     prepared: &mut PreparedPostIslandPrintOrder,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     let predecessor = &prepared.predecessor;
     let traversal = &predecessor
@@ -67,37 +68,43 @@ pub(in crate::project_slice) fn apply(
     // `SeamPlacer.cpp:1442` — occlusion is computed per PrintObject, each
     // with its own `trafo_centered` frame; share one visibility model per
     // object index.
-    let visibilities = placements
-        .iter()
-        .enumerate()
-        .map(|(object_index, placement)| {
-            // SeamPlacer.cpp:1440-1457 leaves rear/random visibility at zero.
-            if !matches!(
-                placement,
-                Some(
-                    ProcessSeamPosition::Aligned
-                        | ProcessSeamPosition::Nearest
-                        | ProcessSeamPosition::AlignedBack
-                )
-            ) {
-                return None;
-            }
-            let source_index = traversal
-                .print_object_config(object_index)
-                .0
-                .source_object_index;
-            let mesh = mesh::TriangleMesh::from_object(
-                &traversal.project.objects()[source_index],
-                traversal.print_object_config(object_index).1,
-                traversal.scale,
-            );
-            (!mesh.triangles.is_empty()).then(|| {
-                let front_bias =
-                    placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack);
-                visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias)
-            })
-        })
-        .collect::<Vec<_>>();
+    let mut visibilities = Vec::with_capacity(placements.len());
+    for (object_index, placement) in placements.iter().enumerate() {
+        cancel.check()?;
+        // SeamPlacer.cpp:1440-1457 leaves rear/random visibility at zero.
+        if !matches!(
+            placement,
+            Some(
+                ProcessSeamPosition::Aligned
+                    | ProcessSeamPosition::Nearest
+                    | ProcessSeamPosition::AlignedBack
+            )
+        ) {
+            visibilities.push(None);
+            continue;
+        }
+        let source_index = traversal
+            .print_object_config(object_index)
+            .0
+            .source_object_index;
+        let mesh = mesh::TriangleMesh::from_object(
+            &traversal.project.objects()[source_index],
+            traversal.print_object_config(object_index).1,
+            traversal.scale,
+        );
+        if mesh.triangles.is_empty() {
+            visibilities.push(None);
+        } else {
+            let front_bias =
+                placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack);
+            visibilities.push(Some(visibility::GlobalVisibility::from_mesh(
+                mesh,
+                VISIBILITY_SAMPLE_COUNT,
+                front_bias,
+                cancel,
+            )?));
+        }
+    }
     let nozzle_diameter = traversal
         .resolved
         .views
@@ -116,8 +123,9 @@ pub(in crate::project_slice) fn apply(
         SeamObjectSettings {
             placements: &placements,
             visibilities: &visibilities,
+            nozzle_diameter,
+            cancel,
         },
-        nozzle_diameter,
         &mut nearest_seam_plans,
     )?;
     prepared.nearest_seam_plans = nearest_seam_plans;
@@ -128,6 +136,8 @@ pub(in crate::project_slice) fn apply(
 struct SeamObjectSettings<'a> {
     placements: &'a [Option<ProcessSeamPosition>],
     visibilities: &'a [Option<visibility::GlobalVisibility>],
+    nozzle_diameter: f32,
+    cancel: &'a CancelToken,
 }
 
 fn apply_objects(
@@ -136,11 +146,13 @@ fn apply_objects(
     SeamObjectSettings {
         placements,
         visibilities,
+        nozzle_diameter,
+        cancel,
     }: SeamObjectSettings<'_>,
-    nozzle_diameter: f32,
     nearest_plans: &mut [Vec<NearestSeamLayer>],
 ) -> Result<(), SliceError> {
     for (object_index, layers) in objects.iter_mut().enumerate() {
+        cancel.check()?;
         let Some(placement) = placements[object_index] else {
             continue;
         };
@@ -170,13 +182,21 @@ fn apply_objects(
             traversal,
             object_index,
             nozzle_diameter,
-            (visibility, paint.as_ref()),
+            alignment::PreparationInput {
+                visibility,
+                paint: paint.as_ref(),
+                cancel,
+            },
         )?;
         match placement {
             ProcessSeamPosition::Aligned
             | ProcessSeamPosition::AlignedBack
-            | ProcessSeamPosition::Back => alignment::align(&mut plans),
-            ProcessSeamPosition::Random => alignment::randomize(&mut plans),
+            | ProcessSeamPosition::Back => {
+                cancel.check()?;
+                alignment::align(&mut plans);
+                cancel.check()?;
+            }
+            ProcessSeamPosition::Random => alignment::randomize(&mut plans, cancel)?,
             ProcessSeamPosition::Nearest => {
                 // `SeamPlacer.cpp:1465` skips `pick_seam_point` for spNearest —
                 // the seam is picked at emit with actual nozzle position
@@ -195,6 +215,7 @@ fn apply_objects(
             .staggered_inner_seams
             .0;
         for (layer, plan) in layers.iter_mut().zip(&plans) {
+            cancel.check()?;
             placement::place_layer(layer, plan, staggered, traversal.scale);
         }
     }

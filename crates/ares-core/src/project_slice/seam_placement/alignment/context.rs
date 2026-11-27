@@ -1,33 +1,46 @@
 mod unsupported;
 use crate::geometry::{CoordinateScale, ExPolygon, Line, LineDistanceTree, Point, Polygon};
 use crate::project_slice::layers::PlannedLayer;
+use crate::{CancelToken, SliceError};
 
 use super::LayerPlan;
 
+pub(super) struct PopulationInput<'a> {
+    pub(super) compute_embedding: &'a [bool],
+    pub(super) layer_slices: &'a [Vec<ExPolygon>],
+    pub(super) planned_layers: &'a [PlannedLayer],
+    pub(super) scale: CoordinateScale,
+    pub(super) cancel: &'a CancelToken,
+}
+
 pub(super) fn populate(
     layers: &mut [LayerPlan],
-    compute_embedding: &[bool],
-    layer_slices: &[Vec<ExPolygon>],
-    planned_layers: &[PlannedLayer],
-    scale: CoordinateScale,
-) {
+    input: PopulationInput<'_>,
+) -> Result<(), SliceError> {
+    let PopulationInput {
+        compute_embedding,
+        layer_slices,
+        planned_layers,
+        scale,
+        cancel,
+    } = input;
     assert_eq!(layers.len(), compute_embedding.len());
     assert_eq!(layers.len(), layer_slices.len());
-    for layer_index in 0..layers.len() {
+    crate::parallel::par_for_each_mut_try(layers, cancel, |layer_index, current| {
         if compute_embedding[layer_index] {
-            populate_embedded_distance(&mut layers[layer_index], &layer_slices[layer_index], scale);
+            populate_embedded_distance(current, &layer_slices[layer_index], scale);
         }
         if layer_index > 0 {
-            let (_, current) = layers.split_at_mut(layer_index);
-            unsupported::populate(&layer_slices[layer_index - 1], &mut current[0], scale);
+            unsupported::populate(&layer_slices[layer_index - 1], current, scale);
             populate_overhang(
                 &layer_slices[layer_index - 1],
-                &mut current[0],
+                current,
                 planned_layers[layer_index].height,
                 scale,
             );
         }
-    }
+        Ok(())
+    })
 }
 
 fn populate_overhang(

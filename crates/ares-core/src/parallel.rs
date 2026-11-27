@@ -78,6 +78,35 @@ where
     results.into_iter().collect()
 }
 
+pub(crate) fn par_chunks_mut_try<T, F>(
+    items: &mut [T],
+    chunk_size: usize,
+    cancel: &CancelToken,
+    f: F,
+) -> Result<(), SliceError>
+where
+    T: Send,
+    F: Fn(usize, &mut [T]) -> Result<(), SliceError> + Sync + Send,
+{
+    cancel.check()?;
+    let chunk_size = chunk_size.max(1);
+    #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
+    if items.len() > chunk_size {
+        use rayon::prelude::*;
+        return items.par_chunks_mut(chunk_size).enumerate().try_for_each(
+            |(chunk_index, chunk)| {
+                cancel.check()?;
+                f(chunk_index * chunk_size, chunk)
+            },
+        );
+    }
+    for (chunk_index, chunk) in items.chunks_mut(chunk_size).enumerate() {
+        cancel.check()?;
+        f(chunk_index * chunk_size, chunk)?;
+    }
+    Ok(())
+}
+
 pub(crate) fn par_for_each_mut_try<T, F>(
     items: &mut [T],
     cancel: &CancelToken,
