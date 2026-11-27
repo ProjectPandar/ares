@@ -178,6 +178,7 @@ test("a rotate drag previews the turn about the core's rotation pivot, like Sele
   const object = page.getByTestId("object-list").getByRole("treeitem", { name: /cube10\.stl/ });
   await object.click();
   await expect(object).toHaveAttribute("aria-selected", "true");
+  await shownTab(page).getByRole("button", { name: "Top", exact: true }).click();
   await gizmoButton(page, "Rotate").click();
   // A quarter turn about Z, pressed where no other ring crosses. About the box centre instead of
   // the bounding-sphere centre (`m_cache.rotation_pivot`, Selection.cpp:2548) the instance would
@@ -189,6 +190,7 @@ test("a rotate drag previews the turn about the core's rotation pivot, like Sele
     `${JSON.stringify({ fixture: "tests/parity/island-visit-order/four-disjoint-prisms.3mf", steps: STEPS, rotate: result }, null, 2)}\n`,
   );
   await check(page, "asymmetric-rotate", "rotate", result, before);
+  expect(result.previewMatrix![1], "the dragged ring rotates +X towards +Y").toBeCloseTo(1, 2);
 });
 
 test("drags preview in the viewport without the worker and commit once on release, like GLCanvas3D", async ({

@@ -382,7 +382,7 @@ dialog .filament-column-search {
 }
 
 @media (pointer: coarse) {
-  dialog .side-button,
+  :is(dialog, .wizard-notice) .side-button,
   .dialog-field,
   .print-host-field :is(input, select) {
     min-height: 44px;

@@ -110,7 +110,7 @@ test("dropping two STLs loads one object with both parts and slices it", async (
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(dialog.getByRole("button", { name: "No", exact: true })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Yes", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeFocused();
   await expect(
@@ -120,6 +120,8 @@ test("dropping two STLs loads one object with both parts and slices it", async (
   await page.screenshot({ path: info.outputPath("question.png") });
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("checkbox", { name: "Auto-Drop", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "No", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Yes", exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
