@@ -14,6 +14,8 @@ mod purge;
 mod seam_visibility;
 #[path = "belt_print/skirt.rs"]
 mod skirt;
+#[path = "belt_print/volumes.rs"]
+mod volumes;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
