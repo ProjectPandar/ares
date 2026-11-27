@@ -18,7 +18,7 @@
     },
     "app": {
       "name": "ares-app",
-      "version": "0.1.67",
+      "version": "0.1.68",
       "dependencies": {
         "@ares-slicer/profiles": "0.1.0",
         "@ares-slicer/wasm": "0.1.0",
