@@ -66,7 +66,7 @@ case "$endpoint" in
   */git/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
     printf '%s\n' "$MOCK_TREE"
     ;;
-  */pulls/42/runs\?per_page=100)
+  */actions/runs\?event=pull_request\&head_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\&per_page=100)
     printf '%s\n' '[{"workflow_runs":[{"id":99,"name":"Tier 1","status":"in_progress","conclusion":null}]}]'
     ;;
   *)

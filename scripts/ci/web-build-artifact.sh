@@ -224,7 +224,7 @@ restore_artifact() {
     pr_tree="$(gh api "/repos/${repository}/git/commits/${pr_head_sha}" --jq '.tree.sha // empty')" || miss "commit-api-error"
     [ "$pr_tree" = "$queue_tree" ] || miss "tree-sha-mismatch"
     local runs run_id jobs artifact_id artifact_name="${ARTIFACT_PREFIX}-${queue_tree}" zip extracted
-    runs="$(gh api --paginate --slurp "/repos/${repository}/pulls/${pr_number}/runs?per_page=100")" || miss "runs-api-error"
+    runs="$(gh api --paginate --slurp "/repos/${repository}/actions/runs?event=pull_request&head_sha=${pr_head_sha}&per_page=100")" || miss "runs-api-error"
     while IFS= read -r run_id; do
       [ -n "$run_id" ] || continue
       jobs="$(gh api --paginate --slurp "/repos/${repository}/actions/runs/${run_id}/jobs?per_page=100")" || continue
