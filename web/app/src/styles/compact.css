@@ -61,9 +61,6 @@
   width: 16px;
   height: 16px;
 }
-:root[data-theme="light"] :is(.tab img, .bar-button img) {
-  filter: brightness(0.38);
-}
 
 .tab.active,
 .process-tab.active {
