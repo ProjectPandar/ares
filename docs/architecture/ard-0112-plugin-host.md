@@ -59,8 +59,8 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    plugins can only alter perimeters by rewriting G-code text, where the
    perimeter index is lost. Ares adds one non-upstream extension at the
    `posPerimeters` seam: read-only inset index per perimeter path, and
-   writable per-path Z offset, flow multiplier and perimeter order, honoured
-   by G-code emission. Its exact data model is specified with its first
+   writable per-path Z, height, flow multiplier and perimeter order, plus
+   duplication of a path, honoured by G-code emission. Its exact data model is specified with its first
    consumer.
 
 ## Rewrite rule amendment
