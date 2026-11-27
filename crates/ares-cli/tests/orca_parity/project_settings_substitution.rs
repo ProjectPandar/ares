@@ -8,6 +8,9 @@ use crate::{
     runner::native_stream_case,
 };
 
+#[path = "project_settings_substitution/zigzag.rs"]
+mod zigzag;
+
 #[test]
 fn project_settings_enum_unknown_substitutes_default() {
     run(
