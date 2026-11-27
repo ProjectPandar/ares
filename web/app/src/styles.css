@@ -6,5 +6,7 @@
 @import "./styles/devices.css";
 @import "./styles/wizard.css";
 @import "./styles/viewport.css";
+@import "./styles/viewCube.css";
+@import "./styles/preview.css";
 @import "./styles/mobile.css";
 @import "./styles/touch.css";

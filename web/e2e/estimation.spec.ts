@@ -265,14 +265,14 @@ test("legend estimation footer matches GCodeViewer::render_legend over Native st
         if ((await page.locator("html").getAttribute("data-theme")) !== theme)
           await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-        await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-estimation-${theme}.png` });
+        await page.getByTestId("slice-summary").screenshot({ path: `${artifacts}/legend-estimation-${theme}.png` });
       }
       await page.getByTestId("view-type").selectOption("Summary");
       for (const theme of ["light", "dark"] as const) {
         if ((await page.locator("html").getAttribute("data-theme")) !== theme)
           await page.getByTitle(theme === "dark" ? "Dark theme" : "Light theme").click();
         await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-        await page.getByTestId("legend").screenshot({ path: `${artifacts}/legend-summary-${theme}.png` });
+        await page.getByTestId("slice-summary").screenshot({ path: `${artifacts}/legend-summary-${theme}.png` });
       }
     }
   }

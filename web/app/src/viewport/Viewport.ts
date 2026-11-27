@@ -3,12 +3,13 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { buildPlates, type PlateMaterials, recolorPlates } from "./bed";
 import type { BedShape } from "./bedShape";
-import { selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
+import { rotateOnSphere, selectView, type ViewPreset, zoomToBox, type ZoomTarget } from "./camera";
 import { disposeGeometries } from "./dispose";
 import { type GizmoMode, Gizmos } from "./gizmos";
 import { attachInstanceDrag, type DragHit, type EditHandlers, type InstanceRef } from "./instanceDrag";
 import { applySelectionMaterials, buildInstances, type ModelMaterials, updateInstances } from "./models";
 import { attachPicking } from "./picking";
+import { plateThumbnails } from "./plateThumbnails";
 import { type SharedGl, sharedGl } from "./sharedGl";
 import type { ToolpathFilter } from "./toolpathMesh";
 import { ViewportToolpaths } from "./viewportToolpaths";
@@ -76,6 +77,9 @@ export class Viewport {
   #positions: Float32Array | null = null;
   /** The user started orbiting/panning/zooming away from a preset view. */
   onOrbit?: () => void;
+  /** The camera's world-to-view rotation (column-major 3x3) as last drawn; the view cube follows it. */
+  #turn: readonly number[] | null = null;
+  readonly #turnListeners = new Set<() => void>();
 
   constructor(
     readonly container: HTMLElement,
@@ -272,6 +276,31 @@ export class Viewport {
     this.render();
   }
 
+  /** A view cube drag of `dx`, `dy` pixels orbits like a canvas drag: a turn per canvas height. */
+  orbit(dx: number, dy: number) {
+    const turn = (2 * Math.PI) / this.container.clientHeight;
+    rotateOnSphere(this.#camera, this.#controls.target, -dx * turn, -dy * turn);
+    this.#controls.update();
+    this.onOrbit?.();
+    this.render();
+  }
+
+  /** Calls `listener` after a draw that turned the camera (`useSyncExternalStore`'s subscribe). */
+  subscribeTurn = (listener: () => void) => {
+    this.#turnListeners.add(listener);
+    return () => void this.#turnListeners.delete(listener);
+  };
+
+  get turn(): readonly number[] {
+    return (this.#turn ??= this.#cameraTurn());
+  }
+
+  #cameraTurn() {
+    this.#camera.updateMatrixWorld();
+    const e = this.#camera.matrixWorldInverse.elements;
+    return [e[0], e[1], e[2], e[4], e[5], e[6], e[8], e[9], e[10]];
+  }
+
   /** Camera::update_zoom: each step scales the zoom by 1 / (1 - 0.1 * delta), delta clamped to ±4. */
   zoomBy(delta: number) {
     const target = this.#controls.target;
@@ -309,6 +338,11 @@ export class Viewport {
     this.#controls.update();
   }
 
+  /** The plate toolbar thumbnails of every plate (`plateThumbnails`). */
+  plateThumbnails(size: number): string[] {
+    return plateThumbnails(this.#renderer, this.#scene, this.#bedShape, this.#plateOrigins, size);
+  }
+
   /**
    * GLCanvas3D renders a changed canvas immediately, not on a display frame
    * (GLCanvas3D.cpp:4810-4811): the requests of one task, e.g. one input
@@ -325,6 +359,11 @@ export class Viewport {
     this.#dirty = false;
     this.#renderer.render(this.#scene, this.#camera);
     delete this.container.dataset.drawing;
+    const turn = this.#cameraTurn();
+    if (turn.some((value, index) => value !== this.#turn?.[index])) {
+      this.#turn = turn;
+      for (const listener of this.#turnListeners) listener();
+    }
   }
 
   /** Frees this viewport's geometry; the context and its materials stay. */

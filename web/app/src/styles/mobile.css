@@ -13,47 +13,12 @@
 /* Tablets: the 3D view is about 530px wide, so the preview overlays stack instead of keeping their
    desktop corners (GCodeViewer stacks its windows, GCodeViewer.cpp:957-972). */
 @media (min-width: 641px) and (max-width: 1024px) {
-  .view-toolbar {
-    top: 8px;
-    left: 10px;
-    right: 86px;
-    transform: none;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
   .plater-toolbar {
     top: 8px;
     left: 10px;
     right: 10px;
     max-width: none;
     transform: none;
-  }
-  .view-button {
-    flex: none;
-  }
-  .preview-card,
-  .layer-slider {
-    top: 66px;
-  }
-  .preview-card {
-    width: min(250px, calc(50% - 20px));
-    max-height: calc(50% - 96px);
-    overflow: auto;
-  }
-  /* GCodeWindow is the phones' five-line band over the summary card. */
-  .gcode-panel {
-    top: 66px;
-    bottom: auto;
-    left: 10px;
-    right: 86px;
-    width: auto;
-    height: 106px;
-    z-index: 1;
-  }
-  .legend {
-    bottom: 64px;
-    width: min(200px, calc(50% - 20px));
-    max-height: calc(50% - 94px);
   }
 }
 
@@ -165,17 +130,9 @@
     right: 8px;
   }
 
-  /* Overlays stay inside the 3D view; the camera toolbar scrolls sideways right of the panel toggle. */
+  /* Overlays stay inside the 3D view; the plater toolbar sits right of the panel toggle. */
   .viewport {
     overflow: hidden;
-  }
-  .view-toolbar {
-    top: 8px;
-    left: 60px;
-    right: 8px;
-    transform: none;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
   .plater-toolbar {
     top: 8px;
@@ -184,32 +141,7 @@
     max-width: none;
     transform: none;
   }
-  .view-button {
-    flex: none;
-  }
-  .preview-card,
   .layer-slider {
     top: 66px;
-  }
-  /* The cards keep the centre free for orbit and pinch: the summary above it, the legend below it and above the moves slider. */
-  .preview-card {
-    width: min(250px, calc(100% - 100px));
-    max-height: calc(50% - 96px);
-    overflow: auto;
-  }
-  /* GCodeWindow shrinks to five lines framing the current one, over the summary card. */
-  .gcode-panel {
-    top: 66px;
-    bottom: auto;
-    left: 10px;
-    right: 86px;
-    width: auto;
-    height: 106px;
-    z-index: 1;
-  }
-  .legend {
-    bottom: 64px;
-    width: min(200px, calc(100% - 100px));
-    max-height: calc(50% - 94px);
   }
 }

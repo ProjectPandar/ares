@@ -218,11 +218,11 @@ async function mainFlow(page: Page, input: Input, directory: string) {
     await shot("7-layer");
 
     // Scrubbing moves opens the G-code window; every preview overlay stays clear of the others and
-    // of the centre. The G-code window is the five-line band over the summary card (slice 3b, P).
+    // of the centre. The G-code window is the five-line band above the moves slider.
     const moves = page.getByRole("slider", { name: "Moves" });
     await moves.fill(String(Math.floor(Number(await moves.getAttribute("max")) / 2)));
     await expect(page.getByTestId("gcode-panel")).toBeVisible();
-    gestures.overlays = (await expectNoOverlap(page, ["gcode-panel/preview-card"])).join(",");
+    gestures.overlays = (await expectNoOverlap(page, [])).join(",");
     await shot("7b-moves");
   }
 

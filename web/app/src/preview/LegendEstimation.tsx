@@ -72,3 +72,25 @@ export function EstimationRows({
     </section>
   );
 }
+
+/** The collapsed slicing result's one line: the total filament and cost in the feature type view, and the total time. */
+export function EstimationBrief({ estimation, featureType }: { estimation: Estimation; featureType: boolean }) {
+  const { totalUsedFilament, totalWeight, totalCost, time } = estimation;
+  const rows: [string, string][] = featureType
+    ? [
+        ["Total", `${printf(totalUsedFilament / 1000, 2)} m / ${compactWeight(totalWeight)}`],
+        ["Cost", printf(totalCost, 2)],
+      ]
+    : [];
+  rows.push(["Total time", shortTime(timeDhms(time))]);
+  return (
+    <dl className="slice-result-brief">
+      {rows.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}:</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

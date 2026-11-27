@@ -100,10 +100,10 @@ test("OrcaSlicer keyboard shortcuts drive import, camera, slicing, export and pr
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
 
   // GLCanvas3D::on_char: Ctrl+0-6 select camera views; bare digits are filament keys, not views.
-  await page.getByRole("button", { name: "Iso", exact: true }).click();
+  await page.getByRole("button", { name: "Iso view", exact: true }).click();
   await blur(page);
   await page.keyboard.press("1");
-  await pressed(page, "Iso");
+  await pressed(page, "Iso view");
   await page.keyboard.press("ControlOrMeta+1");
   await pressed(page, "Top");
   await page.keyboard.press("ControlOrMeta+6");

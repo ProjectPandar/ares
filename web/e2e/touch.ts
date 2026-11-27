@@ -145,7 +145,7 @@ export async function expectFits(page: Page, controls: Locator[]) {
 }
 
 /** The 3D view overlays a touch layout must keep apart (GCodeViewer stacks its windows, never overlapping them). */
-const OVERLAYS = ["view-toolbar", "preview-card", "legend", "moves-slider", "layer-slider", "gcode-panel"];
+const OVERLAYS = ["view-cube-nav", "slice-result", "moves-slider", "layer-slider", "gcode-panel"];
 
 /**
  * Every preview overlay is shown, lies inside the 3D view, no two overlap except the pairs in
@@ -155,7 +155,7 @@ export async function expectNoOverlap(page: Page, allowed: string[]) {
   const viewport = (await shownTab(page).locator(".viewport").boundingBox())!;
   const boxes: { id: string; x: number; y: number; width: number; height: number }[] = [];
   for (const id of OVERLAYS) {
-    const overlay = shownTab(page).locator(`.viewport > .${id}`);
+    const overlay = shownTab(page).locator(`.viewport .${id}`);
     await expect.soft(overlay, `${id} is shown`).toBeVisible();
     if (!(await overlay.isVisible())) continue;
     const box = (await overlay.boundingBox())!;

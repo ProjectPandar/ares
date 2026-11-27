@@ -6,8 +6,9 @@ import { KIND_OPTION } from "@ares-slicer/wasm";
 // fetched from the per-vertex textures. The `w` of the position texel holds the
 // vertex layer and that of the heights/widths/angles texel the role or option kind,
 // for the layer and visibility filter. The template vertex id arrives as
-// `position.x`; `cameraPosition` and `viewMatrix` are world space because the
-// toolpath mesh has an identity model matrix (`ViewerImpl.cpp:1300-1302`).
+// `position.x`. A plate's moves are in its own coordinates; the mesh translation, the plate
+// origin, moves them into world space (`GCodeProcessor::set_xy_offset`) like `cameraPosition`
+// and `viewMatrix`; the model matrix is otherwise identity (`ViewerImpl.cpp:1300-1302`).
 export const vertexShader = /* glsl */ `
 #define POINTY_CAPS
 #define FIX_TWISTING
@@ -57,8 +58,9 @@ void main() {
     return;
   }
   int vertex_id = int(position.x);
-  vec3 pos_a = texelFetch(position_tex, tex_coord(position_tex, id_a), 0).xyz;
-  vec3 pos_b = position_layer_b.xyz;
+  vec3 origin = modelMatrix[3].xyz;
+  vec3 pos_a = texelFetch(position_tex, tex_coord(position_tex, id_a), 0).xyz + origin;
+  vec3 pos_b = position_layer_b.xyz + origin;
   vec3 line = pos_b - pos_a;
   // directions of the line box in world space
   float line_len = length(line);

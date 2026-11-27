@@ -1,7 +1,6 @@
 /* Coarse pointers (touch screens): 44x44 CSS px targets (WCAG 2.5.5). */
 @media (pointer: coarse) {
-  .bar-button,
-  .view-button {
+  .bar-button {
     min-width: 44px;
     min-height: 44px;
     justify-content: center;
@@ -34,6 +33,11 @@
   }
   .legend-row {
     min-height: 44px;
+  }
+  .slice-result-collapse {
+    width: 44px;
+    height: 44px;
+    margin: -6px -10px -6px 0;
   }
   /* The thumb's touch box; the 16px dot is drawn inside it. */
   .layer-slider-thumb {
@@ -114,10 +118,12 @@
     width: calc(35px + 44px * var(--mode));
   }
 }
-/* The taller Moves slider pushes the phone and tablet legend up by as much, keeping the 3D centre clear. */
+/* The taller Moves slider pushes the phone and tablet preview windows and the view cube up by as much. */
 @media (pointer: coarse) and (max-width: 1024px) {
-  .legend {
-    bottom: 88px;
-    max-height: calc(50% - 118px);
+  .preview-right {
+    bottom: 80px;
+  }
+  .viewport:has(.gcode-panel) .view-cube-nav {
+    bottom: 200px;
   }
 }

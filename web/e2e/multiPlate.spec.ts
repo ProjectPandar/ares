@@ -5,6 +5,7 @@ import { test } from "./failureDiagnostics";
 import { normalize } from "./orcaGcode";
 import { guiExport, matrix, oracleRun, orcaPlate, probedTowers } from "./platerOracle";
 import { shownTab } from "./shownTab";
+import { canvasDigest } from "./toolpathPreview";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = fileURLToPath(new URL("../../target/web-e2e/multi-plate/", import.meta.url));
@@ -17,6 +18,9 @@ const plateRow = (page: Page, id: number) => page.getByRole("treeitem", { name: 
 const button = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 /** The notebook's SideButtons. */
 const action = (page: Page, name: string) => page.getByRole("navigation").getByRole("button", { name, exact: true });
+/** The Preview's plate toolbar (GLCanvas3D::_render_imgui_select_plate_toolbar). */
+const thumb = (page: Page, id: number) =>
+  page.getByRole("navigation", { name: "Plates" }).getByRole("button", { name: `Plate ${id}`, exact: true });
 
 /** Plate origins and the current plate as the canvas draws them; `-0` reads as `0`. */
 async function canvasPlates(page: Page) {
@@ -80,6 +84,7 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   // "Slice plate" slices the current plate; selecting plate 2 makes it current.
   const plate1 = await slice(page, "two-plates_plate_1.gcode");
   compare("plate 1", plate1, project, 1);
+  await page.getByRole("link", { name: "Prepare" }).click();
   await plateRow(page, 2).click();
   expect(await canvasPlates(page)).toEqual({
     origins: [
@@ -90,14 +95,29 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
   });
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page.getByTestId("slice-summary")).toContainText("Plate not sliced");
+  // The Preview draws the current plate alone; the plate toolbar shows every plate, the unsliced
+  // ones marked (GLCanvas3D::_render: only_current off the View3D canvas).
+  expect(await canvasPlates(page)).toEqual({ origins: [[STRIDE, 0]], current: 0 });
+  await expect(thumb(page, 2)).toHaveAttribute("aria-current", "true");
+  await expect(thumb(page, 2)).toContainText("Not sliced");
+  await expect(thumb(page, 1)).not.toContainText("Not sliced");
+  await expect(thumb(page, 1).locator("img")).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await page.screenshot({ path: `${artifacts}preview-plate-2-unsliced.png` });
   const plate2 = await slice(page, "two-plates_plate_2.gcode");
   await expect(page.getByTestId("slice-plate")).toHaveText("2");
+  await expect(thumb(page, 2)).not.toContainText("Not sliced");
   compare("plate 2", plate2, project, 2);
-  // Back on plate 1 the preview shows its kept slice (PartPlate::m_gcode_result).
-  await page.getByRole("link", { name: "Prepare" }).click();
-  await plateRow(page, 1).click();
-  await page.getByRole("link", { name: "Preview" }).click();
+  // Plate 2's G-code is in its own coordinates and drawn on its origin (GCodeProcessor::set_xy_offset,
+  // BackgroundSlicingProcess.cpp:868), in view: hiding its outer wall changes the canvas.
+  const outerWall = page.getByTestId("legend").getByRole("button", { name: /Outer wall/ });
+  const drawn = await canvasDigest(page);
+  await outerWall.click();
+  expect(await canvasDigest(page)).not.toBe(drawn);
+  await outerWall.click();
+  // Plate 1's thumbnail brings back its kept slice (PartPlate::m_gcode_result).
+  await thumb(page, 1).click();
   await expect(page.getByTestId("slice-plate")).toHaveText("1");
+  expect(await canvasPlates(page)).toEqual({ origins: [[0, 0]], current: 0 });
   await expect(page.getByTestId("gcode-bytes")).toHaveText(
     `${Buffer.byteLength(plate1).toLocaleString("en-US")} bytes`,
   );
