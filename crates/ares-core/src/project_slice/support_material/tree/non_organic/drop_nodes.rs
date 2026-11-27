@@ -11,7 +11,10 @@ use super::{
     nodes::{NodeArena, NodeId},
     pruning::prune_unsupported,
 };
-use crate::{ObjectOptions, ProcessSupportStyle, geometry::ClipperError};
+use crate::{
+    ObjectOptions, ProcessSupportStyle, geometry::ClipperError,
+    project_slice::belt::floor_context::BeltFloorContext,
+};
 
 pub(super) struct NodeDropping<'a> {
     pub(super) arena: &'a mut NodeArena,
@@ -21,6 +24,7 @@ pub(super) struct NodeDropping<'a> {
     pub(super) settings: &'a DropSettings,
     pub(super) object: &'a ObjectOptions,
     pub(super) style: ProcessSupportStyle,
+    pub(super) floor: Option<BeltFloorContext>,
 }
 
 impl NodeDropping<'_> {
@@ -33,6 +37,7 @@ impl NodeDropping<'_> {
             settings,
             object,
             style,
+            floor,
         } = self;
         if heights.is_empty() {
             return Ok(());
@@ -70,6 +75,7 @@ impl NodeDropping<'_> {
                     settings,
                     next_height,
                     next_nodes: &mut layers[layer - 1],
+                    floor,
                 }
                 .run(group)
                 .map_err(geometry_error)?;
@@ -86,6 +92,7 @@ impl NodeDropping<'_> {
                     buildplate_only: object.support_on_build_plate_only.0,
                     is_slim: style == ProcessSupportStyle::TreeSlim,
                     is_strong: style == ProcessSupportStyle::TreeStrong,
+                    floor,
                 }
                 .run(group)
                 .map_err(geometry_error)?;

@@ -36,7 +36,9 @@ impl BaseArea<'_, '_> {
         destination: &mut Vec<SupportExtrusionEntity>,
     ) -> Result<(), SliceError> {
         let input = self.input;
-        let on_bed = self.layer_id == 0 && input.raft_layers == 0;
+        // Support/TreeSupport.cpp:1775–1819 uses normal base flow and infill on an active belt.
+        let first_layer = self.layer_id == 0 && !input.belt_floor;
+        let on_bed = first_layer && input.raft_layers == 0;
         let flow = if on_bed {
             input.parameters.first_layer_flow
         } else {
@@ -77,12 +79,12 @@ impl BaseArea<'_, '_> {
             reference: Some(Point::new(0, 0)),
         };
         let mut entities = Vec::new();
-        if self.layer_id == 0 || !need_infill || pattern == ProcessSupportBasePattern::Lightning {
+        if first_layer || !need_infill || pattern == ProcessSupportBasePattern::Lightning {
             let spec = RaftFillSpec {
                 angle: f64::from(filler.angle),
                 spacing: filler.spacing,
                 sheath_spacing: f64::from(flow.spacing),
-                density: if self.layer_id == 0 {
+                density: if first_layer {
                     (input.object.raft_first_layer_density.0 * 0.01) as f32
                 } else {
                     0.0

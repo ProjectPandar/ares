@@ -33,7 +33,8 @@ impl InterfaceArea<'_, '_> {
     ) -> Result<(), SliceError> {
         let input = self.input;
         let wall_count = input.object.tree_support_wall_count.0 as usize;
-        let areas = if self.layer_id == 0 {
+        // Support/TreeSupport.cpp:1705–1718 skips interface brim walls on the belt.
+        let areas = if self.layer_id == 0 && !input.belt_floor {
             let flow = if input.raft_layers == 0 {
                 input.brim_flow
             } else {

@@ -14,6 +14,7 @@ use crate::{
         difference_ex, intersection_ex, offset_expolygons, point_in_polygon,
     },
     project_slice::{
+        belt::floor_context::BeltFloorContext,
         layers::PlannedLayer,
         support_material::tree::overhangs::{OverhangLayer, OverhangType},
     },
@@ -33,6 +34,7 @@ pub(super) struct ContactInput<'a> {
     pub(super) top_z_distance: f64,
     pub(super) style: ProcessSupportStyle,
     pub(super) scale: CoordinateScale,
+    pub(super) floor: Option<BeltFloorContext>,
 }
 
 pub(super) struct ContactNodes {
@@ -52,6 +54,7 @@ struct LayerContacts<'a> {
     bottom_z: f64,
     top_z_distance: f64,
     is_sharp_tail: bool,
+    floor: Option<(BeltFloorContext, CoordinateScale)>,
 }
 
 impl LayerContacts<'_> {
@@ -85,14 +88,15 @@ impl LayerContacts<'_> {
         for polygon in normal {
             let bounds =
                 BoundingBox::from_expolygon(&polygon).expect("contact polygon has a contour");
-            let id = self.create(
+            if let Some(id) = self.create(
                 bounds.center(),
                 &polygon,
                 sampling::radius(bounds) * input.scale.factor(),
                 true,
-            );
-            self.arena.nodes[id].node_type = NodeType::Polygon;
-            self.nodes.push(id);
+            ) {
+                self.arena.nodes[id].node_type = NodeType::Polygon;
+                self.nodes.push(id);
+            }
         }
         for polygon in regular {
             self.regular(&polygon, grid, input)?;
@@ -114,7 +118,7 @@ impl LayerContacts<'_> {
         if self.inserted.contains(&hash) {
             return None;
         }
-        Some(self.create(point, overhang, radius, interface))
+        self.create(point, overhang, radius, interface)
     }
 
     fn create(
@@ -123,7 +127,14 @@ impl LayerContacts<'_> {
         overhang: &ExPolygon,
         radius: f64,
         interface: bool,
-    ) -> NodeId {
+    ) -> Option<NodeId> {
+        // Support/TreeSupport.cpp:3754–3759 skips even forced polygon candidates below the belt.
+        if self
+            .floor
+            .is_some_and(|(floor, scale)| self.bottom_z <= floor.floor_at(point, scale))
+        {
+            return None;
+        }
         let hash = (
             point.x() / (self.radius_scaled + 1),
             point.y() / (self.radius_scaled + 1),
@@ -144,7 +155,7 @@ impl LayerContacts<'_> {
         node.overhang = overhang.clone();
         node.is_sharp_tail = self.is_sharp_tail;
         self.nodes.push(id);
-        id
+        Some(id)
     }
 
     fn regular(
@@ -266,6 +277,7 @@ pub(super) fn generate_contact_points(
             bottom_z: input.layers[layer].print_z - input.layers[layer].height,
             top_z_distance: input.top_z_distance,
             is_sharp_tail: false,
+            floor: input.floor.map(|floor| (floor, scale)),
         };
         for (overhang, &kind) in input.overhangs[layer]
             .overhangs

@@ -34,6 +34,7 @@ pub(super) struct ToolpathInput<'a> {
     pub(super) first_object_slices: &'a [ExPolygon],
     pub(super) raft_layers: usize,
     pub(super) scale: CoordinateScale,
+    pub(super) belt_floor: bool,
 }
 
 pub(super) fn generate(

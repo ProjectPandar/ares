@@ -8,7 +8,10 @@ use super::{
     movement,
     nodes::{NodeArena, NodeId, NodeSeed, NodeType},
 };
-use crate::geometry::{ClipperError, Point};
+use crate::{
+    geometry::{ClipperError, Point},
+    project_slice::belt::floor_context::BeltFloorContext,
+};
 
 pub(super) struct MergePass<'a> {
     pub(super) group_index: usize,
@@ -17,6 +20,7 @@ pub(super) struct MergePass<'a> {
     pub(super) settings: &'a DropSettings,
     pub(super) next_height: &'a LayerHeightData,
     pub(super) next_nodes: &'a mut Vec<NodeId>,
+    pub(super) floor: Option<BeltFloorContext>,
 }
 
 impl MergePass<'_> {
@@ -126,6 +130,22 @@ impl MergePass<'_> {
         self.arena.nodes[parent]
             .merged_neighbors
             .push_front(if parent == id { neighbor } else { id });
+        // Support/TreeSupport.cpp:3105–3129 ends the pair using the larger current radius.
+        if self.floor.is_some_and(|floor| {
+            let radius = self.arena.nodes[id]
+                .radius
+                .max(self.arena.nodes[neighbor].radius);
+            floor.circle_landed(
+                (position, radius),
+                self.next_height.print_z,
+                self.settings.scale,
+            )
+        }) {
+            self.arena.nodes[parent].to_buildplate = false;
+            self.arena.nodes[neighbor].valid = false;
+            self.arena.nodes[id].valid = false;
+            return Ok(());
+        }
         let to_buildplate = !movement::is_inside_any(
             self.data.collision(0.0, self.next_height.object_layer)?,
             position,

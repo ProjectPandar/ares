@@ -57,8 +57,12 @@ pub(in crate::project_slice::support_material) fn generate(
         let start = web_time::Instant::now();
         for layer in 0..tree.layers.len() {
             context.check_canceled()?;
+            // Support/TreeSupport.cpp:925–986 uses the belt at the object layer bottom.
+            let floor = tree
+                .floor
+                .map(|floor| (floor, input.planned[layer].print_z));
             overhangs
-                .detect_layer(layer, None, || start.elapsed().as_secs_f64())
+                .detect_layer(layer, floor, || start.elapsed().as_secs_f64())
                 .map_err(error)?;
         }
         overhangs.propagate_sharp_tails().map_err(error)?;
@@ -120,6 +124,7 @@ pub(in crate::project_slice::support_material) fn generate(
             top_z_distance,
             style,
             scale: tree.scale,
+            floor: tree.floor,
         },
         &data,
         &mut arena,
@@ -146,6 +151,7 @@ pub(in crate::project_slice::support_material) fn generate(
         settings: &settings,
         object,
         style,
+        floor: tree.floor,
     }
     .run(context)?;
     smoothing::smooth_nodes(&mut arena, &contacts.layers);
@@ -190,6 +196,7 @@ pub(in crate::project_slice::support_material) fn generate(
         brim_skirt_layers: input.brim_skirt_layers,
         bed: std::slice::from_ref(&tree.bed),
         scale: tree.scale,
+        floor: tree.floor,
     }
     .draw_node_areas(context.cancel_ref())?;
     prefix.append(&mut drawn.layers);
@@ -208,6 +215,7 @@ pub(in crate::project_slice::support_material) fn generate(
             first_object_slices: &tree.slices[0],
             raft_layers: raft_count,
             scale: tree.scale,
+            belt_floor: tree.floor.is_some(),
         },
         context.cancel_ref(),
     )

@@ -53,6 +53,7 @@ impl<'a> NodeShapes<'a> {
         node: &SupportNode,
         object_layer: usize,
         raft_layers: usize,
+        belt_floor: bool,
     ) -> Result<Polygon, ClipperError> {
         let ratio = node.radius / self.branch_radius;
         let move_x = node.movement.x() as f64 / (ratio * self.scaled_radius);
@@ -83,7 +84,8 @@ impl<'a> NodeShapes<'a> {
             }
         }
         let mut circle = Polygon::new(points);
-        if object_layer == 0 && raft_layers == 0 {
+        // Support/TreeSupport.cpp:2304–2312: do not expand a layer-zero tree circle on the belt.
+        if object_layer == 0 && raft_layers == 0 && !belt_floor {
             let brim = if self.object.tree_support_auto_brim.0 {
                 ((node.radius + node.distance_mm_to_top / (ratio * self.branch_radius) * 0.5)
                     .min(12.0)
