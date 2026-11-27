@@ -10,7 +10,7 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 | P0 | ARD-0112 and rewrite rule amendment (done); runtime spike | in progress |
 | P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) as the public core interface; `ares-plugin-host` with WASM/JS loading and hot reload | not started |
 | P2 | Perimeter extension: inset index, per-path Z, height, flow multiplier, order, path duplication | not started |
-| P1b | Hook catalog: every step and G-code stage, data passed, add/remove/modify edits, downstream recomputation | in progress |
+| P1b | Hook catalog: every step and G-code stage, data passed, add/remove/modify edits, downstream recomputation | done |
 | P3 | Official samples in `plugins/`: SDK, staggered perimeters, subdivided outer walls (stage 1) | not started |
 | P4 | Hot reload in CLI and browser; JS versions of the samples | not started |
 
