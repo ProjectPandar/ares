@@ -1,4 +1,4 @@
-//! The local Z frame used by normal and Organic support on a belt.
+//! Support layer and floor frames on a belt.
 
 use std::borrow::Cow;
 
@@ -14,6 +14,7 @@ use crate::{
 pub(super) struct SupportFrame<'a> {
     pub(super) layers: Cow<'a, [PlannedLayer]>,
     pub(super) floor: Option<BeltFloorContext>,
+    pub(super) global_floor: Option<BeltFloorContext>,
     pub(super) tilt_slope: [f64; 2],
     offset: f64,
 }
@@ -29,9 +30,12 @@ impl<'a> SupportFrame<'a> {
                 layer.print_z -= offset;
             }
         }
-        let floor = plan.belt_slice.and_then(|slice| slice.floor).map(|floor| {
-            BeltFloorContext::new(floor, printer.belt_support_floor_offset.0).local(offset)
-        });
+        // PrintObjectSlice.cpp:1034–1041 shifts the object layers and floor together.
+        let global_floor = plan
+            .belt_slice
+            .and_then(|slice| slice.floor)
+            .map(|floor| BeltFloorContext::new(floor, printer.belt_support_floor_offset.0));
+        let floor = global_floor.map(|floor| floor.local(offset));
         let tilt_slope = if plan.belt_slice.is_some() {
             [printer.build_plate_tilt_y.0, printer.build_plate_tilt_x.0]
                 .map(|tilt| (std::f64::consts::PI * tilt.clamp(-89.0, 89.0) / 180.0).tan())
@@ -41,6 +45,7 @@ impl<'a> SupportFrame<'a> {
         Self {
             layers,
             floor,
+            global_floor,
             tilt_slope,
             offset,
         }

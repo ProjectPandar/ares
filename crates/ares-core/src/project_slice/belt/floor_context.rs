@@ -45,6 +45,39 @@ impl BeltFloorContext {
         self.floor.shear * u + self.offset + self.floor.shift
     }
 
+    // Support/BeltFloorContext.cpp:53–59 evaluates the plane at a slicing point.
+    pub(in crate::project_slice) fn floor_at(self, point: Point, scale: CoordinateScale) -> f64 {
+        let u = if self.floor.axis == 0 {
+            point.x()
+        } else {
+            point.y()
+        };
+        self.floor_print_z(scale.unscale(u))
+    }
+
+    // Support/TreeSupport.cpp:719–725 tests the lowest floor height under the circle.
+    pub(in crate::project_slice) fn circle_landed(
+        self,
+        (center, radius): (Point, f64),
+        print_z: f64,
+        scale: CoordinateScale,
+    ) -> bool {
+        print_z <= self.floor_at(center, scale) - self.floor.shear.abs() * radius.max(0.0)
+    }
+
+    // Support/TreeSupport.cpp:727–736 uses the minimum over the outer contour.
+    pub(in crate::project_slice) fn polygon_landed(
+        self,
+        contour: &Polygon,
+        print_z: f64,
+        scale: CoordinateScale,
+    ) -> bool {
+        contour
+            .points()
+            .iter()
+            .all(|&point| print_z <= self.floor_at(point, scale))
+    }
+
     pub(in crate::project_slice) fn half_plane(
         self,
         print_z: f64,

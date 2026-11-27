@@ -31,6 +31,7 @@ use crate::{
         intersection_ex_polygons, offset2_ex, simplification::append_simplified_expolygon,
     },
     project_slice::{
+        belt::floor_context::BeltFloorContext,
         layers::PlannedLayer,
         perimeters::types::Flow,
         support_material::{
@@ -65,6 +66,7 @@ pub(super) struct Drawing<'a> {
     pub(super) brim_skirt_layers: usize,
     pub(super) bed: &'a [Polygon],
     pub(super) scale: CoordinateScale,
+    pub(super) floor: Option<BeltFloorContext>,
 }
 
 pub(super) struct DrawnLayers {
@@ -181,6 +183,7 @@ impl Drawing<'_> {
             collision: &mut collision,
             top_interface_layers: self.counts.top,
             raft_layers: self.raft_layers,
+            belt_floor: self.floor.is_some(),
             buildplate_only: self.object.support_on_build_plate_only.0,
             scale: self.scale,
             max_move_sq,
@@ -189,6 +192,19 @@ impl Drawing<'_> {
         areas.print_z = height.print_z;
         areas.height = height.height;
         self.close_roofs(&mut areas, &mut collision)?;
+        // Support/TreeSupport.cpp:2377–2397 clips in global Z before contact bands and grouping.
+        if let Some(floor) = self.floor {
+            let belt = floor.half_plane(height.print_z, self.scale, true);
+            for polygons in [
+                &mut areas.base,
+                &mut areas.roof,
+                &mut areas.roof_first,
+                &mut areas.floor,
+                &mut areas.roof_gap,
+            ] {
+                *polygons = difference_ex_polygons(polygons, &belt)?;
+            }
+        }
         if shapes.square {
             self.simplify_base(&mut areas)?;
         }
@@ -220,8 +236,10 @@ impl Drawing<'_> {
         extra_wall_areas: &[ExPolygon],
         layer: usize,
     ) -> Result<(), ClipperError> {
+        // Support/TreeSupport.cpp:2526–2548: no Hybrid base expansion on an active belt.
         if layer == 0
             && self.raft_layers == 0
+            && self.floor.is_none()
             && super::super::super::style::resolve(
                 self.object.support_type,
                 self.object.support_style,

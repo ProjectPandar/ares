@@ -259,8 +259,13 @@ pub(in crate::project_slice) fn generate(
                 counts: &counts,
                 slices,
                 layers: &layers,
+                // PrintObject.cpp:5130–5144: only Organic needs its installed Z shifted.
                 planned: if organic { &frame.layers } else { &plan.layers },
-                floor: if organic { frame.floor } else { None },
+                floor: if organic {
+                    frame.floor
+                } else {
+                    frame.global_floor
+                },
                 bridges: &bridges,
                 enforcers: &enforcers,
                 vertical_enforcers: &vertical_enforcers,

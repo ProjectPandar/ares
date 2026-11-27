@@ -12,9 +12,12 @@ use super::{
     neighbor_movement::NeighborMovement,
     nodes::{NodeArena, NodeId, NodeSeed, NodeType},
 };
-use crate::geometry::{
-    BoundingBox, ClipperError, Point, Polygon, clip_clipper_expolygons_with_subject_bbox,
-    difference_ex_polygons,
+use crate::{
+    geometry::{
+        BoundingBox, ClipperError, Point, Polygon, clip_clipper_expolygons_with_subject_bbox,
+        difference_ex_polygons,
+    },
+    project_slice::belt::floor_context::BeltFloorContext,
 };
 
 pub(super) struct DropPass<'a> {
@@ -30,6 +33,7 @@ pub(super) struct DropPass<'a> {
     pub(super) buildplate_only: bool,
     pub(super) is_slim: bool,
     pub(super) is_strong: bool,
+    pub(super) floor: Option<BeltFloorContext>,
 }
 
 impl DropPass<'_> {
@@ -86,6 +90,17 @@ impl DropPass<'_> {
         let clip = clip_clipper_expolygons_with_subject_bbox(collision, bounds);
         let polygons = difference_ex_polygons(std::slice::from_ref(polygon), &clip)?;
         for polygon in polygons {
+            // Support/TreeSupport.cpp:3191–3218 tests each surviving polygon separately.
+            if self.floor.is_some_and(|floor| {
+                floor.polygon_landed(
+                    polygon.contour(),
+                    self.next_height.print_z,
+                    self.settings.scale,
+                )
+            }) {
+                self.arena.nodes[id].to_buildplate = false;
+                continue;
+            }
             let next =
                 self.arena
                     .create_node(self.next_seed(id, centroid(polygon.contour()), true));
@@ -172,6 +187,17 @@ impl DropPass<'_> {
     }
 
     fn drop_circle(&mut self, id: NodeId, position: Point) -> Result<(), ClipperError> {
+        // Support/TreeSupport.cpp:3351–3369 stops the whole circle before creating a child.
+        if self.floor.is_some_and(|floor| {
+            floor.circle_landed(
+                (position, self.arena.nodes[id].radius),
+                self.next_height.print_z,
+                self.settings.scale,
+            )
+        }) {
+            self.arena.nodes[id].to_buildplate = false;
+            return Ok(());
+        }
         let collision = self.data.collision(0.0, self.next_height.object_layer)?;
         let projected = movement::projection_onto(collision, position);
         // OrcaSlicer 2.5.0 TreeSupport.cpp:3359-3360 includes the XY clearance.

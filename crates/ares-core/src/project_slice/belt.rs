@@ -118,9 +118,14 @@ fn automatic_support(
             ProcessSupportType::NormalAuto,
             ProcessSupportStyle::Grid | ProcessSupportStyle::Default,
         ) => true,
+        // Support/TreeSupport.cpp:1901–1955 dispatches both tree generators on belts.
         (
             ProcessSupportType::TreeAuto,
-            ProcessSupportStyle::Organic | ProcessSupportStyle::Default,
+            ProcessSupportStyle::Organic
+            | ProcessSupportStyle::Default
+            | ProcessSupportStyle::TreeSlim
+            | ProcessSupportStyle::TreeStrong
+            | ProcessSupportStyle::TreeHybrid,
         ) => object.support_on_build_plate_only.0,
         _ => false,
     };

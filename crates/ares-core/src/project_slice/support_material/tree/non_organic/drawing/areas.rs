@@ -31,6 +31,7 @@ pub(super) struct NodeDrawing<'a, 's> {
     pub(super) collision: &'a mut DrawCollision<'s>,
     pub(super) top_interface_layers: usize,
     pub(super) raft_layers: usize,
+    pub(super) belt_floor: bool,
     pub(super) buildplate_only: bool,
     pub(super) scale: CoordinateScale,
     pub(super) max_move_sq: f64,
@@ -87,9 +88,12 @@ impl NodeDrawing<'_, '_> {
             }
             return Ok(area);
         }
-        let circle = self
-            .shapes
-            .for_node(node, self.collision.object_layer, self.raft_layers)?;
+        let circle = self.shapes.for_node(
+            node,
+            self.collision.object_layer,
+            self.raft_layers,
+            self.belt_floor,
+        )?;
         let mut area = largest_component(
             &ExPolygon::new(circle, Vec::new()),
             self.collision.get(sharp_tail)?,
