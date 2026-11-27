@@ -167,9 +167,147 @@ that needs them.
 
 ## Hook catalog
 
-_To be written: one row per hook (upstream step or G-code stage, Ares site,
-unit and parallelism, data passed, allowed edits, what is recomputed after an
-edit)._
+Upstream citations are to OrcaSlicer v2.5.0 (`40ecc66f7`). `Print.cpp`,
+`Print.hpp`, `PrintObject.cpp`, `PrintApply.cpp` and `GCode.cpp` are under
+`src/libslic3r/`; `GUI/` is under `src/slic3r/`. Ares paths in the tables are
+relative to `crates/ares-core/src/project_slice/` except `project_slice.rs`,
+which is next to that directory. The catalog describes the public Rust
+interface in `ares-core`. Compiled-in plugins implement it directly and
+`ares-plugin-host` adapts WebAssembly and JavaScript plugins to it. The cited
+Ares sites are producers or consumers, not implemented callbacks. Writable
+extrusion data beyond the perimeter extension is proposed here, not an
+existing extension in [ARD-0112](architecture/ard-0112-plugin-host.md).
+
+Object hooks get one print object's result, including its layers but not a
+separate call for each copy. Keep dispatch in stable object and configured
+plugin order after the relevant work has joined, even when generation runs in
+parallel. Object, instance, region and layer identities and the nominal layer
+Z and height are read-only. Physical path Z and bead height are separate from
+the layer schedule. Core owns derived indices and fitted arcs. Reject invalid
+geometry, mismatched path attributes, or edits that violate a step's tool or
+layer constraints before publishing the edited result; do not reuse a partly
+edited result.
+
+**Write capabilities.** Only **Emitted layer text** and **`psGCodePostProcess`**
+accept raw G-code edits. All other hooks accept validated structured edits to
+paths, surfaces, plans or derived geometry. Core regenerates the G-code for
+structured edits, including edits to the wipe tower plan. Plugins declare
+text hooks like any other hook. No separate permission is required, and core
+treats their output like project custom G-code.
+
+**Hot reload.** `ares-plugin-host` detects changes to hosted plugins. A hook's
+output can depend on the virtual files it reads. The host includes the package
+and the private data files read from the slice-start snapshot in its identity
+comparison. Core compares plugin identity, options and order per step. The
+invalidation column names the results to rebuild from clean inputs. On change
+or removal, discard
+that step's edited result and its dependent results, retain unaffected inputs,
+and run the configured hooks only when their step is recomputed. Never replay
+edits onto previously edited data. Upstream
+`PrintApply.cpp:1646` routes config changes through `Print.cpp:484–505`, where
+changing the selected pipeline plugins invalidates `posSlice`. The object and
+print dependency rules are in `PrintObject.cpp:1875–1917` and
+`Print.cpp:666–672`. Ares has no equivalent persistent step state at these
+call sites today: `project_slice.rs:247–293` builds and consumes fresh stages
+on every slice. Keeping earlier results on reload needs retained checkpoints.
+
+**Export effects.** Re-emitting edited paths through the motion writer rebuilds
+travel, avoid-crossing routes, retraction, wipe and Z-hop using the edited
+sequence. Recompute seam placement when loop geometry changes, and revalidate
+collisions, extents and tool scheduling when the edit can affect them. Run the
+layer filters and export processor again for cooling time, `M73`, timing and
+filament estimates, header totals, and viewer moves and line offsets. Use the
+nominal layer to group sub-layer passes in the viewer; tag-based layer counting
+already exists (`gcode_emit/processor.rs:91–95`,
+`gcode_emit/processor/moves/tags.rs:19–47`), but grouping those passes in all
+output modes needs explicit support. Thumbnails are supplied by the caller
+(`gcode_emit/orchestration.rs:177–183`), not derived from G-code. If a thumbnail
+is meant to show edited paths, the caller must render it again; the processor
+cannot update it.
+
+### Slicing steps
+
+These are the twelve in-pipeline values in `Print.hpp:132–138`, in upstream
+firing order. `Print.cpp:3419–3423` checks that the object step actually ran.
+Support dispatch follows the parallel join; the later simplification call
+also checks that it did not use cached results.
+
+| Hook | OrcaSlicer firing site | Ares boundary, unit and concurrency today | Data and allowed edits | Recompute after edit | Invalidate on reload | Sample |
+| --- | --- | --- | --- | --- | --- | --- |
+| `posSlice` | `Print.cpp:3425–3442`, after `slice()` and before perimeters; backs up the edited untyped slices | `compensation.rs:135–161,195–252`, after compensation and polyholes. Per object, serial here; lower-level slice geometry uses parallel layer work (`raw_intersections.rs:188`). | `PostCompensationPrintObject`: add, remove or modify region `ExPolygon` contours and holes at existing planes. Layer plan, region ownership and source mesh stay read-only. | Refresh both the merged `lslices` and untyped `raw_slices`, including any slice-derived brim inputs that consume affected geometry. Then walls, fills, support and derived plans can use existing producers. Needs a seam to refresh those views together. | `posSlice` through dependent object geometry, tower/tool order, skirt/brim and export. | Neither first-stage sample. Sloped-wall subdivision needs a separate ability to sample extra planes and generate walls from them without inserting nominal layers. |
+| `posPerimeters` | `Print.cpp:3446–3451`, after `make_perimeters()` | `perimeters.rs:90–115`, after Classic/Arachne materialization and redistribution. Per object; generation parallelizes records and Arachne slots (`perimeters/classic/materialize.rs:90`, `perimeters/arachne/materialize.rs:109`). | `PreparedPostLayerRegionPerimeters`, with `ExtrusionEntityCollection` and `ExtrusionPath`. Read-only inset, role and nominal layer facts for the samples. Add or duplicate a wall, remove it, or edit points, width, bead height, physical Z, flow and wall order. For XY edits that change wall coverage, supply matching fill boundaries or let core rebuild them. | Keep retained wall geometry, fill/no-overlap boundaries and region ranges consistent before fill prep. Recompute affected curl, fitted arcs, seams and scheduling. Existing stages can run again, but need a shared edited wall source and a way to preserve explicit wall order and physical Z through emission. | `posPerimeters`, curl and dependent fill/contour/support and simplification data, then any affected print plans and export. Keep `posSlice`. | Both. Stagger uses odd inset, Z, flow and order; subdivision duplicates outer loops and sets height, Z and order. |
+| `posEstimateCurledExtrusions` | `Print.cpp:3456–3464`, after `estimate_curled_extrusions()` | `project_slice.rs:280` and `curl_estimation.rs:35–90`. Per object, serial; Ares computes this later than OrcaSlicer from ordered walls. | Per-layer `Vec<CurledLine>`: add, remove or change line endpoints and estimated curl height. Read wall paths, roles and layer identity only; this changes hazard estimates, not extrusions. | Rebuild the emitter's curl distance data and recalculate overhang speed decisions. The emitter already consumes `curled_lines`; put the seam before it builds the query data. | Curl estimates and export from motion emission; retain walls and infill. | Neither. |
+| `posPrepareInfill` | `Print.cpp:3467–3476`, between `prepare_infill()` and `infill()` | `project_slice.rs:259–264`; `prepare_infill.rs:19–36` returns `PreparedPostInfillCombination`. Per object; multiple substeps parallelize layer or region records (for example `prepare_infill/vertical_shells/stage.rs:47`), with a serial final combination across objects. | `PreparedSurfaceTypeRecord::fill_surfaces` (`Vec<RegionSurface>`) in the final predecessor. Add, remove or reshape fill polygons, or change supported surface type, bridge angle or combined thickness. Keep owning region, layer Z and perimeter paths read-only. | Rebuild affected grouped fill inputs and any adaptive/lightning fields invalidated by changed surfaces before generating paths. Update the derived top-surface input for travel and the support inputs that consume the changed surfaces. Ares has a stage boundary, but needs a seam to refresh fields computed before final fill combination. | `posPrepareInfill` output and dependent infill, ironing, contour, support inputs and simplification; refresh tool order and export as needed. | Neither. |
+| `posInfill` | `Print.cpp:3476–3478`, after `infill()` | `fill_entities/generate.rs:345–355`, collection append finishes immediately before ironing. Per object result; layer generation can be parallel, with serial Lightning and random-angle-template cases (`fill_entities.rs:125–169`). | `LayerFillEntities.collections` of `FillExtrusionCollection` / `FillExtrusionPath`. Add, remove, reorder or modify XY, supported fill roles, width, height and flow. Keep owning region/layer and its scheduled tool read-only; speed is resolved later. | Refresh collection ranges, thin-fill ownership if affected, simplification and island assignment. Rebuild support inputs and wipe-into-infill allocation if changed. Needs an object-level split between fill generation and ironing, which run in the same layer call today. | `posInfill`, ironing and later consumers, including affected support, purge allocation and export; retain prepared surfaces. | Neither. |
+| `posIroning` | `Print.cpp:3488–3491`, after `ironing()` | `fill_entities/generate.rs:354–382`, after `ironing::append_spans` and before `simplify::apply`. Same per-object result and parallel layer work as infill. | Ironing collections in `LayerFillEntities`: add, remove, reorder or modify ironing paths, width, bead height and flow. Keep ironing role, region and nominal Z read-only. | Refresh collection ranges and path fitting, then island placement and ironing order. Later speed is still resolved from the ironing role. Needs an ironing checkpoint separate from the combined fill call. | `posIroning` and dependent contour/simplification, ordering and export; retain normal infill. | Neither. |
+| `posContouring` | `Print.cpp:3500–3506`, after `contour_z()`, only on objects that need Z contouring | `project_slice.rs:266` and `contour_z.rs:11–54`. Per object and layer, serial. | `PreparedPostFillEntities` with contoured wall and fill `Polyline3` paths. Add, remove or edit XYZ samples, bead width, height and flow. Keep region, role and layer identity read-only. | Refresh endpoint links and arc fits if applicable, and rerun affected seam, conflict and motion calculations. Ares has a mutable boundary here and a contoured path writer; its slope-dependent flow logic is not a general per-path Z override (`gcode_emit/motion/path/contour.rs:39–104`). | `posContouring`, affected support inputs, island order/simplification, and export. | Neither. It is not the hook for planar passes at multiple Z heights. |
+| `posSupportMaterial` | `Print.cpp:3512–3543`, after support generation joins and after the belt-brim pass | `project_slice.rs:275–279`, after `support_material/project.rs:30–51,379`. Per object, serial object loop; some layer work is parallel (`support_material/grid_generation.rs:288`, `support_material/tree/non_organic/drawing.rs:89`). Ares plans belt brim separately (`gcode_emit/layers/schedule.rs:154,200–206`). | `InstalledSupportLayer` with `SupportExtrusionEntity` plus slices and support islands. Add, remove or modify paths, support/base/interface roles, points, bead dimensions and flow within existing layer slots. Layer Z and object/tool mapping are read-only. | Refresh support footprint and ordering, support simplification, support/raft merge and any affected skirt/brim or wipe-into-support plan. There is an existing support return boundary; changing footprints requires keeping polygons and paths consistent for downstream consumers. | `posSupportMaterial`, support simplification, affected tower/tool order and adhesion, and export. | Neither. |
+| `posDetectOverhangsForLift` | `Print.cpp:3545–3551`, after `detect_overhangs_for_lift()` | `gcode_emit/orchestration/state.rs:124–125`, where `gcode_emit/motion/auto_lift.rs:31–100` constructs `AutoLift`. Per object, serial. | `AutoLift` per-layer polygons: add, remove or reshape an overhang exclusion polygon. Read-only layer Z, instance offsets and configured hop limits. Does not edit extrusion paths. | Rebuild polygon bounds for the travel test; the existing writer then resolves hop choices against edited regions. Needs access to the per-object data before bounds and the `AutoLift` state are published. | Lift detection and export from motion emission; no wall or support regeneration. | Neither. |
+| `psWipeTower` | `Print.cpp:3599–3629`, after tower/purge planning or tool order alone | `gcode_emit/layers/schedule.rs:324–352` returns `Schedule` with `ToolOrdering` and optional `wipe_tower::Data`. Whole print, serial. | `ToolOrdering` and per-transition `ToolChangeResult` (paths, wipe trace and generated G-code). Add, remove, reorder or modify purge/tower paths, bead dimensions, speed or volume within an assigned transition. Keep generated G-code, transition identity, scheduled Z and from/to tools read-only; changes to the tool schedule belong before planning. | Regenerate matching tower commands, start/end positions, wipe trace, purge accounting, footprint and clearance; rerun skirt/brim and export. `gcode_emit/wipe_tower/prepare.rs:32–44` can generate from a plan, but edits need a seam before materialization or regeneration of both geometry and commands. | `psWipeTower`, dependent `psSkirtBrim`, conflict checks and export; preserve object geometry. | Neither. |
+| `psSkirtBrim` | `Print.cpp:3895–3909`, after the skirt/brim groups and first-layer hull are final | `gcode_emit/orchestration.rs:36–72,113–120`, after `BrimPlan` and `SkirtPlan` (belt bands are in `Schedule`). Whole print, serial. | Add, remove or modify skirt loops, brim paths or belt bands, including points, order, width and flow within valid height/tool slots. Keep group/instance ownership and nominal Z read-only. | Refresh footprints, first-layer hull/bounds, priming quota and affected conflicts. Ordinary geometry has a boundary before bounds and export. A change to belt band placement or tool requirements would also need to update the earlier layer merge and tool plan. | `psSkirtBrim`, dependent bounds and conflicts, and export; rebuild scheduling only when its inputs change. | Neither. |
+| `posSimplifyPath` | `Print.cpp:3918–3926`, after `simplify_extrusion_path()`; hook keyed to the wall step, though the function also simplifies infill and support (`PrintObject.cpp:1057–1114`) | `project_slice.rs:281` simplifies object geometry; `gcode_emit/orchestration.rs:79–86` finishes support/raft simplification. Per object/layer, serial in these passes. | `OrderedExtrusionLayer` and `InstalledSupportLayer`: add, remove or replace simplified paths in their existing role/tool buckets; edit samples or order within a bucket. Fitted-arc records are read-only, not editable independently of the points. | Refit changed paths or discard fits and emit line segments. Rebuild affected seams and conflicts before emission. Needs a common seam (wall/fill and support finish separately); edits that change tool use or purge volume must replan, not reuse the earlier tower. | `posSimplifyPath` and the split infill/support simplification results, then dependent seams, conflicts and export. | Neither. |
+
+### G-code stages
+
+The last row is the thirteenth upstream step, `psGCodePostProcess`. The first
+two are Ares additions, informed by `GCode::process_layer` and its consumers.
+
+| Hook | OrcaSlicer boundary | Ares boundary, unit and concurrency today | Data and allowed edits | Recompute after edit | Invalidate on reload | Sample |
+| --- | --- | --- | --- | --- | --- | --- |
+| Ordered layer extrusions | `GCode.cpp:6586,7449–7786,8068–8160`, `process_layer` resolves layer content and writes it; no single final list is exposed | `gcode_emit/layers/drive.inc:178–228,250–388`; tool buckets/instance visits are set up before motion, but skirt, brim, support, walls, infill, ironing and tower commands are still dispatched separately. Per emitted layer chunk (merged objects or one instance in by-object mode), serial. | **Structured edits only.** Proposed ordered list over `OrderedExtrusionLayer`, `InstalledSupportLayer`, the adhesion plans and tower events. Add, remove or modify paths, XYZ, bead width/height, compatible role, flow, in-range speed and order within the layer. Keep nominal Z, instance ownership, tool/transition slots and required tool-change order read-only. | Needs a planning/emission split to assemble all entries before any move is emitted. Re-emit motion, regenerate fits and seams when needed, and rebuild the export data. Do not move a path across a wipe or tool-change boundary without replanning; changing purge demand requires rerunning the tower plan. | Ordered layer plan and `psGCodeExport`, including subsequent chunks that depend on writer state. Keep upstream geometry unless a plan input changes. | Neither; both need earlier inset/loop attributes, not this print-wide order. |
+| Emitted layer text | `GCode.cpp:5184,5193–5249,5281,5289–5342,8230–8232`, `LayerResult.gcode` and the layer filters. No text plugin here upstream. | `gcode_emit/layers/drive.inc:228,390` and `gcode_emit/layers.rs:265–266`: the raw chunk lives in a `Vec<u8>` and cooling may buffer it. Final filtered chunks are in the plate buffer at `gcode_emit/orchestration.rs:288–335`, before the processor. Per emitted chunk, serial and in order. | **Raw G-code edits.** Add, remove or replace UTF-8 command or comment lines after the layer filters and before processor analysis. The nominal chunk identity is read-only. | The processor can recalculate estimates, `M73`, supported header totals and viewer moves from edited text. It does not rerun cooling or recover writer-derived counts, bounds, tower stats or thumbnails. The next chunk was generated assuming the original endpoint and modal state (tool, XYZ/E modes, feed and extrusion state). Changes to these or to structural tags can change how later chunks print or how the viewer groups layers. | Filtered export text and processor output; keep geometry and, if retained, clean filtered chunks. | Neither. |
+| `psGCodePostProcess` | `GUI/PostProcessor.cpp:266–313,498–506`, after scripts on the exported file | `gcode_emit/orchestration_finish.rs:3–50` and `gcode_emit/processor.rs:252–316`, after the processor has finalized the output. Ares returns `ProcessedGCode` or writes to `GCodeSink` and returns `StreamedGCode` (`../gcode_processor.rs:257`, `../gcode_sink.rs:164`); no post-export edit boundary yet. Whole print, serial. | **Raw G-code edits.** Complete G-code, with config and sidecar facts read-only. Add, remove, replace or reorder command and comment lines across layer boundaries. Does not edit the retained geometry. | Requires buffering or staging before publishing to a sink. Motion edits can stale embedded progress, time, filament and layer totals, tool metadata and thumbnails, as well as viewer moves and offsets. Reparse the edited file for moves and estimates if promised; regenerating embedded metadata needs a distinct pass that replaces old values rather than adding new ones. | Reapply the final edit to pristine export bytes and rebuild any derived results promised for that output. Keep slicing and export computation if the pristine output is retained. | Neither. |
+
+**Text placement.** The pinned source assembles `process_layer →` optional
+`SpiralVase →` optional `PressureEqualizer → CoolingBuffer → FanMover →`
+adaptive pressure advance (non-vase branches) `→ output` in both print modes
+(`GCode.cpp:5240–5249,5333–5342`). It does not run a find/replace filter there.
+If added later, run substitutions before processor analysis too.
+`GCodeOutputStream::write` feeds the same text to the processor
+(`GCode.cpp:9112–9119`). In Ares, vase runs during object entry emission
+(`gcode_emit/layers/object_entry.rs:146–169`); equalizing and cooling run before
+fan and adaptive pressure advance processing (`gcode_emit/cooling.rs:96–138`,
+`gcode_emit/orchestration.rs:288–335`). The text hook belongs after these filters
+and before `finish_to_sink` hands text to the processor. Preserve chunk identity
+through the buffered filters. A motion edit at this late point does not get a
+new cooling calculation. Edits that need cooling or different travel state
+belong at the ordered extrusion hook, before the writer.
+
+**Upstream whole-file behavior.** The exporter finalizes estimates before the
+GUI hook (`GCode.cpp:3039–3076`). Non-BBL file export edits a copy and the
+viewer keeps using the original result (`GUI/BackgroundSlicingProcess.cpp:861–872`).
+BBL edits the file in place and reparses only to replace viewer moves and line
+offsets (`GUI/BackgroundSlicingProcess.cpp:288–302`, `Print.cpp:5777–5800`;
+`GCode/GCodeProcessor.cpp:3933` calls `finalize(false)`). It keeps the other
+result fields and does not regenerate embedded totals, `M73` or thumbnails.
+Ares must not present pre-edit estimates or viewer data as derived from the
+edited file.
+
+### Implementation order
+
+1. Use only `posPerimeters` for the first versions of both samples. Carry
+   read-only inset provenance through wall materialization (Arachne loops
+   retain `inset_idx` at `perimeters/arachne/traverse.rs:188`; open paths do
+   not uniformly retain it in `perimeters/classic/entity_collections/types.rs:50–56`).
+   Carry a wall's explicit Z, bead height and order through emission. Preserve
+   a common seam for copies of one loop. Staggering needs a flow multiplier;
+   subdivision needs duplication and flow derived from each pass's width and
+   height (`perimeters/types.rs:36–53`). Pass the layer and wall provenance
+   needed to observe each sample's skip rules without altering the layer
+   schedule. Check emitted pass Z, order, seam, extrusion volume and nominal
+   layer grouping end to end. With no plugin, export bytes must not change.
+2. Add `psGCodePostProcess` with an explicit policy for edited bytes, viewer
+   data and stale metadata. Then expose the early structured geometry steps
+   as their consumers become available: slices and prepared fills first,
+   then fills, ironing, contouring and support. For sloped-wall subdivision,
+   add extra slice-plane sampling and wall generation for those outlines;
+   neither operation changes the scheduled layer heights.
+3. Expose curl and lift estimates, then the print-level tower and adhesion
+   plans and the split simplification results. Keep derived data under core
+   control so edits to one representation cannot leave another stale.
+4. Build the ordered extrusion seam across all layer contributors, then add
+   the filtered layer-text seam. Explain which writer state and metadata
+   late text edits can leave stale. Neither seam is needed for the two samples.
 
 ## Candidate plugins
 
