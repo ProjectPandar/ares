@@ -1,5 +1,7 @@
 //! BeltSliceStrategy, GCode::collect_layers_to_print, BeltBrim, and BeltKinematics.
 
+#[path = "belt_print/active_purge.rs"]
+mod active_purge;
 #[path = "belt_print/brim.rs"]
 mod brim;
 #[path = "belt_print/normal_support.rs"]
