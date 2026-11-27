@@ -133,10 +133,11 @@ pub(super) fn bottom_contact_layers_and_layer_support_areas(
                 &mut enforcers_projection,
                 &mut area,
                 &mut enforced_area,
-            ] {
-                if !polygons.is_empty() {
-                    *polygons = intersection_polygons_paths(polygons, &valid)?;
-                }
+            ]
+            .into_iter()
+            .filter(|polygons| !polygons.is_empty())
+            {
+                *polygons = intersection_polygons_paths(polygons, &valid)?;
             }
         }
         if !enforced_area.is_empty() {

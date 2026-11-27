@@ -198,13 +198,11 @@ pub(in crate::project_slice::gcode_emit) fn build(
     }
     if belt_printer {
         belt_brim::schedule(
-            &mut merged,
-            objects,
-            support,
+            (&mut merged, &mut raw_zs),
+            (objects, support),
             &mut tool_ordering,
             belt_brim.as_ref(),
             traversal,
-            &mut raw_zs,
         );
     }
     if let Some(raft) = &raft {

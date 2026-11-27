@@ -4,9 +4,7 @@ use crate::project_slice::{
     belt::{EPSILON, floor_context::BeltFloorContext},
     layers::{PlannedLayer, PlannedPrintObject},
     perimeters::{flow::with_flow_ratio, types::Flow},
-    support_material::{
-        install_layers::InstalledSupportLayer, toolpath_parameters::ToolpathParameters,
-    },
+    support_material::install_layers::InstalledSupportLayer,
 };
 use crate::{
     FloatOrPercent, ObjectOptions, ProjectSettings, geometry::CoordinateScale,
@@ -61,8 +59,7 @@ pub(super) fn dimensions(
     settings: &ProjectSettings,
     object: &ObjectOptions,
     plan: &PlannedPrintObject,
-    parameters: &ToolpathParameters,
-    bridge_flow_ratio: f64,
+    (interface_flow, bridge_flow_ratio): (Flow, f64),
     scale: CoordinateScale,
 ) -> (f64, f64, f64) {
     let height_min = settings
@@ -84,11 +81,11 @@ pub(super) fn dimensions(
     };
     let bottom_interface_flow =
         if plan.slicing_parameters.zero_gap_interface_bottom || !object.thick_bridges.0 {
-            with_flow_ratio(parameters.interface_flow, bridge_flow_ratio)
+            with_flow_ratio(interface_flow, bridge_flow_ratio)
         } else {
             Flow::bridging_flow(
-                (bridge_flow_ratio * f64::from(parameters.interface_flow.nozzle_diameter)) as f32,
-                parameters.interface_flow.nozzle_diameter,
+                (bridge_flow_ratio * f64::from(interface_flow.nozzle_diameter)) as f32,
+                interface_flow.nozzle_diameter,
             )
         };
     (

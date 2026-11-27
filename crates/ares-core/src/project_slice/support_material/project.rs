@@ -311,8 +311,7 @@ pub(in crate::project_slice) fn generate(
             settings,
             object,
             plan,
-            &parameters,
-            bridge_flow_ratio,
+            (parameters.interface_flow, bridge_flow_ratio),
             scale,
         );
         let mut geometry = generate_grid_support_geometry(

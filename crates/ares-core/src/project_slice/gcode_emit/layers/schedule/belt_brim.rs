@@ -12,13 +12,11 @@ use crate::project_slice::{
 // Admission gives the belt object one instance and filament, and prologue
 // bands are strictly below all object layers.
 pub(super) fn schedule(
-    merged: &mut Vec<(f64, LayerToPrint)>,
-    objects: &[Vec<OrderedExtrusionLayer>],
-    support: &[Vec<InstalledSupportLayer>],
+    (merged, raw_zs): (&mut Vec<(f64, LayerToPrint)>, &mut Vec<f64>),
+    (objects, support): (&[Vec<OrderedExtrusionLayer>], &[Vec<InstalledSupportLayer>]),
     ordering: &mut ToolOrdering,
     brim: Option<&BeltBrimPlan>,
     traversal: &PreparedPostClassicTraversal,
-    raw_zs: &mut Vec<f64>,
 ) {
     merged.retain(|(_, entry)| {
         let object = entry.object_index;

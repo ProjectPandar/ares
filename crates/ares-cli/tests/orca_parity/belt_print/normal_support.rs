@@ -137,13 +137,7 @@ fn witnesses<'a>(gcode: &'a str, work: &Path) -> Extrusions<'a> {
             "M82" => relative = false,
             "M83" => relative = true,
             "G1" | "G92" => {
-                let (mut e, mut xyz) = (None, false);
-                for word in words {
-                    if let Some(value) = word.strip_prefix('E') {
-                        e = value.parse::<f64>().ok();
-                    }
-                    xyz |= word.starts_with(['X', 'Y', 'Z']);
-                }
+                let (e, xyz) = extrusion_words(words);
                 let Some(value) = e else { continue };
                 if command == "G92" {
                     extruder = value;
@@ -179,6 +173,17 @@ fn witnesses<'a>(gcode: &'a str, work: &Path) -> Extrusions<'a> {
         "expected a printed support-only layer before model extrusion at {work:?}"
     );
     result
+}
+
+fn extrusion_words<'a>(words: impl Iterator<Item = &'a str>) -> (Option<f64>, bool) {
+    let (mut e, mut xyz) = (None, false);
+    for word in words {
+        if let Some(value) = word.strip_prefix('E') {
+            e = value.parse::<f64>().ok();
+        }
+        xyz |= word.starts_with(['X', 'Y', 'Z']);
+    }
+    (e, xyz)
 }
 
 #[derive(Clone, Copy)]
