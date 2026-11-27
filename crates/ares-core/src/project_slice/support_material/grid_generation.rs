@@ -26,10 +26,13 @@ use crate::geometry::support_grid::SupportGridParams;
 use crate::geometry::{
     ClipperError, CoordinateScale, JoinType, Polygon, offset_paths, union_polygons_paths,
 };
+use crate::project_slice::belt::floor_context::BeltFloorContext;
 
 pub(super) struct GridSupportInput<'a> {
     pub(super) toolpath_parameters: &'a ToolpathParameters,
     pub(super) placement: ContactPlacement<'a>,
+    pub(super) floor: Option<BeltFloorContext>,
+    pub(super) tilt_slope: [f64; 2],
     pub(super) layers: &'a [LayerInput<'a>],
     // Slice-support volumes plus projected custom facets, before blocker expansion.
     pub(super) enforcers: &'a [Vec<Polygon>],
@@ -114,6 +117,7 @@ pub(super) fn generate_grid_support_geometry(
     let mut tops = top_contact_layers(
         &TopContactsInput {
             placement: input.placement,
+            tilt_slope: input.tilt_slope,
             layers: input.layers,
             annotations: &annotations,
             bridging_heights: input.bridging_heights,
@@ -164,6 +168,7 @@ pub(super) fn generate_grid_support_geometry(
     let bottom = bottom_contact_layers_and_layer_support_areas(
         &BottomProjectionInput {
             placement: &input.placement,
+            floor: input.floor,
             layers: input.layers,
             top_surfaces: input.top_surfaces,
             bottom_interface_height: input.bottom_interface_height,
@@ -189,6 +194,15 @@ pub(super) fn generate_grid_support_geometry(
         }),
     )
     .map_err(grid_error)?;
+    if let Some(floor) = input.floor {
+        floor
+            .trim(
+                tops.iter_mut()
+                    .map(|layer| (layer.print_z, &mut layer.polygons)),
+                input.scale,
+            )
+            .map_err(grid_error)?;
+    }
     cancel.check()?;
     generate_base_layers(
         &BaseLayersInput {
@@ -202,6 +216,16 @@ pub(super) fn generate_grid_support_geometry(
     )
     .map_err(grid_error)?;
     cancel.check()?;
+    if let Some(floor) = input.floor {
+        floor
+            .trim(
+                bases
+                    .iter_mut()
+                    .map(|layer| (layer.print_z, &mut layer.polygons)),
+                input.scale,
+            )
+            .map_err(grid_error)?;
+    }
     trim_top_contacts_by_bottom_contacts(&bottom.contacts, &mut tops).map_err(grid_error)?;
     let interfaces = generate_grid_interface_layers(
         &GridInterfacesInput {
@@ -227,6 +251,7 @@ pub(super) fn generate_grid_support_geometry(
             parameters,
             first_object_slices: input.layers[0].slices,
             has_brim: input.has_brim,
+            belt_floor: input.floor.is_some(),
             gap_xy_first_layer: input.gap_xy_first_layer,
             first_layer_flow_width_scaled: input.first_layer_flow_width_scaled,
             scale: input.scale,

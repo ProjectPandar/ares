@@ -2,12 +2,18 @@
 //! `layers::append`, hoisted into a struct so the borrow set can be passed
 //! to the group emit helpers as one `&mut` argument.
 
-use super::entry::EntryGeometry;
+use super::{entry::EntryGeometry, schedule::LayerToPrint};
 use crate::geometry::ExPolygon;
 use crate::project_slice::extrusion_islands::PreparedPostExtrusionIslands;
 use crate::project_slice::gcode_emit::motion::CurledLine;
-use crate::project_slice::island_print_order::{self, NearestSeamLayer};
+use crate::project_slice::island_print_order::{self, NearestSeamLayer, OrderedExtrusionLayer};
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
+
+#[derive(Clone, Default)]
+struct EstimatorHistory {
+    previous: Option<usize>,
+    last_prepared: Option<usize>,
+}
 
 pub(super) struct EntryBuilder<'a> {
     traversal: &'a PreparedPostClassicTraversal,
@@ -15,6 +21,7 @@ pub(super) struct EntryBuilder<'a> {
     nearest_seam_plans: &'a [Vec<NearestSeamLayer>],
     curled_lines: &'a [Vec<Vec<CurledLine>>],
     island_predecessor: &'a PreparedPostExtrusionIslands,
+    estimator_history: Vec<EstimatorHistory>,
     layer_boundary_cache: std::collections::HashMap<(usize, usize), std::rc::Rc<[ExPolygon]>>,
     /// The chunk's EXTERNAL-boundary slices, instance-translated
     /// (`get_boundary_external`, `AvoidCrossingPerimeters.cpp:1172-1177`),
@@ -36,8 +43,66 @@ impl<'a> EntryBuilder<'a> {
             curled_lines,
             nearest_seam_plans,
             island_predecessor,
+            estimator_history: vec![EstimatorHistory::default(); traversal.objects.len()],
             layer_boundary_cache: std::collections::HashMap::new(),
             boundary_slices: Vec::new(),
+        }
+    }
+
+    /// GCode.cpp:5102–5108,6995–7001: only a printed object layer with
+    /// an enabled overhang estimator advances the history. Support-only
+    /// chunks and empty geometric slices must not become its reference.
+    pub(super) fn prepare_overhang(
+        &mut self,
+        entries: &[LayerToPrint],
+        objects: &[Vec<OrderedExtrusionLayer>],
+        nozzle: usize,
+    ) {
+        let overhang_fan = self
+            .traversal
+            .resolved
+            .views
+            .full
+            .filament
+            .print
+            .enable_overhang_bridge_fan
+            .0
+            .iter()
+            .any(|enabled| enabled.0);
+        for entry in entries {
+            let Some(layer_index) = entry.object_layer else {
+                continue;
+            };
+            let object_index = entry.object_index;
+            let regions = self.traversal.objects[object_index]
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .as_parts()
+                .0
+                .as_parts()
+                .0
+                .as_parts()
+                .2;
+            let prepares = objects[object_index][layer_index]
+                .tool_regions
+                .iter()
+                .zip(regions)
+                .any(|(usage, region)| {
+                    (usage.perimeters
+                        || usage.outer_wall_fill
+                        || usage.internal_solid
+                        || usage.top
+                        || usage.bottom
+                        || usage.infill)
+                        && (overhang_fan || region.options.enable_overhang_speed.get_at(nozzle))
+                });
+            if prepares {
+                let history = &mut self.estimator_history[object_index];
+                history.previous = history.last_prepared.replace(layer_index);
+            }
         }
     }
 
@@ -47,8 +112,9 @@ impl<'a> EntryBuilder<'a> {
         layer_index: usize,
         chunk_perimeter_spacing: f64,
     ) -> EntryGeometry<'a> {
-        let lower_boundary_lines = self.traversal.objects[object_index]
-            .lower_slices(layer_index)
+        let previous = self.estimator_history[object_index].previous;
+        let lower_boundary_lines = previous
+            .and_then(|layer| self.traversal.objects[object_index].slices(layer))
             .into_iter()
             .flatten()
             .flat_map(ExPolygon::lines)
@@ -66,7 +132,7 @@ impl<'a> EntryBuilder<'a> {
             previous_curled: self
                 .curled_lines
                 .get(object_index)
-                .and_then(|layers| layer_index.checked_sub(1).and_then(|prev| layers.get(prev)))
+                .and_then(|layers| previous.and_then(|index| layers.get(index)))
                 .map_or(&[], |lines| lines),
             layer_slices: super::super::layer_boundary_slices_rc(
                 self.traversal,

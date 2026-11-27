@@ -170,6 +170,7 @@ pub(in crate::project_slice::support_material) fn generate(
             parameters: input.slicing,
             first_object_slices: &input.slices[0],
             has_brim: input.has_brim,
+            belt_floor: false,
             gap_xy_first_layer: input.object.support_object_first_layer_gap.0,
             first_layer_flow_width_scaled: input
                 .scale

@@ -4,8 +4,8 @@ pub(super) mod back_transform;
 pub(super) mod kinematics;
 
 use crate::{
-    BeltRotationAxis, Point3d, ProcessDraftShield, ProcessPrintSequence, Project,
-    ProjectVolumeType, RemapAxis, SliceError,
+    BeltRotationAxis, Point3d, ProcessDraftShield, ProcessPrintSequence, ProcessSupportStyle,
+    ProcessSupportType, Project, ProjectVolumeType, RemapAxis, SliceError,
     geometry::CoordinateScale,
     options::PrinterRemainingOptions,
     project::{Transform3d, effective_config::types::BoundedResolvedProjectConfig},
@@ -14,7 +14,7 @@ use crate::{
 pub(super) const EPSILON: f64 = 1e-4;
 
 pub(super) mod brim;
-mod floor_context;
+pub(super) mod floor_context;
 
 fn unsupported(feature: &str) -> SliceError {
     SliceError::UnsupportedProjectFeature(format!("belt_printer: {feature}"))
@@ -56,9 +56,10 @@ pub(super) fn admit(
         return Err(unsupported("materials"));
     }
 
-    if object.object.enable_support.0
-        || object.object.raft_layers.0 != 0
-        || object.object.enforce_support_layers.0 != 0
+    let options = &object.object;
+    if options.raft_layers.0 != 0
+        || options.enforce_support_layers.0 != 0
+        || (options.enable_support.0 && !normal_grid_support(settings, options, source))
     {
         return Err(unsupported("support"));
     }
@@ -89,6 +90,28 @@ pub(super) fn admit(
         return Err(unsupported("gcode_remap"));
     }
     Ok(())
+}
+
+fn normal_grid_support(
+    settings: &crate::ProjectSettings,
+    object: &crate::ObjectOptions,
+    source: &crate::ProjectObject,
+) -> bool {
+    let printer = &settings.printer.remaining;
+    let (sin, cos) = back_transform::deg2rad(printer.belt_slice_rotation_angle.0).sin_cos();
+    cos.abs() > EPSILON
+        && (sin / cos).abs() >= EPSILON
+        && object.support_type == ProcessSupportType::NormalAuto
+        && matches!(
+            object.support_style,
+            ProcessSupportStyle::Grid | ProcessSupportStyle::Default
+        )
+        && source.volumes()[0]
+            .mesh()
+            .supported_facets
+            .mapping
+            .is_empty()
+        && !brim::enabled(settings, object)
 }
 
 #[derive(Clone, Copy)]

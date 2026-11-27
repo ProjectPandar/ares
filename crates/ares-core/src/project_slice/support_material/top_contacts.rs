@@ -18,6 +18,7 @@ use crate::{ProcessSupportStyle, ProcessSupportType};
 
 pub(super) struct TopContactsInput<'a> {
     pub(super) placement: ContactPlacement<'a>,
+    pub(super) tilt_slope: [f64; 2],
     pub(super) layers: &'a [LayerInput<'a>],
     pub(super) annotations: &'a [LayerAnnotations<'a>],
     pub(super) bridging_heights: &'a [Option<f64>],
@@ -60,6 +61,7 @@ pub(super) fn top_contact_layers(
                     layer: &input.layers[layer_index],
                     lower: layer_index.checked_sub(1).map(|index| &input.layers[index]),
                     object,
+                    tilt_slope: input.tilt_slope,
                     annotations: &input.annotations[layer_index],
                     scale: input.scale,
                 },

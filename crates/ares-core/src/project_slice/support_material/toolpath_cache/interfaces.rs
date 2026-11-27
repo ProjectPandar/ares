@@ -27,6 +27,7 @@ pub(in crate::project_slice::support_material) struct SupportFillInput<'a> {
     pub(in crate::project_slice::support_material) parameters: &'a ToolpathParameters,
     pub(in crate::project_slice::support_material) counts: &'a InterfaceCounts,
     pub(in crate::project_slice::support_material) support_layer: &'a InstalledSupportLayer,
+    pub(in crate::project_slice::support_material) belt_floor: bool,
     pub(in crate::project_slice::support_material) support_layer_index: usize,
     pub(in crate::project_slice::support_material) range_begin: usize,
     pub(in crate::project_slice::support_material) n_raft_layers: usize,

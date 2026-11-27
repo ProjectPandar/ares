@@ -174,6 +174,7 @@
             },
             layer_tools,
         );
+        entry_builder.prepare_overhang(&entries, objects, state.options.nozzle_config_index);
         let mut by_tool = tool_buckets::build(tool_buckets::Input {
             traversal,
             entries: &entries,
@@ -193,7 +194,7 @@
                     .flat_map(|(_, tour)| tour.instances.iter().map(|entry| entry.instance.label_id)),
             );
         }
-        let belt_past_first_layer = boundary::belt::prepare(traversal, &entries, state);
+        let belt_past_first_layer = boundary::belt::prepare(traversal, &entries, support_layers, state);
         let boundary = boundary::append(
             output,
             state,

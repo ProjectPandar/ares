@@ -58,6 +58,19 @@ impl BeltBrimPlan {
     }
 }
 
+pub(super) fn enabled(settings: &crate::ProjectSettings, options: &crate::ObjectOptions) -> bool {
+    let angle = settings.printer.remaining.belt_slice_rotation_angle.0;
+    let leading = settings.process.object.leading_brim_length.0;
+    let lateral = settings.process.object.extra_brim_width.0;
+    // PrintObject::has_belt_brim excludes the marked mesh independently of purge enable.
+    (1.0..=85.0).contains(&angle.abs())
+        && !options.belt_purge_tower_object.0
+        && options.brim_type != ProcessBrimType::NoBrim
+        && (options.brim_width.0 > 0.0
+            || (options.brim_type != ProcessBrimType::InnerOnly
+                && (leading > 0.0 || lateral > 0.0)))
+}
+
 fn generate(
     traversal: &PreparedPostClassicTraversal,
 ) -> Result<Option<BeltBrimPlan>, crate::geometry::ClipperError> {
@@ -67,14 +80,7 @@ fn generate(
     let options = &traversal.print_object_config(0).0.object;
     let leading = full.process.object.leading_brim_length.0;
     let lateral = full.process.object.extra_brim_width.0;
-    // PrintObject::has_belt_brim excludes the marked mesh independently of purge enable.
-    if !(1.0..=85.0).contains(&printer.belt_slice_rotation_angle.0.abs())
-        || options.belt_purge_tower_object.0
-        || options.brim_type == ProcessBrimType::NoBrim
-        || (options.brim_width.0 <= 0.0
-            && (options.brim_type == ProcessBrimType::InnerOnly
-                || (leading <= 0.0 && lateral <= 0.0)))
-    {
+    if !enabled(full, options) {
         return Ok(None);
     }
     let Some(floor) = object.belt_floor() else {
