@@ -65,3 +65,24 @@ export function zoomToBox(camera: THREE.PerspectiveCamera, box: THREE.Box3, targ
   camera.position.copy(center).addScaledVector(forward, -distance);
   return center;
 }
+
+/**
+ * Camera::rotate_on_sphere: turns the eye around `target` by `azimuth` about +Z and `zenith` towards
+ * it (radians), the zenith kept off the poles like OrbitControls' polar limits.
+ */
+export function rotateOnSphere(
+  camera: THREE.PerspectiveCamera,
+  target: THREE.Vector3,
+  azimuth: number,
+  zenith: number,
+) {
+  const offset = camera.position.clone().sub(target);
+  const distance = offset.length();
+  const turned = Math.atan2(offset.y, offset.x) + azimuth;
+  const polar = THREE.MathUtils.clamp(Math.acos(offset.z / distance) + zenith, 1e-4, Math.PI - 1e-4);
+  camera.position
+    .set(Math.sin(polar) * Math.cos(turned), Math.sin(polar) * Math.sin(turned), Math.cos(polar))
+    .multiplyScalar(distance)
+    .add(target);
+  camera.lookAt(target);
+}

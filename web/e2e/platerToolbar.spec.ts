@@ -153,7 +153,7 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
   // [main] | [gizmos] | [assembly view] side by side, centred at the canvas top; the camera view
-  // toolbar centred at its bottom.
+  // cube in its bottom left corner.
   const canvas = (await shownTab(page).getByTestId("viewport").locator("canvas").boundingBox())!;
   const bar = (await toolbar(page).boundingBox())!;
   expect(Math.abs(bar.x + bar.width / 2 - (canvas.x + canvas.width / 2))).toBeLessThanOrEqual(1);
@@ -167,7 +167,8 @@ test("the Prepare toolbar follows GLToolbar and GLGizmosManager and runs its ite
   expect(parts[0].x + parts[0].width).toBeLessThanOrEqual(parts[1].x);
   expect(parts[1].x + parts[1].width).toBeLessThanOrEqual(parts[2].x);
   const views = (await shownTab(page).getByTestId("view-toolbar").boundingBox())!;
-  expect(Math.abs(views.x + views.width / 2 - (canvas.x + canvas.width / 2))).toBeLessThanOrEqual(1);
+  expect(views.x - canvas.x).toBeGreaterThanOrEqual(0);
+  expect(views.x - canvas.x).toBeLessThanOrEqual(16);
   expect(canvas.y + canvas.height - (views.y + views.height)).toBeGreaterThanOrEqual(0);
   expect(canvas.y + canvas.height - (views.y + views.height)).toBeLessThanOrEqual(16);
   await expect(page.locator(".gizmo-toolbar")).toHaveCount(0);

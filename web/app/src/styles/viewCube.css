@@ -1,0 +1,182 @@
+/* Camera view cube at the 3D view's bottom left. */
+:root,
+:root[data-theme="light"] {
+  --cube-face-top: #d3d3d3;
+  --cube-face-front: #c6c6c6;
+  --cube-face-side: #b9b9b9;
+  --cube-edge: #f4f4f4;
+  --cube-text: #4b4b4b;
+  --axis-x: #d9534f;
+  --axis-y: #4caf50;
+  --axis-z: #5468d4;
+}
+:root[data-theme="dark"] {
+  --cube-face-top: #8c8c93;
+  --cube-face-front: #7e7e85;
+  --cube-face-side: #717177;
+  --cube-edge: #a9a9b0;
+  --cube-text: #f4f4f5;
+  --axis-x: #ef6b66;
+  --axis-y: #66c46a;
+  --axis-z: #7c8cf0;
+}
+
+.view-cube-nav {
+  --cube-size: 56px;
+  position: absolute;
+  left: 6px;
+  bottom: 4px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  user-select: none;
+}
+.view-cube-stage {
+  position: relative;
+  width: calc(var(--cube-size) * 110 / 56);
+  height: calc(var(--cube-size) * 94 / 56);
+  touch-action: none;
+}
+.view-cube {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+}
+.view-cube-face {
+  position: absolute;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  margin: calc(var(--cube-size) / -2);
+  padding: 0;
+  border: 1px solid var(--cube-edge);
+  background: var(--cube-face-front);
+  color: var(--cube-text);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  backface-visibility: hidden;
+}
+.view-cube-face:is(.top, .bottom) {
+  background: var(--cube-face-top);
+}
+.view-cube-face:is(.left, .right) {
+  background: var(--cube-face-side);
+}
+.view-cube-face.front {
+  transform: translateZ(calc(var(--cube-size) / 2));
+}
+.view-cube-face.rear {
+  transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2));
+}
+.view-cube-face.left {
+  transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2));
+}
+.view-cube-face.right {
+  transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
+}
+.view-cube-face.top {
+  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+}
+.view-cube-face.bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2));
+}
+@media (hover: hover) {
+  .view-cube-face:hover {
+    background: color-mix(in srgb, var(--accent) 30%, var(--cube-face-top));
+  }
+}
+.view-cube-face[aria-pressed="true"] {
+  background: var(--accent-fill);
+  color: var(--accent-text);
+}
+/* The top-front-left corner selects the iso view. */
+.view-cube-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--cube-edge);
+  opacity: 0.55;
+  cursor: pointer;
+  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2 + 1px))
+    translate(calc(var(--cube-size) / -2), calc(var(--cube-size) / 2));
+}
+.view-cube-corner:hover,
+.view-cube-corner[aria-pressed="true"] {
+  background: var(--accent);
+  opacity: 1;
+}
+.view-cube-axes {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  font-size: 11px;
+  font-style: italic;
+}
+.view-cube-axes line {
+  stroke-width: 2.25;
+  stroke-linecap: round;
+}
+.view-cube-axes .x {
+  color: var(--axis-x);
+}
+.view-cube-axes .y {
+  color: var(--axis-y);
+}
+.view-cube-axes .z {
+  color: var(--axis-z);
+}
+.view-cube-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.view-cube-action {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text-dim);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+.view-cube-action:not(:disabled):hover,
+.view-cube-action[aria-pressed="true"] {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+.view-cube-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.view-cube-action.iso {
+  display: none;
+}
+
+/* Touch screens: 44x44 targets (WCAG 2.5.5); the iso corner becomes an action. */
+@media (pointer: coarse) {
+  .view-cube-nav {
+    --cube-size: 64px;
+  }
+  .view-cube-corner {
+    display: none;
+  }
+  .view-cube-action,
+  .view-cube-action.iso {
+    display: grid;
+    width: 44px;
+    height: 44px;
+  }
+}

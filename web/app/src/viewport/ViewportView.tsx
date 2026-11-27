@@ -14,6 +14,7 @@ import { bedFromSettings } from "./bedShape";
 import type { ViewPreset, ZoomTarget } from "./camera";
 import type { GizmoMode } from "./gizmos";
 import { PlaterToolbar } from "./PlaterToolbar";
+import { ViewCube } from "./ViewCube";
 import type { Viewport, ViewportColors } from "./Viewport";
 
 // Three.js lives in this chunk; requesting it with the entry lets the shell render while it downloads.
@@ -32,16 +33,6 @@ function themeColors(): ViewportColors {
   };
 }
 
-const VIEWS: [ViewPreset, string][] = [
-  ["iso", "Iso"],
-  ["top", "Top"],
-  ["bottom", "Bottom"],
-  ["front", "Front"],
-  ["rear", "Rear"],
-  ["left", "Left"],
-  ["right", "Right"],
-];
-
 /** GLCanvas3D::on_char with Ctrl/Cmd: 0 plate + zoom_to_bed, 1-6 axis views. */
 const VIEW_KEYS: Record<string, ViewPreset> = {
   "0": "plate",
@@ -52,6 +43,21 @@ const VIEW_KEYS: Record<string, ViewPreset> = {
   "5": "left",
   "6": "right",
 };
+
+/** Plate thumbnail pixels: the plate toolbar's 96 CSS px at 2x. */
+const THUMBNAIL_SIZE = 192;
+
+/** `scene` with the instances of plate `index` only. */
+function currentPlateScene(scene: Scene, index: number): Scene {
+  const on = new Set(scene.plates[index]?.instances.map(([object, instance]) => `${object}:${instance}`));
+  return {
+    ...scene,
+    objects: scene.objects.map((object) => ({
+      ...object,
+      instances: object.instances.filter(({ id: [objectId, instanceId] }) => on.has(`${objectId}:${instanceId}`)),
+    })),
+  };
+}
 
 /** GLGizmosManager's gizmo keys (GLGizmoMove3D, Rotate3D, Scale3D::on_init). */
 const GIZMO_KEYS: Record<string, GizmoMode> = { m: "move", r: "rotate", s: "scale" };
@@ -208,13 +214,31 @@ export function ViewportView({
   // oxlint-disable-next-line react/exhaustive-effect-dependencies
   useEffect(() => viewport?.setColors(themeColors()), [viewport, theme]);
 
+  // The Preview canvas draws the current plate only (GLCanvas3D::_render: `only_current` off the View3D canvas).
+  const drawn = useMemo(
+    () => (editable || !scene ? scene : currentPlateScene(scene, currentPlate)),
+    [editable, scene, currentPlate],
+  );
   useEffect(() => {
     const origins = scene?.plates.map(({ origin }): [number, number] => origin ?? [0, 0]);
-    viewport?.setBed(bedFromSettings(scene?.settings ?? null), origins?.length ? origins : undefined, currentPlate);
-  }, [viewport, scene, currentPlate]);
+    const shape = bedFromSettings(scene?.settings ?? null);
+    if (!origins?.length) viewport?.setBed(shape);
+    else if (editable) viewport?.setBed(shape, origins, currentPlate);
+    else viewport?.setBed(shape, [origins[currentPlate]], 0);
+  }, [viewport, scene, currentPlate, editable]);
   useEffect(() => {
-    viewport?.setScene(scene, filamentPalette(selection, loaded?.settings ?? null, loaded?.filamentSlots));
-  }, [viewport, scene, loaded, selection]);
+    viewport?.setScene(drawn, filamentPalette(selection, loaded?.settings ?? null, loaded?.filamentSlots));
+  }, [viewport, drawn, loaded, selection]);
+  // Plater::priv::update_plate_thumbnails: the View3D canvas renders every plate for the Preview's
+  // plate toolbar (GLCanvas3D::_update_imgui_select_plate_toolbar) after the effects above redraw
+  // the scene: filaments, the current plate and `theme` change its colours.
+  useEffect(() => {
+    if (!viewport || !editable) return;
+    useApp.setState({
+      plateThumbnails: (scene?.plates.length ?? 0) > 1 ? viewport.plateThumbnails(THUMBNAIL_SIZE) : [],
+    });
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies
+  }, [viewport, editable, scene, loaded, selection, currentPlate, theme]);
 
   // A press on an instance selects it (GLCanvas3D::on_mouse LeftDown) and drags it; the release
   // commits the drag after its undo snapshot (GLCanvas3D::do_move / do_rotate / do_scale).
@@ -294,48 +318,22 @@ export function ViewportView({
   return (
     <div className="viewport" data-instances={instances}>
       <div className="viewport-canvas" ref={host} data-testid="viewport" />
-      <div
-        className={editable ? "view-toolbar bottom" : "view-toolbar"}
-        role="toolbar"
-        aria-label="Camera view"
-        data-testid="view-toolbar"
-      >
-        {VIEWS.map(([preset, label]) => (
-          <button
-            key={preset}
-            className="view-button"
-            aria-pressed={active === preset}
-            onClick={() => {
-              viewport?.setView(preset);
-              setActive(preset);
-            }}
-          >
-            {label}
-          </button>
-        ))}
-        <span className="view-separator" />
-        <button
-          className="view-button"
-          aria-label="Fit to plate"
-          title="Fit to plate"
-          onClick={() => {
+      <ViewCube
+        viewport={viewport}
+        active={active}
+        onView={(preset) => {
+          viewport?.setView(preset);
+          setActive(preset);
+        }}
+        onFit={(target) => {
+          if (target === "plate") {
             viewport?.setView("plate");
-            viewport?.zoomTo("plate");
             setActive("plate");
-          }}
-        >
-          Plate
-        </button>
-        <button
-          className="view-button"
-          aria-label="Fit to objects"
-          title="Fit to objects"
-          disabled={!scene}
-          onClick={() => viewport?.zoomTo("objects")}
-        >
-          Fit
-        </button>
-      </div>
+          }
+          viewport?.zoomTo(target);
+        }}
+        canFitObjects={scene !== null}
+      />
       {editable && plater && <PlaterToolbar gizmo={gizmo} onGizmo={setGizmo} />}
       {menu && (
         <ObjectMenu

@@ -12,45 +12,6 @@
 .viewport-canvas canvas {
   display: block;
 }
-.view-toolbar {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-}
-.view-button {
-  padding: 3px 10px;
-  color: var(--text-dim);
-}
-@media (hover: hover) {
-  .view-button:not(:disabled):hover {
-    color: var(--text);
-    background: var(--panel-raised);
-  }
-}
-.view-button[aria-pressed="true"] {
-  color: var(--accent-text);
-  background: var(--accent-fill);
-}
-.view-button:disabled {
-  opacity: 0.4;
-}
-.view-toolbar.bottom {
-  top: auto;
-  bottom: 10px;
-}
-.view-separator {
-  width: 1px;
-  margin: 3px 2px;
-  background: var(--separator);
-}
 /* GLCanvas3D::_render_overlay_toolbars: [main] | [gizmos] | [assembly view] at the top centre. */
 .plater-toolbar {
   position: absolute;
@@ -192,165 +153,6 @@
 }
 
 /* Preview */
-.preview-card {
-  position: absolute;
-  top: 56px;
-  left: 10px;
-  width: 250px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-  padding: 10px;
-}
-.preview-card-title {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.summary {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 3px 10px;
-  margin: 0;
-}
-.summary dt {
-  color: var(--text-dim);
-}
-.summary dd {
-  margin: 0;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.summary-empty {
-  color: var(--text-dim);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.preview-note {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-  color: var(--text-faint);
-  font-size: 11px;
-}
-.legend {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  width: 200px;
-  max-height: calc(100% - 200px);
-  overflow: auto;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-  padding: 8px;
-}
-.legend-title {
-  font-weight: 600;
-  margin: 2px 0 4px;
-}
-.legend-view {
-  display: block;
-  height: 22px;
-  margin: 2px 0 4px;
-  padding: 0 2px;
-  background: var(--field);
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-}
-.legend-view:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-@media (hover: hover) {
-  .legend-view:hover {
-    outline: none;
-    border-color: var(--accent);
-  }
-}
-.legend-list {
-  list-style: none;
-  margin: 0 0 6px;
-  padding: 0;
-}
-.legend-row {
-  display: flex;
-  background: none;
-  border: none;
-  font: inherit;
-  cursor: pointer;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: var(--text);
-  text-align: left;
-}
-@media (hover: hover) {
-  .legend-row:hover {
-    background: var(--panel-raised);
-  }
-}
-.legend-row.off {
-  color: var(--text-faint);
-}
-.legend-row.off .legend-swatch {
-  opacity: 0.25;
-}
-.legend-label {
-  flex: 1;
-}
-.legend-time,
-.legend-percent {
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  flex: none;
-}
-.legend-time {
-  width: 7ch;
-}
-.legend-percent {
-  width: 4ch;
-}
-.legend-header {
-  display: flex;
-  gap: 8px;
-  padding: 2px 4px;
-  color: var(--text-faint);
-  font-size: 0.85em;
-}
-.legend-header span:first-child {
-  flex: 1;
-  padding-left: 22px;
-}
-.legend-header span:nth-child(2) {
-  width: 7ch;
-  text-align: right;
-}
-.legend-header span:nth-child(3) {
-  width: 4ch;
-  text-align: right;
-}
-.legend-count {
-  margin-left: auto;
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
-}
-.legend-swatch {
-  width: 14px;
-  height: 10px;
-  border-radius: 2px;
-  flex: none;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
-}
 .layer-slider {
   position: absolute;
   right: 14px;
@@ -441,19 +243,16 @@
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
-/* GCodeWindow::render: right of the layer slider, below the legend, COL_WINDOW_BACKGROUND (0.8 alpha
-   upstream; 0.9 keeps the line numbers at WCAG AA over the light-theme view). */
+/* GCodeWindow::render: under the slicing result, COL_WINDOW_BACKGROUND (0.8 alpha upstream; 0.9 keeps
+   the line numbers at WCAG AA over the light-theme view). */
 .gcode-panel {
-  position: absolute;
-  right: 86px;
-  top: 56px;
-  bottom: 40px;
-  width: max-content;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   background: rgba(26, 26, 26, 0.9);
   font:
     11px/18px "JetBrains Mono",

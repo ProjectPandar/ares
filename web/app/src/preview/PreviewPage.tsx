@@ -8,6 +8,7 @@ import { useApp } from "../state/store";
 import { usedOptions } from "../viewport/roles";
 import { ViewportView } from "../viewport/ViewportView";
 import { LayerSlider } from "./LayerSlider";
+import { PlateStrip } from "./PlateStrip";
 import type { LayerSteps, MovesState } from "./MovesSlider";
 
 // Fetched once a slice has move vertices to show.
@@ -78,6 +79,27 @@ export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene |
   const moves = live?.view ?? null;
   // GCodeViewer::render: the window frames the current vertex's line (`GCodeViewer.cpp:1601`).
   const currentLine = toolpaths && moves ? toolpaths.ids[2 * moves.range[2]] : 0;
+  // Tablets and phones start with the slicing result collapsed, keeping the 3D view clear.
+  const [expanded, setExpanded] = useState(() => !window.matchMedia("(max-width: 1024px)").matches);
+  const summary = slice.status === "done" && (
+    <section>
+      <h3>G-code</h3>
+      <dl className="summary">
+        <dt>G-code size</dt>
+        <dd data-testid="gcode-bytes">{slice.gcode.length.toLocaleString()} bytes</dd>
+        <dt>Slicing time</dt>
+        <dd>{(slice.elapsedMs / 1000).toFixed(2)} s</dd>
+        <dt>Plate</dt>
+        <dd data-testid="slice-plate">{scene?.plates[currentPlate]?.id ?? 1}</dd>
+        {toolpaths && (
+          <>
+            <dt>Layers</dt>
+            <dd data-testid="layer-count">{toolpaths.layerZs.length}</dd>
+          </>
+        )}
+      </dl>
+    </section>
+  );
   return (
     <div className="tab-pane" hidden={!shown}>
       <ViewportView
@@ -89,65 +111,78 @@ export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene |
         view={live?.filter ?? view}
         fit="objects"
       >
-        <div className="preview-card" data-testid="slice-summary">
-          <div className="preview-card-title">Slice result</div>
-          {slice.status === "done" ? (
-            <dl className="summary">
-              <dt>G-code size</dt>
-              <dd data-testid="gcode-bytes">{slice.gcode.length.toLocaleString()} bytes</dd>
-              <dt>Slicing time</dt>
-              <dd>{(slice.elapsedMs / 1000).toFixed(2)} s</dd>
-              <dt>Plate</dt>
-              <dd data-testid="slice-plate">{scene?.plates[currentPlate]?.id ?? 1}</dd>
-              {toolpaths && (
-                <>
-                  <dt>Layers</dt>
-                  <dd data-testid="layer-count">{toolpaths.layerZs.length}</dd>
-                </>
-              )}
-            </dl>
-          ) : slice.status === "slicing" ? (
-            <div className="summary-empty">
-              <span className="spinner" /> Slicing…
-            </div>
-          ) : !scene ? (
-            <div className="summary-empty">
-              Nothing to preview. <Link to="/prepare">Import a model</Link>.
-            </div>
-          ) : (
-            <div className="summary-empty">
-              Plate not sliced.{" "}
-              <button className="link-button" onClick={() => void slicePlate()}>
-                Slice plate
+        {(scene?.plates.length ?? 0) > 1 && <PlateStrip />}
+        <div className="preview-right">
+          <section className="slice-result" data-testid="slice-summary">
+            <header className="slice-result-header">
+              <span>Slicing Result</span>
+              <button
+                className="slice-result-collapse"
+                aria-expanded={expanded}
+                aria-label={expanded ? "Collapse slicing result" : "Expand slicing result"}
+                title={expanded ? "Collapse" : "Expand"}
+                onClick={() => setExpanded(!expanded)}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3.5 10l4.5-4.5 4.5 4.5" />
+                </svg>
               </button>
-            </div>
-          )}
-          {slice.status === "done" && !toolpaths && (
-            <div className="preview-note" data-testid="toolpaths-pending">
-              Toolpaths appear once the Ares engine exports GCodeProcessor move vertices.
-            </div>
+            </header>
+            {toolpaths ? (
+              <Suspense>
+                <Legend
+                  options={options}
+                  toolpaths={toolpaths}
+                  range={colors?.range ?? null}
+                  view={view}
+                  onChange={setPreview}
+                  summary={summary}
+                />
+              </Suspense>
+            ) : slice.status === "done" ? (
+              <>
+                <div className="slice-result-stats">{summary}</div>
+                <div className="preview-note" data-testid="toolpaths-pending">
+                  Toolpaths appear once the Ares engine exports GCodeProcessor move vertices.
+                </div>
+              </>
+            ) : slice.status === "slicing" ? (
+              <div className="summary-empty">
+                <span className="spinner" /> Slicing…
+              </div>
+            ) : !scene ? (
+              <div className="summary-empty">
+                Nothing to preview. <Link to="/prepare">Import a model</Link>.
+              </div>
+            ) : (
+              <div className="summary-empty">
+                Plate not sliced.{" "}
+                <button className="link-button" onClick={() => void slicePlate()}>
+                  Slice plate
+                </button>
+              </div>
+            )}
+          </section>
+          {slice.status === "done" && gcodeWindow && currentLine !== 0 && (
+            <Suspense>
+              <GCodeWindow gcode={slice.gcode} current={currentLine} />
+            </Suspense>
           )}
         </div>
-        {toolpaths && (
-          <Suspense>
-            <Legend
-              options={options}
-              toolpaths={toolpaths}
-              range={colors?.range ?? null}
-              view={view}
-              onChange={setPreview}
-            />
-          </Suspense>
-        )}
         {toolpaths && toolpaths.layerZs.length > 0 && <LayerSlider zs={toolpaths.layerZs} view={view} />}
         {toolpaths && (
           <Suspense>
             <MovesSlider toolpaths={toolpaths} view={view} onMoves={setMoves} steps={LAYER_STEPS} shown={shown} />
-          </Suspense>
-        )}
-        {slice.status === "done" && gcodeWindow && currentLine !== 0 && (
-          <Suspense>
-            <GCodeWindow gcode={slice.gcode} current={currentLine} />
           </Suspense>
         )}
       </ViewportView>

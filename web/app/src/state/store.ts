@@ -112,6 +112,8 @@ export interface AppState {
   arrangeError?: string;
   /** The latest slice of each plate by index (`PartPlate::m_gcode_result`); `slice` shows the current one. */
   plateSlices: Record<number, SlicedPlate>;
+  /** Each plate's thumbnail (`PartPlate::thumbnail_data`) as a data URL, while there are several plates. */
+  plateThumbnails: readonly string[];
   /** `scene.settings` options decoded for typed fields. */
   typedSettings: TypedSettings | null;
   loadingFile: boolean;
@@ -190,6 +192,7 @@ export const useApp = create<AppState>(() => ({
   arrange: null,
   arranging: false,
   plateSlices: {},
+  plateThumbnails: [],
   typedSettings: null,
   loadingFile: false,
   openingStlSession: false,

@@ -142,6 +142,40 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     )
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
+  // The view cube follows the camera: from the top, its Top face is square to the viewer.
+  const views = shownTab(page).getByTestId("view-toolbar");
+  const cubeTurn = () => views.locator(".view-cube").getAttribute("style");
+  const faceBox = async (face: string) => (await views.locator(`.view-cube-face.${face}`).boundingBox())!;
+  const top = await faceBox("top");
+  expect(Math.abs(top.width - top.height)).toBeLessThan(1);
+  expect(top.width).toBeGreaterThan(40);
+  // Dragging the cube orbits the camera like a canvas drag (GLCanvas3D::on_mouse Dragging,
+  // Camera::rotate_on_sphere) and turns the cube with it; the press on its Top face selects no view.
+  const topFrame = await canvasFingerprint(page);
+  const topTurn = await cubeTurn();
+  const stage = (await views.locator(".view-cube-stage").boundingBox())!;
+  await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(stage.x + stage.width / 2 + 60, stage.y + stage.height / 2 + 40, { steps: 6 });
+  await page.mouse.up();
+  await expect(views.locator("[aria-pressed=true]")).toHaveCount(0);
+  expect(await cubeTurn()).not.toBe(topTurn);
+  await expect
+    .poll(
+      async () =>
+        (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== topFrame,
+    )
+    .toBe(true);
+  // An orbit on the canvas turns the cube too.
+  const draggedTurn = await cubeTurn();
+  const canvasBox = (await viewport.locator("canvas").boundingBox())!;
+  await page.mouse.move(canvasBox.x + canvasBox.width * 0.8, canvasBox.y + canvasBox.height * 0.3);
+  await page.mouse.down();
+  await page.mouse.move(canvasBox.x + canvasBox.width * 0.7, canvasBox.y + canvasBox.height * 0.35, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(cubeTurn).not.toBe(draggedTurn);
+  // The view cube turns its Top face to the viewer; its iso corner turns the Front face back.
+  await page.getByRole("button", { name: "Iso view", exact: true }).click();
   await page.getByRole("button", { name: "Front" }).click();
   await expect(
     shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true }),
@@ -192,10 +226,10 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     });
   }
 
-  // Preview opens fitted to the objects. Viewport.setToolpaths sets data-segment-sizes in the task that requests the
-  // frame drawing the fitted toolpaths (data-drawing, Viewport.render): with both, the canvas holds that frame.
+  // Preview opens fitted to the objects. The toolpaths draw once the moves slider applies the engine's view
+  // (aria-busy off, MovesSlider): that commit requests the frame (data-drawing, Viewport.render).
   await page.getByRole("link", { name: "Preview" }).click();
-  await expect(viewport).toHaveAttribute("data-segment-sizes", { timeout: 60_000 });
+  await expect(shownTab(page).getByTestId("moves-slider")).toHaveAttribute("aria-busy", "false", { timeout: 60_000 });
   await expect(viewport).not.toHaveAttribute("data-drawing", { timeout: 60_000 });
   expect(await modelCoverage(page)).toBeGreaterThan(plateCoverage * 4);
   await page.screenshot({ path: `${artifacts}preview-fit.png` });
