@@ -296,7 +296,8 @@ impl PlaterSession {
             request,
             true,
             GenerationMetadata::default(),
-            crate::status::context(options.seed, report.as_mut()),
+            crate::status::context(options.seed, report.as_mut())
+                .with_render_thumbnails(options.render_thumbnails),
         ))
         .map_err(js_error)?
         .map_err(js_error)?;

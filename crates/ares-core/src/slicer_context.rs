@@ -66,6 +66,7 @@ pub struct SlicerContext<'a> {
     cancel: CancelToken,
     status: Option<&'a mut dyn FnMut(&SlicingStatus<'_>)>,
     thumbnail_images: Vec<ThumbnailData>,
+    pub(crate) render_thumbnails: bool,
     pub(crate) max_triangle_count: i32,
     pub(crate) no_check: bool,
     pub(crate) cli_path_conflict_check: bool,
@@ -85,6 +86,7 @@ impl<'a> SlicerContext<'a> {
             cancel: CancelToken::new(),
             status: None,
             thumbnail_images: Vec::new(),
+            render_thumbnails: false,
             max_triangle_count: 0,
             no_check: false,
             cli_path_conflict_check: false,
@@ -175,6 +177,13 @@ impl<'a> SlicerContext<'a> {
 
     pub(crate) fn skip_modified_gcodes(&self) -> bool {
         self.skip_modified_gcodes
+    }
+
+    /// Render configured thumbnails in core when no caller-supplied frames are present.
+    #[must_use]
+    pub fn with_render_thumbnails(mut self, render_thumbnails: bool) -> Self {
+        self.render_thumbnails = render_thumbnails;
+        self
     }
 
     /// Supplies the image payload of `ThumbnailsGeneratorCallback` for this slice.

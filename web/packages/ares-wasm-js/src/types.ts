@@ -179,6 +179,8 @@ export interface ProfileSliceOptions {
   plate?: number;
   /** Seed of the per-slice random streams (fuzzy skin, templates); the caller chooses it. */
   seed: number;
+  /** Render configured G-code thumbnails for this slice. */
+  render_thumbnails?: boolean;
   /**
    * User edits applied after the selected presets, by option key: a `ConfigOption::serialize()`
    * string from `encodeConfigValues`, or one string per element of a vector option.

@@ -174,13 +174,7 @@ pub(in crate::project_slice) fn emit_to_sink(
         },
         &mut state,
     )?;
-    let tags = preamble::append(
-        &mut output,
-        traversal,
-        &schedule,
-        &export_config,
-        context.thumbnail_images(),
-    )?;
+    let tags = preamble::append(&mut output, traversal, &schedule, &export_config, context)?;
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     object::append_definitions(&mut output, traversal);
     machine::append_first_line_m73(&mut output);

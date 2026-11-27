@@ -1,46 +1,97 @@
-use super::{GCodeThumbnailFormat, ThumbnailData, thumbnail_error_string};
-use crate::SliceError;
+use super::{
+    GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailData, render, thumbnail_error_string,
+};
+use crate::{CancelToken, Project, ProjectSettings, SliceError};
+
+fn definitions(value: &str) -> Result<Vec<GCodeThumbnailDefinition>, SliceError> {
+    crate::options::parse_loaded_thumbnail_definitions(value, None).map_err(|error| {
+        SliceError::InvalidInput(format!(
+            "Invalid thumbnails value:\n - {}",
+            thumbnail_error_string(error)
+        ))
+    })
+}
+
+/// `Thumbnails.hpp:60-64`: render one callback result per configured definition.
+pub(crate) fn append_rendered(
+    output: &mut Vec<u8>,
+    project: &Project,
+    settings: &ProjectSettings,
+    cancel: &CancelToken,
+) -> Result<(), SliceError> {
+    let definitions = definitions(settings.printer.remaining.thumbnails.as_str())?;
+    if definitions.is_empty() {
+        return Ok(());
+    }
+    let Some(scene) = render::Scene::prepare(project, settings, cancel)? else {
+        return Ok(());
+    };
+    let mut first_colpic = true;
+    for (position, definition) in definitions.iter().enumerate() {
+        let width = definition.width.round() as u32;
+        let height = definition.height.round() as u32;
+        if let Some(image) = scene.image([width, height], cancel)? {
+            append_image(
+                output,
+                &image,
+                definition.format,
+                position + 1 == definitions.len(),
+                &mut first_colpic,
+            )?;
+        }
+    }
+    Ok(())
+}
 
 /// `Thumbnails.hpp::export_thumbnails_to_file`, supplied by caller-rendered frames.
 pub(crate) fn append(
     output: &mut Vec<u8>,
-    definitions: &str,
+    value: &str,
     images: &[ThumbnailData],
 ) -> Result<(), SliceError> {
     if images.is_empty() {
         return Ok(());
     }
-    let definitions = crate::options::parse_loaded_thumbnail_definitions(definitions, None)
-        .map_err(|error| {
-            SliceError::InvalidInput(format!(
-                "Invalid thumbnails value:\n - {}",
-                thumbnail_error_string(error)
-            ))
-        })?;
+    let definitions = definitions(value)?;
     let mut first_colpic = true;
     for (position, definition) in definitions.iter().enumerate() {
         for image in images.iter().filter(|image| {
             f64::from(image.width()) == definition.width.trunc()
                 && f64::from(image.height()) == definition.height.trunc()
         }) {
-            match definition.format {
-                GCodeThumbnailFormat::BttTft => {
-                    super::btt::append(image, output, position == definitions.len() - 1);
-                }
-                GCodeThumbnailFormat::Qoi => {
-                    append_base64(output, image, "thumbnail_QOI", &super::qoi::encode(image));
-                }
-                GCodeThumbnailFormat::Png => {
-                    append_base64(output, image, "thumbnail", &super::png::encode(image));
-                }
-                GCodeThumbnailFormat::ColPic => {
-                    super::colpic::append(image, output, first_colpic)?;
-                    first_colpic = false;
-                }
-                GCodeThumbnailFormat::Jpg => {
-                    append_base64(output, image, "thumbnail_JPG", &super::jpg::encode(image));
-                }
-            }
+            append_image(
+                output,
+                image,
+                definition.format,
+                position + 1 == definitions.len(),
+                &mut first_colpic,
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn append_image(
+    output: &mut Vec<u8>,
+    image: &ThumbnailData,
+    format: GCodeThumbnailFormat,
+    last: bool,
+    first_colpic: &mut bool,
+) -> Result<(), SliceError> {
+    match format {
+        GCodeThumbnailFormat::BttTft => super::btt::append(image, output, last),
+        GCodeThumbnailFormat::Qoi => {
+            append_base64(output, image, "thumbnail_QOI", &super::qoi::encode(image))
+        }
+        GCodeThumbnailFormat::Png => {
+            append_base64(output, image, "thumbnail", &super::png::encode(image))
+        }
+        GCodeThumbnailFormat::ColPic => {
+            super::colpic::append(image, output, *first_colpic)?;
+            *first_colpic = false;
+        }
+        GCodeThumbnailFormat::Jpg => {
+            append_base64(output, image, "thumbnail_JPG", &super::jpg::encode(image))
         }
     }
     Ok(())

@@ -54,6 +54,8 @@ pub fn filter_compatible_presets_json(
 pub(crate) struct ProfileSliceOptions {
     pub(crate) plate: Option<u32>,
     pub(crate) seed: u32,
+    #[serde(default)]
+    pub(crate) render_thumbnails: bool,
     /// M854 user edits in the same `{key: token}` shape as
     /// `sliceProjectPlate`'s `overridesJson`; deserialization validates
     /// every entry (shared with `ConfigOverrides::from_json`).
@@ -107,7 +109,7 @@ pub async fn slice_with_profiles_bytes(
         input,
         request,
         GenerationMetadata::default(),
-        SlicerContext::new(options.seed),
+        SlicerContext::new(options.seed).with_render_thumbnails(options.render_thumbnails),
     )
     .await
     .map_err(|error| error.to_string())
@@ -155,7 +157,7 @@ pub async fn slice_with_profiles_processed_bytes(
         input,
         request,
         ares_core::GenerationMetadata::default(),
-        ares_core::SlicerContext::new(options.seed),
+        SlicerContext::new(options.seed).with_render_thumbnails(options.render_thumbnails),
     )
     .await
     .map_err(|error| error.to_string())

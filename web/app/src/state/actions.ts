@@ -224,7 +224,7 @@ async function slicePlates(indices: number[]) {
         result = await plater.sliceWithProfiles(
           await presetCatalog(),
           FROM_PROJECT,
-          { plate, seed: 0, placement: "none", overrides: tokens },
+          { plate, seed: 0, placement: "none", overrides: tokens, render_thumbnails: true },
           onStatus,
         );
       } else {

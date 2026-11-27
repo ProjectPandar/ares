@@ -82,7 +82,8 @@ export async function sliceWithPresets(
   plate?: number,
   onStatus?: (status: SlicingStatus) => void,
 ): Promise<SliceResult> {
-  const { profiles, request } = await profileSliceRequest(scene, selection, overrides, plate);
+  const { profiles, request: options } = await profileSliceRequest(scene, selection, overrides, plate);
+  const request = { ...options, render_thumbnails: true };
   const catalog = await presetCatalog();
   const { plater } = useApp.getState();
   if (file.kind === "stl-batch") return plater!.sliceWithProfiles(catalog, profiles, request, onStatus);
