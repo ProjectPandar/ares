@@ -7,9 +7,15 @@ TOTAL="${2:?missing total}"
 TMP_ROOT="${RUNNER_TEMP:-/tmp}"
 
 mkdir -p "${TMP_ROOT}/web-results" "${TMP_ROOT}/web-timings"
-mapfile -t specs < <(bun scripts/ci/balance-web-shards.mjs select \
-  --web-dir web --project desktop --shard "$SHARD" --total "$TOTAL" \
-  --timings "${TMP_ROOT}/web-timings")
+if [[ $# -eq 3 ]]; then
+  mapfile -t specs < "$3"
+else
+  selected=$(bun scripts/ci/balance-web-shards.mjs select \
+    --web-dir web --project desktop --shard "$SHARD" --total "$TOTAL" \
+    --timings "${TMP_ROOT}/web-timings")
+  mapfile -t specs <<< "$selected"
+fi
+: "${specs[0]:?No desktop specs selected}"
 
 # Anchor each spec path so e.g. slice.spec.ts does not substring-match presetSlice.spec.ts.
 spec_filters=()

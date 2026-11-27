@@ -1,0 +1,37 @@
+name: Run Desktop E2E Shard
+description: Restore timings, select desktop tests, and provision their oracles
+inputs:
+  shard:
+    description: Desktop shard number (1 through 4)
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/restore-web-timings
+    - name: Select desktop tests
+      id: selection
+      shell: bash
+      env:
+        SHARD: ${{ inputs.shard }}
+      run: |
+        specs="$RUNNER_TEMP/web-desktop-specs.txt"
+        bun scripts/ci/balance-web-shards.mjs select --project desktop --shard "$SHARD" --total 4 \
+          --timings "$RUNNER_TEMP/web-timings" > "$specs"
+        if grep -Fxq gcodeThumbnails.spec.ts "$specs"; then
+          echo "moonraker=true" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Cache Moonraker metadata extractors and Pillow
+      if: steps.selection.outputs.moonraker == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ares-moonraker
+        key: moonraker-extractors-v1-4ba6fd228-71f9e677b-${{ runner.os }}
+    - name: Setup Moonraker metadata extractors
+      if: steps.selection.outputs.moonraker == 'true'
+      shell: bash
+      run: bash scripts/ci/setup-moonraker.sh "$HOME/.cache/ares-moonraker" "$GITHUB_ENV"
+    - name: Run selected desktop tests
+      shell: bash
+      env:
+        SHARD: ${{ inputs.shard }}
+      run: bash scripts/ci/run-web-desktop-shard.sh "$SHARD" 4 "$RUNNER_TEMP/web-desktop-specs.txt"
