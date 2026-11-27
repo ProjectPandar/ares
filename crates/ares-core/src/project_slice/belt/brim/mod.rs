@@ -67,7 +67,9 @@ fn generate(
     let options = &traversal.print_object_config(0).0.object;
     let leading = full.process.object.leading_brim_length.0;
     let lateral = full.process.object.extra_brim_width.0;
+    // PrintObject::has_belt_brim excludes the marked mesh independently of purge enable.
     if !(1.0..=85.0).contains(&printer.belt_slice_rotation_angle.0.abs())
+        || options.belt_purge_tower_object.0
         || options.brim_type == ProcessBrimType::NoBrim
         || (options.brim_width.0 <= 0.0
             && (options.brim_type == ProcessBrimType::InnerOnly

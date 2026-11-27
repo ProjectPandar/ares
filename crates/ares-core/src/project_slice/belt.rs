@@ -45,6 +45,7 @@ pub(super) fn admit(
     {
         return Err(unsupported("volumes"));
     }
+    // The admitted single slot cannot activate the planner (BeltPurge.cpp:48–61).
     if resolved.logical_filament_count != 1
         || resolved
             .usage
@@ -60,23 +61,6 @@ pub(super) fn admit(
         || object.object.enforce_support_layers.0 != 0
     {
         return Err(unsupported("support"));
-    }
-    if printer.enable_belt_purge_tower.0
-        || project
-            .documents()
-            .project_settings_raw
-            .get("belt_purge_tower_object")
-            .is_some_and(|value| {
-                use crate::project::raw_settings::RawConfigValue;
-                match value {
-                    RawConfigValue::Text(text) => text == "1",
-                    RawConfigValue::Flag(flag) => *flag,
-                    RawConfigValue::Number(number) => number.as_i64() == Some(1),
-                    _ => false,
-                }
-            })
-    {
-        return Err(unsupported("belt_purge"));
     }
     if settings.process.print.skirt_loops.0 != 0
         || settings.process.print.draft_shield != ProcessDraftShield::Disabled
