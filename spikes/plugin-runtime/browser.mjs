@@ -87,6 +87,10 @@ try {
         ['interpreter', 'rust'], ['interpreter', 'quickjs'], ['interpreter', 'boa'],
         ['browser', 'rust'], ['browser', 'quickjs'], ['browser', 'boa'],
     ];
+    if (process.env.PLUGIN_SPIKE_PORTABLE === 'probe') {
+        await capture({ portableLimits: true }, 'browser-portable-limits.json');
+        if (failed) throw new Error('portable WebAssembly limits did not hold');
+    } else {
     for (const kind of ['staggered', 'subdivision']) {
         for (const [backend, engine] of combinations) {
             await capture({ backend, engine, kind, layers, trials }, `browser-${backend}-${engine}-${kind}.jsonl`);
@@ -103,6 +107,7 @@ try {
         await capture({ files }, 'browser-files-' + files + '.json');
     }
     await capture({ component: true, jco: Boolean(jco) }, 'component-browser.json');
+    }
 } finally {
     await browser?.close();
     server.stop(true);

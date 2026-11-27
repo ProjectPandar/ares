@@ -153,7 +153,27 @@ async function limits() {
     return results;
 }
 
+async function portableLimits() {
+    const module = new WebAssembly.Module(await bytes('limits.wasm'));
+    const { exports } = new WebAssembly.Instance(module);
+    let trapped = false;
+    try {
+        exports.advance(100000);
+    } catch (error) {
+        if (!(error instanceof WebAssembly.RuntimeError)) throw error;
+        trapped = true;
+    }
+    const steps = new DataView(exports.memory.buffer).getInt32(0, true);
+    const atCap = exports.grow(1);
+    const aboveCap = exports.grow(1);
+    if (!trapped || steps !== 71 || atCap !== 1 || aboveCap !== -1) {
+        throw new Error(`expected trap at 71 and two-page cap; got ${[trapped, steps, atCap, aboveCap]}`);
+    }
+    return [Number(trapped), steps, atCap, aboveCap];
+}
+
 async function measure(scenario) {
+    if (scenario.portableLimits) return portableLimits();
     if (scenario.component) return component(scenario);
     if (scenario.limits) return limits();
     if (scenario.files) return storage.measure(await bytes(`files-${scenario.files}.wasm`), scenario.files, TRIALS);
