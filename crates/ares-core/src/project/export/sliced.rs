@@ -97,11 +97,32 @@ pub async fn export_saved_sliced_3mf(
     min_save: bool,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
+    export_saved_sliced(input, filename, min_save, false, context)
+}
+
+/// Direct CLI sliced export checks the saved producer version unless explicitly allowed.
+pub fn export_saved_sliced_3mf_for_cli(
+    input: &[u8],
+    filename: &str,
+    min_save: bool,
+    allow_newer_file: bool,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
+    export_saved_sliced(input, filename, min_save, !allow_newer_file, context)
+}
+
+fn export_saved_sliced(
+    input: &[u8],
+    filename: &str,
+    min_save: bool,
+    check_version: bool,
+    context: SlicerContext<'_>,
+) -> Result<Vec<u8>, SliceError> {
     if input.is_empty() {
         return Err(SliceError::EmptyInput);
     }
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-    let loaded = LoadedProfileProject::open_from_archive(&mut archive, false)?;
+    let loaded = LoadedProfileProject::open_from_archive(&mut archive, check_version)?;
     let first_id = saved_print_object_id(loaded.project())
         .map_err(|detail| SliceError::InvalidInput(detail.into()))?;
     let saved_model = geometry::from_saved_project(archive, loaded.project());

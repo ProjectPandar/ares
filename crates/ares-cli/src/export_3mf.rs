@@ -96,19 +96,20 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
     } else {
         let (input, filename) = &models[0];
         if sliced {
-            ares_core::export_saved_sliced_3mf(
+            ares_core::export_saved_sliced_3mf_for_cli(
                 input,
                 filename,
                 args.min_save,
+                args.allow_newer_file,
                 SlicerContext::new(0),
             )
-            .await
         } else {
             ares_core::export_3mf(input, filename, presets)
         }
     }
     .map_err(|err| match err {
-        ares_core::SliceError::ProcessNotCompatible => crate::failure::slice_error_to_failure(
+        ares_core::SliceError::ProcessNotCompatible
+        | ares_core::SliceError::FileVersionNotSupported => crate::failure::slice_error_to_failure(
             err,
             &output,
             #[cfg(target_os = "linux")]

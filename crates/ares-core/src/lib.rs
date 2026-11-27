@@ -146,7 +146,8 @@ pub use project::{
 };
 pub use project::{
     StlExport, export_3mf, export_arranged_sliced_3mf, export_imported_stl_3mf, export_project_3mf,
-    export_saved_sliced_3mf, export_sliced_3mf, export_stl, export_stls, print_object_id,
+    export_saved_sliced_3mf, export_saved_sliced_3mf_for_cli, export_sliced_3mf, export_stl,
+    export_stls, print_object_id,
 };
 pub use project_slice::{
     CliPlateFailure, CliPlateFailureKind, CliPlatesRequest, CliPlatesSettings,
