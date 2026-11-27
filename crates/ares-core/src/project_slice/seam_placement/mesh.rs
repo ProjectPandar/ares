@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
-use crate::{Point3d, ProjectObject, ProjectVolumeType, geometry::CoordinateScale};
+use crate::{Point3d, ProjectObject, ProjectVolumeType, Transform3d, geometry::CoordinateScale};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(super) struct Vec3 {
@@ -148,11 +148,7 @@ pub(super) struct TriangleMesh {
     pub(super) negative_start: usize,
 }
 
-/// `SeamPlacer.cpp:630` — the occlusion mesh is transformed by
-/// `PrintObject::trafo_centered()` = instance transform with zeroed XY
-/// translation (`PrintApply.cpp` zeroes `trafo` XY, moving it to `shift`)
-/// pretranslated by `-center_offset`. The group center follows
-/// `PrintObject.cpp:97-110`, including the source/group rotation difference.
+/// `PrintObject::trafo_centered()`: the object transform without the instance XY shift.
 pub(super) fn centered_transform(
     object: &ProjectObject,
     group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
@@ -171,12 +167,7 @@ pub(super) fn centered_transform(
 }
 
 impl TriangleMesh {
-    pub(super) fn from_object(
-        object: &ProjectObject,
-        group: &crate::project::effective_config::types::ResolvedPrintObjectConfig,
-        scale: CoordinateScale,
-    ) -> Self {
-        let object_transform = centered_transform(object, group, scale);
+    pub(super) fn from_object(object: &ProjectObject, object_transform: Transform3d) -> Self {
         let mut mesh = super::short_edge_collapse::IndexedMesh {
             vertices: Vec::new(),
             indices: Vec::new(),
