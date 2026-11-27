@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/volumes.rs"]
+mod volumes;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -196,6 +198,10 @@ fn run_ares(work: &Path) -> Output {
 }
 
 fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
+    compare_project(name, project(belt, shift, edits, false));
+}
+
+fn compare_project(name: &str, project: Vec<u8>) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("belt coordinates require Native OrcaSlicer");
         return;
@@ -203,7 +209,7 @@ fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
     let work = runner.work_dir().join(name);
     let out = work.join("out");
     fs::create_dir_all(&out).unwrap();
-    fs::write(work.join("input.3mf"), project(belt, shift, edits, false)).unwrap();
+    fs::write(work.join("input.3mf"), project).unwrap();
     stages::run(
         runner.bin(),
         ARGS.map(str::to_owned),
