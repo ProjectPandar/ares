@@ -96,9 +96,9 @@ pub(super) fn apply(
                     "filament preset has an empty {key} vector"
                 )));
             }
-            let mut values = match result.get(key) {
-                Some(value) => vector(value),
-                None => vector(&keys::default_value(key)?.unwrap()),
+            let mut values = match result.get(key).map(vector) {
+                Some(values) if !values.is_empty() => values,
+                _ => vector(&keys::default_value(key)?.unwrap()),
             };
             let first = source[0].clone();
             if values.len() <= slot {
