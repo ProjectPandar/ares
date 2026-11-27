@@ -61,6 +61,7 @@
     inset: -8px -20px;
   }
   .process-tab {
+    min-width: 44px;
     min-height: 44px;
   }
   .object-row.plate-row {
