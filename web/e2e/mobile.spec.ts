@@ -145,7 +145,12 @@ async function mainFlow(page: Page, input: Input, directory: string) {
   await shot("2-imported");
 
   await settings(true);
-  if (touch) await expectFits(page, [button("Printer preset"), button("Process preset")]);
+  if (touch) {
+    await expectFits(page, [button("Printer preset")]);
+    // The phone drawer scrolls, so Process can start below its visible area.
+    if (drawer) await button("Process preset").scrollIntoViewIfNeeded();
+    await expectFits(page, [button("Process preset")]);
+  }
   await targets("sidebar");
   await act(input, button("Printer preset"));
   await targets("preset list");

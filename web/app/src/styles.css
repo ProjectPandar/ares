@@ -9,8 +9,8 @@
 @import "./styles/viewCube.css";
 @import "./styles/preview.css";
 @import "./styles/mobile.css";
-@import "./styles/touch.css";
 @import "./styles/compact.css";
+@import "./styles/touch.css";
 @import "./styles/compactPreview.css";
 @import "./styles/previewLegend.css";
 @import "./styles/dialogs.css";

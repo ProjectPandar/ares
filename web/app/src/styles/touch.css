@@ -63,7 +63,7 @@
   .process-tab {
     min-height: 44px;
   }
-  .plate-row {
+  .object-row.plate-row {
     min-height: 44px;
   }
   .plate-arrange,

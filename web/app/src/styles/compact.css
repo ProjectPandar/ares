@@ -267,7 +267,7 @@
   padding-block: 0;
 }
 
-@media (width > 1024px), (width > 640px) and (pointer: fine) {
+@media (width > 640px) and (pointer: fine) {
   .plate-row :is(.plate-arrange, .plate-lock, .plate-delete) {
     inline-size: var(--plate-row-height);
     block-size: var(--plate-row-height);

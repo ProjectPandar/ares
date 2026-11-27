@@ -179,6 +179,9 @@ test("plates render on the grid, slice one at a time or all, and follow add and 
     );
   expect(tree).toEqual(["Plate 1", "on plate", "Plate 2", "Plate 3", "Plate 4", "Outside", "on plate"]);
   await page.screenshot({ path: `${artifacts}after-delete.png` });
+  await expect(action(page, "Slice all")).toBeVisible();
+  await action(page, "Slicing options").click();
+  await page.getByRole("menuitemradio", { name: "Slice plate", exact: true }).click();
   const moved = await slice(page, "two-plates_plate_1.gcode");
   const oracle = `${artifacts}after-delete.3mf`;
   writeFileSync(
