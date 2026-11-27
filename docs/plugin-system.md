@@ -34,8 +34,10 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
   sample plugins, kept in this repository under `plugins/` with the plugin SDK.
 - 2026-11-28: plugins declare their own options; selection and option values
   are saved in the project (3MF) through the upstream plugin keys. Hosted
-  plugins are embedded in the 3MF and run only after the user trusts their
-  content hash (ARD-0112 decisions 8 and 9).
+  plugins are embedded in the 3MF (ARD-0112 decisions 8 and 9).
+- 2026-11-28: no trust prompt for embedded plugins: they run only inside
+  slicing steps and always sandboxed. Plugin G-code output is not policed,
+  like custom G-code in a project.
 - 2026-11-28: hosted plugins run sandboxed: no network for now, no real
   filesystem; file access is limited to a per-plugin virtual root with a
   read-only `/package` and a quota-limited private `/data` (ARD-0112
@@ -79,10 +81,10 @@ mitigations:
 | --- | --- |
 | Sandbox escape | WASM through a memory-safe engine; JS on a memory-safe engine or inside WASM; no imports except the host's data functions and its virtual file API |
 | Filesystem access | Only the plugin's own virtual root: read-only `/package`, private `/data` with quotas; absolute paths, `..` and links rejected |
-| Runs on open | Never runs before the user trusts its content hash; CLI needs an explicit trust argument and fails instead of slicing without it |
+| Runs on open | Plugins run only inside slicing steps, always sandboxed; no trust prompt |
 | Hang or memory exhaustion | Deterministic fuel budget and memory cap |
 | Data leaks | No network or clock; files only inside the plugin's root; hooks get slicing data only, no paths, user or machine identity |
-| Harmful G-code (heaters, limits, firmware or EEPROM commands) | Same exposure as custom G-code already stored in project configs; raw G-code permission is declared and shown before trust; extrusion edits are validated by core |
+| Harmful G-code | Not policed; same as custom G-code already stored in project configs |
 | Tampering or version drift | Content hash pinned in the project; a mismatch is reported, never substituted |
 
 OrcaSlicer keeps the plugin keys but drops unknown 3MF parts when it re-saves a
@@ -90,8 +92,7 @@ project, so the embedded code does not survive a round trip through it.
 
 Open: per-object plugin options (for example enabling outer wall subdivision
 on one object only) have no upstream storage; decide with the first plugin
-that needs them. Publisher signatures are optional extra trust signals, not a
-replacement for the hash prompt.
+that needs them. 
 
 ## Hook catalog
 

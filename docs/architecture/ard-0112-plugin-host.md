@@ -80,22 +80,17 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
 9. **Hosted plugins travel inside the 3MF.** Saving a project that uses WASM
    or JS plugins embeds their code, so the project slices the same anywhere.
    The project also records each plugin's capability reference, version and
-   content hash. Embedded code is untrusted input:
-   - it never runs until the user trusts that exact content hash; the CLI
-     refuses such a project unless the hash is trusted explicitly, and never
-     slices it without the plugin silently;
-   - it runs only through `ares-plugin-host` in the sandbox of decision 4,
-     with its file access limited to its own root (decision 10), and receives
-     no user paths, names or machine identity;
-   - execution is bounded by a deterministic fuel budget and a memory cap, so
-     a runaway plugin fails the same way on every platform;
-   - JS runs on a memory-safe engine or inside the WASM sandbox, never on an
-     unsandboxed C engine;
-   - a plugin declares the hooks it uses and whether it writes raw G-code text;
-     undeclared hooks are never called, and raw G-code permission is shown
-     before trust is granted.
-   Native Rust plugins cannot be embedded; a project that needs one records
-   only its reference and version.
+   content hash; a mismatch is reported and never replaced by another build.
+   Plugins run only inside slicing steps, never when a project is opened, and
+   always in the sandbox of decisions 4 and 10, so an embedded plugin runs
+   without a separate trust prompt. Execution is bounded by a deterministic
+   fuel budget and a memory cap, so a runaway plugin fails the same way on
+   every platform. JS runs on a memory-safe engine or inside the WASM sandbox,
+   never on an unsandboxed C engine. A plugin declares the hooks it uses;
+   undeclared hooks are never called. The G-code a plugin produces is not
+   policed; it is treated like custom G-code in a project. Native Rust plugins
+   cannot be embedded; a project that needs one records only its reference
+   and version.
 
 10. **Plugin file sandbox.** Each plugin sees one virtual root and nothing
     outside it; `ares-plugin-host` resolves every path inside it and rejects
