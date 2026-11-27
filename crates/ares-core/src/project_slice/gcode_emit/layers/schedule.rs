@@ -237,7 +237,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
             .windows(2)
             .filter(|pair| (pair[1] - pair[0]).abs() >= EPSILON)
             .count();
-    for object_index in 0..object_count {
+    for object_index in (0..object_count).filter(|_| !belt_printer) {
         let first = &merged
             .iter()
             .find(|(_, entry)| entry.object_index == object_index)
@@ -260,12 +260,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
                 .iter()
                 .any(|island| !island.entities.is_empty())
         });
-        if !object_extrusions
-            && !support_extrusions
-            && !raft_extrusions
-            && first.belt_prologue.is_none()
-            && !belt_printer
-        {
+        if !object_extrusions && !support_extrusions && !raft_extrusions {
             return Err(crate::SliceError::InvalidInput(
                 "one object has an empty first layer and cannot be printed".into(),
             ));

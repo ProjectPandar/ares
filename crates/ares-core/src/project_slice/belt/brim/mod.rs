@@ -6,7 +6,7 @@ mod geometry;
 use self::geometry::Frame;
 use super::floor_context::BeltFloorContext;
 use crate::{
-    ProcessBrimType, SliceError,
+    ObjectOptions, ProcessBrimType, ProjectSettings, SliceError,
     geometry::{
         BoundingBox, CoordinateScale, ExPolygon, Polyline, intersection_ex_polygons,
         union_expolygons,
@@ -42,14 +42,15 @@ impl BeltBrimPlan {
     pub(in crate::project_slice) fn generate(
         traversal: &PreparedPostClassicTraversal,
     ) -> Result<Option<Self>, SliceError> {
-        if !traversal
-            .resolved
-            .views
-            .full
-            .printer
-            .remaining
-            .belt_printer
-            .0
+        if traversal.objects.len() != 1
+            || !traversal
+                .resolved
+                .views
+                .full
+                .printer
+                .remaining
+                .belt_printer
+                .0
         {
             return Ok(None);
         }
@@ -58,7 +59,7 @@ impl BeltBrimPlan {
     }
 }
 
-pub(super) fn enabled(settings: &crate::ProjectSettings, options: &crate::ObjectOptions) -> bool {
+pub(super) fn enabled(settings: &ProjectSettings, options: &ObjectOptions) -> bool {
     let angle = settings.printer.remaining.belt_slice_rotation_angle.0;
     let leading = settings.process.object.leading_brim_length.0;
     let lateral = settings.process.object.extra_brim_width.0;

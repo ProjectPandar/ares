@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     ValidatedMaterializedProject,
-    candidates::{resolve_project_candidates, resolve_project_objects},
+    candidates::{resolve_project_candidates, resolve_project_objects, z_shrinkage_compensation},
     grouping::{GroupedPrintObjects, group_print_object_transforms},
     types::{BoundedProjectUsage, BoundedResolvedProjectConfig, ResolvedProjectObject},
     usage::{ProjectUsageSources, collect_bounded_project_usage},
@@ -83,7 +83,13 @@ fn resolve_with_observer(
     )?;
     first = materialized;
     let first_validated = validate_materialized_project(&first, project)?;
-    let grouped = group_print_object_transforms(project.objects());
+    let belt_shrinkage = first
+        .printer
+        .remaining
+        .belt_printer
+        .0
+        .then(|| z_shrinkage_compensation(&first, first_validated.logical_filament_count));
+    let grouped = group_print_object_transforms(project.objects(), belt_shrinkage);
     observer.validate_and_group(MaterializationPass::First, &grouped);
 
     let first_shells = resolve_project_objects(

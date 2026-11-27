@@ -1,17 +1,4 @@
-use crate::{
-    ProjectObject, ProjectVolumeType, SliceError,
-    project::effective_config::types::ResolvedProjectObject,
-};
-
-pub(super) fn participating_object_heights(
-    source_objects: &[ProjectObject],
-    resolved_objects: &[ResolvedProjectObject],
-) -> Result<Vec<f64>, SliceError> {
-    resolved_objects
-        .iter()
-        .map(|resolved| object_height(&source_objects[resolved.source_object_index]))
-        .collect()
-}
+use crate::{ProjectObject, ProjectVolumeType, SliceError};
 
 pub(super) fn object_height(object: &ProjectObject) -> Result<f64, SliceError> {
     let instance_transform = object.instances()[0].transform();

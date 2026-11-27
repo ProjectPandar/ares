@@ -9,7 +9,12 @@ pub(in crate::project_slice::gcode_emit::layers) fn prepare(
     support: &[Vec<InstalledSupportLayer>],
     state: &mut motion::EmitState,
 ) -> Option<bool> {
-    let entry = entries.first()?;
+    // GCode.cpp:6611–6644 prefers the first object layer to a support layer.
+    let entry = entries
+        .iter()
+        .filter(|entry| entry.object_layer.is_some())
+        .min_by_key(|entry| entry.object_index)
+        .or_else(|| entries.first())?;
     let object = &traversal.objects[entry.object_index];
     let object_z = entry
         .object_layer

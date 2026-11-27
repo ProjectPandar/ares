@@ -205,6 +205,8 @@ pub(super) fn emit(
     // entry's values in place.
     let object_layer_state = entry.object_layer.inspect(|&layer_index| {
         let physical_layer = &traversal.objects[object_index].physical_layers()[layer_index];
+        state.belt_bands =
+            super::boundary::belt::bands(traversal, object_index, physical_layer.print_z);
         state.layer_index = physical_layer.id;
         state.active_layer_print_z = physical_layer.print_z;
         state.on_first_layer =
