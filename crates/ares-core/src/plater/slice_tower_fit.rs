@@ -1,4 +1,4 @@
-//! The prime tower fit of a plain slice (`OrcaSlicer.cpp:6480-6509` at v2.5.0-beta `345efec64`):
+//! The prime tower fit of a plain slice (`OrcaSlicer.cpp:6480–6512`, `CLI::run`):
 //! the plate's stored position passes through `estimate_wipe_tower_polygon` before anything is
 //! sliced. See `docs/architecture/slice-wipe-tower-fit-spec.md`.
 
@@ -18,11 +18,11 @@ pub(crate) fn fit_slice_wipe_tower(
     project: Project,
     plate: Option<u32>,
 ) -> Result<Project, SliceError> {
-    // Belt printers are deferred (no `belt_printer` key).
-    if !project.settings().process.print.enable_prime_tower.0 {
+    let settings = project.settings();
+    if settings.printer.remaining.belt_printer.0 || !settings.process.print.enable_prime_tower.0 {
         return Ok(project);
     }
-    let config = DynamicPrintConfig::new(project.settings())?;
+    let config = DynamicPrintConfig::new(settings)?;
     let plate = plate.unwrap_or_else(|| project.first_plate_id());
     // `select_plate` reports a plate the project does not have.
     let Some(index) = project.plates().iter().position(|p| p.id() == plate) else {

@@ -70,6 +70,7 @@ macro_rules! object_option_fields {
             support_ironing_spacing => "support_ironing_spacing": OrcaFloat = OrcaFloat(0.1),
             xy_hole_compensation => "xy_hole_compensation": OrcaFloat = OrcaFloat(0.0),
             xy_contour_compensation => "xy_contour_compensation": OrcaFloat = OrcaFloat(0.0),
+            belt_purge_tower_object => "belt_purge_tower_object": OrcaBool = OrcaBool(false),
             flush_into_objects => "flush_into_objects": OrcaBool = OrcaBool(false),
             flush_into_infill => "flush_into_infill": OrcaBool = OrcaBool(false),
             flush_into_support => "flush_into_support": OrcaBool = OrcaBool(true),

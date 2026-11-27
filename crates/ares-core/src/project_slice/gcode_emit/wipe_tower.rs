@@ -58,12 +58,10 @@ pub(super) fn requested(
     settings: &crate::ProjectSettings,
     bbl: bool,
 ) -> Option<crate::WipeTowerType> {
-    let print = &settings.process.print;
-    let enabled = print.enable_prime_tower.0
-        && ((settings.process.gcode.enable_wrapping_detection.0
-            && settings.printer.gcode.wrapping_exclude_area.0.len() > 2)
-            || print.timelapse_type == crate::ProcessTimelapseType::Smooth
-            || (!print.spiral_mode.0 && settings.filament.gcode.filament_diameter.0.len() > 1));
+    let enabled = crate::project::effective_config::usage::has_wipe_tower(
+        settings,
+        settings.filament.gcode.filament_diameter.0.len(),
+    );
     enabled.then_some(if bbl {
         crate::WipeTowerType::Type1
     } else {

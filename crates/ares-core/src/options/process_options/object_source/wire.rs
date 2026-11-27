@@ -7,7 +7,8 @@ impl Serialize for ProcessObjectSourceOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(130))?;
+        let mut map = serializer.serialize_map(Some(131))?;
+        map.serialize_entry("belt_purge_tower_object", &self.belt_purge_tower_object)?;
         map.serialize_entry("bridge_acceleration", &self.bridge_acceleration)?;
         map.serialize_entry("bridge_no_support", &self.bridge_no_support)?;
         map.serialize_entry(
