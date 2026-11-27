@@ -8,17 +8,23 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 | Phase | Scope | State |
 | --- | --- | --- |
 | P0 | ARD-0112 and rewrite rule amendment (done); runtime spike | in progress |
-| P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) and the WASM host | not started |
+| P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) as the public core interface; `ares-plugin-host` with WASM/JS loading and hot reload | not started |
 | P2 | Perimeter extension: inset index, per-path Z, height, flow multiplier, order, path duplication | not started |
 | P1b | Hook catalog: every step and G-code stage, data passed, add/remove/modify edits, downstream recomputation | in progress |
 | P3 | Official samples in `plugins/`: SDK, staggered perimeters, subdivided outer walls (stage 1) | not started |
-| P4 | JS runtime plugin, hot reload in CLI and browser | not started |
+| P4 | Hot reload in CLI and browser; JS versions of the samples | not started |
 
 ## Decision log
 
 - 2026-11-28: the host loads only WebAssembly modules. Ares maintains one
   plugin interface. JavaScript is an optional authoring path through a JS
   runtime plugin that implements the same interface.
+- 2026-11-28 (supersedes the previous entry): `ares-core` exposes the one
+  public Rust plugin interface. Rust plugins may implement it directly and be
+  compiled in (native speed, no hot reload). A dedicated `ares-plugin-host` crate
+  loads WebAssembly and JavaScript plugins, adapts them to the core interface
+  and owns hot reload. Rust and JavaScript are both official authoring paths;
+  each sample exists in both.
 - 2026-11-28: hot reload is required; plugin identity is a content hash that
   feeds step invalidation.
 - 2026-11-28: plugin modules are exempt from the rewrite rule in `AGENTS.md`;
@@ -37,14 +43,15 @@ not assumptions. Throwaway branch; nothing from it lands directly.
 
 Questions:
 
-1. Engine placement: pure-Rust interpreter inside core on all platforms, or
-   native runtime in the CLI plus the browser's WebAssembly in the web build.
+1. WASM engine inside `ares-plugin-host`: a pure-Rust interpreter on all
+   platforms, or a native runtime plus the browser's WebAssembly in the web
+   build. Compare against a native Rust plugin implementing the core interface.
    Build on Linux, Windows, macOS and `wasm32-unknown-unknown`.
 2. Interface encoding: plain core module with a byte-buffer call and one
    serialized schema, or the component model. Hot reload in the browser is a
    hard requirement.
-3. JS engine inside the runtime plugin: QuickJS (C, built for a WASM target)
-   or Boa (pure Rust).
+3. JS engine: QuickJS or Boa, embedded directly in `ares-plugin-host` or run
+   inside a WASM module; the same engine build on every platform.
 4. Cost: per-layer hook time for a perimeter-attribute plugin written in Rust
    and in JS on a synthetic model; module load and reload latency.
 5. Determinism: the same plugin and input give identical output bytes on

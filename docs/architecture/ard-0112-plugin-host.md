@@ -26,31 +26,30 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
 
 ## Decisions
 
-1. **One plugin interface.** The only plugin contract is a versioned
-   WebAssembly module interface, defined once (message types in one crate)
-   and projected into a Rust SDK and TypeScript declarations. There is no
-   second compiled-in or native plugin interface; first-party plugins ship as
-   `.wasm` like any other.
-2. **The host only loads WebAssembly.** JavaScript plugins run through a JS
-   runtime plugin: a WASM module that embeds a JS engine, implements the same
-   interface and forwards calls to JS sources. Every platform runs the same
-   engine binary, so a JS plugin produces identical bytes on native and in the
-   browser.
-3. **`ares-core` stays platform-neutral.** Core owns the step enum, the
-   activation and recompute-only firing rules, and the host trait. The WASM
-   engine is either a pure-Rust interpreter usable from core on all four
-   platforms, or adapter-owned (native runtime in `ares-cli`, the browser's
-   WebAssembly in `ares-wasm`); the spike in [plugin-system.md](../plugin-system.md)
-   selects one. Core never reads plugin files.
+1. **One plugin interface, in core.** `ares-core` exposes one public Rust
+   plugin interface: the step enum, the data each hook receives and the edits it
+   may return. It is the only contract Ares maintains; every other form is an
+   adapter onto it.
+2. **Native Rust plugins.** A Rust plugin can implement the core interface
+   directly and be compiled into the application. It runs at native speed on
+   every platform, including the browser build, but has no hot reload.
+3. **Plugin host crate.** A dedicated crate (`ares-plugin-host`) loads WebAssembly
+   and JavaScript plugins, adapts them to the core interface, and owns hot
+   reload. The WASM call encoding and the JS object model are projections of
+   the core types maintained only there. The same JS engine runs on every
+   platform, so a JS plugin produces identical bytes on native and in the
+   browser. `ares-core` stays platform-neutral, never reads plugin files and has
+   no WASM or JS dependency; the CLI and browser adapters attach the host.
 4. **Deterministic plugins.** Plugins get no clock, randomness, threads,
    filesystem or network. Each hook is a pure function of the data the host
    passes for one layer or object; hooks run in the order of
    `slicing_pipeline_plugin`. NaN payloads returned by a plugin are
    canonicalized. Output must not depend on core count.
-5. **Hot reload.** A plugin's identity is the hash of its module bytes (and, for
-   JS, its sources). The identity is part of the configuration compared by the
+5. **Hot reload.** For hosted plugins, identity is the hash of the module
+   bytes or JS sources. The identity is part of the configuration compared by the
    PrintApply invalidation, so replacing a plugin recomputes from its first
-   hooked step and keeps earlier steps. File watching belongs to the adapter.
+   hooked step and keeps earlier steps. File watching and reloading belong to
+   `ares-plugin-host`.
 6. **No plugin, no change.** With no host attached or an empty
    `slicing_pipeline_plugin`, output is byte-identical to the current code and
    every parity suite is unchanged. Output produced with plugins carries no

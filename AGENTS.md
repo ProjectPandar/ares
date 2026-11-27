@@ -20,6 +20,7 @@ Active workspace members:
 - `crates/ares-wasm`: Browser WASM adapter crate. It owns wasm-bindgen byte-oriented bindings around `ares-core` and rendering-neutral data exposure, but must not contain filesystem access, terminal behavior, OpenGL/viewer runtime, or independent slicing pipeline logic.
 
 Candidate crates are not workspace members until a milestone creates them:
+- `crates/ares-plugin-host`: Loads WebAssembly and JavaScript plugins, adapts them to the public `ares-core` plugin interface and owns hot reload ([ARD-0112](docs/architecture/ard-0112-plugin-host.md)).
 - Optional geometry/config split crates: Create only if `ares-core` module size, compile boundaries, or reuse pressure makes extraction simpler than keeping modules inside core.
 
 Do not add candidate crates to `Cargo.toml` or this active list before the milestone that creates them.
