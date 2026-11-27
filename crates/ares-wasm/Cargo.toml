@@ -16,6 +16,9 @@ serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = { workspace = true }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+plugin-spike-host = { path = "../../spikes/plugin-runtime/host", default-features = false, optional = true }
+
 [dev-dependencies]
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 tokio = { workspace = true }
@@ -25,3 +28,8 @@ tempfile = { workspace = true }
 # Exports panicProbe(), which the plater session's sliceWithProfilesProcessed calls first: the
 # deterministic panic of the web E2E probe wasm. The shipped wasm is built without it.
 panic-probe = []
+spike-plugin-interpreter = ["plugin-spike-host/interpreter"]
+spike-plugin-compiled-rust = ["dep:plugin-spike-host"]
+spike-plugin-quickjs = ["plugin-spike-host/direct-quickjs"]
+spike-plugin-boa = ["plugin-spike-host/direct-boa"]
+spike-plugin-files = ["spike-plugin-interpreter", "plugin-spike-host/files"]

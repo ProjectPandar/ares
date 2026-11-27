@@ -1,0 +1,19 @@
+[package]
+name = "plugin-spike-js"
+version = "0.0.0"
+edition = "2024"
+
+[features]
+boa = ["dep:boa_engine"]
+quickjs = ["dep:rquickjs"]
+
+[dependencies]
+plugin-spike-wire = { path = "../wire" }
+libm = { version = "=0.2.16", default-features = false, features = ["force-soft-floats"] }
+rquickjs = { version = "=0.14.0", optional = true, features = ["array-buffer"] }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies]
+boa_engine = { version = "=0.22.0", optional = true, default-features = false }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+boa_engine = { version = "=0.22.0", optional = true, default-features = false, features = ["js"] }

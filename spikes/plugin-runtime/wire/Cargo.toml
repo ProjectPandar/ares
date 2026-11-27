@@ -1,0 +1,8 @@
+[package]
+name = "plugin-spike-wire"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+bytemuck = "1.25"
+plugin-spike-api = { path = "../api" }

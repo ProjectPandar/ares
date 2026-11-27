@@ -1,0 +1,10 @@
+[package]
+name = "plugin-spike-files-guest"
+version = "0.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+wasi = []

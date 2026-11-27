@@ -15,6 +15,19 @@ mod profiles;
 mod raw_moves;
 mod role_times;
 mod scene;
+#[cfg(all(
+    target_arch = "wasm32",
+    any(
+        feature = "spike-plugin-compiled-rust",
+        feature = "spike-plugin-quickjs",
+        feature = "spike-plugin-boa"
+    )
+))]
+mod spike_direct;
+#[cfg(all(target_arch = "wasm32", feature = "spike-plugin-files"))]
+mod spike_files;
+#[cfg(all(target_arch = "wasm32", feature = "spike-plugin-interpreter"))]
+mod spike_plugin;
 mod status;
 
 pub use colors::{option_colors, role_colors, view_types};

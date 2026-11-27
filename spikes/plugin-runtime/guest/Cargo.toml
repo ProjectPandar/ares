@@ -1,0 +1,19 @@
+[package]
+name = "plugin-spike-guest"
+version = "0.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+alternate = []
+subdivide = []
+boa = ["dep:plugin-spike-js", "plugin-spike-js/boa"]
+quickjs = ["dep:plugin-spike-js", "plugin-spike-js/quickjs"]
+
+[dependencies]
+plugin-spike-api = { path = "../api" }
+plugin-spike-samples = { path = "../samples" }
+plugin-spike-wire = { path = "../wire" }
+plugin-spike-js = { path = "../js", optional = true }
