@@ -6,6 +6,7 @@ on:
     types: [checks_requested]
 
 permissions:
+  actions: read
   contents: read
   packages: read
   pull-requests: read
@@ -42,7 +43,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash scripts/ci/check-merge-group-reuse.sh --workflow tier1 --base "${{ github.event.merge_group.base_sha }}" --github-output "$GITHUB_OUTPUT"
-
   fast-checks:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
@@ -69,7 +69,6 @@ jobs:
           key: ares-wasm-pkg-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', 'crates/ares-core/**', 'crates/ares-vgcode/**', 'crates/ares-wasm/**', 'vendor/**', 'web/packages/ares-wasm-js/scripts/build-wasm.mjs') }}
       - name: Run merged fast checks with strict latency budgets
         run: ARES_PROFILE_TEST_ARTIFACTS="$RUNNER_TEMP/profile-tests" bash scripts/ci/run-fast-checks.sh
-
   rust-wasm-check:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
@@ -94,7 +93,6 @@ jobs:
       - name: Check wasm32 targets
         if: steps.select.outputs.run_rust_wasm == 'true'
         run: cargo check --target wasm32-unknown-unknown -p ares-core -p ares-wasm
-
   rust-clippy:
     needs: merge-scope
     if: "!cancelled() && (github.event_name != 'merge_group' || (needs.merge-scope.result == 'success' && needs.merge-scope.outputs.reuse_pr_checks != 'true'))"
@@ -238,6 +236,8 @@ jobs:
         with:
           filter: blob:none
           persist-credentials: false
+      - uses: ./.github/actions/restore-web-build-artifact
+        id: web-artifact
       - name: Resolve pinned CI browser container image
         id: toolchain
         run: bash scripts/ci/toolchain-image.sh verify-pins && echo "browsers_image=$(bash scripts/ci/toolchain-image.sh ref browsers)" >> "$GITHUB_OUTPUT"
@@ -254,15 +254,16 @@ jobs:
           shared-key: "pages-wasm"
       - uses: ./.github/actions/setup-web-deps
       - uses: ./.github/actions/cache-web-wasm
+        if: github.event_name != 'merge_group'
         id: web-wasm
       - uses: taiki-e/install-action@wasm-bindgen-cli
-        if: steps.web-wasm.outputs.wasm-hit != 'true' || steps.web-wasm.outputs.panic-probe-hit != 'true'
+        if: (github.event_name == 'merge_group' && (steps.web-artifact.outputs.wasm-hit != 'true' || steps.web-artifact.outputs.panic-probe-hit != 'true')) || (github.event_name != 'merge_group' && (steps.web-wasm.outputs.wasm-hit != 'true' || steps.web-wasm.outputs.panic-probe-hit != 'true'))
         with:
           tool: wasm-bindgen-cli@0.2.121
       - name: Build CLI, WASM, web app, verify metadata, and pack bundle
         env:
-          WASM_CACHE_HIT: ${{ steps.web-wasm.outputs.wasm-hit }}
-          PANIC_PROBE_CACHE_HIT: ${{ steps.web-wasm.outputs.panic-probe-hit }}
+          WASM_CACHE_HIT: ${{ github.event_name == 'merge_group' && steps.web-artifact.outputs.wasm-hit || steps.web-wasm.outputs.wasm-hit }}
+          PANIC_PROBE_CACHE_HIT: ${{ github.event_name == 'merge_group' && steps.web-artifact.outputs.panic-probe-hit || steps.web-wasm.outputs.panic-probe-hit }}
         run: bash scripts/ci/run-web-build.sh && bun scripts/ci/balance-web-shards.mjs verify --web-dir web --project desktop --total 4
       - uses: actions/cache/save@v4
         with:

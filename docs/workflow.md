@@ -260,8 +260,11 @@ dependencies):
    `wasm32` check, web `fmt:check`/`lint`/`typecheck`/`test:unit`) on the stacked tip and pushes
    the release PR branch.
 3. COORD audits the complete PR commit range (authors, zero `Co-Authored-By:` trailers, hygiene,
-   LOC `<= 400`), opens the release PR targeting `main`, and enqueues it via
-   `gh pr merge <pr> --auto --rebase`.
+   LOC `<= 400`), opens the release PR targeting `main`, and waits for the
+   tree-addressed web-build producer check on the PR head to be green before
+   enqueueing it via `gh pr merge <pr> --auto --rebase`. An in-progress producer
+   is not sufficient; this ordering rule does not change repository rulesets or
+   required checks.
 4. GitHub Merge Queue runs the full 29-job suite and lands the release atomically onto `main`.
    Optional local machine verification (`$COORD_DIR/bin/batch/` against local Nix oracles) may be
    used for heavy local profiling or bisecting, but never replaces the mandatory Merge Queue gate.
