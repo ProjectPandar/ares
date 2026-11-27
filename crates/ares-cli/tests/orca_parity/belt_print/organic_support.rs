@@ -8,7 +8,7 @@ use std::{
 };
 use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-const CANTILEVER: &[u8] =
+pub(super) const CANTILEVER: &[u8] =
     include_bytes!("../../../../../tests/parity/belt-tree-support/organic-cantilever.3mf");
 
 #[tokio::test]
@@ -25,7 +25,7 @@ async fn raising_the_belt_floor_changes_organic_support_motion() {
     let Some(runner) = reference() else { return };
     let root = runner.work_dir();
     let work = root.join("organic-raised-floor");
-    let raised = project(&[("belt_support_floor_offset", "1")], false);
+    let raised = project(CANTILEVER, &[("belt_support_floor_offset", "1")], false);
     let native = native_slice(&runner, &work, &raised);
     let zero = native_slice(&runner, &root.join("organic-floor-zero"), CANTILEVER);
     let (raised_moves, zero_moves) = (support_moves(&native), support_moves(&zero));
@@ -45,6 +45,7 @@ async fn default_tree_style_prints_organic_branches_on_a_y_tilted_belt() {
     let Some(runner) = reference() else { return };
     let work = runner.work_dir().join("organic-belt-y-default");
     let model = project(
+        CANTILEVER,
         &[
             ("support_style", "default"),
             ("belt_slice_rotation", "y"),
@@ -60,34 +61,47 @@ async fn default_tree_style_prints_organic_branches_on_a_y_tilted_belt() {
 }
 
 #[test]
-fn defers_other_tree_styles_and_tree_on_model_on_belts() {
+fn rejects_tree_on_model_and_manual_tree_support_on_belts() {
     let root = crate::artifacts::root_from_env().unwrap();
-    for (key, value) in [
-        ("support_style", "tree_slim"),
-        ("support_style", "tree_strong"),
-        ("support_style", "tree_hybrid"),
-        ("support_on_build_plate_only", "0"),
+    for edits in [
+        &[("support_on_build_plate_only", "0")][..],
+        &[
+            ("support_style", "tree_slim"),
+            ("support_on_build_plate_only", "0"),
+        ],
+        &[
+            ("support_style", "tree_strong"),
+            ("support_on_build_plate_only", "0"),
+        ],
+        &[
+            ("support_style", "tree_hybrid"),
+            ("support_on_build_plate_only", "0"),
+        ],
+        &[
+            ("support_style", "tree_slim"),
+            ("support_type", "tree(manual)"),
+        ],
     ] {
         let work = tempfile::Builder::new()
             .prefix("unsupported-belt-tree-")
             .tempdir_in(&root)
             .unwrap()
             .keep();
-        prepare(&work, &project(&[(key, value)], false));
+        prepare(&work, &project(CANTILEVER, edits, false));
         let result = run_ares(&work);
-        assert!(!result.status.success(), "{key}={value} at {work:?}");
+        assert!(!result.status.success(), "{edits:?} at {work:?}");
         assert!(
             String::from_utf8_lossy(&result.stderr).contains("belt_printer: support"),
-            "wrong rejection for {key}={value} at {work:?}"
+            "wrong rejection for {edits:?} at {work:?}"
         );
         assert!(!work.join("out/plate_1.gcode").exists(), "{work:?}");
     }
 }
 
-fn reference() -> Option<OrcaRunner> {
+pub(super) fn reference() -> Option<OrcaRunner> {
     let runner = OrcaRunner::from_env().unwrap();
     if runner.is_none() {
-        crate::native_environment::skipped("organic belt support requires Native OrcaSlicer");
+        crate::native_environment::skipped("belt tree support requires Native OrcaSlicer");
     }
     runner
 }
@@ -97,7 +111,7 @@ fn prepare(work: &Path, project: &[u8]) {
     fs::write(work.join("input.3mf"), project).unwrap();
 }
 
-fn native_slice(runner: &OrcaRunner, work: &Path, project: &[u8]) -> String {
+pub(super) fn native_slice(runner: &OrcaRunner, work: &Path, project: &[u8]) -> String {
     prepare(work, project);
     stages::run(
         runner.bin(),
@@ -113,7 +127,7 @@ fn native_slice(runner: &OrcaRunner, work: &Path, project: &[u8]) -> String {
     fs::read_to_string(native.join("plate_1.gcode")).unwrap()
 }
 
-async fn matches_reference(native: &str, work: &Path, project: &[u8]) {
+pub(super) async fn matches_reference(native: &str, work: &Path, project: &[u8]) {
     let result = run_ares(work);
     assert!(
         result.status.success(),
@@ -138,7 +152,7 @@ async fn matches_reference(native: &str, work: &Path, project: &[u8]) {
         .unwrap_or_else(|error| panic!("public API: {error}; {work:?}"));
 }
 
-fn support_moves(gcode: &str) -> Vec<&str> {
+pub(super) fn support_moves(gcode: &str) -> Vec<&str> {
     let mut base = false;
     let mut relative = false;
     gcode
@@ -172,8 +186,8 @@ fn support_moves(gcode: &str) -> Vec<&str> {
         .collect()
 }
 
-fn project(edits: &[(&str, &str)], turn_about_z: bool) -> Vec<u8> {
-    let mut reader = ZipArchive::new(Cursor::new(CANTILEVER)).unwrap();
+pub(super) fn project(input: &[u8], edits: &[(&str, &str)], turn_about_z: bool) -> Vec<u8> {
+    let mut reader = ZipArchive::new(Cursor::new(input)).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for i in 0..reader.len() {
         let mut member = reader.by_index(i).unwrap();

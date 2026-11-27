@@ -12,6 +12,8 @@ mod purge;
 mod seam_visibility;
 #[path = "belt_print/skirt.rs"]
 mod skirt;
+#[path = "belt_print/tree_styles.rs"]
+mod tree_styles;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
