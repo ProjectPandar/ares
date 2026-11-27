@@ -32,6 +32,11 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
   OrcaSlicer parity claim.
 - 2026-11-28: staggered perimeters and subdivided outer walls are the official
   sample plugins, kept in this repository under `plugins/` with the plugin SDK.
+- 2026-11-28: plugins declare their own options; selection and option values
+  are saved in the project (3MF) through the upstream plugin keys. Plugin code
+  is referenced by id, version and content hash; embedding a hosted plugin in a
+  3MF is optional and requires the user's trust before it runs (ARD-0112
+  decisions 8 and 9).
 - 2026-11-28: hooks are not limited to perimeters. Every upstream pipeline step
   and the G-code stages expose hooks that can add, remove or modify extrusions
   or G-code; the catalog below lists each hook, its data and its allowed edits.
@@ -58,6 +63,26 @@ Questions:
    native and in the browser, including `Math` functions in JS.
 
 Results: _to be recorded here._
+
+## Plugin options and projects
+
+Why plugin code is not embedded by default:
+
+- A 3MF from the internet would otherwise carry code that runs on open.
+  Hosted plugins are sandboxed (no files, network, clock or threads), but they
+  can still loop or exhaust memory, and a native Rust plugin cannot be
+  sandboxed or embedded at all.
+- OrcaSlicer drops unknown 3MF parts when it re-saves a project, so an
+  embedded plugin would not survive a round trip, while the upstream keys do.
+- Hash pinning keeps reproducibility: a project slices only with the exact
+  plugin build it was saved with.
+
+Embedding stays available for hosted plugins when a project is shared
+deliberately; the loader shows the embedded plugins and asks for trust first.
+
+Open: per-object plugin options (for example enabling outer wall subdivision
+on one object only) have no upstream storage; decide with the first plugin
+that needs them.
 
 ## Hook catalog
 

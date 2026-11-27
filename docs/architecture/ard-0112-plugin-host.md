@@ -62,6 +62,27 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    duplication of a path, honoured by G-code emission. Its exact data model is specified with its first
    consumer.
 
+8. **Plugin options.** A plugin declares typed options (key, type, default,
+   range or enum values, label, tooltip, and the preset scope print, printer
+   or filament). The host validates values against that declaration and hooks
+   receive the resolved values; the UI renders the declaration generically.
+   Values are stored in the upstream keys `print_plugin_config_overrides`,
+   `printer_plugin_config_overrides` and `filament_plugin_config_overrides`
+   (`PrintConfig.cpp:1300–1313`, already inert keys in Ares) as entries of
+   capability id, plugin version and JSON values (`plugin/PluginConfig.hpp`
+   `CapabilityConfigEntry`). Selections use upstream `slicing_pipeline_plugin`
+   and the `plugins` manifest (`name;uuid;capability`). A saved 3MF therefore
+   carries plugin selection and options in its project config, and OrcaSlicer
+   keeps those keys. Option values are part of the configuration identity,
+   so editing one recomputes from the plugin's first hooked step.
+9. **Plugin code is referenced, not embedded, by default.** The project stores
+   the capability reference, plugin version and the content hash of the module
+   or sources. Opening a project whose plugin is missing or whose hash differs
+   reports it and does not slice with a substitute. Hosted plugins (WASM or JS)
+   may optionally be embedded in the 3MF for sharing; an embedded plugin never
+   runs until the user trusts it, and every hosted plugin runs under fuel and
+   memory limits. Native Rust plugins cannot be embedded.
+
 ## Rewrite rule amendment
 
 `AGENTS.md` requires every milestone to be an upstream rewrite slice. Plugin
