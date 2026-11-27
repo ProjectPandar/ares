@@ -150,7 +150,7 @@ pub(super) fn multiobject_project(input: &[u8], additional_part: bool) -> Vec<u8
     })
 }
 
-fn rewrite_project(input: &[u8], rewrite: impl Fn(&str, &str) -> String) -> Vec<u8> {
+pub(super) fn rewrite_project(input: &[u8], rewrite: impl Fn(&str, &str) -> String) -> Vec<u8> {
     let mut archive = ZipArchive::new(Cursor::new(input)).unwrap();
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..archive.len() {
