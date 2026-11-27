@@ -167,6 +167,16 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         "ironing_angle" if value.starts_with('-') => *value = "0".to_owned(),
         "counterbole_hole_bridging" => *opt_key = "counterbore_hole_bridging".to_owned(),
         "draft_shield" if value == "limited" => *value = "disabled".to_owned(),
+        "sparse_infill_pattern"
+        | "top_surface_pattern"
+        | "bottom_surface_pattern"
+        | "internal_solid_infill_pattern"
+        | "ironing_pattern"
+        | "support_ironing_pattern"
+            if value == "zig-zag" =>
+        {
+            *value = "rectilinear".to_owned();
+        }
         "filament_map_mode" if value == "Auto" => *value = "Auto For Flush".to_owned(),
         "filament_type" => normalize_filament_type(value),
         "prime_tower_rib_wall" => {
