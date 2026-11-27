@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/skirt.rs"]
+mod skirt;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
@@ -196,6 +198,16 @@ fn run_ares(work: &Path) -> Output {
 }
 
 fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
+    compare_output(name, belt, shift, edits, |_| {});
+}
+
+fn compare_output(
+    name: &str,
+    belt: bool,
+    shift: bool,
+    edits: &[(&str, Value)],
+    check: impl FnOnce(&[u8]),
+) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("belt coordinates require Native OrcaSlicer");
         return;
@@ -223,6 +235,7 @@ fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
     let actual = fs::read(out.join("plate_1.gcode")).unwrap();
     golden::compare_ordered_bytes_generator_only(&native, &actual)
         .unwrap_or_else(|error| panic!("{error}; {work:?}"));
+    check(&actual);
 }
 
 fn rejects(reason: &str, edits: &[(&str, Value)]) {
