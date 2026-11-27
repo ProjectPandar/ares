@@ -21,7 +21,25 @@ merge-group event, downloads the artifact by run ID, and verifies the manifest
 and every file hash against the current tree before restoring either directory.
 A missing run, missing artifact, tree mismatch, manifest mismatch, or hash
 mismatch is a cache miss and takes the existing build path; it must not skip a
-check or accept a non-identical artifact.
+check or accept a non-identical artifact. An in-progress producer is also a
+miss. The queue must not be started until the producer check on the pull-request
+head is successful; this ordering is documented in `docs/workflow.md` and does
+not change repository rulesets or required checks.
+
+A hit requires the merge-group tree to equal the pull-request head tree. In
+practice, the pull request must be up to date with `main` when it is enqueued.
+If `main` moves between producer completion and enqueue, the merge-group tree
+changes and the consumer takes the full path; the measured cost is 562 seconds.
+The under-four-minute target applies only to the exact-tree hit path, not this
+honest miss path.
+
+Only same-repository pull requests are eligible. Fork pull requests, multiple
+pull requests in one queue ref, and any other ambiguous producer selection are
+misses. Each uploaded producer artifact has an explicit `retention-days: 14`.
+The manifest identity includes the pinned Rust, wasm-bindgen, Bun, and browser
+tool versions plus SHA-256 values for `scripts/ci/run-web-build.sh` and
+`web/packages/ares-wasm-js/scripts/build-wasm.mjs`; a different build recipe
+cannot be reused even if its tree value is otherwise acceptable.
 
 The held idea of populating a panic-probe cache from the main push is dropped.
 The tree-addressed producer supplies the probe to the queue without adding a
@@ -59,7 +77,8 @@ bound to beat for a fresh queue target after the expensive outputs are restored;
 it already has 28 seconds of margin under the four-minute requirement. The
 producer artifact removes the two longer compile phases while retaining the
 host-tool build, metadata check, nextest suites, web build, typecheck, and
-bundle packing in the queue consumer.
+bundle packing in the queue consumer. The 562-second value is the measured
+full-path miss baseline, not a target result.
 
 ## Workflow shape
 
@@ -75,10 +94,12 @@ bundle packing in the queue consumer.
 2. **Merge-group consumer.** Before installing the Rust compiler or
    `wasm-bindgen`, query the workflow runs for the single same-repository pull
    request identified by the merge-group ref. Select only a completed,
-   successful producer run. Download its tree-addressed artifact, verify the
-   manifest against `HEAD^{tree}`, and restore the two directories. Export
-   `WASM_CACHE_HIT=true` and `PANIC_PROBE_CACHE_HIT=true` only after both
-   validations succeed.
+   successful producer run; an in-progress run is a miss and must not be used
+   to start the queue. Download its tree-addressed artifact, verify the
+   manifest against `HEAD^{tree}`, the pull-request head tree, the explicit
+   14-day retention policy, and the recipe identity, then restore the two
+   directories. Export `WASM_CACHE_HIT=true` and `PANIC_PROBE_CACHE_HIT=true`
+   only after all validations succeed.
 3. **Fail-closed build.** If the producer cannot be found or any validation
    fails, leave both outputs absent and run the current compile path. Do not
    use prefix restores, a default-branch artifact, an artifact from another
@@ -96,14 +117,19 @@ lookup must reuse the existing single-PR and base/tree checks rather than
 trusting a branch name: `scripts/ci/check-merge-group-reuse.sh:4-11,60-123`
 shows the current fail-closed rules and exact tree comparison. Multiple pull
 requests, a changed base, a rebased head, a fork, an API error, or an
-in-progress producer must take the compile path.
+in-progress producer must take the compile path. The queue ordering rule is
+separate: the producer check must already be successful on the pull-request
+head before enqueueing, even though the consumer still treats a stale or
+unavailable producer as a miss.
 
 ## Included and deferred behavior
 
 Included:
 
-- A tree-addressed producer artifact for both expensive WebAssembly outputs.
-- A successful-run lookup and manifest/hash validation in the queue consumer.
+- A tree-addressed producer artifact for both expensive WebAssembly outputs,
+  retained for exactly 14 days.
+- A successful-run lookup and manifest/hash validation in the queue consumer,
+  including same-repository, pull-request-tree, toolchain, and recipe checks.
 - Exact-hit variables passed to the existing script only after validation.
 - Preservation of the current output bundle, browser consumers, checks,
   comparators, retry settings, and failure behavior.
@@ -125,16 +151,20 @@ Deferred:
 ## Verification after approval
 
 Run branch workflows only. First run the producer with an empty target and
-empty output directories. Then run the merge-group consumer with a fresh target
-and the producer artifact available, recording step timings and confirming the
-build log contains no WebAssembly compiler or bindgen invocation. The consumer
-run must complete in at most 240 seconds.
+empty output directories, and confirm that its successful check is complete
+before starting any consumer workflow. Then run the merge-group consumer with a
+fresh target and the producer artifact available, recording step timings and
+confirming the build log contains no WebAssembly compiler or bindgen invocation.
+The consumer hit run must complete in at most 240 seconds. Separately run a
+main-move simulation and record it as the measured 562-second full-path miss;
+do not present that miss as meeting the target.
 
 For both producer and consumer, compare the manifest hashes, final packed
 bundle inventory, PrintConfigDef verification (805/805 keys), and the required
 consumer files. Run the same web static checks and browser shards used by the
 workflow. A negative fixture must change one tree byte and prove that the
 consumer rejects the artifact and builds instead. A second negative fixture
-must use a failed or incomplete producer run and prove that no output is
-restored. Report misses as misses; never count a fallback build as an artifact
-hit.
+must use an in-progress, failed, or incomplete producer run and prove that no
+output is restored. Also verify that a recipe-hash change rejects an otherwise
+matching artifact. Report misses as misses; never count a fallback build as an
+artifact hit.
