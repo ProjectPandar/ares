@@ -10,7 +10,8 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 | P0 | ARD-0112 and rewrite rule amendment (done); runtime spike | in progress |
 | P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) and the WASM host | not started |
 | P2 | Perimeter extension: inset index, per-path Z, height, flow multiplier, order, path duplication | not started |
-| P3 | Staggered perimeters and subdivided outer walls (stage 1) plugins | not started |
+| P1b | Hook catalog: every step and G-code stage, data passed, add/remove/modify edits, downstream recomputation | in progress |
+| P3 | Official samples in `plugins/`: SDK, staggered perimeters, subdivided outer walls (stage 1) | not started |
 | P4 | JS runtime plugin, hot reload in CLI and browser | not started |
 
 ## Decision log
@@ -23,6 +24,11 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 - 2026-11-28: plugin modules are exempt from the rewrite rule in `AGENTS.md`;
   output without plugins stays byte-identical and plugin output makes no
   OrcaSlicer parity claim.
+- 2026-11-28: staggered perimeters and subdivided outer walls are the official
+  sample plugins, kept in this repository under `plugins/` with the plugin SDK.
+- 2026-11-28: hooks are not limited to perimeters. Every upstream pipeline step
+  and the G-code stages expose hooks that can add, remove or modify extrusions
+  or G-code; the catalog below lists each hook, its data and its allowed edits.
 
 ## Runtime spike
 
@@ -45,6 +51,12 @@ Questions:
    native and in the browser, including `Math` functions in JS.
 
 Results: _to be recorded here._
+
+## Hook catalog
+
+_To be written: one row per hook (upstream step or G-code stage, Ares site,
+unit and parallelism, data passed, allowed edits, what is recomputed after an
+edit)._
 
 ## Candidate plugins
 
