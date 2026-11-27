@@ -78,7 +78,6 @@ export async function selectDiameter(panel: PrinterPanel, diameter: string) {
     panel.nozzleDiameters.length > 1 &&
     panel.nozzleDiameters.some((value) => diameterString(value) !== diameter);
   if (panel.printerVariant === diameter && !nozzlesApart) return;
-  if (panel.printerVariant === "" && diameterString(panel.nozzleDiameters[0]) === diameter) return;
   const { presetSelection: selection, scene } = useApp.getState();
   const current = {
     name:
