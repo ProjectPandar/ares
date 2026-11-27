@@ -7,7 +7,7 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 
 | Phase | Scope | State |
 | --- | --- | --- |
-| P0 | ARD-0112, rewrite rule amendment, runtime spike | in progress |
+| P0 | ARD-0112 and rewrite rule amendment (done); runtime spike | in progress |
 | P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) and the WASM host | not started |
 | P2 | Perimeter extension (inset index, Z offset, flow multiplier, order) | not started |
 | P3 | Staggered perimeters plugin | not started |
@@ -20,6 +20,9 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
   runtime plugin that implements the same interface.
 - 2026-11-28: hot reload is required; plugin identity is a content hash that
   feeds step invalidation.
+- 2026-11-28: plugin modules are exempt from the rewrite rule in `AGENTS.md`;
+  output without plugins stays byte-identical and plugin output makes no
+  OrcaSlicer parity claim.
 
 ## Runtime spike
 

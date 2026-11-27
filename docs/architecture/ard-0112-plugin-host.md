@@ -1,6 +1,6 @@
 # ARD-0112: Slicing pipeline plugin host
 
-Status: proposed. Tracking: [plugin-system.md](../plugin-system.md).
+Status: accepted (2026-11-28). Tracking: [plugin-system.md](../plugin-system.md).
 
 ## Source boundary
 
@@ -63,11 +63,11 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    by G-code emission. Its exact data model is specified with its first
    consumer.
 
-## Rewrite rule amendment (proposed)
+## Rewrite rule amendment
 
 `AGENTS.md` requires every milestone to be an upstream rewrite slice. Plugin
 features (for example staggered perimeters) have no upstream implementation.
-Proposed addition:
+`AGENTS.md` now carries this exception:
 
 > Plugin modules are exempt from the rewrite rule. Core changes for plugins
 > are limited to porting the upstream plugin seam plus the extensions recorded

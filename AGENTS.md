@@ -32,6 +32,8 @@ For future milestones, the rewrite boundary stays with `libslic3r` and `libvgcod
 
 This rewrite-gate requirement applies to the continuing `PrintConfig.hpp` and `PrintConfig.cpp` milestone chain as well as later `libslic3r` / `libvgcode` slices: keep milestones source-cited, upstream-boundary-first, and free of self-designed Ares pipeline goals.
 
+Plugin exception ([ARD-0112](docs/architecture/ard-0112-plugin-host.md), tracked in [docs/plugin-system.md](docs/plugin-system.md)): plugin modules are exempt from the rewrite gate. Core changes for plugins are limited to porting the upstream plugin seam plus the extensions recorded in ARD-0112. With no plugin attached, output must stay byte-identical; plugin output makes no OrcaSlicer parity claim.
+
 ## Document
 
 ### docs/architecture/*.md
