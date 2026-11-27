@@ -1,0 +1,345 @@
+/* Segmented navigation and button variants. */
+.shell {
+  grid-template-rows: 42px 52px minmax(0, 1fr) 27px;
+}
+
+.titlebar {
+  border-bottom: 1px solid var(--separator);
+  padding-inline: 12px;
+}
+
+.brand {
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-control);
+  background: var(--accent-fill);
+}
+
+.titlebar-title {
+  color: var(--text-dim);
+  opacity: 1;
+}
+.bar-button {
+  border-radius: var(--radius-control);
+}
+
+.tabbar {
+  align-items: center;
+  padding-inline: 12px;
+  border-top: 0;
+  border-bottom: 1px solid var(--separator);
+}
+
+.tabbar-tabs,
+.process-tabs,
+.mode-track {
+  background: var(--panel-raised);
+}
+.tabbar-tabs {
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+}
+
+.tab {
+  min-width: 100px;
+  min-height: 32px;
+  gap: 6px;
+  padding-inline: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.tab img {
+  width: 16px;
+  height: 16px;
+}
+:root[data-theme="light"] :is(.tab img, .bar-button img) {
+  filter: brightness(0.38);
+}
+
+.tab.active,
+.process-tab.active {
+  border-color: var(--border);
+  background: var(--field);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.tabbar-actions .side-button {
+  min-width: 0;
+  height: 34px;
+  padding-inline: 12px;
+  border-color: var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--inset);
+}
+
+.tabbar-actions .side-button:not(:disabled):hover {
+  border-color: var(--border);
+  background: var(--panel-raised);
+}
+
+.tabbar-actions .side-button.slice-action {
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
+  color: var(--accent-text);
+}
+
+.tabbar-actions .side-button.slice-action:not(:disabled):hover {
+  border-color: var(--accent-fill-hover);
+  background: var(--accent-fill-hover);
+}
+
+.tabbar-actions .side-button:disabled {
+  border-color: var(--border);
+  background: var(--panel-sunken);
+  color: var(--text-dim);
+  opacity: 0.64;
+  box-shadow: none;
+}
+
+/* Frames and compact form controls. */
+.sidebar {
+  padding: 10px;
+  background: var(--panel);
+  scrollbar-color: var(--border) transparent;
+  scrollbar-width: thin;
+}
+
+.side-section {
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-panel);
+  background: var(--panel-raised);
+}
+
+.side-section + .side-section {
+  margin-top: 6px;
+}
+.side-section-header {
+  height: 28px;
+  padding-inline: 8px;
+  border: 0;
+  background: none;
+  color: var(--text);
+}
+
+.side-section-extra {
+  min-width: 18px;
+  margin-left: auto;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.side-section-extra + .side-section-action {
+  margin-left: 0;
+}
+
+.side-section-body {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius-panel) - 3px);
+  background: var(--panel);
+  box-shadow: var(--inset);
+}
+
+.preset-edit {
+  border-radius: var(--radius-control);
+}
+.preset-edit:hover {
+  border-color: transparent;
+  background: var(--panel);
+}
+
+.combo,
+.option-field,
+.option-select,
+.slice-result .legend-view {
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  box-shadow: var(--inset);
+}
+
+:is(.combo, .option-field, .option-select, .slice-result .legend-view):not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--border) 70%, var(--text-dim));
+}
+
+.combo-caret {
+  width: 6px;
+  height: 6px;
+  margin: -3px 2px 0 0;
+  border: solid var(--text-dim);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+
+.mode-track {
+  padding: 2px;
+  border-color: var(--border);
+  border-radius: 6px;
+}
+.mode-track::before {
+  content: none;
+}
+.mode-dot {
+  border-radius: 3px;
+}
+.mode-dot.current {
+  background: var(--field);
+  box-shadow: var(--shadow);
+}
+.mode-dot.current::after {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+.process-tabs {
+  flex-wrap: nowrap;
+  gap: 1px;
+  margin: 2px 0 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 8px;
+}
+.process-tab {
+  flex: 1 0 auto;
+  padding: 4px 3px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.optgroup {
+  margin-top: 6px;
+}
+.optgroup-title {
+  color: var(--text);
+  font-size: 12px;
+}
+.option-row {
+  min-height: 26px;
+  padding-block: 1px;
+}
+.option-label {
+  white-space: normal;
+}
+.option-value {
+  width: 42%;
+}
+.option-unit {
+  width: auto;
+  min-width: 22px;
+}
+
+.option-check {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent-fill);
+}
+.object-list {
+  border-radius: var(--radius-control);
+  background: var(--panel-sunken);
+}
+.object-row {
+  min-height: 26px;
+}
+.object-row.plate-row {
+  min-height: var(--plate-row-height);
+  padding-block: 0;
+}
+
+@media (width > 1024px), (width > 640px) and (pointer: fine) {
+  .plate-row :is(.plate-arrange, .plate-lock, .plate-delete) {
+    inline-size: var(--plate-row-height);
+    block-size: var(--plate-row-height);
+  }
+}
+
+.statusbar {
+  background: var(--panel);
+}
+.engine-dot.ready {
+  background: var(--success);
+}
+.status-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell :is(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+  .process-tabs {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    grid-template-rows:
+      minmax(42px, auto) minmax(40px, auto) minmax(0, 1fr)
+      auto minmax(24px, auto);
+  }
+  .titlebar {
+    padding-inline: 6px;
+  }
+  .brand {
+    margin-inline: 2px;
+    font-size: 0;
+  }
+  .tabbar-tabs {
+    margin: 3px 8px;
+    border-top: 0;
+  }
+  .tab {
+    min-width: 0;
+  }
+  .tabbar-actions {
+    gap: 4px;
+    padding: 6px 8px;
+    border-top: 1px solid var(--separator);
+  }
+  .tabbar-actions .side-button {
+    min-height: 44px;
+    padding-inline: 4px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .sidebar {
+    width: calc(100% - 54px);
+  }
+  .side-section-header {
+    height: auto;
+    min-height: 36px;
+  }
+  .option-value {
+    width: 43%;
+  }
+  :is(.combo, .option-field, .option-select) {
+    height: 44px;
+    font-size: 16px;
+  }
+}

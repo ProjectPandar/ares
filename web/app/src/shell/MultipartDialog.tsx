@@ -34,19 +34,19 @@ export function MultipartDialog({ files, onClose }: { files: File[]; onClose: ()
           {"\u2715"}
         </button>
       </header>
-      <p id="multipart-question" className="switch-diameter-text">
-        Load these files as a single object with multiple parts?
-      </p>
-      <label className="vendor-item">
-        <input type="checkbox" checked={autoDrop} onChange={(event) => setAutoDrop(event.target.checked)} />
-        Auto-Drop
-      </label>
+      <div className="dialog-body">
+        <p id="multipart-question">Load these files as a single object with multiple parts?</p>
+        <label className="vendor-item">
+          <input type="checkbox" checked={autoDrop} onChange={(event) => setAutoDrop(event.target.checked)} />
+          Auto-Drop
+        </label>
+      </div>
       <footer className="vendor-footer">
-        <button className="side-button" onClick={() => choose(true)}>
-          Yes
-        </button>
         <button className="side-button" onClick={() => choose(false)}>
           No
+        </button>
+        <button className="side-button dialog-primary" onClick={() => choose(true)}>
+          Yes
         </button>
       </footer>
     </dialog>

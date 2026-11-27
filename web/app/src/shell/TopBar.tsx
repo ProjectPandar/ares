@@ -14,6 +14,7 @@ import { useApp } from "../state/store";
 import { CloudMenu } from "./CloudMenu";
 import { FileMenu } from "./FileMenu";
 import { MoonIcon, OrcaIcon, SunIcon } from "./icons";
+import { SplitAction, type ToolbarAction } from "./SplitAction";
 
 /** BBLTopbar: the File and Cloud menus and the project title. */
 export function TitleBar({
@@ -155,6 +156,22 @@ export function TabBar({ onPrint }: { onPrint: () => void }) {
     void start();
     void navigate({ to: "/preview" });
   };
+  const sliceDisabled = !scene || slicing || engine !== "ready" || blocker !== null;
+  const outputActions: [ToolbarAction, ...ToolbarAction[]] = [
+    {
+      label: "Export G-code file",
+      run: exportGcode,
+      disabled: slice.status !== "done",
+    },
+    { label: "Print plate", run: onPrint, disabled: slice.status !== "done" },
+  ];
+  if (multiPlate) {
+    outputActions.push({
+      label: "Export all",
+      run: exportAllGcode,
+      disabled: slicing || Object.keys(plateSlices).length === 0,
+    });
+  }
   return (
     <nav className="tabbar">
       <div className="tabbar-tabs">
@@ -172,40 +189,37 @@ export function TabBar({ onPrint }: { onPrint: () => void }) {
         )}
       </div>
       <div className="tabbar-actions">
-        <button
-          className="side-button"
-          onClick={() => sliceAndPreview(slicePlate)}
-          disabled={!scene || slicing || engine !== "ready" || blocker !== null}
-          title={blocker ?? undefined}
-        >
-          {slicing ? "Slicing…" : "Slice plate"}
-        </button>
-        {multiPlate && (
+        {multiPlate ? (
+          <SplitAction
+            label="Slicing"
+            primary
+            busy={slicing}
+            title={blocker ?? undefined}
+            actions={[
+              {
+                label: "Slice plate",
+                run: () => sliceAndPreview(slicePlate),
+                disabled: sliceDisabled,
+              },
+              {
+                label: "Slice all",
+                run: () => sliceAndPreview(sliceAllPlates),
+                disabled: sliceDisabled,
+              },
+            ]}
+          />
+        ) : (
           <button
-            className="side-button"
-            onClick={() => sliceAndPreview(sliceAllPlates)}
-            disabled={slicing || engine !== "ready" || blocker !== null}
+            type="button"
+            className="side-button slice-action"
+            onClick={() => sliceAndPreview(slicePlate)}
+            disabled={sliceDisabled}
             title={blocker ?? undefined}
           >
-            Slice all
+            {slicing ? "Slicing…" : "Slice plate"}
           </button>
         )}
-        <button className="side-button" onClick={exportGcode} disabled={slice.status !== "done"}>
-          Export G-code file
-        </button>
-        {/* SideButton "Print plate" (Plater::send_gcode): a Cloud sign-in first, then the send dialog. */}
-        <button className="side-button" onClick={onPrint} disabled={slice.status !== "done"}>
-          Print plate
-        </button>
-        {multiPlate && (
-          <button
-            className="side-button"
-            onClick={exportAllGcode}
-            disabled={slicing || Object.keys(plateSlices).length === 0}
-          >
-            Export all
-          </button>
-        )}
+        <SplitAction label="Output" actions={outputActions} />
       </div>
     </nav>
   );

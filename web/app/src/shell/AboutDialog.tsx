@@ -23,10 +23,17 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
         </button>
       </header>
       <div className="about-body">
-        <p className="about-name">Ares</p>
-        <p className="about-version" data-testid="about-version">
-          {ARES_VERSION}
-        </p>
+        <div className="about-identity">
+          <span className="brand-mark" aria-hidden="true">
+            A
+          </span>
+          <div>
+            <p className="about-name">Ares</p>
+            <p className="about-version" data-testid="about-version">
+              {ARES_VERSION}
+            </p>
+          </div>
+        </div>
         {orca && <p>Ares is a Rust port of the OrcaSlicer {orca} slicing core.</p>}
         <p className="about-credits">
           Open-source slicing stands on a tradition of collaboration and attribution. Slic3r, created by Alessandro

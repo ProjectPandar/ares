@@ -183,7 +183,7 @@ export function Legend({
                 <span>%</span>
               </div>
             )}
-            <ul className="legend-list">
+            <ul className={times ? "legend-list legend-roles legend-metrics" : "legend-list legend-roles"}>
               {Array.from(extrusionRoles, (id, index) => {
                 const hidden = (view.hiddenRoles >> id) & 1;
                 return (

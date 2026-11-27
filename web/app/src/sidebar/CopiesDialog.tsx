@@ -22,23 +22,26 @@ export function CopiesDialog({ object, count, onClose }: { object: number; count
           {"\u2715"}
         </button>
       </header>
-      <label className="vendor-item">
-        Number of copies:
-        <input
-          type="number"
-          min={0}
-          max={MAX_COPIES}
-          step={1}
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-        />
-      </label>
+      <div className="dialog-body">
+        <label className="print-host-field">
+          Number of copies:
+          <input
+            className="dialog-field"
+            type="number"
+            min={0}
+            max={MAX_COPIES}
+            step={1}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+          />
+        </label>
+      </div>
       <footer className="vendor-footer">
         <button className="side-button" onClick={() => dialog.current!.close()}>
           Cancel
         </button>
         <button
-          className="side-button"
+          className="side-button dialog-primary"
           disabled={!valid}
           onClick={() => {
             void setNumberOfCopies(object, num);

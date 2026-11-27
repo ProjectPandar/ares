@@ -1,5 +1,5 @@
 import type { FilamentSlotEdit, FilamentSlots } from "@ares-slicer/wasm";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import "./filamentAssignment.css";
 
 export function FilamentSlotMenu({
@@ -20,6 +20,11 @@ export function FilamentSlotMenu({
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<number>();
+  const confirmation = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (mergeTarget !== undefined) confirmation.current!.showModal();
+  }, [mergeTarget]);
   const close = () => {
     popup.current!.hidePopover();
     trigger.current!.focus();
@@ -105,15 +110,15 @@ export function FilamentSlotMenu({
                     aria-label={`Filament ${index + 1}: ${preset}`}
                     onClick={() => {
                       close();
-                      const confirmed = components.includes(slot);
-                      if (
-                        confirmed &&
-                        !window.confirm(
-                          "The target mixed filament uses this filament as a component. Merging may invalidate the mix. Continue?",
-                        )
-                      )
-                        return;
-                      edit({ kind: "merge", source: slot, target: index + 1, confirmed });
+                      const target = index + 1;
+                      if (components.includes(slot)) setMergeTarget(target);
+                      else
+                        edit({
+                          kind: "merge",
+                          source: slot,
+                          target,
+                          confirmed: false,
+                        });
                     }}
                   >
                     <span className="filament-swatch" aria-hidden="true" style={{ background: colour }}>
@@ -136,6 +141,46 @@ export function FilamentSlotMenu({
           Delete
         </button>
       </div>
+      {mergeTarget !== undefined && (
+        <dialog
+          ref={confirmation}
+          className="shortcuts-dialog"
+          aria-labelledby={`${id}-merge-title`}
+          role="alertdialog"
+          onClose={() => {
+            setMergeTarget(undefined);
+            trigger.current?.focus();
+          }}
+        >
+          <header className="shortcuts-header">
+            <h2 id={`${id}-merge-title`}>Merge filament?</h2>
+          </header>
+          <div className="dialog-body">
+            <p className="dialog-notice warning">
+              The target mixed filament uses this filament as a component. Merging may invalidate the mix.
+            </p>
+          </div>
+          <footer className="vendor-footer">
+            <button className="side-button" onClick={() => confirmation.current!.close()}>
+              Cancel
+            </button>
+            <button
+              className="side-button dialog-danger"
+              onClick={() => {
+                confirmation.current!.close();
+                edit({
+                  kind: "merge",
+                  source: slot,
+                  target: mergeTarget,
+                  confirmed: true,
+                });
+              }}
+            >
+              Merge
+            </button>
+          </footer>
+        </dialog>
+      )}
     </>
   );
 }

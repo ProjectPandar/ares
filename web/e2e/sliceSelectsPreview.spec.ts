@@ -53,6 +53,11 @@ test("Slice all selects the Preview tab and ends on the last plate", async ({ pa
   await expect(page).toHaveURL(/#\/prepare$/);
 
   await watchPreviewSwitch(page);
+  await action(page, "Slicing options").press("ArrowDown");
+  await expect(page.getByRole("menuitemradio", { name: "Slice plate" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#\/prepare$/);
   await action(page, "Slice all").click();
   await expect(page).toHaveURL(/#\/preview$/);
   await expect(page.getByTestId("slice-plate")).toHaveText("2", { timeout: 120_000 });

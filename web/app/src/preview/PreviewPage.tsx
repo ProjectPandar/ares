@@ -42,7 +42,10 @@ const ALL_ROLES = (1 << EXTRUSION_ROLES.length) - 1;
  * line type view is `Toolpaths.colors`, which has no range to follow toggles.
  */
 function useViewColors(toolpaths: Toolpaths | null, viewType: string, hiddenRoles: number, visibleOptions: number) {
-  const [state, setState] = useState<{ toolpaths: Toolpaths; colors: ViewColors } | null>(null);
+  const [state, setState] = useState<{
+    toolpaths: Toolpaths;
+    colors: ViewColors;
+  } | null>(null);
   const lineType = viewType === "FeatureType";
   useEffect(() => {
     if (!toolpaths || lineType) return;
@@ -113,7 +116,7 @@ export function PreviewPage({ shown, placed }: { shown: boolean; placed: Scene |
       >
         {(scene?.plates.length ?? 0) > 1 && <PlateStrip />}
         <div className="preview-right">
-          <section className="slice-result" data-testid="slice-summary">
+          <section className="slice-result" aria-label="Slicing Result" tabIndex={0} data-testid="slice-summary">
             <header className="slice-result-header">
               <span>Slicing Result</span>
               <button

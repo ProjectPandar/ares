@@ -1,0 +1,397 @@
+/* Compact modal shells shared by the existing dialogs. */
+:root {
+  --dialog-padding: 20px;
+  --dialog-scrim: #171c264e;
+  --dialog-danger: #b82f38;
+  --dialog-danger-text: #ae2d35;
+  --dialog-danger-soft: #fff1f1;
+  --dialog-warning: #855211;
+  --dialog-warning-soft: #fff5e3;
+  --dialog-shadow: 0 1px 2px #0002, 0 16px 48px #0a0d1533;
+}
+
+:root[data-theme="dark"] {
+  --dialog-scrim: #08090cb0;
+  --dialog-danger: #ae3945;
+  --dialog-danger-text: #ffa3aa;
+  --dialog-danger-soft: #3d252b;
+  --dialog-warning: #ffd38c;
+  --dialog-warning-soft: #3b3021;
+}
+
+dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog) {
+  width: min(var(--dialog-width, 460px), calc(100% - 36px));
+  max-height: calc(100% - 36px);
+  border-radius: 16px;
+  box-shadow: var(--dialog-shadow);
+  font-size: 13px;
+  line-height: 1.46;
+}
+
+dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog)::backdrop {
+  background: var(--dialog-scrim);
+}
+
+.shortcuts-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
+  gap: 12px;
+  background: var(--panel);
+  color: var(--text);
+  align-items: flex-start;
+  padding: 17px var(--dialog-padding) 10px;
+}
+
+.shortcuts-header h2 {
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.shortcuts-header .bar-button {
+  margin-inline-start: auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  color: var(--text-dim);
+  padding: 0;
+}
+
+.shortcuts-header .bar-button:hover {
+  background: var(--panel-raised);
+}
+
+:is(dialog, .wizard-notice) .side-button {
+  min-width: 0;
+  height: auto;
+  min-height: 34px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  color: var(--text);
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+:is(dialog, .wizard-notice) .side-button:not(:disabled):hover {
+  background: var(--panel-raised);
+}
+:is(dialog, .wizard-notice) .side-button.dialog-primary {
+  border-color: transparent;
+  background: var(--accent-fill);
+  color: var(--accent-text);
+  box-shadow: var(--inset);
+}
+
+:is(dialog, .wizard-notice) .side-button.dialog-primary:not(:disabled):hover {
+  background: var(--accent-fill-hover);
+}
+dialog .side-button.dialog-danger {
+  border-color: transparent;
+  background: var(--dialog-danger);
+  color: #fff;
+}
+dialog .side-button.dialog-danger:not(:disabled):hover {
+  background: var(--dialog-danger);
+  filter: brightness(0.9);
+}
+dialog .side-button:disabled {
+  opacity: 0.56;
+}
+
+:is(dialog, .wizard-notice) :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+dialog .vendor-footer {
+  position: sticky;
+  bottom: 0;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px var(--dialog-padding);
+  border-top: 1px solid var(--border);
+  background: var(--panel-sunken);
+}
+
+.dialog-body,
+.about-body {
+  padding: 3px var(--dialog-padding) 16px;
+  font-size: inherit;
+  color: var(--text);
+}
+.dialog-body > :first-child,
+.print-host-fields > :first-child {
+  margin-top: 0;
+}
+.dialog-body > :last-child {
+  margin-bottom: 0;
+}
+.dialog-body > .vendor-item {
+  min-height: 30px;
+}
+.dialog-body > .vendor-item input[type="number"] {
+  margin-inline-start: auto;
+  width: 110px;
+}
+
+.dialog-field,
+.print-host-field :is(input, select),
+dialog .filament-column-search {
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  color: var(--text);
+  padding-inline: 9px;
+  font: inherit;
+}
+
+.dialog-notice {
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel-raised);
+  overflow-wrap: anywhere;
+}
+.dialog-notice.error {
+  color: var(--dialog-danger-text);
+  background: var(--dialog-danger-soft);
+}
+.dialog-notice.warning {
+  color: var(--dialog-warning);
+  background: var(--dialog-warning-soft);
+}
+.dialog-notice.success {
+  background: var(--accent-soft);
+}
+.dialog-notice.busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-dialog {
+  --dialog-width: 700px;
+  height: fit-content;
+}
+.settings-heading {
+  flex: 1;
+  min-width: 0;
+}
+.settings-preset {
+  display: block;
+  margin: 5px 0 0;
+  color: var(--text-dim);
+  opacity: 1;
+}
+.settings-body {
+  flex: 0 1 auto;
+  padding: 3px var(--dialog-padding) 16px;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+.settings-body .process-tabs {
+  margin: 0;
+  padding: 3px;
+  background: var(--panel-raised);
+}
+.settings-body .optgroup {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.settings-body .optgroup-title {
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--panel-raised);
+}
+.settings-body .option-row {
+  margin-inline: 10px;
+  min-height: 36px;
+}
+.settings-body .optgroup > :last-child {
+  margin-bottom: 5px;
+}
+.settings-body .option-value {
+  width: min(44%, 210px);
+}
+.settings-body :is(.option-field, .option-select) {
+  min-height: 30px;
+}
+.settings-body .option-field[readonly] {
+  background: var(--field);
+  color: var(--text);
+}
+
+.shortcuts-dialog:has(.shortcuts-groups) .shortcuts-header {
+  justify-content: space-between;
+}
+.shortcuts-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 3px var(--dialog-padding) 16px;
+}
+.shortcuts-groups section {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+.shortcuts-groups h3 {
+  margin: 0;
+  padding: 6px 10px;
+  color: var(--text);
+  background: var(--panel-raised);
+}
+.shortcuts-groups dl {
+  padding-inline: 10px;
+}
+.shortcut-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 30px;
+  align-items: center;
+}
+.shortcut-row dt {
+  grid-column: 2;
+  grid-row: 1;
+}
+.shortcut-row dd {
+  grid-column: 1;
+  grid-row: 1;
+}
+.shortcut-row kbd {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: var(--panel-raised);
+  font:
+    11px/1.45 ui-monospace,
+    monospace;
+  white-space: nowrap;
+}
+
+.about-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.about-identity .brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 23px;
+}
+.about-identity .about-name {
+  margin: 0;
+  font-size: 16px;
+}
+.about-identity .about-version {
+  margin: 0;
+  text-align: start;
+  font-size: 13px;
+}
+.about-credits {
+  color: var(--text-dim);
+}
+.engine-crash-message {
+  white-space: pre-wrap;
+}
+
+.arrange-popup {
+  width: min(336px, calc(100% - 20px));
+  border-radius: 16px;
+  padding: 16px 20px 10px;
+  font-size: 13px;
+}
+.arrange-popup h2 {
+  margin: 0 0 3px;
+  font-size: 17px;
+}
+.arrange-popup input[type="number"] {
+  height: 34px;
+  padding-inline: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+  color: var(--text);
+}
+.arrange-actions {
+  justify-content: end;
+  margin-inline: -20px;
+  padding: 10px 20px 0;
+}
+.arrange-actions .side-button {
+  min-width: 0;
+  min-height: 34px;
+  flex: none;
+  border-radius: var(--radius-control);
+}
+.arrange-actions .dialog-primary {
+  background: var(--accent-fill);
+  color: var(--accent-text);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --dialog-padding: 15px;
+  }
+  dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog) {
+    width: calc(100% - 20px);
+    max-height: calc(100% - 20px);
+  }
+  dialog:is(.settings-dialog, .filament-dialog, .send-dialog) {
+    width: 100%;
+    margin: auto 0 0;
+    max-height: calc(100% - 32px);
+    border-radius: 16px 16px 0 0;
+  }
+  .shortcuts-header {
+    padding-top: 14px;
+  }
+  .shortcuts-header .bar-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  dialog .vendor-footer {
+    flex-wrap: wrap;
+  }
+  dialog .vendor-footer .side-button {
+    flex: 1 1 auto;
+  }
+  .settings-body .process-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .print-host-options-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (pointer: coarse) {
+  dialog .side-button,
+  .dialog-field,
+  .print-host-field :is(input, select) {
+    min-height: 44px;
+  }
+  .dialog-field,
+  .print-host-field :is(input, select) {
+    font-size: 16px;
+  }
+  .dialog-body > .vendor-item {
+    min-height: 44px;
+  }
+}

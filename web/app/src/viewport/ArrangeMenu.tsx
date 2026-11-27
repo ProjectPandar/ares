@@ -62,7 +62,8 @@ export function ArrangePopup() {
     if (!Number.isNaN(value)) void editArrangeSettings({ distance: value });
   };
   return (
-    <div className="arrange-popup" role="dialog" aria-label="Arrange settings">
+    <div className="arrange-popup" role="dialog" aria-labelledby="arrange-settings-title">
+      <h2 id="arrange-settings-title">Arrange settings</h2>
       <div className="arrange-spacing">
         <label htmlFor="arrange-spacing">Spacing</label>
         <input
@@ -120,10 +121,12 @@ export function ArrangePopup() {
         Align to Y axis
       </label>
       <div className="arrange-actions">
-        <button disabled={busy} onClick={() => void arrange()}>
+        <button className="side-button" onClick={resetArrangeSettings}>
+          Reset
+        </button>
+        <button className="side-button dialog-primary" disabled={busy} onClick={() => void arrange()}>
           Arrange
         </button>
-        <button onClick={resetArrangeSettings}>Reset</button>
       </div>
     </div>
   );

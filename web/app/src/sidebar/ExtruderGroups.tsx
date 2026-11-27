@@ -33,20 +33,22 @@ function SwitchDiameter({
       <header className="shortcuts-header">
         <h2 id="switch-diameter-title">Switch diameter</h2>
       </header>
-      <p className="switch-diameter-text">
-        The software does not support using different diameter of nozzles for one print. If the left and right nozzles
-        are inconsistent, we can only proceed with single-head printing. Please confirm which nozzle you would like to
-        use for this project.
-      </p>
+      <div className="dialog-body">
+        <p className="dialog-notice warning">
+          The software does not support using different diameter of nozzles for one print. If the left and right nozzles
+          are inconsistent, we can only proceed with single-head printing. Please confirm which nozzle you would like to
+          use for this project.
+        </p>
+      </div>
       <footer className="vendor-footer">
+        <button className="side-button" onClick={() => dialog.current!.close()}>
+          Cancel
+        </button>
         <button className="side-button" onClick={() => choose(diameters[0])}>{`Left nozzle: ${diameters[0]}mm`}</button>
         <button
           className="side-button"
           onClick={() => choose(diameters[1])}
         >{`Right nozzle: ${diameters[1]}mm`}</button>
-        <button className="side-button" onClick={() => dialog.current!.close()}>
-          Cancel
-        </button>
       </footer>
     </dialog>
   );
@@ -61,7 +63,10 @@ export function ExtruderGroups() {
   useApp((state) => state.overrides);
   useApp((state) => state.scene);
   // Each question is its own dialog: the close event of a dismissed one arrives after the click.
-  const [mismatch, setMismatch] = useState<{ id: number; diameters: [string, string] } | null>(null);
+  const [mismatch, setMismatch] = useState<{
+    id: number;
+    diameters: [string, string];
+  } | null>(null);
   if (!isDual(panel) || !volumeTypeDef) return null;
   const { volumeTypes } = extruderState();
   const nozzles = [nozzleOptions(panel, 0), nozzleOptions(panel, 1)];
