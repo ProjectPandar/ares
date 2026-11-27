@@ -61,12 +61,12 @@ async fn default_tree_style_prints_organic_branches_on_a_y_tilted_belt() {
 }
 
 #[test]
-fn rejects_tree_on_model_and_manual_tree_support_on_belts() {
+fn rejects_remaining_tree_model_landings_and_manual_support_on_belts() {
     let root = crate::artifacts::root_from_env().unwrap();
     for edits in [
         &[("support_on_build_plate_only", "0")][..],
         &[
-            ("support_style", "tree_slim"),
+            ("support_style", "default"),
             ("support_on_build_plate_only", "0"),
         ],
         &[
