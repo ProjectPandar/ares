@@ -17,6 +17,12 @@ const BRIDGE: &[u8] =
     include_bytes!("../../../tests/parity/grid-surface-collections/k1-bridge.3mf");
 const VOLUME_RANGES: &[u8] =
     include_bytes!("../../../tests/parity/object-layer-ranges/volume-precedence.3mf");
+const HILBERT_BRIDGE: &[u8] =
+    include_bytes!("../../../tests/parity/turning-bridge-boundary-sampling/mk4-hilbert.3mf");
+const LIGHTNING: &[u8] =
+    include_bytes!("../../../tests/parity/lightning-initial-overhang-join/positive.3mf");
+const CURVED_WALLS: &[u8] =
+    include_bytes!("../../../tests/parity/gyroid-standard-boundary-waves/paired-cylinders.3mf");
 const CHILD_OUTPUT: &str = "ARES_PARALLEL_SLICING_HASH_FILE";
 
 async fn slice(
@@ -58,6 +64,23 @@ async fn fixture_hashes() -> String {
             r#"{"enable_extra_bridge_layer":"external_bridge_only"}"#,
         ),
         ("volume_ranges", VOLUME_RANGES, "{}"),
+        ("hilbert_bridge", HILBERT_BRIDGE, "{}"),
+        (
+            "random_template_bridge",
+            HILBERT_BRIDGE,
+            r#"{"sparse_infill_rotate_template":"+30~2","solid_infill_rotate_template":"+30^2"}"#,
+        ),
+        ("lightning", LIGHTNING, "{}"),
+        (
+            "arc_fitting_enabled",
+            CURVED_WALLS,
+            r#"{"enable_arc_fitting":"enabled"}"#,
+        ),
+        (
+            "arc_fitting_disabled",
+            CURVED_WALLS,
+            r#"{"enable_arc_fitting":"disabled"}"#,
+        ),
     ] {
         let mut output = Vec::new();
         let overrides = ConfigOverrides::from_json(options.as_bytes()).unwrap();
