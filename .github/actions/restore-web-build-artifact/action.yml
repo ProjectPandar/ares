@@ -1,0 +1,18 @@
+name: Restore Tree-Addressed Web Build Artifact
+description: Restore pull-request WebAssembly outputs only for an exact merge-group tree
+outputs:
+  wasm-hit:
+    description: Exact shipped package artifact hit
+    value: ${{ steps.restore.outputs.wasm-hit }}
+  panic-probe-hit:
+    description: Exact panic-probe artifact hit
+    value: ${{ steps.restore.outputs.panic-probe-hit }}
+runs:
+  using: composite
+  steps:
+    - id: restore
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GITHUB_EVENT_MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+      run: bash scripts/ci/web-build-artifact.sh restore --workspace "$GITHUB_WORKSPACE"
