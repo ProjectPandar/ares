@@ -26,23 +26,33 @@ def stable(rows, key):
 
 
 rows = {}
+incomplete = []
 for kind in ("staggered", "subdivision"):
     for platform in ("native", "browser"):
         for backend in ("direct", "interpreter", "jit" if platform == "native" else "browser"):
             for engine in ("rust", "quickjs", "boa"):
                 prefix = f"{platform}-{backend}-{engine}-{kind}"
-                rows[platform, backend, engine, kind] = read_lines(prefix + ".jsonl")
+                try:
+                    samples = read_lines(prefix + ".jsonl")
+                except (FileNotFoundError, json.JSONDecodeError):
+                    samples = []
+                if len(samples) != 5:
+                    incomplete.append(prefix)
+                    continue
+                rows[platform, backend, engine, kind] = samples
 
 print("| Platform | Placement | Plugin | Recipe | ms/layer | ms/300 | Load ms | Reload ms |")
 print("| --- | --- | --- | --- | ---: | ---: | ---: | ---: |")
 for (platform, backend, engine, kind), samples in rows.items():
-    assert len(samples) == 5, (platform, backend, engine, kind)
     total = median(samples, "hook_total_ms")
     load = median(samples, "load_ms") if (backend, engine) != ("direct", "rust") else None
     print(f"| {platform} | {backend} | {engine} | {kind} | "
           f"{fmt(total / 300)} | {fmt(total)} | {fmt(load)} | {fmt(median(samples, 'reload_ms'))} |")
 
-print("\nLayer edit digests")
+if incomplete:
+    print("\nMissing or incomplete five-trial rows:", ", ".join(incomplete))
+
+print("\nLayer edit digests (complete rows)")
 for kind in ("staggered", "subdivision"):
     hashes = {stable(samples, "layer_sha256") for key, samples in rows.items() if key[3] == kind}
     assert len(hashes) == 1, (kind, hashes)
@@ -93,3 +103,6 @@ base = (root / "baseline_bg.wasm").stat().st_size
 for path in sorted(root.glob("*.wasm")):
     size = path.stat().st_size
     print(path.name, size, (size - base) if path.name.endswith("_bg.wasm") else "")
+
+if incomplete:
+    sys.exit(1)
