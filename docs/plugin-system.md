@@ -14,6 +14,77 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 | P3 | Official samples in `plugins/`: SDK, staggered perimeters, subdivided outer walls (stage 1) | not started |
 | P4 | Hot reload in CLI and browser; JS versions of the samples | not started |
 
+## Plugin rules
+
+Binding rules for the plugin system. Rationale and upstream sources are in
+[ARD-0112](architecture/ard-0112-plugin-host.md); the decision log below
+records when each was made.
+
+Interface and crates
+
+1. `ares-core` exposes one public Rust plugin interface: the step enum, the
+   data each hook receives and the edits it may return. It is the only plugin
+   contract; every other form adapts to it. Core has no WASM or JS dependency
+   and never reads plugin files.
+2. Rust plugins may implement the core interface directly and be compiled in.
+   They run at native speed on every platform but cannot be hot reloaded or
+   embedded in a project.
+3. `ares-plugin-host` loads WebAssembly and JavaScript plugins, adapts them to
+   the core interface, runs their sandbox and owns hot reload. The CLI and the
+   browser adapters attach it.
+4. Rust and JavaScript are both official authoring paths; each official
+   sample exists in both. Official samples live in `plugins/`.
+5. Plugin modules are exempt from the rewrite rule in `AGENTS.md`. Core
+   changes for plugins are limited to the upstream seam plus the extensions
+   recorded in ARD-0112.
+
+Output
+
+6. With no plugin attached, output is byte-identical to the current code and
+   every parity suite is unchanged. Plugin output makes no OrcaSlicer parity
+   claim.
+7. Plugin output is deterministic: identical on native and in the browser and
+   independent of core count. Hooks run in the order of
+   `slicing_pipeline_plugin`; NaN payloads are canonicalized.
+8. Plugins run only inside slicing steps, never when a project is opened.
+9. The G-code a plugin produces is not policed; it is treated like custom
+   G-code stored in a project.
+
+Sandbox
+
+10. Every hosted (WASM or JS) plugin runs sandboxed: no network, clock,
+    randomness or threads, no real filesystem, and no user paths, names or
+    machine identity.
+11. File access is limited to the plugin's own virtual root. `/package` is
+    read-only and holds the files shipped with the plugin (part of its content
+    hash). `/data` is private, read-write and limited by size and file-count
+    quotas; it is never shared between plugins and never embedded in a
+    project. Absolute paths, `..` and links are rejected.
+12. During a slice, `/data` reads see the snapshot taken when the slice
+    started; writes become visible to the next slice. The hash of the `/data`
+    files a plugin read joins its identity for invalidation.
+13. Execution is bounded by a deterministic fuel budget and a memory cap, so
+    a runaway plugin fails the same way on every platform.
+14. JavaScript runs on a memory-safe engine or inside the WASM sandbox, never
+    on an unsandboxed C engine.
+15. A plugin declares the hooks it uses; undeclared hooks are never called.
+
+Options, projects and reload
+
+16. A plugin declares typed options (key, type, default, range or enum
+    values, label, tooltip, scope print, printer or filament). Values are
+    stored in the upstream `print_plugin_config_overrides`,
+    `printer_plugin_config_overrides` and `filament_plugin_config_overrides`
+    keys; selection uses `slicing_pipeline_plugin` and `plugins`.
+17. Saving a project that uses hosted plugins embeds their code in the 3MF
+    together with each plugin's reference, version and content hash. Embedded
+    plugins run without a trust prompt. A hash mismatch is reported and never
+    replaced by another build.
+18. A hosted plugin's identity is the hash of its module bytes or JS sources.
+    Identity and option values are part of the configuration compared by the
+    PrintApply invalidation, so replacing a plugin or editing an option
+    recomputes from the plugin's first hooked step and keeps earlier steps.
+
 ## Decision log
 
 - 2026-11-28: the host loads only WebAssembly modules. Ares maintains one
