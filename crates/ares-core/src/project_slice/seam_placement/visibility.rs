@@ -42,6 +42,8 @@ impl GlobalVisibility {
             front_bias,
             cancel,
         };
+        // SeamPlacer.cpp:184-225 raycasts global visibility samples;
+        // compute_global_occlusion is assembled around :986-1050.
         crate::parallel::par_chunks_mut_try(&mut values, 64, cancel, |offset, values| {
             chunk.fill(offset, values)
         })?;

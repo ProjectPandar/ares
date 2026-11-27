@@ -4,8 +4,6 @@ use crate::{
 
 use super::{LayerPlan, SeamPerimeter, Vec3, is_not_much_worse};
 
-const RANDOM_MULTIPLIER: f32 = f32::from_bits(0x472a_ee8c);
-
 #[derive(Clone, Copy)]
 struct Edge {
     index: usize,
@@ -14,6 +12,8 @@ struct Edge {
 }
 
 pub(super) fn apply(layers: &mut [LayerPlan], cancel: &CancelToken) -> Result<(), SliceError> {
+    // SeamPlacer.cpp:2181-2194 selects each layer's seam independently;
+    // pick_random_seam_point is defined at :1367-1435.
     crate::parallel::par_for_each_mut_try(layers, cancel, |_, layer| {
         for perimeter_index in 0..layer.candidates.perimeters.len() {
             cancel.check()?;
@@ -29,7 +29,7 @@ fn select(layer: &LayerPlan, perimeter_index: usize) -> (usize, Vec3) {
     let perimeter = &layer.candidates.perimeters[perimeter_index];
     let seed = layer.positions[perimeter.start_index];
     let mut random =
-        (sincosf::sin(seed.dot(Vec3::new(12.9898, 78.233, 133.3333))) * RANDOM_MULTIPLIER).abs();
+        (sincosf::sin(seed.dot(Vec3::new(12.9898, 78.233, 133.3333))) * 43_758.547).abs();
     random -= random as i32 as f32;
     let viable = viable_edges(layer, perimeter);
     let mut picked = viable.iter().map(|edge| edge.length).sum::<f32>() * random;

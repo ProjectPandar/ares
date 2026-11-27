@@ -26,6 +26,7 @@ pub(super) fn populate(
     } = input;
     assert_eq!(layers.len(), compute_embedding.len());
     assert_eq!(layers.len(), layer_slices.len());
+    // SeamPlacer.cpp:1683-1734 embeds layer context; its independent loop is :1688.
     crate::parallel::par_for_each_mut_try(layers, cancel, |layer_index, current| {
         if compute_embedding[layer_index] {
             populate_embedded_distance(current, &layer_slices[layer_index], scale);

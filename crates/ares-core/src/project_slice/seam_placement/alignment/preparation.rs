@@ -66,6 +66,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .iter()
         .map(|value| value.0)
         .fold(0.0_f64, f64::max);
+    // SeamPlacer.cpp:1635-1665 gathers candidates; its independent loop is :1641.
     let mut plans = crate::parallel::par_range_map_try(layers.len(), cancel, |index| {
         let regions = layer_regions(&layers[index], input, index);
         prepare_layer(
@@ -76,6 +77,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             (placement, paint),
         )
     })?;
+    // SeamPlacer.cpp:1668-1680 scores candidate visibility; its independent loop is :1672.
     crate::parallel::par_for_each_mut_try(&mut plans, cancel, |_, plan| {
         for (score, candidate) in plan.scores.iter_mut().zip(&plan.candidates.points) {
             cancel.check()?;
@@ -95,6 +97,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             cancel,
         },
     )?;
+    // SeamPlacer.cpp:2181-2194 performs the independent initial per-layer choice.
     crate::parallel::par_for_each_mut_try(&mut plans, cancel, |_, plan| {
         plan.choices = Vec::with_capacity(plan.candidates.perimeters.len());
         for perimeter in &plan.candidates.perimeters {
