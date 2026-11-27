@@ -40,11 +40,13 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    platform, so a JS plugin produces identical bytes on native and in the
    browser. `ares-core` stays platform-neutral, never reads plugin files and has
    no WASM or JS dependency; the CLI and browser adapters attach the host.
-4. **Deterministic plugins.** Plugins get no clock, randomness, threads,
-   filesystem or network. Each hook is a pure function of the data the host
-   passes for one layer or object; hooks run in the order of
-   `slicing_pipeline_plugin`. NaN payloads returned by a plugin are
-   canonicalized. Output must not depend on core count.
+4. **Sandboxed, deterministic plugins.** Every hosted plugin runs in a sandbox
+   owned by `ares-plugin-host`. It gets no network, clock, randomness or
+   threads, and no access to the real filesystem. Its only file access is a
+   per-plugin virtual root (decision 10). Each hook is a pure function of the
+   data the host passes for one layer or object plus the files it read; hooks
+   run in the order of `slicing_pipeline_plugin`. NaN payloads returned by a
+   plugin are canonicalized. Output must not depend on core count.
 5. **Hot reload.** For hosted plugins, identity is the hash of the module
    bytes or JS sources. The identity is part of the configuration compared by the
    PrintApply invalidation, so replacing a plugin recomputes from its first
@@ -82,9 +84,9 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    - it never runs until the user trusts that exact content hash; the CLI
      refuses such a project unless the hash is trusted explicitly, and never
      slices it without the plugin silently;
-   - it runs only through `ares-plugin-host` with no imports besides the
-     data-only host functions (no files, network, clock, randomness, threads),
-     and receives no user paths, names or machine identity;
+   - it runs only through `ares-plugin-host` in the sandbox of decision 4,
+     with its file access limited to its own root (decision 10), and receives
+     no user paths, names or machine identity;
    - execution is bounded by a deterministic fuel budget and a memory cap, so
      a runaway plugin fails the same way on every platform;
    - JS runs on a memory-safe engine or inside the WASM sandbox, never on an
@@ -94,6 +96,21 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
      before trust is granted.
    Native Rust plugins cannot be embedded; a project that needs one records
    only its reference and version.
+
+10. **Plugin file sandbox.** Each plugin sees one virtual root and nothing
+    outside it; `ares-plugin-host` resolves every path inside it and rejects
+    absolute paths, `..` and links. The root has two areas:
+    - `/package`: read-only files shipped with the plugin. They are part of
+      its content hash and travel with it in a 3MF.
+    - `/data`: private read-write storage for that plugin only, with size and
+      file-count quotas. It is never shared between plugins, never embedded in
+      a 3MF and can be cleared by the user.
+    During a slice, `/data` reads see a snapshot taken when the slice starts
+    and writes become visible to the next slice, so parallel hooks cannot
+    observe each other. The hash of the `/data` files a plugin read joins its
+    identity for invalidation. The adapter supplies the backing store (an
+    application data directory natively, browser storage in the web build);
+    `ares-core` never sees it.
 
 ## Rewrite rule amendment
 

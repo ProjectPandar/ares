@@ -36,6 +36,10 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
   are saved in the project (3MF) through the upstream plugin keys. Hosted
   plugins are embedded in the 3MF and run only after the user trusts their
   content hash (ARD-0112 decisions 8 and 9).
+- 2026-11-28: hosted plugins run sandboxed: no network for now, no real
+  filesystem; file access is limited to a per-plugin virtual root with a
+  read-only `/package` and a quota-limited private `/data` (ARD-0112
+  decision 10).
 - 2026-11-28: hooks are not limited to perimeters. Every upstream pipeline step
   and the G-code stages expose hooks that can add, remove or modify extrusions
   or G-code; the catalog below lists each hook, its data and its allowed edits.
@@ -60,6 +64,9 @@ Questions:
    and in JS on a synthetic model; module load and reload latency.
 5. Determinism: the same plugin and input give identical output bytes on
    native and in the browser, including `Math` functions in JS.
+6. Sandbox: deterministic fuel and memory caps per engine; file API as a
+   small WASI subset mapped onto the virtual root (so Rust `std::fs` works in
+   plugins) or as custom host functions, and its cost in the browser.
 
 Results: _to be recorded here._
 
@@ -70,10 +77,11 @@ mitigations:
 
 | Risk | Mitigation |
 | --- | --- |
-| Sandbox escape | WASM through a memory-safe engine; JS on a memory-safe engine or inside WASM; no imports except data-only host functions |
+| Sandbox escape | WASM through a memory-safe engine; JS on a memory-safe engine or inside WASM; no imports except the host's data functions and its virtual file API |
+| Filesystem access | Only the plugin's own virtual root: read-only `/package`, private `/data` with quotas; absolute paths, `..` and links rejected |
 | Runs on open | Never runs before the user trusts its content hash; CLI needs an explicit trust argument and fails instead of slicing without it |
 | Hang or memory exhaustion | Deterministic fuel budget and memory cap |
-| Data leaks | No network, files or clock; hooks get slicing data only, no paths, user or machine identity |
+| Data leaks | No network or clock; files only inside the plugin's root; hooks get slicing data only, no paths, user or machine identity |
 | Harmful G-code (heaters, limits, firmware or EEPROM commands) | Same exposure as custom G-code already stored in project configs; raw G-code permission is declared and shown before trust; extrusion edits are validated by core |
 | Tampering or version drift | Content hash pinned in the project; a mismatch is reported, never substituted |
 
