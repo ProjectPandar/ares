@@ -203,8 +203,6 @@ restore_artifact() {
     esac
   done
   [ -n "$workspace" ] || usage
-  emit "wasm-hit" false
-  emit "panic-probe-hit" false
   local artifact_root=""
   if [ -n "$direct_artifact" ]; then
     artifact_root="$direct_artifact"
