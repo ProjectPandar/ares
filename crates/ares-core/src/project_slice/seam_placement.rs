@@ -64,14 +64,13 @@ pub(in crate::project_slice) fn apply(
         return Ok(());
     }
 
-    // `SeamPlacer.cpp:1442` — occlusion is computed per PrintObject, each
-    // with its own `trafo_centered` frame; share one visibility model per
-    // object index.
+    // `SeamPlacer.cpp::compute_global_occlusion` uses each PrintObject's
+    // `trafo_sliced`, including its belt rotation and lift.
     let visibilities = placements
         .iter()
         .enumerate()
         .map(|(object_index, placement)| {
-            // SeamPlacer.cpp:1440-1457 leaves rear/random visibility at zero.
+            // SeamPlacer.cpp:2149–2167 leaves rear/random visibility at zero.
             if !matches!(
                 placement,
                 Some(
@@ -82,15 +81,12 @@ pub(in crate::project_slice) fn apply(
             ) {
                 return None;
             }
-            let source_index = traversal
-                .print_object_config(object_index)
-                .0
-                .source_object_index;
-            let mesh = mesh::TriangleMesh::from_object(
-                &traversal.project.objects()[source_index],
-                traversal.print_object_config(object_index).1,
-                traversal.scale,
-            );
+            let (source, group) = traversal.print_object_config(object_index);
+            let object = &traversal.project.objects()[source.source_object_index];
+            let transform = traversal.objects[object_index]
+                .belt_slice_transform()
+                .unwrap_or_else(|| mesh::centered_transform(object, group, traversal.scale));
+            let mesh = mesh::TriangleMesh::from_object(object, transform);
             (!mesh.triangles.is_empty()).then(|| {
                 let front_bias =
                     placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack);

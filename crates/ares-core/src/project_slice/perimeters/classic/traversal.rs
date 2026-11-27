@@ -136,25 +136,31 @@ fn prepare_object(
 }
 
 impl PostClassicTraversalPrintObject {
+    fn plan(&self) -> &crate::project_slice::layers::PlannedPrintObject {
+        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
+        &input.object.as_parts().0.plan
+    }
+
+    pub(in crate::project_slice) fn belt_slice_transform(&self) -> Option<crate::Transform3d> {
+        self.plan().belt_slice.map(|slice| slice.centered_transform)
+    }
+
     pub(in crate::project_slice) fn belt_floor(
         &self,
     ) -> Option<crate::project_slice::belt::BeltFloor> {
-        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
-        input.object.as_parts().0.plan.belt_slice?.floor
+        self.plan().belt_slice?.floor
     }
 
     pub(in crate::project_slice) fn physical_layers(
         &self,
     ) -> &[crate::project_slice::layers::PlannedLayer] {
-        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
-        &input.object.as_parts().0.plan.layers
+        &self.plan().layers
     }
 
     pub(in crate::project_slice) fn slicing_parameters(
         &self,
     ) -> &crate::project_slice::parameters::SlicingParameters {
-        let input = &self.predecessor.predecessor.predecessor.predecessor.object;
-        &input.object.as_parts().0.plan.slicing_parameters
+        &self.plan().slicing_parameters
     }
 
     pub(in crate::project_slice) fn lower_series(
