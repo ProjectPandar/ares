@@ -36,10 +36,11 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
 3. **Plugin host crate.** A dedicated crate (`ares-plugin-host`) loads WebAssembly
    and JavaScript plugins, adapts them to the core interface, and owns hot
    reload. The WASM call encoding and the JS object model are projections of
-   the core types maintained only there. The same JS engine runs on every
-   platform, so a JS plugin produces identical bytes on native and in the
-   browser. `ares-core` stays platform-neutral, never reads plugin files and has
-   no WASM or JS dependency; the CLI and browser adapters attach the host.
+   the core types maintained only there. Use the same JS engine on every
+   platform and define portable numeric behavior; pinning the engine alone
+   does not guarantee identical output bytes. `ares-core` stays platform-neutral,
+   never reads plugin files and has no WASM or JS dependency; the CLI and
+   browser adapters attach the host.
 4. **Sandboxed, deterministic plugins.** Every hosted plugin runs in a sandbox
    owned by `ares-plugin-host`. It gets no network, clock, randomness or
    threads, and no access to the real filesystem. Its only file access is a
@@ -84,8 +85,9 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    Plugins run only inside slicing steps, never when a project is opened, and
    always in the sandbox of decisions 4 and 10, so an embedded plugin runs
    without a separate trust prompt. Execution is bounded by a deterministic
-   fuel budget and a memory cap, so a runaway plugin fails the same way on
-   every platform. JS runs on a memory-safe engine or inside the WASM sandbox,
+   fuel budget and a memory cap. To fail at the same point on every platform,
+   use the same metering semantics; fuel counts from different runtimes are
+   not interchangeable. JS runs on a memory-safe engine or inside the WASM sandbox,
    never on an unsandboxed C engine. A plugin declares the hooks it uses;
    undeclared hooks are never called. The G-code a plugin produces is not
    policed; it is treated like custom G-code in a project. Native Rust plugins
