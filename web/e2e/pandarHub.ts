@@ -5,12 +5,6 @@ import { type BrowserContext, expect, type Page, type Request, type WebSocketRou
 export const hub = "http://hub.pandar.test";
 export const token = "pandar_web_token";
 export const expiresAt = "2099-01-01T00:00:00Z";
-const app = "http://127.0.0.1:4174";
-const cors = {
-  "access-control-allow-origin": app,
-  "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "authorization, content-type",
-};
 
 export interface FakeHub {
   /** Each job upload. */
@@ -24,7 +18,18 @@ export interface FakeHub {
  * at once to the app's callback with a ticket, and the exchange checks the PKCE verifier against
  * the challenge it was issued for.
  */
-export async function fakeHub(context: BrowserContext, printers: object[]): Promise<FakeHub> {
+export async function fakeHub(
+  context: BrowserContext,
+  printers: object[],
+  baseURL: string | undefined,
+): Promise<FakeHub> {
+  if (!baseURL) throw new Error("The fake Pandar Hub requires a Playwright baseURL");
+  const origin = new URL(baseURL).origin;
+  const cors = {
+    "access-control-allow-origin": origin,
+    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-headers": "authorization, content-type",
+  };
   const hubState: FakeHub = { jobs: [], sockets: [] };
   const challenges = new Map<string, string>();
   let tickets = 0;
@@ -34,7 +39,8 @@ export async function fakeHub(context: BrowserContext, printers: object[]): Prom
     const path = url.pathname;
     if (path === "/web-sign-in") {
       const redirect = new URL(url.searchParams.get("redirect_url")!);
-      if (redirect.href !== `${app}/cloud-callback.html`) return route.fulfill({ status: 400, body: "redirect_url" });
+      if (redirect.href !== `${origin}/cloud-callback.html`)
+        return route.fulfill({ status: 400, body: "redirect_url" });
       const ticket = `pandar_web_ticket_${++tickets}`;
       challenges.set(ticket, url.searchParams.get("code_challenge")!);
       redirect.search = new URLSearchParams({ ticket, state: url.searchParams.get("state")! }).toString();

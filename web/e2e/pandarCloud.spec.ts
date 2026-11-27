@@ -47,9 +47,9 @@ const cloudMenu = (page: Page) => page.getByRole("button", { name: "Cloud" });
 const devicesTab = (page: Page) => page.getByRole("link", { name: "Devices" });
 const storedCloud = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("ares.config")!).cloud);
 
-test("signs in to Pandar Cloud and shows its printers live in the Devices tab", async ({ page }) => {
+test("signs in to Pandar Cloud and shows its printers live in the Devices tab", async ({ page, baseURL }) => {
   mkdirSync(artifacts, { recursive: true });
-  const hubState = await fakeHub(page.context(), [idle, voron]);
+  const hubState = await fakeHub(page.context(), [idle, voron], baseURL);
   await page.goto("/#/devices");
   // Signed out: no Devices tab, and its route falls back to Prepare.
   await expect(page).toHaveURL(/#\/prepare$/);

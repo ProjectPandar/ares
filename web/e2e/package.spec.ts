@@ -79,13 +79,14 @@ test("the packed @ares-slicer/wasm tarball works for a third-party consumer", as
 
   // Runtime: the README usage, bundled by Vite from the extracted tarball, slices byte-identically to native.
   await build({ root: consumer, logLevel: "warn", build: { outDir: "dist", target: "es2022" } });
+  const port = Number(process.env.ARES_WEB_HELPER_PORT ?? 4245);
   const server = await preview({
     root: consumer,
     logLevel: "warn",
-    preview: { host: "127.0.0.1", port: 4245, strictPort: true },
+    preview: { host: "127.0.0.1", port, strictPort: true },
   });
   try {
-    await page.goto("http://127.0.0.1:4245/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await page.getByTestId("input").setInputFiles(`${repositoryRoot}${fixture}`);
     const result = page.getByTestId("result");
     await expect(result).not.toBeEmpty({ timeout: 120_000 });

@@ -48,9 +48,9 @@ async function send(page: Page, printer: string) {
 
 test.use({ firstRunConfig: false });
 
-test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hub", async ({ page }) => {
+test("sends the sliced plate to Bambu and Moonraker printers through a Pandar Hub", async ({ page, baseURL }) => {
   mkdirSync(artifacts, { recursive: true });
-  const { jobs } = await fakeHub(page.context(), printers);
+  const { jobs } = await fakeHub(page.context(), printers, baseURL);
   await page.addInitScript((record) => {
     if (localStorage.getItem("ares.config") === null) localStorage.setItem("ares.config", record);
   }, JSON.stringify(config));

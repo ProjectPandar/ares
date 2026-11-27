@@ -77,7 +77,8 @@ const server = createServer(async (req, res) => {
   res.setHeader("Content-Type", entry[1]);
   res.end(readFileSync(entry[0]));
 });
-await new Promise((r) => server.listen(4245, "127.0.0.1", r));
+const port = Number(process.env.ARES_WEB_HELPER_PORT ?? 4245);
+await new Promise((r) => server.listen(port, "127.0.0.1", r));
 let browser;
 try {
   browser = await chromium.launch({ executablePath: process.env.ARES_E2E_CHROME || undefined, headless: true });

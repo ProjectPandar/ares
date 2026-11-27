@@ -39,15 +39,16 @@ test("a project sliced twice through the worker API is complete, repeatable and 
     `${artifacts}page/system-presets.json`,
     catalogPath ? readFileSync(catalogPath, "utf8") : await systemPresetCatalog(),
   );
+  const port = Number(process.env.ARES_WEB_HELPER_PORT ?? 4245);
   const server = await preview({
     root,
     logLevel: "warn",
     build: { outDir: `${artifacts}page` },
-    preview: { host: "127.0.0.1", port: 4245, strictPort: true },
+    preview: { host: "127.0.0.1", port, strictPort: true },
   });
   let result: Slice;
   try {
-    await page.goto("http://127.0.0.1:4245/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
     result = await page.evaluate(
       (bytes) => (window as unknown as { aresKsrSlice: (bytes: number[]) => Promise<Slice> }).aresKsrSlice(bytes),
