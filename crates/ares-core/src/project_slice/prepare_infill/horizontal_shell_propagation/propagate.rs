@@ -1,5 +1,5 @@
 use crate::{
-    ProcessEnsureVerticalShellThickness, SliceError,
+    CancelToken, ProcessEnsureVerticalShellThickness, SliceError,
     project_slice::prepare_infill::{
         horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,
         horizontal_shell_propagation::{
@@ -13,9 +13,15 @@ use crate::{
 pub(super) fn project(
     prepared: &PreparedPostHorizontalShellPromotion,
     working: &mut WorkingProject,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     for object_index in 0..prepared.objects.len() {
-        propagate_object(prepared, &mut working.objects[object_index], object_index)?;
+        propagate_object(
+            prepared,
+            &mut working.objects[object_index],
+            object_index,
+            cancel,
+        )?;
     }
     Ok(())
 }
@@ -24,9 +30,12 @@ fn propagate_object(
     prepared: &PreparedPostHorizontalShellPromotion,
     working: &mut WorkingObject,
     object_index: usize,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
+    cancel.check()?;
     for source_index in 0..prepared.objects[object_index].records.len() {
-        propagate_source(prepared, working, object_index, source_index)?;
+        cancel.check()?;
+        propagate_source(prepared, working, object_index, source_index, cancel)?;
     }
     Ok(())
 }
@@ -36,6 +45,7 @@ fn propagate_source(
     working: &mut WorkingObject,
     object_index: usize,
     source_index: usize,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     let object = &prepared.objects[object_index];
     let traversal = &prepared.predecessor.objects[object_index];
@@ -50,7 +60,13 @@ fn propagate_source(
         return Ok(());
     }
     for kind in SOURCE_KINDS {
-        propagate_kind(prepared, working, [object_index, source_index], kind)?;
+        propagate_kind(
+            prepared,
+            working,
+            [object_index, source_index],
+            kind,
+            cancel,
+        )?;
     }
     Ok(())
 }
@@ -60,6 +76,7 @@ fn propagate_kind(
     working: &mut WorkingObject,
     indices: [usize; 2],
     kind: SourceKind,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     let [object_index, source_index] = indices;
     let object = &prepared.objects[object_index];
@@ -95,6 +112,7 @@ fn propagate_kind(
 
     for neighbor_layer in window::indices(kind, source_input.planned_layer_index, plan.layers.len())
     {
+        cancel.check()?;
         if !window::includes(
             kind,
             [source_input.planned_layer_index, neighbor_layer],

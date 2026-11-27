@@ -1,5 +1,6 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
+    parallel::par_range_map_ordered_try,
     project_slice::prepare_infill::{
         vertical_shell_regularization::{regularize, types::VerticalShellRegularizationObject},
         vertical_shell_trimming::PreparedPostVerticalShellTrim,
@@ -8,7 +9,9 @@ use crate::{
 
 pub(super) fn regularize(
     prepared: &PreparedPostVerticalShellTrim,
+    cancel: &CancelToken,
 ) -> Result<Vec<VerticalShellRegularizationObject>, SliceError> {
+    cancel.check()?;
     validate_alignment(prepared);
     prepared
         .objects
@@ -17,23 +20,24 @@ pub(super) fn regularize(
         .zip(&prepared.predecessor.objects)
         .map(|((object, trim_object), traversal)| {
             let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
-            let records = object
-                .records
-                .iter()
-                .zip(&trim_object.records)
-                .zip(&prelude.object.records)
-                .map(|((record, trim), input)| match (record, trim, input) {
-                    (Some(_), Some(trim), Some(input)) => regularize::regularize_record(
-                        trim,
-                        input
-                            .solid_infill_flow
-                            .scaled_spacing(prepared.predecessor.scale),
-                    )
-                    .map(Some),
-                    (None, None, None) => Ok(None),
-                    _ => unreachable!("validated O22 slots remain aligned"),
-                })
-                .collect::<Result<_, _>>()?;
+            let records =
+                par_range_map_ordered_try(object.records.len(), cancel, |index| {
+                    match (
+                        &object.records[index],
+                        &trim_object.records[index],
+                        &prelude.object.records[index],
+                    ) {
+                        (Some(_), Some(trim), Some(input)) => regularize::regularize_record(
+                            trim,
+                            input
+                                .solid_infill_flow
+                                .scaled_spacing(prepared.predecessor.scale),
+                        )
+                        .map(Some),
+                        (None, None, None) => Ok(None),
+                        _ => unreachable!("validated O22 slots remain aligned"),
+                    }
+                })?;
             Ok(VerticalShellRegularizationObject { records })
         })
         .collect()

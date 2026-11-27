@@ -63,6 +63,21 @@ where
         .collect()
 }
 
+/// Preserve input order when jobs can fail with distinct geometry errors.
+pub(crate) fn par_range_map_ordered_try<U, F>(
+    len: usize,
+    cancel: &CancelToken,
+    f: F,
+) -> Result<Vec<U>, SliceError>
+where
+    U: Send,
+    F: Fn(usize) -> Result<U, SliceError> + Sync + Send,
+{
+    let results = par_range_map_try(len, cancel, |index| Ok(f(index)))?;
+    cancel.check()?;
+    results.into_iter().collect()
+}
+
 pub(crate) fn par_for_each_mut_try<T, F>(
     items: &mut [T],
     cancel: &CancelToken,

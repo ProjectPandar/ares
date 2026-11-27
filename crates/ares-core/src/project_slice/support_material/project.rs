@@ -93,14 +93,14 @@ pub(in crate::project_slice) fn generate(
             resolved_object,
             plan,
             ProjectVolumeType::SupportEnforcer,
-            scale,
+            (scale, context.cancel_ref()),
         )?;
         let mut blockers = annotations::slice_volumes(
             source_object,
             resolved_object,
             plan,
             ProjectVolumeType::SupportBlocker,
-            scale,
+            (scale, context.cancel_ref()),
         )?;
         let facets = super::facet_projection::Input {
             source: source_object,

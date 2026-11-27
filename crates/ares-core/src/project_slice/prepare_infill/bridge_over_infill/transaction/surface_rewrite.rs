@@ -1,6 +1,7 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
     geometry::CoordinateScale,
+    parallel::par_range_map_ordered_try,
     project_slice::{
         perimeters::types::{PerimeterInputRecord, RegionLayerIndex},
         prepare_infill::{
@@ -8,6 +9,7 @@ use crate::{
             external_surfaces::PreparedPostExternalSurfaces,
             surface_type_detection::types::PreparedSurfaceTypeRecord,
         },
+        region_slices::RegionSurface,
     },
 };
 
@@ -26,11 +28,17 @@ use super::geometry_error;
 pub(super) fn prepare(
     predecessor: &mut PreparedPostExternalSurfaces,
     candidate_objects: &[BridgeCandidateObject],
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     let horizontal = &mut predecessor.predecessor;
     let traversal = &horizontal.predecessor;
     let scale = traversal.scale;
     for (object_index, candidates) in candidate_objects.iter().enumerate() {
+        cancel.check()?;
+        let surfaces_by_layer = &candidates.surfaces_by_layer;
+        if surfaces_by_layer.is_empty() {
+            continue;
+        }
         let traversal_object = &traversal.objects[object_index];
         let prelude = &traversal_object
             .predecessor
@@ -42,12 +50,9 @@ pub(super) fn prepare(
         let (plan, _, regions) = post_regions.as_parts();
         let layer_count = plan.layers.len();
         let object = &mut horizontal.objects[object_index];
-        for layer_index in 0..layer_count {
-            let current = candidates
-                .surfaces_by_layer
-                .get(&layer_index)
-                .map(Vec::as_slice);
-            let upper = candidates.surfaces_by_layer.get(&(layer_index + 1));
+        let staged = par_range_map_ordered_try(layer_count, cancel, |layer_index| {
+            let current = surfaces_by_layer.get(&layer_index).map(Vec::as_slice);
+            let upper = surfaces_by_layer.get(&(layer_index + 1));
             let upper_inputs = upper.map(|surfaces| {
                 surfaces
                     .iter()
@@ -68,17 +73,26 @@ pub(super) fn prepare(
             let Some(areas) = collect_bridge_rewrite_areas(current, upper_inputs.as_deref(), scale)
                 .map_err(geometry_error)?
             else {
-                continue;
+                return Ok(Vec::new());
             };
+            let mut layer = Vec::new();
             for region_index in 0..regions.len() {
                 let slot = region_index * layer_count + layer_index;
-                let (input, record) = match (&inputs[slot], &mut object.records[slot]) {
+                let (input, record) = match (&inputs[slot], &object.records[slot]) {
                     (Some(input), Some(record)) => (input, record),
                     (None, None) => continue,
                     _ => unreachable!("scheduled bridge region/layer records remain aligned"),
                 };
-                rewrite_region(input, record, current.unwrap_or(&[]), &areas, scale)?;
+                let fill = rewrite_region(input, record, current.unwrap_or(&[]), &areas, scale)?;
+                layer.push((slot, fill));
             }
+            Ok(layer)
+        })?;
+        for (slot, fill) in staged.into_iter().flatten() {
+            cancel.check()?;
+            let record = object.records[slot].as_mut().expect("staged bridge record");
+            let original = std::mem::take(&mut record.fill_surfaces);
+            record.fill_surfaces = commit_region_bridge_surfaces(original, &fill);
         }
     }
     Ok(())
@@ -86,11 +100,11 @@ pub(super) fn prepare(
 
 fn rewrite_region(
     input: &PerimeterInputRecord,
-    record: &mut PreparedSurfaceTypeRecord,
+    record: &PreparedSurfaceTypeRecord,
     current: &[CandidateSurface],
     areas: &BridgeRewriteAreas,
     scale: CoordinateScale,
-) -> Result<(), SliceError> {
+) -> Result<Vec<RegionSurface>, SliceError> {
     let ensuring = prepare_region_bridge_ensuring_areas(
         &record.fill_surfaces,
         &areas.additional_ensuring_areas,
@@ -116,7 +130,5 @@ fn rewrite_region(
         )
         .map_err(geometry_error)?,
     );
-    let original = std::mem::take(&mut record.fill_surfaces);
-    record.fill_surfaces = commit_region_bridge_surfaces(original, &new_surfaces);
-    Ok(())
+    Ok(new_surfaces)
 }

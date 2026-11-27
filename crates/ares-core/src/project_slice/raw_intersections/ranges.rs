@@ -1,6 +1,6 @@
 use crate::{
-    ProjectObject, SliceError,
-    mesh_slicer::{IntersectionLine, slice_mesh_on_planes},
+    CancelToken, ProjectObject, SliceError,
+    mesh_slicer::{IntersectionLine, MeshTopology, slice_mesh_on_planes},
     options::FilamentRegionSourceOptions,
     project::{effective_config::types::ResolvedProjectObject, region_graph::object_region_graph},
 };
@@ -45,7 +45,9 @@ pub(super) fn slice_volume(
     triangles: &[[u32; 3]],
     planes: &[f32],
     ranges: &[(f64, f64)],
+    (topology, cancel): (&MeshTopology, &CancelToken),
 ) -> Result<Vec<Vec<IntersectionLine>>, SliceError> {
+    cancel.check()?;
     if planes.is_empty() || ranges.is_empty() {
         return Ok(Vec::new());
     }
@@ -53,7 +55,7 @@ pub(super) fn slice_volume(
         && f64::from(planes[0]) >= *low
         && f64::from(planes[planes.len() - 1]) < *high
     {
-        return slice_mesh_on_planes(vertices, triangles, planes);
+        return slice_mesh_on_planes(vertices, triangles, planes, topology, cancel);
     }
     let mut filtered = Vec::with_capacity(planes.len());
     let mut spans = Vec::with_capacity(2 * ranges.len());
@@ -74,7 +76,7 @@ pub(super) fn slice_volume(
     if spans.is_empty() {
         return Ok(Vec::new());
     }
-    let layers = slice_mesh_on_planes(vertices, triangles, &filtered)?;
+    let layers = slice_mesh_on_planes(vertices, triangles, &filtered, topology, cancel)?;
     let mut output = vec![Vec::new(); planes.len()];
     let mut slices = layers.into_iter();
     for span in spans {

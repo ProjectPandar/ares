@@ -51,6 +51,7 @@ fn sides(
 }
 pub(in crate::project_slice) fn apply_project(
     prepared: &mut PreparedPostRegions,
+    cancel: &crate::CancelToken,
 ) -> Result<(), SliceError> {
     let full = &prepared.resolved.views.full;
     let states = full.filament.gcode.filament_diameter.0.len() + 1;
@@ -82,6 +83,7 @@ pub(in crate::project_slice) fn apply_project(
         let transform = &resolved.print_objects[object.plan.transform_index];
         let input = projection::Input {
             painting: projection::Painting::Mmu,
+            cancel,
             source,
             transform: transform.transform.without_xy_translation(),
             center: centering::center(source, transform, prepared.scale)?,

@@ -1,6 +1,7 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
     geometry::{ExPolygon, intersection_ex, intersection_ex_refs_ex},
+    parallel::{par_for_each_mut_try, par_range_map_ordered_try},
     project_slice::{
         perimeters::{
             classic::PostClassicTraversalPrintObject,
@@ -43,14 +44,16 @@ struct StageRecordContext {
 
 pub(super) fn project(
     prepared: &PreparedPostLayerRegionPerimeters,
+    cancel: &CancelToken,
 ) -> Result<Vec<StagedObject>, SliceError> {
+    cancel.check()?;
     let classic = prepared.predecessor.as_classic();
     assert_eq!(prepared.objects.len(), classic.objects.len());
     prepared
         .objects
         .iter()
         .zip(&classic.objects)
-        .map(|(object, traversal)| stage_object(prepared, object, traversal))
+        .map(|(object, traversal)| stage_object(prepared, object, traversal, cancel))
         .collect()
 }
 
@@ -58,6 +61,7 @@ fn stage_object(
     prepared: &PreparedPostLayerRegionPerimeters,
     object: &PreparedLayerRegionPerimeterObject,
     traversal: &PostClassicTraversalPrintObject,
+    cancel: &CancelToken,
 ) -> Result<StagedObject, SliceError> {
     let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
     let input_object = &prelude.object;
@@ -95,11 +99,8 @@ fn stage_object(
         .map(|record| record.layer_id + 1)
         .max()
         .unwrap_or(0);
-    let mut records = object
-        .records
-        .iter()
-        .zip(&input_object.records)
-        .map(|(output, input)| match (output, input) {
+    let mut records = par_range_map_ordered_try(object.records.len(), cancel, |index| {
+        match (&object.records[index], &input_object.records[index]) {
             (Some(output), Some(input)) => {
                 let region = input_object.region_options(input);
                 let bottom_shell_layers = usize::try_from(region.bottom_shell_layers.0)
@@ -143,24 +144,26 @@ fn stage_object(
             }
             (None, None) => Ok(None),
             _ => unreachable!("O17 slots remain aligned with O16 and regional inputs"),
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+        }
+    })?;
     extra_bridge::apply(
         &mut records,
         &input_object.records,
         input_object,
         options.enable_extra_bridge_layer,
-        prepared.predecessor.as_classic().scale,
+        (prepared.predecessor.as_classic().scale, cancel),
     )?;
-    for (staged, output) in records.iter_mut().zip(&object.records) {
-        match (staged, output) {
+    par_for_each_mut_try(&mut records, cancel, |index, staged| {
+        match (staged.as_mut(), object.records[index].as_ref()) {
             (Some(staged), Some(output)) => {
                 staged.fill_surfaces = clipped_fill(&staged.slices, &output.fill_expolygons)?;
             }
             (None, None) => {}
             _ => unreachable!("external extra-bridge records remain aligned"),
         }
-    }
+        Ok(())
+    })?;
+    cancel.check()?;
     Ok(StagedObject { records })
 }
 

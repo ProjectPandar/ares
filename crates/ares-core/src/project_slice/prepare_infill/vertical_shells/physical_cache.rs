@@ -1,8 +1,9 @@
 //! `PrintObject.cpp:2024-2151::discover_vertical_shells` physical cache ownership.
 
 use crate::{
-    ProcessEnsureVerticalShellThickness, SliceError,
+    CancelToken, ProcessEnsureVerticalShellThickness, SliceError,
     geometry::{JoinType, offset_expolygons_paths, offset_paths, union_polygons_paths},
+    parallel::par_range_map_ordered_try,
     project_slice::{
         perimeters::{
             flow::{FlowContext, PerimeterFlowRole, resolve_role_flow},
@@ -19,6 +20,7 @@ pub(super) fn build(
     object_index: usize,
     num_layers: usize,
     shared: bool,
+    cancel: &CancelToken,
 ) -> Result<PhysicalShellCache, SliceError> {
     let traversal = &prepared.predecessor;
     let prelude = &traversal.objects[object_index]
@@ -32,22 +34,20 @@ pub(super) fn build(
     let (plan, _, regions) = post_regions.as_parts();
     let object = &prepared.objects[object_index];
     if !shared {
-        let holes = (0..num_layers)
-            .map(|layer_index| {
-                (0..regions.len())
-                    .filter_map(|region_index| {
-                        let slot = input_object.region_layer_record_index(RegionLayerIndex {
-                            region_index,
-                            layer_index,
-                        });
-                        object.records[slot].as_ref()
-                    })
-                    .flat_map(|record| &record.fill_expolygons)
-                    .flat_map(|polygon| std::iter::once(polygon.contour()).chain(polygon.holes()))
-                    .cloned()
-                    .collect()
-            })
-            .collect();
+        let holes = par_range_map_ordered_try(num_layers, cancel, |layer_index| {
+            Ok((0..regions.len())
+                .filter_map(|region_index| {
+                    let slot = input_object.region_layer_record_index(RegionLayerIndex {
+                        region_index,
+                        layer_index,
+                    });
+                    object.records[slot].as_ref()
+                })
+                .flat_map(|record| &record.fill_expolygons)
+                .flat_map(|polygon| std::iter::once(polygon.contour()).chain(polygon.holes()))
+                .cloned()
+                .collect())
+        })?;
         return Ok(PhysicalShellCache::RegionalHoles(holes));
     }
     let enabled = regions.iter().any(|region| {
@@ -68,8 +68,8 @@ pub(super) fn build(
         .expect("vertical shells retain their resolved object")
         .object;
     let scale = traversal.scale;
-    let mut layers = Vec::with_capacity(num_layers);
-    for (layer_index, planned) in plan.layers.iter().take(num_layers).enumerate() {
+    let layers = par_range_map_ordered_try(num_layers, cancel, |layer_index| {
+        let planned = &plan.layers[layer_index];
         let mut combined = cache::empty();
         let mut perimeter_offset = 0.0_f32;
         let mut perimeter_min_spacing = f32::MAX;
@@ -138,8 +138,8 @@ pub(super) fn build(
             );
         }
         combined.holes = union_polygons_paths(&combined.holes).map_err(geometry_error)?;
-        layers.push(combined);
-    }
+        Ok(combined)
+    })?;
     Ok(PhysicalShellCache::Shared(layers))
 }
 

@@ -1,91 +1,96 @@
 use crate::{
-    SliceError, project_slice::prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation,
+    CancelToken, SliceError, parallel::par_range_map_ordered_try,
+    project_slice::prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation,
 };
 
 use super::{cache, types::VerticalShellCacheObject};
 
 pub(super) fn project(
     prepared: &PreparedPostFillSurfacePreparation,
+    cancel: &CancelToken,
 ) -> Result<Vec<VerticalShellCacheObject>, SliceError> {
+    cancel.check()?;
     validate_alignment(prepared);
-    prepared
+    (0..prepared.objects.len())
+        .map(|object_index| project_object(prepared, object_index, cancel))
+        .collect()
+}
+
+fn project_object(
+    prepared: &PreparedPostFillSurfacePreparation,
+    object_index: usize,
+    cancel: &CancelToken,
+) -> Result<VerticalShellCacheObject, SliceError> {
+    let object = &prepared.objects[object_index];
+    let traversal = &prepared.predecessor.objects[object_index];
+    let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
+    let input_object = &prelude.object;
+    let (compensated, _) = input_object.as_parts();
+    let (post_regions, _) = compensated.as_parts();
+    let (plan, _, regions) = post_regions.as_parts();
+    let resolved = &prepared.predecessor.resolved;
+    let options = &resolved
         .objects
         .iter()
-        .zip(&prepared.predecessor.objects)
-        .enumerate()
-        .map(|(object_index, (object, traversal))| {
-            let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
-            let input_object = &prelude.object;
-            let (compensated, _) = input_object.as_parts();
-            let (post_regions, _) = compensated.as_parts();
-            let (plan, _, regions) = post_regions.as_parts();
-            let resolved = &prepared.predecessor.resolved;
-            let options = &resolved
-                .objects
-                .iter()
-                .find(|object| object.source_object_index == plan.source_object_index)
-                .expect("vertical shells retain their resolved object")
-                .object;
-            let num_layers = if resolved.views.full.process.print.spiral_mode.0 {
-                plan.layers
-                    .len()
-                    .min(regions[0].options.bottom_shell_layers.0 as usize)
-            } else {
-                plan.layers.len()
-            };
-            let multiple = regions.len() > 1;
-            let shared = multiple && !options.interface_shells.0;
-            let records = object
-                .records
-                .iter()
-                .zip(&input_object.records)
-                .map(|(record, input)| match (record, input) {
-                    (Some(_), Some(input)) if shared || input.current.layer_index >= num_layers => {
-                        Ok(Some(cache::empty()))
-                    }
-                    (Some(record), Some(input)) => {
-                        let fill_expolygons = if multiple {
-                            &[][..]
-                        } else {
-                            record.fill_expolygons.as_slice()
-                        };
-                        cache::build(
-                            &record.slices,
-                            fill_expolygons,
-                            input_object
-                                .region_options(input)
-                                .ensure_vertical_shell_thickness,
-                            input
-                                .solid_infill_flow
-                                .scaled_spacing(prepared.predecessor.scale),
-                        )
-                        .map(Some)
-                    }
-                    (None, None) => Ok(None),
-                    _ => unreachable!("validated O19 slots remain aligned"),
-                })
-                .collect::<Result<_, _>>()?;
-            let physical = if multiple
-                && regions.iter().any(|region| {
-                    region.options.ensure_vertical_shell_thickness
-                        == crate::ProcessEnsureVerticalShellThickness::EnsureAll
-                }) {
-                Some(super::physical_cache::build(
-                    prepared,
-                    object_index,
-                    num_layers,
-                    shared,
-                )?)
-            } else {
-                None
-            };
-            Ok(VerticalShellCacheObject {
-                records,
-                physical,
-                num_layers,
-            })
-        })
-        .collect()
+        .find(|object| object.source_object_index == plan.source_object_index)
+        .expect("vertical shells retain their resolved object")
+        .object;
+    let num_layers = if resolved.views.full.process.print.spiral_mode.0 {
+        plan.layers
+            .len()
+            .min(regions[0].options.bottom_shell_layers.0 as usize)
+    } else {
+        plan.layers.len()
+    };
+    let multiple = regions.len() > 1;
+    let shared = multiple && !options.interface_shells.0;
+    let records = par_range_map_ordered_try(object.records.len(), cancel, |index| {
+        match (&object.records[index], &input_object.records[index]) {
+            (Some(_), Some(input)) if shared || input.current.layer_index >= num_layers => {
+                Ok(Some(cache::empty()))
+            }
+            (Some(record), Some(input)) => {
+                let fill_expolygons = if multiple {
+                    &[][..]
+                } else {
+                    record.fill_expolygons.as_slice()
+                };
+                cache::build(
+                    &record.slices,
+                    fill_expolygons,
+                    input_object
+                        .region_options(input)
+                        .ensure_vertical_shell_thickness,
+                    input
+                        .solid_infill_flow
+                        .scaled_spacing(prepared.predecessor.scale),
+                )
+                .map(Some)
+            }
+            (None, None) => Ok(None),
+            _ => unreachable!("validated O19 slots remain aligned"),
+        }
+    })?;
+    let physical = if multiple
+        && regions.iter().any(|region| {
+            region.options.ensure_vertical_shell_thickness
+                == crate::ProcessEnsureVerticalShellThickness::EnsureAll
+        }) {
+        Some(super::physical_cache::build(
+            prepared,
+            object_index,
+            num_layers,
+            shared,
+            cancel,
+        )?)
+    } else {
+        None
+    };
+    Ok(VerticalShellCacheObject {
+        records,
+        physical,
+        num_layers,
+    })
 }
 
 fn validate_alignment(prepared: &PreparedPostFillSurfacePreparation) {

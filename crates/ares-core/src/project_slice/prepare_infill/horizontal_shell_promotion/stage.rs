@@ -1,5 +1,5 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
     geometry::CoordinateScale,
     project_slice::prepare_infill::{
         horizontal_shell_promotion::{
@@ -16,9 +16,11 @@ struct StagedObject {
 
 pub(super) fn prepare(
     prepared: PreparedPostVerticalShellAssignment,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostHorizontalShellPromotion, SliceError> {
+    cancel.check()?;
     validate_alignment(&prepared);
-    let staged = stage_decisions(&prepared)?;
+    let staged = stage_decisions(&prepared, cancel)?;
 
     let PreparedPostVerticalShellAssignment {
         predecessor,
@@ -26,6 +28,7 @@ pub(super) fn prepare(
     } = prepared;
     for (object, staged_object) in objects.iter_mut().zip(staged) {
         for (record, decision) in object.records.iter_mut().zip(staged_object.records) {
+            cancel.check()?;
             match (record, decision) {
                 (Some(record), Some(decision)) => promote::commit(record, decision),
                 (None, None) => {}
@@ -41,6 +44,7 @@ pub(super) fn prepare(
 
 fn stage_decisions(
     prepared: &PreparedPostVerticalShellAssignment,
+    cancel: &CancelToken,
 ) -> Result<Vec<StagedObject>, SliceError> {
     prepared
         .objects
@@ -54,17 +58,20 @@ fn stage_decisions(
                 .records
                 .iter()
                 .zip(inputs)
-                .map(|(record, input)| match (record, input) {
-                    (Some(_), Some(input)) => {
-                        let raw = input_object
-                            .region_options(input)
-                            .extra_solid_infills
-                            .0
-                            .as_str();
-                        promote::stage_decision(raw, input.planned_layer_index).map(Some)
+                .map(|(record, input)| {
+                    cancel.check()?;
+                    match (record, input) {
+                        (Some(_), Some(input)) => {
+                            let raw = input_object
+                                .region_options(input)
+                                .extra_solid_infills
+                                .0
+                                .as_str();
+                            promote::stage_decision(raw, input.planned_layer_index).map(Some)
+                        }
+                        (None, None) => Ok(None),
+                        _ => unreachable!("validated O25 slots remain aligned"),
                     }
-                    (None, None) => Ok(None),
-                    _ => unreachable!("validated O25 slots remain aligned"),
                 })
                 .collect::<Result<_, _>>()?;
             Ok(StagedObject { records })

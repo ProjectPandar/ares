@@ -1,5 +1,6 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
+    parallel::par_range_map_ordered_try,
     project_slice::prepare_infill::{
         vertical_shell_filtering::{filter, types::VerticalShellTinyFilterObject},
         vertical_shell_regularization::PreparedPostVerticalShellRegularization,
@@ -8,7 +9,9 @@ use crate::{
 
 pub(super) fn filter(
     prepared: &PreparedPostVerticalShellRegularization,
+    cancel: &CancelToken,
 ) -> Result<Vec<VerticalShellTinyFilterObject>, SliceError> {
+    cancel.check()?;
     validate_alignment(prepared);
     let scale = prepared.predecessor.scale;
     prepared
@@ -23,14 +26,14 @@ pub(super) fn filter(
                 let input_object = &prelude.object;
                 let (compensated, _) = input_object.as_parts();
                 let (_, lslices) = compensated.as_parts();
-                let records = object
-                    .records
-                    .iter()
-                    .zip(&trim_object.records)
-                    .zip(&regularization_object.records)
-                    .zip(&input_object.records)
-                    .map(|(((record, trim), regularization), input)| {
-                        match (record, trim, regularization, input) {
+                let records =
+                    par_range_map_ordered_try(object.records.len(), cancel, |index| {
+                        match (
+                            &object.records[index],
+                            &trim_object.records[index],
+                            &regularization_object.records[index],
+                            &input_object.records[index],
+                        ) {
                             (Some(record), Some(trim), Some(regularization), Some(input)) => {
                                 filter::filter_record(
                                     filter::RecordOperands {
@@ -54,8 +57,7 @@ pub(super) fn filter(
                             (None, None, None, None) => Ok(None),
                             _ => unreachable!("validated O23 slots remain aligned"),
                         }
-                    })
-                    .collect::<Result<_, _>>()?;
+                    })?;
                 Ok(VerticalShellTinyFilterObject { records })
             },
         )

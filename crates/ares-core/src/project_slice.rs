@@ -256,31 +256,7 @@ fn slice_plate_to_sink(
         context.set_status(35, format_args!("Generating infill toolpath"), 0);
         context.check_canceled()?;
     }
-    let staged = prepare_infill::surface_type_detection::prepare(walls)?;
-    context.check_canceled()?;
-    let external = prepare_infill::external_surfaces::prepare(
-        prepare_infill::horizontal_shell_propagation::prepare(
-            prepare_infill::horizontal_shell_promotion::prepare(
-                prepare_infill::vertical_shell_assignment::prepare(
-                    prepare_infill::vertical_shell_filtering::prepare(
-                        prepare_infill::vertical_shell_regularization::prepare(
-                            prepare_infill::vertical_shell_trimming::prepare(
-                                prepare_infill::vertical_shell_projection::prepare(
-                                    prepare_infill::vertical_shells::prepare(
-                                        prepare_infill::fill_surfaces::prepare(staged),
-                                    )?,
-                                )?,
-                            )?,
-                        )?,
-                    )?,
-                )?,
-            )?,
-        )?,
-    )?;
-    context.check_canceled()?;
-    let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
-    let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
-    let prepared = prepare_infill::combine_infill::prepare(bridged)?;
+    let prepared = prepare_infill::prepare(walls, context.cancel_ref())?;
     context.check_canceled()?;
     // `get_boundary` consumes current Top fill surfaces after prepare_infill
     // (`AvoidCrossingPerimeters.cpp:1116-1130`), not the classification snapshot.

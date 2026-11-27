@@ -3,9 +3,10 @@ use super::{clip_error, projection::Input};
 use crate::geometry::union_polygons_paths_pair;
 use crate::{
     Point3d, ProjectVolumeType, SliceError,
-    geometry::{CoordinateScale, Polygon},
+    geometry::Polygon,
     mesh_slicer::{
-        chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes, slice_mesh_slabs,
+        MeshTopology, chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes,
+        slice_mesh_slabs,
     },
     project::facets_annotation::strict_annotated_facets,
 };
@@ -34,15 +35,15 @@ fn bottom_slice(
     vertices: &[[f32; 3]],
     triangles: &[[u32; 3]],
     z: f32,
-    scale: CoordinateScale,
-    coplanar: &[bool],
+    input: &Input<'_>,
+    (topology, coplanar): (&MeshTopology, &[bool]),
 ) -> Result<Vec<Polygon>, SliceError> {
-    let lines = slice_mesh_on_planes(vertices, triangles, &[z])?
+    let lines = slice_mesh_on_planes(vertices, triangles, &[z], topology, input.cancel)?
         .pop()
         .unwrap();
     Ok(make_loops(
         chain_lines_by_triangle_connectivity(lines, coplanar),
-        scale.scaled_delta(2.0) as i64,
+        input.scale.scaled_delta(2.0) as i64,
     )
     .polygons()
     .to_vec())
@@ -132,8 +133,8 @@ pub(super) fn collect(input: &Input<'_>, (top, bottom): (bool, bool)) -> Result<
                     &vertices,
                     &facets.triangles,
                     planes[0],
-                    input.scale,
-                    &coplanar,
+                    input,
+                    (&topology, &coplanar),
                 )?;
                 projected.bottom[0] =
                     union_polygons_paths_pair(&projected.bottom[0], &slice).map_err(clip_error)?;
