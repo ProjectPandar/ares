@@ -235,6 +235,8 @@ pub(super) fn prepare_region_slices(
         regions,
     };
     let mut complex_layer_indices = Vec::new();
+    // PrintObjectSlice.cpp:340–359: region boxes stay in the pre-rotation frame.
+    let bbox_z_in_layer_frame = output.plan.belt_slice.is_none();
 
     for layer_index in 0..layer_count {
         let z = output.plan.layers[layer_index].slice_z as f32;
@@ -247,8 +249,20 @@ pub(super) fn prepare_region_slices(
                 }
             }
             records => {
-                let active =
-                    |record: &VolumeRegion| bounds[record.bound_index].bbox().contains_z(z);
+                if !bbox_z_in_layer_frame
+                    && records
+                        .iter()
+                        .filter(|record| record.kind == ProjectVolumeType::ModelPart)
+                        .nth(1)
+                        .is_some()
+                {
+                    complex_layer_indices.push(layer_index);
+                    continue;
+                }
+                let bbox_z = bbox_z_in_layer_frame.then_some(z);
+                let active = |record: &VolumeRegion| {
+                    bbox_z.is_none_or(|z| bounds[record.bound_index].bbox().contains_z(z))
+                };
                 let Some(first_index) = records
                     .iter()
                     .enumerate()
@@ -267,7 +281,7 @@ pub(super) fn prepare_region_slices(
                             &bounds,
                             first_index,
                             record_index,
-                            z,
+                            bbox_z,
                         )
                 });
                 if complex {
@@ -329,11 +343,11 @@ fn overlaps_active_predecessor(
     bounds: &[VolumeBound],
     first_index: usize,
     record_index: usize,
-    z: f32,
+    bbox_z: Option<f32>,
 ) -> bool {
     let current = bounds[records[record_index].bound_index].bbox();
     records[first_index..record_index].iter().any(|record| {
         let predecessor = bounds[record.bound_index].bbox();
-        predecessor.contains_z(z) && current.intersects_xy(predecessor)
+        bbox_z.is_none_or(|z| predecessor.contains_z(z)) && current.intersects_xy(predecessor)
     })
 }

@@ -128,11 +128,14 @@ impl BoundaryContext<'_> {
         // (`ExtrusionProcessor.hpp:92-101,366`): the previous-layer
         // boundary lines are unscaled f64 — the distance is measured in
         // f64 millimetres, then signed by the inside/outside winding
-        // (negative inside).
-        let nearest = self
+        // (negative inside). An empty prior-layer tree returns infinity
+        // (AABBTreeLines.hpp:343–344).
+        let Some(nearest) = self
             .tree
             .nearest_mm([point.0, point.1], self.scale.factor())
-            .expect("a nonempty boundary has a nearest line");
+        else {
+            return f64::INFINITY;
+        };
         self.tree
             .outside_mm([point.0, point.1], self.scale.factor()) as f64
             * if z == 0.0 {
