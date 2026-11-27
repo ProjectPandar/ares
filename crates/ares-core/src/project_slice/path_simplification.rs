@@ -1,5 +1,7 @@
 use crate::{
+    CancelToken, SliceError,
     geometry::{CoordinateScale, Point},
+    parallel::par_for_each_mut_try,
     project_slice::{
         fill_entities::FillExtrusionEntity,
         gcode_emit,
@@ -14,7 +16,11 @@ use crate::{
     },
 };
 
-pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
+pub(in crate::project_slice) fn apply(
+    prepared: &mut PreparedPostIslandPrintOrder,
+    cancel: &CancelToken,
+) -> Result<(), SliceError> {
+    cancel.check()?;
     let traversal = &prepared
         .predecessor
         .predecessor
@@ -35,9 +41,17 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     };
     let scale = traversal.scale;
     let tolerance = process.print.resolution.0;
+    // PrintObject.cpp:1064,1082: walls and fills own their physical layer's paths.
     for layers in &mut prepared.objects {
-        simplify_layers(layers, scale, tolerance, arc_fitting);
+        par_for_each_mut_try(layers, cancel, |_, layer| {
+            for island in &mut layer.islands {
+                cancel.check()?;
+                simplify_island(&mut island.entities, scale, tolerance, arc_fitting);
+            }
+            Ok(())
+        })?;
     }
+    cancel.check()
 }
 
 // OrcaSlicer libslic3r.h:91–92, in millimeters.
@@ -71,11 +85,18 @@ pub(in crate::project_slice) fn simplify_layers(
     tolerance: f64,
     arc_fitting: crate::ArcFittingMode,
 ) {
-    for entity in layers
-        .iter_mut()
-        .flat_map(|layer| &mut layer.islands)
-        .flat_map(|island| &mut island.entities)
-    {
+    for island in layers.iter_mut().flat_map(|layer| &mut layer.islands) {
+        simplify_island(&mut island.entities, scale, tolerance, arc_fitting);
+    }
+}
+
+fn simplify_island(
+    entities: &mut [IslandPrintEntity],
+    scale: CoordinateScale,
+    tolerance: f64,
+    arc_fitting: crate::ArcFittingMode,
+) {
+    for entity in entities {
         match entity {
             IslandPrintEntity::Perimeter(collection) => {
                 for path in collection

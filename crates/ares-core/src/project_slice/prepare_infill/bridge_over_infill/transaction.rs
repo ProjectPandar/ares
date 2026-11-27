@@ -32,7 +32,7 @@ pub(in crate::project_slice) fn prepare(
         mut objects,
     } = predecessor;
     validate_capabilities(&predecessor, &objects)?;
-    candidate_expansion::prepare(&predecessor, &mut objects)?;
+    candidate_expansion::prepare(&predecessor, &mut objects, cancel)?;
     cancel.check()?;
     surface_rewrite::prepare(&mut predecessor, &objects, cancel)?;
     cancel.check()?;

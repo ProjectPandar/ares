@@ -4,18 +4,18 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    OrcaFloats, ProcessInfillPattern, SliceError,
-    geometry::{CoordinateScale, Polyline},
+    CancelToken, ProcessInfillPattern, SliceError,
+    geometry::Polyline,
+    parallel::{par_map_try, par_range_map_ordered_try},
     project_slice::{
         perimeters::{
             classic::traversal::PostClassicTraversalPrintObject,
-            flow::{resolve_nominal_sparse_infill_flow, resolve_thick_solid_infill_bridge_flow},
+            flow::resolve_thick_solid_infill_bridge_flow,
             types::{PostPerimeterInputPrintObject, RegionLayerIndex},
         },
         prepare_infill::{
             bridge_over_infill::types::{BridgeCandidateObject, CandidateSurface},
             external_surfaces::PreparedPostExternalSurfaces,
-            surface_type_detection::types::PreparedSurfaceTypeObject,
         },
     },
 };
@@ -33,34 +33,28 @@ use super::super::super::{
     current_layer_context::{CurrentLayerBridgeRegion, prepare_current_layer_bridge_context},
     deep_sparse_area::{DeepSparseLayer, gather_deep_sparse_infill_area},
     lower_cluster_subtraction::{ClusterBridgeHistoryLayer, subtract_filled_lower_cluster_bridges},
-    sparse_anchoring::generate_sparse_infill_polylines_for_anchoring,
+    sparse_anchoring::AnchoringContext,
 };
 use super::super::geometry_error;
 use super::TARGET_FLOW_HEIGHT_FACTOR;
+
+mod anchor;
+use anchor::prepare_anchor_layer;
 
 pub(super) fn prepare_infill_lines(
     predecessor: &PreparedPostExternalSurfaces,
     object_index: usize,
     candidates: &BridgeCandidateObject,
     view: super::ObjectView<'_>,
+    (uses_random_template, cancel): (bool, &CancelToken),
 ) -> Result<BTreeMap<usize, Vec<Polyline>>, SliceError> {
-    let super::ObjectView {
-        horizontal,
-        prelude,
-        nozzles,
-        scale,
-        ..
-    } = view;
+    cancel.check()?;
     let resolved = predecessor
         .predecessor
         .predecessor
-        .resolved
-        .objects
-        .iter()
-        .find(|object| object.source_object_index == prelude.identity().0)
-        .expect("bridge transaction retains its resolved object");
-    let object_options = &resolved.object;
-    let (plan, _, _) = prelude.as_parts().0.as_parts().0.as_parts();
+        .print_object_config(object_index)
+        .0;
+    let (plan, _, _) = view.prelude.as_parts().0.as_parts().0.as_parts();
     // Fill.cpp:1398/1443 gives the anchoring filler the same PrintObject box.
     let grid_bounds = resolved
         .all_regions
@@ -73,84 +67,131 @@ pub(super) fn prepare_infill_lines(
             crate::project_slice::fill_entities::extended_object_bounds(
                 &predecessor.predecessor.predecessor.project.objects()[plan.source_object_index],
                 resolved.print_objects[plan.transform_index].transform,
-                scale,
+                view.scale,
             )
         });
-    let (_, inputs) = prelude.as_parts();
-    let region_count = prelude.as_parts().0.as_parts().0.as_parts().2.len();
-    let mut result = BTreeMap::new();
-    for &candidate_layer in candidates.surfaces_by_layer.keys() {
+    let adaptive_fields = &candidates.adaptive_infill_fields;
+    let prepare = |candidate_layer: usize, lightning_generator| {
+        cancel.check()?;
         let lower_layer = candidate_layer
             .checked_sub(1)
             .expect("bridge candidate always has a lower layer");
-        for region_index in 0..region_count {
-            let slot = prelude.region_layer_record_index(RegionLayerIndex {
-                region_index,
-                layer_index: lower_layer,
-            });
-            let input = match (&inputs[slot], &horizontal.records[slot]) {
-                (Some(input), Some(_)) => input,
-                (None, None) => continue,
-                _ => unreachable!("bridge anchor records remain aligned"),
-            };
-            let region = prelude.region_options(input);
-            if region.sparse_infill_density.0 == 0.0 {
-                continue;
-            }
-            let nominal_flow = resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
-            super::super::anchor_projection::validate(region, nominal_flow.spacing, scale)?;
-        }
-        let lines = generate_sparse_infill_polylines_for_anchoring(
+        let lines = prepare_anchor_layer(
             predecessor,
             object_index,
             lower_layer,
-            super::super::super::sparse_anchoring::AnchoringContext {
-                lightning_generator: candidates.lightning_generator.as_deref(),
-                adaptive_fields: &candidates.adaptive_infill_fields,
+            view,
+            AnchoringContext {
+                lightning_generator,
+                adaptive_fields,
                 grid_bounds,
             },
         )?;
-        result.insert(lower_layer, lines);
+        Ok((lower_layer, lines))
+    };
+    if uses_random_template || candidates.lightning_generator.is_some() {
+        return candidates
+            .surfaces_by_layer
+            .keys()
+            .map(|&key| prepare(key, candidates.lightning_generator.as_deref()))
+            .collect();
     }
-    Ok(result)
+    let layers = candidates
+        .surfaces_by_layer
+        .keys()
+        .copied()
+        .collect::<Vec<_>>();
+    // PrintObject.cpp:3374–3385: each candidate's lower layer owns its anchor lines.
+    let lines =
+        par_range_map_ordered_try(layers.len(), cancel, |index| prepare(layers[index], None))?;
+    Ok(lines.into_iter().collect())
 }
 
-pub(super) struct LayerJob<'a> {
-    pub(super) candidates: &'a mut BridgeCandidateObject,
-    pub(super) cluster: &'a [usize],
-    pub(super) job_index: usize,
-    pub(super) layer_index: usize,
-    pub(super) horizontal: &'a PreparedSurfaceTypeObject,
-    pub(super) prelude: &'a PostPerimeterInputPrintObject,
+#[derive(Clone, Copy)]
+pub(super) struct ClusterContext<'a> {
+    pub(super) view: super::ObjectView<'a>,
     pub(super) planned_layers: &'a [crate::project_slice::layers::PlannedLayer],
     pub(super) deep_layers: &'a [DeepSparseLayer<'a>],
     pub(super) infill_lines: &'a BTreeMap<usize, Vec<Polyline>>,
-    pub(super) nozzles: &'a OrcaFloats,
-    pub(super) scale: CoordinateScale,
-    pub(super) object_options: &'a crate::ObjectOptions,
-    pub(super) default_region: &'a crate::ProcessRegionSourceOptions,
+    pub(super) cancel: &'a CancelToken,
 }
 
-pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
-    let LayerJob {
-        candidates,
-        cluster,
-        job_index,
-        layer_index,
-        horizontal,
-        prelude,
+type Cluster = Vec<(usize, Vec<CandidateSurface>)>;
+
+pub(super) fn prepare_clusters(
+    candidates: &mut BTreeMap<usize, Vec<CandidateSurface>>,
+    clusters: Vec<Vec<usize>>,
+    context: ClusterContext<'_>,
+    uses_random_template: bool,
+) -> Result<(), SliceError> {
+    let jobs = clusters
+        .into_iter()
+        .map(|layers| {
+            context.cancel.check()?;
+            Ok(layers
+                .into_iter()
+                .map(|index| {
+                    (
+                        index,
+                        candidates
+                            .remove(&index)
+                            .expect("cluster layer has candidates"),
+                    )
+                })
+                .collect::<Cluster>())
+        })
+        .collect::<Result<Vec<_>, SliceError>>()?;
+    // PrintObject.cpp:3747–4032: layers depend only on earlier layers in their cluster.
+    let completed = if uses_random_template {
+        jobs.into_iter()
+            .map(|job| prepare_cluster(job, context))
+            .collect::<Result<Vec<_>, _>>()?
+    } else {
+        let results = par_map_try(jobs, context.cancel, |job| {
+            Ok(prepare_cluster(job, context))
+        })?;
+        context.cancel.check()?;
+        results.into_iter().collect::<Result<Vec<_>, _>>()?
+    };
+    context.cancel.check()?;
+    candidates.extend(completed.into_iter().flatten());
+    Ok(())
+}
+
+fn prepare_cluster(
+    mut layers: Cluster,
+    context: ClusterContext<'_>,
+) -> Result<Cluster, SliceError> {
+    context.cancel.check()?;
+    for index in 0..layers.len() {
+        context.cancel.check()?;
+        let (previous, current) = layers.split_at_mut(index);
+        let (layer_index, current) = &mut current[0];
+        let result = prepare_layer(*layer_index, std::mem::take(current), previous, context)?;
+        replace_candidate_layer(current, result);
+    }
+    Ok(layers)
+}
+
+fn prepare_layer(
+    layer_index: usize,
+    raw: Vec<CandidateSurface>,
+    previous: &[(usize, Vec<CandidateSurface>)],
+    ClusterContext {
+        view,
         planned_layers,
         deep_layers,
         infill_lines,
+        cancel,
+    }: ClusterContext<'_>,
+) -> Result<Vec<CandidateSurface>, SliceError> {
+    let super::ObjectView {
+        horizontal,
+        prelude,
         nozzles,
         scale,
-        object_options,
-        default_region,
-    } = job;
-    let raw = candidates
-        .surfaces_by_layer
-        .remove(&layer_index)
-        .expect("cluster layer retains its candidate map entry");
+        ..
+    } = view;
     let ordered = order_candidate_surfaces(raw);
     let first = ordered
         .first()
@@ -167,11 +208,11 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
     let target_flow_height = first_flow.height * TARGET_FLOW_HEIGHT_FACTOR;
     let deep = gather_deep_sparse_infill_area(deep_layers, layer_index, target_flow_height, scale)
         .map_err(geometry_error)?;
-    let history = cluster[..job_index]
+    let history = previous
         .iter()
-        .map(|&index| ClusterBridgeHistoryLayer {
-            print_z: planned_layers[index].print_z,
-            candidates: candidates.surfaces_by_layer[&index].as_slice(),
+        .map(|(index, candidates)| ClusterBridgeHistoryLayer {
+            print_z: planned_layers[*index].print_z,
+            candidates,
         })
         .collect::<Vec<_>>();
     let deep = subtract_filled_lower_cluster_bridges(
@@ -219,27 +260,14 @@ pub(super) fn prepare_layer(job: LayerJob<'_>) -> Result<(), SliceError> {
         scale,
     )
     .map_err(geometry_error)?;
-    let completed = prepare_candidates(
-        ordered,
-        context,
-        super::ObjectView {
-            horizontal,
-            prelude,
-            nozzles,
-            scale,
-            object_options,
-            default_region,
-        },
-    )?;
-    let current = candidates.surfaces_by_layer.entry(layer_index).or_default();
-    replace_candidate_layer(current, completed);
-    Ok(())
+    prepare_candidates(ordered, context, view, cancel)
 }
 
-pub(super) fn prepare_candidates(
+fn prepare_candidates(
     ordered: Vec<CandidateSurface>,
     context: super::super::super::current_layer_context::CurrentLayerBridgeContext,
     view: super::ObjectView<'_>,
+    cancel: &CancelToken,
 ) -> Result<Vec<CandidateSurface>, SliceError> {
     let super::ObjectView {
         prelude,
@@ -259,6 +287,7 @@ pub(super) fn prepare_candidates(
     let (_, inputs) = prelude.as_parts();
     let mut completed = Vec::with_capacity(ordered.len());
     for candidate in ordered {
+        cancel.check()?;
         let input = inputs[prelude.region_layer_record_index(RegionLayerIndex {
             region_index: candidate.source.region_index,
             layer_index: candidate.source.layer_index,

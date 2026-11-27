@@ -278,7 +278,7 @@ fn slice_plate_to_sink(
     ordered.support_layers = support_layers;
     context.check_canceled()?;
     ordered.curled_lines = curl_estimation::estimate(&ordered)?;
-    path_simplification::apply(&mut ordered);
+    path_simplification::apply(&mut ordered, context.cancel_ref())?;
     context.check_canceled()?;
     if let Some(custom_gcodes) = plate_custom_gcodes {
         *custom_gcodes = ordered.plate_custom_gcodes();

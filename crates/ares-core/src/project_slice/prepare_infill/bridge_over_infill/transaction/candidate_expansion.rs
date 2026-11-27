@@ -1,5 +1,5 @@
 use crate::{
-    ObjectOptions, OrcaFloats, ProcessRegionSourceOptions, SliceError,
+    CancelToken, ObjectOptions, OrcaFloats, ProcessRegionSourceOptions, SliceError,
     geometry::CoordinateScale,
     project_slice::{
         perimeters::types::{PostPerimeterInputPrintObject, RegionLayerIndex},
@@ -22,20 +22,19 @@ pub(super) const TARGET_FLOW_HEIGHT_FACTOR: f32 = 0.9;
 pub(super) fn prepare(
     predecessor: &PreparedPostExternalSurfaces,
     candidates: &mut [BridgeCandidateObject],
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
     let horizontal = &predecessor.predecessor;
     let traversal = &horizontal.predecessor;
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
     for (index, candidates) in candidates.iter_mut().enumerate() {
-        let traversal_object = &traversal.objects[index];
-        let prelude = prelude(traversal_object);
-        let object_options = &traversal
-            .resolved
-            .objects
-            .iter()
-            .find(|object| object.source_object_index == prelude.identity().0)
-            .expect("bridge transaction retains its resolved object")
-            .object;
+        cancel.check()?;
+        let prelude = prelude(&traversal.objects[index]);
+        let (resolved, _) = traversal.print_object_config(index);
+        let uses_random_template = resolved.all_regions.iter().any(|region| {
+            region.sparse_infill_rotate_template.0.contains(['~', '^'])
+                || region.solid_infill_rotate_template.0.contains(['~', '^'])
+        });
         prepare_object(
             predecessor,
             index,
@@ -45,9 +44,10 @@ pub(super) fn prepare(
                 prelude,
                 nozzles,
                 scale: traversal.scale,
-                object_options,
+                object_options: &resolved.object,
                 default_region: &traversal.resolved.views.full.process.region,
             },
+            (uses_random_template, cancel),
         )?;
     }
     Ok(())
@@ -63,11 +63,12 @@ pub(super) struct ObjectView<'a> {
     default_region: &'a ProcessRegionSourceOptions,
 }
 
-pub(super) fn prepare_object(
+fn prepare_object(
     predecessor: &PreparedPostExternalSurfaces,
     object_index: usize,
     candidates: &mut BridgeCandidateObject,
     view: ObjectView<'_>,
+    (uses_random_template, cancel): (bool, &CancelToken),
 ) -> Result<(), SliceError> {
     let ObjectView {
         horizontal,
@@ -126,13 +127,20 @@ pub(super) fn prepare_object(
     if candidates.surfaces_by_layer.is_empty() {
         return Ok(());
     }
-    let region_options = regions
-        .iter()
-        .map(|region| region.as_parts().1)
-        .collect::<Vec<_>>();
-    let infill_lines = prepare_infill_lines(predecessor, object_index, candidates, view)?;
-    let clusters =
-        cluster_candidate_object(candidates, &plan.layers, &region_options, nozzles, scale)?;
+    let infill_lines = prepare_infill_lines(
+        predecessor,
+        object_index,
+        candidates,
+        view,
+        (uses_random_template, cancel),
+    )?;
+    let clusters = cluster_candidate_object(
+        candidates,
+        &plan.layers,
+        (regions[0].as_parts().1, nozzles),
+        scale,
+        cancel,
+    )?;
     let deep_layers = plan
         .layers
         .iter()
@@ -155,26 +163,18 @@ pub(super) fn prepare_object(
         })
         .collect::<Vec<_>>();
 
-    for cluster in clusters {
-        for (job_index, &layer_index) in cluster.iter().enumerate() {
-            prepare_layer(LayerJob {
-                candidates,
-                cluster: &cluster,
-                job_index,
-                layer_index,
-                horizontal,
-                prelude,
-                planned_layers: &plan.layers,
-                deep_layers: &deep_layers,
-                infill_lines: &infill_lines,
-                nozzles,
-                scale,
-                object_options: view.object_options,
-                default_region: view.default_region,
-            })?;
-        }
-    }
-    Ok(())
+    prepare_clusters(
+        &mut candidates.surfaces_by_layer,
+        clusters,
+        ClusterContext {
+            view,
+            planned_layers: &plan.layers,
+            deep_layers: &deep_layers,
+            infill_lines: &infill_lines,
+            cancel,
+        },
+        uses_random_template,
+    )
 }
 
 /// `PrintObject.cpp:2593` two-phase lightning expansion. For each layer whose
@@ -366,4 +366,4 @@ pub(super) fn build_lightning_generator(
 
 mod layers;
 mod lower_direction;
-use layers::{LayerJob, prelude, prepare_infill_lines, prepare_layer};
+use layers::{ClusterContext, prelude, prepare_clusters, prepare_infill_lines};

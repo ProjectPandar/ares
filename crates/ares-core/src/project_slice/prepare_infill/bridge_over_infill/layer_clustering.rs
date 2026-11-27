@@ -1,9 +1,10 @@
 use crate::{
-    OrcaFloats, RegionOptions, SliceError,
+    CancelToken, OrcaFloats, RegionOptions, SliceError,
     geometry::{
         ClipperError, CoordinateScale, Point, Polygon, intersection_polygons_paths,
         union_polygons_paths,
     },
+    parallel::par_range_map_ordered_try,
     project_slice::{
         layers::PlannedLayer, perimeters::flow::resolve_thick_solid_infill_bridge_flow,
     },
@@ -25,14 +26,15 @@ pub(in crate::project_slice) struct CandidateClusterLayer<'a> {
 pub(in crate::project_slice) fn cluster_candidate_layers(
     layers: &[CandidateClusterLayer<'_>],
     scale: CoordinateScale,
-) -> Result<Vec<Vec<usize>>, ClipperError> {
-    let mut coverage_by_layer = Vec::with_capacity(layers.len());
-    for layer in layers {
-        coverage_by_layer.push(layer_coverage(layer.candidates, scale)?);
-    }
-
+    cancel: &CancelToken,
+) -> Result<Vec<Vec<usize>>, SliceError> {
+    // PrintObject.cpp:3405–3433: independent footprints, followed by an ordered grouping walk.
+    let coverage_by_layer = par_range_map_ordered_try(layers.len(), cancel, |index| {
+        layer_coverage(layers[index].candidates, scale).map_err(geometry_error)
+    })?;
     let mut clusters: Vec<Vec<usize>> = Vec::new();
     for (position, layer) in layers.iter().enumerate() {
+        cancel.check()?;
         let starts_new_cluster = if position == 0 {
             true
         } else {
@@ -44,7 +46,8 @@ pub(in crate::project_slice) fn cluster_candidate_layers(
                 || intersection_polygons_paths(
                     &coverage_by_layer[position - 1],
                     &coverage_by_layer[position],
-                )?
+                )
+                .map_err(geometry_error)?
                 .is_empty()
         };
         if starts_new_cluster {
@@ -62,11 +65,11 @@ pub(in crate::project_slice) fn cluster_candidate_layers(
 pub(in crate::project_slice) fn cluster_candidate_object(
     candidates: &BridgeCandidateObject,
     planned_layers: &[PlannedLayer],
-    ordered_region_options: &[&RegionOptions],
-    nozzle_diameters: &OrcaFloats,
+    (first_region, nozzle_diameters): (&RegionOptions, &OrcaFloats),
     scale: CoordinateScale,
+    cancel: &CancelToken,
 ) -> Result<Vec<Vec<usize>>, SliceError> {
-    let flow = resolve_thick_solid_infill_bridge_flow(ordered_region_options[0], nozzle_diameters)?;
+    let flow = resolve_thick_solid_infill_bridge_flow(first_region, nozzle_diameters)?;
     let layers = candidates
         .surfaces_by_layer
         .iter()
@@ -77,7 +80,7 @@ pub(in crate::project_slice) fn cluster_candidate_object(
             candidates,
         })
         .collect::<Vec<_>>();
-    cluster_candidate_layers(&layers, scale).map_err(geometry_error)
+    cluster_candidate_layers(&layers, scale, cancel)
 }
 
 fn layer_coverage(
