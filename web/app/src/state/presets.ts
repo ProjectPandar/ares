@@ -150,7 +150,7 @@ export async function selectPrinter(
 ) {
   const saved = printer === null ? undefined : storedConfig.printers[printer];
   const remembered = printer === null ? null : rememberedSelection(stored);
-  if (printer === null || remembered === null) useApp.setState({ presetSelection: null });
+  if (printer === null || remembered === null) useApp.setState({ presetSelection: null, compatible: null });
   else {
     // The combo shows the printer and the filtering state while the print is chosen.
     useApp.setState({
@@ -160,19 +160,22 @@ export async function selectPrinter(
     // A printer the catalog cannot resolve has no print; updateCompatible shows the engine's error.
     const process = await (await presetCatalog()).compatiblePrint(printer, remembered.process).catch(() => null);
     const chosen = useApp.getState().presetSelection;
-    if (process && chosen?.printer === printer) useApp.setState({ presetSelection: { ...chosen, process } });
+    if (chosen?.printer !== printer) return;
+    if (process) useApp.setState({ presetSelection: { ...chosen, process } });
   }
-  await updateCompatible(remembered?.project);
+  // Keep filtering visible until the selected printer has its effective plate type.
   await updatePrinterPanel();
-  const selection = useApp.getState().presetSelection;
-  if (selection && selection.printer === printer) {
+  const { presetSelection: selection, printerPanel } = useApp.getState();
+  if ((selection?.printer ?? null) !== printer) return;
+  if (selection) {
     useApp.setState({
       presetSelection: {
         ...selection,
         bedType: printerBedType(saved?.bedType),
-        ...selectionExtruders(printer, useApp.getState().printerPanel),
+        ...selectionExtruders(selection.printer, printerPanel),
       },
     });
+    await updateCompatible(remembered?.project);
   }
   if ((useApp.getState().presetSelection?.printer ?? null) === printer) saveSelection();
 }
