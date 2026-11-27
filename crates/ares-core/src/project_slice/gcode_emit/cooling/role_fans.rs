@@ -96,6 +96,7 @@ impl CoolingState {
                 baseline = part_speed;
                 output.extend_from_slice(&replacement);
                 output.extend_from_slice(line);
+                self.reapply_belt_fan(output);
                 continue;
             }
             let Some(marker_pos) = find_marker_start(line) else {
@@ -295,9 +296,6 @@ impl CoolingState {
         support_speed: Option<u8>,
         ironing_speed: Option<u8>,
     ) -> Vec<u8> {
-        if self.belt_fan_off {
-            return self.set_part_fan(0);
-        }
         let mut replacement = Vec::new();
         // CoolingBuffer.cpp:890–898 sends auxiliary before the part fan.
         if self.auxiliary_fan
@@ -312,7 +310,9 @@ impl CoolingState {
                 format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed)).as_bytes(),
             );
         }
-        if role_speed.is_none()
+        if self.belt_fan_off {
+            replacement.extend_from_slice(&self.set_part_fan(0));
+        } else if role_speed.is_none()
             && support_speed.is_none()
             && ironing_speed.is_none()
             && let Some(speed) = self.current_part_speed
@@ -320,6 +320,13 @@ impl CoolingState {
             replacement.extend_from_slice(&self.part_fan_command(speed));
         }
         replacement
+    }
+
+    // CoolingBuffer.cpp:917–924 reapplies an open belt band after T.
+    fn reapply_belt_fan(&mut self, output: &mut Vec<u8>) {
+        if self.belt_fan_off {
+            output.extend_from_slice(&self.set_part_fan(0));
+        }
     }
 
     fn set_gated_part_fan(&mut self, target: u8) -> Vec<u8> {

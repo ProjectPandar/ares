@@ -1,6 +1,6 @@
 use super::LayerTools;
 use crate::project_slice::{
-    perimeters::classic::traversal::PreparedPostClassicTraversal,
+    belt::brim::BeltBrimPlan, perimeters::classic::traversal::PreparedPostClassicTraversal,
     support_material::InstalledSupportLayer,
 };
 
@@ -22,6 +22,7 @@ pub(super) fn initialize_layers(
     traversal: &PreparedPostClassicTraversal,
     support: &[Vec<InstalledSupportLayer>],
     raft: Option<&[Vec<crate::project_slice::raft::RaftLayerPlan>]>,
+    brim: Option<&BeltBrimPlan>,
 ) -> Vec<LayerTools> {
     let mut zs = traversal
         .objects
@@ -32,7 +33,24 @@ pub(super) fn initialize_layers(
     if let Some(plans) = raft {
         zs.extend(plans.iter().flatten().map(|plan| plan.z.print_z));
     }
+    if let Some(brim) = brim {
+        zs.extend(brim.prologue.iter().map(|band| band.print_z));
+    }
     initialize_layers_on_zs(zs)
+}
+
+// ToolOrdering.cpp:1001–1033 registers both kinds of brim in the one-based tool list.
+pub(super) fn collect_belt_brim(layers: &mut [LayerTools], brim: &BeltBrimPlan) {
+    for band in brim
+        .prologue
+        .iter()
+        .chain(&brim.by_layer)
+        .filter(|band| !band.paths.is_empty())
+    {
+        layers[layer_index(layers, band.print_z)]
+            .extruders
+            .push(brim.filament + 1);
+    }
 }
 
 /// `ToolOrdering.cpp:406-414`: the per-object ordering initializes the

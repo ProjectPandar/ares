@@ -166,11 +166,9 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if cancelled_lift && state.positioned {
-        // Clear-position `emit_xyz(point_on_plate)` path: one combined
-        // `G1 X Y Z` travel line at the travel feedrate
-        // (`GCodeWriter.cpp:799-805`). The unclear-position variant
-        // keeps the XY+`_travel_to_z` split via the `else` arm below.
+    } else if cancelled_lift && (state.positioned || state.belt.is_some()) {
+        // GCodeWriter.cpp:1115–1139: an axis remap emits the destination
+        // in one XYZ move even after custom G-code cleared the position.
         travel_emit::xyz_with_comment(
             output,
             state,
@@ -182,7 +180,9 @@ pub(super) fn emit_approach_move(
             state.travel_feedrate,
             first_travel_comment,
         );
-        travel_set_layer_z = true;
+        // The path still re-states Z when the toolchange invalidated last_pos.
+        unclear_position_travel = first_position;
+        travel_set_layer_z = !first_position;
     } else if first_position
         && state.options.z_hop.abs() > travel::EPSILON
         && (first_travel_lift.is_some() || state.pending_lift.is_some())

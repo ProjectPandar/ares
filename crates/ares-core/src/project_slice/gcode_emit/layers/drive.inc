@@ -221,8 +221,10 @@
         let timelapse_context = boundary.timelapse_context;
         state.layer_index = cooling_layer_index;
         state.on_first_layer = first_layer;
+        let mut brim_tool = belt_band.and(belt_brim.as_ref()).map(|plan| plan.filament);
         if prologue {
             let shift = instances[layer_object][0].shift;
+            belt_brim::select(output, state, brim_tool.unwrap(), timelapse_context)?;
             belt_brim::emit(output, state, belt_band.unwrap(), timelapse_context, (shift, None))?;
             cooling.finish_layer(output, layer_output_start, cooling_buffer_flush);
             previous_layer_z = layer_z;
@@ -332,9 +334,8 @@
                 last_object_copy = None;
             }
             let entry_count = tool_entries.visits.len();
-            if entry_count > 0 && let Some((band, index, geometry)) = belt_band.take() {
-                let shift = instances[layer_object][0].shift;
-                belt_brim::emit(output, state, band, timelapse_context, (shift, Some((index, &geometry))))?;
+            if entry_count > 0 && brim_tool.take_if(|id| id == tool).is_some() {
+                belt_brim::emit_coincident(output, state, timelapse_context, instances[layer_object][0].shift, belt_band.take())?;
             }
             for (pass, entry_position) in [tool_buckets::Pass::Wiping, tool_buckets::Pass::Normal]
                 .into_iter()
@@ -380,9 +381,9 @@
                 )?;
             }
         }
-        if let Some((band, index, geometry)) = belt_band {
-            let shift = instances[layer_object][0].shift;
-            belt_brim::emit(output, state, band, timelapse_context, (shift, Some((index, &geometry))))?;
+        if let Some(tool) = brim_tool {
+            belt_brim::select(output, state, tool, timelapse_context)?;
+            belt_brim::emit_coincident(output, state, timelapse_context, instances[layer_object][0].shift, belt_band)?;
         }
         // An empty final visit can bypass the per-entry tail.
         layer_end::append_farthest_fallback(output, state, timelapse_context)?;

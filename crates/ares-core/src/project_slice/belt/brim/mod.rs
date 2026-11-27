@@ -34,6 +34,7 @@ pub(in crate::project_slice) struct BandPath {
 }
 
 pub(in crate::project_slice) struct BeltBrimPlan {
+    pub(in crate::project_slice) filament: usize,
     pub(in crate::project_slice) by_layer: Vec<Band>,
     pub(in crate::project_slice) prologue: Vec<Band>,
 }
@@ -201,7 +202,21 @@ fn generate(
         }
     }
     prologue.reverse();
-    Ok(Some(BeltBrimPlan { by_layer, prologue }))
+    // PrintObject::belt_brim_filament uses configured walls, not the layer override.
+    let filament = traversal
+        .print_object_config(0)
+        .0
+        .all_regions
+        .iter()
+        .map(|region| region.outer_wall_filament_id.0)
+        .filter(|&id| id > 0)
+        .min()
+        .map_or(0, |id| id as usize - 1);
+    Ok(Some(BeltBrimPlan {
+        filament,
+        by_layer,
+        prologue,
+    }))
 }
 
 fn cutoff_band(floor: BeltFloorContext, (z, height): (f64, f64)) -> (f64, f64) {

@@ -130,6 +130,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         &slicing_parameters,
         traversal.scale,
     )?;
+    let belt_brim = BeltBrimPlan::generate(traversal)?;
     let mut tool_ordering = super::super::tool_ordering::build_recommended(
         &mut original
             .predecessor
@@ -140,6 +141,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         objects,
         support,
         raft.as_ref(),
+        belt_brim.as_ref(),
     )?;
     let traversal = &original
         .predecessor
@@ -150,7 +152,6 @@ pub(in crate::project_slice::gcode_emit) fn build(
         .predecessor;
     let settings = &traversal.resolved.views.full;
     let belt_printer = settings.printer.remaining.belt_printer.0;
-    let belt_brim = BeltBrimPlan::generate(traversal)?;
     tool_ordering.install_tower_support_layers(support);
     let mut merged = Vec::new();
     let mut raw_zs = Vec::new();
@@ -196,7 +197,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         pair_layers(&mut merged, object_index, &object_z, &support_z);
     }
     if belt_printer {
-        belt_brim::schedule(&mut merged, objects, &mut tool_ordering, belt_brim.as_ref());
+        belt_brim::schedule(&mut merged, objects, belt_brim.as_ref());
         raw_zs.extend(merged.iter().map(|entry| entry.0));
     }
     if let Some(raft) = &raft {

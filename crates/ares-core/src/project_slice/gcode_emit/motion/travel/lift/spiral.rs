@@ -4,6 +4,12 @@ use super::{EmitState, format_axis, format_offset, format_z, z_feedrate};
 use crate::geometry::arc_welder::arc_discretization_steps;
 
 pub(super) fn append(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {
+    // GCodeWriter.cpp:1200–1208; BeltKinematics always requires coupled XYZ.
+    if state.belt.is_some() {
+        super::append_linear(output, state, raised_z, " ; spiral lift Z");
+        state.record_z(raised_z);
+        return;
+    }
     let feedrate = z_feedrate(state);
     let comment = if state.options.gcode_comments {
         " ; spiral lift Z"

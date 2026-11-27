@@ -233,7 +233,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let rise = raised_z - state.writer_z.unwrap_or(state.layer_z);
     let emitted = match mode {
         LiftMode::Normal => {
-            append_normal(output, state, raised_z);
+            append_linear(output, state, raised_z, " ; normal lift Z");
             true
         }
         LiftMode::Spiral => {
@@ -245,7 +245,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 if state.spiral_lift_fits_printable_area((source.0 + i, source.1 + j), radius) {
                     append_spiral(output, state, raised_z, i, j);
                 } else {
-                    append_normal(output, state, raised_z);
+                    append_linear(output, state, raised_z, " ; normal lift Z");
                 }
                 true
             } else {
@@ -341,10 +341,10 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState, force_sp
         if state.spiral_lift_fits_printable_area(center, radius) {
             append_spiral(output, state, raised_z, radius, 0.0);
         } else {
-            append_normal(output, state, raised_z);
+            append_linear(output, state, raised_z, " ; normal lift Z");
         }
     } else {
-        append_normal(output, state, raised_z);
+        append_linear(output, state, raised_z, " ; normal lift Z");
     }
     state.record_z(raised_z);
     state.lifted = true;
@@ -377,11 +377,11 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.lifted_amount = state.options.z_hop;
 }
 
-// GCodeWriter::_travel_to_z: the same normal lift serves both rejected-circle branches.
-fn append_normal(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64) {
+// GCodeWriter::_travel_to_z also emits the remapped fallback for a spiral.
+fn append_linear(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, comment: &str) {
     let feedrate = z_feedrate_at(state, raised_z);
     let comment = if state.options.gcode_comments {
-        " ; normal lift Z"
+        comment
     } else {
         ""
     };
