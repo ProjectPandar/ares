@@ -3,14 +3,15 @@ mod stage;
 pub(in crate::project_slice::prepare_infill) mod trim;
 pub(in crate::project_slice) mod types;
 
-use crate::{SliceError, project_slice::prepare_infill::vertical_shell_projection};
+use crate::{CancelToken, SliceError, project_slice::prepare_infill::vertical_shell_projection};
 
 pub(in crate::project_slice) use types::PreparedPostVerticalShellTrim;
 
 pub(in crate::project_slice) fn prepare(
     prepared: vertical_shell_projection::PreparedPostVerticalShellProjection,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostVerticalShellTrim, SliceError> {
-    let trims = stage::trim(&prepared)?;
+    let trims = stage::trim(&prepared, cancel)?;
     let vertical_shell_projection::PreparedPostVerticalShellProjection {
         predecessor,
         objects,

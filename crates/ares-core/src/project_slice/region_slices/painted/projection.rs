@@ -14,6 +14,7 @@ pub(super) enum Painting {
 
 pub(super) struct Input<'a> {
     pub(super) painting: Painting,
+    pub(super) cancel: &'a crate::CancelToken,
     pub(super) source: &'a ProjectObject,
     pub(super) transform: Transform3d,
     pub(super) center: Point,

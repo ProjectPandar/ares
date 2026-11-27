@@ -1,10 +1,11 @@
 use crate::{
-    ProcessExtraBridgeLayer, SliceError,
+    CancelToken, ProcessExtraBridgeLayer, SliceError,
     geometry::{
         CoordinateScale, ExPolygon, JoinType, difference_ex_with_safety_offset,
         intersection_ex_with_safety_offset, offset_expolygons, opening_ex,
         union_safety_offset_expolygons,
     },
+    parallel::{par_for_each_mut_try, par_range_map_ordered_try},
     project_slice::{
         perimeters::types::{PerimeterInputRecord, PostPerimeterInputPrintObject},
         region_slices::{RegionSurface, RegionSurfaceKind},
@@ -23,15 +24,17 @@ pub(super) fn apply(
     inputs: &[Option<PerimeterInputRecord>],
     input_object: &PostPerimeterInputPrintObject,
     mode: ProcessExtraBridgeLayer,
-    scale: CoordinateScale,
+    (scale, cancel): (CoordinateScale, &CancelToken),
 ) -> Result<(), SliceError> {
+    cancel.check()?;
     if !matches!(
         mode,
         ProcessExtraBridgeLayer::ExternalBridgeOnly | ProcessExtraBridgeLayer::ApplyToAll
     ) {
         return Ok(());
     }
-    let caches = collect(records, inputs, input_object, scale)?;
+    let caches = collect(records, inputs, input_object, scale, cancel)?;
+    let mut targets = (0..records.len()).map(|_| None).collect::<Vec<_>>();
     for (cache, input) in caches.iter().zip(inputs) {
         let (Some(cache), Some(input)) = (cache, input) else {
             continue;
@@ -40,12 +43,14 @@ pub(super) fn apply(
             continue;
         };
         let upper_index = input_object.region_layer_record_index(upper_same_region);
-        let Some(upper) = &mut records[upper_index] else {
-            continue;
-        };
-        upper.slices = rewrite(std::mem::take(&mut upper.slices), cache)?;
+        targets[upper_index] = Some(cache);
     }
-    Ok(())
+    par_for_each_mut_try(records, cancel, |index, record| {
+        if let (Some(upper), Some(cache)) = (record, targets[index]) {
+            upper.slices = rewrite(std::mem::take(&mut upper.slices), cache)?;
+        }
+        Ok(())
+    })
 }
 
 fn collect(
@@ -53,11 +58,10 @@ fn collect(
     inputs: &[Option<PerimeterInputRecord>],
     input_object: &PostPerimeterInputPrintObject,
     scale: CoordinateScale,
+    cancel: &CancelToken,
 ) -> Result<Vec<Option<Cache>>, SliceError> {
-    records
-        .iter()
-        .zip(inputs)
-        .map(|(record, input)| match (record, input) {
+    par_range_map_ordered_try(records.len(), cancel, |index| {
+        match (&records[index], &inputs[index]) {
             (Some(record), Some(input)) => {
                 let polygons = record
                     .slices
@@ -80,8 +84,8 @@ fn collect(
             }
             (None, None) => Ok(None),
             _ => unreachable!("external extra-bridge records remain aligned"),
-        })
-        .collect()
+        }
+    })
 }
 
 fn rewrite(surfaces: Vec<RegionSurface>, cache: &Cache) -> Result<Vec<RegionSurface>, SliceError> {

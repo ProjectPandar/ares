@@ -7,6 +7,7 @@ use crate::{
 
 pub(in crate::project_slice) fn apply_project(
     prepared: &mut PreparedPostRegions,
+    cancel: &crate::CancelToken,
 ) -> Result<(), SliceError> {
     let nozzles = &prepared.resolved.views.full.project.print.nozzle_diameter;
     for (object, metadata) in prepared.objects.iter_mut().zip(&prepared.painting) {
@@ -29,6 +30,7 @@ pub(in crate::project_slice) fn apply_project(
             .collect::<Vec<_>>();
         let input = projection::Input {
             painting: projection::Painting::Fuzzy,
+            cancel,
             source,
             transform: transform.transform.without_xy_translation(),
             center: centering::center(source, transform, prepared.scale)?,

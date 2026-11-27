@@ -1,5 +1,6 @@
 use crate::{
-    ProcessEnsureVerticalShellThickness, SliceError,
+    CancelToken, ProcessEnsureVerticalShellThickness, SliceError,
+    parallel::par_range_map_ordered_try,
     project_slice::prepare_infill::{
         vertical_shell_projection::PreparedPostVerticalShellProjection,
         vertical_shell_trimming::{trim, types::VerticalShellTrimObject},
@@ -8,7 +9,9 @@ use crate::{
 
 pub(super) fn trim(
     prepared: &PreparedPostVerticalShellProjection,
+    cancel: &CancelToken,
 ) -> Result<Vec<VerticalShellTrimObject>, SliceError> {
+    cancel.check()?;
     validate_alignment(prepared);
     prepared
         .objects
@@ -20,13 +23,13 @@ pub(super) fn trim(
             let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
             let input_object = &prelude.object;
             let (_, inputs) = input_object.as_parts();
-            let records = object
-                .records
-                .iter()
-                .zip(&projection_object.records)
-                .zip(inputs)
-                .map(
-                    |((record, projection), input)| match (record, projection, input) {
+            let records =
+                par_range_map_ordered_try(object.records.len(), cancel, |index| {
+                    match (
+                        &object.records[index],
+                        &projection_object.records[index],
+                        &inputs[index],
+                    ) {
                         (Some(record), Some(projection), Some(input)) => trim::trim_record(
                             record,
                             projection,
@@ -39,9 +42,8 @@ pub(super) fn trim(
                         .map(Some),
                         (None, None, None) => Ok(None),
                         _ => unreachable!("validated O21 slots remain aligned"),
-                    },
-                )
-                .collect::<Result<_, _>>()?;
+                    }
+                })?;
             Ok(VerticalShellTrimObject { records })
         })
         .collect()

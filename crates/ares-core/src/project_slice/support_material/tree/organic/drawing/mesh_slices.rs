@@ -17,6 +17,7 @@ impl Drawing<'_, '_> {
         branch: &Branch,
         mesh: &mut IndexedTriangleSet,
         slice_z: &mut Vec<f32>,
+        cancel: &crate::CancelToken,
     ) -> Result<Option<BranchSlices>, SliceError> {
         mesh.vertices.clear();
         mesh.indices.clear();
@@ -70,7 +71,7 @@ impl Drawing<'_, '_> {
                 vertex[1] *= multiplier;
             }
         }
-        let raw = slice_mesh_on_planes(&mesh.vertices, &mesh.indices, slice_z)?;
+        let raw = slice_mesh_on_planes(&mesh.vertices, &mesh.indices, slice_z, &topology, cancel)?;
         let mut polygons = Vec::with_capacity(raw.len());
         for (offset, lines) in raw.into_iter().enumerate() {
             let mut loops = make_loops(

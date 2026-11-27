@@ -1,5 +1,5 @@
 use crate::{
-    RegionOptions,
+    CancelToken, RegionOptions, SliceError,
     project_slice::{
         perimeters::classic::traversal::PreparedPostClassicTraversal,
         region_slices::{RegionSurface, RegionSurfaceKind},
@@ -15,7 +15,9 @@ pub(in crate::project_slice) struct PreparedPostFillSurfacePreparation {
 
 pub(in crate::project_slice) fn prepare(
     prepared: PreparedPostSurfaceTypeDetection,
-) -> PreparedPostFillSurfacePreparation {
+    cancel: &CancelToken,
+) -> Result<PreparedPostFillSurfacePreparation, SliceError> {
+    cancel.check()?;
     validate_alignment(&prepared);
     let PreparedPostSurfaceTypeDetection {
         predecessor,
@@ -30,6 +32,7 @@ pub(in crate::project_slice) fn prepare(
             .predecessor
             .object;
         for (record, input) in object.records.iter_mut().zip(&input_object.records) {
+            cancel.check()?;
             if let (Some(record), Some(input)) = (record, input) {
                 prepare_record(
                     &mut record.fill_surfaces,
@@ -39,10 +42,10 @@ pub(in crate::project_slice) fn prepare(
             }
         }
     }
-    PreparedPostFillSurfacePreparation {
+    Ok(PreparedPostFillSurfacePreparation {
         predecessor,
         objects,
-    }
+    })
 }
 
 pub(in crate::project_slice) fn validate_alignment(prepared: &PreparedPostSurfaceTypeDetection) {

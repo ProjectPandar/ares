@@ -11,7 +11,7 @@ mod stage;
 mod types;
 
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
     project_slice::prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
 };
 
@@ -20,6 +20,7 @@ pub(in crate::project_slice) use types::{Bridge, ExpansionResult, ExpansionZone}
 
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostHorizontalShellPropagation,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostExternalSurfaces, SliceError> {
-    stage::prepare(predecessor)
+    stage::prepare(predecessor, cancel)
 }

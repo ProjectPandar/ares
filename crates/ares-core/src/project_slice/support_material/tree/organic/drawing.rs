@@ -73,7 +73,9 @@ pub(super) fn draw_branch_slices(
         let mut tree = aggregation::TreeSlices::default();
         for branch in branches {
             cancel.check()?;
-            let Some(mut slices) = drawing.slice_branch(&branch, &mut mesh, &mut slice_z)? else {
+            let Some(mut slices) =
+                drawing.slice_branch(&branch, &mut mesh, &mut slice_z, cancel)?
+            else {
                 continue;
             };
             drawing.recover_roofs(interface, &branch, &mut slices);

@@ -1,5 +1,5 @@
 use crate::{
-    SliceError, geometry::ClipperError,
+    CancelToken, SliceError, geometry::ClipperError, parallel::par_for_each_mut_try,
     project_slice::prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
 };
 
@@ -13,8 +13,10 @@ pub(in crate::project_slice) struct PreparedPostExternalSurfaces {
 
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostHorizontalShellPropagation,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostExternalSurfaces, SliceError> {
-    process_records(&mut predecessor).map_err(geometry_error)?;
+    process_records(&mut predecessor, cancel)?;
+    cancel.check()?;
     let object_spacings = predecessor
         .objects
         .iter()
@@ -44,7 +46,9 @@ pub(in crate::project_slice) fn prepare(
 
 fn process_records(
     predecessor: &mut PreparedPostHorizontalShellPropagation,
-) -> Result<(), ClipperError> {
+    cancel: &CancelToken,
+) -> Result<(), SliceError> {
+    cancel.check()?;
     let scale = predecessor.predecessor.scale;
     let spiral_mode = predecessor
         .predecessor
@@ -63,8 +67,8 @@ fn process_records(
     {
         let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
         let (_, inputs) = prelude.object.as_parts();
-        for (record, input) in object.records.iter_mut().zip(inputs) {
-            match (record, input) {
+        par_for_each_mut_try(&mut object.records, cancel, |index, record| {
+            match (record, &inputs[index]) {
                 (Some(record), Some(input)) => {
                     let options = prelude.object.region_options(input);
                     process_external_surfaces(
@@ -83,12 +87,14 @@ fn process_records(
                             spiral_mode,
                             scale,
                         },
-                    )?;
+                    )
+                    .map_err(geometry_error)?;
                 }
                 (None, None) => {}
                 _ => unreachable!("validated O26 record slots remain aligned"),
             }
-        }
+            Ok(())
+        })?;
     }
     Ok(())
 }

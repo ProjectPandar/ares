@@ -175,8 +175,9 @@ pub(super) fn slice_projected_objects(
                     &triangles,
                     &planes,
                     &active[projected_volume.source_volume_index],
+                    (&topology, cancel),
                 )?,
-                None => slice_mesh_on_planes(&vertices, &triangles, &planes)?,
+                None => slice_mesh_on_planes(&vertices, &triangles, &planes, &topology, cancel)?,
             };
             // PrintObjectSlice.cpp:221-225 drops volumes with no filtered layers.
             if active_ranges.is_some() && layers.is_empty() {

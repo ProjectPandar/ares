@@ -1,6 +1,5 @@
 use crate::{
-    ProcessInfillPattern, SliceError,
-    geometry::ClipperError,
+    CancelToken, ProcessInfillPattern, SliceError,
     project_slice::{
         perimeters::flow::{FillFlowContext, FillFlowRole, resolve_fill_flow},
         prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
@@ -19,8 +18,10 @@ pub(in crate::project_slice) struct PreparedPostBridgeCandidates {
 
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostExternalSurfaces,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostBridgeCandidates, SliceError> {
-    let objects = gather_objects(&predecessor)?;
+    cancel.check()?;
+    let objects = gather_objects(&predecessor, cancel)?;
     Ok(PreparedPostBridgeCandidates {
         predecessor,
         objects,
@@ -29,6 +30,7 @@ pub(in crate::project_slice) fn prepare(
 
 fn gather_objects(
     predecessor: &PreparedPostExternalSurfaces,
+    cancel: &CancelToken,
 ) -> Result<Vec<BridgeCandidateObject>, SliceError> {
     let horizontal = &predecessor.predecessor;
     let traversal = &horizontal.predecessor;
@@ -66,6 +68,7 @@ fn gather_objects(
                 .iter()
                 .enumerate()
                 .map(|(layer_index, layer)| {
+                    cancel.check()?;
                     let solid_infill_spacing = if layer_index == 0 {
                         // The source skips this layer before calling its Flow getter.
                         0
@@ -125,16 +128,7 @@ fn gather_objects(
                     }))
                 })
                 .collect::<Result<Vec<_>, SliceError>>()?;
-            gather_candidates(&layers, has_lightning_infill, filter, scale).map_err(geometry_error)
+            gather_candidates(&layers, has_lightning_infill, filter, scale, cancel)
         })
         .collect()
-}
-
-fn geometry_error(error: ClipperError) -> SliceError {
-    match error {
-        ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
-            "internal-bridge candidate coordinate is outside the supported Clipper range"
-                .to_owned(),
-        ),
-    }
 }

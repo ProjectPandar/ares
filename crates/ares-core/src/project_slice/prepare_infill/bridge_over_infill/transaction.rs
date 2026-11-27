@@ -4,7 +4,7 @@ mod extra_bridge;
 mod surface_rewrite;
 
 use crate::{
-    SliceError, geometry::ClipperError,
+    CancelToken, SliceError, geometry::ClipperError,
     project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
 };
 
@@ -24,15 +24,20 @@ pub(in crate::project_slice) struct PreparedPostBridgeOverInfill {
 
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostBridgeCandidates,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostBridgeOverInfill, SliceError> {
+    cancel.check()?;
     let PreparedPostBridgeCandidates {
         mut predecessor,
         mut objects,
     } = predecessor;
     validate_capabilities(&predecessor, &objects)?;
     candidate_expansion::prepare(&predecessor, &mut objects)?;
-    surface_rewrite::prepare(&mut predecessor, &objects)?;
+    cancel.check()?;
+    surface_rewrite::prepare(&mut predecessor, &objects, cancel)?;
+    cancel.check()?;
     extra_bridge::prepare(&mut predecessor)?;
+    cancel.check()?;
     let lightning_generators = objects
         .iter()
         .map(|object| object.lightning_generator.clone())

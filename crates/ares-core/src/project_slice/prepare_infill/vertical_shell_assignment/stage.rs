@@ -1,6 +1,7 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
     geometry::CoordinateScale,
+    parallel::par_range_map_ordered_try,
     project_slice::prepare_infill::{
         vertical_shell_assignment::{
             assign::{self, StagedAssignment},
@@ -16,9 +17,11 @@ struct StagedObject {
 
 pub(super) fn prepare(
     prepared: PreparedPostVerticalShellFiltering,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostVerticalShellAssignment, SliceError> {
+    cancel.check()?;
     validate_alignment(&prepared);
-    let staged = stage_assignments(&prepared)?;
+    let staged = stage_assignments(&prepared, cancel)?;
 
     let PreparedPostVerticalShellFiltering {
         predecessor,
@@ -27,6 +30,7 @@ pub(super) fn prepare(
     } = prepared;
     for (object, staged_object) in objects.iter_mut().zip(staged) {
         for (record, staged_record) in object.records.iter_mut().zip(staged_object.records) {
+            cancel.check()?;
             match (record, staged_record) {
                 (Some(record), Some(staged_record)) => assign::commit(record, staged_record),
                 (None, None) => {}
@@ -42,22 +46,23 @@ pub(super) fn prepare(
 
 fn stage_assignments(
     prepared: &PreparedPostVerticalShellFiltering,
+    cancel: &CancelToken,
 ) -> Result<Vec<StagedObject>, SliceError> {
     prepared
         .objects
         .iter()
         .zip(&prepared.filters)
         .map(|(object, filter_object)| {
-            let records = object
-                .records
-                .iter()
-                .zip(&filter_object.records)
-                .map(|(record, filter)| match (record, filter) {
-                    (Some(record), Some(filter)) => assign::stage_record(record, filter).map(Some),
-                    (None, None) => Ok(None),
-                    _ => unreachable!("validated O24 slots remain aligned"),
-                })
-                .collect::<Result<_, _>>()?;
+            let records =
+                par_range_map_ordered_try(object.records.len(), cancel, |index| {
+                    match (&object.records[index], &filter_object.records[index]) {
+                        (Some(record), Some(filter)) => {
+                            assign::stage_record(record, filter).map(Some)
+                        }
+                        (None, None) => Ok(None),
+                        _ => unreachable!("validated O24 slots remain aligned"),
+                    }
+                })?;
             Ok(StagedObject { records })
         })
         .collect()

@@ -1,5 +1,5 @@
 use crate::{
-    ProcessEnsureVerticalShellThickness, SliceError,
+    CancelToken, ProcessEnsureVerticalShellThickness, SliceError,
     geometry::CoordinateScale,
     project_slice::prepare_infill::{
         horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,
@@ -13,11 +13,14 @@ use crate::{
 
 pub(super) fn prepare(
     prepared: PreparedPostHorizontalShellPromotion,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostHorizontalShellPropagation, SliceError> {
+    cancel.check()?;
     validate_alignment(&prepared);
 
     let mut working = build_working_graph(&prepared);
-    super::propagate::project(&prepared, &mut working)?;
+    super::propagate::project(&prepared, &mut working, cancel)?;
+    cancel.check()?;
     Ok(commit_dirty(prepared, working))
 }
 

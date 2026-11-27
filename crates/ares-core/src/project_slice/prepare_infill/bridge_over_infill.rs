@@ -28,7 +28,8 @@ pub(in crate::project_slice) mod transaction;
 mod types;
 
 use crate::{
-    SliceError, project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+    CancelToken, SliceError,
+    project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
 };
 
 pub(in crate::project_slice) use stage::PreparedPostBridgeCandidates;
@@ -36,6 +37,7 @@ pub(in crate::project_slice) use types::BridgeCandidateObject;
 
 pub(in crate::project_slice) fn prepare(
     predecessor: PreparedPostExternalSurfaces,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostBridgeCandidates, SliceError> {
-    stage::prepare(predecessor)
+    stage::prepare(predecessor, cancel)
 }

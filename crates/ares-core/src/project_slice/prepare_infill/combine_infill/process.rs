@@ -1,7 +1,7 @@
 //! `PrintObject::combine_infill` (`PrintObject.cpp:4166-4291`).
 
 use crate::{
-    FloatOrPercent, OrcaFloats, ProcessInfillPattern, RegionOptions, SliceError,
+    CancelToken, FloatOrPercent, OrcaFloats, ProcessInfillPattern, RegionOptions, SliceError,
     geometry::{
         CoordinateScale, ExPolygon, JoinType, difference_ex, intersection_ex, offset_expolygons,
     },
@@ -44,7 +44,9 @@ pub(super) fn apply(
     traversal: &PostClassicTraversalPrintObject,
     nozzles: &OrcaFloats,
     scale: CoordinateScale,
+    cancel: &CancelToken,
 ) -> Result<(), SliceError> {
+    cancel.check()?;
     let prelude = &traversal.predecessor.predecessor.predecessor.predecessor;
     let (post_regions, _) = prelude.object.object.as_parts();
     let (plan, _, regions) = post_regions.as_parts();
@@ -56,6 +58,7 @@ pub(super) fn apply(
     }
     let configs = layer_configs(traversal, nozzles, scale)?;
     for region_index in 0..regions.len() {
+        cancel.check()?;
         let start = region_index * plan.layers.len();
         let end = start + plan.layers.len();
         let configs = &configs[start..end];
@@ -66,6 +69,7 @@ pub(super) fn apply(
             .enumerate()
             .filter(|(_, count)| *count > 1)
         {
+            cancel.check()?;
             combine_group(records, configs, top, count, scale)?;
         }
     }

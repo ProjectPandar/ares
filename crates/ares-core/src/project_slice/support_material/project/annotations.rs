@@ -3,7 +3,7 @@
 use std::borrow::Cow;
 
 use crate::{
-    Point3d, ProjectObject, ProjectVolumeType, SliceError,
+    CancelToken, Point3d, ProjectObject, ProjectVolumeType, SliceError,
     geometry::{CoordinateScale, Polygon, union_polygons_paths},
     mesh_slicer::{
         SlicingMode, chain_lines_by_triangle_connectivity, make_loops, slice_mesh_on_planes,
@@ -20,7 +20,7 @@ pub(super) fn slice_volumes(
     resolved: &ResolvedProjectObject,
     plan: &PlannedPrintObject,
     volume_type: ProjectVolumeType,
-    scale: CoordinateScale,
+    (scale, cancel): (CoordinateScale, &CancelToken),
 ) -> Result<Vec<Vec<Polygon>>, SliceError> {
     let mut volumes = source
         .volumes()
@@ -88,7 +88,7 @@ pub(super) fn slice_volumes(
             &topology,
             scale.factor(),
         );
-        let layers = slice_mesh_on_planes(&vertices, &triangles, &planes)?;
+        let layers = slice_mesh_on_planes(&vertices, &triangles, &planes, &topology, cancel)?;
         for ((target, merge), lines) in slices.iter_mut().zip(&mut merge_layers).zip(layers) {
             let loops = make_loops(
                 chain_lines_by_triangle_connectivity(lines, &coplanar),
