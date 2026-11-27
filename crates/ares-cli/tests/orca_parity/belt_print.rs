@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/purge.rs"]
+mod purge;
 #[path = "belt_print/seam_visibility.rs"]
 mod seam_visibility;
 
@@ -99,12 +101,17 @@ fn rejects_belt_support_without_gcode() {
     rejects("support", &[("enable_support", json!("1"))]);
 }
 
-#[test]
-fn rejects_belt_purge_without_gcode() {
-    rejects("belt_purge", &[("enable_belt_purge_tower", json!("1"))]);
+fn project(belt: bool, shift: bool, edits: &[(&str, Value)], second_island: bool) -> Vec<u8> {
+    project_with(belt, shift, edits, second_island, |_, bytes| bytes)
 }
 
-fn project(belt: bool, shift: bool, edits: &[(&str, Value)], second_island: bool) -> Vec<u8> {
+fn project_with(
+    belt: bool,
+    shift: bool,
+    edits: &[(&str, Value)],
+    second_island: bool,
+    edit_member: impl Fn(&str, Vec<u8>) -> Vec<u8>,
+) -> Vec<u8> {
     let mut reader = ZipArchive::new(Cursor::new(CUBE)).unwrap();
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for i in 0..reader.len() {
@@ -146,6 +153,7 @@ fn project(belt: bool, shift: bool, edits: &[(&str, Value)], second_island: bool
             }
             _ => {}
         }
+        let bytes = edit_member(&name, bytes);
         writer
             .start_file(name, SimpleFileOptions::default())
             .unwrap();
@@ -202,6 +210,10 @@ fn compare(name: &str, belt: bool, shift: bool, edits: &[(&str, Value)]) {
 }
 
 fn compare_project(name: &str, project: Vec<u8>) {
+    compare_project_with_native(name, project, |_| {});
+}
+
+fn compare_project_with_native(name: &str, input: Vec<u8>, check_native: impl FnOnce(&str)) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         crate::native_environment::skipped("belt coordinates require Native OrcaSlicer");
         return;
@@ -209,7 +221,7 @@ fn compare_project(name: &str, project: Vec<u8>) {
     let work = runner.work_dir().join(name);
     let out = work.join("out");
     fs::create_dir_all(&out).unwrap();
-    fs::write(work.join("input.3mf"), project).unwrap();
+    fs::write(work.join("input.3mf"), input).unwrap();
     stages::run(
         runner.bin(),
         ARGS.map(str::to_owned),
@@ -218,6 +230,8 @@ fn compare_project(name: &str, project: Vec<u8>) {
     )
     .unwrap();
     fs::rename(&out, work.join("native")).unwrap();
+    let native = fs::read(work.join("native/plate_1.gcode")).unwrap();
+    check_native(std::str::from_utf8(&native).unwrap());
     fs::create_dir(&out).unwrap();
     let result = run_ares(&work);
     assert!(
@@ -225,13 +239,16 @@ fn compare_project(name: &str, project: Vec<u8>) {
         "Ares exited {} in {work:?}",
         result.status
     );
-    let native = fs::read(work.join("native/plate_1.gcode")).unwrap();
     let actual = fs::read(out.join("plate_1.gcode")).unwrap();
     golden::compare_ordered_bytes_generator_only(&native, &actual)
         .unwrap_or_else(|error| panic!("{error}; {work:?}"));
 }
 
 fn rejects(reason: &str, edits: &[(&str, Value)]) {
+    rejects_project(reason, project(true, false, edits, false));
+}
+
+fn rejects_project(reason: &str, input: Vec<u8>) {
     let work = tempfile::Builder::new()
         .prefix("unsupported-belt-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -239,7 +256,7 @@ fn rejects(reason: &str, edits: &[(&str, Value)]) {
         .keep();
     let out = work.join("out");
     fs::create_dir(&out).unwrap();
-    fs::write(work.join("input.3mf"), project(true, false, edits, false)).unwrap();
+    fs::write(work.join("input.3mf"), input).unwrap();
     let result = run_ares(&work);
     assert!(
         !result.status.success(),

@@ -313,6 +313,7 @@ where
         "enable_mixed_color_sublayer",
         &print.enable_mixed_color_sublayer,
     )?;
+    map.serialize_entry("belt_purge_tower_object", &object.belt_purge_tower_object)?;
     map.serialize_entry("belt_purge_tower_width", &print.belt_purge_tower_width)?;
     map.serialize_entry(
         "wipe_tower_sparse_layers_combination",

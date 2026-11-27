@@ -29,7 +29,7 @@ macro_rules! declare_process_object_source_options {
             }
         }
         impl ProcessObjectSourceOptions {
-            pub const DECLARATION_ORDER: [&'static str; 130] = [
+            pub const DECLARATION_ORDER: [&'static str; 131] = [
                 $($key),*,
                 "leading_brim_length",
                 "extra_brim_width",

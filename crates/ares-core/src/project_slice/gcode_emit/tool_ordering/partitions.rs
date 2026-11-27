@@ -126,9 +126,12 @@ fn raft_gap(layers: &mut Vec<LayerTools>, object_bottom_z: f64, max_layer_height
 }
 
 pub(super) fn insert_extruder(layers: &mut [LayerTools], settings: &ProjectSettings) -> bool {
-    // `ToolOrdering.cpp:323–340`: only partitioned layers need this additional tool.
+    // `ToolOrdering.cpp:419–440`: belt mode has no separate tower tool.
     let print = &settings.process.print;
-    if !print.enable_prime_tower.0 || print.wipe_tower_filament.0 == 0 {
+    if settings.printer.remaining.belt_printer.0
+        || !print.enable_prime_tower.0
+        || print.wipe_tower_filament.0 == 0
+    {
         return false;
     }
     let tool = (print.wipe_tower_filament.0 - 1) as usize;
