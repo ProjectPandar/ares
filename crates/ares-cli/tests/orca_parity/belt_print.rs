@@ -4,6 +4,8 @@
 mod brim;
 #[path = "belt_print/normal_support.rs"]
 mod normal_support;
+#[path = "belt_print/organic_support.rs"]
+mod organic_support;
 #[path = "belt_print/purge.rs"]
 mod purge;
 #[path = "belt_print/seam_visibility.rs"]
