@@ -38,21 +38,38 @@ test("Qidi X-Plus 5 initializes Textured PEI and exports Native first-layer bed 
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await combo("Printer preset").click();
   await page.getByRole("option", { name: "Qidi X-Plus 5", exact: true }).click();
-  await page.getByRole("combobox", { name: "Nozzle diameter", exact: true }).selectOption("0.4");
-  await expect(combo("Printer preset")).toHaveAttribute("title", "Qidi X-Plus 5 0.4 nozzle");
+  const nozzle = page.getByRole("combobox", { name: "Nozzle diameter", exact: true });
+  await nozzle.selectOption("0.6");
+  await expect(combo("Printer preset")).toHaveAttribute("title", "Qidi X-Plus 5 0.6 nozzle");
+  await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
+  await expect(nozzle).toHaveValue("0.6");
+  const printer = "Qidi X-Plus 5 0.4 nozzle";
+  // Read the plate in the DOM update that removes the filtering indicator.
+  const firstPlate = await page.evaluateHandle((printerName) => {
+    const value: { bed: string | null } = { bed: null };
+    const observer = new MutationObserver(() => {
+      const selected = document.querySelector('[aria-label="Printer preset"]')?.getAttribute("title");
+      if (selected !== printerName || document.querySelector('[data-testid="preset-filtering"]')) return;
+      value.bed = document.querySelector<HTMLSelectElement>('select[aria-label="Plate type"]')?.value ?? null;
+      observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["title"] });
+    return value;
+  }, printer);
+  await nozzle.selectOption("0.4");
+  await expect(combo("Printer preset")).toHaveAttribute("title", printer);
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
   await expect(plate).toBeVisible();
   const bed = await plate.inputValue();
+  const bedAtFilterEnd = await firstPlate.evaluate((result) => result.bed);
+  await firstPlate.dispose();
   writeFileSync(
     `${artifacts}initial-selection.json`,
-    JSON.stringify(
-      { bed, printer: await combo("Printer preset").getAttribute("title"), explicit_bed_selection: false },
-      null,
-      2,
-    ),
+    JSON.stringify({ bed, bed_at_filter_end: bedAtFilterEnd, printer, explicit_bed_selection: false }, null, 2),
   );
   await page.screenshot({ path: `${artifacts}implicit-selection.png` });
+  expect(bedAtFilterEnd).toBe("Textured PEI Plate");
   expect(bed).toBe("Textured PEI Plate");
   await combo("Process preset").click();
   await page.getByRole("option", { name: "0.20mm Standard @X-Plus 5", exact: true }).click();
