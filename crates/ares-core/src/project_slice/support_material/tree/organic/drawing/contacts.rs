@@ -1,22 +1,24 @@
 //! Native gracious/non-gracious landings and bottom contact retention.
 
 use super::{Branch, BranchSlices, Drawing, clipping};
-use crate::geometry::{ClipperError, Polygon};
+use crate::geometry::{ClipperError, Polygon, difference_polygons_paths};
 
 impl Drawing<'_, '_> {
     pub(super) fn root_contacts(
         &mut self,
         branch: &Branch,
         slices: &mut BranchSlices,
+        dropped_leading_slices: bool,
     ) -> Result<(), ClipperError> {
         let state = self.element(branch.path[0]).state;
         let front = slices.polygons[0].clone();
         let floors = self.config().mesh.floor_layers > 0;
         let model = self.config().support_rests_on_model;
         let gap = self.config().z_distance_bottom_layers > 0;
+        let belt = !self.volumes.belt_floor.is_empty();
         if state.bits.to_model_gracious {
             self.gracious_contact(&front, slices)?;
-        } else if slices.begin > 0 {
+        } else if slices.begin > 0 && (!belt || !dropped_leading_slices) {
             self.descend_root(
                 &front,
                 state.actual_radius(self.config()),
@@ -24,7 +26,8 @@ impl Drawing<'_, '_> {
                 slices,
             )?;
         }
-        if model
+        if !belt
+            && model
             && state.layer_index > 0
             && floors
             && gap
@@ -79,7 +82,8 @@ impl Drawing<'_, '_> {
     ) -> Result<(), ClipperError> {
         let config = self.config();
         let maximum = 5 * radius / config.mesh.layer_height;
-        let lowest = if very_lost {
+        let belt = !self.volumes.belt_floor.is_empty();
+        let lowest = if very_lost && !belt {
             0
         } else {
             (slices.begin as i64 - maximum).max(0) as usize
@@ -102,13 +106,24 @@ impl Drawing<'_, '_> {
                 collision,
                 scale,
             )?;
+            // TreeSupport3D.cpp:4074–4096: only a real cut is a landing.
+            let belt_cut = if let Some(floor) = self.volumes.belt_floor.get(layer) {
+                let before = rest.iter().map(Polygon::area).sum::<f64>();
+                rest = difference_polygons_paths(&rest, floor)?;
+                rest.iter().map(Polygon::area).sum::<f64>() < before - clipping::tiny_area(scale)
+            } else {
+                false
+            };
             clipping::remove_small(&mut rest, scale);
             if rest.iter().map(Polygon::area).sum::<f64>() < stop_area {
                 break;
             }
             extra.push(rest.clone());
+            if belt_cut {
+                break;
+            }
         }
-        if self.config().mesh.floor_layers > 0 {
+        if !belt && self.config().mesh.floor_layers > 0 {
             let model = self.config().support_rests_on_model;
             let mut contacts = self.descended_contact(front, &extra, slices.begin)?;
             clipping::remove_small(&mut contacts, scale);

@@ -59,7 +59,7 @@ pub(super) fn admit(
     let options = &object.object;
     if options.raft_layers.0 != 0
         || options.enforce_support_layers.0 != 0
-        || (options.enable_support.0 && !normal_grid_support(settings, options, source))
+        || (options.enable_support.0 && !automatic_support(settings, options, source))
     {
         return Err(unsupported("support"));
     }
@@ -99,20 +99,27 @@ pub(super) fn admit(
     Ok(())
 }
 
-fn normal_grid_support(
+fn automatic_support(
     settings: &crate::ProjectSettings,
     object: &crate::ObjectOptions,
     source: &crate::ProjectObject,
 ) -> bool {
+    let supported_style = match (object.support_type, object.support_style) {
+        (
+            ProcessSupportType::NormalAuto,
+            ProcessSupportStyle::Grid | ProcessSupportStyle::Default,
+        ) => true,
+        (
+            ProcessSupportType::TreeAuto,
+            ProcessSupportStyle::Organic | ProcessSupportStyle::Default,
+        ) => object.support_on_build_plate_only.0,
+        _ => false,
+    };
     let printer = &settings.printer.remaining;
     let (sin, cos) = back_transform::deg2rad(printer.belt_slice_rotation_angle.0).sin_cos();
-    cos.abs() > EPSILON
+    supported_style
+        && cos.abs() > EPSILON
         && (sin / cos).abs() >= EPSILON
-        && object.support_type == ProcessSupportType::NormalAuto
-        && matches!(
-            object.support_style,
-            ProcessSupportStyle::Grid | ProcessSupportStyle::Default
-        )
         && source.volumes()[0]
             .mesh()
             .supported_facets

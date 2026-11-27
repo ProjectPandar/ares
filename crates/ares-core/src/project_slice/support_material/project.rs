@@ -2,6 +2,7 @@
 
 mod annotations;
 mod bed;
+mod frame;
 mod grid;
 pub(super) mod region;
 mod tree_input;
@@ -206,6 +207,7 @@ pub(in crate::project_slice) fn generate(
         let has_brim = object.raft_layers.0 <= 0
             && (object.brim_type == ProcessBrimType::AutoBrim
                 || (object.brim_type != ProcessBrimType::NoBrim && object.brim_width.0 > 0.0));
+        let frame = frame::SupportFrame::new(plan, &settings.printer.remaining);
         if tree {
             let bottom_bridges = data
                 .iter()
@@ -257,7 +259,8 @@ pub(in crate::project_slice) fn generate(
                 counts: &counts,
                 slices,
                 layers: &layers,
-                planned: &plan.layers,
+                planned: if organic { &frame.layers } else { &plan.layers },
+                floor: if organic { frame.floor } else { None },
                 bridges: &bridges,
                 enforcers: &enforcers,
                 vertical_enforcers: &vertical_enforcers,
@@ -292,7 +295,7 @@ pub(in crate::project_slice) fn generate(
                 continue;
             }
             let mut geometry = super::tree::generate(&tree_input, context)?;
-            output.push(generate_grid_support_toolpaths(
+            let mut installed = generate_grid_support_toolpaths(
                 &mut geometry,
                 &ToolpathInput {
                     object,
@@ -300,13 +303,14 @@ pub(in crate::project_slice) fn generate(
                     parameters: &parameters,
                     counts: &counts,
                     scale,
-                    belt_floor: false,
+                    belt_floor: frame.floor.is_some(),
                 },
                 context.cancel_ref(),
-            )?);
+            )?;
+            frame.restore(&mut installed);
+            output.push(installed);
             continue;
         }
-        let frame = grid::SupportFrame::new(plan, &settings.printer.remaining);
         let (height_min, extrusion_width, bottom_interface_height) = grid::dimensions(
             settings,
             object,

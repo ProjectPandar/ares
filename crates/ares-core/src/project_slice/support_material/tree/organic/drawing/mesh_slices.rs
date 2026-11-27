@@ -4,7 +4,7 @@ use super::super::{branch_mesh::IndexedTriangleSet, interface_placer::layer_z, l
 use super::{Branch, BranchSlices, Drawing, clipping, geometry_error};
 use crate::{
     SliceError,
-    geometry::intersection_polygons_paths_with_safety_offset,
+    geometry::{difference_polygons_paths, intersection_polygons_paths_with_safety_offset},
     mesh_slicer::{
         SlicingMode, apply_slicing_mode, chain_lines_by_triangle_connectivity, make_loops,
         slice_mesh_on_planes,
@@ -90,6 +90,9 @@ impl Drawing<'_, '_> {
                 std::slice::from_ref(&self.volumes.bed_area),
             )
             .map_err(geometry_error)?;
+            if let Some(floor) = self.volumes.belt_floor.get(begin + offset) {
+                clipped = difference_polygons_paths(&clipped, floor).map_err(geometry_error)?;
+            }
             clipping::remove_small(&mut clipped, scale);
             polygons.push(clipped);
         }
@@ -105,7 +108,7 @@ impl Drawing<'_, '_> {
             contacts: Vec::new(),
         };
         if branch.has_root {
-            self.root_contacts(branch, &mut slices)
+            self.root_contacts(branch, &mut slices, leading != 0)
                 .map_err(geometry_error)?;
         }
         Ok(Some(slices))

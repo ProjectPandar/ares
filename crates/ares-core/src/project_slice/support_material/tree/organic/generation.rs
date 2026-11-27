@@ -25,6 +25,7 @@ use crate::{
         ClipperError, Coord, CoordinateScale, ExPolygon, JoinType, Point, Polygon, offset_paths,
     },
     project_slice::{
+        belt::floor_context::BeltFloorContext,
         layers::PlannedLayer,
         parameters::SlicingParameters,
         perimeters::flow::SupportFlows,
@@ -51,6 +52,7 @@ pub(in crate::project_slice::support_material) struct TreeInput<'a> {
     pub(in crate::project_slice::support_material) slices: &'a [Vec<ExPolygon>],
     pub(in crate::project_slice::support_material) layers: &'a [LayerInput<'a>],
     pub(in crate::project_slice::support_material) planned: &'a [PlannedLayer],
+    pub(in crate::project_slice::support_material) floor: Option<BeltFloorContext>,
     pub(in crate::project_slice::support_material) bridges: &'a [Vec<RegionBridges<'a>>],
     pub(in crate::project_slice::support_material) enforcers: &'a [Vec<Polygon>],
     pub(in crate::project_slice::support_material) vertical_enforcers: &'a [VerticalEnforcer],
@@ -88,6 +90,13 @@ pub(in crate::project_slice::support_material) fn generate(
         input.scale,
     )
     .map_err(error)?;
+    if let Some(floor) = input.floor {
+        volumes.belt_floor = input
+            .planned
+            .iter()
+            .map(|layer| floor.half_plane(layer.print_z, input.scale, true))
+            .collect();
+    }
     let overhangs = detect(input, config.raft_layers.len(), context.cancel_ref())?;
     let maximum = overhangs
         .iter()
@@ -170,7 +179,7 @@ pub(in crate::project_slice::support_material) fn generate(
             parameters: input.slicing,
             first_object_slices: &input.slices[0],
             has_brim: input.has_brim,
-            belt_floor: false,
+            belt_floor: input.floor.is_some(),
             gap_xy_first_layer: input.object.support_object_first_layer_gap.0,
             first_layer_flow_width_scaled: input
                 .scale
@@ -185,7 +194,8 @@ pub(in crate::project_slice::support_material) fn generate(
     )
     .map_err(error)?;
     geometry.support_layers = generate_support_layers(&mut geometry);
-    output::clip_to_bed(&mut geometry, std::slice::from_ref(&input.bed)).map_err(error)?;
+    output::clip_to_build_surface(&mut geometry, &input.bed, input.floor, input.scale)
+        .map_err(error)?;
     Ok(geometry)
 }
 
@@ -208,8 +218,11 @@ fn detect(
     let start = web_time::Instant::now();
     for layer in 0..input.layers.len() {
         cancel.check()?;
+        let floor = input
+            .floor
+            .map(|floor| (floor, input.planned[layer].print_z));
         smart
-            .detect_layer(layer, || start.elapsed().as_secs_f64())
+            .detect_layer(layer, floor, || start.elapsed().as_secs_f64())
             .map_err(error)?;
     }
     smart.propagate_sharp_tails().map_err(error)?;

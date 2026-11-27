@@ -30,6 +30,10 @@ fn clipped(subject: &[Polygon], clip: &[Polygon], scale: CoordinateScale) -> Vec
 }
 
 pub(super) fn remove_small(polygons: &mut Vec<Polygon>, scale: CoordinateScale) {
-    let tiny = scale.scaled_delta(0.001).powi(2);
+    let tiny = tiny_area(scale);
     polygons.retain(|polygon| polygon.area().abs() >= tiny);
+}
+
+pub(super) fn tiny_area(scale: CoordinateScale) -> f64 {
+    scale.scaled_delta(0.001).powi(2)
 }

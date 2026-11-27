@@ -21,6 +21,8 @@ pub(super) struct TreeModelVolumes<'a> {
     settings: &'a TreeSettings,
     outlines: Vec<Vec<Polygon>>,
     pub(super) bed_area: Polygon,
+    // TreeModelVolumes.cpp:148–171 keeps belt contacts separate from avoidance.
+    pub(super) belt_floor: Vec<[Polygon; 1]>,
     anti_overhang: Vec<Vec<Polygon>>,
     radii: RadiusQuantization,
     max_move: Coord,
@@ -63,6 +65,7 @@ impl<'a> TreeModelVolumes<'a> {
             settings,
             outlines,
             bed_area,
+            belt_floor: Vec::new(),
             anti_overhang,
             radii: RadiusQuantization::new(
                 scale,

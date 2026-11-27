@@ -135,7 +135,11 @@ fn split(
                 band_top(prev_band)
             };
             let t = ((edge - prev_h) / (h - prev_h)).clamp(0., 1.);
-            let cut = ((a.0 as f64 + t * dx) as i64, (a.1 as f64 + t * dy) as i64);
+            // GCode.cpp constructs a Point3 here; Point.hpp rounds each coordinate.
+            let cut = (
+                (a.0 as f64 + t * dx).round() as i64,
+                (a.1 as f64 + t * dy).round() as i64,
+            );
             current.push(cut, length);
             let next = Piece {
                 points: vec![cut],

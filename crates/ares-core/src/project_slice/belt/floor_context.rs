@@ -23,6 +23,20 @@ impl BeltFloorContext {
         self.floor.shear.abs() > EPSILON
     }
 
+    /// `TreeSupport.cpp:945–950`: advance a lower slice along signed belt shear.
+    pub(in crate::project_slice) fn lower_layer_shift(
+        self,
+        height: f64,
+        scale: CoordinateScale,
+    ) -> Point {
+        let shift = -scale.scaled_delta(height * self.floor.shear) as i64;
+        if self.floor.axis == 0 {
+            Point::new(shift, 0)
+        } else {
+            Point::new(0, shift)
+        }
+    }
+
     pub(super) fn cutoff_u(self, print_z: f64) -> f64 {
         (print_z - self.floor.shift - self.offset) / self.floor.shear
     }

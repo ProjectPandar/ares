@@ -5,12 +5,15 @@ use super::{
     interfaces::indices,
 };
 use crate::{
-    geometry::{ClipperError, Polygon, intersection_polygons_paths},
-    project_slice::support_material::{
-        bottom_contacts::BottomContactLayer,
-        contact_layer::TopContactLayer,
-        grid_generation::{GeneratedSupportGeometry, LayerOwnership},
-        intermediate_heights::{IntermediateLayer, SupportLayerType},
+    geometry::{ClipperError, CoordinateScale, Polygon, intersection_polygons_paths},
+    project_slice::{
+        belt::floor_context::BeltFloorContext,
+        support_material::{
+            bottom_contacts::BottomContactLayer,
+            contact_layer::TopContactLayer,
+            grid_generation::{GeneratedSupportGeometry, LayerOwnership},
+            intermediate_heights::{IntermediateLayer, SupportLayerType},
+        },
     },
 };
 
@@ -101,18 +104,28 @@ fn intermediate(
     (layers, owners)
 }
 
-pub(super) fn clip_to_bed(
+pub(super) fn clip_to_build_surface(
     geometry: &mut GeneratedSupportGeometry,
-    bed: &[Polygon],
+    bed: &Polygon,
+    floor: Option<BeltFloorContext>,
+    scale: CoordinateScale,
 ) -> Result<(), ClipperError> {
+    let clip = |print_z, polygons: &mut Vec<Polygon>| -> Result<(), ClipperError> {
+        *polygons = intersection_polygons_paths(polygons, std::slice::from_ref(bed))?;
+        // TreeSupport3D.cpp:3681–3699: derived layers use their own local Z.
+        if let Some(floor) = floor.filter(|_| !polygons.is_empty()) {
+            floor.trim([(print_z, polygons)], scale)?;
+        }
+        Ok(())
+    };
     for layer in &mut geometry.rafts {
-        layer.polygons = intersection_polygons_paths(&layer.polygons, bed)?;
+        clip(layer.print_z, &mut layer.polygons)?;
     }
     for layer in &mut geometry.tops {
-        layer.polygons = intersection_polygons_paths(&layer.polygons, bed)?;
+        clip(layer.print_z, &mut layer.polygons)?;
     }
     for layer in &mut geometry.bottoms {
-        layer.polygons = intersection_polygons_paths(&layer.polygons, bed)?;
+        clip(layer.print_z, &mut layer.polygons)?;
     }
     for layers in [
         &mut geometry.bases,
@@ -120,7 +133,7 @@ pub(super) fn clip_to_bed(
         &mut geometry.base_interfaces,
     ] {
         for layer in layers {
-            layer.polygons = intersection_polygons_paths(&layer.polygons, bed)?;
+            clip(layer.print_z, &mut layer.polygons)?;
         }
     }
     Ok(())
