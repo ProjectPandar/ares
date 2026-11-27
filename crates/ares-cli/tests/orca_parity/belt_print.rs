@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/multi_filament.rs"]
+mod multi_filament;
 #[path = "belt_print/purge.rs"]
 mod purge;
 
