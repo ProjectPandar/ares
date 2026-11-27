@@ -3,14 +3,17 @@ mod stage;
 
 pub(in crate::project_slice) mod types;
 
-use crate::{SliceError, project_slice::prepare_infill::vertical_shell_regularization};
+use crate::{
+    CancelToken, SliceError, project_slice::prepare_infill::vertical_shell_regularization,
+};
 
 pub(in crate::project_slice) use types::PreparedPostVerticalShellFiltering;
 
 pub(in crate::project_slice) fn prepare(
     prepared: vertical_shell_regularization::PreparedPostVerticalShellRegularization,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostVerticalShellFiltering, SliceError> {
-    let filters = stage::filter(&prepared)?;
+    let filters = stage::filter(&prepared, cancel)?;
     let vertical_shell_regularization::PreparedPostVerticalShellRegularization {
         predecessor,
         objects,

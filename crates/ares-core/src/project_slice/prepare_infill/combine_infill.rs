@@ -1,4 +1,6 @@
-use crate::{SliceError, project_slice::prepare_infill::bridge_over_infill::transaction};
+use crate::{
+    CancelToken, SliceError, project_slice::prepare_infill::bridge_over_infill::transaction,
+};
 
 mod process;
 
@@ -8,7 +10,9 @@ pub(in crate::project_slice) struct PreparedPostInfillCombination {
 
 pub(in crate::project_slice) fn prepare(
     mut predecessor: transaction::PreparedPostBridgeOverInfill,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostInfillCombination, SliceError> {
+    cancel.check()?;
     let horizontal = &mut predecessor.predecessor.predecessor;
     let traversal = &horizontal.predecessor;
     let nozzles = &traversal.resolved.views.full.project.print.nozzle_diameter;
@@ -17,6 +21,9 @@ pub(in crate::project_slice) fn prepare(
         .objects
         .iter_mut()
         .zip(&traversal.objects)
-        .try_for_each(|(object, traversal)| process::apply(object, traversal, nozzles, scale))?;
+        .try_for_each(|(object, traversal)| {
+            process::apply(object, traversal, nozzles, scale, cancel)
+        })?;
+    cancel.check()?;
     Ok(PreparedPostInfillCombination { predecessor })
 }

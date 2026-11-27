@@ -1,6 +1,9 @@
 use std::ops::Range;
 
-use crate::SliceError;
+use crate::{
+    CancelToken, SliceError,
+    parallel::{par_for_each_mut_try, par_range_map_try},
+};
 
 mod chaining;
 mod coplanar;
@@ -41,46 +44,62 @@ pub(crate) fn slice_mesh_on_planes(
     vertices: &[[f32; 3]],
     triangles: &[[u32; 3]],
     planes: &[f32],
+    topology: &MeshTopology,
+    cancel: &CancelToken,
 ) -> Result<Vec<Vec<IntersectionLine>>, SliceError> {
+    const FACES_PER_RANGE: usize = 2048;
+    cancel.check()?;
     let input = MeshPlaneInput::new(vertices, triangles, planes);
-    let topology = index_mesh_edges(triangles)?;
-    let mut lines = (0..planes.len()).map(|_| Vec::new()).collect::<Vec<_>>();
-    dispatch_indexed_mesh_on_planes_with(
-        input,
-        &topology,
-        |_, _| {},
-        |plane_index, line| lines[plane_index].push(line),
-    );
-    for layer in &mut lines {
-        layer.sort_unstable_by_key(|line| line.canonical_key(line.edge_type() as u8));
+    let mut lines = vec![Vec::new(); planes.len()];
+    let ranges = triangles.len().div_ceil(FACES_PER_RANGE);
+    if cfg!(all(feature = "parallel", not(target_arch = "wasm32"))) && ranges > 1 {
+        let batches = par_range_map_try(ranges, cancel, |range| {
+            let first = range * FACES_PER_RANGE;
+            let end = (first + FACES_PER_RANGE).min(triangles.len());
+            let mut batch = Vec::new();
+            dispatch_facet_range(input, topology, first..end, cancel, |plane, line| {
+                batch.push((plane, line));
+            })?;
+            Ok(batch)
+        })?;
+        // Preserve original facet order before canonical sorting.
+        for batch in batches {
+            cancel.check()?;
+            for (plane, line) in batch {
+                lines[plane].push(line);
+            }
+        }
+    } else {
+        dispatch_facet_range(
+            input,
+            topology,
+            0..triangles.len(),
+            cancel,
+            |plane, line| {
+                lines[plane].push(line);
+            },
+        )?;
     }
+    par_for_each_mut_try(&mut lines, cancel, |_, layer| {
+        layer.sort_unstable_by_key(|line| line.canonical_key(line.edge_type() as u8));
+        Ok(())
+    })?;
+    cancel.check()?;
     Ok(lines)
 }
 
-fn dispatch_mesh_on_planes_with<Visit, Push>(
-    input: MeshPlaneInput<'_>,
-    visit: Visit,
-    push: Push,
-) -> Result<(), SliceError>
-where
-    Visit: FnMut(usize, usize),
-    Push: FnMut(usize, IntersectionLine),
-{
-    let topology = index_mesh_edges(input.triangles)?;
-    dispatch_indexed_mesh_on_planes_with(input, &topology, visit, push);
-    Ok(())
-}
-
-fn dispatch_indexed_mesh_on_planes_with<Visit, Push>(
+fn dispatch_facet_range(
     input: MeshPlaneInput<'_>,
     topology: &MeshTopology,
-    mut visit: Visit,
-    mut push: Push,
-) where
-    Visit: FnMut(usize, usize),
-    Push: FnMut(usize, IntersectionLine),
-{
-    for (face_index, triangle) in input.triangles.iter().enumerate() {
+    faces: Range<usize>,
+    cancel: &CancelToken,
+    mut push: impl FnMut(usize, IntersectionLine),
+) -> Result<(), SliceError> {
+    for face_index in faces {
+        if face_index.is_multiple_of(128) {
+            cancel.check()?;
+        }
+        let triangle = input.triangles[face_index];
         let face_vertices = triangle.map(|vertex_id| input.vertices[vertex_id as usize]);
         let min_z = face_vertices[0][2].min(face_vertices[1][2].min(face_vertices[2][2]));
         let max_z = face_vertices[0][2].max(face_vertices[1][2].max(face_vertices[2][2]));
@@ -90,17 +109,20 @@ fn dispatch_indexed_mesh_on_planes_with<Visit, Push>(
         let edge_ids = topology.face_edge_ids()[face_index];
 
         for plane_index in eligible_plane_range(input.planes, min_z, max_z) {
-            visit(face_index, plane_index);
+            if plane_index.is_multiple_of(128) {
+                cancel.check()?;
+            }
             if let Some(line) = intersect_facet(
                 input.planes[plane_index],
                 &face_vertices,
-                *triangle,
+                triangle,
                 edge_ids,
             ) {
                 push(plane_index, line);
             }
         }
     }
+    Ok(())
 }
 
 fn eligible_plane_range(planes: &[f32], min_z: f32, max_z: f32) -> Range<usize> {
@@ -110,15 +132,17 @@ fn eligible_plane_range(planes: &[f32], min_z: f32, max_z: f32) -> Range<usize> 
 }
 
 type FacetIntersectionFn = fn(f32, &[[f32; 3]; 3], [u32; 3], [u32; 3]) -> Option<IntersectionLine>;
-type MeshSliceFn =
-    fn(&[[f32; 3]], &[[u32; 3]], &[f32]) -> Result<Vec<Vec<IntersectionLine>>, SliceError>;
-type MeshDispatchFn =
-    fn(MeshPlaneInput<'_>, fn(usize, usize), fn(usize, IntersectionLine)) -> Result<(), SliceError>;
+type MeshSliceFn = fn(
+    &[[f32; 3]],
+    &[[u32; 3]],
+    &[f32],
+    &MeshTopology,
+    &CancelToken,
+) -> Result<Vec<Vec<IntersectionLine>>, SliceError>;
 type LoopRepairFn = fn(ChainedLayer, crate::geometry::Coord) -> LoopedLayer;
 
 const _: FacetIntersectionFn = intersect_facet;
 const _: MeshSliceFn = slice_mesh_on_planes;
-const _: MeshDispatchFn = dispatch_mesh_on_planes_with;
 const _: LoopRepairFn = make_loops;
 const _: fn(&LoopedLayer) -> &[crate::geometry::Polygon] = LoopedLayer::polygons;
 const _: fn(IntersectionLine) -> IntersectionPoint = IntersectionLine::a;

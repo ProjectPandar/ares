@@ -1,9 +1,10 @@
 use crate::{
-    ProcessInternalBridgeFilter,
+    CancelToken, ProcessInternalBridgeFilter, SliceError,
     geometry::{
         ClipperError, Coord, CoordinateScale, ExPolygon, JoinType, Polygon,
         difference_polygons_paths, intersection_polygons_paths, offset_paths,
     },
+    parallel::par_range_map_ordered_try,
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
@@ -30,19 +31,28 @@ pub(super) fn gather_candidates(
     has_lightning_infill: bool,
     filter: ProcessInternalBridgeFilter,
     scale: CoordinateScale,
-) -> Result<BridgeCandidateObject, ClipperError> {
-    let mut surfaces_by_layer = std::collections::BTreeMap::new();
-    for (layer_index, layer) in layers.iter().enumerate() {
-        let Some(layer) = layer else { continue };
+    cancel: &CancelToken,
+) -> Result<BridgeCandidateObject, SliceError> {
+    let candidates = par_range_map_ordered_try(layers.len(), cancel, |layer_index| {
+        let Some(layer) = &layers[layer_index] else {
+            return Ok(Vec::new());
+        };
         let Some(lower_layer_index) = layer.lower_layer_index else {
-            continue;
+            return Ok(Vec::new());
         };
         let lower = layers[lower_layer_index].as_ref();
-        let candidates = gather_layer(layer_index, layer, lower, filter, scale)?;
-        if !candidates.is_empty() {
-            surfaces_by_layer.insert(layer_index, candidates);
-        }
-    }
+        gather_layer(layer_index, layer, lower, filter, scale).map_err(|_| {
+            SliceError::InvalidInput(
+                "internal-bridge candidate coordinate is outside the supported Clipper range"
+                    .to_owned(),
+            )
+        })
+    })?;
+    let surfaces_by_layer = candidates
+        .into_iter()
+        .enumerate()
+        .filter(|(_, candidates)| !candidates.is_empty())
+        .collect();
     Ok(BridgeCandidateObject {
         has_lightning_infill,
         surfaces_by_layer,

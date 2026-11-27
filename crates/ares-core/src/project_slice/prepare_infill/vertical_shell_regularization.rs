@@ -3,14 +3,15 @@ mod stage;
 
 pub(in crate::project_slice) mod types;
 
-use crate::{SliceError, project_slice::prepare_infill::vertical_shell_trimming};
+use crate::{CancelToken, SliceError, project_slice::prepare_infill::vertical_shell_trimming};
 
 pub(in crate::project_slice) use types::PreparedPostVerticalShellRegularization;
 
 pub(in crate::project_slice) fn prepare(
     prepared: vertical_shell_trimming::PreparedPostVerticalShellTrim,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostVerticalShellRegularization, SliceError> {
-    let regularizations = stage::regularize(&prepared)?;
+    let regularizations = stage::regularize(&prepared, cancel)?;
     let vertical_shell_trimming::PreparedPostVerticalShellTrim {
         predecessor,
         objects,

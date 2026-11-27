@@ -1,5 +1,6 @@
 use crate::{
-    SliceError,
+    CancelToken, SliceError,
+    parallel::par_range_map_ordered_try,
     project_slice::prepare_infill::{
         vertical_shell_projection::{gather, types::VerticalShellProjectionObject},
         vertical_shells::PreparedPostVerticalShellCache,
@@ -8,7 +9,9 @@ use crate::{
 
 pub(super) fn project(
     prepared: &PreparedPostVerticalShellCache,
+    cancel: &CancelToken,
 ) -> Result<Vec<VerticalShellProjectionObject>, SliceError> {
+    cancel.check()?;
     validate_alignment(prepared);
     prepared
         .objects
@@ -21,33 +24,34 @@ pub(super) fn project(
             let (compensated, inputs) = input_object.as_parts();
             let (post_regions, lslices) = compensated.as_parts();
             let (plan, _, _) = post_regions.as_parts();
-            let records = object
-                .records
-                .iter()
-                .zip(&cache_object.records)
-                .zip(inputs)
-                .map(|((record, cache), input)| match (record, cache, input) {
-                    (Some(_), Some(_), Some(input)) => gather::project_record(
-                        input.current.layer_index,
-                        gather::ProjectionInput {
-                            caches: &cache_object.records[input.current.region_index
-                                * plan.layers.len()
-                                ..(input.current.region_index + 1) * plan.layers.len()],
-                            physical: cache_object.physical.as_ref(),
-                            num_layers: cache_object.num_layers,
-                            layers: &plan.layers,
-                            lslices,
-                            options: input_object.region_options(input),
-                            external_spacing: input
-                                .ext_perimeter_flow
-                                .scaled_spacing(prepared.predecessor.scale),
-                        },
-                    )
-                    .map(Some),
-                    (None, None, None) => Ok(None),
-                    _ => unreachable!("validated O20 slots remain aligned"),
-                })
-                .collect::<Result<_, _>>()?;
+            let records =
+                par_range_map_ordered_try(object.records.len(), cancel, |index| {
+                    match (
+                        &object.records[index],
+                        &cache_object.records[index],
+                        &inputs[index],
+                    ) {
+                        (Some(_), Some(_), Some(input)) => gather::project_record(
+                            input.current.layer_index,
+                            gather::ProjectionInput {
+                                caches: &cache_object.records[input.current.region_index
+                                    * plan.layers.len()
+                                    ..(input.current.region_index + 1) * plan.layers.len()],
+                                physical: cache_object.physical.as_ref(),
+                                num_layers: cache_object.num_layers,
+                                layers: &plan.layers,
+                                lslices,
+                                options: input_object.region_options(input),
+                                external_spacing: input
+                                    .ext_perimeter_flow
+                                    .scaled_spacing(prepared.predecessor.scale),
+                            },
+                        )
+                        .map(Some),
+                        (None, None, None) => Ok(None),
+                        _ => unreachable!("validated O20 slots remain aligned"),
+                    }
+                })?;
             Ok(VerticalShellProjectionObject { records })
         })
         .collect()

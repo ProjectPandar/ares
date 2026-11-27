@@ -12,13 +12,15 @@ pub(in crate::project_slice) use types::{
 };
 
 use crate::{
-    SliceError, project_slice::perimeters::layer_region::PreparedPostLayerRegionPerimeters,
+    CancelToken, SliceError,
+    project_slice::perimeters::layer_region::PreparedPostLayerRegionPerimeters,
 };
 
 pub(in crate::project_slice) fn prepare(
     prepared: PreparedPostLayerRegionPerimeters,
+    cancel: &CancelToken,
 ) -> Result<PreparedPostSurfaceTypeDetection, SliceError> {
-    let staged = stage::project(&prepared)?;
+    let staged = stage::project(&prepared, cancel)?;
     let PreparedPostLayerRegionPerimeters {
         predecessor,
         objects,
