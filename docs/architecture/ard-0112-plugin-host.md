@@ -75,13 +75,25 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
    carries plugin selection and options in its project config, and OrcaSlicer
    keeps those keys. Option values are part of the configuration identity,
    so editing one recomputes from the plugin's first hooked step.
-9. **Plugin code is referenced, not embedded, by default.** The project stores
-   the capability reference, plugin version and the content hash of the module
-   or sources. Opening a project whose plugin is missing or whose hash differs
-   reports it and does not slice with a substitute. Hosted plugins (WASM or JS)
-   may optionally be embedded in the 3MF for sharing; an embedded plugin never
-   runs until the user trusts it, and every hosted plugin runs under fuel and
-   memory limits. Native Rust plugins cannot be embedded.
+9. **Hosted plugins travel inside the 3MF.** Saving a project that uses WASM
+   or JS plugins embeds their code, so the project slices the same anywhere.
+   The project also records each plugin's capability reference, version and
+   content hash. Embedded code is untrusted input:
+   - it never runs until the user trusts that exact content hash; the CLI
+     refuses such a project unless the hash is trusted explicitly, and never
+     slices it without the plugin silently;
+   - it runs only through `ares-plugin-host` with no imports besides the
+     data-only host functions (no files, network, clock, randomness, threads),
+     and receives no user paths, names or machine identity;
+   - execution is bounded by a deterministic fuel budget and a memory cap, so
+     a runaway plugin fails the same way on every platform;
+   - JS runs on a memory-safe engine or inside the WASM sandbox, never on an
+     unsandboxed C engine;
+   - a plugin declares the hooks it uses and whether it writes raw G-code text;
+     undeclared hooks are never called, and raw G-code permission is shown
+     before trust is granted.
+   Native Rust plugins cannot be embedded; a project that needs one records
+   only its reference and version.
 
 ## Rewrite rule amendment
 

@@ -33,10 +33,9 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 - 2026-11-28: staggered perimeters and subdivided outer walls are the official
   sample plugins, kept in this repository under `plugins/` with the plugin SDK.
 - 2026-11-28: plugins declare their own options; selection and option values
-  are saved in the project (3MF) through the upstream plugin keys. Plugin code
-  is referenced by id, version and content hash; embedding a hosted plugin in a
-  3MF is optional and requires the user's trust before it runs (ARD-0112
-  decisions 8 and 9).
+  are saved in the project (3MF) through the upstream plugin keys. Hosted
+  plugins are embedded in the 3MF and run only after the user trusts their
+  content hash (ARD-0112 decisions 8 and 9).
 - 2026-11-28: hooks are not limited to perimeters. Every upstream pipeline step
   and the G-code stages expose hooks that can add, remove or modify extrusions
   or G-code; the catalog below lists each hook, its data and its allowed edits.
@@ -66,23 +65,25 @@ Results: _to be recorded here._
 
 ## Plugin options and projects
 
-Why plugin code is not embedded by default:
+Embedded plugins make a shared 3MF self-contained. The risks and their
+mitigations:
 
-- A 3MF from the internet would otherwise carry code that runs on open.
-  Hosted plugins are sandboxed (no files, network, clock or threads), but they
-  can still loop or exhaust memory, and a native Rust plugin cannot be
-  sandboxed or embedded at all.
-- OrcaSlicer drops unknown 3MF parts when it re-saves a project, so an
-  embedded plugin would not survive a round trip, while the upstream keys do.
-- Hash pinning keeps reproducibility: a project slices only with the exact
-  plugin build it was saved with.
+| Risk | Mitigation |
+| --- | --- |
+| Sandbox escape | WASM through a memory-safe engine; JS on a memory-safe engine or inside WASM; no imports except data-only host functions |
+| Runs on open | Never runs before the user trusts its content hash; CLI needs an explicit trust argument and fails instead of slicing without it |
+| Hang or memory exhaustion | Deterministic fuel budget and memory cap |
+| Data leaks | No network, files or clock; hooks get slicing data only, no paths, user or machine identity |
+| Harmful G-code (heaters, limits, firmware or EEPROM commands) | Same exposure as custom G-code already stored in project configs; raw G-code permission is declared and shown before trust; extrusion edits are validated by core |
+| Tampering or version drift | Content hash pinned in the project; a mismatch is reported, never substituted |
 
-Embedding stays available for hosted plugins when a project is shared
-deliberately; the loader shows the embedded plugins and asks for trust first.
+OrcaSlicer keeps the plugin keys but drops unknown 3MF parts when it re-saves a
+project, so the embedded code does not survive a round trip through it.
 
 Open: per-object plugin options (for example enabling outer wall subdivision
 on one object only) have no upstream storage; decide with the first plugin
-that needs them.
+that needs them. Publisher signatures are optional extra trust signals, not a
+replacement for the hash prompt.
 
 ## Hook catalog
 
