@@ -58,7 +58,7 @@ pub(in crate::project_slice::support_material) fn generate(
         for layer in 0..tree.layers.len() {
             context.check_canceled()?;
             overhangs
-                .detect_layer(layer, || start.elapsed().as_secs_f64())
+                .detect_layer(layer, None, || start.elapsed().as_secs_f64())
                 .map_err(error)?;
         }
         overhangs.propagate_sharp_tails().map_err(error)?;

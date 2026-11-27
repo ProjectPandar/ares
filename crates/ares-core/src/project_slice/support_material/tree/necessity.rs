@@ -18,7 +18,7 @@ pub(in crate::project_slice::support_material) fn is_support_necessary(
     overhangs.automatic = true;
     let start = web_time::Instant::now();
     for layer in 0..layers.len() {
-        overhangs.detect_layer(layer, || start.elapsed().as_secs_f64())?;
+        overhangs.detect_layer(layer, None, || start.elapsed().as_secs_f64())?;
     }
     let feature = if overhangs.has_sharp_tails {
         "floating regions"

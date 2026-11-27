@@ -3,16 +3,20 @@
 use super::{SmartOverhangs, overlaps};
 use crate::{
     geometry::{
-        BoundingBox, ClipperError, JoinType, Point, Polygon, difference_ex, intersection_ex,
-        offset_expolygon, offset_expolygons,
+        BoundingBox, ClipperError, ExPolygon, FillRule, JoinType, Point, Polygon, difference_ex,
+        intersection_ex, intersection_polygons_paths, offset_expolygon, offset_expolygons,
+        union_ex, union_expolygons,
     },
-    project_slice::support_material::layer_input::to_polygons,
+    project_slice::{
+        belt::floor_context::BeltFloorContext, support_material::layer_input::to_polygons,
+    },
 };
 
 impl SmartOverhangs<'_> {
     pub(in super::super) fn detect_layer(
         &mut self,
         layer_index: usize,
+        floor: Option<(BeltFloorContext, f64)>,
         elapsed_seconds: impl FnOnce() -> f64,
     ) -> Result<(), ClipperError> {
         let automatic = self.automatic;
@@ -24,13 +28,17 @@ impl SmartOverhangs<'_> {
             self.initial_sharp_tails();
             return Ok(());
         }
+        let previous = &self.layers[layer_index - 1];
         let lower_offset = if layer_index < enforce_layers {
             -0.15 * self.extrusion_width
         } else {
-            f64::from(self.layers[layer_index - 1].height as f32) / self.threshold_radians.tan()
+            f64::from(previous.height as f32) / self.threshold_radians.tan()
         };
+        let belt_lower = floor
+            .map(|floor| self.belt_lower(layer_index, floor))
+            .transpose()?;
         let lower = offset_expolygons(
-            &self.layers[layer_index - 1].extrudable,
+            belt_lower.as_deref().unwrap_or(&previous.extrudable),
             self.scale.scaled_delta(lower_offset) as f32,
             JoinType::Square,
             0.0,
@@ -43,7 +51,7 @@ impl SmartOverhangs<'_> {
             return Ok(());
         }
         if automatic && self.detect_sharp_tails {
-            self.floating_sharp_tails(layer_index)?;
+            self.floating_sharp_tails(layer_index, belt_lower.as_deref())?;
         }
         let cantilever_base = offset_expolygons(
             &lower,
@@ -54,6 +62,63 @@ impl SmartOverhangs<'_> {
             3.0,
         )?;
         self.detect_cantilevers(layer_index, &cantilever_base)
+    }
+
+    // TreeSupport.cpp:925–986 uses the belt at the current layer's bottom.
+    fn belt_lower(
+        &self,
+        layer_index: usize,
+        (floor, print_z): (BeltFloorContext, f64),
+    ) -> Result<Vec<ExPolygon>, ClipperError> {
+        let previous = &self.layers[layer_index - 1];
+        let current = &self.layers[layer_index];
+        let shift = floor.lower_layer_shift(previous.height, self.scale);
+        let translate = |polygon: &Polygon| {
+            Polygon::new(
+                polygon
+                    .points()
+                    .iter()
+                    .map(|point| Point::new(point.x() + shift.x(), point.y() + shift.y()))
+                    .collect(),
+            )
+        };
+        let shifted: Vec<_> = previous
+            .extrudable
+            .iter()
+            .map(|region| {
+                ExPolygon::new(
+                    translate(region.contour()),
+                    region.holes().iter().map(translate).collect(),
+                )
+            })
+            .collect();
+        let lower = BoundingBox::from_expolygons(&previous.extrudable);
+        let mut bounds = BoundingBox::from_expolygons(&current.extrudable);
+        if let Some(lower) = lower {
+            if let Some(bounds) = &mut bounds {
+                bounds.merge_point(lower.min());
+                bounds.merge_point(lower.max());
+            } else {
+                bounds = Some(lower);
+            }
+        }
+        let Some(bounds) = bounds else {
+            return Ok(shifted);
+        };
+        let bounds = bounds.inflated(self.scale.scaled_delta(10.0) as i64);
+        let (min, max) = (bounds.min(), bounds.max());
+        let window = Polygon::new(vec![
+            min,
+            Point::new(max.x(), min.y()),
+            max,
+            Point::new(min.x(), max.y()),
+        ]);
+        let belt = floor.half_plane(print_z - current.height, self.scale, true);
+        let belt = intersection_polygons_paths(&belt, &[window])?;
+        if belt.is_empty() {
+            return Ok(shifted);
+        }
+        union_expolygons(&shifted, &union_ex(&belt, FillRule::NonZero)?)
     }
 
     fn initial_sharp_tails(&mut self) {
@@ -71,10 +136,14 @@ impl SmartOverhangs<'_> {
         }
     }
 
-    fn floating_sharp_tails(&mut self, layer_index: usize) -> Result<(), ClipperError> {
+    fn floating_sharp_tails(
+        &mut self,
+        layer_index: usize,
+        belt_lower: Option<&[ExPolygon]>,
+    ) -> Result<(), ClipperError> {
         let (below, above) = self.layers.split_at_mut(layer_index);
         let current = &mut above[0];
-        let lower = &below[layer_index - 1].extrudable;
+        let lower = belt_lower.unwrap_or(&below[layer_index - 1].extrudable);
         let distance = 0.1 * self.extrusion_width_scaled;
         for polygon in &current.extrudable {
             let expanded = offset_expolygon(polygon, distance as f32, JoinType::Miter, 3.0)?;
