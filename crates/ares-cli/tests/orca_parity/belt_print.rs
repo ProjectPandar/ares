@@ -4,6 +4,8 @@
 mod brim;
 #[path = "belt_print/normal_support.rs"]
 mod normal_support;
+#[path = "belt_print/organic_support.rs"]
+mod organic_support;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
