@@ -2,6 +2,8 @@
 
 #[path = "belt_print/brim.rs"]
 mod brim;
+#[path = "belt_print/instances.rs"]
+mod instances;
 
 use crate::{OrcaRunner, golden, runner::stages};
 use serde_json::{Value, json};
