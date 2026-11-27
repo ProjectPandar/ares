@@ -109,13 +109,14 @@ test("@ares-slicer/profiles mirrors OrcaSlicer resources/profiles as lazy per-ve
   page.on("request", (request) => {
     if (request.resourceType() === "script") scripts.push(new URL(request.url()).pathname);
   });
+  const port = Number(process.env.ARES_WEB_HELPER_PORT ?? 4176);
   const server = await preview({
     root: consumer,
     logLevel: "warn",
-    preview: { host: "127.0.0.1", port: 4176, strictPort: true },
+    preview: { host: "127.0.0.1", port, strictPort: true },
   });
   try {
-    await page.goto("http://127.0.0.1:4176/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.getByTestId("vendors").getByRole("listitem")).toHaveText(ids);
     expect(scripts).toEqual([`/${entry.fileName}`]);
     await page.getByTestId("load").click();

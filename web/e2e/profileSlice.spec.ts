@@ -76,14 +76,15 @@ test("sliceWithProfiles on @ares-slicer/profiles system presets matches OrcaSlic
     logLevel: "warn",
     build: { outDir: `${artifacts}page`, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 16_000 },
   });
+  const port = Number(process.env.ARES_WEB_HELPER_PORT ?? 4234);
   const server = await preview({
     root,
     logLevel: "warn",
     build: { outDir: `${artifacts}page` },
-    preview: { host: "127.0.0.1", port: 4234, strictPort: true },
+    preview: { host: "127.0.0.1", port, strictPort: true },
   });
   try {
-    await page.goto("http://127.0.0.1:4234/");
+    await page.goto(server.resolvedUrls!.local[0]);
     await expect(page.getByTestId("ready")).toHaveText("ready", { timeout: 60_000 });
     const slice = (vendors: string[], input = model, filename = "cube10.stl", edits: [string, number][] = []) =>
       page.evaluate(
