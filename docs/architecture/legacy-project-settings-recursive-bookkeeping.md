@@ -38,6 +38,16 @@ is at raw legacy dispatch, before `ProjectSettingsRaw` in
 `crates/ares-core/src/project/raw_settings.rs` supplies the saved-project
 export. It is not a second filter on serialized output.
 
+### Already-bound bookkeeping
+
+`CLI::run` resizes and edits the bound `ConfigOptionStrings` vector without
+calling `handle_legacy` again (`src/OrcaSlicer.cpp:3202–3223`). The first
+pass can produce an unregistered name by overlapping substring replacements.
+A second pass misreads that result as input and erases it. The legacy pass
+after the 3MF profile or override merge therefore preserves the bound
+bookkeeping vector. An explicit override of the bookkeeping option is a new
+input and still goes through legacy dispatch.
+
 Out of scope: changes to which direct settings are retained, any top-level
 obsolete or unknown-key filter, changes to typed legacy handling, and
 changes to substitution or warning reporting. A nested name is bookkeeping
