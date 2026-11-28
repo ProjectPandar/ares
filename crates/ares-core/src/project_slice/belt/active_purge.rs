@@ -64,5 +64,15 @@ pub fn align_active_purge_plans(
         for layer in &mut object.plan.layers {
             layer.print_z += delta;
         }
+        // BeltPurge.cpp:325-345 shifts more than Layer::print_z.  The
+        // support/brim generators and belt-floor clipping consume these plan
+        // fields after slicing, while SupportFrame uses print_z_offset as the
+        // local-frame equivalent of m_belt_global_z_offset.
+        if let Some(slice) = &mut object.plan.belt_slice {
+            slice.print_z_offset += delta;
+            if let Some(floor) = &mut slice.floor {
+                floor.shift += delta;
+            }
+        }
     }
 }
