@@ -3,16 +3,8 @@ import type { ViewPreset } from "./camera";
 import type { Viewport } from "./Viewport";
 
 type Face = Exclude<ViewPreset, "iso" | "plate">;
-const FACES: [Face, string][] = [
-  ["top", "Top"],
-  ["bottom", "Bottom"],
-  ["front", "Front"],
-  ["rear", "Rear"],
-  ["left", "Left"],
-  ["right", "Right"],
-];
 
-/** Half the cube edge in the axes' SVG units, which match `--cube-size: 56px`. */
+/** Half the cube edge in cube units; `--cube-size` spans 56 of them. */
 const HALF = 28;
 /** The world axes from the front-left-bottom corner, in cube coordinates (CSS: y down, z to the viewer). */
 const AXES = [
@@ -21,14 +13,29 @@ const AXES = [
   { name: "z", direction: [0, -1, 0], length: 43 },
 ] as const;
 
-/** The front view's camera turn: the identity CSS transform. */
+/** The front view's camera turn: the identity rotation. */
 const FRONT = [1, 0, 0, 0, 0, -1, 0, 1, 0];
 const unsubscribed = () => () => undefined;
 
+/** A cube face or hotspot: its centre and its local x and y axes in cube coordinates. */
+type Quad = { centre: readonly number[]; x: readonly number[]; y: readonly number[] };
+const TOP: Quad = { centre: [0, -HALF, 0], x: [1, 0, 0], y: [0, 0, 1] };
+/** Each face's centre and the local x and y axes its label reads along; x cross y points out of the cube. */
+const FACES: [Face, string, Quad][] = [
+  ["top", "Top", TOP],
+  ["bottom", "Bottom", { centre: [0, HALF, 0], x: [1, 0, 0], y: [0, 0, -1] }],
+  ["front", "Front", { centre: [0, 0, HALF], x: [1, 0, 0], y: [0, 1, 0] }],
+  ["rear", "Rear", { centre: [0, 0, -HALF], x: [-1, 0, 0], y: [0, 1, 0] }],
+  ["left", "Left", { centre: [-HALF, 0, 0], x: [0, 0, 1], y: [0, 1, 0] }],
+  ["right", "Right", { centre: [HALF, 0, 0], x: [0, 0, -1], y: [0, 1, 0] }],
+];
+/** The iso hotspot lies on the top face at the cube's top-front-left corner. */
+const CORNER: Quad = { centre: [-HALF, -HALF, HALF], x: TOP.x, y: TOP.y };
+
 /**
- * The cube's CSS transform columns (cube x, y, z in screen x, y, z) for the camera's world-to-view
- * rotation `turn` (column-major): cube x is world X, cube y world -Z and cube z world -Y, and the
- * screen's y runs down where the view's runs up.
+ * The screen directions of the cube's x, y and z for the camera's world-to-view rotation `turn`
+ * (column-major): cube x is world X, cube y world -Z and cube z world -Y, and the screen's y runs
+ * down where the view's runs up.
  */
 function cubeColumns(turn: readonly number[]) {
   const [r00, r10, r20, r01, r11, r21, r02, r12, r22] = turn;
@@ -42,6 +49,24 @@ function cubeColumns(turn: readonly number[]) {
 /** The screen position of cube point `[x, y, z]` under the cube's `columns`. */
 function project([x, y, z]: readonly number[], [cx, cy, cz]: number[][]): [number, number] {
   return [cx[0] * x + cy[0] * y + cz[0] * z, cx[1] * x + cy[1] * y + cz[1] * z];
+}
+
+/** The screen depth of cube point `[x, y, z]`: positive is towards the viewer. */
+function depth([x, y, z]: readonly number[], [cx, cy, cz]: number[][]): number {
+  return cx[2] * x + cy[2] * y + cz[2] * z;
+}
+
+/**
+ * A quad's 2D transform: its button is centred on the cube's centre and `--cube-size` wide, so
+ * `matrix()` maps the button's own x and y onto the projected axes and the `translate()` before it
+ * moves its centre onto the projected centre (cube units).
+ */
+function quadTransform({ centre, x, y }: Quad, turn: number[][]): string {
+  const [a, b] = project(x, turn);
+  const [c, d] = project(y, turn);
+  const [e, f] = project(centre, turn);
+  const at = (value: number) => `calc(var(--cube-size) * ${value / (2 * HALF)})`;
+  return `translate(${at(e)}, ${at(f)}) matrix(${a}, ${b}, ${c}, ${d}, 0, 0)`;
 }
 
 function Axes({ turn }: { turn: number[][] }) {
@@ -107,7 +132,9 @@ function Axes({ turn }: { turn: number[][] }) {
 /**
  * The camera view cube at the 3D view's bottom left: a face selects its view (`Camera::select_view`),
  * the top-front-left corner the iso view. The cube turns with the camera, and a drag on it orbits the
- * camera like a canvas drag (`GLCanvas3D::on_mouse` Dragging, `Camera::rotate_on_sphere`).
+ * camera like a canvas drag (`GLCanvas3D::on_mouse` Dragging, `Camera::rotate_on_sphere`). Its
+ * faces are the cube's orthographic projection, one 2D transform each, not CSS 3D: the compositor
+ * dropped composited `backface-visibility: hidden` faces under the axes overlay.
  */
 export function ViewCube({
   viewport,
@@ -165,14 +192,15 @@ export function ViewCube({
           drag.current = null;
         }}
       >
-        <div
-          className="view-cube"
-          style={{ transform: `matrix3d(${turn.map((column) => [...column, 0]).flat()},0,0,0,1)` }}
-        >
-          {FACES.map(([preset, label]) => (
+        <div className="view-cube">
+          {FACES.map(([preset, label, quad]) => (
             <button
               key={preset}
               className={`view-cube-face ${preset}`}
+              style={{
+                transform: quadTransform(quad, turn),
+                visibility: depth(quad.centre, turn) > 0 ? "visible" : "hidden",
+              }}
               aria-pressed={active === preset}
               title={`${label} view`}
               onClick={() => onView(preset)}
@@ -182,6 +210,10 @@ export function ViewCube({
           ))}
           <button
             className="view-cube-corner"
+            style={{
+              transform: quadTransform(CORNER, turn),
+              visibility: depth(TOP.centre, turn) > 0 ? "visible" : "hidden",
+            }}
             aria-pressed={active === "iso"}
             aria-label="Iso view"
             title="Iso view"

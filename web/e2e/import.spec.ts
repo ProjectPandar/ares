@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
@@ -68,6 +68,49 @@ function canvasFingerprint(page: Page) {
       for (let index = 0; index < pixels.length; index++) hash = Math.imul(hash ^ pixels[index], 0x01000193);
       return hash >>> 0;
     });
+}
+
+/**
+ * Pixels of a view cube face that show the face's own background: the stage screenshot's column
+ * through the face centre, decoded in the page (its label leaves the column's ends free). A face
+ * the compositor dropped shows the viewport behind it instead.
+ */
+function paintedFacePixels(page: Page, views: Locator, png: Buffer, face: string) {
+  return views.locator(`.view-cube-face.${face}`).evaluate(
+    (element, src) => {
+      const stage = element.closest(".view-cube-stage")!.getBoundingClientRect();
+      const box = element.getBoundingClientRect();
+      return new Promise<number>((resolve) => {
+        const image = new Image();
+        image.onload = () => {
+          const probe = document.createElement("canvas");
+          probe.width = image.width;
+          probe.height = image.height;
+          const context = probe.getContext("2d")!;
+          // The face's colour as sRGB bytes, whatever its computed syntax.
+          context.fillStyle = getComputedStyle(element).backgroundColor;
+          context.fillRect(0, 0, 1, 1);
+          const color = context.getImageData(0, 0, 1, 1).data;
+          context.drawImage(image, 0, 0);
+          // The screenshot is in device pixels; the box is in CSS pixels.
+          const scale = image.width / stage.width;
+          const column = context.getImageData(
+            Math.round((box.x + box.width / 2 - stage.x) * scale),
+            Math.round((box.y + box.height / 2 - stage.y - 12) * scale),
+            1,
+            Math.round(25 * scale),
+          ).data;
+          let painted = 0;
+          for (let index = 0; index < column.length; index += 4)
+            if (color.every((channel, offset) => offset === 3 || Math.abs(column[index + offset] - channel) <= 10))
+              painted++;
+          resolve(painted);
+        };
+        image.src = src;
+      });
+    },
+    `data:image/png;base64,${png.toString("base64")}`,
+  );
 }
 
 test("drag-drop import, object list, camera views", async ({ page }) => {
@@ -142,24 +185,30 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     )
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-top.png` });
-  // The view cube follows the camera: from the top, its Top face is square to the viewer.
+  // The view cube follows the camera: from the top, its Top face is square to the viewer and painted.
   const views = shownTab(page).getByTestId("view-toolbar");
-  const cubeTurn = () => views.locator(".view-cube").getAttribute("style");
   const faceBox = async (face: string) => (await views.locator(`.view-cube-face.${face}`).boundingBox())!;
+  /** How far a face moved or resized on screen since `before`, in px. */
+  const faceShift = async (face: string, before: Awaited<ReturnType<typeof faceBox>>) => {
+    const after = await faceBox(face);
+    return Math.hypot(after.x - before.x, after.y - before.y, after.width - before.width, after.height - before.height);
+  };
   const top = await faceBox("top");
   expect(Math.abs(top.width - top.height)).toBeLessThan(1);
   expect(top.width).toBeGreaterThan(40);
+  expect(
+    await paintedFacePixels(page, views, await views.locator(".view-cube-stage").screenshot(), "top"),
+  ).toBeGreaterThan(0);
   // Dragging the cube orbits the camera like a canvas drag (GLCanvas3D::on_mouse Dragging,
   // Camera::rotate_on_sphere) and turns the cube with it; the press on its Top face selects no view.
   const topFrame = await canvasFingerprint(page);
-  const topTurn = await cubeTurn();
   const stage = (await views.locator(".view-cube-stage").boundingBox())!;
   await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2);
   await page.mouse.down();
   await page.mouse.move(stage.x + stage.width / 2 + 60, stage.y + stage.height / 2 + 40, { steps: 6 });
   await page.mouse.up();
   await expect(views.locator("[aria-pressed=true]")).toHaveCount(0);
-  expect(await cubeTurn()).not.toBe(topTurn);
+  expect(await faceShift("top", top)).toBeGreaterThan(1);
   await expect
     .poll(
       async () =>
@@ -167,19 +216,40 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     )
     .toBe(true);
   // An orbit on the canvas turns the cube too.
-  const draggedTurn = await cubeTurn();
+  const dragged = await faceBox("top");
   const canvasBox = (await viewport.locator("canvas").boundingBox())!;
   await page.mouse.move(canvasBox.x + canvasBox.width * 0.8, canvasBox.y + canvasBox.height * 0.3);
   await page.mouse.down();
   await page.mouse.move(canvasBox.x + canvasBox.width * 0.7, canvasBox.y + canvasBox.height * 0.35, { steps: 6 });
   await page.mouse.up();
-  await expect.poll(cubeTurn).not.toBe(draggedTurn);
+  await expect.poll(() => faceShift("top", dragged)).toBeGreaterThan(1);
   // The view cube turns its Top face to the viewer; its iso corner turns the Front face back.
+  const orbited = await canvasFingerprint(page);
   await page.getByRole("button", { name: "Iso view", exact: true }).click();
+  await expect(views.locator(".view-cube-corner")).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(
+      async () => (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== orbited,
+    )
+    .toBe(true);
+  // The iso view shows Top, Left and Front; every face facing the viewer is painted.
+  const iso = await views.locator(".view-cube-stage").screenshot({ path: `${artifacts}view-cube-iso.png` });
+  for (const face of ["top", "left", "front"])
+    expect(await paintedFacePixels(page, views, iso, face), `${face} face painted`).toBeGreaterThan(0);
+  const isoFrame = await canvasFingerprint(page);
   await page.getByRole("button", { name: "Front" }).click();
   await expect(
     shownTab(page).getByTestId("view-toolbar").getByRole("button", { name: "Front", pressed: true }),
   ).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await viewport.getAttribute("data-drawing")) === null && (await canvasFingerprint(page)) !== isoFrame,
+    )
+    .toBe(true);
+  expect(
+    await paintedFacePixels(page, views, await views.locator(".view-cube-stage").screenshot(), "front"),
+  ).toBeGreaterThan(0);
   await page.keyboard.press("ControlOrMeta+0");
   await expect.poll(() => modelCoverage(page)).toBeLessThan(fitCoverage / 4);
 
