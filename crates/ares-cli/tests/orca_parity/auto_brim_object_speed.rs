@@ -69,6 +69,7 @@ pub(super) fn run(
     assert_eq!(sha(project), expected_sha);
     let case = NativeCase::slice(&runner, project, prefix);
     let native_moves = brim_moves(&case.native);
+    assert_eq!(case.native.contains(";TYPE:Brim\n"), has_brim);
     assert_eq!(!native_moves.is_empty(), has_brim);
     if let Some((control_project, control_prefix)) = changed_brim_control {
         let control = NativeCase::slice(&runner, control_project, control_prefix);
@@ -84,7 +85,7 @@ pub(super) fn run(
     ));
     for bytes in [&api, &cli] {
         let text = std::str::from_utf8(bytes).unwrap();
-        assert_eq!(brim_moves(text).is_empty(), !has_brim);
+        assert_eq!(text.contains(";TYPE:Brim\n"), has_brim);
         assert_eq!(brim_moves(text), native_moves);
     }
 }
