@@ -19,12 +19,26 @@ keys not marked as changed; preset bookkeeping is not replaced
 (`src/OrcaSlicer.cpp:3164–3200`). `src/libslic3r/Preset.cpp:1090–1118`
 implements the default/project/system overlay, and
 `src/libslic3r/PresetBundle.cpp:724–757,5520–5532` owns system-preset resolution
-and decoding the protected keys. The CLI applies `DynamicPrintConfig::validate(true)`
+and decoding the protected keys. The system resolver returns completed vendor
+presets: `PresetBundle.cpp:7839–7848` applies `extend_default_config_length`
+(`Preset.cpp:313–369`) after the vendor layer. It sizes process, filament and
+machine options from their variant counts, with twice the machine count for
+paired machine limits. `Preset.cpp:1110–1113` and `PrintConfig.cpp:12186–12194`
+copy the completed system vectors for unprotected keys; `OrcaSlicer.cpp:3188–3193`
+adopts those values in the merged CLI configuration. The CLI applies
+`DynamicPrintConfig::validate(true)`
 to the merged config (`src/OrcaSlicer.cpp:4277–4283`). On failure it records
 and exits with `CLI_INVALID_VALUES_IN_3MF` before reaching export. Otherwise
 it passes the merged config and sliced plate data to `export_project`
 (`:8081–8086`). This is one configuration path for slicing and export, not
 an export-time repair of an invalid option.
+
+The result report uses the original printer's upward-compatible list, not the
+refreshed project options. `OrcaSlicer.cpp:1894` reads the embedded list and
+`:2770–2773,2820–2837` selects the installed original `machine_full` list if
+present. The CLI commits the list after compatibility admission (`:3005`);
+its invalid-values exit (`:4282`) writes the nonempty list in `result.json`
+(`:550–551`).
 
 ## Ares boundary
 
@@ -56,8 +70,15 @@ or repair a setting separately in the archive writer.
   unresolved. Non-BBL saved projects remain on their embedded-config path.
 - Included: if strict validation of the direct saved-project export returns
   `InvalidValuesInProject`, reuse `ares-cli/src/failure/mapping.rs`'s ordinary
-  slice failure (`-18`), including its diagnostic and result report. Do not
-  add a separate mapping table or change how other export errors are reported.
+  slice failure (`-18`), including its diagnostic and result report. Pass the
+  original-machine input and report through `project_slice/state.rs:93–104`
+  so the exit carries the snapshot committed before validation. The CLI reads
+  optional `machine_full` bytes; core reuses the already admitted archive.
+- Included: complete installed vendor preset vectors in
+  `profiles/project_refresh/preset.rs::system_config`, before the retained
+  merge adopts their values. Reuse preset normalization and its registered
+  per-variant groups, including paired machine limits. This shared resolver
+  also serves ordinary retained CLI slicing; no resizing in the archive writer.
 - Unchanged: producer-version admission (including `--allow-newer-file`),
   strict option bounds, saved model layout checks, and `--min-save` packaging
   behavior. No archive layout or comparator changes.
@@ -87,5 +108,5 @@ value with the same exit code (`-18`, or `238` on Linux) and write no archive.
 Compare stderr and `result.json` using the existing invalid-value comparison
 conventions. Generate Native outputs at test time and run the focused cases
 and adjacent sliced-export/retained-refresh cases in both the Official and
-Seeded Native reference lanes, including the existing version-admission and
-`--min-save` cases.
+Seeded Native reference lanes, including the existing version-admission,
+`--min-save`, and ordinary CLI retained preset cases.
