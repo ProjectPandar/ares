@@ -139,6 +139,10 @@ fn auto_brim_rotated_instance_high_height_control() {
     );
 }
 
+fn has_brim_marker(gcode: &str) -> bool {
+    gcode.contains("; FEATURE: Brim\n")
+}
+
 fn run_rotated_instance_case(prefix: &str, project: &[u8], expected_sha: &str, has_brim: bool) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -146,14 +150,14 @@ fn run_rotated_instance_case(prefix: &str, project: &[u8], expected_sha: &str, h
     assert_eq!(sha(project), expected_sha);
     let case = NativeCase::slice(&runner, project, prefix);
     let native_moves = brim_moves(&case.native);
-    assert_eq!(case.native.contains(";TYPE:Brim\n"), has_brim);
+    assert_eq!(has_brim_marker(&case.native), has_brim);
     assert_eq!(!native_moves.is_empty(), has_brim);
     let (api, cli) = case.compare(ares_core::GenerationMetadata::deterministic(
         2026, 10, 20, 0, 0, 0,
     ));
     for bytes in [&api, &cli] {
         let text = std::str::from_utf8(bytes).unwrap();
-        assert_eq!(text.contains(";TYPE:Brim\n"), has_brim);
+        assert_eq!(has_brim_marker(text), has_brim);
         assert_eq!(brim_moves(text), native_moves);
     }
 }
