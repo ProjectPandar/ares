@@ -41,8 +41,9 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform-style: preserve-3d;
 }
+/* Each face is centred on the cube's centre; ViewCube.tsx sets its projected 2D transform and
+   hides the faces pointing away from the viewer. */
 .view-cube-face {
   position: absolute;
   width: var(--cube-size);
@@ -57,31 +58,12 @@
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  backface-visibility: hidden;
 }
 .view-cube-face:is(.top, .bottom) {
   background: var(--cube-face-top);
 }
 .view-cube-face:is(.left, .right) {
   background: var(--cube-face-side);
-}
-.view-cube-face.front {
-  transform: translateZ(calc(var(--cube-size) / 2));
-}
-.view-cube-face.rear {
-  transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2));
-}
-.view-cube-face.left {
-  transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2));
-}
-.view-cube-face.right {
-  transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
-}
-.view-cube-face.top {
-  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
-}
-.view-cube-face.bottom {
-  transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2));
 }
 @media (hover: hover) {
   .view-cube-face:hover {
@@ -104,8 +86,6 @@
   background: var(--cube-edge);
   opacity: 0.55;
   cursor: pointer;
-  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2 + 1px))
-    translate(calc(var(--cube-size) / -2), calc(var(--cube-size) / 2));
 }
 .view-cube-corner:hover,
 .view-cube-corner[aria-pressed="true"] {
