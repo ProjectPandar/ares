@@ -166,6 +166,9 @@ impl Project {
                 profile.enable_timelapse,
             );
         }
+        // Apply `set_deserialize`/`handle_legacy` (`Config.cpp:577-579`) to
+        // merged option tokens before the typed builder and `is_value_valid`
+        // loop see them. Already-bound bookkeeping is not an input token.
         merged.handle_legacy_after_merge(overrides);
         // The typed build mirrors upstream's fully parsed `m_print_config`:
         // CLI bed classification reads `printable_area` and `printable_height`

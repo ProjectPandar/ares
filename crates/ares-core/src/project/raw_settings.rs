@@ -171,19 +171,19 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_scalar_vector_strings(&mut self.0)
     }
 
-    /// `Config.cpp:945-1001` array branch for the embedded raw: a
-    /// homogeneous string array on a scalar-kind option joins
-    /// (`parse_str_arr`) and decodes through the option's own deserializer
-    /// — the second `handle_legacy` pass over the joined value inside
-    /// `set_deserialize` (`Config.cpp:577-579`) — so the flat map
-    /// `Slic3r::validate` checks and the export view carry the bound scalar,
-    /// not the array. Runs after `handle_legacy` (the branch's first pass
-    /// renames the key with an empty value).
+    /// `Config.cpp:945-1001` binds homogeneous string arrays on scalar options.
+    /// After the first `handle_legacy` pass renames the key with an empty wire,
+    /// `parse_str_arr` joins the array for `set_deserialize` (`Config.cpp:577-579`).
+    /// `Slic3r::validate` and export then see the bound scalar, not the array.
     pub(crate) fn normalize_scalar_arrays(&mut self) -> Result<(), String> {
         crate::options::json_deserialize::normalize_scalar_arrays(&mut self.0)
     }
 
-    /// Applies legacy rules to serialized settings before option binding.
+    /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs within
+    /// `set_deserialize` (`Config.cpp:577-579`) before binding each key and wire.
+    /// String arrays run it with an empty wire, then with the joined members
+    /// before substitution and decoding (`Config.cpp:1008-1058`).
+    /// Cleared keys drop; arrays without a definition keep their original value.
     pub(crate) fn handle_legacy(&mut self) {
         self.handle_legacy_entries(true);
     }
