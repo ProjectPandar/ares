@@ -182,10 +182,9 @@ fn handle_legacy_token(opt_key: &mut String, value: &mut String, migrate_feature
         "sparse_infill_anchor_max" => *opt_key = "infill_anchor_max".to_owned(),
         "chamber_temperatures" => *opt_key = "chamber_temperature".to_owned(),
         "thumbnail_size" => *opt_key = "thumbnails".to_owned(),
-        "top_one_wall_type" if !value.is_empty() && value != "none" => {
-            // `PrintConfig.cpp:8161-8165` uses `value != "none"`; the empty-value
-            // guard preserves Ares's handling of non-string inputs (arrays, bools,
-            // numbers are not renamed — only real string values trigger).
+        "top_one_wall_type" if value != "none" => {
+            // `PrintConfig.cpp:9917-9920` uses `value != "none"`; an empty
+            // token therefore enables the destination option too.
             *opt_key = "only_one_wall_top".to_owned();
             *value = "1".to_owned();
         }

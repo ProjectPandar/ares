@@ -307,7 +307,7 @@ pub(crate) fn decode(kind: OptionValueKind, value: &str) -> Result<RawConfigValu
     })
 }
 
-pub(super) fn is_string_array(values: &[RawConfigValue]) -> bool {
+pub(crate) fn is_string_array(values: &[RawConfigValue]) -> bool {
     values.iter().all(|value| match value {
         RawConfigValue::Text(_) => true,
         RawConfigValue::List(values) => is_string_array(values),
@@ -315,7 +315,7 @@ pub(super) fn is_string_array(values: &[RawConfigValue]) -> bool {
     })
 }
 
-pub(super) fn encode_array(
+pub(crate) fn encode_array(
     kind: OptionValueKind,
     values: &[RawConfigValue],
 ) -> Result<String, &'static str> {

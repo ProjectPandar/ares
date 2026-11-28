@@ -140,64 +140,81 @@ impl ProjectSettingsRaw {
 
     /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
     /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
-    /// before the option is stored, so the loaded config — and the flat map
-    /// `Slic3r::validate` checks — is post-legacy. Applies the shared
-    /// string-token `handle_legacy` core to every entry: the value's
-    /// `token()` is the `value` string upstream sees, the normalized token is
-    /// re-decoded by the (possibly renamed) key's option kind, and a cleared
-    /// key drops the entry.
-    /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
-    /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
-    /// before the option is stored, so the loaded config — and the flat map
-    /// `Slic3r::validate` checks — is post-legacy.
-    ///
-    /// Upstream `load_from_json` (`Config.cpp:945-962`) hands `handle_legacy`
-    /// the raw string for scalar values but an *empty* `value_str` for array
-    /// elements (the array is element-processed later), so non-scalar
-    /// `RawConfigValue`s only ever get a key rename — their elements are
-    /// preserved untouched. Scalars carry their `token()` through the rewrite
-    /// and are re-decoded by the (possibly renamed) key's option kind. A
-    /// cleared key drops the entry; keys with no option definition are kept
-    /// (matching `SliceOptions`' normalization, which does not drop them).
+    /// before the option is stored. Scalars pass their token through the
+    /// shared rule set. String arrays follow `Config.cpp:1008-1058`: the
+    /// first pass sees an empty wire, array members append to that same wire,
+    /// and the second pass runs before substitution and typed decoding. A
+    /// cleared key drops the entry; keys without an option definition retain
+    /// their original array value.
     pub(crate) fn handle_legacy(&mut self) {
         let mut normalized = BTreeMap::new();
         let mut derived = Vec::new();
         for (mut key, value) in std::mem::take(&mut self.0) {
-            let (scalar, mut token, rest) = match value {
-                // handle_legacy receives the deserialize input, not the export
-                // view: Config.hpp:946-950 distinguishes "nil" from "" (zero).
-                RawConfigValue::Text(text) => (true, text, None),
-                other @ (RawConfigValue::Number(_) | RawConfigValue::Flag(_)) => {
-                    (true, other.token().unwrap_or_default(), None)
+            let value = match value {
+                RawConfigValue::List(values)
+                    if crate::options::json_deserialize::is_string_array(&values) =>
+                {
+                    // Config.cpp:1008-1015 invokes the first legacy pass with
+                    // an empty wire before appending the array members.
+                    let mut wire = String::new();
+                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
+                    if key.is_empty() {
+                        continue;
+                    }
+                    let Some(definition) = crate::options::registry::option_definition(&key) else {
+                        normalized.insert(key, RawConfigValue::List(values));
+                        continue;
+                    };
+                    let Ok(array_wire) =
+                        crate::options::json_deserialize::encode_array(definition.kind, &values)
+                    else {
+                        normalized.insert(key, RawConfigValue::List(values));
+                        continue;
+                    };
+                    wire.push_str(&array_wire);
+                    // set_deserialize_nothrow repeats handle_legacy on the
+                    // joined wire before substitution and typed decoding.
+                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
+                    if key.is_empty() {
+                        continue;
+                    }
+                    RawConfigValue::Text(wire)
                 }
-                other => (false, String::new(), Some(other)),
+                // Config.hpp:946-950 distinguishes a JSON string from nil.
+                RawConfigValue::Text(mut token) => {
+                    // Config.cpp:996-1005 derives this from the source pair,
+                    // then Config.cpp:1072-1075 writes it after explicit fields.
+                    if let Some(assignment) =
+                        crate::options::legacy::handle_legacy_derived(&key, &token)
+                    {
+                        derived.push(assignment);
+                    }
+                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
+                    if key.is_empty() {
+                        continue;
+                    }
+                    RawConfigValue::Text(token)
+                }
+                other @ (RawConfigValue::Number(_) | RawConfigValue::Flag(_)) => {
+                    let mut token = other.token().unwrap_or_default();
+                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
+                    if key.is_empty() {
+                        continue;
+                    }
+                    RawConfigValue::Text(token)
+                }
+                other => {
+                    // Non-string/non-array values do not reach upstream's
+                    // set_deserialize branch; retain their existing behavior.
+                    let mut token = String::new();
+                    crate::options::handle_legacy(&mut key, &mut token);
+                    if key.is_empty() {
+                        continue;
+                    }
+                    other
+                }
             };
-            // Read the source pair before it is rewritten. Config.cpp:996–1005,
-            // 1072–1075 applies the derived value after the document's explicit fields.
-            if scalar
-                && let Some(assignment) =
-                    crate::options::legacy::handle_legacy_derived(&key, &token)
-            {
-                derived.push(assignment);
-            }
-            if scalar {
-                crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
-            } else {
-                crate::options::handle_legacy(&mut key, &mut token);
-            }
-            if key.is_empty() {
-                continue;
-            }
-            // Upstream `handle_legacy` only rewrites the `value` string; the
-            // option's own `deserialize` (run later by the typed builder) is
-            // what parses/validates it, so the normalized token is stored back
-            // as a plain text scalar — not re-decoded here (which would
-            // pre-empt the typed builder's diagnostics).
-            let stored = match rest {
-                None => RawConfigValue::Text(token),
-                Some(value) => value,
-            };
-            normalized.insert(key, stored);
+            normalized.insert(key, value);
         }
         normalized.extend(derived.into_iter().map(|(key, value)| {
             (
