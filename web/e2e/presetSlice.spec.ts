@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
+import { browserGcodeForHeadlessComparison } from "./browserHeadlessGcode";
 import { test } from "./failureDiagnostics";
 import { nativeEnv, oraclePath, runParityNextest } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
@@ -234,8 +235,9 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     )}\n`,
   );
   expect(multiColour(browser), "filament_multi_colour config line").toEqual(multiColour(native));
+  const comparable = await browserGcodeForHeadlessComparison(page, normalize(browser, "Ares"), native);
   expect(
-    normalize(browser, "Ares") === withPlaterTower(native, normalize(browser, "Ares"), session),
+    comparable === withPlaterTower(native, comparable, session),
     "browser G-code equals native --load-settings G-code",
   ).toBe(true);
 
@@ -271,8 +273,13 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
     )}\n`,
   );
   expect(multiColour(browserEdited), "edited filament_multi_colour config line").toEqual(multiColour(nativeEdited));
+  const comparableEdited = await browserGcodeForHeadlessComparison(
+    page,
+    normalize(browserEdited, "Ares"),
+    nativeEdited,
+  );
   expect(
-    normalize(browserEdited, "Ares") === withPlaterTower(nativeEdited, normalize(browserEdited, "Ares"), session),
+    comparableEdited === withPlaterTower(nativeEdited, comparableEdited, session),
     "edited browser G-code equals native --load-settings G-code",
   ).toBe(true);
 
@@ -338,7 +345,7 @@ test("a 3MF plate with and without a sidebar edit and a centered STL sliced with
   );
   expect(multiColour(centered), "STL filament_multi_colour config line").toEqual(multiColour(nativeCenter));
   expect(
-    normalize(centered, "Ares") === nativeCenter,
+    (await browserGcodeForHeadlessComparison(page, normalize(centered, "Ares"), nativeCenter)) === nativeCenter,
     "browser STL G-code equals native G-code of the bed-centered model",
   ).toBe(true);
   expect(errors).toEqual([]);

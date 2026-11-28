@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { strFromU8, unzipSync } from "fflate";
+import { browserGcodeForHeadlessComparison } from "./browserHeadlessGcode";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
@@ -221,7 +222,8 @@ test("a one-filament 3MF sliced with the four-filament Snapmaker U1 selected mat
       2,
     )}\n`,
   );
-  expect(browser === native, "browser G-code equals the native slice of the plater's saved project").toBe(true);
+  const comparable = await browserGcodeForHeadlessComparison(page, browser, native);
+  expect(comparable === native, "browser G-code equals the native slice of the plater's saved project").toBe(true);
   expect(errors).toEqual([]);
 });
 

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
+import { browserGcodeForHeadlessComparison } from "./browserHeadlessGcode";
 import { test } from "./failureDiagnostics";
 import { withoutCliGroups } from "./platerExport";
 import { openedSelection, withGuiProjectOptions, withSelectedPresets } from "./selectedPresetLines";
@@ -198,7 +199,7 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     .toBe(true);
   await page.screenshot({ path: `${artifacts}prepare-selected.png` });
 
-  // Multi-object plate slices byte-identical to native ares-cli.
+  // Multi-object plate slicing matches the headless Ares CLI stream and supplies valid browser thumbnails.
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(status).toContainText("Slice complete", { timeout: 240_000 });
   const [download] = await Promise.all([
@@ -215,7 +216,9 @@ test("drag-drop import, object list, camera views", async ({ page }) => {
     execFileSync(`${repositoryRoot}target/release/ares`, ["slice", "--plate", "1", "-o", nativePath, comparison]);
     const expected = withoutCliGroups(withSelectedPresets(readFileSync(nativePath, "utf8"), selection), selection);
     writeFileSync(`${artifacts}expected.gcode`, expected);
-    expect(sha256(gcode), "browser G-code must match native ares-cli bytes with the plater's selected presets").toBe(
+    const browser = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(gcode);
+    const comparable = await browserGcodeForHeadlessComparison(page, browser, expected);
+    expect(sha256(Buffer.from(comparable)), "browser G-code must match headless Ares CLI bytes").toBe(
       sha256(Buffer.from(expected)),
     );
   } else {
