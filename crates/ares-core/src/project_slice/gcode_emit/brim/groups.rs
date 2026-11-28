@@ -263,8 +263,8 @@ pub(super) fn model_mesh_bbox(
         .identity();
     let object = &traversal.project.objects()[source_index];
     let instance = object.instances()[transform_index].transform();
-    let mut min = [f32::INFINITY; 3];
-    let mut max = [f32::NEG_INFINITY; 3];
+    let mut min = [f64::INFINITY; 3];
+    let mut max = [f64::NEG_INFINITY; 3];
     for (source_index, volume) in object.volumes().iter().enumerate() {
         if volume.volume_type() != ProjectVolumeType::ModelPart {
             continue;
@@ -274,19 +274,14 @@ pub(super) fn model_mesh_bbox(
         {
             continue;
         }
-        let bbox = crate::project::region_graph::bounds::transformed_mesh_bbox(
-            volume.mesh(),
-            instance.then(volume.transform()),
-            0.0,
-        );
-        for axis in 0..3 {
-            min[axis] = min[axis].min(bbox.min()[axis]);
-            max[axis] = max[axis].max(bbox.max()[axis]);
+        let transform = instance.then(volume.transform());
+        for &vertex in volume.mesh().vertices() {
+            let point = transform.transform_point(vertex);
+            for (axis, value) in [point.x, point.y, point.z].into_iter().enumerate() {
+                min[axis] = min[axis].min(value);
+                max[axis] = max[axis].max(value);
+            }
         }
     }
-    [
-        f64::from(max[0] - min[0]),
-        f64::from(max[1] - min[1]),
-        f64::from(max[2] - min[2]),
-    ]
+    [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
 }
