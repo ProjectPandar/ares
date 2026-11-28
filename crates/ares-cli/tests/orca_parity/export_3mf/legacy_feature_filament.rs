@@ -82,7 +82,7 @@ fn check_selectors(legacy: &str, expected_outer: &str, prefix: &str) {
     assert!(actual == native_bytes, "saved settings differ at {root:?}");
 }
 
-fn check_bookkeeping(prefix: &str, wire: &str, native_premise: Value) {
+pub(super) fn check_bookkeeping(prefix: &str, wire: &str, native_premise: Value) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

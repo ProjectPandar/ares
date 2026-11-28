@@ -16,6 +16,8 @@ mod comparison_tests;
 mod legacy_array_dispatch;
 #[path = "export_3mf/legacy_feature_filament.rs"]
 mod legacy_feature_filament;
+#[path = "export_3mf/legacy_recursive_bookkeeping.rs"]
+mod legacy_recursive_bookkeeping;
 
 #[test]
 fn export_x1c_stl_matches_native_unsliced_project_members() {
