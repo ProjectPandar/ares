@@ -180,7 +180,7 @@ export function PlaterToolbar({
           <Item name="Assembly View" title="Assembly View" icon={icon("toolbar_assemble")} enabled={false} />
         </Bar>
       </div>
-      {arranging && <ArrangePopup />}
+      {arranging && <ArrangePopup onClose={() => setArranging(false)} />}
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { DialogHeader } from "./DialogHeader";
 import { ctrlLabel as ctrl, mac } from "./keys";
 
 /**
@@ -69,29 +70,30 @@ export function ShortcutsDialog({ open, onClose }: { open: boolean; onClose: () 
     if (open) dialog.current!.showModal();
   }, [open]);
   return (
-    <dialog ref={dialog} className="shortcuts-dialog" aria-labelledby="shortcuts-title" onClose={onClose}>
-      <header className="shortcuts-header">
-        <h2 id="shortcuts-title">Keyboard Shortcuts</h2>
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
-          {"\u2715"}
-        </button>
-      </header>
-      <div className="shortcuts-groups">
-        {GROUPS.map(([title, rows]) => (
-          <section key={title}>
-            <h3>{title}</h3>
-            <dl>
-              {rows.map(([keys, description]) => (
-                <div className="shortcut-row" key={keys + description}>
-                  <dt>
-                    <kbd>{keys}</kbd>
-                  </dt>
-                  <dd>{description}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        ))}
+    <dialog ref={dialog} className="dialog" aria-labelledby="shortcuts-title" onClose={onClose}>
+      <DialogHeader id="shortcuts-title" title="Keyboard Shortcuts" close={() => dialog.current!.close()} />
+      <div className="dialog-body">
+        <div className="stack">
+          {GROUPS.map(([title, rows]) => (
+            <section className="frame" key={title}>
+              <header className="frame-head">
+                <h2>{title}</h2>
+              </header>
+              <div className="frame-content">
+                <dl className="shortcuts-list">
+                  {rows.map(([keys, description]) => (
+                    <div key={keys + description}>
+                      <dt>{description}</dt>
+                      <dd>
+                        <kbd>{keys}</kbd>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </dialog>
   );

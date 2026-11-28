@@ -265,7 +265,7 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
 
   await page.getByRole("button", { name: "Edit printer settings" }).click();
   const printer = page.getByRole("dialog", { name: "Printer settings" });
-  const printerCoverage = await checkTab(page, printer, printer.locator(".settings-body"), "printer", PRINTER_PAGES);
+  const printerCoverage = await checkTab(page, printer, printer.locator(".dialog-body"), "printer", PRINTER_PAGES);
   await expect(
     printer.locator("input:not([readonly]):not([disabled]), textarea:not([readonly]), select:not([disabled])"),
   ).toHaveCount(0);
@@ -275,13 +275,7 @@ test("OrcaSlicer settings tabs render PrintConfigDef metadata per mode; unedited
 
   await page.getByRole("button", { name: "Edit filament 1 settings" }).click();
   const filament = page.getByRole("dialog", { name: "Filament settings" });
-  const filamentCoverage = await checkTab(
-    page,
-    filament,
-    filament.locator(".settings-body"),
-    "filament",
-    FILAMENT_PAGES,
-  );
+  const filamentCoverage = await checkTab(page, filament, filament.locator(".dialog-body"), "filament", FILAMENT_PAGES);
   await expect(
     filament.locator("input:not([readonly]):not([disabled]), textarea:not([readonly]), select:not([disabled])"),
   ).toHaveCount(0);

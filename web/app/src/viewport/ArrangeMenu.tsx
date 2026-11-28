@@ -53,7 +53,7 @@ export function ArrangeButton({
 }
 
 /** The arrange settings popup (`_render_arrange_menu`, GLCanvas3D.cpp:6654-6778). */
-export function ArrangePopup() {
+export function ArrangePopup({ onClose }: { onClose: () => void }) {
   const state = useApp((app) => app.arrange);
   const busy = useApp((app) => app.arranging || app.slice.status === "slicing");
   if (!state) return null;
@@ -61,73 +61,82 @@ export function ArrangePopup() {
   const spacing = (value: number) => {
     if (!Number.isNaN(value)) void editArrangeSettings({ distance: value });
   };
+  const option = (name: string, checked: boolean, change: (value: boolean) => void, disabled = false) => (
+    <label className="check">
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => change(event.target.checked)} />
+      <span>{name}</span>
+    </label>
+  );
   return (
-    <div className="arrange-popup" role="dialog" aria-labelledby="arrange-settings-title">
-      <h2 id="arrange-settings-title">Arrange settings</h2>
-      <div className="arrange-spacing">
-        <label htmlFor="arrange-spacing">Spacing</label>
-        <input
-          id="arrange-spacing"
-          type="range"
-          min={0}
-          max={MAX_SPACING}
-          step={0.01}
-          value={Math.min(settings.distance, MAX_SPACING)}
-          onChange={(event) => spacing(event.target.valueAsNumber)}
-        />
-        <input
-          type="number"
-          aria-label="Spacing value"
-          min={0}
-          step={0.05}
-          value={settings.distance.toFixed(2)}
-          onChange={(event) => spacing(event.target.valueAsNumber)}
-        />
+    <div className="popup" role="dialog" aria-labelledby="arrange-settings-title">
+      <header className="dialog-header">
+        <div className="dialog-heading">
+          <h1 id="arrange-settings-title">Arrange settings</h1>
+        </div>
+        <button className="button close" type="button" aria-label="Close" onClick={onClose}>
+          {"×"}
+        </button>
+      </header>
+      <div className="dialog-body">
+        <div className="stack">
+          <div className="spacing-row">
+            <label className="field">
+              <span>Spacing</span>
+              <input
+                id="arrange-spacing"
+                type="range"
+                min={0}
+                max={MAX_SPACING}
+                step={0.01}
+                value={Math.min(settings.distance, MAX_SPACING)}
+                onChange={(event) => spacing(event.target.valueAsNumber)}
+              />
+            </label>
+            <label className="field">
+              <span>mm</span>
+              <input
+                type="number"
+                aria-label="Spacing value"
+                min={0}
+                step={0.05}
+                value={settings.distance.toFixed(2)}
+                onChange={(event) => spacing(event.target.valueAsNumber)}
+              />
+            </label>
+          </div>
+          <p className="muted">0 means auto spacing.</p>
+          {option(
+            "Auto rotate for arrangement",
+            settings.enableRotation,
+            (enableRotation) => void editArrangeSettings({ enableRotation }),
+          )}
+          {option(
+            "Allow multiple materials on same plate",
+            settings.allowMultiMaterialsOnSamePlate,
+            (allowMultiMaterialsOnSamePlate) => void editArrangeSettings({ allowMultiMaterialsOnSamePlate }),
+          )}
+          {model.showsCalibrationRegion &&
+            option(
+              "Avoid extrusion calibration region",
+              settings.avoidExtrusionCaliRegion,
+              (avoidExtrusionCaliRegion) => void editArrangeSettings({ avoidExtrusionCaliRegion }),
+            )}
+          {option(
+            "Align to Y axis",
+            settings.alignToYAxis,
+            (alignToYAxis) => void editArrangeSettings({ alignToYAxis }),
+            settings.enableRotation,
+          )}
+        </div>
       </div>
-      <p className="arrange-hint">0 means auto spacing.</p>
-      <label>
-        <input
-          type="checkbox"
-          checked={settings.enableRotation}
-          onChange={(event) => void editArrangeSettings({ enableRotation: event.target.checked })}
-        />
-        Auto rotate for arrangement
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={settings.allowMultiMaterialsOnSamePlate}
-          onChange={(event) => void editArrangeSettings({ allowMultiMaterialsOnSamePlate: event.target.checked })}
-        />
-        Allow multiple materials on same plate
-      </label>
-      {model.showsCalibrationRegion && (
-        <label>
-          <input
-            type="checkbox"
-            checked={settings.avoidExtrusionCaliRegion}
-            onChange={(event) => void editArrangeSettings({ avoidExtrusionCaliRegion: event.target.checked })}
-          />
-          Avoid extrusion calibration region
-        </label>
-      )}
-      <label>
-        <input
-          type="checkbox"
-          checked={settings.alignToYAxis}
-          disabled={settings.enableRotation}
-          onChange={(event) => void editArrangeSettings({ alignToYAxis: event.target.checked })}
-        />
-        Align to Y axis
-      </label>
-      <div className="arrange-actions">
-        <button className="side-button" onClick={resetArrangeSettings}>
+      <footer className="dialog-footer">
+        <button className="button" onClick={resetArrangeSettings}>
           Reset
         </button>
-        <button className="side-button dialog-primary" disabled={busy} onClick={() => void arrange()}>
+        <button className="button primary" disabled={busy} onClick={() => void arrange()}>
           Arrange
         </button>
-      </div>
+      </footer>
     </div>
   );
 }

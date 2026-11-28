@@ -31,7 +31,7 @@
   --accent: #009688;
   --accent-hover: #26a69a;
   --accent-pressed: #00897b;
-  --accent-text: #fefefe;
+  --accent-text: #fff;
   /* WCAG AA text on and in the accent: filled controls carrying text, and accent-coloured text. */
   --accent-fill: #00796b;
   --accent-fill-hover: #00695c;

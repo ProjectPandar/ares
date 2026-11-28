@@ -73,28 +73,38 @@ export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose:
   return (
     <dialog
       ref={dialog}
-      className="shortcuts-dialog wizard-dialog"
+      className="dialog wide"
       aria-labelledby="wizard-title"
       onClose={onClose}
       onCancel={blockClose}
       onKeyDown={(event) => event.key === "Escape" && blockClose(event)}
     >
-      <header className="shortcuts-header">
-        <div>
+      <header className="dialog-header">
+        <div className="dialog-heading">
           {firstRun && (
-            <span className="dialog-step">
+            <div className="step">
               <b>{filamentStep ? "2" : "1"} of 2</b> · First-run setup
-            </span>
+            </div>
           )}
-          <h2 id="wizard-title">{filamentStep ? "Filament Selection" : "Printer Selection"}</h2>
+          <h1 id="wizard-title">{filamentStep ? "Filament Selection" : "Printer Selection"}</h1>
         </div>
         {!firstRun && (
-          <button className="bar-button" aria-label="Close" disabled={busy} onClick={() => dialog.current!.close()}>
-            {"✕"}
+          <button
+            className="button close"
+            type="button"
+            aria-label="Close"
+            disabled={busy}
+            onClick={() => dialog.current!.close()}
+          >
+            {"×"}
           </button>
         )}
       </header>
-      {!models && <div className="side-empty">Loading printers…</div>}
+      {!models && (
+        <div className="dialog-body">
+          <div className="side-empty">Loading printers…</div>
+        </div>
+      )}
       {models && filamentStep && (
         <FilamentPage
           filaments={filamentStep.filaments}
@@ -106,27 +116,23 @@ export function SetupWizard({ firstRun, onClose }: { firstRun: boolean; onClose:
       {models && !filamentStep && (
         <>
           <ModelPage models={models} checked={checked} onChange={setChecked} />
-          <footer className="vendor-footer wizard-footer">
-            <span className="filament-count">{checked.size} selected</span>
+          <footer className="dialog-footer">
+            <span className="summary">{checked.size} selected</span>
             {firstRun ? (
-              <button
-                className="side-button dialog-primary"
-                disabled={busy}
-                onClick={() => checked.size > 0 && void next(models)}
-              >
+              <button className="button primary" disabled={busy} onClick={() => checked.size > 0 && void next(models)}>
                 Next
               </button>
             ) : (
               <>
+                <button className="button" disabled={busy} onClick={() => dialog.current!.close()}>
+                  Cancel
+                </button>
                 <button
-                  className="side-button dialog-primary"
+                  className="button primary"
                   disabled={busy}
                   onClick={() => checked.size > 0 && void confirm(models)}
                 >
                   Confirm
-                </button>
-                <button className="side-button" disabled={busy} onClick={() => dialog.current!.close()}>
-                  Cancel
                 </button>
               </>
             )}

@@ -2,9 +2,7 @@
 @import "./styles/shell.css";
 @import "./styles/sidebar.css";
 @import "./styles/printer.css";
-@import "./styles/printHost.css";
 @import "./styles/devices.css";
-@import "./styles/wizard.css";
 @import "./styles/viewport.css";
 @import "./styles/viewCube.css";
 @import "./styles/preview.css";
@@ -14,4 +12,4 @@
 @import "./styles/compactPreview.css";
 @import "./styles/previewLegend.css";
 @import "./styles/dialogs.css";
-@import "./styles/catalogDialogs.css";
+@import "./styles/dialogPanels.css";

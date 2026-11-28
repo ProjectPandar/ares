@@ -193,7 +193,7 @@ test("H2D keeps its paired nozzle controls when switching the printer diameter",
   await expect(page.getByRole("button", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
   const diameter = (await left.inputValue()) === "0.6" ? "0.4" : "0.6";
   await left.selectOption(diameter);
-  const question = page.getByRole("dialog", { name: "Switch diameter" });
+  const question = page.getByRole("alertdialog", { name: "Switch diameter" });
   await question.getByRole("button", { name: `Left nozzle: ${diameter}mm`, exact: true }).click();
   await expect(printer(page)).toHaveAttribute("title", `Bambu Lab H2D ${diameter} nozzle`, { timeout: 60_000 });
   await expect(left).toHaveValue(diameter);

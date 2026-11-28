@@ -154,16 +154,16 @@
   font-variant-numeric: tabular-nums;
 }
 
-.summary {
+.slice-result .summary {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 3px 10px;
   margin: 0;
 }
-.summary dt {
+.slice-result .summary dt {
   color: var(--text-dim);
 }
-.summary dd {
+.slice-result .summary dd {
   margin: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;

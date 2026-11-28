@@ -120,7 +120,7 @@ test("a wasm panic reports the HardCrash text and the engine restarts on the sam
   const expected = hardCrash(probePanic());
   await page.getByRole("button", { name: "Slice plate" }).click();
   await expect(status).toHaveText(expected, { timeout: 60_000 });
-  const dialog = page.getByRole("dialog", { name: "Slicing engine failed" });
+  const dialog = page.getByRole("alertdialog", { name: "Slicing engine failed" });
   await expect(dialog).toBeVisible();
   expect(await dialog.getByTestId("engine-crash-message").textContent()).toBe(expected);
   await expect(dialog).toContainText("edits made on the canvas after it was opened, and the undo history, are lost");
