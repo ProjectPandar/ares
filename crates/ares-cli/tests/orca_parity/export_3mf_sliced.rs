@@ -31,6 +31,9 @@ mod retained_catalog;
 mod saved_archive_assets;
 #[path = "export_3mf_sliced/saved_build_transforms.rs"]
 mod saved_build_transforms;
+#[cfg(target_os = "linux")]
+#[path = "export_3mf_sliced/saved_part_extruder.rs"]
+mod saved_part_extruder;
 
 use comparator::{compare_members, read_members};
 
