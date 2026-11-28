@@ -31,6 +31,8 @@ mod retained_catalog;
 mod saved_archive_assets;
 #[path = "export_3mf_sliced/saved_build_transforms.rs"]
 mod saved_build_transforms;
+#[path = "export_3mf_sliced/saved_mesh_stat.rs"]
+mod saved_mesh_stat;
 
 use comparator::{compare_members, read_members};
 
