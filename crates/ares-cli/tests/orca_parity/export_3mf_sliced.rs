@@ -29,6 +29,8 @@ mod comparison_tests;
 mod retained_catalog;
 #[path = "export_3mf_sliced/saved_archive_assets.rs"]
 mod saved_archive_assets;
+#[path = "export_3mf_sliced/saved_build_transforms.rs"]
+mod saved_build_transforms;
 
 use comparator::{compare_members, read_members};
 
