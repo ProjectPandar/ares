@@ -23,6 +23,59 @@ use serde::Deserialize;
 #[serde(transparent)]
 pub(crate) struct ProjectSettingsRaw(BTreeMap<String, RawConfigValue>);
 
+fn normalize_legacy_array(
+    mut key: String,
+    values: Vec<RawConfigValue>,
+) -> Option<(String, RawConfigValue)> {
+    let mut wire = String::new();
+    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
+    if key.is_empty() {
+        return None;
+    }
+    let Some(definition) = crate::options::registry::option_definition(&key) else {
+        return Some((key, RawConfigValue::List(values)));
+    };
+    let Ok(array_wire) = crate::options::json_deserialize::encode_array(definition.kind, &values)
+    else {
+        return Some((key, RawConfigValue::List(values)));
+    };
+    wire.push_str(&array_wire);
+    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
+    if key.is_empty() {
+        return None;
+    }
+    let value = if crate::options::json_deserialize::is_vector(definition.kind) {
+        crate::options::json_deserialize::decode(definition.kind, &wire)
+            .unwrap_or(RawConfigValue::Text(wire))
+    } else {
+        RawConfigValue::Text(wire)
+    };
+    Some((key, value))
+}
+
+fn normalize_legacy_scalar(mut key: String, mut token: String) -> Option<(String, RawConfigValue)> {
+    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
+    (!key.is_empty()).then_some((key, RawConfigValue::Text(token)))
+}
+
+fn normalize_legacy_non_string(
+    mut key: String,
+    value: RawConfigValue,
+) -> Option<(String, RawConfigValue)> {
+    let mut token = value.token().unwrap_or_default();
+    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
+    (!key.is_empty()).then_some((key, RawConfigValue::Text(token)))
+}
+
+fn normalize_legacy_non_wire(
+    mut key: String,
+    value: RawConfigValue,
+) -> Option<(String, RawConfigValue)> {
+    let mut token = String::new();
+    crate::options::handle_legacy(&mut key, &mut token);
+    (!key.is_empty()).then_some((key, value))
+}
+
 impl ProjectSettingsRaw {
     pub(crate) fn extend(&mut self, values: impl IntoIterator<Item = (String, RawConfigValue)>) {
         self.0.extend(values);
@@ -149,77 +202,27 @@ impl ProjectSettingsRaw {
     pub(crate) fn handle_legacy(&mut self) {
         let mut normalized = BTreeMap::new();
         let mut derived = Vec::new();
-        for (mut key, value) in std::mem::take(&mut self.0) {
-            let value = match value {
+        for (key, value) in std::mem::take(&mut self.0) {
+            if let RawConfigValue::Text(token) = &value
+                && let Some(assignment) = crate::options::legacy::handle_legacy_derived(&key, token)
+            {
+                derived.push(assignment);
+            }
+            let normalized_entry = match value {
                 RawConfigValue::List(values)
                     if crate::options::json_deserialize::is_string_array(&values) =>
                 {
-                    // Config.cpp:1008-1015 invokes the first legacy pass with
-                    // an empty wire before appending the array members.
-                    let mut wire = String::new();
-                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
-                    if key.is_empty() {
-                        continue;
-                    }
-                    let Some(definition) = crate::options::registry::option_definition(&key) else {
-                        normalized.insert(key, RawConfigValue::List(values));
-                        continue;
-                    };
-                    let Ok(array_wire) =
-                        crate::options::json_deserialize::encode_array(definition.kind, &values)
-                    else {
-                        normalized.insert(key, RawConfigValue::List(values));
-                        continue;
-                    };
-                    wire.push_str(&array_wire);
-                    // set_deserialize_nothrow repeats handle_legacy on the
-                    // joined wire before substitution and typed decoding.
-                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
-                    if key.is_empty() {
-                        continue;
-                    }
-                    if crate::options::json_deserialize::is_vector(definition.kind) {
-                        crate::options::json_deserialize::decode(definition.kind, &wire)
-                            .unwrap_or_else(|_| RawConfigValue::Text(wire))
-                    } else {
-                        RawConfigValue::Text(wire)
-                    }
+                    normalize_legacy_array(key, values)
                 }
-                // Config.hpp:946-950 distinguishes a JSON string from nil.
-                RawConfigValue::Text(mut token) => {
-                    // Config.cpp:996-1005 derives this from the source pair,
-                    // then Config.cpp:1072-1075 writes it after explicit fields.
-                    if let Some(assignment) =
-                        crate::options::legacy::handle_legacy_derived(&key, &token)
-                    {
-                        derived.push(assignment);
-                    }
-                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
-                    if key.is_empty() {
-                        continue;
-                    }
-                    RawConfigValue::Text(token)
-                }
+                RawConfigValue::Text(token) => normalize_legacy_scalar(key, token),
                 other @ (RawConfigValue::Number(_) | RawConfigValue::Flag(_)) => {
-                    let mut token = other.token().unwrap_or_default();
-                    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
-                    if key.is_empty() {
-                        continue;
-                    }
-                    RawConfigValue::Text(token)
+                    normalize_legacy_non_string(key, other)
                 }
-                other => {
-                    // Non-string/non-array values do not reach upstream's
-                    // set_deserialize branch; retain their existing behavior.
-                    let mut token = String::new();
-                    crate::options::handle_legacy(&mut key, &mut token);
-                    if key.is_empty() {
-                        continue;
-                    }
-                    other
-                }
+                other => normalize_legacy_non_wire(key, other),
             };
-            normalized.insert(key, value);
+            if let Some((key, value)) = normalized_entry {
+                normalized.insert(key, value);
+            }
         }
         normalized.extend(derived.into_iter().map(|(key, value)| {
             (
