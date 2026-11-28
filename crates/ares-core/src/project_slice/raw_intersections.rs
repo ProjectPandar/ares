@@ -93,15 +93,17 @@ pub(super) fn slice_projected_objects(
             .iter()
             .find(|resolved| resolved.source_object_index == plan.source_object_index)
             .expect("planned object must have resolved configuration");
-        let active_ranges = (resolved.layer_candidates.len() > 1).then(|| {
-            ranges::active_volume_ranges(
-                source,
-                resolved,
-                filament,
-                logical_count,
-                process_variant_indices,
-            )
-        });
+        let active_ranges = (!resolved.object.belt_purge_tower_object.0
+            && resolved.layer_candidates.len() > 1)
+            .then(|| {
+                ranges::active_volume_ranges(
+                    source,
+                    resolved,
+                    filament,
+                    logical_count,
+                    process_variant_indices,
+                )
+            });
         let center =
             super::centering::center(source, &resolved.print_objects[plan.transform_index], scale)?;
         let centered_object_transform = plan.belt_slice.map_or_else(

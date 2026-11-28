@@ -24,8 +24,48 @@ pub(super) fn plan(
     if print.print_sequence == crate::ProcessPrintSequence::ByObject
         || copy_filter.is_some()
         || print.print_order == crate::ProcessPrintOrder::AsObjectList
+        || traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .remaining
+            .enable_belt_purge_tower
+            .0
     {
-        let instances = super::instances::order(instances, traversal);
+        if traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .remaining
+            .enable_belt_purge_tower
+            .0
+        {
+            let purge_source = traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.object.belt_purge_tower_object.0)
+                .map(|object| object.source_object_index);
+            instances.sort_by_key(|entry| {
+                let source = traversal.objects[entry.source.object_index]
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .object
+                    .identity()
+                    .0;
+                (
+                    purge_source.is_some_and(|purge| source != purge),
+                    entry.instance.position,
+                    entry.instance.copy,
+                )
+            });
+        } else {
+            instances = super::instances::order(instances, traversal);
+        }
         let visits = (0..instances.len())
             .map(|instance_idx| InstanceVisit {
                 instance_idx,

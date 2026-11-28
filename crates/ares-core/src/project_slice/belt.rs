@@ -13,7 +13,9 @@ use crate::{
 
 pub(super) const EPSILON: f64 = 1e-4;
 
+mod active_purge;
 pub(super) mod brim;
+pub(super) use active_purge::align_active_purge_plans;
 pub(super) mod floor_context;
 
 fn unsupported(feature: &str) -> SliceError {
@@ -56,14 +58,30 @@ pub(super) fn admit(
     {
         return Err(unsupported("materials"));
     }
+    let marked_count = objects
+        .clone()
+        .filter(|object| object.object.belt_purge_tower_object.0)
+        .count();
+    let active_purge = printer.enable_belt_purge_tower.0 && slots > 1 && marked_count == 1;
+    if active_purge
+        && (placements != 2
+            || objects.clone().count() != 2
+            || objects
+                .clone()
+                .filter(|object| !object.object.belt_purge_tower_object.0)
+                .count()
+                != 1)
+    {
+        return Err(unsupported("active_purge"));
+    }
     if slots > 1 {
-        if placements != 1 {
+        if !active_purge && placements != 1 {
             return Err(unsupported("multi_placement_materials"));
         }
         let object = objects
             .clone()
-            .next()
-            .expect("one placement has one object");
+            .find(|object| !active_purge || !object.object.belt_purge_tower_object.0)
+            .expect("multi-filament print has an ordinary object");
         let source = &project.objects()[object.source_object_index];
         if !admits_multiple_filaments(project, resolved, source, &object.object) {
             return Err(unsupported("materials"));
@@ -103,10 +121,11 @@ pub(super) fn admit(
         {
             return Err(unsupported("multi_placement_brim"));
         }
-        if printer.enable_belt_purge_tower.0
-            || objects
-                .clone()
-                .any(|object| object.object.belt_purge_tower_object.0)
+        if !active_purge
+            && (printer.enable_belt_purge_tower.0
+                || objects
+                    .clone()
+                    .any(|object| object.object.belt_purge_tower_object.0))
         {
             return Err(unsupported("instances: multi_placement_purge"));
         }
@@ -284,11 +303,20 @@ impl BeltSlice {
         let centered = group
             .transform
             .pretranslated(Point3d::new(-center.x, -center.y, 0.));
-        let volume = &source.volumes()[0];
-        let local = centered.then(volume.transform());
+        let model_volumes = source
+            .volumes()
+            .iter()
+            .filter(|volume| {
+                volume.volume_type() == ProjectVolumeType::ModelPart
+                    && !volume.mesh().triangles().is_empty()
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            !model_volumes.is_empty(),
+            "belt object has a model-part volume"
+        );
         let forward = rotation.forward();
         let rotated = forward.then(centered);
-        let rotated_volume = rotated.then(volume.transform());
         let mut lower = [f64::INFINITY; 3];
         let mut upper = [f64::NEG_INFINITY; 3];
         let (axis, shear) = match rotation.axis {
@@ -304,14 +332,18 @@ impl BeltSlice {
         let floor_z = |p: Point3d| floor.map_or(0., |floor| floor.shear * [p.x, p.y][floor.axis]);
         let margin = floor.map_or(0., |floor| 10. * floor.shear.abs());
         let mut min_z = f64::INFINITY;
-        for &vertex in volume.mesh().vertices() {
-            let point = local.transform_point(vertex);
-            for (i, value) in [point.x, point.y, point.z].into_iter().enumerate() {
-                lower[i] = lower[i].min(value);
-                upper[i] = upper[i].max(value);
+        for volume in &model_volumes {
+            let local_volume = centered.then(volume.transform());
+            let rotated_volume = rotated.then(volume.transform());
+            for &vertex in volume.mesh().vertices() {
+                let point = local_volume.transform_point(vertex);
+                for (i, value) in [point.x, point.y, point.z].into_iter().enumerate() {
+                    lower[i] = lower[i].min(value);
+                    upper[i] = upper[i].max(value);
+                }
+                let rotated_point = rotated_volume.transform_point(vertex);
+                min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
             }
-            let rotated_point = rotated_volume.transform_point(vertex);
-            min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
         }
         let lift = (margin - min_z).max(0.);
         // BeltTransform.cpp:151–168 estimates the below-footprint floor from

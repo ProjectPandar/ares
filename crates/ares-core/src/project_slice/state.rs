@@ -237,7 +237,7 @@ impl AppliedPlate {
         let planned_objects = plan_project(&project, &resolved, scale)?;
         let projected_objects =
             prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
-        let looped_objects = slice_projected_objects(
+        let mut looped_objects = slice_projected_objects(
             (project.objects(), &resolved.objects),
             projected_objects,
             scale,
@@ -248,6 +248,7 @@ impl AppliedPlate {
             ),
             cancel,
         )?;
+        super::belt::align_active_purge_plans(&mut looped_objects, &resolved);
         Ok(ProjectSliceState {
             project,
             resolved,

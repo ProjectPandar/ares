@@ -65,9 +65,27 @@ pub(in crate::project_slice::gcode_emit) fn collect(
     }
     // Print.cpp:934 initializes by model-object index, not split PrintObject index.
     if as_object_list(traversal) {
-        for (rank, index) in super::object_order::model_order(&model_indices)
-            .into_iter()
-            .enumerate()
+        let purge_source = traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .remaining
+            .enable_belt_purge_tower
+            .0
+            .then(|| {
+                traversal
+                    .resolved
+                    .objects
+                    .iter()
+                    .find(|object| object.object.belt_purge_tower_object.0)
+                    .map(|object| object.source_object_index)
+            })
+            .flatten();
+        for (rank, index) in
+            super::object_order::model_order_with_purge(&model_indices, purge_source)
+                .into_iter()
+                .enumerate()
         {
             let (object, copy) = owners[index];
             instances[object][copy].arrange_order = rank + 1;
@@ -75,7 +93,7 @@ pub(in crate::project_slice::gcode_emit) fn collect(
     }
     // Bucket identity remains independent of the model-order field.
     let print = &traversal.resolved.views.full.process.print;
-    let order = if print.print_sequence == crate::ProcessPrintSequence::ByLayer {
+    let mut order = if print.print_sequence == crate::ProcessPrintSequence::ByLayer {
         match print.print_order {
             crate::ProcessPrintOrder::Default => {
                 super::object_order::reference_order(&centers, traversal.scale)
@@ -96,6 +114,43 @@ pub(in crate::project_slice::gcode_emit) fn collect(
         order.reverse();
         order
     };
+    if traversal
+        .resolved
+        .views
+        .full
+        .printer
+        .remaining
+        .enable_belt_purge_tower
+        .0
+    {
+        if let Some(purge_source) = traversal
+            .resolved
+            .objects
+            .iter()
+            .find(|object| object.object.belt_purge_tower_object.0)
+            .map(|object| object.source_object_index)
+        {
+            let (mut purge, mut rest) = (Vec::new(), Vec::new());
+            for index in order {
+                let (object, _) = owners[index];
+                let source = traversal.objects[object]
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .object
+                    .identity()
+                    .0;
+                if source == purge_source {
+                    purge.push(index);
+                } else {
+                    rest.push(index);
+                }
+            }
+            purge.extend(rest);
+            order = purge;
+        }
+    }
     for (position, index) in order.into_iter().enumerate() {
         let (object, copy) = owners[index];
         instances[object][copy].position = position;
