@@ -147,19 +147,12 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
                     .map(|(volume_index, volume)| {
                         let mut part = saved_part(volume, &settings.parts, full_cli_slice)?;
                         if let Some(filename) = full_cli_source_filename {
-                            // bbs_3mf.cpp:2360–2374 fills only unset indices on fallback.
-                            if part.source_file.is_empty() {
-                                part.source_file = filename.to_owned();
-                                if part.source_object == -1 {
-                                    part.source_object = object_index as i32;
-                                }
-                                if part.source_volume == -1 {
-                                    part.source_volume = volume_index as i32;
-                                }
-                            } else if let Some(separator) = part.source_file.rfind(['/', '\\']) {
-                                // bbs_3mf.cpp:8249–8259,8374–8387: write the basename.
-                                part.source_file = part.source_file[separator + 1..].to_owned();
-                            }
+                            project_source_provenance(
+                                &mut part,
+                                filename,
+                                object_index,
+                                volume_index,
+                            );
                         }
                         Ok(part)
                     })
@@ -178,6 +171,27 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
         },
         extras,
     ))
+}
+
+fn project_source_provenance(
+    part: &mut Part,
+    filename: &str,
+    object_index: usize,
+    volume_index: usize,
+) {
+    // bbs_3mf.cpp:2360–2374 fills only unset indices on fallback.
+    if part.source_file.is_empty() {
+        part.source_file = filename.to_owned();
+        if part.source_object == -1 {
+            part.source_object = object_index as i32;
+        }
+        if part.source_volume == -1 {
+            part.source_volume = volume_index as i32;
+        }
+    } else if let Some(separator) = part.source_file.rfind(['/', '\\']) {
+        // bbs_3mf.cpp:8249–8259,8374–8387: write the basename.
+        part.source_file = part.source_file[separator + 1..].to_owned();
+    }
 }
 
 fn safe_name(name: &str) -> bool {
