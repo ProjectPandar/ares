@@ -33,8 +33,12 @@ For a scalar `different_settings_to_system` wire value, the same handler recurse
 on its sorted, distinct semicolon-delimited names with an empty value and
 applies `ReplaceString` to the original wire (`PrintConfig.cpp:77–84,9844–9854`).
 A feature alias in this list must resolve directly to the same current name,
-not to an intermediate alias. Keep the upstream replacement order and existing
-quote and separator handling.
+not to an intermediate alias. Each replacement applies to every matching
+substring in the entire evolving wire, not just standalone delimited names.
+For example, when both `inner_wall_filament` and `wall_filament` are present,
+the first replacement produces `inner_wall_filament_id`. The later replacement
+of `wall_filament` also changes the substring inside that new name. Keep this
+ordering and the existing quote and separator handling.
 
 ## Ares boundary
 
@@ -49,8 +53,11 @@ that raw map (`crates/ares-core/src/project/export/saved_presets.rs`).
 `ProjectSettingsRaw::handle_legacy` already processes raw entries in `BTreeMap`
 order and inserts each result into its normalized map. Write the current key at that insertion and do not change
 map ordering or add a later overwrite pass. `normalize_different_settings_to_system`
-already recurses into the token handler, so it uses the same feature names.
-The typed conversion stays available for inputs that bypass raw JSON load.
+already takes sorted distinct names from the unquoted input with a `BTreeSet`
+and calls `String::replace` on the evolving wire for each recursive rename.
+Keep that algorithm so the new destinations participate in exactly the same
+substring replacements as upstream. The typed conversion stays available for
+inputs that bypass raw JSON load.
 
 The empty value used for recursive name resolution is not the empty wire used
 to discover an array's destination. Keep the existing non-scalar path for these
@@ -67,6 +74,7 @@ source ordering directions in Native and Ares saved `Metadata/project_settings.c
 selector), and `infill_extruder` earlier than `sparse_infill_filament_id` (current
 `1` remains `1`). Write conflicting keys in reverse text order to distinguish
 sorted precedence from archive order. Use a canonical control and a scalar
-`different_settings_to_system` witness with multiple feature aliases; compare
-the full bookkeeping value to Native and verify the old names are absent. Run
-both reference lanes. No array cases are included.
+`different_settings_to_system` witness with multiple feature aliases. Also
+exercise an overlapping pair (`inner_wall_filament;wall_filament`); compare the
+full bookkeeping value to live Native output, including the result of the later
+substring replacement. Run both reference lanes. No array cases are included.
