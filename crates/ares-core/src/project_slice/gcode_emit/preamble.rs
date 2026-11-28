@@ -24,7 +24,10 @@ pub(super) fn append(
         traversal
             .objects
             .iter()
-            .filter_map(|object| object.physical_layers().last().map(|layer| layer.print_z))
+            .zip(schedule.object_layer_counts())
+            .filter_map(|(object, &count)| {
+                Some(object.physical_layers().get(count.checked_sub(1)?)?.print_z)
+            })
             .fold(-1.0, f64::max)
     } else {
         schedule.merged.last().map_or(0.0, |entry| entry.0)

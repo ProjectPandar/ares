@@ -1,5 +1,6 @@
 //! `ToolOrdering.cpp` materialized layer tools and writer-used IDs.
 
+mod belt_purge;
 mod collect;
 mod custom_gcodes;
 mod first_layer;

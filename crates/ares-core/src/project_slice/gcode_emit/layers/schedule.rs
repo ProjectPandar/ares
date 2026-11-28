@@ -75,7 +75,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
     prepared: &mut crate::project_slice::island_print_order::PreparedPostIslandPrintOrder,
     instances: Vec<Vec<super::instances::Instance>>,
 ) -> Result<Schedule, crate::SliceError> {
-    let objects = &prepared.objects;
+    let objects = &mut prepared.objects;
     let support = &mut prepared.support_layers;
     let original = &mut prepared.predecessor;
     let traversal = &original
@@ -144,6 +144,7 @@ pub(in crate::project_slice::gcode_emit) fn build(
         raft.as_ref(),
         belt_brim.as_ref(),
     )?;
+    tool_ordering.plan_belt_purge(original, objects, support)?;
     let traversal = &original
         .predecessor
         .predecessor
@@ -158,8 +159,12 @@ pub(in crate::project_slice::gcode_emit) fn build(
     let mut raw_zs = Vec::new();
     let mut skirt_layers = Vec::new();
     for (object_index, source) in traversal.objects.iter().enumerate() {
-        let object_z = source
-            .physical_layers()
+        let mut physical_layers = source.physical_layers();
+        if belt_printer {
+            // Active purge can retain only a prefix of the prism's layers.
+            physical_layers = &physical_layers[..objects[object_index].len()];
+        }
+        let object_z = physical_layers
             .iter()
             .map(|layer| layer.print_z)
             .collect::<Vec<_>>();

@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 mod assign;
 mod source;
+pub(super) use source::object_layer_index;
 pub(in crate::project_slice::gcode_emit) use source::objects;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]

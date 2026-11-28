@@ -2,10 +2,20 @@
 use super::{Collection, CollectionId, Object, Region};
 use crate::project_slice::{
     extrusion_islands::PreparedPostExtrusionIslands,
+    layers::PlannedLayer,
     perimeters::classic::traversal::PreparedPostClassicTraversal,
     support_material::{InstalledSupportLayer, SupportExtrusionEntity, SupportExtrusionPath},
 };
 use crate::{ExtrusionRole, RegionOptions, geometry::CoordinateScale};
+
+pub(in crate::project_slice::gcode_emit::tool_ordering) fn object_layer_index(
+    layers: &[PlannedLayer],
+    print_z: f64,
+) -> Option<usize> {
+    // PrintObject.cpp:5537–5542: lower bound and inclusive upper bound.
+    let index = layers.partition_point(|layer| layer.print_z < print_z - 1e-4);
+    (layers.get(index)?.print_z <= print_z + 1e-4).then_some(index)
+}
 
 pub(in crate::project_slice::gcode_emit) fn objects(
     traversal: &PreparedPostClassicTraversal,
@@ -39,55 +49,52 @@ pub(in crate::project_slice::gcode_emit) fn objects(
                 return None;
             }
             let regions = prelude.as_parts().0.as_parts().0.as_parts().2;
-            let layers = prepared.physical_layers();
-            let index = layers.partition_point(|layer| layer.print_z < print_z - 1e-4);
-            let regions = layers
-                .get(index)
-                .filter(|layer| (layer.print_z - print_z).abs() < 1e-4)
-                .map(|_| {
-                    let collections = &original.objects[id][index].wiping_volumes;
-                    let mut output = regions
-                        .iter()
-                        .map(|input| {
-                            let config = &input.options;
-                            Region {
-                                infill_first: config.is_infill_first.0,
-                                wall_tool: (config.outer_wall_filament_id.0.max(1) - 1) as usize,
-                                sparse_tool: (config.sparse_infill_filament_id.0.max(1) - 1)
-                                    as usize,
-                                infills: Vec::new(),
-                                perimeters: Vec::new(),
-                            }
-                        })
-                        .collect::<Vec<_>>();
-                    for entry in &collections.infills {
-                        output[entry.region].infills.push(Collection {
-                            id: CollectionId::Infill(entry.id),
-                            tool: tool(
-                                entry.role,
-                                entry.infill,
-                                entry.solid,
-                                &regions[entry.region].options,
-                            ),
-                            role: entry.role,
-                            volume: entry.volume,
-                        });
-                    }
-                    for entry in &collections.perimeters {
-                        output[entry.region].perimeters.push(Collection {
-                            id: CollectionId::Perimeter(entry.id),
-                            tool: tool(
-                                entry.role,
-                                entry.infill,
-                                entry.solid,
-                                &regions[entry.region].options,
-                            ),
-                            role: entry.role,
-                            volume: entry.volume,
-                        });
-                    }
-                    output
-                });
+            let retained = &original.objects[id];
+            let layer_index =
+                object_layer_index(&prepared.physical_layers()[..retained.len()], print_z);
+            let regions = layer_index.map(|index| {
+                let collections = &retained[index].wiping_volumes;
+                let mut output = regions
+                    .iter()
+                    .map(|input| {
+                        let config = &input.options;
+                        Region {
+                            infill_first: config.is_infill_first.0,
+                            wall_tool: (config.outer_wall_filament_id.0.max(1) - 1) as usize,
+                            sparse_tool: (config.sparse_infill_filament_id.0.max(1) - 1) as usize,
+                            infills: Vec::new(),
+                            perimeters: Vec::new(),
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                for entry in &collections.infills {
+                    output[entry.region].infills.push(Collection {
+                        id: CollectionId::Infill(entry.id),
+                        tool: tool(
+                            entry.role,
+                            entry.infill,
+                            entry.solid,
+                            &regions[entry.region].options,
+                        ),
+                        role: entry.role,
+                        volume: entry.volume,
+                    });
+                }
+                for entry in &collections.perimeters {
+                    output[entry.region].perimeters.push(Collection {
+                        id: CollectionId::Perimeter(entry.id),
+                        tool: tool(
+                            entry.role,
+                            entry.infill,
+                            entry.solid,
+                            &regions[entry.region].options,
+                        ),
+                        role: entry.role,
+                        volume: entry.volume,
+                    });
+                }
+                output
+            });
             let support = &support[id];
             let index = support.partition_point(|layer| layer.print_z < print_z - 1e-4);
             let support = support
