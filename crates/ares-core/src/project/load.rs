@@ -238,19 +238,6 @@ fn load_project_from_archive(
     } else {
         ProjectSettingsRaw::default()
     };
-    let (project_settings_raw, settings) = settings::resolve(
-        project_settings_raw,
-        overrides,
-        materialize_retained_defaults,
-    )?;
-
-    let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
-    super::domain::materialize_meshes(&mut objects);
-    super::domain::normalize_volume_offsets(&mut objects);
-    super::layer_config_ranges::load(archive, &archive_paths, &mut objects)?;
-    super::layer_height_profiles::load(archive, &archive_paths, &mut objects)?;
-    super::brim_ear_points::load(archive, &archive_paths, &mut objects)?;
-    let plates_custom_gcodes = super::plate_custom_gcodes::load(archive, &archive_paths)?;
     // bbs_3mf.cpp:3945-3957: the model's `Application` metadata tags the
     // BambuStudio/OrcaSlicer family (`is_bbl_3mf`).
     let bbl_family_3mf = graph.models.iter().any(|model| {
@@ -260,6 +247,22 @@ fn load_project_from_archive(
                     || entry.value.starts_with("OrcaSlicer-"))
         })
     });
+    let saved_filament_limit =
+        bbl_family_3mf.then(|| settings::saved_filament_limit(&project_settings_raw));
+    let (project_settings_raw, settings) = settings::resolve(
+        project_settings_raw,
+        overrides,
+        materialize_retained_defaults,
+    )?;
+
+    let (models, mut objects) =
+        assemble::project_domain(&graph, &metadata, &model_settings, saved_filament_limit)?;
+    super::domain::materialize_meshes(&mut objects);
+    super::domain::normalize_volume_offsets(&mut objects);
+    super::layer_config_ranges::load(archive, &archive_paths, &mut objects)?;
+    super::layer_height_profiles::load(archive, &archive_paths, &mut objects)?;
+    super::brim_ear_points::load(archive, &archive_paths, &mut objects)?;
+    let plates_custom_gcodes = super::plate_custom_gcodes::load(archive, &archive_paths)?;
     // bbs_3mf.cpp:1539-1551: OrcaSlicer metadata takes precedence over Application.
     let preset_file_version = graph
         .models

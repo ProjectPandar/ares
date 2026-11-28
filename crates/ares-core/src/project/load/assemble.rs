@@ -71,15 +71,17 @@ pub(super) fn project_domain(
     graph: &ModelGraph,
     metadata: &MetadataIndex,
     settings: &ModelSettings,
+    saved_filament_limit: Option<i32>,
 ) -> Result<(Vec<ProjectModel>, Vec<ProjectObject>), SliceError> {
     let mut budget = ExpandedModelBudget::default();
-    project_domain_with_budget(graph, metadata, settings, &mut budget)
+    project_domain_with_budget(graph, metadata, settings, saved_filament_limit, &mut budget)
 }
 
 fn project_domain_with_budget(
     graph: &ModelGraph,
     metadata: &MetadataIndex,
     settings: &ModelSettings,
+    saved_filament_limit: Option<i32>,
     expanded_model_budget: &mut ExpandedModelBudget,
 ) -> Result<(Vec<ProjectModel>, Vec<ProjectObject>), SliceError> {
     let models = graph
@@ -125,7 +127,7 @@ fn project_domain_with_budget(
                 .map(|index| &settings.objects[*index]);
             let object_ordinal = order.len() + 1;
             let object_metadata = object_metadata(
-                source_settings,
+                source_settings.map(|settings| (settings, saved_filament_limit)),
                 &source_object.name,
                 source_object.pid,
                 object_ordinal,
@@ -214,18 +216,26 @@ fn project_domain_with_budget(
 }
 
 fn object_metadata(
-    settings: Option<&ObjectSettings>,
+    saved: Option<(&ObjectSettings, Option<i32>)>,
     xml_name: &str,
     pid: i32,
     ordinal: usize,
     group_extruders: &BTreeMap<i32, i32>,
 ) -> (String, String, ObjectOptionOverrides, RegionOptionOverrides) {
-    if let Some(settings) = settings {
+    if let Some((settings, saved_filament_limit)) = saved {
+        let mut region = settings.region_overrides.clone();
+        // bbs_3mf.cpp:2376–2384 applies the saved object default before slicing.
+        if let Some(max) = saved_filament_limit {
+            let selector = region.extruder.map_or(0, |selector| selector.0);
+            if selector == 0 || selector > max {
+                region.extruder = Some(OrcaInt(1));
+            }
+        }
         return (
             settings.name.clone(),
             settings.module.clone(),
             settings.overrides.clone(),
-            settings.region_overrides.clone(),
+            region,
         );
     }
 

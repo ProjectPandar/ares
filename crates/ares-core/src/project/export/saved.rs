@@ -1,6 +1,6 @@
 use super::super::super::{
     ArchiveLimits, PackagePath, ProjectArchive, Transform3d,
-    model_settings::{ObjectSettings, PartSettings},
+    model_settings::{Metadata, ObjectSettings, PartSettings},
     model_xml::ModelDocument,
 };
 use super::super::saved_assets::{self, SavedArchiveExtras};
@@ -136,7 +136,18 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
             Ok(Object {
                 name: object.name().to_owned(),
                 instances: vec![saved_instance],
-                metadata: cli_object_metadata(),
+                metadata: if full_cli_slice && project.documents().bbl_family_3mf {
+                    vec![Metadata {
+                        key: "extruder".into(),
+                        value: object
+                            .region_overrides()
+                            .extruder
+                            .map_or(1, |selector| selector.0)
+                            .to_string(),
+                    }]
+                } else {
+                    cli_object_metadata()
+                },
                 auto_drop: true,
                 parts: object
                     .volumes()

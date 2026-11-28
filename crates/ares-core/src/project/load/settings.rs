@@ -1,5 +1,25 @@
 use super::ProjectSettingsRaw;
-use crate::{ConfigOverrides, ProjectSettings, SliceError};
+use crate::{
+    ConfigOverrides, ProjectSettings, SliceError,
+    options::{json_deserialize, registry::OptionValueKind},
+    project::raw_settings::RawConfigValue,
+};
+
+pub(super) fn saved_filament_limit(raw: &ProjectSettingsRaw) -> i32 {
+    let count = match raw.get("filament_settings_id") {
+        Some(RawConfigValue::List(ids)) => Some(ids.len()),
+        Some(RawConfigValue::Text(wire)) => {
+            match json_deserialize::decode(OptionValueKind::Strings, wire) {
+                Ok(RawConfigValue::List(ids)) => Some(ids.len()),
+                _ => None,
+            }
+        }
+        _ => None,
+    };
+    count
+        .and_then(|count| i32::try_from(count).ok())
+        .unwrap_or(i32::MAX)
+}
 
 pub(super) fn resolve(
     mut project_settings_raw: ProjectSettingsRaw,
