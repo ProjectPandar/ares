@@ -41,8 +41,13 @@ five companion fields is optional, since the existing projection supplies
 its default if absent. Each supplied companion must still pass the
 existing validation and occur at most once; reject duplicate filename
 entries and unrelated retained metadata as before. For a present nonempty
-filename, keep the existing portable-name and complete-companion rules.
-Do not treat a malformed or unsupported explicit filename as missing.
+filename, keep the complete-companion requirement. Apply no affine-only
+restriction to the filename: the already-admitted translation-only route
+uses the same source field and projects its basename without opening the
+path. Reuse `project_source_provenance`, including its separator handling.
+This follows `get_dealed_platform_path` and the normal-mode writer in
+`bbs_3mf.cpp:8249–8259,8374–8387`. A nonempty source filename never triggers
+fallback or fills indices.
 
 Keep the selector and other object/part settings constraints, finite
 invertibility test, printable-instance count, safe names, centered
@@ -50,9 +55,9 @@ ordinary geometry, identity component and source transforms, paint and
 shape checks, and full selected-plate CLI route unchanged. Do not admit
 other project shapes or change archive paths, slicing, load semantics, or
 public APIs. Do not reopen the input. A partial record with an explicit
-nonempty filename, additional explicit path shapes, other volume types,
-minimum save, unsliced and processed-plate export, and nondefault object
-selectors are outside this change.
+nonempty filename, other volume types, minimum save, unsliced and
+processed-plate export, and nondefault object selectors are outside this
+change.
 
 ## Synthetic verification
 
@@ -63,12 +68,16 @@ source record. Both Native reference modes preserved the build matrix and
 emitted all six fields for no source fields, a missing filename with
 companions, and an explicitly empty filename with companions. Current
 Ares refused those three sliced exports. Both engines preserved the
-matrix and complete explicit source record in the control.
+matrix and complete explicit source record in the control. With the same
+complete companions and an explicit nested source path, Native exported
+the basename with those companions, whereas Ares refused. The existing
+translation-only route already emits the basename for nested paths.
 
 Exercise these cases through `--slice 1 --export-3mf`, with distinct input
 and export filenames. Compare the resulting build matrix and all six part
 source fields to the pinned Native archive. Use companion values that
 verify each `-1` index is filled independently and that set indices and
-offsets survive; retain the complete explicit record as a passing control.
-Run both reference modes and paired project load/export coverage without
-altering the shared archive comparator.
+offsets survive; retain the complete explicit basename record as a passing
+control. Also compare the entire sliced archive with the existing strict
+comparator, including G-code and its checksum. Run both reference modes
+and paired project load/export and saved-transform coverage.
