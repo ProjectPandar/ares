@@ -3,7 +3,7 @@ use std::{fs, os::unix::fs::symlink, path::Path};
 use serde_json::{Value, json};
 
 use super::super::export_3mf_sliced_rejection::rewrite_project;
-use super::{STL, invoke, repo_root, saved_build_transforms::prism_stl, write_inputs};
+use super::{STL, invoke, repo_root, write_inputs};
 use crate::{OrcaRunner, golden::compare_ordered_bytes_generator_only};
 
 const PROJECT: &str = "saved.3mf";
@@ -62,7 +62,6 @@ fn compare(object: Option<u8>, part: Option<u8>, slot: &str, virtual_tool: &str)
 fn saved_project(runner: &OrcaRunner, cwd: &Path, object: Option<u8>, part: Option<u8>) -> Vec<u8> {
     fs::create_dir_all(cwd).unwrap();
     write_inputs(cwd);
-    fs::write(cwd.join(STL), prism_stl()).unwrap();
     let process = cwd.join("process.json");
     let mut config: Value = serde_json::from_slice(&fs::read(&process).unwrap()).unwrap();
     config["brim_type"] = json!("no_brim");

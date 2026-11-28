@@ -116,7 +116,7 @@ fn assert_build_item(model: &[u8], expected: &str) {
     assert_eq!(count, 1);
 }
 
-pub(super) fn prism_stl() -> Vec<u8> {
+fn prism_stl() -> Vec<u8> {
     let outline = [
         [-15.0_f32, -5.0_f32],
         [15.0, -5.0],
