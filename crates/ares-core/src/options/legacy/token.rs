@@ -12,6 +12,8 @@
 
 use std::collections::BTreeSet;
 
+use super::super::{LegacyAction, find_explicit_rule};
+
 /// `PrintConfig.cpp:8033-8290`: per-entry legacy normalization on the
 /// serialized `key`/`value` tokens. `key`/`value` are rewritten in place;
 /// clearing `key` (obsolete or unrecognized) drops the entry.
@@ -34,6 +36,29 @@ pub(crate) fn erases_percentage_for_absolute_keys(opt_key: &str) -> bool {
 }
 
 pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
+    handle_legacy_token(opt_key, value, false);
+}
+
+pub(crate) fn handle_legacy_scalar(opt_key: &mut String, value: &mut String) {
+    handle_legacy_token(opt_key, value, true);
+}
+
+fn handle_legacy_token(opt_key: &mut String, value: &mut String, migrate_feature_filament: bool) {
+    if migrate_feature_filament
+        && let Some(rule) = find_explicit_rule(opt_key)
+        && let LegacyAction::FeatureFilament {
+            target,
+            legacy_inherit,
+            canonical_inherit,
+        } = rule.action
+    {
+        *opt_key = target.to_owned();
+        if value == legacy_inherit {
+            *value = canonical_inherit.to_owned();
+        }
+        return;
+    }
+
     match opt_key.as_str() {
         "curr_bed_type" if value == "SuperTack Plate" => *value = "Supertack Plate".to_owned(),
         "enable_wipe_tower" => *opt_key = "enable_prime_tower".to_owned(),
@@ -85,7 +110,9 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
             // PrintConfig.cpp (345efec64c7b):9839-9840: legacy auto, not a new minimum.
             *value = "0".to_owned();
         }
-        "different_settings_to_system" => normalize_different_settings_to_system(value),
+        "different_settings_to_system" => {
+            normalize_different_settings_to_system(value, migrate_feature_filament);
+        }
         "overhang_fan_threshold" if value == "5%" => *value = "10%".to_owned(),
         "wall_infill_order" => {
             // `PrintConfig.cpp:8134-8145`: the three-part legacy order collapses
@@ -255,7 +282,7 @@ fn is_obsolete_legacy_key(key: &str) -> bool {
 /// `PrintConfig.cpp:8123-8133` `different_settings_to_system`: each `;`-
 /// separated sub-key is itself run through `handle_legacy`; renamed keys are
 /// replaced inside the value string.
-fn normalize_different_settings_to_system(value: &mut String) {
+fn normalize_different_settings_to_system(value: &mut String, migrate_feature_filament: bool) {
     if value.is_empty() {
         return;
     }
@@ -268,7 +295,7 @@ fn normalize_different_settings_to_system(value: &mut String) {
     for split_key in split_keys {
         let mut copy_key = split_key.to_owned();
         let mut copy_value = String::new();
-        handle_legacy(&mut copy_key, &mut copy_value);
+        handle_legacy_token(&mut copy_key, &mut copy_value, migrate_feature_filament);
         if copy_key != split_key {
             normalized = normalized.replace(split_key, &copy_key);
         }

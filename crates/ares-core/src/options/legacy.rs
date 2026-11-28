@@ -5,15 +5,15 @@ use serde_json::Value;
 
 use super::SliceOptions;
 
-mod token;
 mod sla;
 mod thumbnails;
+mod token;
 mod wiping_volumes;
 
 pub(crate) use self::thumbnails::format_thumbnail_definitions;
 pub(crate) use self::token::{
     erases_percentage_for_absolute_keys, handle_legacy, handle_legacy_derived,
-    handle_legacy_dest_bool,
+    handle_legacy_dest_bool, handle_legacy_scalar,
 };
 
 impl<'de> Deserialize<'de> for SliceOptions {

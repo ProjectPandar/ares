@@ -180,7 +180,11 @@ impl ProjectSettingsRaw {
             {
                 derived.push(assignment);
             }
-            crate::options::handle_legacy(&mut key, &mut token);
+            if scalar {
+                crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
+            } else {
+                crate::options::handle_legacy(&mut key, &mut token);
+            }
             if key.is_empty() {
                 continue;
             }
