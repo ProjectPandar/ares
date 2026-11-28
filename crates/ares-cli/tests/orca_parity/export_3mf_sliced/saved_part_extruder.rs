@@ -1,12 +1,19 @@
-use std::{fs, os::unix::fs::symlink, path::Path};
+use std::{
+    fs,
+    os::unix::fs::symlink,
+    path::{Path, PathBuf},
+};
 
+use serde::Deserialize;
 use serde_json::{Value, json};
 
 use super::super::export_3mf_sliced_rejection::rewrite_project;
-use super::{STL, invoke, repo_root, write_inputs};
+use super::{STL, comparator, invoke, repo_root, write_inputs};
 use crate::{OrcaRunner, golden::compare_ordered_bytes_generator_only};
 
 const PROJECT: &str = "saved.3mf";
+const EXPORT: &str = "export.3mf";
+const SETTINGS: &str = "Metadata/model_settings.config";
 const SLICE: &[&str] = &["--slice", "1", "--outputdir", "out", PROJECT];
 
 #[test]
@@ -29,6 +36,90 @@ fn plain_slice_prefers_the_saved_object_selector_over_its_lone_part() {
     compare(Some(2), Some(1), "2", "1");
 }
 
+#[test]
+fn plain_slice_defaults_an_out_of_range_saved_object_slot() {
+    compare(Some(3), None, "1", "0");
+}
+
+#[test]
+fn saved_export_writes_object_slot_one() {
+    compare_export(1, "1");
+}
+
+#[test]
+fn saved_export_preserves_object_slot_two() {
+    compare_export(2, "2");
+}
+
+#[test]
+fn saved_export_defaults_an_out_of_range_object_slot() {
+    compare_export(3, "1");
+}
+
+fn compare_export(object: u8, slot: &str) {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let root = runner.work_dir();
+    let project = saved_project(&runner, &root.join("source/cwd"), Some(object), None);
+    let expected = export_metadata(runner.bin(), &root.join("native/cwd"), &project);
+    let config: ExportedConfig = quick_xml::de::from_str(&expected).unwrap();
+    let [object] = config.objects.as_slice() else {
+        panic!("expected one object in Native export in {root:?}");
+    };
+    let [part] = object.parts.as_slice() else {
+        panic!("expected one part in Native export in {root:?}");
+    };
+    let selectors = object
+        .metadata
+        .iter()
+        .filter(|entry| entry.key == "extruder")
+        .map(|entry| entry.value.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(selectors, [slot], "unexpected Native export in {root:?}");
+    assert!(part.metadata.iter().all(|entry| entry.key != "extruder"));
+    let actual = export_metadata(&installed_ares(&root), &root.join("ares/cwd"), &project);
+    assert_eq!(actual, expected, "{SETTINGS} differs in {root:?}");
+}
+
+#[derive(Deserialize)]
+struct ExportedConfig {
+    #[serde(rename = "object")]
+    objects: Vec<ExportedObject>,
+}
+
+#[derive(Deserialize)]
+struct ExportedObject {
+    metadata: Vec<ExportedMetadata>,
+    #[serde(rename = "part")]
+    parts: Vec<ExportedPart>,
+}
+
+#[derive(Deserialize)]
+struct ExportedPart {
+    metadata: Vec<ExportedMetadata>,
+}
+
+#[derive(Deserialize)]
+struct ExportedMetadata {
+    #[serde(rename = "@key")]
+    key: String,
+    #[serde(rename = "@value")]
+    value: String,
+}
+
+fn export_metadata(bin: &Path, cwd: &Path, project: &[u8]) -> String {
+    fs::create_dir_all(cwd).unwrap();
+    fs::write(cwd.join(PROJECT), project).unwrap();
+    let args = ["--slice", "1", "--export-3mf", EXPORT, PROJECT];
+    assert_eq!(invoke(bin, cwd, &args), Some(0), "export in {cwd:?}");
+    comparator::read_members(&cwd.join(EXPORT))
+        .into_iter()
+        .find(|member| member.name == SETTINGS)
+        .map(|member| String::from_utf8(member.bytes).unwrap())
+        .unwrap_or_else(|| panic!("missing {SETTINGS} in {cwd:?}"))
+}
+
 fn compare(object: Option<u8>, part: Option<u8>, slot: &str, virtual_tool: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
@@ -45,6 +136,12 @@ fn compare(object: Option<u8>, part: Option<u8>, slot: &str, virtual_tool: &str)
         assert_eq!(markers, [value], "unexpected Native selector in {root:?}");
     }
 
+    let actual = slice(&installed_ares(&root), &root.join("ares/cwd"), &project);
+    compare_ordered_bytes_generator_only(&expected, &actual)
+        .unwrap_or_else(|error| panic!("{error}; {root:?}"));
+}
+
+fn installed_ares(root: &Path) -> PathBuf {
     let install = root.join("installation");
     let ares = install.join("bin/ares");
     fs::create_dir_all(ares.parent().unwrap()).unwrap();
@@ -54,9 +151,7 @@ fn compare(object: Option<u8>, part: Option<u8>, slot: &str, virtual_tool: &str)
         install.join("resources"),
     )
     .unwrap();
-    let actual = slice(&ares, &root.join("ares/cwd"), &project);
-    compare_ordered_bytes_generator_only(&expected, &actual)
-        .unwrap_or_else(|error| panic!("{error}; {root:?}"));
+    ares
 }
 
 fn saved_project(runner: &OrcaRunner, cwd: &Path, object: Option<u8>, part: Option<u8>) -> Vec<u8> {

@@ -52,7 +52,9 @@ The `SliceError::InvalidInput` detail is `invalid Orca option extruder`.
   filament ID list, before later caller overrides or profile materialization,
   as the bound. Do not change the raw model-settings document or replace
   effective selector validation with clamping. Leave unrelated validation,
-  including negative selectors, as-is.
+  including negative selectors, as-is. This loaded object also feeds plain
+  project G-code slicing and the browser build, so they see the same
+  default/range result before slicing.
 - In `project/export/saved.rs`, the full saved CLI sliced export projects
   the live object selector from the same loaded domain object used for
   slicing. Replace its use of the constant metadata record on this route
@@ -72,14 +74,20 @@ ordinary model and preset helpers. Use two loaded filament slots and one
 normal part; change only the saved object selector across inputs `1`, `2`,
 and `3` after making the same translation adjustment in each input. Do not
 use archived outputs or inputs from a local run. Run the same saved sliced
-export command with Native and Ares and compare the exact object and part
-`extruder` metadata from their output archives. Each case must produce an
-archive. Confirm Native's expected `1`, `2`, `1` results and the absence of
-a part selector so the fixture exercises the intended input.
+export command with Native and Ares. Compare `Metadata/model_settings.config`
+byte for byte, including the exact object and part `extruder` metadata.
+Each case must produce an archive. Confirm Native's expected `1`, `2`, `1`
+results and the absence of a part selector so the fixture exercises the
+intended input.
+
+Also slice the selector-`3` fixture to plain G-code with the same command
+on both CLIs, using the existing ordered-byte comparator. This checks the
+shared importer outside the archive exporter.
 
 On the test-only commit, the `1` control passes, `2` fails on object metadata,
-and `3` fails at Ares export. Verify in both Official and Seeded modes before
-implementation. On the implementation tip all three must pass in both
-modes, alongside the existing saved selector and mesh-stat cases. Use the
-unchanged existing archive comparisons in paired scoped base/tip runs;
-require no passing-to-failing cases and no selected skips.
+and `3` fails at Ares export and plain slicing. Verify in both Official and
+Seeded modes before implementation. On the implementation tip all four
+must pass in both modes, alongside the existing saved selector and mesh-stat
+cases. Paired scoped base/tip runs cover saved export, project load, and
+project G-code slicing suites without changing their comparators. Require
+no passing-to-failing cases and no selected skips.
