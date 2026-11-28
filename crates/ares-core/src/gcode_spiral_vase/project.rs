@@ -15,6 +15,7 @@ pub(crate) struct ProjectSpiralVaseConfig {
     pub(crate) finishing_flow_ratio: f64,
     pub(crate) resolution: f64,
     pub(crate) relative_e: bool,
+    pub(crate) belt_printer: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -30,6 +31,7 @@ pub(crate) struct ProjectSpiralVaseLayer {
 struct ReaderState {
     x: f64,
     y: f64,
+    z: f64,
     e: f64,
 }
 
@@ -51,6 +53,10 @@ impl ProjectSpiralVaseRunState {
         }
     }
 
+    pub(crate) fn is_belt_printer(&self) -> bool {
+        self.config.belt_printer
+    }
+
     /// Ports the serial vase filter boundary at `GCode.cpp:3693-3705`, before
     /// cooling, and `GCode/SpiralVase.cpp:66-216`'s full-layer transform.
     pub(crate) fn process_layer(&mut self, output: &mut Vec<u8>, layer: ProjectSpiralVaseLayer) {
@@ -66,7 +72,15 @@ impl ProjectSpiralVaseRunState {
 
         let transition_in = !self.vase_enabled && self.config.relative_e;
         self.vase_enabled = true;
-        let base_z = f64::from(layer.z as f32 - layer.height as f32);
+        let (base_z, layer_height) = if self.config.belt_printer {
+            belt_layer_z(&input, &self.reader, self.config.relative_e)
+                .expect("belt spiral layer starts with a non-extruding Z move")
+        } else {
+            (
+                f64::from(layer.z as f32 - layer.height as f32),
+                f64::from(layer.height as f32),
+            )
+        };
         let total_length = total_extrusion_length(&input, &self.reader, self.config.relative_e);
         let minimum_segment_length = SOURCE_EPSILON_MM.max(2.0 * self.config.resolution);
         let transition_out = layer.final_layer && self.config.relative_e;
@@ -127,7 +141,7 @@ impl ProjectSpiralVaseRunState {
                 );
                 push_line(&mut transition, &tapered);
             }
-            let target_z = f64::from(base_z as f32 + progress as f32 * layer.height as f32);
+            let target_z = f64::from(base_z as f32 + progress as f32 * layer_height as f32);
             normal = set_word(&normal, 'Z', format_z(target_z));
             if smooth {
                 normal = match smooth_line(
@@ -262,6 +276,9 @@ impl ReaderState {
         if let Some(y) = line.y {
             self.y = y;
         }
+        if let Some(z) = line.z {
+            self.z = z;
+        }
         if let Some(e) = line.e {
             self.e = if relative_e && line.command == Some(Command::G1) {
                 self.e + e
@@ -270,6 +287,28 @@ impl ReaderState {
             };
         }
     }
+}
+
+fn belt_layer_z(input: &str, initial: &ReaderState, relative_e: bool) -> Option<(f64, f64)> {
+    let mut reader = initial.clone();
+    // GCodeReader exposes float axis values and deltas (`GCodeReader.hpp:44–60,76–79`).
+    // Use that precision for the Z scan in `SpiralVase.cpp:99–110`.
+    let mut layer_z: Option<f32> = None;
+    let mut layer_height = 0.0_f32;
+    for line in input.lines() {
+        let parsed = ParsedLine::parse(line);
+        let movement = Movement::from(&reader, &parsed, relative_e);
+        if parsed.command == Some(Command::G1)
+            && !movement.extruding
+            && let Some(z) = parsed.z
+        {
+            let z = z as f32;
+            layer_height += z - reader.z as f32;
+            layer_z.get_or_insert(z);
+        }
+        reader.apply(&parsed, relative_e);
+    }
+    layer_z.map(|z| (f64::from(z - layer_height), f64::from(layer_height)))
 }
 
 fn total_extrusion_length(input: &str, initial: &ReaderState, relative_e: bool) -> f32 {

@@ -74,6 +74,27 @@ pub(super) fn prepare_traditional_timelapse(output: &mut Vec<u8>, state: &mut Em
     travel::retract_for_timelapse(output, state);
 }
 
+/// Native's first `travel_to_xyz` leg for a belt spiral layer
+/// (`GCode.cpp:10645–10651,10670–10679`, `GCodeWriter.cpp:1113–1140`) raises the existing
+/// writer XY endpoint to the new layer Z before layer comments and object
+/// entry are emitted. It also consumes the pending layer-change travel, so a
+/// following object entry only travels when its first point differs.
+pub(super) fn append_belt_spiral_layer_start(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    layer_z: f64,
+) {
+    path::xyz_with_comment(
+        output,
+        state,
+        crate::Point3d::new(state.x, state.y, layer_z),
+        state.travel_feedrate,
+        "",
+    );
+    state.layer_change_travel_pending = false;
+    state.current_feedrate = state.travel_feedrate;
+}
+
 /// The wrapping-detection per-layer retract (`GCode.cpp:5282/5303`,
 /// `retract(false, false, auto_lift_type, true)`): retract + wipe + eager
 /// lift. Like the timelapse retract, it still performs an allowed eager
@@ -125,7 +146,10 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     travel::plain_retract(output, state);
     if travel::effective_retraction_length(state) > 0.0 {
         state.extruder.retracted = true;
-        travel::defer_layer_change_lift(state);
+        // `GCode.cpp:10890–10894` passes the vase mode to `lazy_lift`.
+        if !state.spiral_vase || state.belt.is_none() {
+            travel::defer_layer_change_lift(state);
+        }
     }
     travel::reset_e(output, state, false);
 }

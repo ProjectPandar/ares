@@ -27,6 +27,7 @@ pub(super) struct Input<'a, 'b> {
     pub(super) traditional_timelapse: bool,
     pub(super) timelapse_context: timelapse::Context<'a>,
     pub(super) is_group_end: bool,
+    pub(super) last_layer: bool,
     pub(super) last_object_copy: &'a mut Option<(usize, usize)>,
     pub(super) entry_builder: &'a mut EntryBuilder<'b>,
     pub(super) chunk_slices: &'a [ExPolygon],
@@ -37,7 +38,6 @@ pub(super) struct Input<'a, 'b> {
     pub(super) spiral: &'a mut spiral_vase::SpiralVaseFilter,
     pub(super) layer_z: f64,
     pub(super) layer_height: f64,
-    pub(super) object_layer_counts: &'a [usize],
     pub(super) layer_output_start: usize,
 }
 
@@ -60,6 +60,7 @@ pub(super) fn emit(
         traditional_timelapse,
         timelapse_context,
         is_group_end,
+        last_layer,
         last_object_copy,
         entry_builder,
         chunk_slices,
@@ -70,7 +71,6 @@ pub(super) fn emit(
         spiral,
         layer_z,
         layer_height,
-        object_layer_counts,
         layer_output_start,
     } = input;
     if purging_finished {
@@ -292,8 +292,8 @@ pub(super) fn emit(
         timelapse_context,
         layer_z,
         layer_height,
-        object_layer_counts,
         is_group_end,
+        last_layer,
         layer_output_start,
     )?;
     Ok(())

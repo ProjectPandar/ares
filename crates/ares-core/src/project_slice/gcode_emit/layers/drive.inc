@@ -76,8 +76,8 @@
             group_end == merged.len(),
         );
         group_start = group_end;
-        // `GCode.cpp:5149,5248`: one status per layer to print; by object, each instance restarts at 1.
-        status_layer += 1;
+        let spiral_last_layer = group::spiral_last_layer(traversal, &entries, merged.len());
+        status_layer += 1; // One status per scheduled layer (`GCode.cpp:5149,5248`).
         slicer.set_status(80, format_args!("Generating G-code: layer {status_layer}"), 0);
         slicer.check_canceled()?;
         if tool_ordering.tools_for_layer(group_z).is_empty() {
@@ -368,6 +368,7 @@
                         is_group_end: pass == tool_buckets::Pass::Normal
                             && entry_position + 1 == entry_count
                             && Some(*tool) == last_tool,
+                        last_layer: spiral_last_layer,
                         last_object_copy: &mut last_object_copy,
                         entry_builder: &mut entry_builder,
                         chunk_slices: &chunk_slices,
@@ -378,7 +379,6 @@
                         spiral: &mut spiral,
                         layer_z,
                         layer_height,
-                        object_layer_counts: &object_layer_counts,
                         layer_output_start,
                     },
                 )?;

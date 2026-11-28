@@ -57,6 +57,7 @@ impl SpiralVaseFilter {
                     .runtime_gcode
                     .use_relative_e_distances
                     .0,
+                belt_printer: full.printer.remaining.belt_printer.0,
             }),
             enabled,
             bottom_shell_layers: usize::try_from(region.bottom_shell_layers.0)
@@ -100,16 +101,26 @@ impl SpiralVaseFilter {
             && !has_fill
     }
 
-    pub(super) fn append_layer_z(&self, output: &mut Vec<u8>, layer_index: usize, layer_z: f64) {
+    pub(super) fn append_layer_z(
+        &self,
+        output: &mut Vec<u8>,
+        layer_index: usize,
+        layer_z: f64,
+        state: &mut super::motion::EmitState,
+    ) {
         // `GCode.cpp` `change_layer` unconditionally travels to the new
         // print Z (the SpiralVase filter only rewrites it for body layers;
         // layer 0 and the bottom layers pass it through untouched).
-        let _ = layer_index;
-        if self.enabled {
+        if self.enabled && self.run.is_belt_printer() && layer_index >= self.bottom_shell_layers {
+            // On a belt, Native routes the first leg from the previous
+            // extruded endpoint at the new Z instead of emitting a Z-only
+            // move (`GCode.cpp:7488-7498`; `GCodeWriter.cpp:685-710`).
+            super::motion::append_belt_spiral_layer_start(output, state, layer_z);
+        } else if self.enabled {
             output.extend_from_slice(
                 format!(
-                    "G1 Z{} F{}\n",
-                    super::motion::format::z(layer_z),
+                    "G1 {} F{}\n",
+                    state.z_words(layer_z),
                     super::format_processor_float(self.travel_feedrate)
                 )
                 .as_bytes(),

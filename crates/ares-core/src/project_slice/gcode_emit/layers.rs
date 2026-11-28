@@ -140,7 +140,6 @@ pub(super) fn append(
         instances,
         label_inventory,
         labels,
-        object_layer_counts,
         belt_brim,
         mut skirt_schedule,
         tool_ordering,

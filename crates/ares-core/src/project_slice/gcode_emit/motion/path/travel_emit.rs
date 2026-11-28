@@ -22,7 +22,7 @@ pub(super) fn xy_with_comment(
 
 /// Writer-domain XYZ from `GCodeWriter.cpp::travel_to_xyz` (`Vec3d`), less the writer's XY
 /// offset (`:1114`), represented by the existing double-coordinate `Point3d`.
-pub(super) fn xyz_with_comment(
+pub(in crate::project_slice::gcode_emit::motion) fn xyz_with_comment(
     output: &mut Vec<u8>,
     state: &mut super::super::EmitState,
     crate::Point3d { x, y, z }: crate::Point3d,
@@ -30,7 +30,15 @@ pub(super) fn xyz_with_comment(
     comment: &str,
 ) {
     output.extend_from_slice(b"G1 ");
-    state.push_xy_words(output, (x, y), Some(z));
+    if state.spiral_vase && state.belt.is_some() && !state.spiral_vase_layer {
+        output.extend_from_slice(
+            state
+                .spiral_travel_words(crate::Point3d::new(x, y, z))
+                .as_bytes(),
+        );
+    } else {
+        state.push_xy_words(output, (x, y), Some(z));
+    }
     output.extend_from_slice(b" F");
     push_axis(output, feedrate);
     output.extend_from_slice(comment.as_bytes());

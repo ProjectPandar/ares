@@ -52,7 +52,25 @@ impl EmitState {
         String::from_utf8(buf).expect("XY words are ASCII")
     }
 
-    pub(super) fn z_words(&self, z: f64) -> String {
+    pub(super) fn spiral_travel_words(&self, point: Point3d) -> String {
+        let Some(belt) = &self.belt else {
+            return self.xy_words((point.x, point.y), Some(point.z));
+        };
+        let (x, y) = (point.x - self.xy_offset.0, point.y - self.xy_offset.1);
+        // `GCodeWriter::travel_to_xyz` emits the transformed destination
+        // (`GCodeWriter.cpp:1113–1122`), including machine Z under a belt.
+        let [x, y, z] = belt.apply(Point3d::new(x, y, point.z));
+        let mut buf = Vec::with_capacity(32);
+        buf.push(b'X');
+        push_axis(&mut buf, x);
+        buf.extend_from_slice(b" Y");
+        push_axis(&mut buf, y);
+        buf.extend_from_slice(b" Z");
+        push_axis(&mut buf, z);
+        String::from_utf8(buf).expect("spiral travel words are ASCII")
+    }
+
+    pub(in crate::project_slice::gcode_emit) fn z_words(&self, z: f64) -> String {
         if self.belt.is_some() {
             self.xy_words((self.x, self.y), Some(z))
         } else {

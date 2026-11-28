@@ -198,9 +198,10 @@ pub(super) fn append<'a>(
     // raises to layer+hop and descends at the target. Capture the
     // flag BEFORE the wipe flush consumes it; defer only here (the
     // c7ea935f lesson: no already-retracted mid-print deferrals).
-    // The deferred lift exists only when the change-layer retract ran —
-    // same `will_move_z` gate (`GCode.cpp:5693`).
-    let layer_retract_pending = state.options.retract_when_changing_layer
+    // Spiral vase lifts immediately (`GCodeWriter.cpp:917–928`); keep the
+    // deferred branch for ordinary belt layers as well as flat-bed layers.
+    let layer_retract_pending = (!state.spiral_vase || state.belt.is_none())
+        && state.options.retract_when_changing_layer
         && will_move_z
         && state.options.z_hop > 0.0
         && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
@@ -236,7 +237,7 @@ pub(super) fn append<'a>(
     // Spiral filter targets live in the writer (offset) Z domain
     // (`GCode.cpp:5692` emits the `print_z + z_offset` move, then
     // `SpiralVase.cpp` rewrites that move and derives its ramp).
-    spiral.append_layer_z(output, layer_index, layer_z + state.options.z_offset);
+    spiral.append_layer_z(output, layer_index, layer_z + state.options.z_offset, state);
     // `change_layer`'s explicit `travel_to_z` (`GCode.cpp:5702-5704`) and
     // the silent `m_pos.z() = z` both leave the writer at the new layer z —
     // but that z change happens AFTER the deferred-lift gate reads the

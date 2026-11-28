@@ -8,6 +8,7 @@ pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
 pub(super) use start_travel::{TowerTravelZ, tower_travel};
 mod travel_emit;
+pub(super) use travel_emit::xyz_with_comment;
 mod variable;
 
 pub(in crate::project_slice::gcode_emit) use avoid_crossing::Boundary;

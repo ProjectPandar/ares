@@ -53,6 +53,22 @@ pub(super) fn leading_print_z(
     }
 }
 
+// The by-layer `LayerResult` compares the physical object layer ID against
+// `layers_to_print.size() - 1` (`GCode.cpp:5196–5198,5292–5294,6638`).
+// Belt layer IDs can be offset from the index of the last printable chunk.
+pub(super) fn spiral_last_layer(
+    traversal: &PreparedPostClassicTraversal,
+    entries: &[LayerToPrint],
+    layer_count: usize,
+) -> bool {
+    entries.iter().any(|entry| {
+        entry.object_layer.is_some_and(|layer| {
+            traversal.objects[entry.object_index].physical_layers()[layer].id
+                == layer_count.saturating_sub(1)
+        })
+    })
+}
+
 pub(super) fn geometry(
     traversal: &PreparedPostClassicTraversal,
     entries: &[LayerToPrint],

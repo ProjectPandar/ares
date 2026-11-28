@@ -66,7 +66,13 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_type1(
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
     if state.spiral_vase {
-        lift::append_spiral_vase(output, state);
+        if state.belt.is_some() && !state.spiral_vase_layer && state.layer_index == 0 {
+            if state.positioned {
+                lift::append_spiral_vase(output, state);
+            }
+        } else {
+            lift::append_spiral_vase(output, state);
+        }
     } else {
         lift::schedule(state, false);
     }

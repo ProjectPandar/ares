@@ -113,6 +113,31 @@ pub(super) fn admit(
             ),
         });
     }
+    if print.spiral_mode.0 {
+        // Print::validate queries PrintObject::has_belt_brim before the vase checks.
+        if objects
+            .clone()
+            .any(|object| brim::enabled(settings, &object.object))
+        {
+            return Err(SliceError::Validate {
+                kind: PrintValidationKind::Generic,
+                message: "Brim is not compatible with spiral vase mode on a belt printer. Disable one of them."
+                    .to_owned(),
+                plate_index: project.first_plate_id(),
+                layer_height: f64::from(settings.process.object.layer_height.0 as f32),
+                wall_loops: settings.process.region.wall_loops.0,
+                sparse_infill_density: f64::from(
+                    settings.process.region.sparse_infill_density.0 as f32,
+                ),
+            });
+        }
+        if placements != 1
+            || slots != 1
+            || objects.clone().any(|object| object.object.enable_support.0)
+        {
+            return Err(unsupported("spiral_mode"));
+        }
+    }
     if placements > 1 {
         if objects
             .clone()
@@ -130,9 +155,6 @@ pub(super) fn admit(
         if print.skirt_loops.0 != 0 {
             return Err(unsupported("multi_placement_skirt"));
         }
-    }
-    if settings.process.print.spiral_mode.0 {
-        return Err(unsupported("spiral_mode"));
     }
     if objects
         .flat_map(|object| &object.all_regions)

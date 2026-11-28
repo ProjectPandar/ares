@@ -220,7 +220,9 @@ pub(super) fn emit_needs_travel(
     // (`NormalLift` `slop_move`), and both paths end with the separate
     // `_travel_to_z` re-statement from the unclear-position branch.
     // A detour first leg targets nominal Z, before any explicit terminal Z.
-    let leg_z = if route.len() > 1 && !type2_entry {
+    let leg_z = if state.belt.is_some() && state.spiral_vase {
+        slope_start_z.unwrap_or(target_z)
+    } else if route.len() > 1 && !type2_entry {
         state.layer_z
     } else {
         slope_start_z.unwrap_or(target_z)

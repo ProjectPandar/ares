@@ -32,8 +32,8 @@ pub(super) fn emit(
     timelapse_context: timelapse_core::Context<'_>,
     layer_z: f64,
     layer_height: f64,
-    object_layer_counts: &[usize],
     is_group_end: bool,
+    last_layer: bool,
     layer_output_start: usize,
 ) -> Result<(), SliceError> {
     let spiral_body_layer = spiral.is_body_layer(layer, layer_index, layer_z);
@@ -157,12 +157,11 @@ pub(super) fn emit(
                 entry_output_start
             },
             enabled: spiral_body_layer,
-            // `GCode.cpp:3805-3806`: `last_layer` is per object batch
-            // under the single-object (by-object) pipeline, and the
-            // by-layer batch degenerates to the same expression because
-            // spiral by-layer prints are admission-limited to one copy
-            // (`Print.cpp:1334-1341`).
-            final_layer: layer_index + 1 == object_layer_counts[object_index],
+            // `GCode.cpp:5196-5198` (and `:5292-5294`) compares the
+            // LayerResult object layer id from `process_layer`
+            // (`GCode.cpp:6638`) with `layers_to_print.size() - 1`.
+            // It is intentionally not the final merged print chunk.
+            final_layer: last_layer,
             z: layer_z + state.options.z_offset,
             height: layer_height,
         },
