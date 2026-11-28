@@ -12,6 +12,8 @@ use super::export_3mf_model_settings::object_record_permutation;
 
 #[path = "export_3mf/comparison_tests.rs"]
 mod comparison_tests;
+#[path = "export_3mf/legacy_array_dispatch.rs"]
+mod legacy_array_dispatch;
 #[path = "export_3mf/legacy_feature_filament.rs"]
 mod legacy_feature_filament;
 
