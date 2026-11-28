@@ -1,6 +1,9 @@
 //! Public CLI parity for the BBL saved-project version admission.
 #![cfg(target_os = "linux")]
 
+#[path = "cli_allow_newer_file/positional.rs"]
+mod positional;
+
 use std::{
     fs,
     io::Cursor,
