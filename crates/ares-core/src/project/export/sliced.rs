@@ -5,8 +5,8 @@
 use super::super::{ArchiveLimits, LoadedProfileProject, ProjectArchive};
 use super::{SavedModel, Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
 use crate::{
-    ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata, PresetCatalogHandle,
-    ProcessedGCode, Project, SliceError, SlicerContext,
+    CliUpwardMachine, ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata,
+    PresetCatalogHandle, ProcessedGCode, Project, SliceError, SlicerContext, UpwardMachineSource,
 };
 
 pub fn export_sliced_3mf(
@@ -98,65 +98,89 @@ pub async fn export_saved_sliced_3mf(
     min_save: bool,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    export_saved_sliced(input, filename, min_save, false, None, context)
+    CliSavedSlicedProject::open(input, false)?.export_inner(filename, min_save, None, None, context)
 }
 
-/// Direct CLI sliced export checks the saved producer version and can refresh retained system presets.
-pub fn export_saved_sliced_3mf_for_cli(
-    input: &[u8],
-    filename: &str,
-    min_save: bool,
-    allow_newer_file: bool,
-    system_catalog: Option<&PresetCatalogHandle>,
-    context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
-    export_saved_sliced(
-        input,
-        filename,
-        min_save,
-        !allow_newer_file,
-        system_catalog,
-        context,
-    )
+/// An admitted saved archive. The CLI resolves the original machine resources before slicing
+/// without reopening the archive or making the core resolve filesystem paths.
+pub struct CliSavedSlicedProject<'a> {
+    input: &'a [u8],
+    archive: ProjectArchive<'a>,
+    loaded: LoadedProfileProject,
 }
 
-fn export_saved_sliced(
-    input: &[u8],
-    filename: &str,
-    min_save: bool,
-    check_version: bool,
-    system_catalog: Option<&PresetCatalogHandle>,
-    context: SlicerContext<'_>,
-) -> Result<Vec<u8>, SliceError> {
-    if input.is_empty() {
-        return Err(SliceError::EmptyInput);
+impl<'a> CliSavedSlicedProject<'a> {
+    pub fn admit(input: &'a [u8], allow_newer_file: bool) -> Result<Self, SliceError> {
+        Self::open(input, !allow_newer_file)
     }
-    let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
-    let loaded = LoadedProfileProject::open_from_archive(&mut archive, check_version)?;
-    let first_id = saved_print_object_id(loaded.project())
-        .map_err(|detail| SliceError::InvalidInput(detail.into()))?;
-    let saved_model = geometry::from_saved_project(archive, loaded.project());
-    let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
-        (input, Box::new(loaded)),
-        GenerationMetadata::default(),
-        DirectProjectSliceRequest {
-            plate: Some(1),
-            overrides: &ConfigOverrides::default(),
-            system_catalog,
-        },
-        context,
-    )?;
-    if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
-        return Err(invalid(
-            "export requires a source filename without a directory",
-        ));
+
+    fn open(input: &'a [u8], check_version: bool) -> Result<Self, SliceError> {
+        if input.is_empty() {
+            return Err(SliceError::EmptyInput);
+        }
+        let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+        let loaded = LoadedProfileProject::open_from_archive(&mut archive, check_version)?;
+        Ok(Self {
+            input,
+            archive,
+            loaded,
+        })
     }
-    if !filename.to_ascii_lowercase().ends_with(".3mf") {
-        return Err(deferred(
-            "sliced export requires a saved 3MF or a captured STL model",
-        ));
+
+    pub fn take_upward_source(&mut self) -> Result<Option<UpwardMachineSource>, SliceError> {
+        self.loaded.take_upward_source()
     }
-    write_sliced_3mf_package(saved_model?, processed, first_id, min_save)
+
+    pub fn export(
+        self,
+        filename: &str,
+        min_save: bool,
+        system_catalog: Option<&PresetCatalogHandle>,
+        upward: CliUpwardMachine<'_>,
+        context: SlicerContext<'_>,
+    ) -> Result<Vec<u8>, SliceError> {
+        self.export_inner(filename, min_save, system_catalog, Some(upward), context)
+    }
+
+    fn export_inner(
+        self,
+        filename: &str,
+        min_save: bool,
+        system_catalog: Option<&PresetCatalogHandle>,
+        upward: Option<CliUpwardMachine<'_>>,
+        context: SlicerContext<'_>,
+    ) -> Result<Vec<u8>, SliceError> {
+        let Self {
+            input,
+            archive,
+            loaded,
+        } = self;
+        let first_id = saved_print_object_id(loaded.project())
+            .map_err(|detail| SliceError::InvalidInput(detail.into()))?;
+        let saved_model = geometry::from_saved_project(archive, loaded.project());
+        let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
+            (input, Box::new(loaded)),
+            GenerationMetadata::default(),
+            DirectProjectSliceRequest {
+                plate: Some(1),
+                overrides: &ConfigOverrides::default(),
+                system_catalog,
+            },
+            upward,
+            context,
+        )?;
+        if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
+            return Err(invalid(
+                "export requires a source filename without a directory",
+            ));
+        }
+        if !filename.to_ascii_lowercase().ends_with(".3mf") {
+            return Err(deferred(
+                "sliced export requires a saved 3MF or a captured STL model",
+            ));
+        }
+        write_sliced_3mf_package(saved_model?, processed, first_id, min_save)
+    }
 }
 
 fn saved_print_object_id(project: &Project) -> Result<u32, &'static str> {

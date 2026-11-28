@@ -269,6 +269,7 @@ pub async fn slice_project_plate_with_archive(
             overrides,
             system_catalog: None,
         },
+        None,
         context,
     )
 }
@@ -277,17 +278,24 @@ pub(crate) fn slice_loaded_project_plate_with_archive(
     (input, loaded): (&[u8], Box<crate::project::LoadedProfileProject>),
     metadata: GenerationMetadata,
     mut request: DirectProjectSliceRequest<'_>,
+    upward: Option<CliUpwardMachine<'_>>,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     request.system_catalog = request
         .system_catalog
-        .filter(|_| loaded.project().documents().bbl_family_3mf);
+        .filter(|_| loaded.is_bbl_family_3mf());
     let input = if request.system_catalog.is_some() {
         super::ProjectInput::SavedCliBytes(input)
     } else {
         super::ProjectInput::Bytes(input)
     };
-    slice_project_plate_with_archive_loaded((input, Some(loaded)), metadata, request, context)
+    slice_project_plate_with_archive_loaded(
+        (input, Some(loaded)),
+        metadata,
+        request,
+        upward,
+        context,
+    )
 }
 
 fn slice_project_plate_with_archive_loaded(
@@ -297,6 +305,7 @@ fn slice_project_plate_with_archive_loaded(
     ),
     metadata: GenerationMetadata,
     request: DirectProjectSliceRequest<'_>,
+    upward: Option<CliUpwardMachine<'_>>,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
@@ -315,7 +324,7 @@ fn slice_project_plate_with_archive_loaded(
             skip_modified_gcodes: false,
             allow_mix_temp: false,
             orient: false,
-            upward: None,
+            upward,
             sliced_plate: None,
             max_triangle_count: 0,
             custom_gcodes: None,

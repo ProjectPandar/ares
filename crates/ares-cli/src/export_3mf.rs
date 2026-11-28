@@ -86,6 +86,7 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         settings: &settings,
         filaments: &filaments,
     };
+    let mut upward_report = Vec::new();
     let archive = if stl {
         export_stl(
             models,
@@ -96,20 +97,34 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
     } else {
         let (input, filename) = &models[0];
         if sliced {
-            let resources = crate::installed_resources::resolve(None)?;
-            let catalog = resources
-                .join("profiles")
-                .try_exists()?
-                .then(|| crate::project_presets::load_resources_catalog(&resources))
-                .transpose()?;
-            ares_core::export_saved_sliced_3mf_for_cli(
-                input,
-                filename,
-                args.min_save,
-                args.allow_newer_file,
-                catalog.as_ref(),
-                SlicerContext::new(0),
-            )
+            let admitted = ares_core::CliSavedSlicedProject::admit(input, args.allow_newer_file)
+                .and_then(|mut project| Ok((project.take_upward_source()?, project)));
+            match admitted {
+                Ok((source, project)) => {
+                    let resources = crate::installed_resources::resolve(None)?;
+                    let original =
+                        crate::compatible_machine::read_machine_full(source.as_ref(), &resources)?;
+                    let catalog = crate::project_presets::retained_printer_catalog(
+                        &resources,
+                        source.as_ref(),
+                        false,
+                    )?;
+                    project.export(
+                        filename,
+                        args.min_save,
+                        catalog.as_ref(),
+                        ares_core::CliUpwardMachine {
+                            source,
+                            input: ares_core::UpwardMachineInput::FetchOriginal(
+                                original.as_deref(),
+                            ),
+                            report: &mut upward_report,
+                        },
+                        SlicerContext::new(0),
+                    )
+                }
+                Err(error) => Err(error),
+            }
         } else {
             ares_core::export_3mf(input, filename, presets)
         }
@@ -125,7 +140,9 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
             )
         };
         match err {
-            SliceError::InvalidValuesInProject(_) if sliced && !stl => slice_failure(err),
+            SliceError::InvalidValuesInProject(_) if sliced && !stl => {
+                slice_failure(err).with_upward_report(upward_report)
+            }
             SliceError::ProcessNotCompatible | SliceError::FileVersionNotSupported => {
                 slice_failure(err)
             }

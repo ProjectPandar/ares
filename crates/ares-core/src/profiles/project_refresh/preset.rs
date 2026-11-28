@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use super::super::{ProfileKind, catalog::Catalog};
+use super::super::{ProfileKind, catalog::Catalog, preset_normalization};
 use super::{PresetLookup, filament, keys};
 use crate::{
     SliceError,
@@ -198,6 +198,7 @@ pub(super) fn system_config(
     let membership = keys::names(kind).collect::<BTreeSet<_>>();
     let mut raw = ProjectSettingsRaw::default();
     raw.extend(super::default_preset_fields(kind)?);
+    let vendor = !catalog.is_default(position);
     for layer in catalog.resolved_layers(position)? {
         let mut fragment = ProjectSettingsRaw::default();
         fragment.extend(
@@ -210,16 +211,28 @@ pub(super) fn system_config(
         if kind == ProfileKind::Machine {
             normalize_authored_thumbnails(&mut fragment)?;
         }
-        for (key, value) in fragment.entries() {
-            if membership.contains(key.as_str()) {
-                raw.insert(key.clone(), value.clone());
-            }
+        if vendor {
+            fragment
+                .normalize_preset_string_vectors()
+                .map_err(SliceError::InvalidInput)?;
+            preset_normalization::replace_nil_from_defaults(&mut fragment, &raw)?;
+        }
+        raw.extend(
+            fragment
+                .into_entries()
+                .into_iter()
+                .filter(|(key, _)| membership.contains(key.as_str())),
+        );
+        // PresetBundle.cpp:7839–7848 completes each vendor config before it can
+        // become the parent of another preset or be adopted by the CLI merge.
+        if vendor {
+            preset_normalization::extend_default_config_length(&mut raw)?;
         }
     }
     raw.normalize_wire_vector_shapes()
         .map_err(SliceError::InvalidInput)?;
     if kind == ProfileKind::Machine {
-        super::super::preset_normalization::normalize_machine(&mut raw)?;
+        preset_normalization::normalize_machine(&mut raw)?;
     }
     Ok(Some(raw))
 }

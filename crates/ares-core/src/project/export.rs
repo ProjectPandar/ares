@@ -12,7 +12,7 @@ mod zip_records;
 pub use scene::export_project_3mf;
 pub(crate) use scene::write as write_plater_project;
 pub use sliced::{
-    export_saved_sliced_3mf, export_saved_sliced_3mf_for_cli, export_sliced_3mf, print_object_id,
+    CliSavedSlicedProject, export_saved_sliced_3mf, export_sliced_3mf, print_object_id,
 };
 pub use stl::export_imported_stl_3mf;
 
