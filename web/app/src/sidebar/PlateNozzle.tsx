@@ -3,6 +3,7 @@ import { selectBedType, selectDiameter } from "../state/printer";
 import { accordBedType, bedTypeOptions, nozzleOptions, showsBedTypes } from "../state/printerPanel";
 import { useApp } from "../state/store";
 import { firstString } from "./options";
+import { PrinterOptionMenu } from "./PrinterOptionMenu";
 
 /**
  * The plate type and machine variant selectors of the plater printer panel
@@ -23,36 +24,21 @@ export function PlateNozzle({ settings }: { settings: ProjectSettings | null }) 
   return (
     <>
       {showsBedTypes(panel) && (
-        <label className="kv-row">
-          <span>Plate type</span>
-          <select
-            className="option-select printer-select"
-            aria-label="Plate type"
-            value={accordBedType(options, bedType ?? "")}
-            onChange={(event) => selectBedType(event.target.value)}
-          >
-            {options.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <PrinterOptionMenu
+          label="Plate type"
+          value={accordBedType(options, bedType ?? "")}
+          options={options}
+          onSelect={selectBedType}
+        />
       )}
       {(panel.nozzleDiameters.length < 2 || multiExtruderVariant) && (
-        <label className="kv-row">
-          <span>{multiExtruderVariant ? "Variant" : "Nozzle"}</span>
-          <select
-            className="option-select printer-select"
-            aria-label={multiExtruderVariant ? "Variant" : "Nozzle diameter"}
-            value={nozzle.selected}
-            onChange={(event) => void selectDiameter(panel, event.target.value)}
-          >
-            {nozzle.options.map((diameter) => (
-              <option key={diameter} value={diameter}>{`${diameter} mm`}</option>
-            ))}
-          </select>
-        </label>
+        <PrinterOptionMenu
+          label={multiExtruderVariant ? "Variant" : "Nozzle"}
+          name={multiExtruderVariant ? "Variant" : "Nozzle diameter"}
+          value={nozzle.selected}
+          options={nozzle.options.map((value) => ({ value, label: `${value} mm` }))}
+          onSelect={(diameter) => void selectDiameter(panel, diameter)}
+        />
       )}
     </>
   );

@@ -9,6 +9,7 @@ import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { platerExport } from "./platerExport";
 import { nativeSelection, presetSelectProbe } from "./presetSelectOracle";
+import { choosePrinterOption, openPrinterOptions } from "./printerOptions";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
@@ -63,12 +64,6 @@ function plateOracle(vendor: string, printer: string) {
         ? 1
         : 3;
   return { labels, selected: BED_TYPES[key - 1][1] };
-}
-
-async function selectedLabel(page: Page, name: string) {
-  return page
-    .getByRole("combobox", { name, exact: true })
-    .evaluate((select: HTMLSelectElement) => select.selectedOptions[0].textContent);
 }
 
 async function install(page: Page, vendor: string) {
@@ -160,9 +155,14 @@ test("plate type and nozzle offer the selected printer's options and reach the s
   await chooseModel(page, "Bambu Lab A1 mini");
   const a1mini = (await combo(page, "Printer preset").getAttribute("title"))!;
   const plate = plateOracle("BBL", a1mini);
-  const plateCombo = page.getByRole("combobox", { name: "Plate type", exact: true });
-  expect(await plateCombo.locator("option").allTextContents()).toEqual(plate.labels);
-  expect(await selectedLabel(page, "Plate type")).toBe(plate.selected);
+  const plateCombo = page.getByRole("button", { name: "Plate type", exact: true });
+  await expect(plateCombo).toHaveText(plate.selected);
+  await plateCombo.press("ArrowDown");
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitemradio")).toHaveText(plate.labels);
+  await expect(menu.getByRole("menuitemradio", { checked: true })).toHaveText(plate.selected);
+  await page.keyboard.press("Escape");
+  await expect(plateCombo).toBeFocused();
   const { machines, field } = vendorPrinters("BBL");
   const variants = [
     ...new Set(
@@ -171,23 +171,24 @@ test("plate type and nozzle offer the selected printer's options and reach the s
         .map((name) => field(name, "printer_variant")!),
     ),
   ].sort();
-  const nozzleCombo = page.getByRole("combobox", { name: "Nozzle diameter", exact: true });
-  expect(await nozzleCombo.locator("option").allTextContents()).toEqual(variants.map((variant) => `${variant} mm`));
-  expect(await selectedLabel(page, "Nozzle diameter")).toBe(`${field(a1mini, "printer_variant")} mm`);
+  const nozzleCombo = page.getByRole("button", { name: "Nozzle diameter", exact: true });
+  await expect(nozzleCombo).toHaveText(`${field(a1mini, "printer_variant")} mm`);
+  await expect(await openPrinterOptions(nozzleCombo)).toHaveText(variants.map((variant) => `${variant} mm`));
+  await page.keyboard.press("Escape");
   await page.screenshot({ path: `${artifacts}a1-mini.png` });
 
   // Another diameter selects the model's printer with that variant (get_similar_printer_preset).
-  await nozzleCombo.selectOption("0.6");
+  await choosePrinterOption(nozzleCombo, "0.6 mm");
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab A1 mini 0.6 nozzle");
-  await expect.poll(() => selectedLabel(page, "Nozzle diameter")).toBe("0.6 mm");
+  await expect(nozzleCombo).toHaveText("0.6 mm");
   // The chosen plate is stored for the printer and comes back after a reload.
-  await plateCombo.selectOption({ label: "Textured PEI Plate" });
+  await choosePrinterOption(plateCombo, BED_TYPE);
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "Bambu Lab A1 mini 0.6 nozzle", {
     timeout: 60_000,
   });
-  await expect.poll(() => selectedLabel(page, "Plate type")).toBe("Textured PEI Plate");
+  await expect(plateCombo).toHaveText("Textured PEI Plate");
   await page.screenshot({ path: `${artifacts}a1-mini-0.6.png` });
 
   // A printer without a BBL vendor or support_multi_bed_types has no plate combo (Plater.cpp:641-646).
@@ -209,10 +210,8 @@ test("plate type and nozzle offer the selected printer's options and reach the s
     .getByRole("group", { name: "Project presets" })
     .getByRole("option", { name: project.printer_settings_id, exact: true })
     .click();
-  expect(await selectedLabel(page, "Plate type")).toBe(
-    BED_TYPES.find(([value]) => value === project.curr_bed_type)![1],
-  );
-  await plateCombo.selectOption(BED_TYPE);
+  await expect(plateCombo).toHaveText(BED_TYPES.find(([value]) => value === project.curr_bed_type)![1]);
+  await choosePrinterOption(plateCombo, BED_TYPE);
   const web = await sliceAndExport(page, "web.gcode");
   expect(web).toContain(`; curr_bed_type = ${BED_TYPE}`);
   await page.screenshot({ path: `${artifacts}project.png` });

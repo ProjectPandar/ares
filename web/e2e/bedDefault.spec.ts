@@ -5,6 +5,7 @@ import { ORCA_SLICER_COMMIT } from "@ares-slicer/profiles";
 import { test } from "./failureDiagnostics";
 import { bedCommands, firstBedCommands, nativeBedReference } from "./bedDefaultOracle";
 import { oraclePath } from "./oracleEnv";
+import { choosePrinterOption, openPrinterOptions } from "./printerOptions";
 
 const repository = fileURLToPath(new URL("../../", import.meta.url));
 const model = `${repository}tests/parity/adaptive-octree-spacing/baseline.3mf`;
@@ -38,12 +39,12 @@ test("Qidi X-Plus 5 initializes Textured PEI and exports Native first-layer bed 
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await combo("Printer preset").click();
   await page.getByRole("option", { name: "Qidi X-Plus 5", exact: true }).click();
-  await page.getByRole("combobox", { name: "Nozzle diameter", exact: true }).selectOption("0.4");
+  await choosePrinterOption(page.getByRole("button", { name: "Nozzle diameter", exact: true }), "0.4 mm");
   await expect(combo("Printer preset")).toHaveAttribute("title", "Qidi X-Plus 5 0.4 nozzle");
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
-  await expect(plate).toBeVisible();
-  const bed = await plate.inputValue();
+  const plate = page.getByRole("button", { name: "Plate type", exact: true });
+  await expect(plate).toHaveText("Textured PEI Plate");
+  const bed = await plate.innerText();
   writeFileSync(
     `${artifacts}initial-selection.json`,
     JSON.stringify(
@@ -53,7 +54,6 @@ test("Qidi X-Plus 5 initializes Textured PEI and exports Native first-layer bed 
     ),
   );
   await page.screenshot({ path: `${artifacts}implicit-selection.png` });
-  expect(bed).toBe("Textured PEI Plate");
   await combo("Process preset").click();
   await page.getByRole("option", { name: "0.20mm Standard @X-Plus 5", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
@@ -176,7 +176,7 @@ test("a hidden plate combo still initializes a concrete printer bed", async ({ p
   await page.getByRole("button", { name: "Printer preset", exact: true }).click();
   await page.getByRole("option", { name: "LH Stinger", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Plate type", exact: true })).toHaveCount(0);
   const state = () =>
     page.evaluate(() => {
       const config = JSON.parse(localStorage.getItem("ares.config")!);
@@ -217,25 +217,18 @@ test("supported remembered beds win and unsupported remembered beds use the firs
   await printer.click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
-  await plate.selectOption("High Temp Plate");
+  const plate = page.getByRole("button", { name: "Plate type", exact: true });
+  await choosePrinterOption(plate, "Smooth High Temp Plate");
   await page.reload();
-  await expect(plate).toHaveValue("High Temp Plate", { timeout: 60_000 });
-  const firstListed = await plate.locator("option").first().getAttribute("value");
+  await expect(plate).toHaveText("Smooth High Temp Plate", { timeout: 60_000 });
+  const options = await (await openPrinterOptions(plate)).allTextContents();
   await page.evaluate(() => {
     const config = JSON.parse(localStorage.getItem("ares.config")!);
     config.printers[config.printer].bedType = "Unsupported Plate";
     localStorage.setItem("ares.config", JSON.stringify(config));
   });
   await page.reload();
-  await expect(plate).toHaveValue(firstListed!, { timeout: 60_000 });
+  await expect(plate).toHaveText(options[0], { timeout: 60_000 });
   mkdirSync(artifacts, { recursive: true });
-  writeFileSync(
-    `${artifacts}remembered.json`,
-    JSON.stringify(
-      { selected: await plate.inputValue(), options: await plate.locator("option").allTextContents() },
-      null,
-      2,
-    ),
-  );
+  writeFileSync(`${artifacts}remembered.json`, JSON.stringify({ selected: await plate.innerText(), options }, null, 2));
 });
