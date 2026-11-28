@@ -4,7 +4,7 @@ use miniz_oxide::deflate::core::{
 };
 
 /// `miniz.c::tdefl_write_image_to_png_file_in_memory_ex`: level 6, RGBA, flip.
-pub(super) fn encode(image: &ThumbnailData) -> Vec<u8> {
+pub(crate) fn encode(image: &ThumbnailData) -> Vec<u8> {
     let mut output = Vec::with_capacity(57 + image.pixels().len() + image.height() as usize);
     output.extend_from_slice(b"\x89PNG\r\n\x1a\n");
     output.extend_from_slice(&13_u32.to_be_bytes());

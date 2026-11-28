@@ -2,6 +2,7 @@
 mod geometry;
 mod json_float;
 mod project_settings;
+mod saved_assets;
 mod saved_presets;
 mod scene;
 mod sliced;
@@ -24,6 +25,7 @@ use zip::{ZipWriter, write::SimpleFileOptions};
 use crate::{LoadSettingsRequest, SliceError};
 pub(crate) use geometry::{SavedModel, placed_stl_model};
 pub(crate) use project_settings::direct_stl_settings;
+use saved_assets::{PREVIEW_REFERENCES, PlatePreviews, SMALL_PREVIEW};
 
 const MODEL: &str = "3D/3dmodel.model";
 const SETTINGS: &str = "Metadata/project_settings.config";
@@ -42,6 +44,7 @@ pub(crate) fn write_project_settings_raw(
 struct Sliced {
     members: Vec<SlicedMembers>,
     skip_model: bool,
+    auxiliary: Vec<(String, Vec<u8>)>,
 }
 
 struct SlicedMembers {
@@ -50,6 +53,7 @@ struct SlicedMembers {
     plate_json: Vec<u8>,
     gcode: Vec<u8>,
     slice_info: Vec<u8>,
+    previews: Option<PlatePreviews>,
 }
 
 struct ObjectEntry<'a> {
@@ -174,6 +178,7 @@ pub fn export_arranged_sliced_3mf(
             plate_json: xml::plate_json(archive, first_print_object_id + source.id - 1),
             slice_info: xml::slice_info(archive, &source.processed, *plate).into_bytes(),
             gcode: source.processed.gcode.clone(),
+            previews: None,
         })
         .collect();
     write_package(
@@ -182,6 +187,7 @@ pub fn export_arranged_sliced_3mf(
         Some(Sliced {
             members: sliced,
             skip_model: false,
+            auxiliary: Vec::new(),
         }),
         (model.orca_version.as_deref(), None),
         None,
@@ -212,7 +218,9 @@ fn write_package(
         })
         .collect::<Vec<_>>();
     let skip_model = sliced.as_ref().is_some_and(|sliced| sliced.skip_model);
-    let sliced = sliced.map(|sliced| sliced.members);
+    let (mut sliced, auxiliary) = sliced.map_or((None, Vec::new()), |sliced| {
+        (Some(sliced.members), sliced.auxiliary)
+    });
     let sliced_output = sliced.is_some();
     let model_settings = xml::model_settings(
         &objects,
@@ -222,17 +230,35 @@ fn write_package(
         skip_model,
     )
     .into_bytes();
+    let has_previews = sliced
+        .as_ref()
+        .is_some_and(|members| members.iter().any(|member| member.previews.is_some()));
     let mut entries = vec![(
         "[Content_Types].xml".to_owned(),
         xml::content_types().into_bytes(),
     )];
-    if let Some(sliced) = &sliced {
-        entries.extend(sliced.iter().map(|member| {
-            (
+    if let Some(sliced) = &mut sliced {
+        for member in sliced {
+            if let Some(PlatePreviews {
+                primary,
+                small,
+                secondary,
+            }) = member.previews.take()
+            {
+                entries.push((PREVIEW_REFERENCES[0].1.to_owned(), primary));
+                entries.push((SMALL_PREVIEW.to_owned(), small));
+                entries.extend(
+                    PREVIEW_REFERENCES[1..]
+                        .iter()
+                        .zip(secondary)
+                        .map(|((_, path), bytes)| (path.to_string(), bytes)),
+                );
+            }
+            entries.push((
                 format!("Metadata/plate_{}.json", member.plate),
                 member.plate_json.clone(),
-            )
-        }));
+            ));
+        }
     }
     // bbs_3mf.cpp:7404,7437,7465: SkipModel writes no object resources, build items, object
     // files or their relationships.
@@ -295,11 +321,12 @@ fn write_package(
             "Metadata/filament_sequence.json".to_owned(),
             filament_sequence,
         ),
-        (
-            "_rels/.rels".to_owned(),
-            xml::relationships([MODEL]).into_bytes(),
-        ),
     ]);
+    entries.extend(auxiliary);
+    entries.push((
+        "_rels/.rels".to_owned(),
+        xml::root_relationships(has_previews).into_bytes(),
+    ));
     if sliced_output {
         let stream = write_members(ZipWriter::new_stream(Vec::new()), entries)?;
         let mut bytes = stream.into_inner();
@@ -316,12 +343,17 @@ fn write_members<W: Write + Seek>(
 ) -> Result<W, SliceError> {
     // Native miniz supplies local wall time when absent; the ZIP epoch keeps
     // the envelope repeatable without changing a member payload.
-    let options = SimpleFileOptions::default()
-        .last_modified_time(zip::DateTime::default())
-        .compression_method(zip::CompressionMethod::Deflated);
+    let options = SimpleFileOptions::default().last_modified_time(zip::DateTime::default());
     for (name, bytes) in entries {
+        // bbs_3mf.cpp:6912–6919, 6959–7024: PNGs are stored, including
+        // generated plate previews. File-backed WebP pictures use Deflate.
+        let method = if name.ends_with(".png") {
+            zip::CompressionMethod::Stored
+        } else {
+            zip::CompressionMethod::Deflated
+        };
         writer
-            .start_file(name, options)
+            .start_file(name, options.compression_method(method))
             .map_err(|err| invalid(err.to_string()))?;
         writer
             .write_all(&bytes)

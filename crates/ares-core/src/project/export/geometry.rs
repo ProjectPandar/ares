@@ -170,7 +170,9 @@ pub(crate) fn placed_stl_model(project: &crate::Project) -> Result<SavedModel, S
 
 #[path = "saved.rs"]
 mod saved;
-pub(super) use saved::{from_saved_project, load_saved, model_part};
+pub(super) use saved::{
+    from_saved_project, from_saved_project_with_extras, load_saved, model_part,
+};
 
 pub(super) fn load(input: &[u8], filename: &str) -> Result<Mesh, SliceError> {
     if filename.to_ascii_lowercase().ends_with(".stl") {

@@ -86,6 +86,17 @@ impl<'a> ProjectArchive<'a> {
     pub(crate) fn entry_index(&self, path: &PackagePath) -> usize {
         self.entries[path].0
     }
+
+    pub(crate) fn entry_name(&mut self, path: &PackagePath) -> Result<String, SliceError> {
+        let index = self.entry_index(path);
+        let file = self
+            .archive
+            .by_index_raw(index)
+            .map_err(|error| invalid_entry(path, &error.to_string()))?;
+        std::str::from_utf8(file.name_raw())
+            .map(str::to_owned)
+            .map_err(|_| invalid_entry(path, "does not have a UTF-8 name"))
+    }
 }
 
 fn invalid_archive(reason: impl Into<String>) -> SliceError {

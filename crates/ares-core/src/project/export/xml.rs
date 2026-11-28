@@ -1,13 +1,16 @@
 use std::fmt::Write;
 
+use super::saved_assets::PREVIEW_REFERENCES;
 use super::{BAMBU_VERSION, ObjectEntry, SlicedMembers, scene::SceneLayout};
 use crate::ORCA_SLICER_COMPATIBILITY_VERSION as ORCA_VERSION;
 use crate::project::model_settings::Metadata;
 use crate::{ProcessedGCode, SlicedArchive, Transform3d};
 
 mod plate;
+mod relationships;
 
 pub(super) use plate::plate_json;
+pub(super) use relationships::{gcode_relationship, relationships, root_relationships};
 
 const DECL: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 const MODEL_OPEN: &str = concat!(
@@ -54,31 +57,6 @@ pub(super) fn content_types() -> String {
         .unwrap();
     }
     out.push_str("</Types>");
-    out
-}
-
-pub(super) fn relationships<'a>(paths: impl IntoIterator<Item = &'a str>) -> String {
-    relationship(paths, super::super::relationships::MODEL_RELATIONSHIP_TYPE)
-}
-
-pub(super) fn gcode_relationship<'a>(paths: impl IntoIterator<Item = &'a str>) -> String {
-    relationship(paths, "http://schemas.bambulab.com/package/2021/gcode")
-}
-
-fn relationship<'a>(paths: impl IntoIterator<Item = &'a str>, media_type: &str) -> String {
-    let mut out = format!(
-        "{DECL}<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">\n",
-    );
-    for (index, path) in paths.into_iter().enumerate() {
-        let path = quick_xml::escape::escape(path);
-        let id = index + 1;
-        writeln!(
-            out,
-            " <Relationship Target=\"/{path}\" Id=\"rel-{id}\" Type=\"{media_type}\"/>"
-        )
-        .unwrap();
-    }
-    out.push_str("</Relationships>");
     out
 }
 
@@ -248,6 +226,11 @@ fn write_package_plates(
             .map(|_| format!("Metadata/plate_{plate_id}.gcode"))
             .unwrap_or_default();
         writeln!(out, "  <plate>\n    <metadata key=\"plater_id\" value=\"{plate_id}\"/>\n    <metadata key=\"plater_name\" value=\"\"/>\n    <metadata key=\"locked\" value=\"false\"/>\n    <metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>\n    <metadata key=\"gcode_file\" value=\"{gcode_file}\"/>").unwrap();
+        if plate.is_some_and(|plate| plate.previews.is_some()) {
+            for (key, path) in PREVIEW_REFERENCES {
+                metadata(out, "    ", key, path);
+            }
+        }
         let saved_object = saved_instance_id.map(|id| (0, id));
         let object_ids = plate.map_or(saved_object.as_slice(), |plate| plate.object_ids.as_slice());
         for &(model_index, identify_id) in if skip_model { &[][..] } else { object_ids } {

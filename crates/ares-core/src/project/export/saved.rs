@@ -2,6 +2,7 @@ use super::super::super::{
     ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_settings::PartSettings,
     model_xml::ModelDocument,
 };
+use super::super::saved_assets::{self, SavedArchiveExtras};
 use super::{Instance, MODEL, cli_object_metadata, deferred, invalid};
 use super::{Mesh, Object, Part, SavedModel};
 use crate::SliceError;
@@ -43,31 +44,51 @@ pub(crate) fn load_saved(input: &[u8]) -> Result<SavedModel, SliceError> {
 }
 
 pub(crate) fn from_saved_project(
-    mut archive: ProjectArchive<'_>,
+    archive: ProjectArchive<'_>,
     project: &crate::Project,
 ) -> Result<SavedModel, SliceError> {
+    from_saved_project_with_extras(archive, project, false).map(|(model, _)| model)
+}
+
+pub(in crate::project::export) fn from_saved_project_with_extras(
+    mut archive: ProjectArchive<'_>,
+    project: &crate::Project,
+    allow_extras: bool,
+) -> Result<(SavedModel, SavedArchiveExtras), SliceError> {
     let paths: std::collections::BTreeSet<_> = project
         .objects()
         .iter()
         .flat_map(|object| object.volumes().iter().map(|part| part.source_model_path()))
         .collect();
 
-    if archive.paths().any(|path| {
-        !paths.contains(path.as_str())
-            && !matches!(
-                path.as_str(),
-                MODEL
-                    | "3D/_rels/3dmodel.model.rels"
-                    | "_rels/.rels"
-                    | "[Content_Types].xml"
-                    | "Metadata/project_settings.config"
-                    | "Metadata/model_settings.config"
-                    | "Metadata/slice_info.config"
-                    | "Metadata/filament_sequence.json"
-            )
-    }) {
-        return Err(deferred("additional saved archive members"));
-    }
+    let additional = {
+        let mut additional = archive.paths().filter(|path| {
+            !paths.contains(path.as_str())
+                && !matches!(
+                    path.as_str(),
+                    MODEL
+                        | "3D/_rels/3dmodel.model.rels"
+                        | "_rels/.rels"
+                        | "[Content_Types].xml"
+                        | "Metadata/project_settings.config"
+                        | "Metadata/model_settings.config"
+                        | "Metadata/slice_info.config"
+                        | "Metadata/filament_sequence.json"
+                )
+        });
+        if allow_extras {
+            additional.cloned().collect::<Vec<_>>()
+        } else if additional.next().is_some() {
+            return Err(deferred("additional saved archive members"));
+        } else {
+            Vec::new()
+        }
+    };
+    let extras = if additional.is_empty() {
+        SavedArchiveExtras::default()
+    } else {
+        saved_assets::load(&mut archive, project, additional)?
+    };
     for path in paths {
         let bytes = archive.read(&PackagePath::entry(path.as_bytes())?)?;
         if has_painted_triangles(&bytes)? {
@@ -112,14 +133,17 @@ pub(crate) fn from_saved_project(
             })
         })
         .collect::<Result<_, SliceError>>()?;
-    Ok(SavedModel {
-        objects,
-        orca_version: doc
-            .metadata
-            .into_iter()
-            .find(|m| m.name == "OrcaSlicer")
-            .map(|m| m.value),
-    })
+    Ok((
+        SavedModel {
+            objects,
+            orca_version: doc
+                .metadata
+                .into_iter()
+                .find(|m| m.name == "OrcaSlicer")
+                .map(|m| m.value),
+        },
+        extras,
+    ))
 }
 
 fn saved_part(

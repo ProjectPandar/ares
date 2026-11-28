@@ -3,6 +3,7 @@
 //! `Plater::send_gcode` also writes (`Plater.cpp:21240`).
 
 use super::super::{ArchiveLimits, LoadedProfileProject, ProjectArchive};
+use super::saved_assets::SavedArchiveExtras;
 use super::{SavedModel, Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
 use crate::{
     CliUpwardMachine, ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata,
@@ -40,7 +41,13 @@ pub fn export_sliced_3mf(
         }
         geometry::load_saved(input)?
     };
-    write_sliced_3mf_package(model, processed, first_print_object_id, min_save)
+    write_sliced_3mf_package(
+        model,
+        processed,
+        first_print_object_id,
+        min_save,
+        SavedArchiveExtras::default(),
+    )
 }
 
 fn write_sliced_3mf_package(
@@ -48,6 +55,7 @@ fn write_sliced_3mf_package(
     mut processed: ProcessedGCode,
     first_print_object_id: u32,
     min_save: bool,
+    extras: SavedArchiveExtras,
 ) -> Result<Vec<u8>, SliceError> {
     let archive = processed
         .archive
@@ -76,6 +84,7 @@ fn write_sliced_3mf_package(
         plate_json: xml::plate_json(&archive, first_print_object_id),
         slice_info: xml::slice_info(&archive, &processed, 1).into_bytes(),
         gcode: processed.gcode,
+        previews: extras.previews,
     };
     write_package(
         &model.objects,
@@ -83,6 +92,7 @@ fn write_sliced_3mf_package(
         Some(Sliced {
             members: vec![sliced],
             skip_model: min_save,
+            auxiliary: extras.auxiliary,
         }),
         (model.orca_version.as_deref(), None),
         None,
@@ -160,7 +170,11 @@ impl<'a> CliSavedSlicedProject<'a> {
         } = self;
         let first_id = saved_print_object_id(loaded.project())
             .map_err(|detail| SliceError::InvalidInput(detail.into()))?;
-        let saved_model = geometry::from_saved_project(archive, loaded.project());
+        let saved_model = geometry::from_saved_project_with_extras(
+            archive,
+            loaded.project(),
+            upward.is_some() && !min_save,
+        );
         let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
             (input, Box::new(loaded)),
             GenerationMetadata::default(),
@@ -182,7 +196,8 @@ impl<'a> CliSavedSlicedProject<'a> {
                 "sliced export requires a saved 3MF or a captured STL model",
             ));
         }
-        write_sliced_3mf_package(saved_model?, processed, first_id, min_save)
+        let (model, extras) = saved_model?;
+        write_sliced_3mf_package(model, processed, first_id, min_save, extras)
     }
 }
 

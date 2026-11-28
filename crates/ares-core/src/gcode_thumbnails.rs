@@ -7,6 +7,7 @@ mod png;
 mod qoi;
 pub use data::ThumbnailData;
 pub(crate) use export::append;
+pub(crate) use png::encode as encode_png;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum GCodeThumbnailFormat {

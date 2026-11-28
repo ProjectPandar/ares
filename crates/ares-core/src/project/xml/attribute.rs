@@ -17,16 +17,6 @@ pub(super) fn validate(
     if role == XmlRole::Model {
         return super::model::validate_attribute_namespace(element_name, local_name, namespace);
     }
-    if role == XmlRole::LayerConfigRanges {
-        return if matches!(namespace, ResolveResult::Unbound)
-            && matches!(local_name, b"id" | b"min_z" | b"max_z" | b"opt_key")
-        {
-            Ok(())
-        } else {
-            Err(invalid(role))
-        };
-    }
-
     let typed_attribute = match role {
         XmlRole::ContentTypes => {
             matches!(local_name, b"Extension" | b"ContentType" | b"PartName")
@@ -48,8 +38,20 @@ pub(super) fn validate(
                 | b"transform"
                 | b"offset"
         ),
+        XmlRole::LayerConfigRanges | XmlRole::CutInformation => {
+            let allowed = if role == XmlRole::LayerConfigRanges {
+                matches!(local_name, b"id" | b"min_z" | b"max_z" | b"opt_key")
+            } else {
+                matches!(local_name, b"id" | b"check_sum" | b"connectors_cnt")
+            };
+            return if allowed && matches!(namespace, ResolveResult::Unbound) {
+                Ok(())
+            } else {
+                Err(invalid(role))
+            };
+        }
         XmlRole::SliceInfo => matches!(local_name, b"key" | b"value"),
-        XmlRole::Model | XmlRole::LayerConfigRanges => unreachable!(),
+        XmlRole::Model => unreachable!(),
     };
     if typed_attribute && !matches!(namespace, ResolveResult::Unbound) {
         return Err(invalid(role));
