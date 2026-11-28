@@ -36,6 +36,8 @@ mod saved_mesh_stat;
 #[cfg(target_os = "linux")]
 #[path = "export_3mf_sliced/saved_part_extruder.rs"]
 mod saved_part_extruder;
+#[path = "export_3mf_sliced/saved_part_provenance.rs"]
+mod saved_part_provenance;
 
 use comparator::{compare_members, read_members};
 

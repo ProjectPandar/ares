@@ -44,6 +44,9 @@ follows:
 ## Ares destination and scope
 
 Apply both behaviors in the saved ordinary-part provenance projection.
+Native can run the fallback at load because its importer receives a path;
+the core loader receives only bytes, so the filename-aware export is the
+first point where this route has the positional basename and loaded model.
 `project/export/sliced.rs::CliSavedSlicedProject::export_inner` already
 receives the positional archive's basename and the admitted model; pass
 that source filename to the full saved CLI export projection in
