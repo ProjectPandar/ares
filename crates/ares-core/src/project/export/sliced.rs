@@ -202,7 +202,7 @@ impl<'a> CliSavedSlicedProject<'a> {
         let saved_model = geometry::from_saved_project_with_extras(
             archive,
             loaded.project(),
-            upward.is_some() && !min_save,
+            (upward.is_some() && !min_save).then_some(filename),
         );
         let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
             (input, Box::new(loaded)),

@@ -48,14 +48,15 @@ pub(crate) fn from_saved_project(
     archive: ProjectArchive<'_>,
     project: &crate::Project,
 ) -> Result<SavedModel, SliceError> {
-    from_saved_project_with_extras(archive, project, false).map(|(model, _)| model)
+    from_saved_project_with_extras(archive, project, None).map(|(model, _)| model)
 }
 
 pub(in crate::project::export) fn from_saved_project_with_extras(
     mut archive: ProjectArchive<'_>,
     project: &crate::Project,
-    full_cli_slice: bool,
+    full_cli_source_filename: Option<&str>,
 ) -> Result<(SavedModel, SavedArchiveExtras), SliceError> {
+    let full_cli_slice = full_cli_source_filename.is_some();
     let paths: std::collections::BTreeSet<_> = project
         .objects()
         .iter()
@@ -103,7 +104,8 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
     let objects = project
         .objects()
         .iter()
-        .map(|object| {
+        .enumerate()
+        .map(|(object_index, object)| {
             let [instance] = object.instances() else {
                 return Err(deferred("expected one saved instance per object"));
             };
@@ -141,8 +143,27 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
                 parts: object
                     .volumes()
                     .iter()
-                    .map(|volume| saved_part(volume, &settings.parts, full_cli_slice))
-                    .collect::<Result<_, _>>()?,
+                    .enumerate()
+                    .map(|(volume_index, volume)| {
+                        let mut part = saved_part(volume, &settings.parts, full_cli_slice)?;
+                        if let Some(filename) = full_cli_source_filename {
+                            // bbs_3mf.cpp:2360–2374 fills only unset indices on fallback.
+                            if part.source_file.is_empty() {
+                                part.source_file = filename.to_owned();
+                                if part.source_object == -1 {
+                                    part.source_object = object_index as i32;
+                                }
+                                if part.source_volume == -1 {
+                                    part.source_volume = volume_index as i32;
+                                }
+                            } else if let Some(separator) = part.source_file.rfind(['/', '\\']) {
+                                // bbs_3mf.cpp:8249–8259,8374–8387: write the basename.
+                                part.source_file = part.source_file[separator + 1..].to_owned();
+                            }
+                        }
+                        Ok(part)
+                    })
+                    .collect::<Result<_, SliceError>>()?,
             })
         })
         .collect::<Result<_, SliceError>>()?;
