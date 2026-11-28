@@ -12,7 +12,9 @@
 
 use std::collections::BTreeSet;
 
-use super::super::{LegacyAction, find_explicit_rule};
+use super::super::{
+    LegacyAction, find_explicit_rule, is_obsolete_input, registry::option_definition,
+};
 
 /// `PrintConfig.cpp:8033-8290`: per-entry legacy normalization on the
 /// serialized `key`/`value` tokens. `key`/`value` are rewritten in place;
@@ -295,6 +297,9 @@ fn normalize_different_settings_to_system(value: &mut String, migrate_feature_fi
         let mut copy_key = split_key.to_owned();
         let mut copy_value = String::new();
         handle_legacy_token(&mut copy_key, &mut copy_value, migrate_feature_filament);
+        if is_obsolete_input(&copy_key) || option_definition(&copy_key).is_none() {
+            copy_key.clear();
+        }
         if copy_key != split_key {
             normalized = normalized.replace(split_key, &copy_key);
         }
