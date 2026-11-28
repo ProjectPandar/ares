@@ -270,10 +270,10 @@ fn compare_project_with_checks(
 }
 
 fn rejects(reason: &str, edits: &[(&str, Value)]) {
-    rejects_project(reason, project(true, false, edits, false));
+    rejects_project(Some(reason), project(true, false, edits, false));
 }
 
-fn rejects_project(reason: &str, input: Vec<u8>) {
+fn rejects_project(reason: Option<&str>, input: Vec<u8>) {
     let work = tempfile::Builder::new()
         .prefix("unsupported-belt-")
         .tempdir_in(crate::artifacts::root_from_env().unwrap())
@@ -287,10 +287,12 @@ fn rejects_project(reason: &str, input: Vec<u8>) {
         !result.status.success(),
         "unsupported belt mode was accepted in {work:?}"
     );
-    assert!(
-        String::from_utf8_lossy(&result.stderr).contains(&format!("belt_printer: {reason}")),
-        "wrong rejection reason in {work:?}"
-    );
+    if let Some(reason) = reason {
+        assert!(
+            String::from_utf8_lossy(&result.stderr).contains(&format!("belt_printer: {reason}")),
+            "wrong rejection reason in {work:?}"
+        );
+    }
     assert!(
         !out.join("plate_1.gcode").exists(),
         "rejected belt mode emitted G-code in {work:?}"

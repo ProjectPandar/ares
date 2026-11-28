@@ -108,6 +108,8 @@ fn enabling_belt_purge_still_rejects_support_without_gcode() {
 
 #[test]
 fn rejects_a_marked_multi_slot_purge_prism_without_gcode() {
+    // Native continues without a reference grid (BeltPurge.cpp:109–121,160–183).
+    // Ares defers a lone prism in the slice order of belt-active-purge.md.
     for switches in [&[][..], super::multi_filament::SWITCHES] {
         let input = super::multi_filament::project(
             2,
@@ -116,7 +118,7 @@ fn rejects_a_marked_multi_slot_purge_prism_without_gcode() {
             switches,
             &[("enable_belt_purge_tower", json!("1"))],
         );
-        super::rejects_project("materials", input);
+        super::rejects_project(None, input);
     }
 }
 
@@ -136,7 +138,7 @@ fn enabling_belt_purge_still_rejects_multiple_instances_without_gcode() {
             second_instance(std::str::from_utf8(&bytes).unwrap()).into_bytes()
         },
     );
-    super::rejects_project("instances", input);
+    super::rejects_project(Some("instances"), input);
 }
 
 fn compare(

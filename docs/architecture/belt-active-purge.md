@@ -75,8 +75,12 @@ it must not instantiate classic tower data just to make the wiping pass run.
    leftover strictly above 1 mm³, ceiling for total and worst-layer volumes,
    worst physical Z formatted to two decimals, `BeltPurge.cpp:296–315`). Do not
    add warning comments to G-code.
-3. **Wider planner cases stay outside the first slice.** Multiple ordinary
-   objects, custom/variable grids, additional absorbers, support, raft,
+3. **Wider planner cases stay outside the first slice.** A lone marked prism
+   with active purge is deferred. Native does not reject it for lacking an
+   ordinary model: alignment returns without a reference grid and the planner
+   proceeds to tool ordering (`BeltPurge.cpp:109–121,160–183`). Ares refuses
+   that shape without emitting G-code. Multiple ordinary objects,
+   custom/variable grids, additional absorbers, support, raft,
    soluble/support filaments, mixing, and plate-event interactions need their
    own comparisons before admission. Do not port spiral or by-object purge
    generation; Native does not take the planner there. Automatic prism mesh
