@@ -267,7 +267,7 @@ pub(crate) fn normalize_scalar_arrays(
     Ok(())
 }
 
-fn is_vector(kind: OptionValueKind) -> bool {
+pub(crate) fn is_vector(kind: OptionValueKind) -> bool {
     match kind {
         OptionValueKind::Percents
         | OptionValueKind::PercentsNullable

@@ -178,7 +178,12 @@ impl ProjectSettingsRaw {
                     if key.is_empty() {
                         continue;
                     }
-                    RawConfigValue::Text(wire)
+                    if crate::options::json_deserialize::is_vector(definition.kind) {
+                        crate::options::json_deserialize::decode(definition.kind, &wire)
+                            .unwrap_or_else(|_| RawConfigValue::Text(wire))
+                    } else {
+                        RawConfigValue::Text(wire)
+                    }
                 }
                 // Config.hpp:946-950 distinguishes a JSON string from nil.
                 RawConfigValue::Text(mut token) => {
