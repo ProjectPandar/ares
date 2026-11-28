@@ -80,6 +80,10 @@ pub(super) fn collect_volumes(
             }
         }
     }
+    // bbs_3mf.cpp:2386–2389 erases the sole loaded volume's extruder option.
+    if let [volume] = output.as_mut_slice() {
+        volume.clear_extruder();
+    }
     Ok(output)
 }
 

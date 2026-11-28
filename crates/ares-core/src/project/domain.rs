@@ -336,6 +336,10 @@ impl ProjectVolume {
         &self.region_overrides
     }
 
+    pub(super) fn clear_extruder(&mut self) {
+        self.region_overrides.extruder = None;
+    }
+
     /// The original unit if this volume was converted to millimeters.
     pub fn converted_from(&self) -> Option<StlUnit> {
         self.stl_conversion.map(|(unit, _)| unit)
