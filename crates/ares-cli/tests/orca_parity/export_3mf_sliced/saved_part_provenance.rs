@@ -6,11 +6,11 @@ use super::super::export_3mf_sliced_rejection::rewrite_project;
 use super::{GCODE, comparator, invoke, write_saved_input};
 use crate::OrcaRunner;
 
-const MODEL_SETTINGS: &str = "Metadata/model_settings.config";
+pub(super) const MODEL_SETTINGS: &str = "Metadata/model_settings.config";
 const SOURCE: &str = "input/synthetic-witness.3mf";
 const BASENAME: &str = "synthetic-witness.3mf";
 const EXPORT: &str = "export.3mf";
-const KEYS: [&str; 6] = [
+pub(super) const KEYS: [&str; 6] = [
     "source_file",
     "source_object_id",
     "source_volume_id",
@@ -98,7 +98,7 @@ fn check(input: [Option<&str>; 6], expected: [&str; 6]) {
     assert_eq!(ares, native, "saved part provenance differs in {root:?}");
 }
 
-fn with_provenance(xml: &str, values: [Option<&str>; 6]) -> String {
+pub(super) fn with_provenance(xml: &str, values: [Option<&str>; 6]) -> String {
     let start = "    <part id=\"1\" subtype=\"normal_part\">";
     let mut replacement = start.to_owned();
     for (key, value) in KEYS.into_iter().zip(values) {
@@ -138,7 +138,7 @@ fn export(bin: &Path, cwd: &Path, project: &[u8]) -> BTreeMap<&'static str, Stri
     part_provenance(&config.bytes)
 }
 
-fn part_provenance(xml: &[u8]) -> BTreeMap<&'static str, String> {
+pub(super) fn part_provenance(xml: &[u8]) -> BTreeMap<&'static str, String> {
     let mut reader = Reader::from_reader(xml);
     let mut part_count = 0;
     let mut in_part = false;

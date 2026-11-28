@@ -6,7 +6,7 @@ use super::super::export_3mf_sliced_rejection::rewrite_project;
 use super::{SETTINGS, STL, comparator, invoke, write_inputs};
 use crate::OrcaRunner;
 
-const MODEL: &str = "3D/3dmodel.model";
+pub(super) const MODEL: &str = "3D/3dmodel.model";
 const PROJECT: &str = "saved.3mf";
 const EXPORT: &str = "export.3mf";
 
@@ -83,7 +83,7 @@ fn check(transform: &str, no_brim: bool) {
     comparator::compare_members(native, ares);
 }
 
-fn assert_build_item(model: &[u8], expected: &str) {
+pub(super) fn assert_build_item(model: &[u8], expected: &str) {
     let matrix = |value: &str| {
         value
             .split_ascii_whitespace()
@@ -116,7 +116,7 @@ fn assert_build_item(model: &[u8], expected: &str) {
     assert_eq!(count, 1);
 }
 
-fn prism_stl() -> Vec<u8> {
+pub(super) fn prism_stl() -> Vec<u8> {
     let outline = [
         [-15.0_f32, -5.0_f32],
         [15.0, -5.0],

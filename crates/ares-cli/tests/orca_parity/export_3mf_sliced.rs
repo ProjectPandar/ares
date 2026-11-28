@@ -27,6 +27,8 @@ mod comparison_tests;
 #[cfg(target_os = "linux")]
 #[path = "export_3mf_sliced/retained_catalog.rs"]
 mod retained_catalog;
+#[path = "export_3mf_sliced/saved_affine_source_provenance.rs"]
+mod saved_affine_source_provenance;
 #[path = "export_3mf_sliced/saved_archive_assets.rs"]
 mod saved_archive_assets;
 #[path = "export_3mf_sliced/saved_build_transforms.rs"]
