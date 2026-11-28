@@ -230,7 +230,6 @@
   width: auto;
   min-width: 0;
   max-width: 60%;
-  padding-inline: 10px;
 }
 .filament-row {
   display: flex;
@@ -471,6 +470,9 @@
   border: 1px solid var(--border);
   border-radius: 3px;
   font: inherit;
+}
+.option-select.printer-select {
+  padding-inline: 8px;
 }
 .option-select:focus {
   outline: none;
