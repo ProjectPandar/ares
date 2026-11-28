@@ -1,82 +1,98 @@
-# Saved object extruder in sliced 3MF export
+# Saved single-part extruder selection in plain slicing
 
 ## Native boundary
 
 OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`),
 `src/libslic3r/Format/bbs_3mf.cpp::_BBS_3MF_Importer::_load_model_from_file`,
-separates object names and modules from object config deserialization
-(2272–2280). `extruder` is an integer config option
-(`src/libslic3r/PrintConfig.cpp:2798–2804`). After loading volumes,
-the importer reads the logical slot count from `filament_settings_id` when
-present, or uses the maximum integer otherwise. An absent or zero object
-selector, or one greater than that count, is set to `1`
-(`bbs_3mf.cpp:2376–2384`). A single volume's own selector is erased;
-for multiple volumes, zero is erased and a selector above the count is
-set to `1` (`2386–2400`). That part policy is separate from the object's
-selector: a part record does not supply the serialized object value.
+deserializes object config and builds the object's volumes (2272–2280,
+2314–2320). It then resolves the saved `extruder` selectors:
 
-For full selected-plate export, `src/OrcaSlicer.cpp:8081–8086` passes the
-model to `export_project`. `_BBS_3MF_Exporter::_add_model_config_file_to_archive`
-iterates the object's config keys and writes each serialized value under
-its `<object>` record in `Metadata/model_settings.config`
-(`bbs_3mf.cpp:8296–8326`). This stores the model's 1-based logical assignment,
-not the resulting tool index, first extruder, or filament sequence on the plate.
+- `2376–2385`: the limit is the number of embedded `filament_settings_id`
+  entries, or the maximum integer if that option is absent. An absent,
+  zero, or above-limit object selector becomes `1`.
+- `2386–2389`: for exactly one loaded volume, erase that volume's
+  `extruder`. Do not copy the value to the object or reset the volume to `1`.
+- `2390–2400`: for multiple volumes, erase a zero volume selector and
+  normalize an above-limit volume selector to `1`. Keep in-range selectors.
 
-## Ares destination and scope
+`src/libslic3r/PrintObject.cpp::region_config_from_model_volume`
+(4395–4431) applies the object's config before the model part's config.
+Erasing only the volume selector lets the object assignment supply defaults
+without removing explicit per-feature overrides. The G-code writer exposes
+logical assignment in `; filament:` and marks the initial logical filament
+with `;VT` on the single-nozzle path (`src/libslic3r/GCode.cpp:4285–4305,
+4433–4444`). Neither annotation is a physical tool change.
 
-`crates/ares-core/src/project/model_settings/object_metadata.rs` already
-binds object config to typed overrides. `project/load/assemble.rs::object_metadata`
-puts those overrides on `ProjectObject`. In the full saved `--slice 1
---export-3mf` route, `project/export/sliced.rs::CliSavedSlicedProject::export_inner`
-uses that same project for the slice and for
-`project/export/saved.rs::from_saved_project_with_extras`. The latter
-always emits the CLI-default record (`extruder=1`) for a saved object and
-rejects a nondefault value in `supports_build_transform`.
+## Ares boundary
 
-Project the admitted object's typed selector into the saved object's
-metadata, with the existing `project/export/xml.rs::model_settings` writer.
-Use the embedded logical `filament_settings_id` slots before slicing or
-tool mapping. Explicit positive in-range selectors are stored as decimal
-integers. Keep the serialized default `1` for an absent or zero selector.
-Do not widen admission for an absent slot list, a negative selector, or
-one beyond the embedded slot count. The Native importer can correct
-out-of-range selectors before slicing; matching that import behavior is
-separate from this export projection. Do not change slicer validation or
-use a fallback to make otherwise rejected input writable.
+Apply the one-volume branch for a saved model part on the plain positional
+3MF slice route. Count loaded model volumes, not XML rows, build instances,
+meshes after slicing, or the number of presets. Keep the object selector
+unchanged. Erase only the typed part `extruder` used for slicing and keep
+all other part options and retained archive metadata intact. This slice does
+not add object-value or multi-volume selector normalization.
 
-Apply this only to full sliced CLI export of an otherwise supported saved
-plate. An in-range object selector is not itself a reason to refuse an
-otherwise supported affine instance. Keep the existing instance, part,
-source provenance, archive, assembly, and metadata restrictions; in
-particular do not admit new part overrides on the affine path. Emit only
-object `extruder`, not arbitrary object options or part config. Do not
-change how a saved part selector affects slicing. Keep
-`project/export/geometry.rs::cli_object_metadata` unchanged for its
-existing callers. Unsliced export, STL, `--min-save`, the API/compatibility
-paths that do not use the full saved CLI projection, and raw project
-config handling are unchanged. Reuse the loaded project; do not reopen the
-input, introduce a public API, or add another source of selector state.
+`project/load/assemble/volumes.rs::collect_volumes` binds saved part records
+to loaded volumes. `project_slice/cli_plates.rs` loads those objects for the
+plain saved CLI request through `ProjectInput::SavedCliBytes`. Scope the
+normalization to the loaded plain-slice model before selector validation or
+plate application, so `project/effective_config/candidates.rs` and
+`project_slice/extruders.rs::collect_project_object_extruders` both see the
+same resolved input. Keep the existing region precedence and tool ordering.
+Do not rewrite G-code annotations, re-read the archive, or add a separate
+source of assignment state. Keep generic import, interactive edits, explicit
+preset replacement, STL, and export routes unchanged.
 
-## Synthetic verification
+## Plain CLI verification
 
-Generate an ordinary closed one-part project at runtime from synthetic
-geometry and two pinned filament slots. Modify only saved object metadata
-to assign slot `2`, leaving the part without an assignment. Exercise an
-identity-linear build and a supported planar affine build. Use the same
-`--slice 1 --export-3mf` arguments in Native and Ares. Verify that each
-invocation succeeds, writes one selected-plate archive and no standalone
-G-code, and emits exactly one object-level `extruder=2` for the corresponding
-build object, with no part-level extruder. Keep the existing default saved
-export and affine cases as controls.
+Generate a synthetic one-part, single-nozzle saved project with two entries
+of the same pinned filament preset. Keep geometry and project settings fixed;
+vary only the saved object and part selector metadata. Run identical
+`--slice 1 --outputdir out saved.3mf` commands with pinned Native and Ares,
+using pinned installation resources. Require each to produce the standalone
+`plate_1.gcode` successfully. Compare the entire ordered byte stream with the
+existing generator-banner-only normalization. Do not exclude annotations,
+usage, config, or motion.
 
-The new comparison covers the object metadata record, not unrelated
-multi-slot slicing output. The synthetic translation case also exposes
-separate differences in retained settings arrays, plate and slice filament
-statistics, filament sequence and the G-code config block. Preserve the
-existing strict archive comparisons in adjacent coverage. Do not normalize
-or mask any archive member to assert byte parity for the new fixture.
+| Saved object selector | Saved single-part selector | Native logical slot |
+| --- | --- | --- |
+| `1` | absent | `1` |
+| `2` | absent | `2` |
+| absent | `2` | `1` |
+| `2` | `1` | `2` |
 
-Verify that both new cases first fail at the expected Ares behavior after
-Native succeeds, then pass in both Official and Seeded with Native required.
-Pair the adjacent saved, sliced, unsliced, STL, assembly, archive-extra,
-version-admission and substitution-warning cases against the parent.
+The first two are unchanged controls. The two conflicting part cases must
+match their respective object-only controls in Native and expose an ordered
+G-code mismatch in Ares before the fix. All four comparisons must pass in
+both reference lanes. A same-material project can expose logical selection
+without changing physical tool commands or reported filament usage. Do not
+infer distinct-material or multi-nozzle motion parity from this fixture.
+Probe artifacts: `plain-slice-premise-v1/driver.log` and each selector case's
+`gcode.diff`.
+
+## Deferred sliced archive behavior
+
+Do not relax the affine-export guard or round-trip nondefault object metadata
+until the selected-plate archive can match Native as a whole. The export
+probe found two separate sets of differences:
+
+- **Specific to object slot 2:** the saved object's `extruder`,
+  `plate_1.json` `first_extruder`, `slice_info.config` layer filament list and
+  filament `used_m`/`used_g`, and `filament_sequence.json` `plate_1.sequence`.
+  The object-only plain slice already selects slot 2 in both engines. Fix
+  the archive projection from live slicing state, not by copying the input
+  selector into output statistics. Artifacts:
+  `slot-one-premise-v1/slot-two/diff.json` and
+  `premise-v1/slot-two-affine-ares/stderr.log`.
+- **Present on the default slot too:** 21 retained vectors in
+  `project_settings.config`, the `compatible_process_expression_group` and
+  `pellet_flow_coefficient` footer values in `plate_1.gcode`, its consequent
+  checksum, `slice_info.config` `limit_filament_maps`, and
+  `filament_sequence.json` `optimal_assignment` width. These are separate
+  from selector resolution. Reuse the existing
+  [retained preset boundary](saved-settings-retained-filaments.md) for
+  overlapping fields. Artifacts: `slot-one-premise-v1/slot-one/diff.json`
+  and `slot-one-premise-v1/slot-default/diff.json`.
+
+Keep the [sliced archive contract](cli-export-3mf-sliced.md) and its strict
+comparisons unchanged.
