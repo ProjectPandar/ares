@@ -24,6 +24,9 @@ mod assemble_items;
 mod comparator;
 #[path = "export_3mf_sliced/comparison_tests.rs"]
 mod comparison_tests;
+#[cfg(target_os = "linux")]
+#[path = "export_3mf_sliced/retained_catalog.rs"]
+mod retained_catalog;
 
 use comparator::{compare_members, read_members};
 
