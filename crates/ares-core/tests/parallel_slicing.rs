@@ -1,8 +1,8 @@
 use std::{fmt::Write as _, process::Command};
 
 use ares_core::{
-    CancelToken, ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata, SliceError,
-    SlicerContext, slice_project_plate_to_sink,
+    CancelToken, ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata, PrintWarning,
+    SliceError, SlicerContext, SlicingNotificationType, WarningLevel, slice_project_plate_to_sink,
 };
 use sha2::{Digest, Sha256};
 
@@ -23,6 +23,10 @@ const LIGHTNING: &[u8] =
     include_bytes!("../../../tests/parity/lightning-initial-overhang-join/positive.3mf");
 const CURVED_WALLS: &[u8] =
     include_bytes!("../../../tests/parity/gyroid-standard-boundary-waves/paired-cylinders.3mf");
+const SUPPORT_NECESSITY: &[u8] =
+    include_bytes!("../../../tests/parity/spiral-vase-admission/two-object-by-object-apart.3mf");
+const TREE_OVERHANG: &[u8] =
+    include_bytes!("../../ares-cli/tests/organic_merge_affinity/overhang-organic.3mf");
 const CHILD_OUTPUT: &str = "ARES_PARALLEL_SLICING_HASH_FILE";
 
 async fn slice(
@@ -30,7 +34,7 @@ async fn slice(
     overrides: &ConfigOverrides,
     context: SlicerContext<'_>,
     output: &mut Vec<u8>,
-) -> Result<(), SliceError> {
+) -> Result<Vec<PrintWarning>, SliceError> {
     slice_project_plate_to_sink(
         project,
         DirectProjectSliceRequest {
@@ -43,7 +47,19 @@ async fn slice(
         output,
     )
     .await
-    .map(|_| ())
+    .map(|result| result.warnings)
+}
+
+fn write_hash(hashes: &mut String, label: &str, bytes: impl AsRef<[u8]>) {
+    write!(hashes, "{label}: ").unwrap();
+    for byte in Sha256::digest(bytes) {
+        write!(hashes, "{byte:02x}").unwrap();
+    }
+    hashes.push('\n');
+}
+
+fn is_support_warning(warning: &PrintWarning) -> bool {
+    warning.message_type == SlicingNotificationType::NeedSupportOn
 }
 
 async fn fixture_hashes() -> String {
@@ -88,11 +104,33 @@ async fn fixture_hashes() -> String {
             .await
             .unwrap_or_else(|error| panic!("{label}: {error}"));
         assert!(!output.is_empty(), "{label}: no G-code");
-        write!(hashes, "{label}: ").unwrap();
-        for byte in Sha256::digest(output) {
-            write!(hashes, "{byte:02x}").unwrap();
-        }
-        hashes.push('\n');
+        write_hash(&mut hashes, label, output);
+    }
+    for (label, project, options, enabled) in [
+        ("support_necessity", SUPPORT_NECESSITY, "{}", false),
+        ("organic_support", TREE_OVERHANG, "{}", true),
+        (
+            "hybrid_support",
+            TREE_OVERHANG,
+            r#"{"support_style":"tree_hybrid"}"#,
+            true,
+        ),
+    ] {
+        let overrides = ConfigOverrides::from_json(options.as_bytes()).unwrap();
+        let mut output = Vec::new();
+        let warnings = slice(project, &overrides, SlicerContext::new(0), &mut output)
+            .await
+            .unwrap_or_else(|error| panic!("{label}: {error}"));
+        let gcode = std::str::from_utf8(&output).unwrap();
+        assert!(!gcode.is_empty(), "{label}: no G-code");
+        assert_eq!(gcode.contains(";TYPE:Support\n"), enabled, "{label}");
+        assert_eq!(warnings.iter().any(is_support_warning), !enabled, "{label}");
+        write_hash(&mut hashes, label, output);
+        write_hash(
+            &mut hashes,
+            &format!("{label}_warnings"),
+            format!("{warnings:?}"),
+        );
     }
     hashes
 }
@@ -131,7 +169,10 @@ async fn changing_thread_count_preserves_complete_gcode_bytes() {
         );
         let hashes = std::fs::read_to_string(file).unwrap();
         if let Some(reference) = &reference {
-            assert_eq!(&hashes, reference, "{threads} threads changed G-code bytes");
+            assert_eq!(
+                &hashes, reference,
+                "{threads} threads changed G-code bytes or warnings"
+            );
         } else {
             reference = Some(hashes);
         }
@@ -139,7 +180,7 @@ async fn changing_thread_count_preserves_complete_gcode_bytes() {
     print!("{}", reference.unwrap());
 }
 
-async fn assert_cancel_before_phase(phase: &str, overrides: &ConfigOverrides) {
+async fn assert_cancel_before_phase(project: &[u8], phase: &str, overrides: &ConfigOverrides) {
     let token = CancelToken::new();
     let mut reached_phase = false;
     let mut cancel_at_phase = |status: &ares_core::SlicingStatus<'_>| {
@@ -151,7 +192,7 @@ async fn assert_cancel_before_phase(phase: &str, overrides: &ConfigOverrides) {
     let mut context = SlicerContext::new(0).with_cancel_token(token.clone());
     context.set_status_callback(&mut cancel_at_phase);
     let mut canceled = Vec::new();
-    let result = slice(ARACHNE, overrides, context, &mut canceled).await;
+    let result = slice(project, overrides, context, &mut canceled).await;
     assert!(reached_phase, "did not reach {phase}");
     assert_eq!(result, Err(SliceError::Canceled), "cancel at {phase}");
     assert!(canceled.is_empty(), "cancel at {phase} wrote G-code");
@@ -167,7 +208,7 @@ async fn canceling_before_mesh_or_infill_work_leaves_sink_empty_and_allows_a_fre
     assert!(!original.is_empty());
 
     for phase in ["Slicing mesh", "Generating infill regions"] {
-        assert_cancel_before_phase(phase, &overrides).await;
+        assert_cancel_before_phase(ARACHNE, phase, &overrides).await;
     }
 
     let mut recovered = Vec::new();
@@ -179,4 +220,37 @@ async fn canceling_before_mesh_or_infill_work_leaves_sink_empty_and_allows_a_fre
         recovered == original,
         "cancel changed the next slice's bytes"
     );
+}
+
+#[tokio::test]
+async fn canceling_support_necessity_leaves_sink_empty_and_preserves_fresh_warnings() {
+    let overrides = ConfigOverrides::default();
+    let mut original = Vec::new();
+    let expected = slice(
+        SUPPORT_NECESSITY,
+        &overrides,
+        SlicerContext::new(0),
+        &mut original,
+    )
+    .await
+    .unwrap();
+    let warning = expected
+        .iter()
+        .find(|warning| is_support_warning(warning))
+        .unwrap();
+    assert_eq!(warning.level, WarningLevel::NonCritical);
+    assert!(warning.message.contains("a floating cantilever"));
+
+    assert_cancel_before_phase(SUPPORT_NECESSITY, "Checking support necessity", &overrides).await;
+
+    let fresh = SlicerContext::new(0).with_cancel_token(CancelToken::new());
+    let mut recovered = Vec::new();
+    let actual = slice(SUPPORT_NECESSITY, &overrides, fresh, &mut recovered)
+        .await
+        .unwrap();
+    assert!(
+        recovered == original,
+        "cancel changed the next slice's bytes"
+    );
+    assert_eq!(actual, expected, "cancel changed the next slice's warnings");
 }
