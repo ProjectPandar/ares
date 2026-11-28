@@ -91,7 +91,7 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
 
   // The Left / Right Nozzle groups replace the nozzle combo (Plater.cpp:641-652, 2645-2648).
   await expect(page.getByRole("group", { name: "Left Nozzle", exact: true })).toBeVisible({ timeout: 60_000 });
-  await expect(select(page, "Nozzle diameter")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
   for (const nozzle of ["Left Nozzle", "Right Nozzle"]) {
     await expect(select(page, `${nozzle} diameter`)).toHaveValue("0.4");
     await expect(select(page, `${nozzle} flow`)).toHaveValue("Standard");

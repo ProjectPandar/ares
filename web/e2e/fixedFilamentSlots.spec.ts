@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect } from "@playwright/test";
 import { test } from "./failureDiagnostics";
+import { choosePrinterOption } from "./printerOptions";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const artifacts = process.env.ARES_FIXED_FILAMENT_ARTIFACT_ROOT ?? `${root}target/web-e2e/fixed-filament-witness`;
@@ -29,7 +30,7 @@ test("U1 has four fixed filament slots and edits them directly", async ({ page }
   await page.screenshot({ path: `${artifacts}/bbl-fresh-one-slot.png` });
   // A model item takes the current printer's variant (PresetBundle::get_similar_printer_preset,
   // PresetBundle.cpp:5322-5354). The U1 filaments of OrcaSlicer 2.4.2 fit only its 0.4 nozzle.
-  await page.getByRole("combobox", { name: "Nozzle diameter", exact: true }).selectOption("0.4");
+  await choosePrinterOption(page.getByRole("button", { name: "Nozzle diameter", exact: true }), "0.4 mm");
   await expect(printer).toHaveAttribute("title", "Bambu Lab X1 Carbon 0.4 nozzle", { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
   await printer.click();

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { test } from "./failureDiagnostics";
 import { oraclePath } from "./oracleEnv";
+import { choosePrinterOption, openPrinterOptions } from "./printerOptions";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const profiles = `${process.env.ORCA_SLICER_DIR ?? `${root}OrcaSlicer`}/resources/profiles`;
@@ -111,12 +112,13 @@ test("U1 machine variants and plate type reach the selected preset slice", async
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 
-  const variant = page.getByRole("combobox", { name: "Variant", exact: true });
+  const variant = page.getByRole("button", { name: "Variant", exact: true });
   await expect(variant).toBeVisible();
-  await expect(variant.locator("option")).toHaveText(["0.2 mm", "0.4 mm", "0.4+0.6 mm", "0.6 mm", "0.8 mm"]);
-  await variant.selectOption("0.4");
+  await expect(await openPrinterOptions(variant)).toHaveText(["0.2 mm", "0.4 mm", "0.4+0.6 mm", "0.6 mm", "0.8 mm"]);
+  await page.keyboard.press("Escape");
+  await choosePrinterOption(variant, "0.4 mm");
   await expect(printer(page)).toHaveAttribute("title", "Snapmaker U1 (0.4 nozzle)", { timeout: 60_000 });
-  await expect(variant).toHaveValue("0.4");
+  await expect(variant).toHaveText("0.4 mm");
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 
   const presets = nativePresets();
@@ -126,15 +128,14 @@ test("U1 machine variants and plate type reach the selected preset slice", async
     ["0.4+0.6", "0.4,0.4,0.6,0.6", "Textured PEI Plate"],
     ["0.8", "0.8,0.8,0.8,0.8", "High Temp Plate"],
   ]) {
-    await variant.selectOption(value);
+    await choosePrinterOption(variant, `${value} mm`);
     await expect(printer(page)).toHaveAttribute("title", `Snapmaker U1 (${value} nozzle)`, { timeout: 60_000 });
-    await expect(variant).toHaveValue(value);
+    await expect(variant).toHaveText(`${value} mm`);
     await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-    const plate = page.getByRole("combobox", { name: "Plate type", exact: true });
-    await expect(plate).toBeVisible();
-    await expect(plate.locator("option")).not.toHaveCount(0);
-    await plate.selectOption(bedType);
-    await expect(plate).toHaveValue(bedType);
+    const plate = page.getByRole("button", { name: "Plate type", exact: true });
+    const bedLabel = bedType === "High Temp Plate" ? "Smooth High Temp Plate" : bedType;
+    await choosePrinterOption(plate, bedLabel);
+    await expect(plate).toHaveText(bedLabel);
     await expect.poll(async () => (await selectedPresets(page)).bedType).toBe(bedType);
     const selection = await selectedPresets(page);
     // The mixed preset's automatic bridge width exceeds its smaller nozzle in the native CLI.
@@ -165,8 +166,8 @@ test("U1 machine variants and plate type reach the selected preset slice", async
   }
   await page.reload();
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 60_000 });
-  await expect(variant).toHaveValue("0.8", { timeout: 60_000 });
-  await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toHaveValue("High Temp Plate");
+  await expect(variant).toHaveText("0.8 mm", { timeout: 60_000 });
+  await expect(page.getByRole("button", { name: "Plate type", exact: true })).toHaveText("Smooth High Temp Plate");
   expect(errors).toEqual([]);
   writeFileSync(`${artifacts}/result.json`, `${JSON.stringify({ records, errors }, null, 2)}\n`);
 });
@@ -188,8 +189,8 @@ test("H2D keeps its paired nozzle controls when switching the printer diameter",
   const right = page.getByRole("combobox", { name: "Right Nozzle diameter", exact: true });
   await expect(left).toBeVisible();
   await expect(right).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Variant", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("combobox", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Variant", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Nozzle diameter", exact: true })).toHaveCount(0);
   const diameter = (await left.inputValue()) === "0.6" ? "0.4" : "0.6";
   await left.selectOption(diameter);
   const question = page.getByRole("dialog", { name: "Switch diameter" });
@@ -197,7 +198,7 @@ test("H2D keeps its paired nozzle controls when switching the printer diameter",
   await expect(printer(page)).toHaveAttribute("title", `Bambu Lab H2D ${diameter} nozzle`, { timeout: 60_000 });
   await expect(left).toHaveValue(diameter);
   await expect(right).toHaveValue(diameter);
-  await expect(page.getByRole("combobox", { name: "Plate type", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Plate type", exact: true })).toBeVisible();
   await page.screenshot({ path: `${artifacts}/h2d-paired-nozzles.png` });
 });
 
@@ -230,10 +231,10 @@ test("U1 shows a customized first nozzle instead of the unchanged mixed variant"
   await printer(page).click();
   await page.getByRole("option", { name: "Snapmaker U1", exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  const variant = page.getByRole("combobox", { name: "Variant", exact: true });
-  await variant.selectOption("0.4+0.6");
+  const variant = page.getByRole("button", { name: "Variant", exact: true });
+  await choosePrinterOption(variant, "0.4+0.6 mm");
   await expect(printer(page)).toHaveAttribute("title", "Snapmaker U1 (0.4+0.6 nozzle)", { timeout: 60_000 });
-  await expect(variant).toHaveValue("0.4+0.6");
+  await expect(variant).toHaveText("0.4+0.6 mm");
   await page.getByTestId("preset-import-input").setInputFiles(preset);
   await printer(page).click();
   await page
@@ -243,7 +244,6 @@ test("U1 shows a customized first nozzle instead of the unchanged mixed variant"
     .click();
   await expect(printer(page)).toHaveAttribute("title", name, { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  await expect(variant).toHaveValue("0.6");
-  await expect(variant.locator("option:checked")).toHaveText("0.6 mm");
+  await expect(variant).toHaveText("0.6 mm");
   await page.screenshot({ path: `${artifacts}/customized-u1.png` });
 });

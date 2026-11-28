@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import { FIRST_RUN_CONFIG, test } from "./failureDiagnostics";
+import { openPrinterOptions } from "./printerOptions";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
@@ -120,10 +121,10 @@ test("the setup wizard installs printer models with every nozzle and their defau
   const klipperVariants = modelVariants("Custom", "Generic Klipper Printer");
   expect(await systemModels(page)).toEqual(["Generic Klipper Printer"]);
   await expect(combo(page, "Printer preset")).toHaveAttribute("title", "MyKlipper 0.4 nozzle");
-  const nozzles = page.getByRole("combobox", { name: "Nozzle diameter", exact: true });
-  expect((await nozzles.locator("option").allTextContents()).sort()).toEqual(
-    klipperVariants.map((variant) => `${variant} mm`).sort(),
-  );
+  const nozzles = page.getByRole("button", { name: "Nozzle diameter", exact: true });
+  const items = await openPrinterOptions(nozzles);
+  expect((await items.allTextContents()).sort()).toEqual(klipperVariants.map((variant) => `${variant} mm`).sort());
+  await page.keyboard.press("Escape");
   await page.screenshot({ path: `${artifacts}finished.png` });
 
   // 6. A plate slices with the chosen printer.

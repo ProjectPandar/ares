@@ -9,6 +9,7 @@ import { oraclePath } from "./oracleEnv";
 import { normalize } from "./orcaGcode";
 import { switchedPlaterExport, withoutCliGroups } from "./platerExport";
 import { type NativeSelection, nativeSelection, PROJECT_CONFIG, presetSelectProbe } from "./presetSelectOracle";
+import { choosePrinterOption } from "./printerOptions";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const profiles = `${process.env.ORCA_SLICER_DIR ?? `${repositoryRoot}OrcaSlicer/`}/resources/profiles/`;
@@ -120,7 +121,7 @@ async function selectInBrowser(
   await combo.click();
   await page.getByRole("option", { name: model, exact: true }).click();
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
-  await page.getByRole("combobox", { name: variants, exact: true }).selectOption(variant);
+  await choosePrinterOption(page.getByRole("button", { name: variants, exact: true }), `${variant} mm`);
   await expect(combo).toHaveAttribute("title", printer, { timeout: 60_000 });
   await expect(page.getByTestId("preset-filtering")).toHaveCount(0, { timeout: 60_000 });
 }

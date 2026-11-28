@@ -1,3 +1,45 @@
+.printer-select.combo {
+  flex: 0 0 60%;
+}
+.printer-menu-chevron {
+  flex: none;
+  color: var(--text-dim);
+}
+.printer-menu-positioner {
+  z-index: 40;
+}
+.printer-menu {
+  width: max-content;
+  min-width: min(var(--anchor-width), var(--available-width));
+  max-width: var(--available-width);
+  max-height: var(--available-height);
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  outline: none;
+}
+.printer-menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 8px 4px 26px;
+  border-radius: 4px;
+  cursor: default;
+  outline: none;
+}
+.printer-menu-item[data-highlighted] {
+  background: var(--accent-soft);
+}
+.printer-menu-indicator {
+  position: absolute;
+  inset-inline-start: 8px;
+  color: var(--accent-ink);
+}
+
 /* Dual-nozzle printers: ExtruderGroup boxes and the filament grouping. */
 .extruder-groups {
   display: grid;
