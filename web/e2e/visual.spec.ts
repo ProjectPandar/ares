@@ -19,8 +19,12 @@ test("visual snapshots", async ({ page }) => {
   mkdirSync(artifacts, { recursive: true });
   await page.goto("/");
   await expect(page.locator(".engine-dot.ready")).toBeVisible({ timeout: 30_000 });
-  await setTheme(page, "dark");
-  await page.screenshot({ path: `${artifacts}empty-dark.png` });
+
+  // The empty plater and its canvas hint, over the bed in each theme.
+  for (const theme of ["dark", "light"] as const) {
+    await setTheme(page, theme);
+    await page.screenshot({ path: `${artifacts}empty-${theme}.png` });
+  }
 
   await page.getByTestId("import-input").setInputFiles(fixture);
   await expect(page.getByTestId("status")).toHaveText("Ready to slice");
