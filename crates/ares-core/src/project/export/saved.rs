@@ -141,7 +141,7 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
                 parts: object
                     .volumes()
                     .iter()
-                    .map(|volume| saved_part(volume, &settings.parts))
+                    .map(|volume| saved_part(volume, &settings.parts, full_cli_slice))
                     .collect::<Result<_, _>>()?,
             })
         })
@@ -188,13 +188,6 @@ fn supports_build_transform(
         && part.id == volume.id()
         && part.options.is_empty()
         && !part.has_parametric_shape
-        && part.mesh_stat.as_ref().is_none_or(|stat| {
-            stat.edges_fixed == 0
-                && stat.degenerate_facets == 0
-                && stat.facets_removed == 0
-                && stat.facets_reversed == 0
-                && stat.backwards_edges == 0
-        })
         && supported_provenance(part)
         && native_invertible_affine(transform)
 }
@@ -275,6 +268,7 @@ fn largest_pivot(lu: &[[f64; 3]; 3], start: usize) -> (usize, usize, f64) {
 fn saved_part(
     volume: &crate::ProjectVolume,
     settings: &[PartSettings],
+    full_cli_slice: bool,
 ) -> Result<Part, SliceError> {
     let part = settings
         .iter()
@@ -283,7 +277,11 @@ fn saved_part(
     if volume.volume_type() != crate::ProjectVolumeType::ModelPart {
         return Err(deferred("expected ordinary model parts"));
     }
-    Ok(model_part(volume, Some(part)))
+    let mut saved = model_part(volume, Some(part));
+    if full_cli_slice {
+        saved.mesh_stat = Some(volume.mesh().repair_statistics().clone());
+    }
+    Ok(saved)
 }
 
 pub(in crate::project::export) fn model_part(

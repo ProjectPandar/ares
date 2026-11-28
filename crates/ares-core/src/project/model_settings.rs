@@ -124,7 +124,7 @@ pub(crate) struct Metadata {
     pub value: String,
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 pub(crate) struct MeshStatistics {
     #[serde(rename = "@edges_fixed")]
     pub edges_fixed: u32,

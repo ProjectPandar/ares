@@ -1,4 +1,4 @@
-use super::Point3d;
+use super::{super::model_settings::MeshStatistics, Point3d};
 use std::sync::Arc;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -6,6 +6,7 @@ pub(super) struct MeshGeometry {
     pub(super) vertices: Vec<Point3d>,
     pub(super) triangles: Vec<[u32; 3]>,
     pub(super) face_properties: Vec<Box<str>>,
+    repair_statistics: MeshStatistics,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -29,11 +30,26 @@ impl ProjectMesh {
         triangles: Vec<[u32; 3]>,
         face_properties: Vec<Box<str>>,
     ) -> Self {
+        Self::new_with_repair_statistics(
+            vertices,
+            triangles,
+            face_properties,
+            MeshStatistics::default(),
+        )
+    }
+
+    pub(crate) fn new_with_repair_statistics(
+        vertices: Vec<Point3d>,
+        triangles: Vec<[u32; 3]>,
+        face_properties: Vec<Box<str>>,
+        repair_statistics: MeshStatistics,
+    ) -> Self {
         Self {
             geometry: Arc::new(MeshGeometry {
                 vertices,
                 triangles,
                 face_properties,
+                repair_statistics,
             }),
             supported_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
             mmu_segmentation_facets: crate::project::facets_annotation::FacetsAnnotation::default(),
@@ -47,6 +63,9 @@ impl ProjectMesh {
     }
     pub fn triangles(&self) -> &[[u32; 3]] {
         &self.geometry.triangles
+    }
+    pub(crate) fn repair_statistics(&self) -> &MeshStatistics {
+        &self.geometry.repair_statistics
     }
     /// Opaque BBS triangle properties, in source-triangle order.
     pub fn face_properties(&self) -> &[Box<str>] {

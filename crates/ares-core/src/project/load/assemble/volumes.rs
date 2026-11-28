@@ -39,7 +39,12 @@ pub(super) fn collect_volumes(
             budget.claim_mesh(mesh.vertices.vertices.len(), mesh.triangles.triangles.len())?;
             let mut selected = volume_metadata::select(parts, output.len(), object.id)?;
             selected.name = volume_name(selected.name, object_name, &mut unnamed_count);
-            let prepared = mesh_prepare::prepare(mesh, model.document.unit, accumulated);
+            let prepared = mesh_prepare::prepare(
+                mesh,
+                model.document.unit,
+                accumulated,
+                selected.mesh_statistics,
+            );
             let mut volume = ProjectVolume::new(
                 model.path.as_str().to_owned(),
                 object.id,
