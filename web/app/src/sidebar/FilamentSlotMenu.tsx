@@ -1,5 +1,6 @@
 import type { FilamentSlotEdit, FilamentSlots } from "@ares-slicer/wasm";
 import { useEffect, useId, useRef, useState } from "react";
+import { DialogHeader } from "../shell/DialogHeader";
 import "./filamentAssignment.css";
 
 export function FilamentSlotMenu({
@@ -144,7 +145,7 @@ export function FilamentSlotMenu({
       {mergeTarget !== undefined && (
         <dialog
           ref={confirmation}
-          className="shortcuts-dialog"
+          className="dialog"
           aria-labelledby={`${id}-merge-title`}
           role="alertdialog"
           onClose={() => {
@@ -152,20 +153,18 @@ export function FilamentSlotMenu({
             trigger.current?.focus();
           }}
         >
-          <header className="shortcuts-header">
-            <h2 id={`${id}-merge-title`}>Merge filament?</h2>
-          </header>
+          <DialogHeader id={`${id}-merge-title`} title="Merge filament?" />
           <div className="dialog-body">
-            <p className="dialog-notice warning">
+            <p className="notice warning" role="status">
               The target mixed filament uses this filament as a component. Merging may invalidate the mix.
             </p>
           </div>
-          <footer className="vendor-footer">
-            <button className="side-button" onClick={() => confirmation.current!.close()}>
+          <footer className="dialog-footer">
+            <button className="button" onClick={() => confirmation.current!.close()}>
               Cancel
             </button>
             <button
-              className="side-button dialog-danger"
+              className="button danger"
               onClick={() => {
                 confirmation.current!.close();
                 edit({

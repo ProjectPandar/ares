@@ -110,7 +110,7 @@ test("the printer title, the printer combo and the filament title open the guide
   const list = filaments.getByRole("group", { name: "Filaments" });
   await expect(list.getByRole("checkbox").first()).toBeVisible({ timeout: 60_000 });
   await filaments.getByRole("searchbox", { name: "Filter filaments" }).fill("::checked");
-  const checked = await list.locator("label").allTextContents();
+  const checked = await list.locator("label > span:first-of-type").allTextContents();
   expect(checked.filter((name) => !before.some((installed) => short(installed) === name))).toEqual([]);
   expect(checked).toEqual(expect.arrayContaining(FIRST_RUN_CONFIG.installedFilaments.map(short)));
   await filaments.getByRole("searchbox", { name: "Filter filaments" }).fill(FILAMENT.toLowerCase());

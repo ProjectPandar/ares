@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import { exportGcode, newProject } from "../state/actions";
 import { saveProject, saveProjectBlocker } from "../state/saveProject";
 import { useApp } from "../state/store";
+import { DialogHeader } from "./DialogHeader";
 import { OrcaIcon } from "./icons";
 import { ctrlLabel, mac } from "./keys";
 
@@ -288,21 +289,20 @@ function NewProjectDialog({ onClose }: { onClose: (discard: boolean) => void }) 
   return (
     <dialog
       ref={dialog}
-      className="shortcuts-dialog"
+      className="dialog"
+      role="alertdialog"
       aria-labelledby="new-project-title"
       onClose={() => onClose(discard.current)}
     >
-      <header className="shortcuts-header">
-        <h2 id="new-project-title">Discard the current project?</h2>
-      </header>
+      <DialogHeader id="new-project-title" title="Discard the current project?" />
       <div className="dialog-body">
         <p>The model, its plates and slice results are closed. The selected presets stay.</p>
       </div>
-      <footer className="vendor-footer">
-        <button className="side-button" onClick={() => answer(false)}>
+      <footer className="dialog-footer">
+        <button className="button" onClick={() => answer(false)}>
           Cancel
         </button>
-        <button className="side-button dialog-danger" onClick={() => answer(true)}>
+        <button className="button danger" onClick={() => answer(true)}>
           Discard
         </button>
       </footer>

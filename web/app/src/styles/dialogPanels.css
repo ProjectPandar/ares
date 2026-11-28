@@ -1,0 +1,354 @@
+/*
+ * The dialog panels of the Design canvas artboards (design/ares-slicer-dialogs/assets/dialogs.css):
+ * frames, the filament catalog, the setup wizard, settings pages, keyboard shortcuts, About and
+ * the arrange popup's spacing row, in the artboard's class names over the app's tokens.
+ */
+.dialog,
+.popup {
+  & .frame {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    overflow: hidden;
+  }
+  & .frame-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--dialog-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  & .frame-head :is(h2, h3) {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 650;
+  }
+  & .frame-content {
+    padding: 7px 10px;
+  }
+  & .frame-content > .check + .check {
+    border-top: 1px solid var(--border);
+  }
+
+  & .catalog {
+    display: grid;
+    grid-template-columns: 156px 164px minmax(0, 1fr);
+    gap: 8px;
+  }
+  & .catalog .frame-content {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+  }
+  & .catalog .search {
+    margin-bottom: 2px;
+  }
+  & .catalog-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  & .catalog-actions .button {
+    min-height: 25px;
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+
+  & .wizard {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    gap: var(--dialog-gap);
+  }
+  & .vendor-nav {
+    display: grid;
+    align-content: start;
+    gap: 3px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--dialog-muted);
+  }
+  & .vendor-nav :is(a, button) {
+    display: block;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  & .vendor-nav :is(a, button):hover {
+    background: var(--panel);
+  }
+  & .vendor-nav strong {
+    padding: 3px 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+  }
+  & .models {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  & .model {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--dialog-control-radius);
+    cursor: pointer;
+  }
+  & .model:has(input:checked) {
+    border-color: color-mix(in srgb, var(--accent-fill), transparent 45%);
+    background: var(--accent-soft);
+  }
+  & .model img {
+    width: 100%;
+    height: 62px;
+    object-fit: contain;
+  }
+  & .model .check {
+    font-weight: 600;
+  }
+  /* A vendor's whole-model box at the right of its frame head (UpdateVendorCheckbox, common.js:360-370). */
+  & .wizard-vendor-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  & .wizard-count {
+    color: var(--text-dim);
+  }
+
+  /* Settings pages: the artboard's segmented tabs over framed two-column fields. */
+  & .process-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: normal;
+    gap: 3px;
+    margin: 0;
+    padding: 3px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 0;
+    border-radius: 9px;
+    background: var(--dialog-muted);
+  }
+  & .process-tab {
+    flex: 1 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 3px 8px;
+    border: 1px solid transparent;
+    border-radius: var(--dialog-control-radius);
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 550;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    cursor: pointer;
+  }
+  & .process-tab.active {
+    background: var(--panel);
+    border-color: var(--border);
+    color: var(--text);
+    box-shadow: none;
+  }
+  & .optgroup {
+    margin: 0;
+  }
+  /* The sidebar's group title is the artboard's frame head: its text sits in the h2. */
+  & .optgroup-title {
+    margin-bottom: 0;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+  }
+  & .optgroup .optgroup-separator {
+    margin-block: 4px;
+  }
+  & .optgroup .option-row {
+    min-width: 0;
+  }
+  & .optgroup .option-row:not(.option-line) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(44%, 210px);
+    align-items: center;
+    justify-content: normal;
+    gap: 5px;
+    min-height: 0;
+    padding: 0;
+  }
+  & .optgroup .option-row:not(.option-line) + .option-row {
+    margin-top: 5px;
+  }
+  & .option-label {
+    flex: 0 1 auto;
+    min-width: auto;
+    overflow: visible;
+    color: var(--text);
+    font-weight: 400;
+  }
+  & .option-value {
+    width: 100%;
+  }
+  & :is(.option-field, .option-select) {
+    flex: 0 1 auto;
+    height: auto;
+    min-height: 30px;
+    padding: 5px 9px;
+    border-radius: var(--dialog-control-radius);
+    background: var(--field);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    white-space: normal;
+    box-shadow: none;
+  }
+  & .option-field:read-only {
+    background: var(--field);
+    color: var(--text);
+  }
+
+  & .shortcuts-list {
+    margin: 0;
+  }
+  & .shortcuts-list > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+  }
+  & .shortcuts-list > div + div {
+    border-top: 1px solid var(--border);
+  }
+  & .shortcuts-list dd {
+    margin: 0;
+  }
+  & kbd {
+    display: inline-block;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 1px 6px;
+    background: var(--dialog-muted);
+    font:
+      11px/1.45 ui-monospace,
+      monospace;
+    white-space: nowrap;
+  }
+
+  & .about-mark {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--accent-fill);
+    color: var(--accent-text);
+    font-size: 23px;
+    font-weight: 700;
+  }
+  & .about-identity {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  & .about-identity strong {
+    font-size: 16px;
+  }
+
+  & .spacing-row {
+    display: grid;
+    grid-template-columns: 1fr 72px;
+    gap: 8px;
+    align-items: end;
+  }
+  & .spacing-row input[type="range"] {
+    width: 100%;
+    height: var(--dialog-control-height);
+    margin: 0;
+  }
+}
+
+/*
+ * Long lists scroll in place (DESIGN.md D3), so the filters and the vendor list stay in view: within
+ * the dialog's max height less its header (74 with a description, 70 with a step line), body padding
+ * (19), footer (55) and, under a search, its 34 and the 12 gap.
+ */
+@media (min-width: 641px) {
+  .dialog {
+    & .catalog .check-list {
+      max-height: calc(100dvh - 251px);
+      overflow-y: auto;
+    }
+    & .vendor-nav {
+      max-height: calc(100dvh - 180px);
+      overflow-y: auto;
+    }
+    & .wizard-vendors {
+      max-height: calc(100dvh - 226px);
+      overflow-y: auto;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .dialog,
+  .popup {
+    & .grid-2,
+    & .catalog,
+    & .wizard {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .catalog-actions .button {
+      min-height: 38px;
+    }
+    & .vendor-nav {
+      grid-auto-flow: column;
+      overflow-x: auto;
+    }
+    & .models {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    & :is(.option-field, .option-select) {
+      min-height: 36px;
+      font-size: inherit;
+    }
+    & .process-tab {
+      min-height: 38px;
+    }
+  }
+}
+
+@media (pointer: coarse) {
+  .dialog,
+  .popup {
+    & .catalog-actions .button,
+    & .process-tab,
+    & :is(.option-field, .option-select) {
+      min-height: 44px;
+    }
+    /* 16px text so iOS Safari does not zoom into a focused field. */
+    & :is(.option-field, .option-select) {
+      font-size: 16px;
+    }
+    & .vendor-nav :is(a, button) {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+}

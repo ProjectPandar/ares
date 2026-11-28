@@ -142,7 +142,7 @@ test("an H2D project shows the left and right nozzles and slices its filament ma
 
   // Different diameters cannot print together: the question picks one for both nozzles; Cancel keeps both.
   await select(page, "Left Nozzle diameter").selectOption("0.6");
-  const question = page.getByRole("dialog", { name: "Switch diameter" });
+  const question = page.getByRole("alertdialog", { name: "Switch diameter" });
   await expect(question.getByRole("button", { name: "Left nozzle: 0.6mm" })).toBeVisible();
   await expect(question.getByRole("button", { name: "Right nozzle: 0.4mm" })).toBeVisible();
   await page.screenshot({ path: `${artifacts}switch-diameter.png` });

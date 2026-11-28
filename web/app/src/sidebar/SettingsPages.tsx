@@ -95,14 +95,18 @@ function Group({ group, context, mode }: { group: LayoutGroup; context: RowConte
   );
   if (!rows.some((row) => row.kind !== "separator")) return null;
   return (
-    <div className="optgroup">
-      <div className="optgroup-title">
-        {group.icon && <OrcaIcon name={group.icon} size={18} />}
-        {group.title}
+    <div className="optgroup frame">
+      <div className="optgroup-title frame-head">
+        <span className="optgroup-heading">
+          {group.icon && <OrcaIcon name={group.icon} size={18} />}
+          <h2>{group.title}</h2>
+        </span>
       </div>
-      {rows.map((row, index) => (
-        <Row key={index} row={row} context={context} defs={defs} />
-      ))}
+      <div className="frame-content">
+        {rows.map((row, index) => (
+          <Row key={index} row={row} context={context} defs={defs} />
+        ))}
+      </div>
     </div>
   );
 }

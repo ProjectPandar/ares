@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { DialogHeader } from "../shell/DialogHeader";
 import { extruderState, isDual, setVolumeType, volumeTypeOptions } from "../state/extruders";
 import { selectDiameter } from "../state/printer";
 import { nozzleOptions, type PrinterPanel } from "../state/printerPanel";
@@ -26,29 +27,25 @@ function SwitchDiameter({
   return (
     <dialog
       ref={dialog}
-      className="shortcuts-dialog switch-diameter"
+      className="dialog"
+      role="alertdialog"
       aria-labelledby="switch-diameter-title"
       onClose={onClose}
     >
-      <header className="shortcuts-header">
-        <h2 id="switch-diameter-title">Switch diameter</h2>
-      </header>
+      <DialogHeader id="switch-diameter-title" title="Switch diameter" />
       <div className="dialog-body">
-        <p className="dialog-notice warning">
+        <p className="notice warning" role="status">
           The software does not support using different diameter of nozzles for one print. If the left and right nozzles
           are inconsistent, we can only proceed with single-head printing. Please confirm which nozzle you would like to
           use for this project.
         </p>
       </div>
-      <footer className="vendor-footer">
-        <button className="side-button" onClick={() => dialog.current!.close()}>
+      <footer className="dialog-footer">
+        <button className="button" onClick={() => dialog.current!.close()}>
           Cancel
         </button>
-        <button className="side-button" onClick={() => choose(diameters[0])}>{`Left nozzle: ${diameters[0]}mm`}</button>
-        <button
-          className="side-button"
-          onClick={() => choose(diameters[1])}
-        >{`Right nozzle: ${diameters[1]}mm`}</button>
+        <button className="button" onClick={() => choose(diameters[0])}>{`Left nozzle: ${diameters[0]}mm`}</button>
+        <button className="button" onClick={() => choose(diameters[1])}>{`Right nozzle: ${diameters[1]}mm`}</button>
       </footer>
     </dialog>
   );

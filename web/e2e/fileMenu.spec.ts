@@ -258,7 +258,7 @@ test("the File menu lists upstream's rows and runs import, open, export, new pro
   // presets and shows Prepare.
   await page.getByRole("link", { name: "Preview" }).click();
   await expect(page).toHaveURL(/#\/preview$/);
-  const discard = page.getByRole("dialog", { name: "Discard the current project?" });
+  const discard = page.getByRole("alertdialog", { name: "Discard the current project?" });
   await pick(["New Project"]);
   await expect(discard).toBeVisible();
   await discard.getByRole("button", { name: "Cancel", exact: true }).click();

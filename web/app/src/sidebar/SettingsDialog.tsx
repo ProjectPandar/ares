@@ -124,22 +124,24 @@ export function SettingsDialog({
         ? preset[printer ? 0 : tab.slot]
         : preset;
   return (
-    <dialog ref={dialog} className="settings-dialog" aria-labelledby="settings-title" onClose={onClose}>
-      <header className="shortcuts-header">
-        <div className="settings-heading">
-          <h2 id="settings-title">{title}</h2>
-          {name && <span className="settings-preset">{String(name)}</span>}
+    <dialog ref={dialog} className="dialog settings sheet" aria-labelledby="settings-title" onClose={onClose}>
+      <header className="dialog-header">
+        <div className="dialog-heading">
+          <h1 id="settings-title">{title}</h1>
+          {name && <p>{String(name)}</p>}
         </div>
         <ModeSwitch />
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
-          {"\u2715"}
+        <button className="button close" type="button" aria-label="Close" onClick={() => dialog.current!.close()}>
+          {"×"}
         </button>
       </header>
-      <div className="settings-body process">
-        <SettingsPages
-          pages={printer && values ? printerPages(values) : printer ? PRINTER_PAGES : FILAMENT_PAGES}
-          context={values && { values, slot: printer ? undefined : tab.slot }}
-        />
+      <div className="dialog-body">
+        <div className="stack process">
+          <SettingsPages
+            pages={printer && values ? printerPages(values) : printer ? PRINTER_PAGES : FILAMENT_PAGES}
+            context={values && { values, slot: printer ? undefined : tab.slot }}
+          />
+        </div>
       </div>
     </dialog>
   );

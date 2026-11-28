@@ -62,42 +62,46 @@ function VendorBlock({
     onChange(models.reduce((next, { model }) => set(model, on, next), new Set(checked)));
   };
   return (
-    <section className="wizard-vendor" data-vendor={vendor} aria-label={vendorTitle(vendor)}>
-      <header className="wizard-vendor-banner">
-        <h3>{vendorTitle(vendor)}</h3>
-        <label className="wizard-vendor-check">
-          <span className="wizard-count">
-            {count} / {models.length}
-          </span>
-          <input
-            ref={box}
-            type="checkbox"
-            aria-label={`All ${vendorTitle(vendor)} models`}
-            checked={count > 0 && count === models.length}
-            onChange={chooseVendor}
-          />
-        </label>
-      </header>
-      <div className="wizard-models">
-        {models.map((model) => (
-          <label key={model.model} className="wizard-model" title={model.name}>
-            <img className="wizard-cover" src={`${import.meta.env.BASE_URL}printer-dummy.png`} alt="" />
-            <span className="wizard-nozzle">
-              Nozzle <span>{model.variants.join(" · ")}</span>
+    <div data-vendor={vendor}>
+      <section className="frame" aria-label={vendorTitle(vendor)}>
+        <header className="frame-head">
+          <h2>{vendorTitle(vendor)}</h2>
+          <label className="wizard-vendor-check">
+            <span className="wizard-count">
+              {count} / {models.length}
             </span>
-            <span className="wizard-model-name">
-              <input
-                type="checkbox"
-                aria-label={model.name}
-                checked={checked.has(model.model)}
-                onChange={(event) => onChange(set(model.model, event.target.checked, new Set(checked)))}
-              />
-              {modelTitle(model)}
-            </span>
+            <input
+              ref={box}
+              type="checkbox"
+              aria-label={`All ${vendorTitle(vendor)} models`}
+              checked={count > 0 && count === models.length}
+              onChange={chooseVendor}
+            />
           </label>
-        ))}
-      </div>
-    </section>
+        </header>
+        <div className="frame-content">
+          <div className="models">
+            {models.map((model) => (
+              <label key={model.model} className="model" title={model.name}>
+                <img src={`${import.meta.env.BASE_URL}printer-dummy.png`} alt="" />
+                <span className="muted">
+                  Nozzle <span>{model.variants.join(" · ")}</span>
+                </span>
+                <span className="check">
+                  <input
+                    type="checkbox"
+                    aria-label={model.name}
+                    checked={checked.has(model.model)}
+                    onChange={(event) => onChange(set(model.model, event.target.checked, new Set(checked)))}
+                  />
+                  {modelTitle(model)}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -123,28 +127,30 @@ export function ModelPage({
       .current!.querySelector<HTMLElement>(`[data-vendor="${CSS.escape(vendor)}"]`)!
       .scrollIntoView({ behavior: "smooth" });
   return (
-    <div className="wizard-printers">
-      <nav className="wizard-sidebar" aria-label="Vendors">
-        <div className="wizard-sidebar-title">Vendors</div>
-        {[...byVendor.keys()].map((vendor) => (
-          <button key={vendor} className="wizard-sidebar-item" onClick={() => scrollTo(vendor)}>
-            {vendor === "Custom" ? "Custom" : vendor}
-          </button>
-        ))}
-      </nav>
-      <div className="wizard-content">
-        <input
-          type="search"
-          className="filament-column-search wizard-search"
-          aria-label="Search printers"
-          placeholder="Search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <div ref={content} className="wizard-vendors">
-          {[...byVendor].map(([vendor, listed]) => (
-            <VendorBlock key={vendor} vendor={vendor} models={listed} checked={checked} onChange={onChange} />
+    <div className="dialog-body">
+      <div className="wizard">
+        <nav className="vendor-nav" aria-label="Vendors">
+          <strong>Vendors</strong>
+          {[...byVendor.keys()].map((vendor) => (
+            <button key={vendor} type="button" onClick={() => scrollTo(vendor)}>
+              {vendor === "Custom" ? "Custom" : vendor}
+            </button>
           ))}
+        </nav>
+        <div className="stack">
+          <input
+            type="search"
+            className="search"
+            aria-label="Search printers"
+            placeholder="Search printers"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <div ref={content} className="stack wizard-vendors">
+            {[...byVendor].map(([vendor, listed]) => (
+              <VendorBlock key={vendor} vendor={vendor} models={listed} checked={checked} onChange={onChange} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

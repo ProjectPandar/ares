@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { DialogHeader } from "./DialogHeader";
 import { restartEngine } from "../state/engineRecovery";
 import { useApp } from "../state/store";
 
@@ -17,25 +18,26 @@ export function EngineCrashDialog() {
   return (
     <dialog
       ref={dialog}
-      className="shortcuts-dialog"
+      className="dialog"
+      role="alertdialog"
       aria-labelledby="engine-crash-title"
       onCancel={(event) => event.preventDefault()}
     >
-      <header className="shortcuts-header">
-        <h2 id="engine-crash-title">Slicing engine failed</h2>
-      </header>
+      <DialogHeader id="engine-crash-title" title="Slicing engine failed" />
       <div className="dialog-body">
-        <p className="dialog-notice error engine-crash-message" data-testid="engine-crash-message">
-          {crash}
-        </p>
-        <p>
-          {fileName
-            ? `Restarting the engine reopens ${fileName} from the original file with the current presets; edits made on the canvas after it was opened, and the undo history, are lost.`
-            : "Restarting the engine reloads the page."}
-        </p>
+        <div className="stack">
+          <p className="notice error engine-crash-message" data-testid="engine-crash-message" role="alert">
+            {crash}
+          </p>
+          <p>
+            {fileName
+              ? `Restarting the engine reopens ${fileName} from the original file with the current presets; edits made on the canvas after it was opened, and the undo history, are lost.`
+              : "Restarting the engine reloads the page."}
+          </p>
+        </div>
       </div>
-      <footer className="vendor-footer">
-        <button className="side-button dialog-primary" onClick={() => void restartEngine()}>
+      <footer className="dialog-footer">
+        <button className="button primary" onClick={() => void restartEngine()}>
           Restart engine
         </button>
       </footer>

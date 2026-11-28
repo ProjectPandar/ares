@@ -1,5 +1,6 @@
 import type { GuideFilament } from "@ares-slicer/wasm";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DialogHeader } from "../shell/DialogHeader";
 import { checkedItems, dialogModel } from "../sidebar/filamentDialog";
 
 /**
@@ -33,7 +34,11 @@ export function FilamentPage({
     [filaments],
   );
   const [checked, setChecked] = useState<ReadonlySet<string>>(() => checkedItems(model.items, selected));
-  const [notice, setNotice] = useState(false);
+  const notice = useRef<HTMLDialogElement>(null);
+  const [showNotice, setShowNotice] = useState(false);
+  useEffect(() => {
+    if (showNotice) notice.current!.showModal();
+  }, [showNotice]);
   const toggle = (key: string, on: boolean) => {
     const next = new Set(checked);
     if (on) next.add(key);
@@ -42,52 +47,70 @@ export function FilamentPage({
   };
   // ResponseFilamentResult (common.js:486-520).
   const finish = () => {
-    if (checked.size === 0) setNotice(true);
+    if (checked.size === 0) setShowNotice(true);
     else onFinish(model.items.filter(({ key }) => checked.has(key)).flatMap(({ names }) => names));
   };
   return (
     <>
-      <div className="wizard-filaments" role="group" aria-label="Filaments">
-        {model.items.map((item) => (
-          <label key={item.key} className="vendor-item" title={item.names.join("\n")}>
-            <input
-              type="checkbox"
-              checked={checked.has(item.key)}
-              onChange={(event) => toggle(item.key, event.target.checked)}
-            />
-            {item.short}
-            <span className="wizard-filament-meta">
-              {item.vendor} · {item.type}
-            </span>
-          </label>
-        ))}
+      <div className="dialog-body">
+        <section className="frame" role="group" aria-label="Filaments">
+          <header className="frame-head">
+            <h2>Filaments</h2>
+          </header>
+          <div className="frame-content">
+            {model.items.map((item) => (
+              <label key={item.key} className="check" title={item.names.join("\n")}>
+                <input
+                  type="checkbox"
+                  aria-label={item.short}
+                  checked={checked.has(item.key)}
+                  onChange={(event) => toggle(item.key, event.target.checked)}
+                />
+                <span>{item.short}</span>
+                <span className="check-detail">
+                  {item.vendor} · {item.type}
+                </span>
+              </label>
+            ))}
+          </div>
+        </section>
       </div>
-      <footer className="vendor-footer wizard-footer">
-        <span className="filament-count" data-testid="filament-count">
+      <footer className="dialog-footer">
+        <span className="summary" data-testid="filament-count">
           {checked.size} / {model.items.length}
         </span>
-        <button className="side-button" onClick={onBack}>
+        <button className="button" onClick={onBack}>
           Back
         </button>
-        <button className="side-button dialog-primary" onClick={finish}>
+        <button className="button primary" onClick={finish}>
           Finish
         </button>
       </footer>
-      {notice && (
-        <div
-          className="wizard-notice"
+      {showNotice && (
+        <dialog
+          ref={notice}
+          className="dialog"
           role="alertdialog"
           aria-labelledby="wizard-notice-title"
-          aria-describedby="wizard-notice-text"
+          // React bubbles a dialog's close and cancel through its ancestors: the wizard under it stays open.
+          onClose={(event) => {
+            event.stopPropagation();
+            setShowNotice(false);
+          }}
+          onCancel={(event) => event.stopPropagation()}
         >
-          <div id="wizard-notice-title" className="wizard-notice-bar">
-            Error
+          <DialogHeader id="wizard-notice-title" title="Error" />
+          <div className="dialog-body">
+            <p className="notice error" role="alert">
+              At least one filament must be selected.
+            </p>
           </div>
-          <p id="wizard-notice-text">At least one filament must be selected.</p>
-          <button className="side-button dialog-primary" onClick={() => setNotice(false)}>
-            OK
-          </button>
-        </div>
+          <footer className="dialog-footer">
+            <button className="button primary" onClick={() => notice.current!.close()}>
+              OK
+            </button>
+          </footer>
+        </dialog>
       )}
     </>
   );

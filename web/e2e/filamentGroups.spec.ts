@@ -111,7 +111,10 @@ test("filament combos group compatible installed presets like PlaterPresetComboB
   ]);
   const filter = dialog.getByRole("searchbox", { name: "Filter filaments" });
   await filter.fill("::checked");
-  const checkedItems = await dialog.getByRole("group", { name: "Filaments" }).locator("label").allTextContents();
+  const checkedItems = await dialog
+    .getByRole("group", { name: "Filaments" })
+    .locator("label > span:first-of-type")
+    .allTextContents();
   expect(checkedItems.sort()).toEqual([...new Set(compatible.map((name) => name.split("@")[0].trim()))].sort());
   await filter.fill(ADDED.toLowerCase());
   const item = dialog.getByRole("group", { name: "Filaments" }).getByRole("checkbox", { name: ADDED, exact: true });

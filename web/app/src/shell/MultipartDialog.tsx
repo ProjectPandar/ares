@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { DialogHeader } from "./DialogHeader";
 import { importStlFiles } from "../state/stlImport";
 
 export function MultipartDialog({ files, onClose }: { files: File[]; onClose: () => void }) {
@@ -13,7 +14,7 @@ export function MultipartDialog({ files, onClose }: { files: File[]; onClose: ()
   return (
     <dialog
       ref={dialog}
-      className="shortcuts-dialog"
+      className="dialog"
       aria-labelledby="multipart-title"
       aria-describedby="multipart-question"
       onClose={onClose}
@@ -28,24 +29,24 @@ export function MultipartDialog({ files, onClose }: { files: File[]; onClose: ()
         }
       }}
     >
-      <header className="shortcuts-header">
-        <h2 id="multipart-title">An object with multiple parts was detected</h2>
-        <button className="bar-button" aria-label="Close" onClick={() => dialog.current!.close()}>
-          {"\u2715"}
-        </button>
-      </header>
+      <DialogHeader
+        id="multipart-title"
+        title="An object with multiple parts was detected"
+        description="Load these files as a single object with multiple parts?"
+        descriptionId="multipart-question"
+        close={() => dialog.current!.close()}
+      />
       <div className="dialog-body">
-        <p id="multipart-question">Load these files as a single object with multiple parts?</p>
-        <label className="vendor-item">
+        <label className="check">
           <input type="checkbox" checked={autoDrop} onChange={(event) => setAutoDrop(event.target.checked)} />
-          Auto-Drop
+          <span>Auto-Drop</span>
         </label>
       </div>
-      <footer className="vendor-footer">
-        <button className="side-button" onClick={() => choose(false)}>
+      <footer className="dialog-footer">
+        <button className="button" onClick={() => choose(false)}>
           No
         </button>
-        <button className="side-button dialog-primary" onClick={() => choose(true)}>
+        <button className="button primary" onClick={() => choose(true)}>
           Yes
         </button>
       </footer>

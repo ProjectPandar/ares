@@ -1,397 +1,356 @@
-/* Compact modal shells shared by the existing dialogs. */
+/*
+ * The dialog set of the Design canvas (design/ares-slicer-dialogs/assets/dialogs.css), in the
+ * artboard's class names: one anatomy for every dialog and popup — `.dialog-header`,
+ * `.dialog-body`, `.dialog-footer` — over the app's tokens. The rules are the artboard's; its
+ * tokens map to the app's: muted → --dialog-muted, dim → --text-dim, accent → --accent-fill.
+ */
 :root {
+  --dialog-muted: #f2f3f5;
+  --dialog-radius: 16px;
+  --dialog-control-radius: 8px;
+  --dialog-gap: 12px;
   --dialog-padding: 20px;
-  --dialog-scrim: #171c264e;
-  --dialog-danger: #b82f38;
+  --dialog-control-height: 34px;
   --dialog-danger-text: #ae2d35;
+  --dialog-danger-fill: #b82f38;
   --dialog-danger-soft: #fff1f1;
   --dialog-warning: #855211;
   --dialog-warning-soft: #fff5e3;
+  --dialog-scrim: #171c264e;
   --dialog-shadow: 0 1px 2px #0002, 0 16px 48px #0a0d1533;
 }
 
 :root[data-theme="dark"] {
-  --dialog-scrim: #08090cb0;
-  --dialog-danger: #ae3945;
+  --dialog-muted: #25282d;
   --dialog-danger-text: #ffa3aa;
+  --dialog-danger-fill: #ae3945;
   --dialog-danger-soft: #3d252b;
   --dialog-warning: #ffd38c;
   --dialog-warning-soft: #3b3021;
+  --dialog-scrim: #08090cb0;
 }
 
-dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog) {
-  width: min(var(--dialog-width, 460px), calc(100% - 36px));
+.dialog,
+.popup {
+  --width: 460px;
+  width: min(var(--width), calc(100% - 36px));
+  max-width: none;
   max-height: calc(100% - 36px);
-  border-radius: 16px;
-  box-shadow: var(--dialog-shadow);
-  font-size: 13px;
-  line-height: 1.46;
-}
-
-dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog)::backdrop {
-  background: var(--dialog-scrim);
-}
-
-.shortcuts-header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  flex: none;
-  gap: 12px;
+  padding: 0;
+  overflow: hidden;
   background: var(--panel);
   color: var(--text);
-  align-items: flex-start;
-  padding: 17px var(--dialog-padding) 10px;
-}
-
-.shortcuts-header h2 {
-  font-size: 17px;
-  line-height: 1.3;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-  margin: 0;
-}
-
-.shortcuts-header .bar-button {
-  margin-inline-start: auto;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-control);
-  font-size: 16px;
-  color: var(--text-dim);
-  padding: 0;
-}
-
-.shortcuts-header .bar-button:hover {
-  background: var(--panel-raised);
-}
-
-:is(dialog, .wizard-notice) .side-button {
-  min-width: 0;
-  height: auto;
-  min-height: 34px;
-  padding: 5px 12px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--field);
-  color: var(--text);
-  font-weight: 550;
-  line-height: 1.25;
-}
-
-:is(dialog, .wizard-notice) .side-button:not(:disabled):hover {
-  background: var(--panel-raised);
-}
-:is(dialog, .wizard-notice) .side-button.dialog-primary {
-  border-color: transparent;
-  background: var(--accent-fill);
-  color: var(--accent-text);
-  box-shadow: var(--inset);
-}
-
-:is(dialog, .wizard-notice) .side-button.dialog-primary:not(:disabled):hover {
-  background: var(--accent-fill-hover);
-}
-dialog .side-button.dialog-danger {
-  border-color: transparent;
-  background: var(--dialog-danger);
-  color: #fff;
-}
-dialog .side-button.dialog-danger:not(:disabled):hover {
-  background: var(--dialog-danger);
-  filter: brightness(0.9);
-}
-dialog .side-button:disabled {
-  opacity: 0.56;
-}
-
-:is(dialog, .wizard-notice) :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-dialog .vendor-footer {
-  position: sticky;
-  bottom: 0;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  padding: 10px var(--dialog-padding);
-  border-top: 1px solid var(--border);
-  background: var(--panel-sunken);
-}
-
-.dialog-body,
-.about-body {
-  padding: 3px var(--dialog-padding) 16px;
-  font-size: inherit;
-  color: var(--text);
-}
-.dialog-body > :first-child,
-.print-host-fields > :first-child {
-  margin-top: 0;
-}
-.dialog-body > :last-child {
-  margin-bottom: 0;
-}
-.dialog-body > .vendor-item {
-  min-height: 30px;
-}
-.dialog-body > .vendor-item input[type="number"] {
-  margin-inline-start: auto;
-  width: 110px;
-}
-
-.dialog-field,
-.print-host-field :is(input, select),
-dialog .filament-column-search {
-  min-height: 34px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--field);
-  color: var(--text);
-  padding-inline: 9px;
-  font: inherit;
-}
-
-.dialog-notice {
-  margin: 0;
-  padding: 9px 11px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--panel-raised);
-  overflow-wrap: anywhere;
-}
-.dialog-notice.error {
-  color: var(--dialog-danger-text);
-  background: var(--dialog-danger-soft);
-}
-.dialog-notice.warning {
-  color: var(--dialog-warning);
-  background: var(--dialog-warning-soft);
-}
-.dialog-notice.success {
-  background: var(--accent-soft);
-}
-.dialog-notice.busy {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings-dialog {
-  --dialog-width: 700px;
-  height: fit-content;
-}
-.settings-heading {
-  flex: 1;
-  min-width: 0;
-}
-.settings-preset {
-  display: block;
-  margin: 5px 0 0;
-  color: var(--text-dim);
-  opacity: 1;
-}
-.settings-body {
-  flex: 0 1 auto;
-  padding: 3px var(--dialog-padding) 16px;
-  overscroll-behavior: contain;
-  min-height: 0;
-}
-.settings-body .process-tabs {
-  margin: 0;
-  padding: 3px;
-  background: var(--panel-raised);
-}
-.settings-body .optgroup {
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  overflow: hidden;
-}
-.settings-body .optgroup-title {
-  margin: 0;
-  padding: 6px 10px;
-  background: var(--panel-raised);
-}
-.settings-body .option-row {
-  margin-inline: 10px;
-  min-height: 36px;
-}
-.settings-body .optgroup > :last-child {
-  margin-bottom: 5px;
-}
-.settings-body .option-value {
-  width: min(44%, 210px);
-}
-.settings-body :is(.option-field, .option-select) {
-  min-height: 30px;
-}
-.settings-body .option-field[readonly] {
-  background: var(--field);
-  color: var(--text);
-}
-
-.shortcuts-dialog:has(.shortcuts-groups) .shortcuts-header {
-  justify-content: space-between;
-}
-.shortcuts-groups {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  padding: 3px var(--dialog-padding) 16px;
-}
-.shortcuts-groups section {
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  overflow: hidden;
-}
-.shortcuts-groups h3 {
-  margin: 0;
-  padding: 6px 10px;
-  color: var(--text);
-  background: var(--panel-raised);
-}
-.shortcuts-groups dl {
-  padding-inline: 10px;
-}
-.shortcut-row {
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 30px;
-  align-items: center;
-}
-.shortcut-row dt {
-  grid-column: 2;
-  grid-row: 1;
-}
-.shortcut-row dd {
-  grid-column: 1;
-  grid-row: 1;
-}
-.shortcut-row kbd {
-  display: inline-block;
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  border-radius: 5px;
-  padding: 1px 6px;
-  background: var(--panel-raised);
+  border-radius: var(--dialog-radius);
+  box-shadow: var(--dialog-shadow);
+  /* The artboard page's body font, which its dialogs inherit. */
   font:
-    11px/1.45 ui-monospace,
-    monospace;
-  white-space: nowrap;
+    13px/1.46 Inter,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+
+  & .dialog-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--dialog-gap);
+    flex: none;
+    padding: 17px var(--dialog-padding) 10px;
+  }
+  & .dialog-heading {
+    min-width: 0;
+    flex: 1;
+  }
+  & .dialog-header h1 {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.3;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+  }
+  & .dialog-header p {
+    margin: 5px 0 0;
+    color: var(--text-dim);
+  }
+  & .dialog-body {
+    min-height: 0;
+    padding: 3px var(--dialog-padding) 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  & .dialog-body > :first-child {
+    margin-top: 0;
+  }
+  & .dialog-body > :last-child {
+    margin-bottom: 0;
+  }
+  & .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 10px var(--dialog-padding);
+    border-top: 1px solid var(--border);
+    background: var(--dialog-muted);
+  }
+  & .dialog-footer .summary {
+    margin-right: auto;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  & .dialog-form {
+    display: contents;
+  }
+
+  & .button {
+    min-height: var(--dialog-control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--dialog-control-radius);
+    background: var(--field);
+    color: var(--text);
+    font: inherit;
+    font-weight: 550;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  & .button:hover {
+    background: var(--dialog-muted);
+  }
+  & .button.primary {
+    border-color: transparent;
+    background: var(--accent-fill);
+    color: var(--accent-text);
+    box-shadow: inset 0 1px #ffffff24;
+  }
+  & .button.danger {
+    border-color: transparent;
+    background: var(--dialog-danger-fill);
+    color: #fff;
+  }
+  & .button:is(.primary, .danger):hover {
+    filter: brightness(0.94);
+  }
+  & .button:disabled {
+    opacity: 0.56;
+    cursor: default;
+  }
+  & .button.close {
+    min-height: 32px;
+    width: 32px;
+    flex: none;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 19px;
+  }
+  & .button.close:hover {
+    background: var(--dialog-muted);
+  }
+  & :focus-visible {
+    outline: 2px solid var(--accent-fill);
+    outline-offset: 2px;
+  }
+
+  & .field {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+  & .field > span:first-child {
+    font-weight: 550;
+  }
+  & .field :is(input:not([type="checkbox"], [type="range"]), select, textarea),
+  & .search {
+    min-height: var(--dialog-control-height);
+    width: 100%;
+    min-width: 0;
+    padding: 5px 9px;
+    border: 1px solid var(--border);
+    border-radius: var(--dialog-control-radius);
+    background: var(--field);
+    color: var(--text);
+    font: inherit;
+  }
+  & .field :is(input, select):disabled {
+    opacity: 0.65;
+  }
+  & input:is([type="checkbox"], [type="range"]) {
+    accent-color: var(--accent-fill);
+  }
+  & input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    flex: none;
+  }
+  & .stack {
+    display: grid;
+    gap: var(--dialog-gap);
+  }
+  & .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--dialog-gap);
+  }
+  & .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+  }
+  & .check-detail {
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 12px;
+    text-align: right;
+  }
+  & .muted {
+    color: var(--text-dim);
+  }
+  & .summary,
+  & .step {
+    font-size: 12px;
+  }
+  & .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    color: var(--text-dim);
+  }
+  & .step b {
+    color: var(--accent-fill);
+    font-weight: 650;
+  }
+
+  & .notice {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--dialog-control-radius);
+    padding: 9px 11px;
+    background: var(--dialog-muted);
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  & .notice.error {
+    border-color: color-mix(in srgb, var(--dialog-danger-text), transparent 76%);
+    background: var(--dialog-danger-soft);
+    color: var(--dialog-danger-text);
+  }
+  & .notice.warning {
+    border-color: color-mix(in srgb, var(--dialog-warning), transparent 76%);
+    background: var(--dialog-warning-soft);
+    color: var(--dialog-warning);
+  }
+  & .notice.success {
+    border-color: color-mix(in srgb, var(--accent-fill), transparent 76%);
+    background: var(--accent-soft);
+  }
+  & .notice.busy {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  & .spinner {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent-fill);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
 }
 
-.about-identity {
+.dialog[open] {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  flex-direction: column;
 }
-.about-identity .brand-mark {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  font-size: 23px;
+.dialog::backdrop {
+  background: var(--dialog-scrim);
 }
-.about-identity .about-name {
-  margin: 0;
-  font-size: 16px;
+.dialog.wide {
+  --width: 790px;
 }
-.about-identity .about-version {
-  margin: 0;
-  text-align: start;
-  font-size: 13px;
+.dialog.settings {
+  --width: 700px;
 }
-.about-credits {
-  color: var(--text-dim);
-}
-.engine-crash-message {
-  white-space: pre-wrap;
-}
-
-.arrange-popup {
-  width: min(336px, calc(100% - 20px));
-  border-radius: 16px;
-  padding: 16px 20px 10px;
-  font-size: 13px;
-}
-.arrange-popup h2 {
-  margin: 0 0 3px;
-  font-size: 17px;
-}
-.arrange-popup input[type="number"] {
-  height: 34px;
-  padding-inline: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--field);
-  color: var(--text);
-}
-.arrange-actions {
-  justify-content: end;
-  margin-inline: -20px;
-  padding: 10px 20px 0;
-}
-.arrange-actions .side-button {
-  min-width: 0;
-  min-height: 34px;
-  flex: none;
-  border-radius: var(--radius-control);
-}
-.arrange-actions .dialog-primary {
-  background: var(--accent-fill);
-  color: var(--accent-text);
+/* The toolbar's arrange popup: anchored under the toolbar, centred in the 3D view. */
+.popup {
+  --width: 336px;
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 640px) {
   :root {
     --dialog-padding: 15px;
+    --dialog-control-height: 44px;
   }
-  dialog:is(.shortcuts-dialog, .about-dialog, .settings-dialog, .print-host-dialog) {
+  .dialog,
+  .popup {
     width: calc(100% - 20px);
     max-height: calc(100% - 20px);
+
+    & .dialog-header {
+      padding-top: 14px;
+    }
+    & .dialog-footer {
+      flex-wrap: wrap;
+    }
+    & .dialog-footer .button {
+      flex: 1 1 auto;
+    }
+    & .button.close {
+      width: 44px;
+      min-height: 44px;
+    }
+    & .check {
+      min-height: 44px;
+    }
   }
-  dialog:is(.settings-dialog, .filament-dialog, .send-dialog) {
+  /* A sheet rises from the bottom edge: send, filament selection and settings on a phone. */
+  .dialog.sheet {
     width: 100%;
     margin: auto 0 0;
     max-height: calc(100% - 32px);
-    border-radius: 16px 16px 0 0;
-  }
-  .shortcuts-header {
-    padding-top: 14px;
-  }
-  .shortcuts-header .bar-button {
-    min-width: 44px;
-    min-height: 44px;
-  }
-  dialog .vendor-footer {
-    flex-wrap: wrap;
-  }
-  dialog .vendor-footer .side-button {
-    flex: 1 1 auto;
-  }
-  .settings-body .process-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  .print-host-options-body {
-    grid-template-columns: minmax(0, 1fr);
+    border-radius: var(--dialog-radius) var(--dialog-radius) 0 0;
   }
 }
 
+/* Touch screens keep WCAG 2.5.5 targets (touch.ts), whatever the pointer's width. */
 @media (pointer: coarse) {
-  :is(dialog, .wizard-notice) .side-button,
-  .dialog-field,
-  .print-host-field :is(input, select) {
-    min-height: 44px;
+  :root {
+    --dialog-control-height: 44px;
   }
-  .dialog-field,
-  .print-host-field :is(input, select) {
-    font-size: 16px;
-  }
-  .dialog-body > .vendor-item {
-    min-height: 44px;
+  .dialog,
+  .popup {
+    & .button.close,
+    & .check {
+      min-height: 44px;
+    }
+    & .button.close {
+      width: 44px;
+    }
+    /* 16px text so iOS Safari does not zoom into a focused field. */
+    & .field :is(input:not([type="checkbox"], [type="range"]), select, textarea),
+    & .search {
+      font-size: 16px;
+    }
   }
 }
