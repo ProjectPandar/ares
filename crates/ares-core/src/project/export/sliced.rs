@@ -98,7 +98,12 @@ pub async fn export_saved_sliced_3mf(
     min_save: bool,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    CliSavedSlicedProject::open(input, false)?.export_inner(filename, min_save, None, None, context)
+    CliSavedSlicedProject::open(input, false)?.export_inner(
+        filename,
+        min_save,
+        (None, None),
+        context,
+    )
 }
 
 /// An admitted saved archive. The CLI resolves the original machine resources before slicing
@@ -135,19 +140,17 @@ impl<'a> CliSavedSlicedProject<'a> {
         self,
         filename: &str,
         min_save: bool,
-        system_catalog: Option<&PresetCatalogHandle>,
-        upward: CliUpwardMachine<'_>,
+        (system_catalog, upward): (Option<&PresetCatalogHandle>, CliUpwardMachine<'_>),
         context: SlicerContext<'_>,
     ) -> Result<Vec<u8>, SliceError> {
-        self.export_inner(filename, min_save, system_catalog, Some(upward), context)
+        self.export_inner(filename, min_save, (system_catalog, Some(upward)), context)
     }
 
     fn export_inner(
         self,
         filename: &str,
         min_save: bool,
-        system_catalog: Option<&PresetCatalogHandle>,
-        upward: Option<CliUpwardMachine<'_>>,
+        (system_catalog, upward): (Option<&PresetCatalogHandle>, Option<CliUpwardMachine<'_>>),
         context: SlicerContext<'_>,
     ) -> Result<Vec<u8>, SliceError> {
         let Self {

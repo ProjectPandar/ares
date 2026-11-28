@@ -112,14 +112,16 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
                     project.export(
                         filename,
                         args.min_save,
-                        catalog.as_ref(),
-                        ares_core::CliUpwardMachine {
-                            source,
-                            input: ares_core::UpwardMachineInput::FetchOriginal(
-                                original.as_deref(),
-                            ),
-                            report: &mut upward_report,
-                        },
+                        (
+                            catalog.as_ref(),
+                            ares_core::CliUpwardMachine {
+                                source,
+                                input: ares_core::UpwardMachineInput::FetchOriginal(
+                                    original.as_deref(),
+                                ),
+                                report: &mut upward_report,
+                            },
+                        ),
                         SlicerContext::new(0),
                     )
                 }
