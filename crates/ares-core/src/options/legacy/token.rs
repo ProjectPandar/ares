@@ -193,6 +193,11 @@ pub(crate) fn handle_legacy(opt_key: &mut String, value: &mut String) {
         "extruder_clearance_max_radius" => *opt_key = "extruder_clearance_radius".to_owned(),
         "machine_switch_extruder_time" => *opt_key = "machine_tool_change_time".to_owned(),
         "wall_direction" if value == "auto" => *value = "ccw".to_owned(),
+        // PrintConfig.cpp:9995–10003 renames the option without changing its value.
+        "is_ixex" => *opt_key = "is_imex".to_owned(),
+        "ixex_carriage_width_x" => *opt_key = "imex_nozzle_clearance_x".to_owned(),
+        "ixex_carriage_width_y" => *opt_key = "imex_nozzle_clearance_y".to_owned(),
+        key if key.starts_with("ixex_") => opt_key.replace_range(.."ixex_".len(), "imex_"),
         key if is_obsolete_legacy_key(key) => opt_key.clear(),
         _ => {}
     }
