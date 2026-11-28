@@ -18,8 +18,7 @@ fn empty_top_wall_scalar_and_array_enable_top_wall_mode() {
         TOP_LEGACY,
         &[("empty-string", json!("")), ("empty-array", json!([]))],
         TOP,
-        json!("1"),
-        None,
+        (json!("1"), None),
     );
 }
 
@@ -33,17 +32,19 @@ fn top_wall_array_reports_the_appended_first_pass_token() {
             ("scalar-none", json!("none")),
         ],
         TOP,
-        json!("0"),
-        Some(&[
-            json!([{
-                "class": "config_value_substituted",
-                "file": "input.3mf",
-                "key": TOP,
-                "old_value": "1none",
-                "new_value": "0"
-            }]),
-            json!([]),
-        ]),
+        (
+            json!("0"),
+            Some(&[
+                json!([{
+                    "class": "config_value_substituted",
+                    "file": "input.3mf",
+                    "key": TOP,
+                    "old_value": "1none",
+                    "new_value": "0"
+                }]),
+                json!([]),
+            ]),
+        ),
     );
 }
 
@@ -54,16 +55,14 @@ fn feature_array_keeps_explicit_filament_one_after_rename() {
         "infill_extruder",
         &[("scalar-one", json!("1"))],
         "sparse_infill_filament_id",
-        json!("0"),
-        None,
+        (json!("0"), None),
     );
     check(
         "feature-array-one-",
         "infill_extruder",
         &[("array-one", json!(["1"]))],
         "sparse_infill_filament_id",
-        json!("1"),
-        None,
+        (json!("1"), None),
     );
 }
 
@@ -74,8 +73,7 @@ fn arc_fitting_array_binds_a_rewritten_scalar_enum() {
         "enable_arc_fitting",
         &[("array-zero", json!(["0"]))],
         "enable_arc_fitting",
-        json!("disabled"),
-        None,
+        (json!("disabled"), None),
     );
 }
 
@@ -86,8 +84,7 @@ fn filament_type_array_rewrites_the_legacy_vector_member() {
         "filament_type",
         &[("array-asa-aero", json!(["ASA-Aero"]))],
         "filament_type",
-        json!(["ASA-AERO"]),
-        None,
+        (json!(["ASA-AERO"]), None),
     );
 }
 
@@ -98,8 +95,7 @@ fn extruder_type_array_rewrites_before_enum_substitution() {
         "extruder_type",
         &[("array-direct-drive", json!(["DirectDrive"]))],
         "extruder_type",
-        json!(["Direct Drive"]),
-        Some(&[json!([])]),
+        (json!(["Direct Drive"]), Some(&[json!([])])),
     );
 }
 
@@ -113,8 +109,7 @@ fn bookkeeping_array_rewrites_names_without_losing_slots() {
             json!(["bridge_fan_speed;layer_height", "", ""]),
         )],
         "different_settings_to_system",
-        json!(["overhang_fan_speed;layer_height", "", ""]),
-        None,
+        (json!(["overhang_fan_speed;layer_height", "", ""]), None),
     );
 }
 
@@ -123,9 +118,9 @@ fn check(
     source: &str,
     variants: &[(&str, Value)],
     destination: &str,
-    expected: Value,
-    expected_warnings: Option<&[Value]>,
+    expected: (Value, Option<&[Value]>),
 ) {
+    let (expected, expected_warnings) = expected;
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };

@@ -22,11 +22,9 @@ use serde::Deserialize;
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, serde::Serialize)]
 #[serde(transparent)]
 pub(crate) struct ProjectSettingsRaw(BTreeMap<String, RawConfigValue>);
+type RawEntry = (String, RawConfigValue);
 
-fn normalize_legacy_array(
-    mut key: String,
-    values: Vec<RawConfigValue>,
-) -> Option<(String, RawConfigValue)> {
+fn normalize_legacy_array(mut key: String, values: Vec<RawConfigValue>) -> Option<RawEntry> {
     let mut wire = String::new();
     crate::options::legacy::handle_legacy_scalar(&mut key, &mut wire);
     if key.is_empty() {
@@ -53,24 +51,18 @@ fn normalize_legacy_array(
     Some((key, value))
 }
 
-fn normalize_legacy_scalar(mut key: String, mut token: String) -> Option<(String, RawConfigValue)> {
+fn normalize_legacy_scalar(mut key: String, mut token: String) -> Option<RawEntry> {
     crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
     (!key.is_empty()).then_some((key, RawConfigValue::Text(token)))
 }
 
-fn normalize_legacy_non_string(
-    mut key: String,
-    value: RawConfigValue,
-) -> Option<(String, RawConfigValue)> {
+fn normalize_legacy_non_string(mut key: String, value: RawConfigValue) -> Option<RawEntry> {
     let mut token = value.token().unwrap_or_default();
     crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
     (!key.is_empty()).then_some((key, RawConfigValue::Text(token)))
 }
 
-fn normalize_legacy_non_wire(
-    mut key: String,
-    value: RawConfigValue,
-) -> Option<(String, RawConfigValue)> {
+fn normalize_legacy_non_wire(mut key: String, value: RawConfigValue) -> Option<RawEntry> {
     let mut token = String::new();
     crate::options::handle_legacy(&mut key, &mut token);
     (!key.is_empty()).then_some((key, value))
