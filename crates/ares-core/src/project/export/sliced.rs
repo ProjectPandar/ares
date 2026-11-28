@@ -6,8 +6,9 @@ use super::super::{ArchiveLimits, LoadedProfileProject, ProjectArchive};
 use super::saved_assets::SavedArchiveExtras;
 use super::{SavedModel, Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
 use crate::{
-    CliUpwardMachine, ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata,
-    PresetCatalogHandle, ProcessedGCode, Project, SliceError, SlicerContext, UpwardMachineSource,
+    CliUpwardMachine, ConfigOverrides, ConfigSubstitution, DirectProjectSliceRequest,
+    GenerationMetadata, PresetCatalogHandle, ProcessedGCode, Project, SliceError, SlicedPlate,
+    SlicerContext, UpwardMachineSource,
 };
 
 pub fn export_sliced_3mf(
@@ -112,7 +113,7 @@ pub async fn export_saved_sliced_3mf(
         filename,
         min_save,
         (None, None),
-        context,
+        (context, None),
     )
 }
 
@@ -142,6 +143,14 @@ impl<'a> CliSavedSlicedProject<'a> {
         })
     }
 
+    pub fn substitutions(&self) -> &[ConfigSubstitution] {
+        self.loaded.substitutions()
+    }
+
+    pub fn check_post_process(&self) -> Result<(), SliceError> {
+        self.loaded.validate_post_process()
+    }
+
     pub fn take_upward_source(&mut self) -> Result<Option<UpwardMachineSource>, SliceError> {
         self.loaded.take_upward_source()
     }
@@ -153,7 +162,27 @@ impl<'a> CliSavedSlicedProject<'a> {
         (system_catalog, upward): (Option<&PresetCatalogHandle>, CliUpwardMachine<'_>),
         context: SlicerContext<'_>,
     ) -> Result<Vec<u8>, SliceError> {
-        self.export_inner(filename, min_save, (system_catalog, Some(upward)), context)
+        self.export_inner(
+            filename,
+            min_save,
+            (system_catalog, Some(upward)),
+            (context, None),
+        )
+    }
+
+    pub fn export_with_report(
+        self,
+        filename: &str,
+        min_save: bool,
+        (system_catalog, upward): (Option<&PresetCatalogHandle>, CliUpwardMachine<'_>),
+        (context, plate): (SlicerContext<'_>, &mut SlicedPlate),
+    ) -> Result<Vec<u8>, SliceError> {
+        self.export_inner(
+            filename,
+            min_save,
+            (system_catalog, Some(upward)),
+            (context, Some(plate)),
+        )
     }
 
     fn export_inner(
@@ -161,7 +190,7 @@ impl<'a> CliSavedSlicedProject<'a> {
         filename: &str,
         min_save: bool,
         (system_catalog, upward): (Option<&PresetCatalogHandle>, Option<CliUpwardMachine<'_>>),
-        context: SlicerContext<'_>,
+        (context, plate): (SlicerContext<'_>, Option<&mut SlicedPlate>),
     ) -> Result<Vec<u8>, SliceError> {
         let Self {
             input,
@@ -184,7 +213,7 @@ impl<'a> CliSavedSlicedProject<'a> {
                 system_catalog,
             },
             upward,
-            context,
+            (context, plate),
         )?;
         if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
             return Err(invalid(

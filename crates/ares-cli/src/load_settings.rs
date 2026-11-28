@@ -6,7 +6,6 @@ use crate::{
     SliceArgs,
     failure::{CliFailure, slice_error_to_failure},
     preset_sources::{as_load_settings_files, read_preset_files},
-    report_success,
 };
 
 pub(super) async fn slice(
@@ -14,15 +13,13 @@ pub(super) async fn slice(
     admitted: ares_core::CliPresetProject<'_>,
     overrides: &ares_core::ConfigOverrides,
     (load_settings, load_filaments): (&[&str], &[&str]),
-    context: ares_core::SlicerContext<'_>,
+    (context, _warnings): (ares_core::SlicerContext<'_>, &mut crate::PositionalWarnings),
 ) -> Result<(), CliFailure> {
-    let input_file = args.input().to_string_lossy().into_owned();
     let filename = args
         .input()
         .file_name()
         .and_then(|name| name.to_str())
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "invalid model filename"))?;
-    let substitutions = admitted.substitutions().to_vec();
     let catalog = args
         .project_preset_catalog
         .as_ref()
@@ -71,13 +68,7 @@ pub(super) async fn slice(
     ) {
         Ok(gcode) => gcode,
         Err(error) => {
-            crate::failure::slicing::check(
-                args,
-                &sliced_plate,
-                &input_file,
-                &substitutions,
-                &sliced_plate.upward_machines,
-            )?;
+            crate::failure::slicing::check(args, &sliced_plate, &sliced_plate.upward_machines)?;
             let failure = slice_error_to_failure(
                 error,
                 args.output(),
@@ -86,8 +77,7 @@ pub(super) async fn slice(
                 // selects that same one-based plate (default first), and
                 // :5723/:433 records index+1 for the -50 result.
                 args.plate.unwrap_or(1),
-            )
-            .with_config_substitutions(&input_file, substitutions);
+            );
             #[cfg(target_os = "linux")]
             let failure = failure
                 .with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings)
@@ -95,27 +85,18 @@ pub(super) async fn slice(
             return Err(failure);
         }
     };
-    crate::failure::slicing::check(
-        args,
-        &sliced_plate,
-        &input_file,
-        &substitutions,
-        &sliced_plate.upward_machines,
-    )?;
+    crate::failure::slicing::check(args, &sliced_plate, &sliced_plate.upward_machines)?;
     fs::write(args.output(), gcode)?;
-    report_success(
-        &input_file,
-        substitutions,
-        #[cfg(target_os = "linux")]
-        result_json::Success {
-            strict_mode: false,
-            output: args.output(),
-            plate: args.plate.unwrap_or(1),
-            plate_index: args.plate.unwrap_or(0),
-            upward_machines: &std::mem::take(&mut sliced_plate.upward_machines),
-            downward_machines: &[],
-            sliced_plate,
-        },
-    );
+    #[cfg(target_os = "linux")]
+    result_json::Success {
+        strict_mode: false,
+        output: args.output(),
+        plate: args.plate.unwrap_or(1),
+        plate_index: args.plate.unwrap_or(0),
+        upward_machines: &std::mem::take(&mut sliced_plate.upward_machines),
+        downward_machines: &[],
+        sliced_plate,
+    }
+    .write(_warnings.take());
     Ok(())
 }

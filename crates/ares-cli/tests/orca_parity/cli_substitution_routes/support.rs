@@ -27,7 +27,7 @@ pub(super) fn check(label: &str, saved: Saved, native: &[&str], ares: &[&str], o
         return;
     };
     let root = runner.work_dir();
-    let input = project(&runner, &root, saved);
+    let input = project(&runner, root, saved);
     let absolute = label == "direct-absolute";
     let cwd = root.join("cwd");
     let spelling = if absolute {
@@ -75,7 +75,7 @@ pub(super) fn check(label: &str, saved: Saved, native: &[&str], ares: &[&str], o
             serde_json::to_vec(&argv).unwrap(),
         )
         .unwrap();
-        let output = run(bin, &root, engine, &argv);
+        let output = run(bin, root, engine, &argv);
         let saved_cwd = root.join(engine).join("cwd");
         check_outcome(outcome, engine, &saved_cwd, &output);
         let stderr = std::str::from_utf8(&output.stderr).unwrap();

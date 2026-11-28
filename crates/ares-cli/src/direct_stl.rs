@@ -18,6 +18,7 @@ mod plates;
 pub(super) async fn run(
     mut args: DirectSliceArgs,
     export_before_slice: bool,
+    warnings: &mut crate::PositionalWarnings,
 ) -> Result<(), CliFailure> {
     let dir = args.outputdir.as_deref().unwrap_or_else(|| Path::new(""));
     let output = dir.join("plate_1.gcode");
@@ -36,7 +37,7 @@ pub(super) async fn run(
                 .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
         {
             args.diagnostics.startup_version();
-            return settings_export::run(input, destination, &args);
+            return settings_export::run(input, destination, &args, warnings);
         }
         // OrcaSlicer.cpp:1453–1467 checks actions before transforms, before any input is read.
         if destination == Path::new("-")
@@ -82,7 +83,7 @@ pub(super) async fn run(
                 io::Error::new(io::ErrorKind::InvalidInput, "--mtcpp requires STL input").into(),
             );
         }
-        return crate::direct_project::run(args).await;
+        return crate::direct_project::run(args, warnings).await;
     }
     if args.datadir.is_some() {
         return Err(io::Error::new(
@@ -218,7 +219,7 @@ pub(super) async fn run(
                 crate::result_json::write_plate_batch(
                     &output,
                     (0, args.strict),
-                    (filename, Vec::new()),
+                    Vec::new(),
                     (&[], &[]),
                     &[],
                 );
@@ -306,7 +307,7 @@ pub(super) async fn run(
     crate::result_json::write_plate_batch(
         &output,
         (selection, args.strict),
-        (filename, Vec::new()),
+        Vec::new(),
         (&[], &[]),
         &completed,
     );

@@ -1,12 +1,66 @@
-use super::{deferred, geometry, project_settings, write_package};
-use crate::{LoadSettingsRequest, SliceError};
+use super::{deferred, geometry, invalid, project_settings, write_package};
+use crate::{
+    ConfigSubstitution, LoadSettingsRequest, SliceError,
+    project::{ArchiveLimits, LoadedProfileProject, ProjectArchive},
+};
 
-pub(super) fn export_saved(
-    archive: super::super::ProjectArchive<'_>,
+/// Unsliced export input, with the first positional 3MF loaded before preset selection.
+pub struct CliUnsliced3mf<'a> {
+    input: &'a [u8],
+    filename: &'a str,
+    saved: Option<(ProjectArchive<'a>, Box<LoadedProfileProject>)>,
+}
+
+impl<'a> CliUnsliced3mf<'a> {
+    pub fn admit(input: &'a [u8], filename: &'a str) -> Result<Self, SliceError> {
+        if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
+            return Err(invalid(
+                "export requires a source filename without a directory",
+            ));
+        }
+        let mut saved = None;
+        if filename.to_ascii_lowercase().ends_with(".3mf") {
+            let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
+            if archive
+                .paths()
+                .any(|path| path.as_str() == "Metadata/model_settings.config")
+            {
+                let loaded = LoadedProfileProject::open_for_export(&mut archive)?;
+                loaded.validate_post_process()?;
+                saved = Some((archive, Box::new(loaded)));
+            }
+        }
+        Ok(Self {
+            input,
+            filename,
+            saved,
+        })
+    }
+
+    pub fn substitutions(&self) -> &[ConfigSubstitution] {
+        self.saved
+            .as_ref()
+            .map_or(&[], |(_, loaded)| loaded.substitutions())
+    }
+
+    pub fn export(self, presets: LoadSettingsRequest<'_>) -> Result<Vec<u8>, SliceError> {
+        if let Some((archive, loaded)) = self.saved {
+            return export_saved(archive, self.input, loaded, presets);
+        }
+        let object =
+            geometry::Object::unsliced(geometry::load(self.input, self.filename)?, self.filename);
+        let settings = project_settings::write(&presets)?;
+        write_package(&[object], settings, None, (None, None), None)
+    }
+}
+
+fn export_saved(
+    archive: ProjectArchive<'_>,
     input: &[u8],
+    loaded: Box<LoadedProfileProject>,
     presets: LoadSettingsRequest<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    let project = crate::profiles::project_for_3mf_export(input, &presets)?;
+    let project = crate::profiles::project_for_3mf_export(input, &presets, loaded)?;
     let [object] = project.objects() else {
         return Err(deferred("expected one saved object"));
     };

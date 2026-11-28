@@ -73,7 +73,7 @@ pub(super) fn slice(
     entry: Entry<'_>,
     mut admitted: ares_core::CliPresetProject<'_>,
     overrides: &ares_core::ConfigOverrides,
-    context: ares_core::SlicerContext<'_>,
+    (context, _warnings): (ares_core::SlicerContext<'_>, &mut crate::PositionalWarnings),
 ) -> Result<(), CliFailure> {
     let filename = args
         .input()
@@ -87,8 +87,6 @@ pub(super) fn slice(
     };
 
     let metadata = ares_core::GenerationMetadata::default();
-    let input_file = args.input().to_string_lossy();
-    let substitutions = admitted.substitutions().to_vec();
     let source = admitted
         .take_upward_source()
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
@@ -167,34 +165,21 @@ pub(super) fn slice(
     let outcome = match result {
         Ok(outcome) => outcome,
         Err(error) => {
-            crate::failure::slicing::check(
-                args,
-                &sliced_plate,
-                &input_file,
-                &substitutions,
-                &upward_report,
-            )?;
+            crate::failure::slicing::check(args, &sliced_plate, &upward_report)?;
             let failure = slice_error_to_failure(
                 error,
                 args.output(),
                 #[cfg(target_os = "linux")]
                 args.plate.unwrap_or(1),
             )
-            .with_upward_report(upward_report)
-            .with_config_substitutions(&input_file, substitutions);
+            .with_upward_report(upward_report);
             #[cfg(target_os = "linux")]
             let failure =
                 failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
             return Err(failure);
         }
     };
-    crate::failure::slicing::check(
-        args,
-        &sliced_plate,
-        &input_file,
-        &substitutions,
-        &upward_report,
-    )?;
+    crate::failure::slicing::check(args, &sliced_plate, &upward_report)?;
     match outcome {
         SliceOutcome::Buffered(processed) => {
             if let Some(path) = &args.dump_moves {
@@ -209,20 +194,17 @@ pub(super) fn slice(
             sink.commit()?;
         }
     }
-    crate::report_success(
-        &input_file,
-        substitutions,
-        #[cfg(target_os = "linux")]
-        crate::result_json::Success {
-            strict_mode: false,
-            output: args.output(),
-            plate: args.plate.unwrap_or(1),
-            plate_index: args.plate.unwrap_or(0),
-            sliced_plate,
-            upward_machines: &upward_report,
-            downward_machines: &[],
-        },
-    );
+    #[cfg(target_os = "linux")]
+    crate::result_json::Success {
+        strict_mode: false,
+        output: args.output(),
+        plate: args.plate.unwrap_or(1),
+        plate_index: args.plate.unwrap_or(0),
+        sliced_plate,
+        upward_machines: &upward_report,
+        downward_machines: &[],
+    }
+    .write(_warnings.take());
     Ok(())
 }
 
@@ -231,11 +213,9 @@ pub(super) fn slice_embedded(
     mut admitted: ares_core::CliPresetProject<'_>,
     resources: &Path,
     overrides: &ares_core::ConfigOverrides,
-    context: ares_core::SlicerContext<'_>,
+    (context, _warnings): (ares_core::SlicerContext<'_>, &mut crate::PositionalWarnings),
 ) -> Result<(), CliFailure> {
     let metadata = ares_core::GenerationMetadata::default();
-    let input_file = args.input().to_string_lossy();
-    let substitutions = admitted.substitutions().to_vec();
     let source = admitted
         .take_upward_source()
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?;
@@ -273,21 +253,14 @@ pub(super) fn slice_embedded(
             if let Some(io_error) = sink.take_error() {
                 return Err(io_error.into());
             }
-            crate::failure::slicing::check(
-                args,
-                &sliced_plate,
-                &input_file,
-                &substitutions,
-                &upward_report,
-            )?;
+            crate::failure::slicing::check(args, &sliced_plate, &upward_report)?;
             let failure = slice_error_to_failure(
                 error,
                 args.output(),
                 #[cfg(target_os = "linux")]
                 args.plate.unwrap_or(1),
             )
-            .with_upward_report(upward_report)
-            .with_config_substitutions(&input_file, substitutions);
+            .with_upward_report(upward_report);
             #[cfg(target_os = "linux")]
             let failure =
                 failure.with_slicing_warnings(args.plate.unwrap_or(1), sliced_plate.warnings);
@@ -295,35 +268,21 @@ pub(super) fn slice_embedded(
         }
     };
     if let Some(path) = &args.dump_moves {
-        crate::failure::slicing::check(
-            args,
-            &sliced_plate,
-            &input_file,
-            &substitutions,
-            &upward_report,
-        )?;
+        crate::failure::slicing::check(args, &sliced_plate, &upward_report)?;
         fs::write(path, crate::moves_csv::format(&streamed.result))?;
     }
-    let _downward = crate::downward::report(
-        args,
-        &sliced_plate,
-        (&input_file, &substitutions),
-        &upward_report,
-    )?;
+    let _downward = crate::downward::report(args, &sliced_plate, &upward_report)?;
     sink.commit()?;
-    crate::report_success(
-        &input_file,
-        substitutions,
-        #[cfg(target_os = "linux")]
-        crate::result_json::Success {
-            strict_mode: false,
-            output: args.output(),
-            plate: args.plate.unwrap_or(1),
-            plate_index: args.plate.unwrap_or(0),
-            sliced_plate,
-            upward_machines: &upward_report,
-            downward_machines: &_downward,
-        },
-    );
+    #[cfg(target_os = "linux")]
+    crate::result_json::Success {
+        strict_mode: false,
+        output: args.output(),
+        plate: args.plate.unwrap_or(1),
+        plate_index: args.plate.unwrap_or(0),
+        sliced_plate,
+        upward_machines: &upward_report,
+        downward_machines: &_downward,
+    }
+    .write(_warnings.take());
     Ok(())
 }

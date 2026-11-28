@@ -270,7 +270,7 @@ pub async fn slice_project_plate_with_archive(
             system_catalog: None,
         },
         None,
-        context,
+        (context, None),
     )
 }
 
@@ -279,7 +279,7 @@ pub(crate) fn slice_loaded_project_plate_with_archive(
     metadata: GenerationMetadata,
     mut request: DirectProjectSliceRequest<'_>,
     upward: Option<CliUpwardMachine<'_>>,
-    context: SlicerContext<'_>,
+    (context, sliced_plate): (SlicerContext<'_>, Option<&mut crate::SlicedPlate>),
 ) -> Result<ProcessedGCode, SliceError> {
     request.system_catalog = request
         .system_catalog
@@ -294,7 +294,7 @@ pub(crate) fn slice_loaded_project_plate_with_archive(
         metadata,
         request,
         upward,
-        context,
+        (context, sliced_plate),
     )
 }
 
@@ -306,7 +306,7 @@ fn slice_project_plate_with_archive_loaded(
     metadata: GenerationMetadata,
     request: DirectProjectSliceRequest<'_>,
     upward: Option<CliUpwardMachine<'_>>,
-    context: SlicerContext<'_>,
+    (context, sliced_plate): (SlicerContext<'_>, Option<&mut crate::SlicedPlate>),
 ) -> Result<ProcessedGCode, SliceError> {
     request.overrides.validate_cli_config()?;
     slice_source_with_archive(
@@ -325,7 +325,7 @@ fn slice_project_plate_with_archive_loaded(
             allow_mix_temp: false,
             orient: false,
             upward,
-            sliced_plate: None,
+            sliced_plate,
             max_triangle_count: 0,
             custom_gcodes: None,
             downward: None,

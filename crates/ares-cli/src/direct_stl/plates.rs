@@ -104,7 +104,6 @@ pub(super) fn publish(
         output,
         (id, &report),
         &[],
-        None,
     )?;
     crate::statistics::write(
         &output.with_file_name(format!("plate_{id}.gcode")),

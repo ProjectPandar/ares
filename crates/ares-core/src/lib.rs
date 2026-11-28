@@ -138,7 +138,7 @@ pub use profiles::{
     slice_with_profiles_validated,
 };
 pub use project::{
-    CliSavedSlicedProject, StlExport, export_3mf, export_arranged_sliced_3mf,
+    CliSavedSlicedProject, CliUnsliced3mf, StlExport, export_3mf, export_arranged_sliced_3mf,
     export_imported_stl_3mf, export_project_3mf, export_saved_sliced_3mf, export_sliced_3mf,
     export_stl, export_stls, print_object_id,
 };

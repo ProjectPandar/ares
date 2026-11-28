@@ -43,8 +43,9 @@ pub use domain::{
 pub(crate) use domain::{InstancePvs, ModelSnapshot, SelectedProfile, SlotOptionsSnapshot};
 pub(crate) use domain::{compute_colum_count, plate_dimensions, plate_origin_at};
 pub use export::{
-    CliSavedSlicedProject, export_3mf, export_arranged_sliced_3mf, export_imported_stl_3mf,
-    export_project_3mf, export_saved_sliced_3mf, export_sliced_3mf, print_object_id,
+    CliSavedSlicedProject, CliUnsliced3mf, export_3mf, export_arranged_sliced_3mf,
+    export_imported_stl_3mf, export_project_3mf, export_saved_sliced_3mf, export_sliced_3mf,
+    print_object_id,
 };
 pub use export_stl::{StlExport, export_stl, export_stls};
 pub use layer_config_ranges::LayerConfigRange;

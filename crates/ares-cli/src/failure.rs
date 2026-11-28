@@ -222,27 +222,26 @@ impl CliFailure {
     /// `cli_report_config_substitutions` (`OrcaSlicer.cpp:520-534`) after the 3MF load (`:1992`):
     /// the stderr lines precede the family's own, and result.json records each substitution. The
     /// post_process rejection (`:1806`) comes before the report and carries none.
-    pub(super) fn with_config_substitutions(
+    #[cfg(target_os = "linux")]
+    pub(super) fn with_load_warnings(
         mut self,
-        file: &str,
-        substitutions: Vec<ares_core::ConfigSubstitution>,
+        output: PathBuf,
+        mut warnings: Vec<crate::result_json::CliWarning>,
+        strict_mode: bool,
     ) -> Self {
-        if let Self::Family(family) = &mut self
-            && family.return_code != -19
-        {
-            family.stderr = substitution_warnings(file, &substitutions) + &family.stderr;
-            #[cfg(target_os = "linux")]
-            {
-                family.warnings = substitutions
-                    .into_iter()
-                    .map(
-                        |substitution| crate::result_json::CliWarning::ConfigValueSubstituted {
-                            file: file.to_owned(),
-                            substitution,
-                        },
-                    )
-                    .collect();
+        match &mut self {
+            Self::Family(family) => {
+                warnings.append(&mut family.warnings);
+                family.warnings = warnings;
+                family.output = output;
             }
+            Self::Legacy(error) => crate::result_json::write_action_result(
+                &output,
+                (1, &error.to_string()),
+                (0, strict_mode),
+                &[],
+                &warnings,
+            ),
         }
         self
     }

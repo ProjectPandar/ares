@@ -6,7 +6,7 @@ use crate::{
     ConfigOverrides, InputFormat, OptionValueKind, Project, SliceError,
     options::{json_deserialize, registry::option_definition},
     project::{
-        ArchiveLimits, PackagePath, ProjectArchive, SelectedProfile,
+        ArchiveLimits, LoadedProfileProject, PackagePath, ProjectArchive, SelectedProfile,
         raw_settings::{ProjectSettingsRaw, RawConfigValue},
     },
     project_slice::compatibility::LoadedPresetNames,
@@ -15,7 +15,9 @@ use crate::{
 pub(crate) fn project_for_3mf_export(
     input: &[u8],
     request: &LoadSettingsRequest<'_>,
+    mut loaded: Box<LoadedProfileProject>,
 ) -> Result<Project, SliceError> {
+    let embedded_raw = loaded.take_embedded_raw();
     super::validate_stl_export_presets(request)?;
     let (composed, names) = if request.settings.is_empty() && request.filaments.is_empty() {
         (
@@ -24,13 +26,17 @@ pub(crate) fn project_for_3mf_export(
                 machine: None,
                 printer_model: String::new(),
                 process: None,
-                embedded: Some(read_embedded_config(input)?),
+                embedded: Some(match &embedded_raw {
+                    Some(raw) => raw.clone(),
+                    None => read_embedded_config(input)?,
+                }),
                 direct_stl_machine: None,
                 filament_indices: Vec::new(),
             },
         )
     } else {
-        let (composed, names) = super::compose_project_load_settings((input, None), request)?;
+        let (composed, names) =
+            super::compose_project_load_settings((input, embedded_raw.as_ref()), request)?;
         (Some(composed), names)
     };
     let mut default_settings = crate::ProjectSettings::default();
@@ -72,15 +78,15 @@ pub(crate) fn project_for_3mf_export(
         },
     };
     let (project, _) = Project::from_3mf_with_profiles(
-        (input, None),
+        (input, Some(loaded)),
         profile,
         &ConfigOverrides::default(),
         (None, &crate::plater::NO_EDITS),
         None,
     )?;
     if names.machine.is_some() && names.process.is_none() && project.documents().bbl_family_3mf {
-        let embedded = match &names.embedded {
-            Some(config) => config.clone(),
+        let embedded = match names.embedded.or(embedded_raw) {
+            Some(config) => config,
             None => read_embedded_config(input)?,
         };
         let original = embedded

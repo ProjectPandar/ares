@@ -72,6 +72,10 @@ impl LoadedProfileProject {
         self.embedded_raw.as_ref()
     }
 
+    pub(crate) fn take_embedded_raw(&mut self) -> Option<ProjectSettingsRaw> {
+        self.embedded_raw.take()
+    }
+
     pub(crate) fn upward_source(&self) -> Result<Option<&UpwardMachineSource>, SliceError> {
         match &self.upward_source {
             Ok(source) => Ok(source.as_ref()),
@@ -109,6 +113,16 @@ impl LoadedProfileProject {
             &crate::ConfigOverrides::empty(),
             true,
             (true, check_version),
+        )?;
+        Ok(Self::from_data(data))
+    }
+
+    pub(crate) fn open_for_export(archive: &mut ProjectArchive<'_>) -> Result<Self, SliceError> {
+        let data = load_project_from_archive(
+            archive,
+            &crate::ConfigOverrides::default(),
+            false,
+            (true, false),
         )?;
         Ok(Self::from_data(data))
     }

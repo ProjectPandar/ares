@@ -10,6 +10,7 @@ mod stl;
 mod xml;
 mod zip_records;
 
+pub use saved_presets::CliUnsliced3mf;
 pub use scene::export_project_3mf;
 pub(crate) use scene::write as write_plater_project;
 pub use sliced::{
@@ -84,23 +85,7 @@ pub fn export_3mf(
     filename: &str,
     presets: LoadSettingsRequest<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    if filename.is_empty() || filename.contains(['/', '\\', '\0']) {
-        return Err(invalid(
-            "export requires a source filename without a directory",
-        ));
-    }
-    if filename.to_ascii_lowercase().ends_with(".3mf") {
-        let archive = super::ProjectArchive::open(input, super::ArchiveLimits::PROJECT)?;
-        if archive
-            .paths()
-            .any(|path| path.as_str() == "Metadata/model_settings.config")
-        {
-            return saved_presets::export_saved(archive, input, presets);
-        }
-    }
-    let object = geometry::Object::unsliced(geometry::load(input, filename)?, filename);
-    let settings = project_settings::write(&presets)?;
-    write_package(&[object], settings, None, (None, None), None)
+    CliUnsliced3mf::admit(input, filename)?.export(presets)
 }
 
 pub fn export_arranged_sliced_3mf(

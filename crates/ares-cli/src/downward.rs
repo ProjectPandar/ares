@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use ares_core::{ConfigSubstitution, DownwardMachine};
+use ares_core::DownwardMachine;
 
 use crate::{SliceArgs, args::ProjectActionArgs, failure::CliFailure};
 
@@ -23,10 +23,9 @@ pub(super) fn load(
 pub(super) fn report(
     args: &SliceArgs,
     plate: &ares_core::SlicedPlate,
-    source: (&str, &[ConfigSubstitution]),
     upward: &[String],
 ) -> Result<Vec<String>, CliFailure> {
-    crate::failure::slicing::check(args, plate, source.0, source.1, upward)?;
+    crate::failure::slicing::check(args, plate, upward)?;
     let machines = load(&args.project_actions, args.output())
         .map_err(|error| error.with_upward_report(upward.to_vec()))?;
     if machines.is_empty() {

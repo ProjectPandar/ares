@@ -2,8 +2,8 @@ use std::{fs, io, path::Path};
 
 use ares_core::{
     CliPresetProject, CliProjectSliceRequest, CliUpwardMachine, ConfigOverrides,
-    ConfigSubstitution, GenerationMetadata, LoadSettingsSliceRequest, Placement, ProcessedGCode,
-    SliceError, SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
+    GenerationMetadata, LoadSettingsSliceRequest, Placement, ProcessedGCode, SliceError,
+    SlicedPlate, SlicerContext, UpwardMachineInput, UpwardMachineSource,
 };
 
 use crate::{
@@ -13,7 +13,10 @@ use crate::{
     slice_plates::{self, PlateOptions},
 };
 
-pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
+pub(super) async fn run(
+    mut args: DirectSliceArgs,
+    warnings: &mut crate::PositionalWarnings,
+) -> Result<(), CliFailure> {
     let datadir = args
         .datadir
         .as_deref()
@@ -94,20 +97,27 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             selection,
             &bytes,
             &ConfigOverrides::default(),
-            args.project_actions
-                .context(SlicerContext::new(0))
-                .with_no_check(args.no_check)
-                .with_enable_timelapse(args.enable_timelapse),
+            (
+                args.project_actions
+                    .context(SlicerContext::new(0))
+                    .with_no_check(args.no_check)
+                    .with_enable_timelapse(args.enable_timelapse),
+                warnings,
+            ),
         );
     }
-    let mut project = CliPresetProject::open(&bytes, args.allow_newer_file).map_err(|error| {
+    let map_err = |error| {
         slice_error_to_failure(
             error,
             &output,
             #[cfg(target_os = "linux")]
             plate,
         )
-    })?;
+    };
+    let mut project = CliPresetProject::open(&bytes, args.allow_newer_file).map_err(map_err)?;
+    let context = args.project_actions.context(SlicerContext::new(0));
+    project.check_post_process(&context).map_err(map_err)?;
+    warnings.record(input, &output, project.substitutions());
     enum ProjectPresets<'a> {
         Replace(Option<&'a str>, Option<&'a str>),
         Saved {
@@ -140,8 +150,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     let mut downward_machines = Vec::new();
     let targets = crate::downward::load(&args.project_actions, &output)?;
     let context = crate::custom_gcodes::load(
-        args.project_actions
-            .context(SlicerContext::new(0))
+        context
             .with_no_check(args.no_check)
             .with_cli_path_conflict_check()
             .with_enable_timelapse(args.enable_timelapse)
@@ -159,9 +168,9 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     }
     let mut sliced_plate = SlicedPlate::default();
     let mut upward_machines = Vec::new();
-    let (outcome, substitutions) = match presets {
+    let outcome = match presets {
         ProjectPresets::Replace(settings, filaments) => {
-            let (processed, substitutions) = slice_with_replacement(
+            let processed = slice_with_replacement(
                 (input, project, plate, &output),
                 (settings, filaments, datadir),
                 context,
@@ -169,14 +178,13 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 args.export_statistics,
             )?;
             upward_machines = std::mem::take(&mut sliced_plate.upward_machines);
-            (processed.map(DirectOutcome::Buffered), substitutions)
+            processed.map(DirectOutcome::Buffered)
         }
         ProjectPresets::Saved {
             source,
             machine,
             catalog,
         } => {
-            let substitutions = project.substitutions().to_vec();
             let mut sink = crate::gcode_file_sink::AtomicFileSink::new(output.clone());
             let streamed = project.slice_project_to_sink(
                 CliProjectSliceRequest {
@@ -200,10 +208,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             {
                 return Err(io_error.into());
             }
-            (
-                streamed.map(|streamed| DirectOutcome::Streamed(streamed, sink)),
-                substitutions,
-            )
+            streamed.map(|streamed| DirectOutcome::Streamed(streamed, sink))
         }
     };
     let outcome = outcome.map_err(|error| {
@@ -217,7 +222,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             &sliced_plate,
         ) {
             return failure
-                .with_config_substitutions(&input.to_string_lossy(), substitutions.clone())
                 .with_upward_report(upward_machines.clone())
                 .with_downward_report(downward_machines.clone());
         }
@@ -240,15 +244,12 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         let failure = failure.with_validation_detail(detail);
         failure
     })?;
-    let input_file = input.to_string_lossy();
-    let project = Some((input_file.as_ref(), substitutions.as_slice()));
     crate::failure::slicing::check_direct(
         (&mut args.diagnostics, args.no_check, args.strict),
         #[cfg(target_os = "linux")]
         &output,
         (plate, &sliced_plate),
         &upward_machines,
-        project,
     )
     .map_err(|failure| failure.with_downward_report(downward_machines.clone()))?;
     match outcome {
@@ -272,7 +273,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
         upward_machines: &upward_machines,
         downward_machines: &downward_machines,
     }
-    .write(&input_file, substitutions);
+    .write(warnings.take());
     Ok(())
 }
 
@@ -282,11 +283,7 @@ fn slice_with_replacement(
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
-) -> Result<(Result<ProcessedGCode, SliceError>, Vec<ConfigSubstitution>), CliFailure> {
-    if let Err(error) = admitted.check_post_process(&context) {
-        return Ok((Err(error), Vec::new()));
-    }
-    let substitutions = admitted.substitutions().to_vec();
+) -> Result<Result<ProcessedGCode, SliceError>, CliFailure> {
     let settings_files = read_preset_list(settings)?;
     let filament_files = read_preset_list(filaments)?;
     let settings = as_load_settings_files(&settings_files);
@@ -324,5 +321,5 @@ fn slice_with_replacement(
         context,
         record_moves,
     );
-    Ok((result, substitutions))
+    Ok(result)
 }

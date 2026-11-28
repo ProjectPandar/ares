@@ -25,7 +25,11 @@ fn destination(output: &Path, outputdir: Option<&Path>) -> std::path::PathBuf {
     )
 }
 
-pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<(), CliFailure> {
+pub(super) async fn run_direct(
+    args: &DirectSliceArgs,
+    output: &Path,
+    warnings: &mut crate::PositionalWarnings,
+) -> Result<(), CliFailure> {
     let output = destination(output, args.outputdir.as_deref());
     let stl = args.inputs.iter().all(|path| {
         path.extension()
@@ -90,6 +94,15 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
     {
         crate::check_positional_project_version(input, args.allow_newer_file, &version_report)?;
     }
+    let unsliced_project = if !stl && !sliced {
+        let (input, filename) = &models[0];
+        let project = ares_core::CliUnsliced3mf::admit(input, filename)
+            .map_err(|error| failed(error.to_string()))?;
+        warnings.record(&args.inputs[0], &version_report, project.substitutions());
+        Some(project)
+    } else {
+        None
+    };
     let settings_files = read_preset_list(args.load_settings.as_deref())?;
     let filament_files = read_preset_list(args.load_filaments.as_deref())?;
     let settings = as_load_settings_files(&settings_files);
@@ -100,6 +113,7 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         filaments: &filaments,
     };
     let mut upward_report = Vec::new();
+    let mut sliced_plate = ares_core::SlicedPlate::default();
     let archive = if stl {
         export_stl(
             models,
@@ -107,41 +121,43 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
             (args.selection, placement, args.convert_unit),
         )
         .await
+    } else if let Some(project) = unsliced_project {
+        project.export(presets)
     } else {
         let (input, filename) = &models[0];
-        if sliced {
-            let admitted = ares_core::CliSavedSlicedProject::admit(input, args.allow_newer_file)
-                .and_then(|mut project| Ok((project.take_upward_source()?, project)));
-            match admitted {
-                Ok((source, project)) => {
-                    let resources = crate::installed_resources::resolve(None)?;
-                    let original =
-                        crate::compatible_machine::read_machine_full(source.as_ref(), &resources)?;
-                    let catalog = crate::project_presets::retained_printer_catalog(
-                        &resources,
-                        source.as_ref(),
-                        false,
-                    )?;
-                    project.export(
-                        filename,
-                        args.min_save,
-                        (
-                            catalog.as_ref(),
-                            ares_core::CliUpwardMachine {
-                                source,
-                                input: ares_core::UpwardMachineInput::FetchOriginal(
-                                    original.as_deref(),
-                                ),
-                                report: &mut upward_report,
-                            },
-                        ),
-                        SlicerContext::new(0),
-                    )
-                }
-                Err(error) => Err(error),
+        let admitted = ares_core::CliSavedSlicedProject::admit(input, args.allow_newer_file)
+            .and_then(|mut project| {
+                project.check_post_process()?;
+                warnings.record(&args.inputs[0], &version_report, project.substitutions());
+                Ok((project.take_upward_source()?, project))
+            });
+        match admitted {
+            Ok((source, project)) => {
+                let resources = crate::installed_resources::resolve(None)?;
+                let original =
+                    crate::compatible_machine::read_machine_full(source.as_ref(), &resources)?;
+                let catalog = crate::project_presets::retained_printer_catalog(
+                    &resources,
+                    source.as_ref(),
+                    false,
+                )?;
+                project.export_with_report(
+                    filename,
+                    args.min_save,
+                    (
+                        catalog.as_ref(),
+                        ares_core::CliUpwardMachine {
+                            source,
+                            input: ares_core::UpwardMachineInput::FetchOriginal(
+                                original.as_deref(),
+                            ),
+                            report: &mut upward_report,
+                        },
+                    ),
+                    (SlicerContext::new(0), &mut sliced_plate),
+                )
             }
-        } else {
-            ares_core::export_3mf(input, filename, presets)
+            Err(error) => Err(error),
         }
     }
     .map_err(|err| {
@@ -156,7 +172,7 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         };
         match err {
             SliceError::InvalidValuesInProject(_) if sliced && !stl => {
-                slice_failure(err).with_upward_report(upward_report)
+                slice_failure(err).with_upward_report(std::mem::take(&mut upward_report))
             }
             SliceError::ProcessNotCompatible => slice_failure(err),
             SliceError::FileVersionNotSupported => crate::failure::slice_error_to_failure(
@@ -168,7 +184,31 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
             other => failed(other.to_string()),
         }
     })?;
-    fs::write(&output, archive).map_err(|err| failed(err.to_string()))
+    fs::write(&output, archive).map_err(|err| failed(err.to_string()))?;
+    #[cfg(target_os = "linux")]
+    if !stl {
+        if sliced {
+            crate::result_json::Success {
+                strict_mode: args.strict,
+                output: &version_report,
+                plate: 1,
+                plate_index: 1,
+                sliced_plate,
+                upward_machines: &upward_report,
+                downward_machines: &[],
+            }
+            .write(warnings.take());
+        } else {
+            crate::result_json::write_action_result(
+                &version_report,
+                (0, "Success."),
+                (0, args.strict),
+                &[],
+                &warnings.take(),
+            );
+        }
+    }
+    Ok(())
 }
 
 async fn export_stl(

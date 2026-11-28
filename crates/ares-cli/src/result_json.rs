@@ -153,7 +153,7 @@ impl SlicedPlateEntry {
 pub(super) fn write_plate_batch(
     output: &Path,
     (plate_index, strict_mode): (u32, bool),
-    (file, substitutions): (&str, Vec<ares_core::ConfigSubstitution>),
+    mut warnings: Vec<CliWarning>,
     (upward_machines, downward_machines): (&[String], &[String]),
     completed: &[(u32, ares_core::SlicedPlate)],
 ) {
@@ -169,18 +169,11 @@ pub(super) fn write_plate_batch(
         .iter()
         .map(|(id, plate)| SlicedPlateEntry::from_plate(*id, plate))
         .collect::<Vec<_>>();
-    let warnings = substitutions
-        .into_iter()
-        .map(|substitution| CliWarning::ConfigValueSubstituted {
-            file: file.to_owned(),
-            substitution,
-        })
-        .chain(
-            completed
-                .iter()
-                .flat_map(|(id, plate)| slicing_warnings(*id, plate.warnings.clone())),
-        )
-        .collect::<Vec<_>>();
+    warnings.extend(
+        completed
+            .iter()
+            .flat_map(|(id, plate)| slicing_warnings(*id, plate.warnings.clone())),
+    );
     let _ = ResultJson {
         return_code: 0,
         error_string: "Success.",
@@ -210,21 +203,14 @@ pub(super) struct Success<'a> {
 }
 
 impl Success<'_> {
-    pub(super) fn write(self, file: &str, substitutions: Vec<ares_core::ConfigSubstitution>) {
+    pub(super) fn write(self, mut warnings: Vec<CliWarning>) {
         let warning_message = self
             .sliced_plate
             .warnings
             .last()
             .map(|warning| warning.message.clone())
             .unwrap_or_default();
-        let warnings = substitutions
-            .into_iter()
-            .map(|substitution| CliWarning::ConfigValueSubstituted {
-                file: file.to_owned(),
-                substitution,
-            })
-            .chain(slicing_warnings(self.plate, self.sliced_plate.warnings))
-            .collect::<Vec<_>>();
+        warnings.extend(slicing_warnings(self.plate, self.sliced_plate.warnings));
         let _ = ResultJson {
             return_code: 0,
             error_string: "Success.",
@@ -244,6 +230,41 @@ impl Success<'_> {
         }
         .write(self.output);
     }
+}
+
+pub(super) fn substitution_records(
+    file: &str,
+    substitutions: impl IntoIterator<Item = ares_core::ConfigSubstitution>,
+) -> impl Iterator<Item = CliWarning> {
+    substitutions
+        .into_iter()
+        .map(move |substitution| CliWarning::ConfigValueSubstituted {
+            file: file.to_owned(),
+            substitution,
+        })
+}
+
+pub(super) fn write_action_result(
+    output: &Path,
+    (return_code, error_string): (i32, &str),
+    (plate_index, strict_mode): (u32, bool),
+    upward_machines: &[String],
+    warnings: &[CliWarning],
+) {
+    let _ = ResultJson {
+        return_code,
+        error_string,
+        plate_index,
+        strict_mode,
+        layer_height: 0.0,
+        wall_loops: 0,
+        sparse_infill_density: 0.0,
+        upward_machines,
+        downward_machines: &[],
+        sliced_plates: &[],
+        warnings,
+    }
+    .write(output);
 }
 
 pub(super) fn slicing_warnings(

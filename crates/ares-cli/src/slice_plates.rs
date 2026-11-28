@@ -58,13 +58,12 @@ pub(super) fn run(
     selection: i32,
     input: &[u8],
     overrides: &ConfigOverrides,
-    context: SlicerContext<'_>,
+    (context, warnings): (SlicerContext<'_>, &mut crate::PositionalWarnings),
 ) -> Result<(), CliFailure> {
     let directory = args.directory;
     let result_path = directory
         .unwrap_or_else(|| Path::new("."))
         .join("plate_1.gcode");
-    let file = args.input.to_string_lossy();
     let filename = args
         .input
         .file_name()
@@ -81,10 +80,8 @@ pub(super) fn run(
     };
     let mut admitted =
         ares_core::CliPresetProject::open(input, args.allow_newer_file).map_err(map_err)?;
-    if loaded_files {
-        admitted.check_post_process(&context).map_err(map_err)?;
-    }
-    let substitutions = admitted.substitutions().to_vec();
+    admitted.check_post_process(&context).map_err(map_err)?;
+    warnings.record(args.input, &result_path, admitted.substitutions());
     let catalog = args
         .project_preset_catalog
         .map(fs::read_to_string)
@@ -134,7 +131,6 @@ pub(super) fn run(
         if args.uptodate
             && let Some(source) = source
         {
-            admitted.check_post_process(&context).map_err(map_err)?;
             refresh = native_refresh::load(
                 &RefreshInputs {
                     resources_dir: args.resources_dir,
@@ -265,21 +261,16 @@ pub(super) fn run(
                 ),
             })
             .with_upward_report(upward_report)
-            .with_downward_report(downward_report)
-            .with_config_substitutions(&file, substitutions);
+            .with_downward_report(downward_report);
         #[cfg(target_os = "linux")]
         let failure = failure.with_plate_batch(error.plate, *error.report, completed);
         return Err(failure);
     }
-    eprint!(
-        "{}",
-        crate::failure::substitution_warnings(&file, &substitutions)
-    );
     #[cfg(target_os = "linux")]
     crate::result_json::write_plate_batch(
         &result_path,
         (selection as u32, false),
-        (&file, substitutions),
+        warnings.take(),
         (&upward_report, &downward_report),
         &completed,
     );

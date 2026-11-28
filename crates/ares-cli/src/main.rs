@@ -14,6 +14,7 @@ mod installed_resources;
 mod load_settings;
 mod moves_csv;
 mod native_refresh;
+mod positional_warnings;
 mod preset_sources;
 mod project_presets;
 #[cfg(target_os = "linux")]
@@ -26,25 +27,29 @@ use std::{fs, io, path::Path};
 
 use args::{Commands, SliceArgs, require_single_input};
 use failure::{CliFailure, slice_error_to_failure, substitution_warnings};
+use positional_warnings::PositionalWarnings;
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let (cli, export_before_slice) = args::parse();
     #[cfg(target_os = "linux")]
     let strict_mode = cli.direct.strict;
+    let mut warnings = PositionalWarnings::default();
     let result = match cli.command {
         Some(Commands::Slice(args)) => {
             if args.export_stl.is_some() || args.export_stls.is_some() || args.repair.is_some() {
                 export_stl::run(&args)
             } else {
-                run_slice(args).await
+                run_slice(args, &mut warnings).await
             }
         }
         None => match cli.direct.export_3mf.as_deref() {
-            Some(output) => export_3mf::run_direct(&cli.direct, output).await,
-            None => direct_stl::run(cli.direct, export_before_slice).await,
+            Some(output) => export_3mf::run_direct(&cli.direct, output, &mut warnings).await,
+            None => direct_stl::run(cli.direct, export_before_slice, &mut warnings).await,
         },
     };
     if let Err(failure) = result {
+        #[cfg(target_os = "linux")]
+        let failure = warnings.attach(failure, strict_mode);
         failure.report(
             #[cfg(target_os = "linux")]
             strict_mode,
@@ -52,7 +57,7 @@ async fn main() {
     }
 }
 
-async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
+async fn run_slice(args: SliceArgs, warnings: &mut PositionalWarnings) -> Result<(), CliFailure> {
     if assembly::requested(&args) {
         return assembly::slice(&args).await;
     }
@@ -138,7 +143,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         context.set_status_callback(&mut print_status);
     }
     if let Some(selection) = args.selection {
-        return slice_plates::run((&args).into(), selection, &input, &overrides, context);
+        return slice_plates::run(
+            (&args).into(),
+            selection,
+            &input,
+            &overrides,
+            (context, warnings),
+        );
     }
     let load_settings = args
         .load_settings
@@ -161,46 +172,48 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
         };
         let admitted =
             ares_core::CliPresetProject::open(&input, args.allow_newer_file).map_err(map_err)?;
+        admitted.check_post_process(&context).map_err(map_err)?;
+        warnings.record(args.input(), args.output(), admitted.substitutions());
         if let Some(catalog) = &args.project_preset_catalog
             && args.load_settings.is_none()
         {
-            admitted.check_post_process(&context).map_err(map_err)?;
             return project_presets::slice(
                 &args,
                 project_presets::Entry::Catalog(catalog),
                 admitted,
                 &overrides,
-                context,
+                (context, warnings),
             );
         }
         if !load_settings.is_empty() || !load_filaments.is_empty() {
-            // `OrcaSlicer.cpp:1682-1690`: probe the embedded `-19` gate before
-            // reading external preset files (`-5`).
-            admitted.check_post_process(&context).map_err(map_err)?;
             return load_settings::slice(
                 &args,
                 admitted,
                 &overrides,
                 (&load_settings, &load_filaments),
-                context,
+                (context, warnings),
             )
             .await;
         }
-        if native_refresh::requested(&args) {
-            admitted.check_post_process(&context).map_err(map_err)?;
-            if let Some(refresh) = native_refresh::load_admitted(&args, &admitted, &load_filaments)?
-            {
-                return project_presets::slice(
-                    &args,
-                    project_presets::Entry::Native(&refresh),
-                    admitted,
-                    &overrides,
-                    context,
-                );
-            }
+        if native_refresh::requested(&args)
+            && let Some(refresh) = native_refresh::load_admitted(&args, &admitted, &load_filaments)?
+        {
+            return project_presets::slice(
+                &args,
+                project_presets::Entry::Native(&refresh),
+                admitted,
+                &overrides,
+                (context, warnings),
+            );
         }
         let resources = installed_resources::resolve(args.resources_dir.as_deref())?;
-        return project_presets::slice_embedded(&args, admitted, &resources, &overrides, context);
+        return project_presets::slice_embedded(
+            &args,
+            admitted,
+            &resources,
+            &overrides,
+            (context, warnings),
+        );
     }
     if args.project_preset_catalog.is_some() && args.load_settings.is_none() {
         return Err(io::Error::new(
@@ -223,7 +236,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), CliFailure> {
             admitted,
             &overrides,
             (&load_settings, &load_filaments),
-            context,
+            (context, warnings),
         )
         .await;
     }
@@ -281,7 +294,7 @@ fn report_success(
 ) {
     eprint!("{}", substitution_warnings(file, &substitutions));
     #[cfg(target_os = "linux")]
-    result.write(file, substitutions);
+    result.write(result_json::substitution_records(file, substitutions).collect());
 }
 
 /// The 3MF load's substitutions (`OrcaSlicer.cpp:1737-1758`). A project whose settings cannot be
