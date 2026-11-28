@@ -37,13 +37,18 @@ legacy key and the token together, so it still maps to inherit (`0`).
 
 ## Ares boundary
 
-- Apply dispatch to embedded `Metadata/project_settings.config` entries in
+- Apply dispatch to embedded `Metadata/project_settings.config` entries and
+  the shared `ProjectSettingsRaw` catalog/preset paths in
   `crates/ares-core/src/project/raw_settings.rs` and `project/load.rs`, using
   the token rules in `options/legacy/token.rs` and the existing encoding,
   substitution, and per-kind wire decoding in `options/json_deserialize.rs`
   and its submodules. The main load and `project_config_substitutions` must
-  see the same embedded rewrites before substitution. The raw map read by
-  saved-project export and the typed load must see the same bound option.
+  see the same embedded rewrites before substitution. Catalog composition
+  callers (`profiles/catalog/compose.rs`, `includes.rs`, and
+  `source_records.rs`) and `flush_matrix/context.rs` intentionally share this
+  boundary, matching upstream's shared `ConfigBase::load_from_json` behavior.
+  The raw map read by saved-project export and the typed load must see the
+  same bound option.
 - Finish both calls for each well-formed array before inserting its result in
   the normalized map. Resolve collisions in existing sorted **source** key
   order. Pick array encoding after the first rename; parse the post-legacy
@@ -67,7 +72,7 @@ Out of scope: malformed-array early break and skipping later JSON keys
 (`Config.cpp:1051–1055`), global obsolete/unknown-key deletion, new alias or
 shortcut lookup rules, and new generic substitution behavior unrelated to
 the affected option kinds. Do not change top-level key retention or migrate
-unrelated config loaders in this slice.
+loaders outside the shared `ProjectSettingsRaw` boundary in this slice.
 
 ## Verification
 

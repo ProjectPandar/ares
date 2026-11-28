@@ -64,7 +64,7 @@ fn normalize_legacy_non_string(mut key: String, value: RawConfigValue) -> Option
 
 fn normalize_legacy_non_wire(mut key: String, value: RawConfigValue) -> Option<RawEntry> {
     let mut token = String::new();
-    crate::options::handle_legacy(&mut key, &mut token);
+    crate::options::legacy::handle_legacy_scalar(&mut key, &mut token);
     (!key.is_empty()).then_some((key, value))
 }
 
