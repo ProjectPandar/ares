@@ -5,7 +5,7 @@ use super::{
     wiping::{self, CollectionId, Layer, WipingExtrusions},
 };
 use crate::project_slice::{
-    extrusion_islands::PreparedPostExtrusionIslands,
+    extrusion_islands::{LayerExtrusionIslands, PreparedPostExtrusionIslands},
     island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
     support_material::InstalledSupportLayer,
 };
@@ -82,16 +82,20 @@ impl ToolOrdering {
             .max_by(f64::total_cmp);
         let mut current = first;
         let mut last_change = None;
-        for layer in self
+        for (z, tool) in self
             .layers
             .iter()
             .take_while(|layer| top.is_none_or(|z| layer.print_z <= z + EPSILON))
+            .flat_map(|layer| {
+                layer
+                    .extruders
+                    .iter()
+                    .map(move |&tool| (layer.print_z, tool))
+            })
         {
-            for &tool in &layer.extruders {
-                if tool != current {
-                    last_change = Some(layer.print_z);
-                    current = tool;
-                }
+            if tool != current {
+                last_change = Some(z);
+                current = tool;
             }
         }
         if let Some(z) = last_change {
@@ -115,6 +119,15 @@ impl ToolOrdering {
         let prime = settings.process.print.prime_volume.0 as f32;
         let use_matrix = settings.printer.gcode.single_extruder_multi_material.0
             && settings.printer.gcode.purge_in_prime_tower.0;
+        // BeltPurge.cpp:187–196,260–271: convert both operands before
+        // multiplying the requested entry of the single-nozzle matrix.
+        let purge_volume = |old: usize, new: usize| {
+            if use_matrix {
+                matrix[old * count + new] as f32 * multiplier
+            } else {
+                prime
+            }
+        };
         current = first;
         for tools in &mut self.layers {
             let mut objects = wiping::objects(traversal, original, support, tools.print_z);
@@ -124,38 +137,17 @@ impl ToolOrdering {
                 soluble: &soluble,
                 support_filaments: &support_filaments,
             };
-            let mut wiping = WipingExtrusions::new(&layer);
-            for &next in &tools.extruders {
-                if next != current {
-                    // BeltPurge.cpp:187–196,260–271: nozzle zero of the
-                    // single-nozzle matrix; convert both operands before multiplying.
-                    let volume = if use_matrix {
-                        matrix[current * count + next] as f32 * multiplier
-                    } else {
-                        prime
-                    };
-                    wiping.mark(&layer, (current, next), volume);
-                    current = next;
-                }
-            }
-            // BeltPurge.cpp:274–295,376–398: distinguish volume claims from
-            // order-only overrides. Keep collection IDs across all three views.
+            let mut wiping = mark_changes(&layer, &mut current, purge_volume);
             let retained = &mut original.objects[prism];
             let physical = &traversal.objects[prism].physical_layers()[..retained.len()];
             if let Some(index) = wiping::object_layer_index(physical, tools.print_z) {
-                let claimed = |id| wiping.entity(prism, id, 0).is_some();
-                if let Some(object) = objects.iter_mut().find(|object| object.id == prism) {
-                    for region in object.regions.iter_mut().flatten() {
-                        region.infills.retain(|fill| claimed(fill.id));
-                    }
-                }
-                retained[index]
-                    .wiping_volumes
-                    .infills
-                    .retain(|fill| claimed(CollectionId::Infill(fill.id)));
-                retain_fills(&mut ordered[prism][index], |id| {
-                    claimed(CollectionId::Infill(id))
-                });
+                drop_unclaimed_fills(
+                    prism,
+                    &mut objects,
+                    &wiping,
+                    &mut retained[index],
+                    &mut ordered[prism][index],
+                );
             }
             wiping.ensure_order(&Layer {
                 objects: &objects,
@@ -167,6 +159,48 @@ impl ToolOrdering {
         }
         Ok(())
     }
+}
+
+fn mark_changes(
+    layer: &Layer<'_>,
+    current: &mut usize,
+    volume: impl Fn(usize, usize) -> f32,
+) -> WipingExtrusions {
+    let mut wiping = WipingExtrusions::new(layer);
+    for &next in layer.tools {
+        if next == *current {
+            continue;
+        }
+        wiping.mark(layer, (*current, next), volume(*current, next));
+        *current = next;
+    }
+    wiping
+}
+
+// BeltPurge.cpp:274–295,376–398: drop fills before order-only overrides
+// are added. Keep collection IDs across all three views.
+fn drop_unclaimed_fills(
+    prism: usize,
+    objects: &mut [wiping::Object],
+    wiping: &WipingExtrusions,
+    original: &mut LayerExtrusionIslands,
+    ordered: &mut OrderedExtrusionLayer,
+) {
+    let claimed = |id| wiping.entity(prism, id, 0).is_some();
+    if let Some(regions) = objects
+        .iter_mut()
+        .find(|object| object.id == prism)
+        .and_then(|object| object.regions.as_mut())
+    {
+        for region in regions {
+            region.infills.retain(|fill| claimed(fill.id));
+        }
+    }
+    original
+        .wiping_volumes
+        .infills
+        .retain(|fill| claimed(CollectionId::Infill(fill.id)));
+    retain_fills(ordered, |id| claimed(CollectionId::Infill(id)));
 }
 
 fn retain_fills(layer: &mut OrderedExtrusionLayer, keep: impl Fn(usize) -> bool) {

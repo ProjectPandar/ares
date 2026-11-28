@@ -337,10 +337,9 @@ impl BeltSlice {
             let rotated_volume = rotated.then(volume.transform());
             for &vertex in volume.mesh().vertices() {
                 let point = local_volume.transform_point(vertex);
-                for (i, value) in [point.x, point.y, point.z].into_iter().enumerate() {
-                    lower[i] = lower[i].min(value);
-                    upper[i] = upper[i].max(value);
-                }
+                let coordinates = [point.x, point.y, point.z];
+                lower = std::array::from_fn(|i| lower[i].min(coordinates[i]));
+                upper = std::array::from_fn(|i| upper[i].max(coordinates[i]));
                 let rotated_point = rotated_volume.transform_point(vertex);
                 min_z = min_z.min(rotated_point.z).min(floor_z(rotated_point));
             }

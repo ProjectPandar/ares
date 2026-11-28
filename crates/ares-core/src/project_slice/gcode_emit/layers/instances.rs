@@ -63,25 +63,25 @@ pub(in crate::project_slice::gcode_emit) fn collect(
             .collect::<Vec<_>>();
         instances.push(copies);
     }
+    let purge_source = traversal
+        .resolved
+        .views
+        .full
+        .printer
+        .remaining
+        .enable_belt_purge_tower
+        .0
+        .then(|| {
+            traversal
+                .resolved
+                .objects
+                .iter()
+                .find(|object| object.object.belt_purge_tower_object.0)
+                .map(|object| object.source_object_index)
+        })
+        .flatten();
     // Print.cpp:934 initializes by model-object index, not split PrintObject index.
     if as_object_list(traversal) {
-        let purge_source = traversal
-            .resolved
-            .views
-            .full
-            .printer
-            .remaining
-            .enable_belt_purge_tower
-            .0
-            .then(|| {
-                traversal
-                    .resolved
-                    .objects
-                    .iter()
-                    .find(|object| object.object.belt_purge_tower_object.0)
-                    .map(|object| object.source_object_index)
-            })
-            .flatten();
         for (rank, index) in
             super::object_order::model_order_with_purge(&model_indices, purge_source)
                 .into_iter()
@@ -114,42 +114,8 @@ pub(in crate::project_slice::gcode_emit) fn collect(
         order.reverse();
         order
     };
-    if traversal
-        .resolved
-        .views
-        .full
-        .printer
-        .remaining
-        .enable_belt_purge_tower
-        .0
-    {
-        if let Some(purge_source) = traversal
-            .resolved
-            .objects
-            .iter()
-            .find(|object| object.object.belt_purge_tower_object.0)
-            .map(|object| object.source_object_index)
-        {
-            let (mut purge, mut rest) = (Vec::new(), Vec::new());
-            for index in order {
-                let (object, _) = owners[index];
-                let source = traversal.objects[object]
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .object
-                    .identity()
-                    .0;
-                if source == purge_source {
-                    purge.push(index);
-                } else {
-                    rest.push(index);
-                }
-            }
-            purge.extend(rest);
-            order = purge;
-        }
+    if let Some(purge_source) = purge_source {
+        order.sort_by_key(|&index| model_indices[index] != purge_source);
     }
     for (position, index) in order.into_iter().enumerate() {
         let (object, copy) = owners[index];
