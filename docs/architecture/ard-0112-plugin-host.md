@@ -109,6 +109,18 @@ slices exactly as today unless the caller explicitly attaches a plugin host.
     application data directory natively, browser storage in the web build);
     `ares-core` never sees it.
 
+11. **Runtime and metering.** Native builds run hosted WASM plugins on
+    Wasmtime; the browser build runs them on the browser's own WebAssembly
+    engine. Neither engine's built-in fuel is used. Before instantiation,
+    `ares-plugin-host` rewrites each module: it inserts one fuel debit per
+    straight-line code segment and sets the linear memory maximum. Both engines
+    then run the same instrumented bytes, so a plugin exhausts its fuel or
+    memory at the same point on every platform. Fuel bounds the guest
+    instruction count, not wall time. Bulk memory, table operations and host
+    calls are charged statically. The linear memory cap does not cover tables,
+    stacks or host allocations, so those need their own limits. Measurements:
+    [runtime spike](../plugin-runtime-spike.md#metering-follow-up).
+
 ## Rewrite rule amendment
 
 `AGENTS.md` requires every milestone to be an upstream rewrite slice. Plugin

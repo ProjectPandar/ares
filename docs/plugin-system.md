@@ -7,7 +7,7 @@ OrcaSlicer rewrite. Architecture decisions: [ARD-0112](architecture/ard-0112-plu
 
 | Phase | Scope | State |
 | --- | --- | --- |
-| P0 | ARD-0112 and rewrite rule amendment (done); runtime spike | in progress |
+| P0 | ARD-0112 and rewrite rule amendment (done); runtime spike: WASM runtime and metering decided, JS engine open | in progress |
 | P1 | Port the upstream seam (`SlicingPipelineStepPlugin`, activation, recompute-only firing, post-process step) as the public core interface; `ares-plugin-host` with WASM/JS loading and hot reload | not started |
 | P2 | Perimeter extension: inset index, per-path Z, height, flow multiplier, order, path duplication | not started |
 | P1b | Hook catalog: every step and G-code stage, data passed, add/remove/modify edits, downstream recomputation | done |
@@ -64,7 +64,8 @@ Sandbox
     started; writes become visible to the next slice. The hash of the `/data`
     files a plugin read joins its identity for invalidation.
 13. Execution is bounded by a deterministic fuel budget and a memory cap, so
-    a runaway plugin fails the same way on every platform.
+    a runaway plugin fails the same way on every platform. The host inserts
+    the fuel accounting into each module; engine-specific fuel is not used.
 14. JavaScript runs on a memory-safe engine or inside the WASM sandbox, never
     on an unsandboxed C engine.
 15. A plugin declares the hooks it uses; undeclared hooks are never called.
@@ -116,6 +117,9 @@ Options, projects and reload
 - 2026-11-28: hooks are not limited to perimeters. Every upstream pipeline step
   and the G-code stages expose hooks that can add, remove or modify extrusions
   or G-code; the catalog below lists each hook, its data and its allowed edits.
+- 2026-11-28: WASM runtime: Wasmtime in native builds and the browser's own
+  WebAssembly in the web build. Fuel is metered by host instrumentation of
+  each module, identical on both engines (ARD-0112 decision 11).
 
 ## Runtime spike
 
