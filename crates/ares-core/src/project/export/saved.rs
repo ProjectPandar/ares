@@ -1,5 +1,6 @@
 use super::super::super::{
-    ArchiveLimits, PackagePath, ProjectArchive, Transform3d, model_settings::PartSettings,
+    ArchiveLimits, PackagePath, ProjectArchive, Transform3d,
+    model_settings::{ObjectSettings, PartSettings},
     model_xml::ModelDocument,
 };
 use super::super::saved_assets::{self, SavedArchiveExtras};
@@ -53,7 +54,7 @@ pub(crate) fn from_saved_project(
 pub(in crate::project::export) fn from_saved_project_with_extras(
     mut archive: ProjectArchive<'_>,
     project: &crate::Project,
-    allow_extras: bool,
+    full_cli_slice: bool,
 ) -> Result<(SavedModel, SavedArchiveExtras), SliceError> {
     let paths: std::collections::BTreeSet<_> = project
         .objects()
@@ -76,7 +77,7 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
                         | "Metadata/filament_sequence.json"
                 )
         });
-        if allow_extras {
+        if full_cli_slice {
             additional.cloned().collect::<Vec<_>>()
         } else if additional.next().is_some() {
             return Err(deferred("additional saved archive members"));
@@ -106,9 +107,11 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
             let [instance] = object.instances() else {
                 return Err(deferred("expected one saved instance per object"));
             };
+            let transform = instance.transform();
+            let translation_only = transform.without_translation() == Transform3d::IDENTITY;
             if !instance.printable()
-                || instance.transform().without_translation() != Transform3d::IDENTITY
-                || object.name().contains(['/', '\\', '\0'])
+                || !safe_name(object.name())
+                || (!translation_only && !full_cli_slice)
             {
                 return Err(deferred("saved model metadata or transforms"));
             }
@@ -116,13 +119,23 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
                 .iter()
                 .find(|entry| entry.id == object.id())
                 .ok_or_else(|| deferred("expected saved object settings"))?;
-            let offset = instance.transform().to_column_major();
+            let mut saved_instance = if translation_only {
+                let offset = transform.to_column_major();
+                Instance::at([offset[12], offset[13], offset[14]])
+            } else {
+                if !instance.auto_drop() || !supports_build_transform(object, settings, transform) {
+                    return Err(deferred("saved model metadata or transforms"));
+                }
+                Instance {
+                    transform,
+                    printable: instance.printable(),
+                    assemble: None,
+                }
+            };
+            saved_instance.assemble = instance.assemble();
             Ok(Object {
                 name: object.name().to_owned(),
-                instances: vec![Instance {
-                    assemble: instance.assemble(),
-                    ..Instance::at([offset[12], offset[13], offset[14]])
-                }],
+                instances: vec![saved_instance],
                 metadata: cli_object_metadata(),
                 auto_drop: true,
                 parts: object
@@ -144,6 +157,119 @@ pub(in crate::project::export) fn from_saved_project_with_extras(
         },
         extras,
     ))
+}
+
+fn safe_name(name: &str) -> bool {
+    !name.contains(['/', '\\', '\0'])
+}
+
+fn supports_build_transform(
+    object: &crate::ProjectObject,
+    settings: &ObjectSettings,
+    transform: Transform3d,
+) -> bool {
+    let ([volume], [part]) = (object.volumes(), settings.parts.as_slice()) else {
+        return false;
+    };
+    // A nonzero volume offset can be folded into the build matrix by the importer
+    // (bbs_3mf.cpp:2337–2358). Keep that case out of this projection.
+    volume.transform() == Transform3d::IDENTITY
+        && volume.source_transform() == Transform3d::IDENTITY
+        && settings
+            .auto_drop
+            .as_deref()
+            .is_none_or(|value| value == "1")
+        && settings.module.is_empty()
+        && settings
+            .options
+            .iter()
+            .all(|entry| entry.key == "extruder" && entry.value == "1")
+        && safe_name(volume.name())
+        && part.id == volume.id()
+        && part.options.is_empty()
+        && !part.has_parametric_shape
+        && part.mesh_stat.as_ref().is_none_or(|stat| {
+            stat.edges_fixed == 0
+                && stat.degenerate_facets == 0
+                && stat.facets_removed == 0
+                && stat.facets_reversed == 0
+                && stat.backwards_edges == 0
+        })
+        && supported_provenance(part)
+        && native_invertible_affine(transform)
+}
+
+fn supported_provenance(part: &PartSettings) -> bool {
+    let [mut file, mut object, mut volume, mut x, mut y, mut z] = [false; 6];
+    for entry in &part.retained_metadata {
+        let value = entry.value.as_str();
+        let (seen, valid) = match entry.key.as_str() {
+            "name" | "matrix" => continue,
+            "source_file" => (
+                &mut file,
+                safe_name(value) && !matches!(value, "" | "." | "..") && !value.contains(':'),
+            ),
+            "source_object_id" => (&mut object, value.parse::<i32>().is_ok()),
+            "source_volume_id" => (&mut volume, value.parse::<i32>().is_ok()),
+            "source_offset_x" => (&mut x, value.parse::<f32>().is_ok_and(f32::is_finite)),
+            "source_offset_y" => (&mut y, value.parse::<f32>().is_ok_and(f32::is_finite)),
+            "source_offset_z" => (&mut z, value.parse::<f32>().is_ok_and(f32::is_finite)),
+            _ => return false,
+        };
+        if *seen || !valid {
+            return false;
+        }
+        *seen = true;
+    }
+    file && object && volume && x && y && z
+}
+
+// bbs_3mf.cpp:4464–4472, Eigen FullPivLU.h:321–342,489–539.
+fn native_invertible_affine(transform: Transform3d) -> bool {
+    let matrix = transform.as_matrix();
+    if !matrix.iter().flatten().all(|value| value.is_finite()) {
+        return false;
+    }
+    let mut lu: [[f64; 3]; 3] = [0, 1, 2].map(|col| [0, 1, 2].map(|row| matrix[row][col]));
+    let mut pivots = [0.0; 3];
+    for (k, magnitude) in pivots.iter_mut().enumerate() {
+        let (row, col, score) = largest_pivot(&lu, k);
+        *magnitude = score;
+        if score == 0.0 || !score.is_finite() {
+            return false;
+        }
+        for column in &mut lu {
+            column.swap(k, row);
+        }
+        lu.swap(k, col);
+        let (pivot_column, trailing) = lu[k..].split_first_mut().unwrap();
+        let pivot = pivot_column[k];
+        for value in &mut pivot_column[k + 1..] {
+            *value /= pivot;
+        }
+        for column in trailing {
+            let factor = column[k];
+            for (value, multiplier) in column[k + 1..].iter_mut().zip(&pivot_column[k + 1..]) {
+                *value -= multiplier * factor;
+            }
+        }
+    }
+    let cutoff = pivots.into_iter().reduce(f64::max).unwrap() * (3.0 * f64::EPSILON);
+    pivots.into_iter().all(|pivot| pivot > cutoff)
+}
+
+fn largest_pivot(lu: &[[f64; 3]; 3], start: usize) -> (usize, usize, f64) {
+    // Eigen visits each remaining corner in column-major order, keeping the first tie.
+    let mut best = (start, start, lu[start][start].abs());
+    for (col, column) in lu.iter().enumerate().skip(start) {
+        for (row, coefficient) in column.iter().enumerate().skip(start) {
+            let score = coefficient.abs();
+            if score > best.2 {
+                best = (row, col, score);
+            }
+        }
+    }
+    best
 }
 
 fn saved_part(

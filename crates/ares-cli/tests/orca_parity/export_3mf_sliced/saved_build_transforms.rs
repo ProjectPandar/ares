@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use quick_xml::{Reader, events::Event};
+use quick_xml::{Reader, XmlVersion, events::Event};
 
 use super::super::export_3mf_sliced_rejection::rewrite_project;
 use super::{SETTINGS, STL, comparator, invoke, write_inputs};
@@ -100,7 +100,7 @@ fn assert_build_item(model: &[u8], expected: &str) {
                         .try_get_attribute(key)
                         .unwrap()
                         .unwrap()
-                        .decode_and_unescape_value(reader.decoder())
+                        .decoded_and_normalized_value(XmlVersion::Implicit1_0, reader.decoder())
                         .unwrap()
                         .into_owned()
                 };
