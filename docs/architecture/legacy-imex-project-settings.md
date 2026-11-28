@@ -24,10 +24,14 @@ the resolved configuration (`src/libslic3r/Format/bbs_3mf.cpp:8196–8205`).
 Port the key rewrites in `handle_legacy` in
 `crates/ares-core/src/options/legacy/token.rs`, where
 `ProjectSettingsRaw::handle_legacy` already runs before the embedded settings
-are deserialized and used for slicing or saved export. Keep the raw document's
-existing ordered assignments: if a legacy key and its canonical destination
-both occur, the later source key overwrites the earlier assignment. Do not
-rewrite canonical `imex_*` keys or change their values.
+are deserialized and used for slicing or saved export. The JSON reader
+(`Config.cpp:56,876–877,931–943`) uses `nlohmann::json`'s map-backed objects:
+literal duplicate keys retain the last parsed value, then distinct keys are
+visited in sorted key order, not file order. Ares already deserializes the
+raw document into a `BTreeMap` and iterates it when inserting normalized
+keys. Keep that ordering: `ixex_*` sorts after `imex_*` and `is_ixex` after
+`is_imex`, so the legacy value wins if both spellings occur. Do not rewrite
+canonical `imex_*` keys or change their values.
 
 No change to plate metadata aliases, IMEX routing or clearance calculations,
 G-code template evaluation, export serialization, general unknown-key handling,
@@ -40,5 +44,7 @@ plus a disabled control. In both reference lanes, compare the emitted G-code
 against Native with the existing parity comparison and verify that the selected
 non-default mode's script and placeholders are emitted. Compare the saved
 `Metadata/project_settings.config` member against Native, including the enable
-flag and distinct X/Y clearance values; verify Native resolves them to the
-canonical keys before using its output as the reference.
+flag and distinct X/Y clearance values. In the export witness, place
+conflicting canonical keys after the legacy keys in the JSON text and
+verify Native still chooses the legacy values. Verify Native resolves them
+to the canonical keys before using its output as the reference.
