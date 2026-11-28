@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 use super::super::export_3mf_sliced_rejection::rewrite_project;
 use super::{GCODE, compare_sliced_archives, invoke, write_saved_input};
-use crate::{OrcaRunner, runner::repo_root};
+use crate::{OrcaRunner, native_wall_clock::result_comparison_bytes, runner::repo_root};
 
 const EXPANSION: &str = "raft_first_layer_expansion";
 const ARCHIVE: &str = "export.3mf";
@@ -35,15 +35,27 @@ fn direct_sliced_export_rejects_authored_negative_raft_expansion_like_native() {
     let (native, ares) = run_pair(&runner, "wall_loops;raft_first_layer_expansion");
     assert_eq!(native, Some(238), "Native strict validation in {root:?}");
     for side in ["native", "ares"] {
-        let dir = root.join(side);
-        assert!(!dir.join("cwd").join(ARCHIVE).exists(), "{dir:?}");
-        let stderr = fs::read_to_string(dir.join("stderr.log")).unwrap();
-        assert!(
-            stderr.contains(&format!("{EXPANSION}: -1 not in range")),
-            "{side} must reject the authored value in {root:?}"
-        );
+        let archive = root.join(side).join("cwd").join(ARCHIVE);
+        assert!(!archive.exists(), "unexpected sliced archive {archive:?}");
     }
     assert_eq!(ares, native, "strict validation exit status in {root:?}");
+    let stderr = |side| fs::read_to_string(root.join(side).join("stderr.log")).unwrap();
+    let expected = stderr("native");
+    assert!(expected.contains(&format!("{EXPANSION}: -1 not in range")));
+    assert_eq!(
+        stderr("ares"),
+        expected,
+        "strict validation stderr in {root:?}"
+    );
+    let report = |side| -> Value {
+        let bytes = fs::read(root.join(side).join("cwd/result.json")).unwrap();
+        serde_json::from_slice(&result_comparison_bytes(&bytes)).unwrap()
+    };
+    assert_eq!(
+        report("ares"),
+        report("native"),
+        "strict validation report in {root:?}"
+    );
 }
 
 fn run_pair(runner: &OrcaRunner, authored: &str) -> (Option<i32>, Option<i32>) {
