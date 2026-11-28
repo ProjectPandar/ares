@@ -78,7 +78,7 @@ fn compare_export(object: u8, slot: &str) {
         .collect::<Vec<_>>();
     assert_eq!(selectors, [slot], "unexpected Native export in {root:?}");
     assert!(part.metadata.iter().all(|entry| entry.key != "extruder"));
-    let actual = export_metadata(&installed_ares(&root), &root.join("ares/cwd"), &project);
+    let actual = export_metadata(&installed_ares(root), &root.join("ares/cwd"), &project);
     assert_eq!(actual, expected, "{SETTINGS} differs in {root:?}");
 }
 
@@ -136,7 +136,7 @@ fn compare(object: Option<u8>, part: Option<u8>, slot: &str, virtual_tool: &str)
         assert_eq!(markers, [value], "unexpected Native selector in {root:?}");
     }
 
-    let actual = slice(&installed_ares(&root), &root.join("ares/cwd"), &project);
+    let actual = slice(&installed_ares(root), &root.join("ares/cwd"), &project);
     compare_ordered_bytes_generator_only(&expected, &actual)
         .unwrap_or_else(|error| panic!("{error}; {root:?}"));
 }
