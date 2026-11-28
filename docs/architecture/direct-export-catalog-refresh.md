@@ -20,10 +20,11 @@ keys not marked as changed; preset bookkeeping is not replaced
 implements the default/project/system overlay, and
 `src/libslic3r/PresetBundle.cpp:724–757,5520–5532` owns system-preset resolution
 and decoding the protected keys. The CLI applies `DynamicPrintConfig::validate(true)`
-to the merged config (`src/OrcaSlicer.cpp:4277–4282`) and passes that config
-and the sliced plate data to `export_project` (`:8081–8086`). This is one
-configuration path for slicing and export, not an export-time repair of an
-invalid option.
+to the merged config (`src/OrcaSlicer.cpp:4277–4283`). On failure it records
+and exits with `CLI_INVALID_VALUES_IN_3MF` before reaching export. Otherwise
+it passes the merged config and sliced plate data to `export_project`
+(`:8081–8086`). This is one configuration path for slicing and export, not
+an export-time repair of an invalid option.
 
 ## Ares boundary
 
@@ -53,9 +54,13 @@ or repair a setting separately in the archive writer.
   BBL-family projects with no explicit replacement presets. Preserve authored
   overrides and existing values when refresh is inactive or a preset is
   unresolved. Non-BBL saved projects remain on their embedded-config path.
+- Included: if strict validation of the direct saved-project export returns
+  `InvalidValuesInProject`, reuse `ares-cli/src/failure/mapping.rs`'s ordinary
+  slice failure (`-18`), including its diagnostic and result report. Do not
+  add a separate mapping table or change how other export errors are reported.
 - Unchanged: producer-version admission (including `--allow-newer-file`),
-  strict option bounds, current CLI error mapping, saved model layout checks,
-  and `--min-save` packaging behavior. No archive layout or comparator changes.
+  strict option bounds, saved model layout checks, and `--min-save` packaging
+  behavior. No archive layout or comparator changes.
 - Deferred: explicit `--load-settings` and `--load-filaments`, `--uptodate` and
   flat preset inputs, additional resource discovery conventions, additional
   plate selections and layouts, STL, export without slicing, settings export,
@@ -78,8 +83,9 @@ export route, Ares rejects the settings before producing the archive.
 
 As a strict-validation control, also mark `raft_first_layer_expansion` as
 authored in the process column. Both commands must reject that still-invalid
-value and write no archive; check the setting named in each diagnostic without
-changing the existing exit-code mapping. Generate Native outputs at test time
-and run the focused cases and adjacent sliced-export/retained-refresh cases in
-both the Official and Seeded Native reference lanes, including the existing
-version-admission and `--min-save` cases.
+value with the same exit code (`-18`, or `238` on Linux) and write no archive.
+Compare stderr and `result.json` using the existing invalid-value comparison
+conventions. Generate Native outputs at test time and run the focused cases
+and adjacent sliced-export/retained-refresh cases in both the Official and
+Seeded Native reference lanes, including the existing version-admission and
+`--min-save` cases.
