@@ -5,7 +5,8 @@
 use super::super::{ArchiveLimits, LoadedProfileProject, ProjectArchive};
 use super::{SavedModel, Sliced, SlicedMembers, deferred, geometry, invalid, write_package, xml};
 use crate::{
-    ConfigOverrides, GenerationMetadata, ProcessedGCode, Project, SliceError, SlicerContext,
+    ConfigOverrides, DirectProjectSliceRequest, GenerationMetadata, PresetCatalogHandle,
+    ProcessedGCode, Project, SliceError, SlicerContext,
 };
 
 pub fn export_sliced_3mf(
@@ -97,18 +98,26 @@ pub async fn export_saved_sliced_3mf(
     min_save: bool,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    export_saved_sliced(input, filename, min_save, false, context)
+    export_saved_sliced(input, filename, min_save, false, None, context)
 }
 
-/// Direct CLI sliced export checks the saved producer version unless explicitly allowed.
+/// Direct CLI sliced export checks the saved producer version and can refresh retained system presets.
 pub fn export_saved_sliced_3mf_for_cli(
     input: &[u8],
     filename: &str,
     min_save: bool,
     allow_newer_file: bool,
+    system_catalog: Option<&PresetCatalogHandle>,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
-    export_saved_sliced(input, filename, min_save, !allow_newer_file, context)
+    export_saved_sliced(
+        input,
+        filename,
+        min_save,
+        !allow_newer_file,
+        system_catalog,
+        context,
+    )
 }
 
 fn export_saved_sliced(
@@ -116,6 +125,7 @@ fn export_saved_sliced(
     filename: &str,
     min_save: bool,
     check_version: bool,
+    system_catalog: Option<&PresetCatalogHandle>,
     context: SlicerContext<'_>,
 ) -> Result<Vec<u8>, SliceError> {
     if input.is_empty() {
@@ -129,8 +139,11 @@ fn export_saved_sliced(
     let processed = crate::project_slice::slice_loaded_project_plate_with_archive(
         (input, Box::new(loaded)),
         GenerationMetadata::default(),
-        Some(1),
-        &ConfigOverrides::default(),
+        DirectProjectSliceRequest {
+            plate: Some(1),
+            overrides: &ConfigOverrides::default(),
+            system_catalog,
+        },
         context,
     )?;
     if filename.is_empty() || filename.contains(['/', '\\', '\0']) {

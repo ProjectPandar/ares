@@ -96,26 +96,41 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
     } else {
         let (input, filename) = &models[0];
         if sliced {
+            let resources = crate::installed_resources::resolve(None)?;
+            let catalog = resources
+                .join("profiles")
+                .try_exists()?
+                .then(|| crate::project_presets::load_resources_catalog(&resources))
+                .transpose()?;
             ares_core::export_saved_sliced_3mf_for_cli(
                 input,
                 filename,
                 args.min_save,
                 args.allow_newer_file,
+                catalog.as_ref(),
                 SlicerContext::new(0),
             )
         } else {
             ares_core::export_3mf(input, filename, presets)
         }
     }
-    .map_err(|err| match err {
-        ares_core::SliceError::ProcessNotCompatible
-        | ares_core::SliceError::FileVersionNotSupported => crate::failure::slice_error_to_failure(
-            err,
-            &output,
-            #[cfg(target_os = "linux")]
-            0,
-        ),
-        other => failed(other.to_string()),
+    .map_err(|err| {
+        use ares_core::SliceError;
+        let slice_failure = |error| {
+            crate::failure::slice_error_to_failure(
+                error,
+                &output,
+                #[cfg(target_os = "linux")]
+                0,
+            )
+        };
+        match err {
+            SliceError::InvalidValuesInProject(_) if sliced && !stl => slice_failure(err),
+            SliceError::ProcessNotCompatible | SliceError::FileVersionNotSupported => {
+                slice_failure(err)
+            }
+            other => failed(other.to_string()),
+        }
     })?;
     fs::write(&output, archive).map_err(|err| failed(err.to_string()))
 }

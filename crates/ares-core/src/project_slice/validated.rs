@@ -262,10 +262,13 @@ pub async fn slice_project_plate_with_archive(
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
     slice_project_plate_with_archive_loaded(
-        (input.as_ref(), None),
+        (super::ProjectInput::Bytes(input.as_ref()), None),
         metadata,
-        plate,
-        overrides,
+        DirectProjectSliceRequest {
+            plate,
+            overrides,
+            system_catalog: None,
+        },
         context,
     )
 }
@@ -273,36 +276,39 @@ pub async fn slice_project_plate_with_archive(
 pub(crate) fn slice_loaded_project_plate_with_archive(
     (input, loaded): (&[u8], Box<crate::project::LoadedProfileProject>),
     metadata: GenerationMetadata,
-    plate: Option<u32>,
-    overrides: &ConfigOverrides,
+    mut request: DirectProjectSliceRequest<'_>,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    slice_project_plate_with_archive_loaded(
-        (input, Some(loaded)),
-        metadata,
-        plate,
-        overrides,
-        context,
-    )
+    request.system_catalog = request
+        .system_catalog
+        .filter(|_| loaded.project().documents().bbl_family_3mf);
+    let input = if request.system_catalog.is_some() {
+        super::ProjectInput::SavedCliBytes(input)
+    } else {
+        super::ProjectInput::Bytes(input)
+    };
+    slice_project_plate_with_archive_loaded((input, Some(loaded)), metadata, request, context)
 }
 
 fn slice_project_plate_with_archive_loaded(
-    (input, loaded): (&[u8], Option<Box<crate::project::LoadedProfileProject>>),
+    (input, loaded): (
+        super::ProjectInput<'_>,
+        Option<Box<crate::project::LoadedProfileProject>>,
+    ),
     metadata: GenerationMetadata,
-    plate: Option<u32>,
-    overrides: &ConfigOverrides,
+    request: DirectProjectSliceRequest<'_>,
     context: SlicerContext<'_>,
 ) -> Result<ProcessedGCode, SliceError> {
-    overrides.validate_cli_config()?;
+    request.overrides.validate_cli_config()?;
     slice_source_with_archive(
         ProjectSource {
             loaded,
-            input: crate::project_slice::ProjectInput::Bytes(input),
-            plate,
+            input,
+            plate: request.plate,
             profile: None,
             refresh: None,
-            system_catalog: None,
-            overrides,
+            system_catalog: request.system_catalog,
+            overrides: request.overrides,
             validate_print: true,
             normative_check: true,
             validate_config: true,
