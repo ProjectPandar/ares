@@ -6,12 +6,23 @@ use std::{
 
 use serde_json::{Value, json};
 
-use crate::OrcaRunner;
+use crate::{OrcaRunner, golden};
 
 const CUBE: &[u8] = include_bytes!("../../../../tests/parity/mesh-edge-pairing/cube-control.3mf");
 const START: &str = "; imex-start={imex_mode}:{imex_mode_index}:{imex_mode_gcode}";
 
-fn project(is_imex: bool, script: &str, (header, start, end): (&str, &str, &str)) -> Vec<u8> {
+fn project(is_imex: bool, script: &str, scripts: (&str, &str, &str)) -> Vec<u8> {
+    project_with_settings(is_imex, script, scripts, |settings| {
+        serde_json::to_vec(settings).unwrap()
+    })
+}
+
+fn project_with_settings(
+    is_imex: bool,
+    script: &str,
+    (header, start, end): (&str, &str, &str),
+    encode: impl Fn(&mut Value) -> Vec<u8>,
+) -> Vec<u8> {
     let mut input = zip::ZipArchive::new(Cursor::new(CUBE)).unwrap();
     let mut output = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for index in 0..input.len() {
@@ -31,7 +42,7 @@ fn project(is_imex: bool, script: &str, (header, start, end): (&str, &str, &str)
             settings["machine_start_gcode"] = json!(start);
             settings["machine_end_gcode"] = json!(end);
             settings["before_layer_change_gcode"] = json!("G92 E0");
-            bytes = serde_json::to_vec(&settings).unwrap();
+            bytes = encode(&mut settings);
         }
         output
             .start_file(file.name(), zip::write::SimpleFileOptions::DEFAULT)
@@ -143,6 +154,117 @@ fn non_imex_export_does_not_render_a_populated_mode_table() {
     for output in [native.unwrap(), ares.unwrap()] {
         assert_eq!(markers(&output), ["; imex-start=:0:"]);
     }
+}
+
+#[test]
+fn legacy_ixex_project_settings_render_complete_imex_startup() {
+    let input = project_with_settings(true, "; imex-script=legacy", ("", START, ""), |settings| {
+        let fields = settings.as_object_mut().unwrap();
+        for (modern, legacy) in [
+            ("is_imex", "is_ixex"),
+            ("imex_parallel_mode", "ixex_parallel_mode"),
+            ("imex_gantry_count", "ixex_gantry_count"),
+            ("imex_tools_per_gantry", "ixex_tools_per_gantry"),
+            ("imex_mode_names", "ixex_mode_names"),
+            ("imex_mode_active_tools", "ixex_mode_active_tools"),
+            ("imex_mode_gcodes", "ixex_mode_gcodes"),
+        ] {
+            let value = fields.remove(modern).unwrap();
+            fields.insert(legacy.to_owned(), value);
+        }
+        serde_json::to_vec(settings).unwrap()
+    });
+    let Some([(_, native), (_, ares)]) = slice_pair("imex-legacy-startup-", &input, 0) else {
+        return;
+    };
+    let native = native.unwrap();
+    let ares = ares.unwrap();
+    assert_eq!(
+        markers(&native),
+        [
+            "; imex-script=legacy",
+            "; imex-start=primary:1:; imex-script=legacy"
+        ]
+    );
+    golden::compare_ordered_bytes_generator_only(native.as_bytes(), ares.as_bytes()).unwrap();
+}
+
+#[test]
+fn legacy_ixex_project_keys_override_canonical_keys_in_saved_settings() {
+    let Some(runner) = OrcaRunner::from_env().unwrap() else {
+        return;
+    };
+    let input = project_with_settings(true, "", ("", START, ""), |settings| {
+        let fields = settings.as_object_mut().unwrap();
+        let enabled = fields.remove("is_imex").unwrap();
+        fields.insert("is_ixex".into(), enabled);
+        fields.insert("ixex_carriage_width_x".into(), json!("7"));
+        fields.insert("ixex_carriage_width_y".into(), json!("11"));
+        let mut wire = serde_json::to_vec(settings).unwrap();
+        // File order conflicts with sorted key order. Do not reserialize through a map.
+        assert_eq!(wire.pop(), Some(b'}'));
+        wire.extend_from_slice(
+            br#", "is_imex":"0", "imex_nozzle_clearance_x":"41", "imex_nozzle_clearance_y":"43"}"#,
+        );
+        wire
+    });
+    let root = tempfile::Builder::new()
+        .prefix("imex-legacy-saved-")
+        .tempdir_in(crate::artifacts::root_from_env().unwrap())
+        .unwrap()
+        .keep();
+    fs::write(root.join("input.3mf"), input).unwrap();
+    let export = |side, bin: &std::path::Path| {
+        let filename = format!("{side}.3mf");
+        let output = Command::new(bin)
+            .current_dir(&root)
+            .args([
+                "--arrange",
+                "0",
+                "--orient",
+                "0",
+                "--export-3mf",
+                &filename,
+                "input.3mf",
+            ])
+            .output()
+            .unwrap();
+        fs::write(root.join(format!("{side}.stdout")), &output.stdout).unwrap();
+        fs::write(root.join(format!("{side}.stderr")), &output.stderr).unwrap();
+        assert!(output.status.success(), "{side} export: {root:?}");
+        let mut archive =
+            zip::ZipArchive::new(fs::File::open(root.join(filename)).unwrap()).unwrap();
+        let mut bytes = Vec::new();
+        archive
+            .by_name("Metadata/project_settings.config")
+            .unwrap()
+            .read_to_end(&mut bytes)
+            .unwrap();
+        bytes
+    };
+    let expected = export("native", runner.bin());
+    let native: Value = serde_json::from_slice(&expected).unwrap();
+    for (canonical, legacy, value) in [
+        ("is_imex", "is_ixex", "1"),
+        ("imex_nozzle_clearance_x", "ixex_carriage_width_x", "7"),
+        ("imex_nozzle_clearance_y", "ixex_carriage_width_y", "11"),
+    ] {
+        assert_eq!(native[canonical], value, "Native {canonical} at {root:?}");
+        assert!(native.get(legacy).is_none(), "Native exported {legacy}");
+    }
+    let actual = export("ares", std::path::Path::new(env!("CARGO_BIN_EXE_ares")));
+    let ares: Value = serde_json::from_slice(&actual).unwrap();
+    for key in [
+        "is_imex",
+        "imex_nozzle_clearance_x",
+        "imex_nozzle_clearance_y",
+    ] {
+        assert_eq!(ares[key], native[key], "saved {key} at {root:?}");
+    }
+    assert!(
+        actual == expected,
+        "saved settings member differs at {root:?}"
+    );
 }
 
 #[test]
