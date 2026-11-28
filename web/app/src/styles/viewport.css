@@ -62,6 +62,9 @@
   opacity: 0.35;
   cursor: default;
 }
+/* Drawn over the bed (--bed, dark in both themes), not over a panel: the plate outline colour
+   (--bed-outline) keeps WCAG AA contrast there where --text does not in light mode; the shadow keeps the
+   hint readable on the canvas background when the bed is panned from under it. */
 .canvas-hint {
   position: absolute;
   left: 50%;
@@ -69,12 +72,15 @@
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
-  color: var(--text-dim);
+  color: color-mix(in srgb, var(--bed-outline) 75%, var(--bed));
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.6),
+    0 1px 2px rgb(0 0 0 / 0.6);
 }
 .canvas-hint-title {
   font-size: 15px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--bed-outline);
 }
 .drop-overlay {
   position: absolute;
