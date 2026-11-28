@@ -29,6 +29,9 @@ mod cli_retained_preset_thumbnails;
 mod cli_skip_modified_gcodes;
 #[path = "cli_slice_plates.rs"]
 mod cli_slice_plates;
+#[cfg(target_os = "linux")]
+#[path = "cli_substitution_routes.rs"]
+mod cli_substitution_routes;
 #[path = "cli_uptodate_printable_size.rs"]
 mod cli_uptodate_printable_size;
 #[path = "cli_uptodate_refresh.rs"]
