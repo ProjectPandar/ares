@@ -3,7 +3,7 @@ use crate::{
     options::RegionOptionOverrides,
     project::{
         ProjectVolumeType, Transform3d,
-        model_settings::{Metadata, PartSettings},
+        model_settings::{MeshStatistics, Metadata, PartSettings},
     },
 };
 
@@ -33,18 +33,6 @@ impl Default for SelectedSourceProvenance {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-#[cfg_attr(not(test), allow(dead_code))]
-pub(crate) struct SelectedMeshStatistics {
-    edges_fixed: u32,
-    degenerate_facets: u32,
-    facets_removed: u32,
-    facets_reversed: u32,
-    backwards_edges: u32,
-}
-
-impl SelectedMeshStatistics {}
-
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(not(test), allow(dead_code))]
 pub(crate) struct SelectedVolumeMetadata {
@@ -55,7 +43,7 @@ pub(crate) struct SelectedVolumeMetadata {
     pub(crate) source_transform: Transform3d,
     pub(crate) mesh_shared_id: Option<i32>,
     pub(crate) source_provenance: SelectedSourceProvenance,
-    pub(crate) mesh_statistics: SelectedMeshStatistics,
+    pub(crate) mesh_statistics: MeshStatistics,
 }
 
 pub(super) fn select(
@@ -77,7 +65,7 @@ pub(super) fn select(
                 source_transform: Transform3d::IDENTITY,
                 mesh_shared_id: None,
                 source_provenance: SelectedSourceProvenance::default(),
-                mesh_statistics: SelectedMeshStatistics::default(),
+                mesh_statistics: MeshStatistics::default(),
             })
         },
         from_part,
@@ -130,18 +118,6 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
         }
     }
 
-    let mesh_statistics =
-        part.mesh_stat
-            .as_ref()
-            .map_or_else(SelectedMeshStatistics::default, |statistics| {
-                SelectedMeshStatistics {
-                    edges_fixed: statistics.edges_fixed,
-                    degenerate_facets: statistics.degenerate_facets,
-                    facets_removed: statistics.facets_removed,
-                    facets_reversed: statistics.facets_reversed,
-                    backwards_edges: statistics.backwards_edges,
-                }
-            });
     Ok(SelectedVolumeMetadata {
         id: part.id,
         name,
@@ -150,7 +126,7 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
         source_transform,
         mesh_shared_id: sharing_key(&part.retained_metadata),
         source_provenance,
-        mesh_statistics,
+        mesh_statistics: part.mesh_stat.clone().unwrap_or_default(),
     })
 }
 

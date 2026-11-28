@@ -1,5 +1,6 @@
 use crate::project::{
     Point3d, ProjectMesh,
+    model_settings::MeshStatistics,
     model_xml::{Mesh, ModelUnit},
     transform::Transform3d,
 };
@@ -14,6 +15,7 @@ pub(super) fn prepare(
     source: &Mesh,
     unit: ModelUnit,
     component_transform: Transform3d,
+    repair_statistics: MeshStatistics,
 ) -> PreparedMesh {
     let factor = unit.millimeter_factor();
     let mut vertices = source
@@ -44,7 +46,7 @@ pub(super) fn prepare(
         }
     }
 
-    let mut mesh = ProjectMesh::new(
+    let mut mesh = ProjectMesh::new_with_repair_statistics(
         vertices
             .into_iter()
             .map(|vertex| {
@@ -62,6 +64,7 @@ pub(super) fn prepare(
             .iter()
             .map(|triangle| triangle.face_property.clone())
             .collect(),
+        repair_statistics,
     );
     mesh.supported_facets = crate::project::facets_annotation::FacetsAnnotation::from_triangles(
         source
