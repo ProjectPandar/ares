@@ -87,6 +87,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 uptodate_settings: None,
                 uptodate_filaments: None,
                 orient: false,
+                allow_newer_file: args.allow_newer_file,
                 #[cfg(target_os = "linux")]
                 report_plate: 1,
             },
@@ -99,10 +100,17 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 .with_enable_timelapse(args.enable_timelapse),
         );
     }
+    let mut project = CliPresetProject::open(&bytes, args.allow_newer_file).map_err(|error| {
+        slice_error_to_failure(
+            error,
+            &output,
+            #[cfg(target_os = "linux")]
+            plate,
+        )
+    })?;
     enum ProjectPresets<'a> {
         Replace(Option<&'a str>, Option<&'a str>),
         Saved {
-            project: CliPresetProject<'a>,
             source: Option<UpwardMachineSource>,
             machine: Option<Vec<u8>>,
             catalog: Option<Box<ares_core::PresetCatalogHandle>>,
@@ -110,14 +118,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     }
     let presets = match files {
         (None, None) => {
-            let mut project = CliPresetProject::open(&bytes, true).map_err(|error| {
-                slice_error_to_failure(
-                    error,
-                    &output,
-                    #[cfg(target_os = "linux")]
-                    plate,
-                )
-            })?;
             let resources = crate::installed_resources::resolve(None)?;
             let source = project
                 .take_upward_source()
@@ -130,7 +130,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
                 false,
             )?;
             ProjectPresets::Saved {
-                project,
                 source,
                 machine,
                 catalog: catalog.map(Box::new),
@@ -163,7 +162,7 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
     let (outcome, substitutions) = match presets {
         ProjectPresets::Replace(settings, filaments) => {
             let (processed, substitutions) = slice_with_replacement(
-                (input, &bytes, plate, &output),
+                (input, project, plate, &output),
                 (settings, filaments, datadir),
                 context,
                 &mut sliced_plate,
@@ -173,7 +172,6 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
             (processed.map(DirectOutcome::Buffered), substitutions)
         }
         ProjectPresets::Saved {
-            project,
             source,
             machine,
             catalog,
@@ -279,16 +277,15 @@ pub(super) async fn run(mut args: DirectSliceArgs) -> Result<(), CliFailure> {
 }
 
 fn slice_with_replacement(
-    (input, bytes, plate, output): (&Path, &[u8], u32, &Path),
+    (input, admitted, plate, output): (&Path, CliPresetProject<'_>, u32, &Path),
     (settings, filaments, datadir): (Option<&str>, Option<&str>, Option<&Path>),
     context: SlicerContext<'_>,
     sliced_plate: &mut SlicedPlate,
     record_moves: bool,
 ) -> Result<(Result<ProcessedGCode, SliceError>, Vec<ConfigSubstitution>), CliFailure> {
-    let admitted = match CliPresetProject::admit(bytes, &context) {
-        Ok(project) => project,
-        Err(error) => return Ok((Err(error), Vec::new())),
-    };
+    if let Err(error) = admitted.check_post_process(&context) {
+        return Ok((Err(error), Vec::new()));
+    }
     let substitutions = admitted.substitutions().to_vec();
     let settings_files = read_preset_list(settings)?;
     let filament_files = read_preset_list(filaments)?;

@@ -295,6 +295,25 @@ fn split_native_list(value: &str) -> Vec<&str> {
     value.split(';').collect()
 }
 
+fn check_positional_project_version(
+    input: &[u8],
+    allow_newer_file: bool,
+    report_path: &Path,
+) -> Result<(), CliFailure> {
+    // For routes without a shared project load, leave archive errors to the action's importer.
+    if let Err(error @ ares_core::SliceError::FileVersionNotSupported) =
+        ares_core::validate_project_version(input, allow_newer_file)
+    {
+        return Err(slice_error_to_failure(
+            error,
+            report_path,
+            #[cfg(target_os = "linux")]
+            0,
+        ));
+    }
+    Ok(())
+}
+
 fn ensure_supported_input(path: &Path) -> Result<(), io::Error> {
     match path.extension().and_then(|extension| extension.to_str()) {
         Some("3mf" | "stl") => Ok(()),

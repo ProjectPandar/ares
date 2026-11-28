@@ -72,6 +72,13 @@ pub(super) fn run(args: &SliceArgs) -> Result<(), CliFailure> {
             Ok((bytes, filename))
         })
         .collect::<Result<Vec<_>, CliFailure>>()?;
+    if let Some((bytes, filename)) = files.first()
+        && Path::new(filename)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
+    {
+        crate::check_positional_project_version(bytes, args.allow_newer_file, &report_path)?;
+    }
     let artifacts = ares_core::export_stls(
         files
             .iter()

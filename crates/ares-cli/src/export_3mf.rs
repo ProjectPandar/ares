@@ -77,6 +77,19 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
         .iter()
         .map(|path| read_model(path, &output))
         .collect::<Result<Vec<_>, _>>()?;
+    let version_report = args
+        .outputdir
+        .as_deref()
+        .unwrap_or_else(|| Path::new("."))
+        .join("result.json");
+    if let [(input, filename)] = models.as_slice()
+        && !sliced
+        && Path::new(filename)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("3mf"))
+    {
+        crate::check_positional_project_version(input, args.allow_newer_file, &version_report)?;
+    }
     let settings_files = read_preset_list(args.load_settings.as_deref())?;
     let filament_files = read_preset_list(args.load_filaments.as_deref())?;
     let settings = as_load_settings_files(&settings_files);
@@ -145,9 +158,13 @@ pub(super) async fn run_direct(args: &DirectSliceArgs, output: &Path) -> Result<
             SliceError::InvalidValuesInProject(_) if sliced && !stl => {
                 slice_failure(err).with_upward_report(upward_report)
             }
-            SliceError::ProcessNotCompatible | SliceError::FileVersionNotSupported => {
-                slice_failure(err)
-            }
+            SliceError::ProcessNotCompatible => slice_failure(err),
+            SliceError::FileVersionNotSupported => crate::failure::slice_error_to_failure(
+                err,
+                &version_report,
+                #[cfg(target_os = "linux")]
+                0,
+            ),
             other => failed(other.to_string()),
         }
     })?;

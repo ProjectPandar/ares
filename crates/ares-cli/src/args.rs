@@ -87,10 +87,9 @@ pub(crate) struct DirectSliceArgs {
     /// Export a 3MF project, including completed plates when --slice is used.
     #[arg(long, value_name = "3MF", conflicts_with = "export_settings")]
     pub(crate) export_3mf: Option<PathBuf>,
-    /// Slice a saved 3MF whose producer version is newer than this CLI.
+    /// Load a saved 3MF whose producer version is newer than this CLI.
     #[arg(
         long,
-        requires_all = ["selection", "export_3mf"],
         action = clap::ArgAction::Set,
         num_args = 0..=1,
         require_equals = true,

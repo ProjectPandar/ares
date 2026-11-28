@@ -183,6 +183,13 @@ pub(super) async fn slice(args: &SliceArgs) -> Result<(), CliFailure> {
         None => Assembly::from_models(&inputs, &args.load_filament_ids),
     }
     .map_err(failure)?;
+    if let Some(archive) = assembly.archive() {
+        crate::check_positional_project_version(
+            archive.bytes,
+            args.allow_newer_file,
+            args.output(),
+        )?;
+    }
     let settings_files = read_preset_list(args.load_settings.as_deref())?;
     let filament_files = read_preset_list(args.load_filaments.as_deref())?;
     let settings = as_load_settings_files(&settings_files);

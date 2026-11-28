@@ -26,6 +26,7 @@ pub(super) struct PlateOptions<'a> {
     pub uptodate_settings: Option<&'a str>,
     pub uptodate_filaments: Option<&'a str>,
     pub orient: bool,
+    pub allow_newer_file: bool,
     #[cfg(target_os = "linux")]
     pub report_plate: u32,
 }
@@ -45,6 +46,7 @@ impl<'a> From<&'a SliceArgs> for PlateOptions<'a> {
             uptodate_settings: args.uptodate_settings.as_deref(),
             uptodate_filaments: args.uptodate_filaments.as_deref(),
             orient: args.orient == Some(1),
+            allow_newer_file: args.allow_newer_file,
             #[cfg(target_os = "linux")]
             report_plate: args.plate.unwrap_or(1),
         }
@@ -77,7 +79,8 @@ pub(super) fn run(
             args.report_plate,
         )
     };
-    let mut admitted = ares_core::CliPresetProject::open(input, true).map_err(map_err)?;
+    let mut admitted =
+        ares_core::CliPresetProject::open(input, args.allow_newer_file).map_err(map_err)?;
     if loaded_files {
         admitted.check_post_process(&context).map_err(map_err)?;
     }

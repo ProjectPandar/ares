@@ -1,10 +1,10 @@
 use std::{fs, io, io::Write, path::Path};
 
-use ares_core::{CliPresetProject, ConfigSubstitution, LoadSettingsRequest};
+use ares_core::{CliPresetProject, ConfigSubstitution, LoadSettingsRequest, SliceError};
 
 use crate::{
     args::DirectSliceArgs,
-    failure::{CliFailure, substitution_warnings},
+    failure::{CliFailure, slice_error_to_failure, substitution_warnings},
     preset_sources::{self, as_load_settings_files},
     split_native_list,
 };
@@ -15,7 +15,23 @@ pub(super) fn run(
     args: &DirectSliceArgs,
 ) -> Result<(), CliFailure> {
     let project = fs::read(input)?;
-    let opened = CliPresetProject::open(&project, true).map_err(io::Error::other)?;
+    let opened = CliPresetProject::open(&project, args.allow_newer_file).map_err(|error| {
+        if matches!(error, SliceError::FileVersionNotSupported) {
+            let report = args
+                .outputdir
+                .as_deref()
+                .unwrap_or_else(|| Path::new("."))
+                .join("result.json");
+            slice_error_to_failure(
+                error,
+                &report,
+                #[cfg(target_os = "linux")]
+                0,
+            )
+        } else {
+            io::Error::other(error).into()
+        }
+    })?;
     let substitutions = opened.substitutions().to_vec();
     if destination != Path::new("-")
         && let Some(settings) = args.load_settings.as_deref()
