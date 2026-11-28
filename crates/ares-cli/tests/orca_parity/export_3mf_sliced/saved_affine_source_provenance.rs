@@ -12,6 +12,7 @@ const SOURCE: &str = "input/affine-witness.3mf";
 const BASENAME: &str = "affine-witness.3mf";
 const EXPORT: &str = "sliced.3mf";
 const TILT: &str = "1 0 0 0 0 1 0 -1 0 128 128 5";
+const TRANSLATION: &str = "1 0 0 0 1 0 0 0 1 128 128 1";
 const EXPLICIT: [&str; 6] = ["original-prism.stl", "2", "4", "0.5", "-0.75", "1.25"];
 
 #[test]
@@ -47,30 +48,50 @@ fn affine_part_explicit_nested_source_exports_its_basename() {
     compare(input, EXPLICIT);
 }
 
+#[test]
+fn sliced_archive_escapes_the_basename_in_both_transform_routes() {
+    let mut expected = EXPLICIT;
+    expected[0] = "original & prism.stl";
+    let mut input = expected.map(Some);
+    input[0] = Some("source/nested/original & prism.stl");
+    for transform in [TRANSLATION, TILT] {
+        compare_with_transform(input, expected, transform);
+    }
+}
+
 fn compare(input: [Option<&str>; 6], expected: [&str; 6]) {
+    compare_with_transform(input, expected, TILT);
+}
+
+fn compare_with_transform(input: [Option<&str>; 6], expected: [&str; 6], transform: &str) {
     let Some(runner) = OrcaRunner::from_env().unwrap() else {
         return;
     };
     let root = runner.work_dir();
-    let project = saved_project(&runner, &root.join("source/cwd"), input);
+    let project = saved_project(&runner, &root.join("source/cwd"), input, transform);
     let expected = KEYS
         .into_iter()
         .zip(expected.map(str::to_owned))
         .collect::<BTreeMap<_, _>>();
 
     let native = export(runner.bin(), &root.join("native/cwd"), &project, "Native");
-    assert_sliced_part(&native, &expected, "Native");
+    assert_sliced_part(&native, &expected, transform, "Native");
     let ares = export(
         Path::new(env!("CARGO_BIN_EXE_ares")),
         &root.join("ares/cwd"),
         &project,
         "Ares",
     );
-    assert_sliced_part(&ares, &expected, "Ares");
+    assert_sliced_part(&ares, &expected, transform, "Ares");
     comparator::compare_members(native, ares);
 }
 
-fn saved_project(runner: &OrcaRunner, cwd: &Path, input: [Option<&str>; 6]) -> Vec<u8> {
+fn saved_project(
+    runner: &OrcaRunner,
+    cwd: &Path,
+    input: [Option<&str>; 6],
+    transform: &str,
+) -> Vec<u8> {
     fs::create_dir_all(cwd).unwrap();
     write_inputs(cwd);
     fs::write(cwd.join(STL), prism_stl()).unwrap();
@@ -87,7 +108,7 @@ fn saved_project(runner: &OrcaRunner, cwd: &Path, input: [Option<&str>; 6]) -> V
                 let item = xml.lines().find(|line| line.contains("<item ")).unwrap();
                 let (_, attr) = item.split_once("transform=\"").unwrap();
                 let (old, _) = attr.split_once('"').unwrap();
-                xml.replace(item, &item.replace(old, TILT))
+                xml.replace(item, &item.replace(old, transform))
             }
             MODEL_SETTINGS => with_provenance(xml, input),
             _ => xml.to_owned(),
@@ -110,6 +131,7 @@ fn export(bin: &Path, cwd: &Path, project: &[u8], engine: &str) -> Vec<comparato
 fn assert_sliced_part(
     members: &[comparator::Member],
     expected: &BTreeMap<&str, String>,
+    transform: &str,
     engine: &str,
 ) {
     let member = |name| {
@@ -119,10 +141,10 @@ fn assert_sliced_part(
             .unwrap()
             .bytes
     };
-    assert_build_item(member(MODEL), TILT);
+    assert_build_item(member(MODEL), transform);
     assert_eq!(
         &part_provenance(member(MODEL_SETTINGS)),
         expected,
-        "{engine} affine part source provenance"
+        "{engine} part source provenance"
     );
 }
