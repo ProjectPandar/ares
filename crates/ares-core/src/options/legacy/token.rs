@@ -112,9 +112,7 @@ fn handle_legacy_token(opt_key: &mut String, value: &mut String, migrate_feature
             // PrintConfig.cpp (345efec64c7b):9839-9840: legacy auto, not a new minimum.
             *value = "0".to_owned();
         }
-        "different_settings_to_system" => {
-            normalize_different_settings_to_system(value, migrate_feature_filament);
-        }
+        "different_settings_to_system" => normalize_different_settings_to_system(value),
         "overhang_fan_threshold" if value == "5%" => *value = "10%".to_owned(),
         "wall_infill_order" => {
             // `PrintConfig.cpp:8134-8145`: the three-part legacy order collapses
@@ -280,10 +278,9 @@ fn is_obsolete_legacy_key(key: &str) -> bool {
     )
 }
 
-/// `PrintConfig.cpp:8123-8133` `different_settings_to_system`: each `;`-
-/// separated sub-key is itself run through `handle_legacy`; renamed keys are
-/// replaced inside the value string.
-fn normalize_different_settings_to_system(value: &mut String, migrate_feature_filament: bool) {
+/// `PrintConfig.cpp:9844-9854` runs `handle_legacy` on each sub-key and
+/// replaces renamed or cleared names throughout the wire.
+fn normalize_different_settings_to_system(value: &mut String) {
     if value.is_empty() {
         return;
     }
@@ -296,7 +293,7 @@ fn normalize_different_settings_to_system(value: &mut String, migrate_feature_fi
     for split_key in split_keys {
         let mut copy_key = split_key.to_owned();
         let mut copy_value = String::new();
-        handle_legacy_token(&mut copy_key, &mut copy_value, migrate_feature_filament);
+        handle_legacy_scalar(&mut copy_key, &mut copy_value);
         if is_obsolete_input(&copy_key) || option_definition(&copy_key).is_none() {
             copy_key.clear();
         }

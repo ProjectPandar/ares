@@ -183,15 +183,17 @@ impl ProjectSettingsRaw {
         crate::options::json_deserialize::normalize_scalar_arrays(&mut self.0)
     }
 
-    /// `PrintConfigDef::handle_legacy` (`PrintConfig.cpp:8033`) runs inside
-    /// `set_deserialize` (`Config.cpp:577-579`) on each `key/value` token
-    /// before the option is stored. Scalars pass their token through the
-    /// shared rule set. String arrays follow `Config.cpp:1008-1058`: the
-    /// first pass sees an empty wire, array members append to that same wire,
-    /// and the second pass runs before substitution and typed decoding. A
-    /// cleared key drops the entry; keys without an option definition retain
-    /// their original array value.
+    /// Applies legacy rules to serialized settings before option binding.
     pub(crate) fn handle_legacy(&mut self) {
+        self.handle_legacy_entries(true);
+    }
+
+    /// `OrcaSlicer.cpp:3202-3223` edits bound bookkeeping without rebinding it.
+    pub(crate) fn handle_legacy_after_merge(&mut self, overrides: &crate::ConfigOverrides) {
+        self.handle_legacy_entries(overrides.contains_key("different_settings_to_system"));
+    }
+
+    fn handle_legacy_entries(&mut self, normalize_bookkeeping: bool) {
         let mut normalized = BTreeMap::new();
         let mut derived = Vec::new();
         for (key, value) in std::mem::take(&mut self.0) {
@@ -201,6 +203,9 @@ impl ProjectSettingsRaw {
                 derived.push(assignment);
             }
             let normalized_entry = match value {
+                value if !normalize_bookkeeping && key == "different_settings_to_system" => {
+                    Some((key, value))
+                }
                 RawConfigValue::List(values)
                     if crate::options::json_deserialize::is_string_array(&values) =>
                 {

@@ -166,11 +166,7 @@ impl Project {
                 profile.enable_timelapse,
             );
         }
-        // `set_deserialize`/`handle_legacy` runs on every option token the
-        // merged config carries — embedded base and profile overlay alike
-        // (`Config.cpp:577-579`) — so the raw view is post-legacy before the
-        // typed builder and the `is_value_valid` loop see it.
-        merged.handle_legacy();
+        merged.handle_legacy_after_merge(overrides);
         // The typed build mirrors upstream's fully parsed `m_print_config`:
         // CLI bed classification reads `printable_area` and `printable_height`
         // from the parsed config (`OrcaSlicer.cpp:4350–4354,4371–4382`),

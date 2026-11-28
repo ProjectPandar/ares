@@ -26,7 +26,7 @@ pub(super) fn resolve(
     // Caller overrides are a later serialized write (`Config.cpp:602`);
     // normalize their tokens without repeating an embedded-only load pass.
     if !overrides.is_empty() {
-        project_settings_raw.handle_legacy();
+        project_settings_raw.handle_legacy_after_merge(overrides);
     }
     // The array branch of the same upstream load: joined string arrays bind
     // scalar options (`Config.cpp:945-1001`), so the validation flat map and
