@@ -7,8 +7,9 @@ mod propagation;
 
 use super::super::{layer_input::LayerInput, overhangs::overlaps};
 use crate::{
-    ObjectOptions,
+    CancelToken, ObjectOptions, SliceError,
     geometry::{ClipperError, CoordinateScale, ExPolygon, JoinType, intersection_ex, offset2_ex},
+    parallel::par_range_map_ordered_try,
 };
 
 pub(super) struct OverhangLayer {
@@ -49,21 +50,24 @@ impl<'a> SmartOverhangs<'a> {
     pub(super) fn new(
         object: &'a ObjectOptions,
         layers: &[LayerInput<'_>],
-        extrusion_width: f64,
-        scale: CoordinateScale,
-    ) -> Result<Self, ClipperError> {
+        (extrusion_width, scale): (f64, CoordinateScale),
+        cancel: &CancelToken,
+        geometry_error: fn(ClipperError) -> SliceError,
+    ) -> Result<Self, SliceError> {
         let extrusion_width_scaled = scale.scaled_delta(extrusion_width);
-        let mut prepared = Vec::with_capacity(layers.len());
-        for layer in layers {
+        // TreeSupport.cpp:880–892 prepares each physical layer before detection.
+        let prepared = par_range_map_ordered_try(layers.len(), cancel, |index| {
+            let layer = &layers[index];
             let opened = offset2_ex(
                 layer.slices,
                 (-extrusion_width_scaled / 2.0) as f32,
                 extrusion_width_scaled as f32,
                 JoinType::Miter,
                 3.0,
-            )?;
-            prepared.push(OverhangLayer {
-                extrudable: intersection_ex(layer.slices, &opened)?,
+            )
+            .map_err(geometry_error)?;
+            Ok(OverhangLayer {
+                extrudable: intersection_ex(layer.slices, &opened).map_err(geometry_error)?,
                 raw_overhangs: Vec::new(),
                 overhangs: Vec::new(),
                 overhang_types: Vec::new(),
@@ -71,8 +75,8 @@ impl<'a> SmartOverhangs<'a> {
                 sharp_tail_heights: Vec::new(),
                 cantilevers: Vec::new(),
                 height: layer.height,
-            });
-        }
+            })
+        })?;
         let threshold = if object.support_threshold_angle.0 > 0 {
             f64::from(object.support_threshold_angle.0) + 1.0
         } else {

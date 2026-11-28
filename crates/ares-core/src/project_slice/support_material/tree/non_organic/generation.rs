@@ -51,8 +51,13 @@ pub(in crate::project_slice::support_material) fn generate(
     // `TreeSupport.cpp:1914-1950`: one status per stage of `TreeSupport::generate`.
     context.set_status(55, format_args!("Generating support"), 0);
     context.check_canceled()?;
-    let mut overhangs = SmartOverhangs::new(object, tree.layers, tree.extrusion_width, tree.scale)
-        .map_err(error)?;
+    let mut overhangs = SmartOverhangs::new(
+        object,
+        tree.layers,
+        (tree.extrusion_width, tree.scale),
+        context.cancel_ref(),
+        error,
+    )?;
     if object.enable_support.0 {
         let start = web_time::Instant::now();
         for layer in 0..tree.layers.len() {

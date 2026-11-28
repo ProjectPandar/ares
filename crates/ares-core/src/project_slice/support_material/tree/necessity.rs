@@ -1,7 +1,7 @@
 //! `PrintObject::is_support_necessary:5289-5303`; check-only return at TreeSupport:1083.
 use super::overhangs::SmartOverhangs;
 use crate::{
-    ObjectOptions, PrintWarning, SlicingNotificationType, WarningLevel,
+    CancelToken, ObjectOptions, PrintWarning, SliceError, SlicingNotificationType, WarningLevel,
     geometry::{ClipperError, CoordinateScale},
     project_slice::support_material::layer_input::LayerInput,
 };
@@ -9,16 +9,19 @@ use crate::{
 pub(in crate::project_slice::support_material) fn is_support_necessary(
     object: &ObjectOptions,
     layers: &[LayerInput<'_>],
-    extrusion_width: f64,
-    scale: CoordinateScale,
+    (extrusion_width, scale): (f64, CoordinateScale),
     name: &str,
-) -> Result<Option<PrintWarning>, ClipperError> {
-    let mut overhangs = SmartOverhangs::new(object, layers, extrusion_width, scale)?;
+    cancel: &CancelToken,
+) -> Result<Option<PrintWarning>, SliceError> {
+    let mut overhangs =
+        SmartOverhangs::new(object, layers, (extrusion_width, scale), cancel, error)?;
     // The effective TreeAuto override is invocation-local, not a config mutation.
     overhangs.automatic = true;
     let start = web_time::Instant::now();
     for layer in 0..layers.len() {
-        overhangs.detect_layer(layer, || start.elapsed().as_secs_f64())?;
+        overhangs
+            .detect_layer(layer, || start.elapsed().as_secs_f64())
+            .map_err(error)?;
     }
     let feature = if overhangs.has_sharp_tails {
         "floating regions"
@@ -37,4 +40,8 @@ pub(in crate::project_slice::support_material) fn is_support_necessary(
             "It seems object {name} has {feature}. Please re-orient the object or enable support generation."
         ),
     }))
+}
+
+fn error(error: ClipperError) -> SliceError {
+    SliceError::InvalidInput(format!("tree support geometry: {error:?}"))
 }

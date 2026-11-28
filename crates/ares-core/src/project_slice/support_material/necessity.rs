@@ -57,12 +57,10 @@ pub(in crate::project_slice) fn check(
         if let Some(warning) = tree::is_support_necessary(
             object,
             &layers,
-            width,
-            traversal.scale,
+            (width, traversal.scale),
             traversal.project.objects()[plan.source_object_index].name(),
-        )
-        .map_err(|error| SliceError::InvalidInput(format!("tree support geometry: {error:?}")))?
-        {
+            context.cancel_ref(),
+        )? {
             warnings.push(warning);
         }
     }

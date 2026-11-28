@@ -200,10 +200,10 @@ fn detect(
     let mut smart = SmartOverhangs::new(
         input.object,
         input.layers,
-        input.extrusion_width,
-        input.scale,
-    )
-    .map_err(error)?;
+        (input.extrusion_width, input.scale),
+        cancel,
+        error,
+    )?;
     let start = web_time::Instant::now();
     for layer in 0..input.layers.len() {
         cancel.check()?;
