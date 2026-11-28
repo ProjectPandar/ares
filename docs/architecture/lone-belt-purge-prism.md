@@ -9,11 +9,11 @@ OrcaSlicer v2.5.0 (`40ecc66f78ed72dc368e0c1ebe40d77f00cc8a19`):
 
 - `src/libslic3r/BeltPurge.cpp:48–61`, `Print::has_belt_purge_tower`:
   active belt purge requires belt mode, its own enable option, more than
-  one configured filament, and a marked object, with spiral mode off.
+  one `filament_diameter` entry, and a marked object, with spiral mode off.
   It does not require a second object or a scheduled filament change.
 - `src/libslic3r/Print.cpp:3614–3615`, `Print::process`: the active belt
   planner runs for layer-by-layer printing.
-- `BeltPurge.cpp:109–121`, `Print::_align_belt_purge_layers`: find the tallest
+- `BeltPurge.cpp:109–123`, `Print::_align_belt_purge_layers`: find the tallest
   non-prism object with layers. If there is none, return without shifting
   the prism or treating the missing reference as an error.
 - `BeltPurge.cpp:146–168`, `Print::_plan_belt_purge`: clear old purge data,
