@@ -228,15 +228,18 @@ fn supports_build_transform(
 }
 
 fn supported_provenance(part: &PartSettings) -> bool {
-    let [mut file, mut object, mut volume, mut x, mut y, mut z] = [false; 6];
+    let mut filename = None;
+    let [mut object, mut volume, mut x, mut y, mut z] = [false; 5];
     for entry in &part.retained_metadata {
         let value = entry.value.as_str();
         let (seen, valid) = match entry.key.as_str() {
             "name" | "matrix" => continue,
-            "source_file" => (
-                &mut file,
-                safe_name(value) && !matches!(value, "" | "." | "..") && !value.contains(':'),
-            ),
+            "source_file" => {
+                if filename.replace(value).is_some() {
+                    return false;
+                }
+                continue;
+            }
             "source_object_id" => (&mut object, value.parse::<i32>().is_ok()),
             "source_volume_id" => (&mut volume, value.parse::<i32>().is_ok()),
             "source_offset_x" => (&mut x, value.parse::<f32>().is_ok_and(f32::is_finite)),
@@ -249,7 +252,7 @@ fn supported_provenance(part: &PartSettings) -> bool {
         }
         *seen = true;
     }
-    file && object && volume && x && y && z
+    filename.is_none_or(str::is_empty) || (object && volume && x && y && z)
 }
 
 // bbs_3mf.cpp:4464–4472, Eigen FullPivLU.h:321–342,489–539.
